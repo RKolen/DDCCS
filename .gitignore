@@ -36,7 +36,13 @@ characters/*.tmp
 00?_*.md
 000?_*.md
 
-# Ignore story series folders (folders containing numbered story files)
+# Ignore all campaign folders and their contents
+*_Campaign/
+Test_Campaign/
+Campaign_*/
+campaign_*/
+
+# Ignore story series folders (any folder containing numbered story files)
 */0??_*.md
 */00?_*.md
 */000?_*.md
