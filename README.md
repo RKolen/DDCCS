@@ -123,7 +123,6 @@ D&D New Beginnings/
 
 - **Python 3.8+** (no external dependencies)
 - **VSCode** with Markdown extensions (recommended)
-- **Fantasy Grounds Unity** (optional, for combat conversion)
 
 ## 🎮 Philosophy
 
