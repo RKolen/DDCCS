@@ -1,0 +1,62 @@
+# D&D Character Consultant System - .gitignore
+# Ignore Python cache and environment files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.env
+venv/
+ENV/
+.envrc
+
+# Ignore VSCode settings and tasks
+.vscode/
+
+# Ignore OS-specific files
+.DS_Store
+Thumbs.db
+
+# Ignore user-generated data and logs
+*.log
+*.sqlite3
+*.db
+
+# Ignore notebook checkpoints
+.ipynb_checkpoints/
+
+# Ignore character backups and temp files
+characters/*.json
+!characters/class.example.json
+!characters/npc.example.json
+characters/*.bak
+characters/*.tmp
+
+# Ignore numbered story files (e.g., 000#, 001#, etc)
+0??_*.md
+00?_*.md
+000?_*.md
+
+# Ignore story series folders (folders containing numbered story files)
+*/0??_*.md
+*/00?_*.md
+*/000?_*.md
+
+# Ignore markdown analysis output (if any)
+*_suggestions.md
+*_analysis.md
+
+# Ignore Fantasy Grounds Unity exports
+FGU_exports/
+
+# Ignore story drafts and temp files
+story_drafts/
+*.tmp
+
+# Ignore test output
+*.coverage
+htmlcov/
+
+# Ignore miscellaneous
+*.swp
+*.swo
+~$*
