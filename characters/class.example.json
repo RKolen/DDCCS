@@ -1,0 +1,41 @@
+{
+  "name": "Character Name",
+  "species": "Species",
+  "lineage": null,
+  "dnd_class": "Class",
+  "subclass": null,
+  "level": 1,
+  "ability_scores": {
+    "strength": 0,
+    "dexterity": 0,
+    "constitution": 0,
+    "intelligence": 0,
+    "wisdom": 0,
+    "charisma": 0
+  },
+  "skills": {},
+  "max_hit_points": 0,
+  "armor_class": 0,
+  "movement_speed": 30,
+  "proficiency_bonus": 2,
+  "equipment": {
+    "weapons": [],
+    "armor": [],
+    "items": [],
+    "gold": 0
+  },
+  "spell_slots": {},
+  "known_spells": [],
+  "background": "Background",
+  "personality_traits": [],
+  "ideals": [],
+  "bonds": [],
+  "flaws": [],
+  "backstory": "Character backstory goes here.",
+  "feats": [],
+  "magic_items": [],
+  "class_abilities": [],
+  "specialized_abilities": [],
+  "major_plot_actions": [],
+  "relationships": {}
+}

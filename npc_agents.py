@@ -1,0 +1,55 @@
+"""
+NPC Agent class and loader for recurring NPCs.
+"""
+
+import json
+from pathlib import Path
+from character_sheet import NPCProfile
+
+class NPCAgent:
+    """Agent for managing and consulting on NPCs."""
+    def __init__(self, profile: NPCProfile):
+        self.profile = profile
+        self.memory = []  # Optional: track NPC events/interactions
+
+    def get_status(self):
+        return {
+            "name": self.profile.name,
+            "role": self.profile.role,
+            "personality": self.profile.personality,
+            "relationships": self.profile.relationships,
+            "key_traits": self.profile.key_traits,
+            "abilities": self.profile.abilities,
+            "recurring": self.profile.recurring,
+            "notes": self.profile.notes
+        }
+
+    def add_to_memory(self, event: str):
+        self.memory.append(event)
+        if len(self.memory) > 50:
+            self.memory = self.memory[-50:]
+
+
+def load_npc_from_json(json_path: Path) -> NPCProfile:
+    """Load an NPC from a JSON file."""
+    with open(json_path, "r", encoding="utf-8") as f:
+        data = json.load(f)
+    return NPCProfile(
+        name=data.get("name", ""),
+        role=data.get("role", "NPC"),
+        personality=data.get("personality", ""),
+        relationships=data.get("relationships", {}),
+        key_traits=data.get("key_traits", []),
+        abilities=data.get("abilities", []),
+        recurring=data.get("recurring", False),
+        notes=data.get("notes", "")
+    )
+
+
+def create_npc_agents(npcs_dir: Path) -> list:
+    """Create NPCAgent objects for all NPC JSON files in the directory."""
+    agents = []
+    for npc_file in npcs_dir.glob("*.json"):
+        profile = load_npc_from_json(npc_file)
+        agents.append(NPCAgent(profile))
+    return agents
