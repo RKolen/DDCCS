@@ -31,6 +31,12 @@ characters/*.json
 characters/*.bak
 characters/*.tmp
 
+# Ignore NPC files except example
+npcs/*.json
+!npcs/npc.example.json
+npcs/*.bak
+npcs/*.tmp
+
 # Ignore numbered story files (e.g., 000#, 001#, etc)
 0??_*.md
 00?_*.md

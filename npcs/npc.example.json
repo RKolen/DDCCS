@@ -1,0 +1,10 @@
+{
+  "name": "NPC Name",
+  "role": "Role or occupation",
+  "personality": "Brief personality description",
+  "relationships": {},
+  "key_traits": [],
+  "abilities": [],
+  "recurring": false,
+  "notes": "Additional notes or secrets."
+}
