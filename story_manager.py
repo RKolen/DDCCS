@@ -33,7 +33,12 @@ class StoryManager:
             return
         
         for filename in os.listdir(self.characters_path):
-            if filename.endswith('.json'):
+            # Skip template and example files
+            if (filename.endswith('.json') and 
+                not filename.startswith('class.example') and 
+                not filename.endswith('.example.json') and
+                not filename.startswith('template')):
+                
                 filepath = os.path.join(self.characters_path, filename)
                 try:
                     profile = CharacterProfile.load_from_file(filepath)

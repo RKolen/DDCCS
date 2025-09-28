@@ -23,6 +23,11 @@ desktop.ini
 *.sqlite3
 *.db
 
+# Ignore party configuration files
+current_party.json
+party_config.json
+*.party.json
+
 # Ignore notebook checkpoints
 .ipynb_checkpoints/
 
@@ -44,16 +49,25 @@ npcs/*.tmp
 00?_*.md
 000?_*.md
 
-# Ignore all campaign folders and their contents
+# Ignore session results files
+session_results_*.md
+*session_results*.md
+
+# Ignore all campaign and story folders and their contents
 *_Campaign/
+*_Quest/
+*_Story/
+*_Adventure/
 Test_Campaign/
 Campaign_*/
 campaign_*/
 
-# Ignore story series folders (any folder containing numbered story files)
+# Ignore story series folders (any folder containing story content)
 */0??_*.md
 */00?_*.md
 */000?_*.md
+*/session_results_*.md
+*/*session_results*.md
 
 # Ignore markdown analysis output (if any)
 *_suggestions.md

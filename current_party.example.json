@@ -1,0 +1,10 @@
+{
+  "party_members": [
+    "Character Name 1",
+    "Character Name 2", 
+    "Character Name 3",
+    "Character Name 4"
+  ],
+  "last_updated": "2025-09-28T00:00:00.000000",
+  "_instructions": "Replace 'Character Name #' with actual character names from your characters/ folder. The system will automatically load this configuration on startup."
+}

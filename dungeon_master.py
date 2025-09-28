@@ -24,8 +24,12 @@ class DMConsultant:
         characters_dir = self.workspace_path / "characters"
         if characters_dir.exists():
             for char_file in characters_dir.glob("*.json"):
-                consultant = CharacterConsultant.load_from_file(char_file)
-                consultants[consultant.profile.name] = consultant
+                # Skip template and example files
+                if (not char_file.name.startswith('class.example') and 
+                    not char_file.name.endswith('.example.json') and
+                    not char_file.name.startswith('template')):
+                    consultant = CharacterConsultant.load_from_file(char_file)
+                    consultants[consultant.profile.name] = consultant
         return consultants
         
     def _load_npc_agents(self) -> Dict[str, NPCAgent]:
