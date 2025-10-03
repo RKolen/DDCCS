@@ -196,26 +196,32 @@ class CharacterAIConfig:
         """
         Create an AI client for this character.
         
+        Uses centralized .env configuration by default. Character-specific overrides
+        (model, base_url, api_key) are only used if explicitly set in character JSON.
+        
         Args:
             default_client: Default client to use if character doesn't have custom config
             
         Returns:
-            AIClient configured for this character
+            AIClient configured for this character with .env defaults + character overrides
         """
         if not self.enabled:
             if default_client:
                 return default_client
             raise RuntimeError("AI is not enabled for this character and no default client provided")
         
-        # If no custom configuration, use defaults
+        # If no custom configuration at all, use default client or create from .env
         if not any([self.model, self.base_url, self.api_key]):
             return default_client if default_client else AIClient()
         
-        # Create custom client for this character
+        # Load .env defaults, then apply character-specific overrides
+        # This allows characters to override just one field (e.g., model) while using .env for the rest
+        env_config = load_ai_config_from_env()
+        
         return AIClient(
-            api_key=self.api_key,
-            base_url=self.base_url,
-            model=self.model,
+            api_key=self.api_key or env_config["api_key"],
+            base_url=self.base_url or env_config["base_url"],
+            model=self.model or env_config["model"],
             default_temperature=self.temperature,
             default_max_tokens=self.max_tokens
         )

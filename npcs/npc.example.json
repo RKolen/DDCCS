@@ -8,14 +8,10 @@
   "recurring": false,
   "notes": "Additional notes or secrets.",
   "ai_config": {
-    "_comment": "Optional AI configuration for this character - remove this section if not using AI",
+    "_comment": "AI uses centralized .env settings (model, base_url, api_key). Only override specific fields if this NPC needs different settings. Most NPCs can use 'enabled: false' and let story_manager handle their dialogue.",
     "enabled": false,
-    "model": null,
-    "base_url": null,
-    "api_key": null,
     "temperature": 0.7,
     "max_tokens": 1000,
-    "system_prompt": null,
-    "custom_parameters": {}
+    "system_prompt": "Custom system prompt for this NPC's personality (optional)"
   }
 }

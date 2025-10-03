@@ -17,7 +17,8 @@
 - [ ] **VSCode tasks update** - Ensure all VSCode tasks work with the new enhanced system
 
 ### Combat & Story Editing
-- [ ] **Fix Combat Summary conversion** - Update combat narrator to accept prompts/summaries instead of raw logs, test combat narrator functionality
+- [ ] **Test Combat Narrator** - Verify combat_narrator.py works with centralized AI configuration and generates proper narrative from combat logs
+- [ ] **Fix Combat Summary conversion** - Update combat narrator to accept prompts/summaries instead of raw logs if needed
 - [ ] **Story amender functionality** - Add system to suggest character reassignments (e.g., "Character A did X but Character B is a better fit for this action")
 
 ### AI Integration

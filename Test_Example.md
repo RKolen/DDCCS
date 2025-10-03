@@ -68,20 +68,27 @@ If you have Ollama installed:
 
 1. Create `.env` file (copy from `.env.example`)
 2. Make sure Ollama is running
-3. Edit a character JSON file and add:
+3. Configure the AI model in `.env`:
+   ```properties
+   OPENAI_MODEL=qwen2.5:14b       # Your chosen model
+   OPENAI_BASE_URL=http://localhost:11434/v1
+   OPENAI_API_KEY=ollama
+   ```
+4. Edit a character JSON file's `ai_config` section:
    ```json
    "ai_config": {
      "enabled": true,
-     "model": "llama3.1:8b",
      "temperature": 0.7,
      "system_prompt": "You are [Character Name], a [class] who..."
    }
    ```
-4. Run `python dnd_consultant.py` again
-5. Press `1` for Character Consultation
-6. Select your character
-7. **Ask:** "What would you do if a dragon appeared?"
-8. **Expect:** AI-generated response in that character's voice
+   **Note:** Model, base_url, and api_key are now centralized in `.env`. Characters only need `enabled`, `temperature`, and `system_prompt`.
+
+5. Run `python dnd_consultant.py` again
+6. Press `1` for Character Consultation
+7. Select your character
+8. **Ask:** "What would you do if a dragon appeared?"
+9. **Expect:** AI-generated response in that character's voice
 
 ---
 
