@@ -80,11 +80,12 @@ class StorySession:
 class EnhancedStoryManager:
     """Enhanced story manager with user choice and better organization."""
     
-    def __init__(self, workspace_path: str, party_config_path: str = None):
+    def __init__(self, workspace_path: str, party_config_path: str = None, ai_client=None):
         self.workspace_path = workspace_path
         self.stories_path = workspace_path
         self.characters_path = os.path.join(workspace_path, "characters")
         self.party_config_path = party_config_path or os.path.join(workspace_path, "current_party.json")
+        self.ai_client = ai_client  # AI client for enhanced features
         self.consultants = {}
         
         # Ensure directories exist
@@ -136,7 +137,7 @@ class EnhancedStoryManager:
                 filepath = os.path.join(self.characters_path, filename)
                 try:
                     profile = CharacterProfile.load_from_file(filepath)
-                    self.consultants[profile.name] = CharacterConsultant(profile)
+                    self.consultants[profile.name] = CharacterConsultant(profile, ai_client=self.ai_client)
                 except Exception as e:
                     print(f"Warning: Could not load character {filename}: {e}")
     

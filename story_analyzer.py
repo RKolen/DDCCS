@@ -14,7 +14,7 @@ import os
 import re
 from pathlib import Path
 from typing import Dict, List, Optional, Set
-from character_agents import CharacterAgent, load_character_from_json
+from character_consultants import CharacterConsultant, CharacterProfile
 
 
 class StoryAnalyzer:
@@ -23,25 +23,29 @@ class StoryAnalyzer:
     def __init__(self, characters_dir: str = "characters", npcs_dir: str = "npcs"):
         self.characters_dir = Path(characters_dir)
         self.npcs_dir = Path(npcs_dir)
-        self.agents: Dict[str, CharacterAgent] = {}
+        self.consultants: Dict[str, CharacterConsultant] = {}
         self.existing_npcs: Set[str] = set()
         
-        # Load all character agents
-        self._load_character_agents()
+        # Load all character consultants
+        self._load_character_consultants()
         self._load_existing_npcs()
     
-    def _load_character_agents(self):
-        """Load all character agents from JSON files."""
+    def _load_character_consultants(self):
+        """Load all character consultants from JSON files."""
         if not self.characters_dir.exists():
             print(f"Characters directory '{self.characters_dir}' not found.")
             return
         
         for json_file in self.characters_dir.glob("*.json"):
+            # Skip template/example files
+            if 'example' in json_file.name.lower() or 'template' in json_file.name.lower():
+                continue
+                
             try:
-                character = load_character_from_json(str(json_file))
-                if character:
-                    agent = CharacterAgent(character)
-                    self.agents[character.name] = agent
+                profile = CharacterProfile.load_from_file(str(json_file))
+                if profile:
+                    consultant = CharacterConsultant(profile)
+                    self.consultants[profile.name] = consultant
             except Exception as e:
                 print(f"Error loading character from {json_file}: {e}")
     
@@ -76,8 +80,8 @@ class StoryAnalyzer:
         chapter_name = Path(story_file_path).stem
         all_suggestions = {}
         
-        for character_name, agent in self.agents.items():
-            suggestions = agent.analyze_story_content(story_content, chapter_name)
+        for character_name, consultant in self.consultants.items():
+            suggestions = consultant.analyze_story_content(story_content, chapter_name)
             
             # Add NPC creation suggestions
             suggestions['npc_creation'] = self._suggest_npc_creation(story_content, character_name)
@@ -116,7 +120,7 @@ class StoryAnalyzer:
             context = story_content[start:end]
             
             # If this dialogue isn't from a known character, suggest NPC creation
-            if not any(char_name in context for char_name in self.agents.keys()):
+            if not any(char_name in context for char_name in self.consultants.keys()):
                 context_around_dialogue.append(context)
         
         if len(context_around_dialogue) > 0:

@@ -18,6 +18,9 @@ VSCode integration for story management and character consistency analysis.
 - **Fantasy Grounds Unity Integration** - Converts combat logs to narrative
 - **NPC Management** - Track recurring NPCs with relationships and traits
 - **VSCode Integration** - Tasks, settings, and markdown workflow support
+- **🆕 AI Integration** - Optional AI/LLM enhancement with OpenAI, Ollama, or any OpenAI-compatible API
+
+> **📖 [AI Integration Guide](AI_INTEGRATION.md)** - Complete guide for adding AI capabilities to your characters
 
 ## 🚫 What This System Does NOT Do
 
@@ -46,11 +49,16 @@ D&D New Beginnings/
 │   └── Your_Next_Campaign/ # Your new organized campaigns go here
 ├── story_template.md      # Template with 80-char line rule
 ├── .vscode/               # VSCode integration
-├── character_agents.py    # Character consultant system
+├── .env                   # AI configuration (create from .env.example)
+├── .env.example           # AI configuration template
+├── ai_client.py           # AI/LLM integration module
+├── character_consultants.py  # Character consultant system with AI
 ├── character_sheet.py     # D&D character data structures
 ├── dnd_consultant.py      # Main interactive interface
-├── story_manager.py       # NEW: Story organization system
+├── story_manager.py       # Story organization system
+├── story_analyzer.py      # Story content analysis and suggestions
 ├── setup.py              # Project initialization
+├── AI_INTEGRATION.md     # Complete AI setup guide
 └── README.md             # This file
 ```
 
@@ -61,12 +69,22 @@ D&D New Beginnings/
    python setup.py
    ```
 
-2. **Start the interactive consultant:**
+2. **Set up AI (optional but recommended):**
+   ```powershell
+   # Copy environment template
+   copy .env.example .env
+   
+   # Download Ollama model (free local AI)
+   ollama pull llama3.1:8b
+   ```
+   See [AI_INTEGRATION.md](AI_INTEGRATION.md) for complete setup guide.
+
+3. **Start the interactive consultant:**
    ```powershell
    python dnd_consultant.py
    ```
 
-3. **Or use VSCode tasks:**
+4. **Or use VSCode tasks:**
    - Press `Ctrl+Shift+P` → "Tasks: Run Task" → "D&D: Interactive Consultant"
 
 ## 🎯 Workflow Summary
@@ -80,10 +98,11 @@ D&D New Beginnings/
    - Good for simple, single-campaign use
 
 2. **Organized Story Series** (RECOMMENDED for new campaigns)
-   - Each campaign gets its own folder
+   - Each campaign gets its own folder (MUST end with: _Campaign, _Quest, _Story, or _Adventure)
    - Separate analysis files per campaign
    - Prevents numbering conflicts
    - Better organization for multiple campaigns
+   - Examples: `Dragon_Heist_Campaign/`, `Rescue_Mission_Quest/`, `Lost_Mine_Adventure/`
 
 ### Story Creation (Organized Series - Recommended)
 1. **Create new story series** via CLI menu system
@@ -110,6 +129,36 @@ D&D New Beginnings/
 2. **Convert to narrative** with character-appropriate descriptions
 3. **Maintain story flow** while preserving mechanical accuracy
 
+## 🤖 AI Features (Optional)
+
+### What AI Adds
+- **AI-Enhanced Character Reactions** - Characters respond with personality-driven dialogue and actions
+- **Intelligent DC Suggestions** - Context-aware difficulty calculations
+- **Per-Character Customization** - Each character can have unique AI settings
+- **Story Analysis** - Automatic suggestions for character development and relationships
+
+### Supported AI Providers
+- **Ollama (Recommended)** - Free, local LLMs running on your PC (llama3.1:8b, mistral, etc.)
+- **OpenAI** - GPT-3.5-Turbo, GPT-4, etc. (requires API key)
+- **OpenRouter** - Access to many models with one API key
+- **Any OpenAI-Compatible API** - Works with custom endpoints
+
+### Quick AI Setup
+```powershell
+# 1. Install Ollama from https://ollama.ai
+# 2. Download a model
+ollama pull llama3.1:8b
+
+# 3. Configure the system
+copy .env.example .env
+# Edit .env and set OPENAI_MODEL=llama3.1:8b
+
+# 4. Enable AI for specific characters
+# Edit character JSON and set ai_config.enabled = true
+```
+
+**📖 Full Guide:** [AI_INTEGRATION.md](AI_INTEGRATION.md)
+
 ## 📋 Technical Verification
 
 ✅ **All systems operational:**
@@ -121,7 +170,8 @@ D&D New Beginnings/
 
 ## 🔧 Prerequisites
 
-- **Python 3.8+** (no external dependencies)
+- **Python 3.8+**
+- **Dependencies for AI features:** `pip install -r requirements.txt` (optional, for AI integration)
 - **VSCode** with Markdown extensions (recommended)
 
 ## 🎮 Philosophy

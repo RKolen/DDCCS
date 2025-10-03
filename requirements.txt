@@ -1,0 +1,7 @@
+# D&D Character Consultant System - Python Dependencies
+
+# AI Integration
+openai>=1.0.0  # OpenAI SDK (works with Ollama, OpenRouter, and other compatible providers)
+python-dotenv>=1.0.0  # Environment variable management
+
+# No other external dependencies required - system uses Python standard library

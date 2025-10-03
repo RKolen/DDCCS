@@ -15,17 +15,46 @@ from character_sheet import DnDClass
 class StoryManager:
     """Manages the 001<storyname>.md story sequence system."""
     
-    def __init__(self, workspace_path: str):
+    # Allowed folder suffixes for story series
+    VALID_SUFFIXES = ['_Campaign', '_Quest', '_Story', '_Adventure']
+    
+    def __init__(self, workspace_path: str, ai_client=None):
         self.workspace_path = workspace_path
         self.stories_path = workspace_path
         self.characters_path = os.path.join(workspace_path, "characters")
         self.consultants = {}
+        self.ai_client = ai_client  # Optional AI client for character consultants
         
         # Ensure directories exist
         os.makedirs(self.characters_path, exist_ok=True)
         
         # Load existing characters
         self._load_characters()
+    
+    def _validate_series_name(self, series_name: str) -> str:
+        """
+        Validate and fix series name to ensure it ends with a valid suffix.
+        
+        Args:
+            series_name: The proposed series name
+            
+        Returns:
+            Valid series name with proper suffix
+            
+        Raises:
+            ValueError: If series name cannot be made valid
+        """
+        # Check if already has valid suffix
+        for suffix in self.VALID_SUFFIXES:
+            if series_name.endswith(suffix):
+                return series_name
+        
+        # If no valid suffix, suggest adding _Quest as default
+        suggested_name = f"{series_name}_Quest"
+        raise ValueError(
+            f"Series name '{series_name}' must end with one of: {', '.join(self.VALID_SUFFIXES)}.\n"
+            f"Suggestion: Use '{suggested_name}' instead."
+        )
     
     def _load_characters(self):
         """Load all character profiles and create consultants."""
@@ -42,7 +71,7 @@ class StoryManager:
                 filepath = os.path.join(self.characters_path, filename)
                 try:
                     profile = CharacterProfile.load_from_file(filepath)
-                    self.consultants[profile.name] = CharacterConsultant(profile)
+                    self.consultants[profile.name] = CharacterConsultant(profile, ai_client=self.ai_client)
                 except Exception as e:
                     print(f"Warning: Could not load character {filename}: {e}")
     
@@ -134,8 +163,8 @@ class StoryManager:
         filepath = os.path.join(self.characters_path, filename)
         profile.save_to_file(filepath)
         
-        # Update consultant
-        self.consultants[profile.name] = CharacterConsultant(profile)
+        # Update consultant with AI client
+        self.consultants[profile.name] = CharacterConsultant(profile, ai_client=self.ai_client)
         print(f"✅ Saved character profile: {profile.name}")
     
     def get_existing_stories(self) -> List[str]:
@@ -177,9 +206,16 @@ class StoryManager:
         return self.get_existing_stories()
     
     def create_new_story_series(self, series_name: str, first_story_name: str, description: str = "") -> str:
-        """Create a new story series in its own folder."""
+        """
+        Create a new story series in its own folder.
+        
+        Series name MUST end with: _Campaign, _Quest, _Story, or _Adventure
+        """
+        # Validate series name has proper suffix
+        validated_name = self._validate_series_name(series_name)
+        
         # Create series folder
-        clean_series_name = re.sub(r'[^a-zA-Z0-9_-]', '_', series_name)
+        clean_series_name = re.sub(r'[^a-zA-Z0-9_-]', '_', validated_name)
         series_path = os.path.join(self.stories_path, clean_series_name)
         os.makedirs(series_path, exist_ok=True)
         

@@ -5,15 +5,24 @@ Integrates with character and NPC agents for coherent storytelling.
 
 from typing import Dict, List, Any, Optional
 from pathlib import Path
-from character_consultants import CharacterConsultant
+from character_consultants import CharacterConsultant, CharacterProfile
 from npc_agents import NPCAgent, create_npc_agents
+
+# Import AI client if available
+try:
+    from ai_client import AIClient
+    AI_AVAILABLE = True
+except ImportError:
+    AIClient = None
+    AI_AVAILABLE = False
 
 
 class DMConsultant:
     """AI consultant that provides DM narrative suggestions based on user prompts."""
     
-    def __init__(self, workspace_path: str = None):
+    def __init__(self, workspace_path: str = None, ai_client=None):
         self.workspace_path = Path(workspace_path) if workspace_path else Path.cwd()
+        self.ai_client = ai_client
         self.character_consultants = self._load_character_consultants()
         self.npc_agents = self._load_npc_agents()
         self.narrative_style = "immersive"  # immersive, cinematic, descriptive
@@ -28,8 +37,9 @@ class DMConsultant:
                 if (not char_file.name.startswith('class.example') and 
                     not char_file.name.endswith('.example.json') and
                     not char_file.name.startswith('template')):
-                    consultant = CharacterConsultant.load_from_file(char_file)
-                    consultants[consultant.profile.name] = consultant
+                    profile = CharacterProfile.load_from_file(str(char_file))
+                    consultant = CharacterConsultant(profile, ai_client=self.ai_client)
+                    consultants[profile.name] = consultant
         return consultants
         
     def _load_npc_agents(self) -> Dict[str, NPCAgent]:
@@ -37,7 +47,7 @@ class DMConsultant:
         agents = {}
         npcs_dir = self.workspace_path / "npcs"
         if npcs_dir.exists():
-            npc_agent_list = create_npc_agents(npcs_dir)
+            npc_agent_list = create_npc_agents(npcs_dir, ai_client=self.ai_client)
             for agent in npc_agent_list:
                 agents[agent.profile.name] = agent
         return agents
@@ -182,3 +192,111 @@ class DMConsultant:
             "relationships": agent.profile.relationships,
             "situation": situation
         }
+    
+    def generate_narrative_content(
+        self, 
+        story_prompt: str, 
+        characters_present: List[str] = None,
+        npcs_present: List[str] = None,
+        style: str = "immersive"
+    ) -> str:
+        """
+        Generate narrative content using AI based on story prompt and present characters/NPCs.
+        
+        Args:
+            story_prompt: The story situation/prompt to generate narrative for
+            characters_present: List of character names present in the scene
+            npcs_present: List of NPC names present in the scene
+            style: Narrative style (immersive, cinematic, descriptive)
+            
+        Returns:
+            Generated narrative content as markdown text
+        """
+        characters_present = characters_present or []
+        npcs_present = npcs_present or []
+        
+        # If AI not available, return rule-based narrative
+        if not self.ai_client or not AI_AVAILABLE:
+            return self._generate_fallback_narrative(story_prompt, characters_present, npcs_present)
+        
+        # Build context about characters
+        character_context = []
+        for char_name in characters_present:
+            if char_name in self.character_consultants:
+                consultant = self.character_consultants[char_name]
+                profile = consultant.profile
+                char_info = f"- {profile.name} ({profile.character_class.value}): {profile.personality_summary[:100]}"
+                character_context.append(char_info)
+        
+        # Build context about NPCs
+        npc_context = []
+        for npc_name in npcs_present:
+            if npc_name in self.npc_agents:
+                agent = self.npc_agents[npc_name]
+                npc_info = f"- {agent.profile.name} ({agent.profile.role}): {agent.profile.personality}"
+                npc_context.append(npc_info)
+        
+        # Create the AI prompt
+        system_prompt = f"""You are an expert D&D Dungeon Master creating engaging narrative content.
+Style: {style} - Write in an {style} style that draws readers into the story.
+Format: Use markdown with ## headers for scenes, write in past tense, keep paragraphs to 2-3 sentences.
+Line length: Keep lines to approximately 70-80 characters for readability.
+
+Create vivid, engaging narrative that:
+- Shows character personalities through actions and dialogue
+- Includes environmental descriptions
+- Advances the plot naturally
+- Maintains appropriate pacing
+- Uses proper D&D terminology"""
+        
+        user_prompt = f"""Create D&D narrative content for this story situation:
+
+{story_prompt}
+
+Characters present:
+{chr(10).join(character_context) if character_context else "No specific characters mentioned"}
+
+NPCs present:
+{chr(10).join(npc_context) if npc_context else "No specific NPCs mentioned"}
+
+Generate a complete narrative scene with:
+1. An opening that sets the scene
+2. Character interactions and dialogue
+3. Plot developments
+4. A natural transition or hook for continuation
+
+Keep the narrative between 300-500 words."""
+        
+        try:
+            narrative = self.ai_client.chat_completion(
+                messages=[
+                    self.ai_client.create_system_message(system_prompt),
+                    self.ai_client.create_user_message(user_prompt)
+                ],
+                temperature=0.8,  # Higher temperature for creative narrative
+                max_tokens=2000
+            )
+            
+            return narrative if narrative else self._generate_fallback_narrative(story_prompt, characters_present, npcs_present)
+            
+        except Exception as e:
+            print(f"Warning: AI narrative generation failed: {e}")
+            return self._generate_fallback_narrative(story_prompt, characters_present, npcs_present)
+    
+    def _generate_fallback_narrative(self, story_prompt: str, characters: List[str], npcs: List[str]) -> str:
+        """Generate basic narrative when AI is unavailable."""
+        narrative = f"## The Story Begins\n\n"
+        narrative += f"{story_prompt}\n\n"
+        
+        if characters:
+            narrative += f"## The Adventurers\n\n"
+            narrative += f"Present for this adventure: {', '.join(characters)}\n\n"
+        
+        if npcs:
+            narrative += f"## Key NPCs\n\n"
+            narrative += f"Important figures in this scene: {', '.join(npcs)}\n\n"
+        
+        narrative += f"## What Happens Next\n\n"
+        narrative += "*[Narrative content would be generated here with AI enabled]*\n"
+        
+        return narrative

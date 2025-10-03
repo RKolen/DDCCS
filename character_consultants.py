@@ -9,6 +9,15 @@ from typing import Dict, List, Any, Optional
 from dataclasses import dataclass, field
 from character_sheet import DnDClass, CharacterSheet
 
+# Import AI client (optional - system works without AI)
+try:
+    from ai_client import AIClient, CharacterAIConfig
+    AI_AVAILABLE = True
+except ImportError:
+    AI_AVAILABLE = False
+    AIClient = None
+    CharacterAIConfig = None
+
 
 @dataclass
 class CharacterProfile:
@@ -36,10 +45,18 @@ class CharacterProfile:
     story_hooks: List[str] = field(default_factory=list)
     character_arcs: List[str] = field(default_factory=list)
     
+    # AI Configuration (optional)
+    ai_config: Optional[Dict[str, Any]] = None
+    
     def save_to_file(self, filepath: str):
         """Save character profile to JSON file."""
+        data = self.__dict__.copy()
+        # Convert ai_config if it's a CharacterAIConfig object
+        if AI_AVAILABLE and hasattr(self, 'ai_config') and self.ai_config:
+            if isinstance(self.ai_config, CharacterAIConfig):
+                data['ai_config'] = self.ai_config.to_dict()
         with open(filepath, 'w', encoding='utf-8') as f:
-            json.dump(self.__dict__, f, indent=2, ensure_ascii=False)
+            json.dump(data, f, indent=2, ensure_ascii=False)
     
     @classmethod
     def load_from_file(cls, filepath: str):
@@ -67,7 +84,7 @@ class CharacterProfile:
         profile.motivations = data.get('bonds', data.get('motivations', []))
         profile.fears_weaknesses = data.get('flaws', data.get('fears_weaknesses', []))
         profile.relationships = data.get('relationships', {})
-        profile.goals = data.get('goals', [])
+        profile.goals = data.get('ideals', data.get('goals', []))
         profile.secrets = data.get('secrets', [])
         
         # Set other optional attributes if they exist
@@ -76,15 +93,51 @@ class CharacterProfile:
             if key in data:
                 setattr(profile, key, data[key])
         
+        # Store additional JSON data for full character access
+        profile.major_plot_actions = data.get('major_plot_actions', [])
+        profile.species = data.get('species', 'Human')
+        profile.lineage = data.get('lineage')
+        profile.subclass = data.get('subclass')
+        profile.ability_scores = data.get('ability_scores', {})
+        profile.skills = data.get('skills', {})
+        profile.max_hit_points = data.get('max_hit_points', 0)
+        profile.armor_class = data.get('armor_class', 10)
+        profile.movement_speed = data.get('movement_speed', 30)
+        profile.proficiency_bonus = data.get('proficiency_bonus', 2)
+        profile.equipment = data.get('equipment', {})
+        profile.spell_slots = data.get('spell_slots', {})
+        profile.known_spells = data.get('known_spells', [])
+        profile.background = data.get('background', '')
+        profile.feats = data.get('feats', [])
+        profile.magic_items = data.get('magic_items', [])
+        profile.class_abilities = data.get('class_abilities', [])
+        profile.specialized_abilities = data.get('specialized_abilities', [])
+        
+        # Load AI configuration if present
+        if 'ai_config' in data and AI_AVAILABLE:
+            profile.ai_config = CharacterAIConfig.from_dict(data['ai_config'])
+        elif 'ai_config' in data:
+            # Store as dict if AI not available
+            profile.ai_config = data['ai_config']
+        
         return profile
 
 
 class CharacterConsultant:
     """AI consultant for a specific character, provides advice and analysis."""
     
-    def __init__(self, profile: CharacterProfile):
+    def __init__(self, profile: CharacterProfile, ai_client = None):
+        """
+        Initialize character consultant.
+        
+        Args:
+            profile: Character profile with personality, background, etc.
+            ai_client: Optional global AI client (can be overridden by character config)
+        """
         self.profile = profile
         self.class_knowledge = self._load_class_knowledge()
+        self.ai_client = ai_client
+        self._character_ai_client = None  # Character-specific client if configured
     
     def _load_class_knowledge(self) -> Dict[str, Any]:
         """Load D&D 5e (2024) class-specific knowledge."""
@@ -546,6 +599,336 @@ class CharacterConsultant:
             advantages.append("Criminal background provides relevant experience")
         
         return advantages
+    
+    def _get_ai_client(self):
+        """
+        Get the appropriate AI client for this character.
+        Returns character-specific client if configured, otherwise global client.
+        """
+        if not AI_AVAILABLE:
+            return None
+        
+        # Create character-specific client if configured and not yet created
+        if self.profile.ai_config and not self._character_ai_client:
+            if isinstance(self.profile.ai_config, CharacterAIConfig):
+                self._character_ai_client = self.profile.ai_config.create_client(self.ai_client)
+            elif isinstance(self.profile.ai_config, dict) and self.profile.ai_config.get('enabled'):
+                # Convert dict to CharacterAIConfig
+                config = CharacterAIConfig.from_dict(self.profile.ai_config)
+                self._character_ai_client = config.create_client(self.ai_client)
+        
+        # Return character-specific or global client
+        return self._character_ai_client or self.ai_client
+    
+    def _build_character_system_prompt(self) -> str:
+        """Build a system prompt that describes this character for AI roleplay."""
+        prompt_parts = [
+            f"You are {self.profile.name}, a {self.profile.character_class.value} in a D&D 5e campaign.",
+            f"You are level {self.profile.level}."
+        ]
+        
+        if self.profile.background_story:
+            prompt_parts.append(f"\nYour background: {self.profile.background_story[:500]}")
+        
+        if self.profile.personality_summary:
+            prompt_parts.append(f"\nYour personality: {self.profile.personality_summary}")
+        
+        if self.profile.motivations:
+            prompt_parts.append(f"\nYour motivations: {', '.join(self.profile.motivations)}")
+        
+        if self.profile.goals:
+            prompt_parts.append(f"\nYour goals: {', '.join(self.profile.goals)}")
+        
+        if self.profile.fears_weaknesses:
+            prompt_parts.append(f"\nYour fears/weaknesses: {', '.join(self.profile.fears_weaknesses)}")
+        
+        # Add class knowledge
+        class_knowledge = self.class_knowledge
+        if class_knowledge:
+            prompt_parts.append(f"\nAs a {self.profile.character_class.value}, you typically: {class_knowledge.get('decision_style', 'act according to your class')}")
+            
+        prompt_parts.append("\nWhen responding, stay in character and consider your personality, motivations, and class nature.")
+        
+        return "\n".join(prompt_parts)
+    
+    def suggest_reaction_ai(self, situation: str, context: Dict[str, Any] = None) -> Dict[str, Any]:
+        """
+        AI-enhanced character reaction suggestion.
+        Falls back to rule-based suggestion if AI not available.
+        
+        Args:
+            situation: Description of the situation
+            context: Optional context information
+            
+        Returns:
+            Dictionary with reaction suggestions, including AI-generated content if available
+        """
+        # Get rule-based suggestion first
+        base_suggestion = self.suggest_reaction(situation, context)
+        
+        # Try AI enhancement
+        ai_client = self._get_ai_client()
+        if not ai_client:
+            base_suggestion['ai_enhanced'] = False
+            return base_suggestion
+        
+        try:
+            # Build prompt for AI
+            system_prompt = self._build_character_system_prompt()
+            
+            # Custom system prompt from character config
+            if self.profile.ai_config and isinstance(self.profile.ai_config, dict):
+                custom_prompt = self.profile.ai_config.get('system_prompt')
+                if custom_prompt:
+                    system_prompt = custom_prompt
+            elif self.profile.ai_config and hasattr(self.profile.ai_config, 'system_prompt'):
+                if self.profile.ai_config.system_prompt:
+                    system_prompt = self.profile.ai_config.system_prompt
+            
+            # Create context string
+            context_str = ""
+            if context:
+                context_str = "\n\nAdditional context:\n" + "\n".join([f"- {k}: {v}" for k, v in context.items()])
+            
+            user_prompt = f"""Given this situation: {situation}{context_str}
+
+How would you react? Consider:
+1. Your immediate emotional/instinctive response
+2. What you would say or do
+3. How this aligns with your goals and personality
+4. Any class abilities or knowledge you might use
+
+Provide a natural, in-character response."""
+            
+            messages = [
+                ai_client.create_system_message(system_prompt),
+                ai_client.create_user_message(user_prompt)
+            ]
+            
+            ai_response = ai_client.chat_completion(messages)
+            
+            # Add AI response to base suggestion
+            base_suggestion['ai_response'] = ai_response
+            base_suggestion['ai_enhanced'] = True
+            
+        except Exception as e:
+            # AI failed, fall back to rule-based
+            base_suggestion['ai_error'] = str(e)
+            base_suggestion['ai_enhanced'] = False
+        
+        return base_suggestion
+    
+    def suggest_dc_for_action_ai(self, action: str, context: Dict[str, Any] = None) -> Dict[str, Any]:
+        """
+        AI-enhanced DC suggestion that considers character abilities and situation.
+        Falls back to rule-based suggestion if AI not available.
+        """
+        # Get rule-based suggestion first
+        base_suggestion = self.suggest_dc_for_action(action, context)
+        
+        ai_client = self._get_ai_client()
+        if not ai_client:
+            base_suggestion['ai_enhanced'] = False
+            return base_suggestion
+        
+        try:
+            # Build a prompt for DC suggestion
+            system_prompt = f"""You are a D&D 5e Dungeon Master helping determine appropriate DCs for character actions.
+
+Character: {self.profile.name} ({self.profile.character_class.value} Level {self.profile.level})
+Class abilities: {', '.join(self.class_knowledge.get('key_features', []))}"""
+            
+            if self.profile.background_story:
+                system_prompt += f"\nBackground: {self.profile.background_story[:300]}"
+            
+            user_prompt = f"""The character wants to: {action}
+
+Consider:
+1. Standard DC guidelines (5=very easy, 10=easy, 15=medium, 20=hard, 25=very hard, 30=nearly impossible)
+2. Character's class abilities and level
+3. Situational modifiers
+
+Suggest an appropriate DC (5-30) and explain why. Also suggest if the character has any advantages for this action."""
+            
+            messages = [
+                ai_client.create_system_message(system_prompt),
+                ai_client.create_user_message(user_prompt)
+            ]
+            
+            ai_response = ai_client.chat_completion(messages)
+            
+            base_suggestion['ai_analysis'] = ai_response
+            base_suggestion['ai_enhanced'] = True
+            
+        except Exception as e:
+            base_suggestion['ai_error'] = str(e)
+            base_suggestion['ai_enhanced'] = False
+        
+        return base_suggestion
+    
+    # Story analysis and character development methods
+    
+    def get_major_plot_actions(self) -> List[Any]:
+        """Return the character's major plot actions."""
+        # Try to access from profile's stored data
+        return getattr(self.profile, 'major_plot_actions', [])
+    
+    def get_relationships(self) -> Dict[str, str]:
+        """Return the character's relationships with other characters and NPCs."""
+        return self.profile.relationships
+    
+    def suggest_relationship_update(self, other_character: str, interaction_context: str) -> Optional[str]:
+        """Suggest updating relationships based on story interactions."""
+        current_relationships = self.get_relationships()
+        
+        # If no existing relationship, suggest creating one
+        if other_character not in current_relationships:
+            suggestions = {
+                'positive_interaction': f"Appreciates {other_character}'s help in {interaction_context}",
+                'conflict': f"Has tensions with {other_character} over {interaction_context}",
+                'neutral': f"Working relationship with {other_character} after {interaction_context}",
+                'suspicious': f"Remains cautious about {other_character} following {interaction_context}"
+            }
+            
+            # Suggest based on character class tendencies
+            class_name = self.profile.character_class.value.lower()
+            
+            if class_name in ['paladin', 'cleric']:
+                return f"SUGGESTION: Add relationship - '{other_character}': '{suggestions['positive_interaction']}'"
+            elif class_name in ['rogue', 'warlock']:
+                return f"SUGGESTION: Add relationship - '{other_character}': '{suggestions['suspicious']}'"
+            else:
+                return f"SUGGESTION: Add relationship - '{other_character}': '{suggestions['neutral']}'"
+        
+        # If existing relationship, suggest updating it
+        else:
+            current = current_relationships[other_character]
+            return f"SUGGESTION: Update relationship with {other_character} - Current: '{current}' - Consider how {interaction_context} affects this"
+    
+    def suggest_plot_action_logging(self, action: str, reasoning: str, chapter: str) -> str:
+        """Suggest adding an action to major_plot_actions."""
+        return f"""SUGGESTION: Log this action to major_plot_actions:
+{{
+  "chapter": "{chapter}",
+  "action": "{action}",
+  "reasoning": "{reasoning}"
+}}"""
+    
+    def suggest_character_development(self, new_behavior: str, context: str) -> List[str]:
+        """Suggest character file updates based on new behaviors."""
+        suggestions = []
+        
+        # Check if this behavior suggests new personality traits
+        if any(word in new_behavior.lower() for word in ['brave', 'courageous', 'bold']):
+            suggestions.append(f"SUGGESTION: Consider adding personality trait: 'Shows courage in {context}'")
+        
+        if any(word in new_behavior.lower() for word in ['cautious', 'careful', 'wary']):
+            suggestions.append(f"SUGGESTION: Consider adding personality trait: 'Exercises caution when {context}'")
+        
+        if any(word in new_behavior.lower() for word in ['lead', 'command', 'direct']):
+            suggestions.append(f"SUGGESTION: Consider adding personality trait: 'Takes leadership during {context}'")
+        
+        # Check if this suggests new fears or motivations
+        if any(word in new_behavior.lower() for word in ['afraid', 'fear', 'terrified']):
+            suggestions.append(f"SUGGESTION: Consider adding to fears_weaknesses: 'Fear related to {context}'")
+        
+        if any(word in new_behavior.lower() for word in ['protect', 'save', 'help']):
+            suggestions.append(f"SUGGESTION: Consider updating motivations to include protecting others in {context}")
+        
+        return suggestions
+    
+    def analyze_story_content(self, story_text: str, chapter_name: str) -> Dict[str, List[str]]:
+        """Analyze story content and provide comprehensive suggestions."""
+        suggestions = {
+            'relationships': [],
+            'plot_actions': [],
+            'character_development': [],
+            'npc_creation': []
+        }
+        
+        lines = story_text.split('\n')
+        
+        for line in lines:
+            # Look for CHARACTER: ACTION: REASONING: patterns
+            if line.strip().startswith('CHARACTER:') and self.profile.name in line:
+                # Extract action and reasoning from subsequent lines
+                try:
+                    action_line = next((l for l in lines[lines.index(line)+1:lines.index(line)+4] if l.strip().startswith('ACTION:')), '')
+                    reasoning_line = next((l for l in lines[lines.index(line)+1:lines.index(line)+4] if l.strip().startswith('REASONING:')), '')
+                    
+                    if action_line and reasoning_line:
+                        action = action_line.replace('ACTION:', '').strip()
+                        reasoning = reasoning_line.replace('REASONING:', '').strip()
+                        
+                        # Suggest logging this action
+                        suggestions['plot_actions'].append(
+                            self.suggest_plot_action_logging(action, reasoning, chapter_name)
+                        )
+                        
+                        # Suggest character development updates
+                        suggestions['character_development'].extend(
+                            self.suggest_character_development(action, chapter_name)
+                        )
+                except:
+                    pass
+            
+            # Look for mentions of other characters or potential NPCs
+            if self.profile.name in line:
+                # Find potential character interactions
+                other_names = self._extract_character_names(line)
+                for other_name in other_names:
+                    if other_name != self.profile.name:
+                        relationship_suggestion = self.suggest_relationship_update(other_name, chapter_name)
+                        if relationship_suggestion:
+                            suggestions['relationships'].append(relationship_suggestion)
+        
+        return suggestions
+    
+    def _extract_character_names(self, text: str) -> List[str]:
+        """Extract potential character/NPC names from text (simple implementation)."""
+        # This is a basic implementation - could be enhanced with NLP
+        words = text.split()
+        potential_names = []
+        
+        for word in words:
+            # Look for capitalized words that might be names
+            if word.strip(',.:;!?').istitle() and len(word) > 2:
+                potential_names.append(word.strip(',.:;!?'))
+        
+        return potential_names
+    
+    def get_status(self) -> Dict[str, Any]:
+        """Get comprehensive character status including all JSON fields."""
+        return {
+            'name': self.profile.name,
+            'species': getattr(self.profile, 'species', 'Human'),
+            'lineage': getattr(self.profile, 'lineage', None),
+            'dnd_class': self.profile.character_class.value,
+            'subclass': getattr(self.profile, 'subclass', None),
+            'level': self.profile.level,
+            'ability_scores': getattr(self.profile, 'ability_scores', {}),
+            'skills': getattr(self.profile, 'skills', {}),
+            'max_hit_points': getattr(self.profile, 'max_hit_points', 0),
+            'armor_class': getattr(self.profile, 'armor_class', 10),
+            'movement_speed': getattr(self.profile, 'movement_speed', 30),
+            'proficiency_bonus': getattr(self.profile, 'proficiency_bonus', 2),
+            'equipment': getattr(self.profile, 'equipment', {}),
+            'spell_slots': getattr(self.profile, 'spell_slots', {}),
+            'known_spells': getattr(self.profile, 'known_spells', []),
+            'background': getattr(self.profile, 'background', ''),
+            'personality_traits': self.profile.personality_summary.split('; ') if self.profile.personality_summary else [],
+            'ideals': self.profile.goals,
+            'bonds': self.profile.motivations,
+            'flaws': self.profile.fears_weaknesses,
+            'backstory': self.profile.background_story,
+            'feats': getattr(self.profile, 'feats', []),
+            'magic_items': getattr(self.profile, 'magic_items', []),
+            'class_abilities': getattr(self.profile, 'class_abilities', []),
+            'specialized_abilities': getattr(self.profile, 'specialized_abilities', []),
+            'major_plot_actions': getattr(self.profile, 'major_plot_actions', []),
+            'relationships': self.profile.relationships,
+            'ai_config': self.profile.ai_config
+        }
     
     @classmethod
     def load_from_file(cls, filepath: str):

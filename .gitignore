@@ -54,13 +54,11 @@ session_results_*.md
 *session_results*.md
 
 # Ignore all campaign and story folders and their contents
+# Only these 4 folder suffixes are allowed: _Campaign, _Quest, _Story, _Adventure
 *_Campaign/
 *_Quest/
 *_Story/
 *_Adventure/
-Test_Campaign/
-Campaign_*/
-campaign_*/
 
 # Ignore story series folders (any folder containing story content)
 */0??_*.md
