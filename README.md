@@ -19,8 +19,11 @@ VSCode integration for story management and character consistency analysis.
 - **NPC Management** - Track recurring NPCs with relationships and traits
 - **VSCode Integration** - Tasks, settings, and markdown workflow support
 - **🆕 AI Integration** - Optional AI/LLM enhancement with OpenAI, Ollama, or any OpenAI-compatible API
+- **🆕 RAG System** - Wiki integration for campaign lore (Exandria, Forgotten Realms, custom wikis)
 
 > **📖 [AI Integration Guide](AI_INTEGRATION.md)** - Complete guide for adding AI capabilities to your characters
+> 
+> **🌐 [RAG Integration Guide](RAG_INTEGRATION.md)** - Wiki integration for accurate campaign lore in stories
 
 ## 🚫 What This System Does NOT Do
 
@@ -142,6 +145,26 @@ D&D New Beginnings/
 - **OpenAI** - GPT-3.5-Turbo, GPT-4, etc. (requires API key)
 - **OpenRouter** - Access to many models with one API key
 - **Any OpenAI-Compatible API** - Works with custom endpoints
+
+## 🌐 RAG Features (Optional)
+
+### What RAG Adds
+- **Wiki Integration** - Automatically fetch accurate campaign lore from any wiki (Fandom.com, MediaWiki, custom)
+- **Lore-Accurate Stories** - AI-generated narratives enriched with official campaign setting information
+- **History Check Enhancement** - Characters recall wiki-sourced information on successful History checks
+- **Smart Caching** - Downloaded wiki content cached locally (7-day TTL) to reduce API calls
+
+### Quick RAG Setup
+```powershell
+# 1. Install dependencies
+pip install requests beautifulsoup4
+
+# 2. Configure in .env
+RAG_ENABLED=true
+RAG_WIKI_BASE_URL=https://your-campaign-wiki.com/wiki
+```
+
+**📖 Full Guide:** [RAG_INTEGRATION.md](RAG_INTEGRATION.md)
 
 ### Quick AI Setup
 ```powershell

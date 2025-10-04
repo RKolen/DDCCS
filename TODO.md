@@ -3,8 +3,6 @@
 ## 🔥 High Priority
 
 ### Story Management System
-- [x] ✅ **Folder naming validation** - Implemented validation for _Campaign, _Quest, _Story, _Adventure suffixes
-- [x] ✅ **Simplified .gitignore patterns** - Reduced to 4 clear folder patterns
 - [ ] **Document party configuration** - Add dedicated section about current_party.json management to README
 - [ ] **Test story creation flow** - Verify the enhanced story manager works with CLI interface end-to-end
 
@@ -22,14 +20,6 @@
 - [ ] **Story amender functionality** - Add system to suggest character reassignments (e.g., "Character A did X but Character B is a better fit for this action")
 
 ### AI Integration
-- [x] ✅ **AI Integration Complete** - Fully integrated with OpenAI SDK, supports OpenAI, Ollama, OpenRouter, and any OpenAI-compatible API
-- [x] ✅ **Per-character AI configuration** - Each character can have unique AI settings (model, temperature, system prompts)
-- [x] ✅ **AI-enhanced character reactions** - Characters respond using AI with rule-based fallback
-- [x] ✅ **AI-enhanced DC suggestions** - Intelligent difficulty calculations with AI analysis
-- [x] ✅ **Comprehensive documentation** - See AI_INTEGRATION.md for complete guide
-- [x] ✅ **NPC AI integration** - NPCs can also have AI-enhanced personalities and responses
-- [x] ✅ **DM narrative generation** - AI-generated story narratives with character context
-- [x] ✅ **Folder naming validation** - System validates campaign folder names (_Campaign, _Quest, _Story, _Adventure)
 - [ ] **AI-powered story suggestions** - Use AI to suggest story developments and narrative improvements (future enhancement)
 - [ ] **Intelligent character matching** - AI-assisted character selection for actions (future enhancement)
 
@@ -98,26 +88,31 @@
 - [ ] **Campaign management best practices** - Tips for organizing complex campaigns
 - [ ] **Integration guide** - How to integrate with external tools
 
----
-
 ## ✅ Recently Completed
 
-[x] **Complete AI Integration** - Flexible AI/LLM support (OpenAI, Ollama, OpenRouter, any OpenAI-compatible API)
-[x] **Per-character AI configuration** - Each character can have unique AI settings (model, temperature, system prompts)
-[x] **AI-enhanced character reactions** - Characters respond using AI with rule-based fallback
-[x] **AI-enhanced DC suggestions** - Intelligent difficulty calculations with AI analysis
-[x] **Comprehensive AI documentation** - See AI_INTEGRATION.md for complete guide
-[x] **Code consolidation** - Merged character_agents.py functionality into character_consultants.py
-[x] **Added story analysis methods** - Character development suggestions, relationship updates, plot action logging
-[x] **Removed test files** - Cleaned up test_ai_integration.py and quick_test.py after setup
-[x] **Fixed character loading** - Exclude template/example files from loading
-[x] **Party configuration system** - Configurable current_party.json with templates
-[x] **Story/mechanics separation** - Pure narrative in stories, mechanics in session results
-[x] **Enhanced .gitignore** - Comprehensive protection of campaign content
-[x] **Git history cleanup** - Removed story references from version control
-[x] **Enhanced story manager** - Better organization and user choice system
+### RAG (Retrieval-Augmented Generation) System - October 2025
+- [x] ✅ **RAG architecture designed** - WikiCache, WikiClient, RAGSystem classes for wiki integration
+- [x] ✅ **Wiki scraping implementation** - Created rag_system.py with web scraping using requests + BeautifulSoup
+- [x] ✅ **Cache system implemented** - TTL-based caching in .rag_cache/ directory (git-ignored)
+- [x] ✅ **Story generation integration** - DungeonMaster extracts locations and injects wiki context into AI prompts
+- [x] ✅ **History check integration** - Created history_check_helper.py for character History checks with wiki lore
+- [x] ✅ **.env configuration** - Added RAG settings to .env.example (RAG_ENABLED, RAG_WIKI_BASE_URL, cache/search settings)
+- [x] ✅ **.gitignore updated** - Added .rag_cache/, *.rag.json, rag_*.db patterns
+- [x] ✅ **RAG documentation** - Created RAG_INTEGRATION.md (450+ lines) and RAG_QUICKSTART.md
+- [x] ✅ **RAG testing** - Tested with wiki integration, verified location lookups
+
+### AI Integration - September 2025
+- [x] ✅ **AI Integration Complete** - Fully integrated with OpenAI SDK, supports OpenAI, Ollama, OpenRouter, and any OpenAI-compatible API
+- [x] ✅ **Per-character AI configuration** - Each character can have unique AI settings (model, temperature, system prompts)
+- [x] ✅ **AI-enhanced character reactions** - Characters respond using AI with rule-based fallback
+- [x] ✅ **AI-enhanced DC suggestions** - Intelligent difficulty calculations with AI analysis
+- [x] ✅ **Comprehensive documentation** - See AI_INTEGRATION.md for complete guide
+- [x] ✅ **NPC AI integration** - NPCs can also have AI-enhanced personalities and responses
+- [x] ✅ **DM narrative generation** - AI-generated story narratives with character context
+- [x] ✅ **Folder naming validation** - Implemented validation for _Campaign, _Quest, _Story, _Adventure suffixes
+- [x] ✅ **Simplified .gitignore patterns** - Reduced to 4 clear folder patterns
 
 ---
 
-**Last Updated:** September 28, 2025
+**Last Updated:** October 4, 2025
 **Priority Legend:** 🔥 High | 🚧 Medium | 🌟 Low | 🐛 Bugs | 📝 Docs

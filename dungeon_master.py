@@ -1,6 +1,7 @@
 """
 Dungeon Master Consultant - Provides narrative suggestions based on user prompts.
 Integrates with character and NPC agents for coherent storytelling.
+Enhanced with RAG (Retrieval-Augmented Generation) for campaign wiki integration.
 """
 
 from typing import Dict, List, Any, Optional
@@ -16,6 +17,14 @@ except ImportError:
     AIClient = None
     AI_AVAILABLE = False
 
+# Import RAG system if available
+try:
+    from rag_system import get_rag_system
+    RAG_AVAILABLE = True
+except ImportError:
+    get_rag_system = None
+    RAG_AVAILABLE = False
+
 
 class DMConsultant:
     """AI consultant that provides DM narrative suggestions based on user prompts."""
@@ -26,6 +35,9 @@ class DMConsultant:
         self.character_consultants = self._load_character_consultants()
         self.npc_agents = self._load_npc_agents()
         self.narrative_style = "immersive"  # immersive, cinematic, descriptive
+        
+        # Initialize RAG system for wiki integration
+        self.rag_system = get_rag_system() if RAG_AVAILABLE else None
         
     def _load_character_consultants(self) -> Dict[str, CharacterConsultant]:
         """Load all character consultants from the characters folder."""
@@ -236,6 +248,20 @@ class DMConsultant:
                 npc_info = f"- {agent.profile.name} ({agent.profile.role}): {agent.profile.personality}"
                 npc_context.append(npc_info)
         
+        # Get RAG context if available
+        rag_context = ""
+        if self.rag_system and self.rag_system.enabled:
+            # Extract location names from prompt (simple keyword extraction)
+            import re
+            potential_locations = self._extract_locations_from_prompt(story_prompt)
+            if potential_locations:
+                print(f"🔍 RAG: Searching wiki for: {', '.join(potential_locations)}")
+                rag_context = self.rag_system.get_context_for_query(
+                    story_prompt, 
+                    potential_locations,
+                    max_results=2
+                )
+        
         # Create the AI prompt
         system_prompt = f"""You are an expert D&D Dungeon Master creating engaging narrative content.
 Style: {style} - Write in an {style} style that draws readers into the story.
@@ -247,7 +273,8 @@ Create vivid, engaging narrative that:
 - Includes environmental descriptions
 - Advances the plot naturally
 - Maintains appropriate pacing
-- Uses proper D&D terminology"""
+- Uses proper D&D terminology
+- Respects established lore from the campaign setting (see lore context if provided)"""
         
         user_prompt = f"""Create D&D narrative content for this story situation:
 
@@ -258,14 +285,15 @@ Characters present:
 
 NPCs present:
 {chr(10).join(npc_context) if npc_context else "No specific NPCs mentioned"}
-
+{rag_context}
 Generate a complete narrative scene with:
 1. An opening that sets the scene
 2. Character interactions and dialogue
 3. Plot developments
 4. A natural transition or hook for continuation
 
-Keep the narrative between 300-500 words."""
+Keep the narrative between 300-500 words.
+{("IMPORTANT: Use the lore context provided above to ensure accuracy and enrich the narrative." if rag_context else "")}"""
         
         try:
             narrative = self.ai_client.chat_completion(
@@ -300,3 +328,30 @@ Keep the narrative between 300-500 words."""
         narrative += "*[Narrative content would be generated here with AI enabled]*\n"
         
         return narrative
+    
+    def _extract_locations_from_prompt(self, prompt: str) -> List[str]:
+        """
+        Extract potential location names from prompt for RAG lookup.
+        Uses simple heuristics: capitalized words/phrases that might be locations.
+        """
+        import re
+        
+        # Look for capitalized phrases (potential proper nouns/locations)
+        # Pattern: words starting with capital letter, possibly multi-word
+        pattern = r'\b([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)\b'
+        matches = re.findall(pattern, prompt)
+        
+        # Filter out common words that aren't locations
+        common_words = {'The', 'A', 'An', 'They', 'He', 'She', 'It', 'We', 'You', 
+                       'What', 'Where', 'When', 'Why', 'How', 'Which', 'Who'}
+        locations = [m for m in matches if m not in common_words and len(m) > 2]
+        
+        # Remove duplicates while preserving order
+        seen = set()
+        unique_locations = []
+        for loc in locations:
+            if loc not in seen:
+                seen.add(loc)
+                unique_locations.append(loc)
+        
+        return unique_locations[:5]  # Limit to 5 most likely locations

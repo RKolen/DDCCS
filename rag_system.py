@@ -1,0 +1,501 @@
+"""
+RAG (Retrieval-Augmented Generation) System for D&D Campaign Wikis
+
+This module provides wiki integration to enhance AI-generated stories with
+accurate campaign setting lore, locations, and history.
+
+Features:
+- Fetch and cache wiki pages from configurable URLs
+- Search for relevant lore when generating stories
+- Integrate with character History checks
+- Support multiple campaign settings (Exandria, Forgotten Realms, custom)
+
+Configuration via .env:
+    RAG_ENABLED=true
+    RAG_WIKI_BASE_URL=https://criticalrole.fandom.com/wiki
+    RAG_CACHE_TTL=604800  # 7 days
+"""
+
+import os
+import json
+import time
+import hashlib
+from typing import Dict, List, Optional, Tuple
+from pathlib import Path
+from urllib.parse import urljoin, urlparse, quote
+import re
+
+try:
+    import requests
+    from bs4 import BeautifulSoup
+    SCRAPING_AVAILABLE = True
+except ImportError:
+    SCRAPING_AVAILABLE = False
+    print("⚠️  RAG System: requests or beautifulsoup4 not installed")
+    print("   Install with: pip install requests beautifulsoup4")
+
+
+class WikiCache:
+    """
+    Manages cached wiki content with TTL (time-to-live) support.
+    All cached data is stored in .rag_cache/ directory (git-ignored).
+    """
+    
+    def __init__(self, cache_dir: str = ".rag_cache", ttl_seconds: int = 604800):
+        """
+        Initialize wiki cache.
+        
+        Args:
+            cache_dir: Directory to store cached pages
+            ttl_seconds: Time-to-live for cached content (default: 7 days)
+        """
+        self.cache_dir = Path(cache_dir)
+        self.cache_dir.mkdir(exist_ok=True)
+        self.ttl_seconds = ttl_seconds
+        
+        # Create index file
+        self.index_file = self.cache_dir / "index.json"
+        self.index = self._load_index()
+    
+    def _load_index(self) -> Dict:
+        """Load cache index from disk."""
+        if self.index_file.exists():
+            try:
+                with open(self.index_file, 'r', encoding='utf-8') as f:
+                    return json.load(f)
+            except:
+                return {}
+        return {}
+    
+    def _save_index(self):
+        """Save cache index to disk."""
+        with open(self.index_file, 'w', encoding='utf-8') as f:
+            json.dump(self.index, f, indent=2)
+    
+    def _get_cache_key(self, url: str) -> str:
+        """Generate cache key from URL."""
+        return hashlib.md5(url.encode()).hexdigest()
+    
+    def get(self, url: str) -> Optional[Dict]:
+        """
+        Retrieve cached content if available and not expired.
+        
+        Args:
+            url: Wiki page URL
+            
+        Returns:
+            Cached content dict or None if not available/expired
+        """
+        cache_key = self._get_cache_key(url)
+        
+        if cache_key not in self.index:
+            return None
+        
+        entry = self.index[cache_key]
+        
+        # Check if expired
+        if time.time() - entry['timestamp'] > self.ttl_seconds:
+            self.delete(url)
+            return None
+        
+        # Load cached content
+        cache_file = self.cache_dir / f"{cache_key}.json"
+        if cache_file.exists():
+            with open(cache_file, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        
+        return None
+    
+    def set(self, url: str, content: Dict):
+        """
+        Cache wiki page content.
+        
+        Args:
+            url: Wiki page URL
+            content: Page content dict with title, text, sections, etc.
+        """
+        cache_key = self._get_cache_key(url)
+        
+        # Save content
+        cache_file = self.cache_dir / f"{cache_key}.json"
+        with open(cache_file, 'w', encoding='utf-8') as f:
+            json.dump(content, f, indent=2)
+        
+        # Update index
+        self.index[cache_key] = {
+            'url': url,
+            'timestamp': time.time(),
+            'title': content.get('title', 'Unknown')
+        }
+        self._save_index()
+    
+    def delete(self, url: str):
+        """Remove cached content."""
+        cache_key = self._get_cache_key(url)
+        
+        if cache_key in self.index:
+            del self.index[cache_key]
+            self._save_index()
+        
+        cache_file = self.cache_dir / f"{cache_key}.json"
+        if cache_file.exists():
+            cache_file.unlink()
+    
+    def clear_expired(self):
+        """Remove all expired cache entries."""
+        expired_keys = []
+        
+        for cache_key, entry in self.index.items():
+            if time.time() - entry['timestamp'] > self.ttl_seconds:
+                expired_keys.append(cache_key)
+        
+        for cache_key in expired_keys:
+            cache_file = self.cache_dir / f"{cache_key}.json"
+            if cache_file.exists():
+                cache_file.unlink()
+            del self.index[cache_key]
+        
+        if expired_keys:
+            self._save_index()
+            print(f"🧹 Cleared {len(expired_keys)} expired cache entries")
+    
+    def get_stats(self) -> Dict:
+        """Get cache statistics."""
+        total_size = sum(f.stat().st_size for f in self.cache_dir.glob("*.json"))
+        return {
+            'entries': len(self.index),
+            'size_mb': total_size / (1024 * 1024),
+            'cache_dir': str(self.cache_dir)
+        }
+
+
+class WikiClient:
+    """
+    Client for fetching and parsing wiki pages.
+    Supports fandom.com wikis and MediaWiki-based sites.
+    """
+    
+    def __init__(self, base_url: str, cache: Optional[WikiCache] = None):
+        """
+        Initialize wiki client.
+        
+        Args:
+            base_url: Base URL of the wiki (e.g., https://criticalrole.fandom.com/wiki)
+            cache: WikiCache instance (creates new if not provided)
+        """
+        self.base_url = base_url.rstrip('/')
+        self.cache = cache or WikiCache()
+        self.session = requests.Session() if SCRAPING_AVAILABLE else None
+        self.session.headers.update({
+            'User-Agent': 'DnD-Character-Consultant/1.0 (Educational; +https://github.com/RKolen/DDCCS)'
+        }) if self.session else None
+    
+    def _clean_wiki_text(self, text: str) -> str:
+        """Clean wiki text by removing references, edit links, etc."""
+        # Remove citation markers like [1], [2], etc.
+        text = re.sub(r'\[\d+\]', '', text)
+        
+        # Remove edit links
+        text = re.sub(r'\[edit\]', '', text)
+        
+        # Clean up excessive whitespace
+        text = re.sub(r'\n\n+', '\n\n', text)
+        text = text.strip()
+        
+        return text
+    
+    def fetch_page(self, page_title: str, force_refresh: bool = False) -> Optional[Dict]:
+        """
+        Fetch wiki page content.
+        
+        Args:
+            page_title: Title of the wiki page (e.g., "Tal'Dorei")
+            force_refresh: Bypass cache and fetch fresh content
+            
+        Returns:
+            Dict with page content or None if fetch failed
+        """
+        if not SCRAPING_AVAILABLE:
+            print("⚠️  Cannot fetch wiki pages: requests/beautifulsoup4 not installed")
+            return None
+        
+        # Construct URL
+        page_url = f"{self.base_url}/{quote(page_title.replace(' ', '_'))}"
+        
+        # Check cache first
+        if not force_refresh:
+            cached = self.cache.get(page_url)
+            if cached:
+                print(f"✅ Cache hit: {page_title}")
+                return cached
+        
+        try:
+            print(f"🌐 Fetching: {page_title}...")
+            response = self.session.get(page_url, timeout=10)
+            response.raise_for_status()
+            
+            soup = BeautifulSoup(response.text, 'html.parser')
+            
+            # Extract page title
+            title_elem = soup.find('h1', class_='page-header__title')
+            if not title_elem:
+                title_elem = soup.find('h1', id='firstHeading')
+            title = title_elem.get_text(strip=True) if title_elem else page_title
+            
+            # Extract main content
+            content_elem = soup.find('div', class_='mw-parser-output')
+            if not content_elem:
+                content_elem = soup.find('div', id='mw-content-text')
+            
+            if not content_elem:
+                print(f"⚠️  Could not find content for {page_title}")
+                return None
+            
+            # Extract sections
+            sections = []
+            current_section = {'title': 'Introduction', 'content': ''}
+            
+            for elem in content_elem.find_all(['h2', 'h3', 'p', 'ul']):
+                if elem.name in ['h2', 'h3']:
+                    # Save previous section
+                    if current_section['content']:
+                        current_section['content'] = self._clean_wiki_text(current_section['content'])
+                        sections.append(current_section)
+                    
+                    # Start new section
+                    section_title = elem.get_text(strip=True)
+                    # Remove edit links
+                    section_title = re.sub(r'\[edit\]', '', section_title).strip()
+                    current_section = {'title': section_title, 'content': ''}
+                
+                elif elem.name == 'p':
+                    text = elem.get_text(strip=True)
+                    if text:
+                        current_section['content'] += text + '\n\n'
+                
+                elif elem.name == 'ul':
+                    # Extract list items
+                    items = [li.get_text(strip=True) for li in elem.find_all('li')]
+                    if items:
+                        current_section['content'] += '\n'.join(f"• {item}" for item in items) + '\n\n'
+            
+            # Save last section
+            if current_section['content']:
+                current_section['content'] = self._clean_wiki_text(current_section['content'])
+                sections.append(current_section)
+            
+            # Create page dict
+            page_data = {
+                'title': title,
+                'url': page_url,
+                'sections': sections,
+                'fetched_at': time.time()
+            }
+            
+            # Cache the result
+            self.cache.set(page_url, page_data)
+            
+            print(f"✅ Fetched: {title} ({len(sections)} sections)")
+            return page_data
+        
+        except requests.RequestException as e:
+            print(f"❌ Failed to fetch {page_title}: {e}")
+            return None
+        except Exception as e:
+            print(f"❌ Error parsing {page_title}: {e}")
+            return None
+    
+    def search_sections(self, page_data: Dict, query: str, max_results: int = 3) -> List[Dict]:
+        """
+        Search for relevant sections within a page.
+        
+        Args:
+            page_data: Page data from fetch_page()
+            query: Search query
+            max_results: Maximum number of sections to return
+            
+        Returns:
+            List of relevant sections with relevance scores
+        """
+        query_lower = query.lower()
+        query_words = set(query_lower.split())
+        
+        results = []
+        
+        for section in page_data['sections']:
+            title = section['title'].lower()
+            content = section['content'].lower()
+            
+            # Calculate relevance score
+            score = 0.0
+            
+            # Title match is worth more
+            if query_lower in title:
+                score += 2.0
+            
+            # Word matches in title
+            title_words = set(title.split())
+            title_matches = len(query_words & title_words)
+            score += title_matches * 0.5
+            
+            # Word matches in content
+            content_words = set(content.split())
+            content_matches = len(query_words & content_words)
+            score += content_matches * 0.1
+            
+            if score > 0:
+                results.append({
+                    'section': section,
+                    'score': score
+                })
+        
+        # Sort by score and return top results
+        results.sort(key=lambda x: x['score'], reverse=True)
+        return results[:max_results]
+
+
+class RAGSystem:
+    """
+    Main RAG system for integrating wiki knowledge with AI generation.
+    """
+    
+    def __init__(self):
+        """Initialize RAG system from .env configuration."""
+        self.enabled = os.getenv('RAG_ENABLED', 'false').lower() == 'true'
+        self.wiki_base_url = os.getenv('RAG_WIKI_BASE_URL', '')
+        
+        if not self.enabled:
+            self.client = None
+            return
+        
+        if not self.wiki_base_url:
+            print("⚠️  RAG enabled but RAG_WIKI_BASE_URL not set in .env")
+            self.client = None
+            return
+        
+        if not SCRAPING_AVAILABLE:
+            print("⚠️  RAG enabled but dependencies not installed")
+            print("   Install with: pip install requests beautifulsoup4")
+            self.client = None
+            return
+        
+        # Initialize cache and client
+        cache_ttl = int(os.getenv('RAG_CACHE_TTL', '604800'))  # 7 days default
+        cache = WikiCache(ttl_seconds=cache_ttl)
+        self.client = WikiClient(self.wiki_base_url, cache)
+        
+        print(f"✅ RAG System initialized: {self.wiki_base_url}")
+    
+    def get_context_for_location(self, location_name: str, max_sections: int = 2) -> str:
+        """
+        Get wiki context for a location.
+        
+        Args:
+            location_name: Name of the location
+            max_sections: Maximum sections to include
+            
+        Returns:
+            Formatted context string to add to AI prompt
+        """
+        if not self.enabled or not self.client:
+            return ""
+        
+        page_data = self.client.fetch_page(location_name)
+        if not page_data:
+            return ""
+        
+        # Get most relevant sections
+        sections = page_data['sections'][:max_sections]
+        
+        context = f"\n\n=== LORE CONTEXT: {page_data['title']} ===\n"
+        for section in sections:
+            context += f"\n{section['title']}:\n{section['content']}\n"
+        context += "=== END LORE CONTEXT ===\n\n"
+        
+        return context
+    
+    def get_context_for_query(self, query: str, pages_to_search: List[str], max_results: int = 3) -> str:
+        """
+        Search multiple pages for relevant context.
+        
+        Args:
+            query: What to search for
+            pages_to_search: List of page titles to search
+            max_results: Maximum results per page
+            
+        Returns:
+            Formatted context string
+        """
+        if not self.enabled or not self.client:
+            return ""
+        
+        context = f"\n\n=== LORE CONTEXT FOR: {query} ===\n"
+        
+        for page_title in pages_to_search:
+            page_data = self.client.fetch_page(page_title)
+            if not page_data:
+                continue
+            
+            # Search for relevant sections
+            results = self.client.search_sections(page_data, query, max_results)
+            
+            if results:
+                context += f"\nFrom {page_data['title']}:\n"
+                for result in results:
+                    section = result['section']
+                    context += f"\n{section['title']}:\n{section['content']}\n"
+        
+        context += "\n=== END LORE CONTEXT ===\n\n"
+        
+        return context
+    
+    def get_history_check_info(self, topic: str, dc_result: int) -> Optional[str]:
+        """
+        Get information for a successful History check.
+        
+        Args:
+            topic: What the character is trying to recall
+            dc_result: The check result (determines detail level)
+            
+        Returns:
+            Information the character recalls, or None if check failed
+        """
+        if not self.enabled or not self.client:
+            return None
+        
+        # Fetch page
+        page_data = self.client.fetch_page(topic)
+        if not page_data:
+            return None
+        
+        # Determine how much info based on check result
+        if dc_result < 10:
+            # Basic info - just introduction
+            sections = page_data['sections'][:1]
+        elif dc_result < 15:
+            # Moderate info - 2 sections
+            sections = page_data['sections'][:2]
+        elif dc_result < 20:
+            # Good info - 3 sections
+            sections = page_data['sections'][:3]
+        else:
+            # Exceptional - all sections
+            sections = page_data['sections']
+        
+        # Format as character recall
+        info = f"You recall the following about {page_data['title']}:\n\n"
+        for section in sections:
+            info += f"{section['title']}:\n{section['content']}\n\n"
+        
+        return info
+
+
+# Global RAG instance
+_rag_instance = None
+
+def get_rag_system() -> RAGSystem:
+    """Get or create global RAG system instance."""
+    global _rag_instance
+    if _rag_instance is None:
+        _rag_instance = RAGSystem()
+    return _rag_instance

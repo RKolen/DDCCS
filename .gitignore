@@ -49,6 +49,11 @@ npcs/*.tmp
 00?_*.md
 000?_*.md
 
+# Ignore RAG cache directory (wiki content)
+.rag_cache/
+*.rag.json
+rag_*.db
+
 # Ignore session results files
 session_results_*.md
 *session_results*.md
