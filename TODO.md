@@ -15,8 +15,6 @@
 - [ ] **VSCode tasks update** - Ensure all VSCode tasks work with the new enhanced system
 
 ### Combat & Story Editing
-- [ ] **Test Combat Narrator** - Verify combat_narrator.py works with centralized AI configuration and generates proper narrative from combat logs
-- [ ] **Fix Combat Summary conversion** - Update combat narrator to accept prompts/summaries instead of raw logs if needed
 - [ ] **Story amender functionality** - Add system to suggest character reassignments (e.g., "Character A did X but Character B is a better fit for this action")
 
 ### AI Integration
@@ -37,11 +35,15 @@
 
 ### Story Tools
 - [ ] **Story timeline tracking** - Track chronological order of events across campaigns
-- [ ] **NPC integration** - Better integration of NPCs with the story management system
 - [ ] **Combat narrative templates** - Pre-built templates for different combat scenarios
 
 ### Technical Improvements
 - [ ] **Configuration system** - Centralized config file for system settings
+- [ ] **Optional SQLite integration** - Add optional database support for:
+  - Character knowledge tracking (History check results)
+  - Session history and analytics
+  - Campaign statistics and insights
+  - Keep JSON as default for simplicity
 
 ## 🌟 Low Priority / Nice to Have
 
@@ -90,6 +92,23 @@
 
 ## ✅ Recently Completed
 
+### NPC Detection System - October 4, 2025
+- [x] ✅ **Automatic NPC detection** - System scans story content for NPCs (innkeepers, merchants, guards, blacksmiths)
+- [x] ✅ **Smart filtering** - Excludes party members (from current_party.json) and existing NPC profiles
+- [x] ✅ **False positive filtering** - Filters out sentence starters (Suddenly, Meanwhile, However, etc.)
+- [x] ✅ **Story hooks integration** - Automatically adds NPC profile suggestions to story hooks file
+- [x] ✅ **Ready-to-run code examples** - Includes Python snippets in hooks file for easy profile generation
+- [x] ✅ **NPC detection documentation** - Created docs/NPC_DETECTION.md with full usage guide
+- [x] ✅ **Test validation** - Updated test_final_validation.py to validate automatic NPC detection
+- [x] ✅ **Fixed literal \n bug** - Story hooks now have proper line breaks instead of literal backslash-n
+
+### Combat Narrator Improvements - October 4, 2025
+- [x] ✅ **Auto-generated combat titles** - AI generates contextual titles from story context (e.g., "Goblin Ambush at Darkwood")
+- [x] ✅ **Combat prompt support** - Accepts simple combat descriptions, not just Fantasy Grounds logs
+- [x] ✅ **RAG integration for combat** - Uses wiki lookup for spell/ability descriptions in combat narratives
+- [x] ✅ **Test Combat Narrator** - Verified combat_narrator.py works with centralized AI configuration
+- [x] ✅ **Combat Summary conversion** - Combat narrator accepts prompts/summaries instead of requiring raw logs
+
 ### RAG (Retrieval-Augmented Generation) System - October 2025
 - [x] ✅ **RAG architecture designed** - WikiCache, WikiClient, RAGSystem classes for wiki integration
 - [x] ✅ **Wiki scraping implementation** - Created rag_system.py with web scraping using requests + BeautifulSoup
@@ -114,5 +133,5 @@
 
 ---
 
-**Last Updated:** October 4, 2025
+**Last Updated:** October 4, 2025 (NPC Detection + Combat Narrator Updates)
 **Priority Legend:** 🔥 High | 🚧 Medium | 🌟 Low | 🐛 Bugs | 📝 Docs

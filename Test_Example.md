@@ -16,8 +16,8 @@ python dnd_consultant.py
 === D&D Character Consultant ===
 1. Character Consultation
 2. DM Consultation
-3. Story Analysis
-4. Combat Narration
+3. Story Management
+4. Combat Conversion
 5. Exit
 Choose an option (1-5):
 ```
@@ -33,10 +33,10 @@ Choose an option (1-5):
 - **Try typing:** "A bard tries to persuade a merchant"
 - **What to expect:** The system suggests a DC (difficulty) like "DC 15 for medium difficulty"
 
-### 5. Test Story Analysis
+### 5. Test Story Management
 - **Press:** `3` and Enter
-- **You'll see:** Prompt asking for a story file
-- **What to expect:** If you have `001_*.md` files, it will analyze them
+- **You'll see:** Options to create campaigns, write stories, or manage sessions
+- **What to expect:** Access to the enhanced story management system
 
 ---
 
@@ -49,20 +49,41 @@ python setup.py
 
 **What happens:** Creates default character templates and VSCode configuration
 
-### Step 2: Create Your First Story
+### Step 2: Create Your First Campaign
 1. Run: `python dnd_consultant.py`
-2. Press `2` for DM Consultation
-3. Look for "Create New Story Series" option
+2. Press `3` for Story Management
+3. Choose "Create New Story Series"
 4. **Name it:** Something ending in `_Quest`, `_Campaign`, `_Story`, or `_Adventure`
-   - ✅ Good: `My_First_Quest`
+   - ✅ Good: `Thornhaven_Campaign`
    - ❌ Bad: `MyStory` (missing required suffix)
 
 **What you'll get:**
-- A new folder with your quest name
-- A file `001_YourStory.md` inside
-- Template files for tracking character development and DCs
+- A new folder with your campaign name
+- Empty and ready for your first story
 
-### Step 3: Test AI Features (Optional)
+### Step 3: Write Your First Story
+1. Still in Story Management, choose "Create New Story"
+2. Select your campaign folder
+3. **Name it:** A descriptive story title (e.g., "The Rusty Tankard")
+4. **What happens:** Creates `001_The_Rusty_Tankard.md`
+5. Open the file and write your narrative
+
+### Step 4: Add Combat Narrative (Optional - Requires AI)
+
+**If you have Ollama installed and configured:**
+
+1. Return to main menu, press `4` for Combat Conversion
+2. **Describe the combat in natural language** (end with `###`)
+3. **Choose narrative style:** Cinematic, Gritty, Heroic, or Tactical
+4. Select your campaign → Select your story file
+
+**What happens:**
+- AI automatically generates a situational title based on your combat and story
+- Converts your tactical description into narrative prose
+- Removes game mechanics (dice rolls, DCs, saves)
+- Appends to your story as a new section
+
+### Step 5: Test AI Features (Optional)
 
 If you have Ollama installed:
 
@@ -95,10 +116,18 @@ If you have Ollama installed:
 ## Expected File Structure After Test
 
 ```
-Your_First_Quest/
-├── 001_Meeting_Tobias.md          (Your story)
-├── character_development_suggestions.md
-└── story_dc_suggestions.md
+Thornhaven_Campaign/
+├── 001_The_Rusty_Tankard.md          (Your story)
+├── 002_Next_Adventure.md
+└── ...
+```
+
+**Optional session files** (created through Story Management):
+```
+Thornhaven_Campaign/
+├── session_results_2025-10-04_the_rusty_tankard.md
+├── character_development_2025-10-04_the_rusty_tankard.md
+└── story_hooks_2025-10-04_the_rusty_tankard.md
 ```
 
 ---

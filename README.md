@@ -15,8 +15,9 @@ VSCode integration for story management and character consistency analysis.
   analysis
 - **DC Suggestion Engine** - Calculates appropriate challenge difficulties 
   based on character stats and abilities
-- **Fantasy Grounds Unity Integration** - Converts combat logs to narrative
+- **Fantasy Grounds Unity Integration** - Converts combat logs to narrative with auto-generated titles
 - **NPC Management** - Track recurring NPCs with relationships and traits
+- **🆕 Automatic NPC Detection** - System automatically detects NPCs in stories and suggests profile creation
 - **VSCode Integration** - Tasks, settings, and markdown workflow support
 - **🆕 AI Integration** - Optional AI/LLM enhancement with OpenAI, Ollama, or any OpenAI-compatible API
 - **🆕 RAG System** - Wiki integration for campaign lore (Exandria, Forgotten Realms, custom wikis)
@@ -110,9 +111,10 @@ D&D New Beginnings/
 ### Story Creation (Organized Series - Recommended)
 1. **Create new story series** via CLI menu system
 2. **Write narrative** in `001_story_name.md` (pure story, 80-char lines)
-3. **Analyze characters** in campaign's `character_development_suggestions.md`
-4. **Calculate DCs** in campaign's `story_dc_suggestions.md`
-5. **Use CHARACTER/ACTION/REASONING** blocks in suggestions files only
+3. **NPCs automatically detected** - System scans story and suggests profile creation in hooks file
+4. **Analyze characters** in campaign's `character_development_suggestions.md`
+5. **Calculate DCs** in campaign's `story_dc_suggestions.md`
+6. **Use CHARACTER/ACTION/REASONING** blocks in suggestions files only
 
 ### Story Creation (Legacy - Single Campaign)
 1. **Write narrative** in `001_story_name.md` (pure story, 80-char lines)
@@ -128,9 +130,10 @@ D&D New Beginnings/
 4. **Generate DCs** based on character strengths and context in separate file
 
 ### Combat Integration
-1. **Paste Fantasy Grounds Unity** combat log
-2. **Convert to narrative** with character-appropriate descriptions
-3. **Maintain story flow** while preserving mechanical accuracy
+1. **Paste Fantasy Grounds Unity** combat log or simple combat description
+2. **AI auto-generates** contextual combat title from story (e.g., "Goblin Ambush at Darkwood")
+3. **Convert to narrative** with character-appropriate descriptions using RAG for spell/ability details
+4. **Maintain story flow** while preserving mechanical accuracy
 
 ## 🤖 AI Features (Optional)
 
@@ -145,6 +148,34 @@ D&D New Beginnings/
 - **OpenAI** - GPT-3.5-Turbo, GPT-4, etc. (requires API key)
 - **OpenRouter** - Access to many models with one API key
 - **Any OpenAI-Compatible API** - Works with custom endpoints
+
+## 🧙 Automatic NPC Detection
+
+### What It Does
+- **Automatic Scanning** - System scans story files for NPCs (innkeepers, merchants, guards, blacksmiths, etc.)
+- **Smart Filtering** - Excludes party members and NPCs that already have profiles
+- **Profile Suggestions** - Adds NPC creation suggestions to story hooks file with ready-to-run code
+- **No Manual Tracking** - Never forget to create profiles for recurring NPCs
+
+### How It Works
+```markdown
+Story: "The innkeeper, Marcus Ironforge, greets the party..."
+
+Story Hooks File Auto-Generated:
+## NPC Profile Suggestions
+### Marcus Ironforge (Innkeeper)
+**To create profile:**
+```python
+npc_profile = story_manager.generate_npc_from_story(
+    npc_name="Marcus Ironforge",
+    context=story_text,
+    role="Innkeeper"
+)
+story_manager.save_npc_profile(npc_profile)
+```
+```
+
+**📖 Full Documentation:** [docs/NPC_DETECTION.md](docs/NPC_DETECTION.md)
 
 ## 🌐 RAG Features (Optional)
 

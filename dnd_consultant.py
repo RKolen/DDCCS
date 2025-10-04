@@ -6,7 +6,7 @@ VSCode-integrated system for story management and character consultation.
 import os
 import sys
 from typing import Dict, List, Any, Optional
-from story_manager import StoryManager
+from enhanced_story_manager import EnhancedStoryManager
 from combat_narrator import CombatNarrator
 from character_consultants import CharacterProfile, CharacterConsultant
 from character_sheet import DnDClass
@@ -18,9 +18,10 @@ class DDConsultantCLI:
     
     def __init__(self, workspace_path: str = None):
         self.workspace_path = workspace_path or os.getcwd()
-        self.story_manager = StoryManager(self.workspace_path)
+        self.story_manager = EnhancedStoryManager(self.workspace_path)
         self.combat_narrator = CombatNarrator(self.story_manager.consultants)
         self.dm_consultant = DMConsultant(self.workspace_path)
+        self.ai_client = None
         
     def run_interactive(self):
         """Run the interactive command-line interface."""
@@ -660,10 +661,15 @@ class DDConsultantCLI:
         input("\\nPress Enter to continue...")
     
     def convert_combat(self):
-        """Convert FGU combat summary to narrative."""
-        print("\\n⚔️ CONVERT COMBAT SUMMARY")
-        print("-" * 30)
-        print("Paste your FGU combat summary (end with '###' on a new line):")
+        """Convert combat description to narrative."""
+        print("\\n⚔️ CONVERT COMBAT TO NARRATIVE")
+        print("-" * 50)
+        print("Describe what happened in combat tactically. Example:")
+        print("  Rain transforms into a bear and attacks the goblin, killing it.")
+        print("  Lysara uses vicious mockery on another goblin, it fails its save.")
+        print("  Brogan shoots his crossbow with a critical hit, killing it.")
+        print()
+        print("Enter your combat description (end with '###' on a new line):")
         
         lines = []
         while True:
@@ -672,28 +678,111 @@ class DDConsultantCLI:
                 break
             lines.append(line)
         
-        fgu_text = "\\n".join(lines)
+        combat_prompt = "\\n".join(lines).strip()
         
-        if not fgu_text.strip():
-            print("No combat summary provided.")
+        if not combat_prompt:
+            print("No combat description provided.")
             return
         
-        print("\\n🔄 Converting to narrative...")
-        narrative = self.combat_narrator.convert_to_narrative(fgu_text)
+        # Ask for style
+        print("\\n🎨 Choose narrative style:")
+        print("1. Cinematic (epic, movie-like)")
+        print("2. Gritty (realistic, visceral)")
+        print("3. Heroic (valorous, inspirational)")
+        print("4. Tactical (clear, precise)")
+        
+        style_choice = input("Enter choice (1-4, or press Enter for Cinematic): ").strip()
+        style_map = {'1': 'cinematic', '2': 'gritty', '3': 'heroic', '4': 'tactical', '': 'cinematic'}
+        style = style_map.get(style_choice, 'cinematic')
+        
+        # Ask which story to append to
+        print("\\n📖 Which story should this combat be added to?")
+        story_series = self.story_manager.get_story_series()
+        existing_stories = self.story_manager.get_existing_stories()
+        
+        target_story_path = None
+        story_context = ""
+        
+        if story_series:
+            print("\\nStory Series:")
+            for i, series in enumerate(story_series, 1):
+                print(f"{i}. {series}")
+            
+            series_choice = input("\\nSelect series number (or press Enter to skip): ").strip()
+            if series_choice.isdigit():
+                idx = int(series_choice) - 1
+                if 0 <= idx < len(story_series):
+                    series_name = story_series[idx]
+                    series_path = os.path.join(self.workspace_path, series_name)
+                    story_files = self.story_manager.get_story_files_in_series(series_name)
+                    
+                    if story_files:
+                        print(f"\\nStories in {series_name}:")
+                        for i, story_file in enumerate(story_files, 1):
+                            print(f"{i}. {story_file}")
+                        
+                        story_choice = input("\\nSelect story number: ").strip()
+                        if story_choice.isdigit():
+                            idx2 = int(story_choice) - 1
+                            if 0 <= idx2 < len(story_files):
+                                target_story_path = os.path.join(series_path, story_files[idx2])
+        
+        # Read story context if file selected
+        if target_story_path and os.path.exists(target_story_path):
+            with open(target_story_path, 'r', encoding='utf-8') as f:
+                story_context = f.read()
+        
+        print(f"\\n🔄 Converting to {style} narrative...")
+        
+        # Initialize AI client if needed
+        if not hasattr(self, 'ai_client') or self.ai_client is None:
+            try:
+                from ai_client import AIClient
+                self.ai_client = AIClient()
+            except Exception as e:
+                print(f"⚠️  Could not initialize AI client: {e}")
+                print("   Using fallback mode...")
+                self.ai_client = None
+        
+        # Recreate combat narrator with AI client
+        self.combat_narrator = CombatNarrator(self.story_manager.consultants, self.ai_client)
+        
+        # Generate combat title automatically
+        print("🏷️  Generating combat title...")
+        combat_title = self.combat_narrator.generate_combat_title(combat_prompt, story_context)
+        print(f"   Title: {combat_title}")
+        
+        # Generate narrative
+        narrative = self.combat_narrator.narrate_combat_from_prompt(
+            combat_prompt=combat_prompt,
+            story_context=story_context,
+            style=style
+        )
         
         print(f"\\n📝 COMBAT NARRATIVE:")
-        print("=" * 50)
+        print("=" * 70)
         print(narrative)
+        print("=" * 70)
         
-        # Ask if they want to save to file
-        save = input("\\nSave to file? (y/n): ").strip().lower()
-        if save == 'y':
-            filename = input("Enter filename (without extension): ").strip()
-            if filename:
-                filepath = os.path.join(self.workspace_path, f"{filename}_combat.md")
-                with open(filepath, 'w', encoding='utf-8') as f:
+        # Append to story file if selected
+        if target_story_path:
+            append = input(f"\\nAppend to {os.path.basename(target_story_path)}? (y/n): ").strip().lower()
+            if append == 'y':
+                with open(target_story_path, 'a', encoding='utf-8') as f:
+                    f.write(f"\\n\\n### {combat_title}\\n\\n")
                     f.write(narrative)
-                print(f"✅ Saved to: {filepath}")
+                print(f"✅ Appended to: {target_story_path}")
+        else:
+            # Save to separate file if no story selected
+            save = input("\\nSave to separate file? (y/n): ").strip().lower()
+            if save == 'y':
+                filename = input("Enter filename (without extension): ").strip()
+                if filename:
+                    filepath = os.path.join(self.workspace_path, f"{filename}.md")
+                    with open(filepath, 'w', encoding='utf-8') as f:
+                        f.write(f"# {combat_title}\\n\\n")
+                        f.write(narrative)
+                    print(f"✅ Saved to: {filepath}")
     
     def get_dc_suggestions(self):
         """Get DC suggestions for an action."""
