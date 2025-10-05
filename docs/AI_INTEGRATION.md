@@ -359,4 +359,4 @@ Planned AI features:
 
 ---
 
-For questions or issues, refer to the main README.md or create an issue in the repository.
+For questions or issues, refer to the main [README.md](../README.md) or create an issue in the repository.

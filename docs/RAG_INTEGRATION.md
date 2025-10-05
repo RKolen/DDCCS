@@ -115,7 +115,7 @@ dm = DMConsultant(workspace_path=".", ai_client=ai_client)
 # Generate narrative - RAG automatically searches for locations
 narrative = dm.generate_narrative_content(
     story_prompt="The party arrives in Whitestone, seeking the de Rolo family.",
-    characters_present=["Lysara", "Rain", "Brogan"],
+    characters_present=["Theron", "Mira", "Garrick"],
     style="immersive"
 )
 ```
@@ -135,7 +135,7 @@ from history_check_helper import handle_history_check
 result = handle_history_check(
     topic="Tal'Dorei",
     check_result=18,  # d20 roll + Intelligence modifier
-    character_name="Lysara"
+    character_name="Elara"
 )
 
 if result['success']:
@@ -147,7 +147,7 @@ else:
 
 **Output Example:**
 ```
-✅ Lysara recalls: 
+✅ Elara recalls: 
 
 === LORE CONTEXT: Tal'Dorei ===
 

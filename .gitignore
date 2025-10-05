@@ -12,6 +12,9 @@ ENV/
 # Ignore VSCode settings and tasks
 .vscode/
 
+# Ignore personal documentation folder
+docs_personal/
+
 # Ignore OS-specific files
 .DS_Store
 Thumbs.db

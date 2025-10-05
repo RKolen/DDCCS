@@ -290,7 +290,7 @@ class StoryManager:
     
     def _create_story_template(self, story_name: str, description: str) -> str:
         """Create a markdown template for a new story using story_template.md as base."""
-        template_path = os.path.join(self.workspace_path, "story_template.md")
+        template_path = os.path.join(self.workspace_path, "templates", "story_template.md")
         if os.path.exists(template_path):
             with open(template_path, 'r', encoding='utf-8') as f:
                 template = f.read()

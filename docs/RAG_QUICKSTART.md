@@ -49,7 +49,7 @@ python dnd_consultant.py
 ```python
 from history_check_helper import handle_history_check
 
-result = handle_history_check("Tal'Dorei", check_result=18, character_name="Lysara")
+result = handle_history_check("Tal'Dorei", check_result=18, character_name="Elara")
 print(result['information'])  # Shows wiki lore!
 ```
 

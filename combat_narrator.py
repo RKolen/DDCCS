@@ -80,7 +80,7 @@ class CombatNarrator:
         Convert a natural language combat prompt into narrative prose.
         
         Args:
-            combat_prompt: Tactical description of combat (e.g., "Rain transforms into a bear...")
+            combat_prompt: Tactical description of combat (e.g., "Theron charges the enemy line...")
             story_context: Optional story so far for context
             style: Narrative style (cinematic, gritty, heroic, tactical)
             

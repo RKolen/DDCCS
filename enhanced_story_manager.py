@@ -50,7 +50,7 @@ def load_current_party(config_path: str = "current_party.json") -> List[str]:
             print(f"Warning: Could not load party configuration: {e}")
     
     # Return default party if no config found
-    return ["Zilvra Baenre", "Kaelen Moonshadow", "Brogan 'Saltshadow' Ironfist", "Alina Gristvale"]
+    return ["Theron Brightblade", "Mira Shadowstep", "Garrick Stonefist", "Elara Moonwhisper"]
 
 
 def save_current_party(party_members: List[str], config_path: str = "current_party.json"):
@@ -363,7 +363,7 @@ class EnhancedStoryManager:
         """Create a markdown template for a new story."""
         if use_template:
             # Use full template with guidance
-            template_path = os.path.join(self.workspace_path, "story_template.md")
+            template_path = os.path.join(self.workspace_path, "templates", "story_template.md")
             if os.path.exists(template_path):
                 with open(template_path, 'r', encoding='utf-8') as f:
                     template = f.read()

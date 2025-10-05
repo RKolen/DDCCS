@@ -1,6 +1,13 @@
 # D&D Character Consultant System
 
-A Python-based system for managing D&D 5e (2024) character consultants with 
+A Python-based system for managing D&D## 📚 Documentation
+
+- **[AI Integration Guide](docs/AI_INTEGRATION.md)** - Complete AI setup (Ollama, OpenAI, Anthropic)
+- **[RAG Integration Guide](docs/RAG_INTEGRATION.md)** - Deep dive into RAG system and wiki integration
+- **[RAG Quick Start](docs/RAG_QUICKSTART.md)** - Fast track to using RAG features
+- **[Usage Examples](docs/Test_Example.md)** - See the system in action
+
+> **Note:** Personal documentation and development notes are kept in `docs_personal/` (git-ignored)4) character consultants with 
 VSCode integration for story management and character consistency analysis.
 
 ## 📋 What This System Does
@@ -22,9 +29,9 @@ VSCode integration for story management and character consistency analysis.
 - **🆕 AI Integration** - Optional AI/LLM enhancement with OpenAI, Ollama, or any OpenAI-compatible API
 - **🆕 RAG System** - Wiki integration for campaign lore (Exandria, Forgotten Realms, custom wikis)
 
-> **📖 [AI Integration Guide](AI_INTEGRATION.md)** - Complete guide for adding AI capabilities to your characters
+> **📖 [AI Integration Guide](docs/AI_INTEGRATION.md)** - Complete guide for adding AI capabilities to your characters
 > 
-> **🌐 [RAG Integration Guide](RAG_INTEGRATION.md)** - Wiki integration for accurate campaign lore in stories
+> **🌐 [RAG Integration Guide](docs/RAG_INTEGRATION.md)** - Wiki integration for accurate campaign lore in stories
 
 ## 🚫 What This System Does NOT Do
 
@@ -40,6 +47,17 @@ D&D New Beginnings/
 │   ├── class.example.json   # Template for new characters
 ├── npcs/                   # NPC management
 │   └── npc.example.json    # NPC template
+├── docs/                   # 📚 Public documentation
+│   ├── AI_INTEGRATION.md   # Complete AI setup guide
+│   ├── RAG_INTEGRATION.md  # RAG system deep dive
+│   ├── RAG_QUICKSTART.md   # Quick start for RAG
+│   └── Test_Example.md     # Usage examples
+├── docs_personal/          # 🔒 Personal documentation (git-ignored)
+│   ├── PARTY_CONFIG_DOCUMENTATION.md
+│   ├── CHARACTER_NAME_ANONYMIZATION.md
+│   └── FOLDER_RESTRUCTURE_SUMMARY.md
+├── templates/              # 📝 Templates
+│   └── story_template.md   # Story template with 80-char line rule
 ├── 001_*.md               # Legacy story sequence files (narrative only)
 ├── character_development_suggestions.md  # Legacy character analysis
 ├── story_dc_suggestions.md # Legacy DC calculations
@@ -51,7 +69,6 @@ D&D New Beginnings/
 │   │   ├── character_development_suggestions.md
 │   │   └── story_dc_suggestions.md
 │   └── Your_Next_Campaign/ # Your new organized campaigns go here
-├── story_template.md      # Template with 80-char line rule
 ├── .vscode/               # VSCode integration
 ├── .env                   # AI configuration (create from .env.example)
 ├── .env.example           # AI configuration template
@@ -62,11 +79,19 @@ D&D New Beginnings/
 ├── story_manager.py       # Story organization system
 ├── story_analyzer.py      # Story content analysis and suggestions
 ├── setup.py              # Project initialization
-├── AI_INTEGRATION.md     # Complete AI setup guide
 └── README.md             # This file
 ```
 
-## 🚀 Quick Start
+## � Documentation
+
+- **[AI Integration Guide](docs/AI_INTEGRATION.md)** - Complete AI setup (Ollama, OpenAI, Anthropic)
+- **[RAG Integration Guide](docs/RAG_INTEGRATION.md)** - Deep dive into RAG system and wiki integration
+- **[RAG Quick Start](docs/RAG_QUICKSTART.md)** - Fast track to using RAG features
+- **[Party Configuration Guide](docs/PARTY_CONFIG_DOCUMENTATION.md)** - Managing your party setup
+- **[Usage Examples](docs/Test_Example.md)** - See the system in action
+- **[Development Notes](docs/CHARACTER_NAME_ANONYMIZATION.md)** - Recent changes and updates
+
+## �🚀 Quick Start
 
 1. **Setup the system:**
    ```powershell
@@ -81,7 +106,7 @@ D&D New Beginnings/
    # Download Ollama model (free local AI)
    ollama pull llama3.1:8b
    ```
-   See [AI_INTEGRATION.md](AI_INTEGRATION.md) for complete setup guide.
+   See **[docs/AI_INTEGRATION.md](docs/AI_INTEGRATION.md)** for complete setup guide.
 
 3. **Start the interactive consultant:**
    ```powershell
@@ -90,6 +115,89 @@ D&D New Beginnings/
 
 4. **Or use VSCode tasks:**
    - Press `Ctrl+Shift+P` → "Tasks: Run Task" → "D&D: Interactive Consultant"
+
+## 👥 Party Configuration Management
+
+The system uses `current_party.json` to track your active adventuring party. This is crucial for:
+- **NPC Detection** - System excludes party members when suggesting NPC profiles
+- **Story Analysis** - Focuses on your active characters
+- **Character Development** - Tracks progression of current party members
+- **Session Management** - Links stories to the correct characters
+
+### Setting Up Your Party
+
+**Option 1: Use the Interactive CLI (Recommended)**
+```powershell
+python dnd_consultant.py
+# Choose: 1. Manage Characters → Create Default Party Configuration
+```
+
+**Option 2: Manual Configuration**
+```powershell
+# Copy the example file
+copy current_party.example.json current_party.json
+
+# Edit current_party.json with your character names
+```
+
+**Example `current_party.json`:**
+```json
+{
+  "party_members": [
+    "Theron Brightblade",
+    "Mira Shadowstep",
+    "Garrick Stonefist"
+  ],
+  "last_updated": "2025-10-05T10:30:00.000000"
+}
+```
+
+### Important Notes
+
+⚠️ **Character Names Must Match Exactly**
+- Names in `current_party.json` must match character JSON filenames
+- Example: `"Theron Brightblade"` → `characters/theron_brightblade.json`
+- Case-insensitive matching, but exact spelling required
+
+⚠️ **Git Ignored by Default**
+- `current_party.json` is in `.gitignore` (your personal party configuration)
+- `current_party.example.json` is tracked (template for others)
+- This allows multiple people to work on the same repo with different parties
+
+### Managing Your Party
+
+**Adding/Removing Members:**
+1. **Via CLI**: Use the interactive menu to modify party
+2. **Via File**: Edit `current_party.json` directly
+3. **Validation**: System validates character names exist on load
+
+**When to Update:**
+- Party composition changes (members join/leave)
+- Starting a new campaign with different characters
+- Testing with a specific character subset
+
+**System Behavior:**
+- **Missing Party File**: Falls back to default party (first 4 characters found)
+- **Invalid Character Names**: System warns but continues with valid names
+- **Empty Party**: System prompts to create party configuration
+
+### Party in Action
+
+**NPC Detection:**
+```markdown
+Story: "The innkeeper, Marcus, greets Theron, Mira, and Garrick..."
+
+System detects:
+✅ Marcus (Innkeeper) - NEW NPC, suggests profile
+❌ Theron, Mira, Garrick - Party members, excluded from NPC suggestions
+```
+
+**Story Analysis:**
+```python
+# System automatically focuses on your party
+story_manager.analyze_story_development()
+# Only analyzes: Theron, Mira, Garrick (from current_party.json)
+```
 
 ## 🎯 Workflow Summary
 
@@ -211,7 +319,7 @@ copy .env.example .env
 # Edit character JSON and set ai_config.enabled = true
 ```
 
-**📖 Full Guide:** [AI_INTEGRATION.md](AI_INTEGRATION.md)
+**📖 Full Guide:** [docs/AI_INTEGRATION.md](docs/AI_INTEGRATION.md)
 
 ## 📋 Technical Verification
 

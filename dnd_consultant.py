@@ -665,9 +665,9 @@ class DDConsultantCLI:
         print("\\n⚔️ CONVERT COMBAT TO NARRATIVE")
         print("-" * 50)
         print("Describe what happened in combat tactically. Example:")
-        print("  Rain transforms into a bear and attacks the goblin, killing it.")
-        print("  Lysara uses vicious mockery on another goblin, it fails its save.")
-        print("  Brogan shoots his crossbow with a critical hit, killing it.")
+        print("  Theron charges forward and strikes the goblin with his longsword.")
+        print("  Mira sneaks behind an enemy and backstabs with her dagger.")
+        print("  Garrick swings his warhammer, crushing the goblin's shield.")
         print()
         print("Enter your combat description (end with '###' on a new line):")
         

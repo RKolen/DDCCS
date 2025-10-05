@@ -159,7 +159,7 @@ def demo_history_check():
     print("=== History Check Demo ===\n")
     
     # Example 1: Basic check
-    result = handle_history_check("Tal'Dorei", check_result=18, character_name="Lysara")
+    result = handle_history_check("Tal'Dorei", check_result=18, character_name="Elara")
     print(f"Check Result: {result['check_result']} vs DC {result['dc']}")
     print(f"Success: {result['success']}")
     print(f"Information: {result['information']}")

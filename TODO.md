@@ -3,7 +3,6 @@
 ## 🔥 High Priority
 
 ### Story Management System
-- [ ] **Document party configuration** - Add dedicated section about current_party.json management to README
 - [ ] **Test story creation flow** - Verify the enhanced story manager works with CLI interface end-to-end
 
 ### Character System Improvements  
@@ -80,7 +79,6 @@
 
 ### README Updates
 - [ ] **Remove outdated references** to Story_Series_Folders structure
-- [ ] **Add party management section** explaining current_party.json
 - [ ] **Update workflow examples** with real use cases
 - [ ] **Add troubleshooting section** for common issues
 
@@ -91,6 +89,21 @@
 - [ ] **Integration guide** - How to integrate with external tools
 
 ## ✅ Recently Completed
+
+### Repository Organization - October 5, 2025
+- [x] ✅ **Folder restructure** - Created docs/ and templates/ folders for better organization
+- [x] ✅ **Documentation reorganization** - Moved 6 docs to docs/, moved story_template.md to templates/
+- [x] ✅ **Python code updates** - Updated enhanced_story_manager.py and story_manager.py template paths
+- [x] ✅ **README navigation** - Added Documentation section with links to all docs
+- [x] ✅ **Personal docs folder** - Created docs_personal/ (git-ignored) for internal documentation
+- [x] ✅ **Cross-reference updates** - Fixed all links between documentation files
+- [x] ✅ **Character name anonymization** - Replaced personal character names with generic examples throughout docs
+
+### Documentation Improvements - October 5, 2025
+- [x] ✅ **Party configuration documentation** - Added comprehensive section to README explaining current_party.json
+- [x] ✅ **Party management guide** - Documented CLI and manual configuration methods
+- [x] ✅ **Party validation notes** - Explained character name matching and git ignore behavior
+- [x] ✅ **Party usage examples** - Showed how party config affects NPC detection and story analysis
 
 ### NPC Detection System - October 4, 2025
 - [x] ✅ **Automatic NPC detection** - System scans story content for NPCs (innkeepers, merchants, guards, blacksmiths)
@@ -125,7 +138,7 @@
 - [x] ✅ **Per-character AI configuration** - Each character can have unique AI settings (model, temperature, system prompts)
 - [x] ✅ **AI-enhanced character reactions** - Characters respond using AI with rule-based fallback
 - [x] ✅ **AI-enhanced DC suggestions** - Intelligent difficulty calculations with AI analysis
-- [x] ✅ **Comprehensive documentation** - See AI_INTEGRATION.md for complete guide
+- [x] ✅ **Comprehensive documentation** - See docs/AI_INTEGRATION.md for complete guide
 - [x] ✅ **NPC AI integration** - NPCs can also have AI-enhanced personalities and responses
 - [x] ✅ **DM narrative generation** - AI-generated story narratives with character context
 - [x] ✅ **Folder naming validation** - Implemented validation for _Campaign, _Quest, _Story, _Adventure suffixes
