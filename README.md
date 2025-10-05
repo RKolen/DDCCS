@@ -27,7 +27,8 @@ VSCode integration for story management and character consistency analysis.
 - **🆕 Automatic NPC Detection** - System automatically detects NPCs in stories and suggests profile creation
 - **VSCode Integration** - Tasks, settings, and markdown workflow support
 - **🆕 AI Integration** - Optional AI/LLM enhancement with OpenAI, Ollama, or any OpenAI-compatible API
-- **🆕 RAG System** - Wiki integration for campaign lore (Exandria, Forgotten Realms, custom wikis)
+- **🆕 RAG System** - Dual wiki integration: campaign lore + D&D 5e rules (items, spells)
+- **🆕 Custom Items Registry** - Track homebrew items separately, blocks wiki lookups for custom content
 
 > **📖 [AI Integration Guide](docs/AI_INTEGRATION.md)** - Complete guide for adding AI capabilities to your characters
 > 
@@ -70,14 +71,24 @@ D&D New Beginnings/
 │   │   └── story_dc_suggestions.md
 │   └── Your_Next_Campaign/ # Your new organized campaigns go here
 ├── .vscode/               # VSCode integration
-├── .env                   # AI configuration (create from .env.example)
-├── .env.example           # AI configuration template
+├── .rag_cache/            # Wiki content cache (git-ignored)
+├── .env                   # AI & RAG configuration (create from .env.example)
+├── .env.example           # Configuration template
 ├── ai_client.py           # AI/LLM integration module
 ├── character_consultants.py  # Character consultant system with AI
 ├── character_sheet.py     # D&D character data structures
 ├── dnd_consultant.py      # Main interactive interface
+├── dungeon_master.py      # DM consultant with RAG integration
 ├── story_manager.py       # Story organization system
 ├── story_analyzer.py      # Story content analysis and suggestions
+├── rag_system.py          # RAG/wiki integration system
+├── item_registry.py       # Custom/homebrew item tracking
+├── custom_items_registry.json  # Your homebrew items (git-ignored)
+├── custom_items_registry.example.json  # Example homebrew items
+├── npc_agents.py          # NPC generation with AI
+├── enhanced_story_manager.py  # Advanced story management
+├── combat_narrator.py     # Fantasy Grounds Unity integration
+├── history_check_helper.py  # History check with wiki lore
 ├── setup.py              # Project initialization
 └── README.md             # This file
 ```

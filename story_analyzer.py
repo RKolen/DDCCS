@@ -133,6 +133,8 @@ class StoryAnalyzer:
         template = {
             "name": npc_name,
             "role": role,
+            "species": "Human",
+            "lineage": "",
             "location": "Unknown",
             "personality": {
                 "summary": f"A {role} who has interacted with {interacted_with}",
@@ -145,7 +147,8 @@ class StoryAnalyzer:
             },
             "notes": [
                 f"Created based on story interaction with {interacted_with}",
-                "Personality and background need to be fleshed out"
+                "Personality and background need to be fleshed out",
+                "Update species and lineage to match character description"
             ]
         }
         return template

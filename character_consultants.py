@@ -45,6 +45,23 @@ class CharacterProfile:
     story_hooks: List[str] = field(default_factory=list)
     character_arcs: List[str] = field(default_factory=list)
     
+    # Game mechanics (from character JSON files)
+    ability_scores: Dict[str, int] = field(default_factory=dict)
+    skills: Dict[str, Any] = field(default_factory=dict)
+    max_hit_points: int = 0
+    armor_class: int = 10
+    movement_speed: int = 30
+    proficiency_bonus: int = 2
+    equipment: Dict[str, List[str]] = field(default_factory=dict)  # {weapons: [], armor: [], items: [], gold: int}
+    spell_slots: Dict[str, int] = field(default_factory=dict)
+    known_spells: List[str] = field(default_factory=list)
+    background: str = ""
+    feats: List[str] = field(default_factory=list)
+    magic_items: List[str] = field(default_factory=list)
+    class_abilities: List[str] = field(default_factory=list)
+    specialized_abilities: List[str] = field(default_factory=list)
+    subclass: Optional[str] = None
+    
     # AI Configuration (optional)
     ai_config: Optional[Dict[str, Any]] = None
     
@@ -489,6 +506,49 @@ class CharacterConsultant:
                 suggestions.append(f"Keep {self.profile.name}'s {self.profile.personality_summary} personality in mind")
         
         return suggestions
+    
+    def get_all_character_items(self) -> List[str]:
+        """
+        Extract all items character has (equipment + magic items).
+        
+        Returns:
+            List of item names
+        """
+        items = []
+        
+        # Get equipment
+        equipment = getattr(self.profile, 'equipment', {})
+        if isinstance(equipment, dict):
+            items.extend(equipment.get('weapons', []))
+            items.extend(equipment.get('armor', []))
+            items.extend(equipment.get('items', []))
+        elif isinstance(equipment, list):
+            items.extend(equipment)
+        
+        # Get magic items
+        magic_items = getattr(self.profile, 'magic_items', [])
+        if isinstance(magic_items, list):
+            items.extend(magic_items)
+        
+        return items
+    
+    def get_item_details(self, item_name: str) -> Optional[Dict[str, Any]]:
+        """
+        Get detailed information about an item using RAG system.
+        
+        Args:
+            item_name: Name of the item to lookup
+            
+        Returns:
+            Dict with item info (from custom registry or wikidot), or None if not found
+        """
+        try:
+            from rag_system import get_rag_system
+            rag = get_rag_system()
+            return rag.fetch_item_info(item_name)
+        except Exception as e:
+            print(f"Warning: Could not fetch item info for '{item_name}': {e}")
+            return None
     
     def suggest_dc_for_action(self, action_description: str, character_abilities: Dict[str, int] = None) -> Dict[str, Any]:
         """Suggest appropriate DC for an action this character wants to take."""

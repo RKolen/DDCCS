@@ -280,6 +280,8 @@ def create_blank_character(
 class NPCProfile:
     name: str
     role: str = "NPC"
+    species: str = "Human"  # Species/ancestry (e.g., "Elf", "Dwarf", "Human")
+    lineage: str = ""  # Optional lineage/subspecies (e.g., "High Elf", "Hill Dwarf")
     personality: str = ""
     relationships: Dict[str, str] = field(default_factory=dict)
     key_traits: List[str] = field(default_factory=list)

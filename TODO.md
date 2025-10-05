@@ -2,6 +2,22 @@
 
 ## 🔥 High Priority
 
+### Project Organization
+- [ ] **Reorganize game data into dedicated folder** - Create `game_data/` folder to separate user data from code
+  - **Problem**: Characters, NPCs, party config, custom items scattered in root with Python files
+  - **Solution**: Move to organized structure:
+    ```
+    game_data/
+    ├── characters/              # Character JSON files
+    ├── npcs/                    # NPC JSON files
+    ├── custom_items_registry.json  # Homebrew items
+    ├── custom_rules_registry.json  # Homebrew rules (future)
+    └── current_party.json       # Active party configuration
+    ```
+  - **Benefits**: Cleaner root directory, logical grouping, easier .gitignore patterns
+  - **Impact**: Update all file paths in Python modules, update documentation
+  - **Migration**: Create migration script to move existing files safely
+
 ### Story Management System
 - [ ] **Test story creation flow** - Verify the enhanced story manager works with CLI interface end-to-end
 
@@ -128,10 +144,14 @@
 - [x] ✅ **Cache system implemented** - TTL-based caching in .rag_cache/ directory (git-ignored)
 - [x] ✅ **Story generation integration** - DungeonMaster extracts locations and injects wiki context into AI prompts
 - [x] ✅ **History check integration** - Created history_check_helper.py for character History checks with wiki lore
-- [x] ✅ **.env configuration** - Added RAG settings to .env.example (RAG_ENABLED, RAG_WIKI_BASE_URL, cache/search settings)
-- [x] ✅ **.gitignore updated** - Added .rag_cache/, *.rag.json, rag_*.db patterns
+- [x] ✅ **.env configuration** - Added RAG settings to .env.example (RAG_ENABLED, RAG_WIKI_BASE_URL, RAG_RULES_BASE_URL, cache/search settings)
+- [x] ✅ **.gitignore updated** - Added .rag_cache/, *.rag.json, rag_*.db, custom_items_registry.json patterns
 - [x] ✅ **RAG documentation** - Created RAG_INTEGRATION.md (450+ lines) and RAG_QUICKSTART.md
 - [x] ✅ **RAG testing** - Tested with wiki integration, verified location lookups
+- [x] ✅ **Dual wiki support** - Separate lore wiki (RAG_WIKI_BASE_URL) and rules wiki (RAG_RULES_BASE_URL)
+- [x] ✅ **Custom items registry** - Created item_registry.py and custom_items_registry.json for homebrew item tracking
+- [x] ✅ **Homebrew filtering** - WikiClient blocks custom items from wiki lookups, returns local data instead
+- [x] ✅ **Item integration** - CharacterProfile now stores equipment and magic_items, CharacterConsultant can extract and lookup items
 
 ### AI Integration - September 2025
 - [x] ✅ **AI Integration Complete** - Fully integrated with OpenAI SDK, supports OpenAI, Ollama, OpenRouter, and any OpenAI-compatible API
@@ -144,7 +164,13 @@
 - [x] ✅ **Folder naming validation** - Implemented validation for _Campaign, _Quest, _Story, _Adventure suffixes
 - [x] ✅ **Simplified .gitignore patterns** - Reduced to 4 clear folder patterns
 
+### Character System Improvements - October 5, 2025
+- [x] ✅ **NPC species/lineage fields** - Added species and lineage fields to NPCProfile dataclass
+- [x] ✅ **Character equipment tracking** - CharacterProfile now includes equipment dict and magic_items list as dataclass fields
+- [x] ✅ **Item extraction methods** - Added get_all_character_items() and get_item_details() to CharacterConsultant
+- [x] ✅ **Item-aware suggestions** - Foundation for AI to suggest creative item uses in action suggestions (in progress)
+
 ---
 
-**Last Updated:** October 4, 2025 (NPC Detection + Combat Narrator Updates)
+**Last Updated:** October 5, 2025 (RAG Dual Wiki + Custom Items Registry)
 **Priority Legend:** 🔥 High | 🚧 Medium | 🌟 Low | 🐛 Bugs | 📝 Docs

@@ -14,12 +14,15 @@ Create or edit `.env` file:
 # Enable RAG
 RAG_ENABLED=true
 
-# Choose your campaign wiki
+# Choose your campaign wiki (for lore: locations, NPCs)
 # Critical Role (Exandria)
 RAG_WIKI_BASE_URL=https://criticalrole.fandom.com/wiki
 
 # Forgotten Realms
 # RAG_WIKI_BASE_URL=https://forgottenrealms.fandom.com/wiki
+
+# D&D 5e rules wiki (for items, spells, game mechanics)
+RAG_RULES_BASE_URL=https://dnd5e.wikidot.com
 
 # Cache settings (optional)
 RAG_CACHE_TTL=604800  # 7 days

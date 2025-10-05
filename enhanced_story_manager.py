@@ -661,6 +661,8 @@ class EnhancedStoryManager:
             return {
                 "name": npc_name,
                 "role": role or "NPC",
+                "species": "Human",
+                "lineage": "",
                 "personality": "To be determined",
                 "relationships": {},
                 "key_traits": [],
@@ -685,17 +687,21 @@ NPC Name: {npc_name}
 {f"Role: {role}" if role else ""}
 
 Generate a JSON profile with:
-1. personality: 2-3 sentence personality description
-2. key_traits: Array of 3-5 distinctive traits
-3. abilities: Array of 2-4 notable skills or abilities
-4. recurring: boolean - should this NPC appear again?
-5. notes: Any secrets, motivations, or hidden agendas
-6. relationships: Object with any mentioned character names as keys
+1. species: D&D species/ancestry (Human, Elf, Dwarf, Tiefling, etc.)
+2. lineage: Optional subspecies (e.g., "High Elf", "Hill Dwarf", "Fire Genasi") - empty string if not applicable
+3. personality: 2-3 sentence personality description
+4. key_traits: Array of 3-5 distinctive traits
+5. abilities: Array of 2-4 notable skills or abilities
+6. recurring: boolean - should this NPC appear again?
+7. notes: Any secrets, motivations, or hidden agendas
+8. relationships: Object with any mentioned character names as keys
 
 Be specific and D&D-appropriate. Make them memorable and useful for the story.
 
 Return ONLY valid JSON in this format:
 {{
+  "species": "Human",
+  "lineage": "",
   "personality": "description",
   "key_traits": ["trait1", "trait2"],
   "abilities": ["ability1", "ability2"],
@@ -724,6 +730,8 @@ Return ONLY valid JSON in this format:
             npc_profile = {
                 "name": npc_name,
                 "role": role or npc_data.get("role", "NPC"),
+                "species": npc_data.get("species", "Human"),
+                "lineage": npc_data.get("lineage", ""),
                 "personality": npc_data.get("personality", "To be determined"),
                 "relationships": npc_data.get("relationships", {}),
                 "key_traits": npc_data.get("key_traits", []),
@@ -747,6 +755,8 @@ Return ONLY valid JSON in this format:
             return {
                 "name": npc_name,
                 "role": role or "NPC",
+                "species": "Human",
+                "lineage": "",
                 "personality": "To be determined",
                 "relationships": {},
                 "key_traits": [],

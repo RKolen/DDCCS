@@ -27,6 +27,8 @@ class NPCAgent:
         return {
             "name": self.profile.name,
             "role": self.profile.role,
+            "species": self.profile.species,
+            "lineage": self.profile.lineage,
             "personality": self.profile.personality,
             "relationships": self.profile.relationships,
             "key_traits": self.profile.key_traits,
@@ -49,6 +51,8 @@ def load_npc_from_json(json_path: Path) -> NPCProfile:
     profile = NPCProfile(
         name=data.get("name", ""),
         role=data.get("role", "NPC"),
+        species=data.get("species", "Human"),
+        lineage=data.get("lineage", ""),
         personality=data.get("personality", ""),
         relationships=data.get("relationships", {}),
         key_traits=data.get("key_traits", []),

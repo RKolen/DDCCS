@@ -57,6 +57,11 @@ npcs/*.tmp
 *.rag.json
 rag_*.db
 
+# Ignore personal custom item and rule registries
+custom_items_registry.json
+custom_rules_registry.json
+items_registry.json
+
 # Ignore session results files
 session_results_*.md
 *session_results*.md

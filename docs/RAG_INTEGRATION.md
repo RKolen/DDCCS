@@ -53,9 +53,12 @@ Copy from `.env.example` and configure:
 # Enable RAG system
 RAG_ENABLED=true
 
-# Wiki base URL for your campaign setting
+# Wiki base URL for your campaign setting (lore: locations, NPCs, history)
 # Critical Role (Exandria)
 RAG_WIKI_BASE_URL=https://criticalrole.fandom.com/wiki
+
+# Rules wiki URL (game mechanics: items, spells, abilities)
+RAG_RULES_BASE_URL=https://dnd5e.wikidot.com
 
 # Cache settings
 RAG_CACHE_TTL=604800  # 7 days in seconds
@@ -68,35 +71,21 @@ RAG_MIN_RELEVANCE=0.5  # Minimum relevance score (0.0-1.0)
 
 ### 2. Choose Your Campaign Setting
 
-#### Critical Role (Exandria)
+The system uses **two separate wikis**:
+- **RAG_WIKI_BASE_URL**: Campaign lore (locations, NPCs, history)
+- **RAG_RULES_BASE_URL**: Game mechanics (items, spells, abilities, rules)
+
+
+####  Wiki
 ```properties
-RAG_WIKI_BASE_URL=https://criticalrole.fandom.com/wiki
-```
-
-Popular pages:
-- `Tal'Dorei` - The continent
-- `Whitestone` - The de Rolo family's city
-- `Emon` - Capital of Tal'Dorei
-- `Vasselheim` - Ancient city of the gods
-- `Wildemount` - Second continent
-- `Exandria` - The world itself
-
-#### Forgotten Realms
-```properties
-RAG_WIKI_BASE_URL=https://forgottenrealms.fandom.com/wiki
-```
-
-Popular pages:
-- `Waterdeep` - City of Splendors
-- `Baldur's Gate` - Gateway to the West
-- `Neverwinter` - Jewel of the North
-- `Sword Coast` - Western region
-- `Faerun` - The main continent
-
-#### Custom/Homebrew Wiki
-```properties
+# Your custom lore wiki
 RAG_WIKI_BASE_URL=https://your-wiki.com/wiki
+
+# D&D 5e rules wiki (recommended)
+RAG_RULES_BASE_URL=https://dnd5e.wikidot.com
 ```
+
+> **Note:** The rules wiki is typically `https://dnd5e.wikidot.com` for all campaigns, as it contains official D&D 5e game mechanics. The lore wiki varies based on your campaign setting.
 
 ## 🚀 Usage
 

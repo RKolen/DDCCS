@@ -1,6 +1,9 @@
 {
   "name": "NPC Name",
-  "role": "Role or occupation",
+  "role": "Role or occupation (e.g., innkeeper, merchant, guard)",
+  "species": "Human",
+  "lineage": "",
+  "_lineage_note": "Optional subspecies/lineage (e.g., 'High Elf', 'Hill Dwarf', 'Fire Genasi'). Leave empty if not applicable.",
   "personality": "Brief personality description",
   "relationships": {},
   "key_traits": [],

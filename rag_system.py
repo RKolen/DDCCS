@@ -20,7 +20,7 @@ import os
 import json
 import time
 import hashlib
-from typing import Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 from pathlib import Path
 from urllib.parse import urljoin, urlparse, quote
 import re
@@ -175,16 +175,18 @@ class WikiClient:
     Supports fandom.com wikis and MediaWiki-based sites.
     """
     
-    def __init__(self, base_url: str, cache: Optional[WikiCache] = None):
+    def __init__(self, base_url: str, cache: Optional[WikiCache] = None, item_registry=None):
         """
         Initialize wiki client.
         
         Args:
             base_url: Base URL of the wiki (e.g., https://criticalrole.fandom.com/wiki)
             cache: WikiCache instance (creates new if not provided)
+            item_registry: ItemRegistry for homebrew filtering (optional)
         """
         self.base_url = base_url.rstrip('/')
         self.cache = cache or WikiCache()
+        self.item_registry = item_registry
         self.session = requests.Session() if SCRAPING_AVAILABLE else None
         self.session.headers.update({
             'User-Agent': 'DnD-Character-Consultant/1.0 (Educational; +https://github.com/RKolen/DDCCS)'
@@ -217,6 +219,11 @@ class WikiClient:
         """
         if not SCRAPING_AVAILABLE:
             print("⚠️  Cannot fetch wiki pages: requests/beautifulsoup4 not installed")
+            return None
+        
+        # Check if this is a custom item (should not be fetched)
+        if self.item_registry and self.item_registry.is_custom(page_title):
+            print(f"🚫 Blocked custom item lookup: {page_title} (in custom registry)")
             return None
         
         # Construct URL
@@ -357,34 +364,67 @@ class WikiClient:
 class RAGSystem:
     """
     Main RAG system for integrating wiki knowledge with AI generation.
+    
+    IMPORTANT: Homebrew content is NEVER looked up on wikidot.
+    Use ItemRegistry to mark homebrew items/rules.
     """
     
-    def __init__(self):
-        """Initialize RAG system from .env configuration."""
+    def __init__(self, item_registry=None):
+        """
+        Initialize RAG system from .env configuration.
+        
+        Args:
+            item_registry: Optional ItemRegistry instance for homebrew filtering
+        """
         self.enabled = os.getenv('RAG_ENABLED', 'false').lower() == 'true'
         self.wiki_base_url = os.getenv('RAG_WIKI_BASE_URL', '')
+        self.rules_base_url = os.getenv('RAG_RULES_BASE_URL', '')
+        self.item_registry = item_registry
+        
+        # Load item registry if not provided
+        if self.item_registry is None:
+            try:
+                from item_registry import ItemRegistry
+                self.item_registry = ItemRegistry()
+            except:
+                self.item_registry = None
         
         if not self.enabled:
             self.client = None
-            return
-        
-        if not self.wiki_base_url:
-            print("⚠️  RAG enabled but RAG_WIKI_BASE_URL not set in .env")
-            self.client = None
+            self.rules_client = None
             return
         
         if not SCRAPING_AVAILABLE:
             print("⚠️  RAG enabled but dependencies not installed")
             print("   Install with: pip install requests beautifulsoup4")
             self.client = None
+            self.rules_client = None
             return
         
-        # Initialize cache and client
+        # Initialize cache (shared between both clients)
         cache_ttl = int(os.getenv('RAG_CACHE_TTL', '604800'))  # 7 days default
         cache = WikiCache(ttl_seconds=cache_ttl)
-        self.client = WikiClient(self.wiki_base_url, cache)
         
-        print(f"✅ RAG System initialized: {self.wiki_base_url}")
+        # Initialize lore wiki client (for locations, NPCs, etc.)
+        if self.wiki_base_url:
+            self.client = WikiClient(self.wiki_base_url, cache, self.item_registry)
+            print(f"✅ RAG Lore Wiki initialized: {self.wiki_base_url}")
+        else:
+            self.client = None
+            print("⚠️  RAG_WIKI_BASE_URL not set - lore lookups disabled")
+        
+        # Initialize rules wiki client (for items, spells, rules, etc.)
+        if self.rules_base_url:
+            self.rules_client = WikiClient(self.rules_base_url, cache, self.item_registry)
+            print(f"✅ RAG Rules Wiki initialized: {self.rules_base_url}")
+        else:
+            self.rules_client = None
+            print("⚠️  RAG_RULES_BASE_URL not set - item/spell lookups disabled")
+        
+        if self.item_registry:
+            custom_count = len(self.item_registry.get_all_custom_items())
+            magic_count = len(self.item_registry.get_magic_items())
+            print(f"   Custom item filter: {custom_count} items ({magic_count} magic) - will NOT lookup on wikidot")
     
     def get_context_for_location(self, location_name: str, max_sections: int = 2) -> str:
         """
@@ -488,6 +528,75 @@ class RAGSystem:
             info += f"{section['title']}:\n{section['content']}\n\n"
         
         return info
+    
+    def fetch_item_info(self, item_name: str) -> Optional[Dict[str, Any]]:
+        """
+        Fetch information about an item, respecting custom/homebrew filtering.
+        
+        Logic:
+        1. If item is in custom_items_registry.json -> return local info (do NOT lookup)
+        2. If item is NOT in registry -> assume official, lookup on D&D 5e rules wiki
+        
+        Args:
+            item_name: Name of the item to lookup
+            
+        Returns:
+            Dict with item info, or None if not found
+            {
+                'name': str,
+                'description': str,
+                'properties': Dict[str, Any],
+                'is_custom': bool,
+                'is_magic': bool,
+                'source': str ('custom_registry' or 'wikidot')
+            }
+        """
+        if not self.enabled or not self.rules_client:
+            return None
+        
+        # Check if item is in custom registry (homebrew)
+        if self.item_registry:
+            item = self.item_registry.get_item(item_name)
+            
+            # If item is in custom registry, return local info ONLY
+            if item:
+                return {
+                    'name': item.name,
+                    'description': item.description,
+                    'properties': item.properties,
+                    'is_custom': True,
+                    'is_magic': item.is_magic,
+                    'source': 'custom_registry',
+                    'notes': item.notes
+                }
+        
+        # Item not in custom registry - assume official, try D&D 5e rules wiki lookup
+        page_data = self.rules_client.fetch_page(item_name)
+        if not page_data:
+            return None
+        
+        # Parse sections into description
+        description = ""
+        properties = {}
+        
+        for section in page_data.get('sections', []):
+            title = section.get('title', '')
+            content = section.get('content', '')
+            
+            if title.lower() in ['description', 'overview', 'summary']:
+                description = content
+            else:
+                properties[title] = content
+        
+        return {
+            'name': page_data.get('title', item_name),
+            'description': description,
+            'properties': properties,
+            'is_custom': False,
+            'is_magic': 'magic' in item_name.lower(),  # Heuristic
+            'source': 'wikidot',
+            'url': page_data.get('url', '')
+        }
 
 
 # Global RAG instance

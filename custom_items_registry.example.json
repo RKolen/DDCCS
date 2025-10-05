@@ -1,0 +1,57 @@
+{
+  "_comment": "This is an EXAMPLE custom items registry. Copy to custom_items_registry.json and add your campaign-specific items.",
+  "_instructions": "Items in this registry are marked as custom/homebrew and will NOT be looked up on wikidot. Official D&D items should NOT be added here.",
+  
+  "Example Mystic Amulet": {
+    "name": "Example Mystic Amulet",
+    "item_type": "magic_item",
+    "is_magic": true,
+    "description": "A magical amulet with ancient runes that glow faintly in darkness.",
+    "properties": {
+      "rarity": "rare",
+      "attunement": true,
+      "benefit": "+1 to AC while attuned"
+    },
+    "notes": "Found in the ruins of the ancient temple"
+  },
+  
+  "Example Reinforced Backpack": {
+    "name": "Example Reinforced Backpack",
+    "item_type": "gear",
+    "is_magic": false,
+    "description": "A specially reinforced backpack with extra storage compartments and sturdy straps.",
+    "properties": {
+      "capacity": "40 lbs",
+      "weight": "3 lbs",
+      "special": "Can hold 10 lbs more than standard backpack"
+    },
+    "notes": "Crafted by local artisan"
+  },
+  
+  "Example Alchemist's Portable Lab": {
+    "name": "Example Alchemist's Portable Lab",
+    "item_type": "tool",
+    "is_magic": false,
+    "description": "A compact alchemical laboratory that folds into a small case.",
+    "properties": {
+      "weight": "10 lbs",
+      "setup_time": "10 minutes",
+      "benefit": "Advantage on Alchemy checks when used"
+    },
+    "notes": "Allows crafting potions while traveling"
+  },
+  
+  "Example Everburning Torch": {
+    "name": "Example Everburning Torch",
+    "item_type": "magic_item",
+    "is_magic": true,
+    "description": "A torch that burns with an eternal flame that never consumes the wood.",
+    "properties": {
+      "rarity": "uncommon",
+      "attunement": false,
+      "light": "Bright light 20 ft, dim light 40 ft",
+      "duration": "Indefinite"
+    },
+    "notes": "Can be extinguished and reignited with a command word"
+  }
+}
