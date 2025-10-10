@@ -10,19 +10,27 @@ from typing import Dict, List, Any, Optional, Tuple
 from datetime import datetime
 from character_consultants import CharacterConsultant, CharacterProfile
 from character_sheet import DnDClass
+from spell_highlighter import highlight_spells_in_text, extract_known_spells_from_characters
 
 
-def wrap_narrative_text(text: str, width: int = 80) -> str:
+def wrap_narrative_text(text: str, width: int = 80, apply_spell_highlighting: bool = True, known_spells: set = None) -> str:
     """
     Wrap narrative text to specified width while preserving paragraphs.
+    Optionally applies spell name highlighting.
     
     Args:
         text: The text to wrap
         width: Maximum line width (default 80 characters)
+        apply_spell_highlighting: Whether to highlight spell names (default True)
+        known_spells: Set of known spell names for better matching
     
     Returns:
-        Text wrapped to specified width
+        Text wrapped to specified width with optional spell highlighting
     """
+    # Apply spell highlighting first if requested
+    if apply_spell_highlighting:
+        text = highlight_spells_in_text(text, known_spells)
+    
     # Split into paragraphs
     paragraphs = text.split('\n\n')
     wrapped_paragraphs = []
@@ -39,7 +47,7 @@ def wrap_narrative_text(text: str, width: int = 80) -> str:
     return '\n\n'.join(wrapped_paragraphs)
 
 
-def load_current_party(config_path: str = "current_party.json") -> List[str]:
+def load_current_party(config_path: str = "game_data/current_party/current_party.json") -> List[str]:
     """Load current party members from configuration file."""
     if os.path.exists(config_path):
         try:
@@ -53,7 +61,7 @@ def load_current_party(config_path: str = "current_party.json") -> List[str]:
     return ["Theron Brightblade", "Mira Shadowstep", "Garrick Stonefist", "Elara Moonwhisper"]
 
 
-def save_current_party(party_members: List[str], config_path: str = "current_party.json"):
+def save_current_party(party_members: List[str], config_path: str = "game_data/current_party/current_party.json"):
     """Save current party members to configuration file."""
     data = {
         'party_members': party_members,
@@ -110,14 +118,15 @@ class EnhancedStoryManager:
     
     def __init__(self, workspace_path: str, party_config_path: str = None, ai_client=None):
         self.workspace_path = workspace_path
-        self.stories_path = workspace_path
-        self.characters_path = os.path.join(workspace_path, "characters")
-        self.party_config_path = party_config_path or os.path.join(workspace_path, "current_party.json")
+        self.stories_path = os.path.join(workspace_path, "game_data", "campaigns")
+        self.characters_path = os.path.join(workspace_path, "game_data", "characters")
+        self.party_config_path = party_config_path or os.path.join(workspace_path, "game_data", "current_party", "current_party.json")
         self.ai_client = ai_client  # AI client for enhanced features
         self.consultants = {}
         
         # Ensure directories exist
         os.makedirs(self.characters_path, exist_ok=True)
+        os.makedirs(self.stories_path, exist_ok=True)
         
         # Load existing characters
         self._load_characters()
@@ -168,6 +177,26 @@ class EnhancedStoryManager:
                     self.consultants[profile.name] = CharacterConsultant(profile, ai_client=self.ai_client)
                 except Exception as e:
                     print(f"Warning: Could not load character {filename}: {e}")
+        
+        # Extract known spells from all loaded characters
+        self._update_known_spells()
+    
+    def _update_known_spells(self):
+        """Extract and cache known spells from all loaded characters."""
+        self.known_spells = set()
+        for consultant in self.consultants.values():
+            # Add known spells from profile
+            if consultant.profile.known_spells:
+                self.known_spells.update(spell.lower() for spell in consultant.profile.known_spells)
+            
+            # Add known spells from character sheet if available
+            if hasattr(consultant.profile, 'character_sheet') and consultant.profile.character_sheet:
+                if hasattr(consultant.profile.character_sheet, 'known_spells'):
+                    self.known_spells.update(spell.lower() for spell in consultant.profile.character_sheet.known_spells)
+    
+    def apply_spell_highlighting(self, text: str) -> str:
+        """Apply spell name highlighting to narrative text."""
+        return highlight_spells_in_text(text, self.known_spells)
     
     def should_create_new_story_file(self, series_name: str, session_results: StorySession) -> bool:
         """Ask user if they want to create a new story file or continue existing one."""
@@ -240,7 +269,7 @@ class EnhancedStoryManager:
         series_folders = []
         for item in os.listdir(self.stories_path):
             item_path = os.path.join(self.stories_path, item)
-            if os.path.isdir(item_path) and not item.startswith('.') and item != 'characters' and item != 'npcs' and item != '__pycache__':
+            if os.path.isdir(item_path) and not item.startswith('.') and item != 'game_data' and item != 'npcs' and item != '__pycache__':
                 # Check if folder contains numbered story files
                 if any(re.match(r'\d{3}.*\.md$', f) for f in os.listdir(item_path) if f.endswith('.md')):
                     series_folders.append(item)
@@ -552,7 +581,7 @@ class EnhancedStoryManager:
                     
                     # Check if NPC profile already exists
                     npc_filename = npc_name.lower().replace(' ', '_').replace("'", '') + '.json'
-                    npc_path = os.path.join(self.workspace_path, 'npcs', npc_filename)
+                    npc_path = os.path.join(self.workspace_path, 'game_data', 'npcs', npc_filename)
                     
                     if not os.path.exists(npc_path):
                         # Get context around the NPC mention
@@ -615,7 +644,7 @@ class EnhancedStoryManager:
                     content += f"    role=\"{npc['role']}\"\n"
                     content += f")\n"
                     content += f"story_manager.save_npc_profile(npc_profile)\n"
-                    content += f"# This will create: npcs/{npc['filename']}\n"
+                    content += f"# This will create: game_data/npcs/{npc['filename']}\n"
                     content += "```\n\n"
                     content += f"This NPC could be developed as a recurring character with personality traits, relationships, and story hooks.\n\n"
         
@@ -773,7 +802,7 @@ Return ONLY valid JSON in this format:
     
     def save_npc_profile(self, npc_profile: Dict[str, Any]) -> str:
         """
-        Save an NPC profile to the npcs/ directory.
+        Save an NPC profile to the game_data/npcs/ directory.
         
         Args:
             npc_profile: NPC profile dictionary
@@ -781,7 +810,7 @@ Return ONLY valid JSON in this format:
         Returns:
             Path to saved NPC file
         """
-        npcs_path = os.path.join(self.workspace_path, "npcs")
+        npcs_path = os.path.join(self.workspace_path, "game_data", "npcs")
         os.makedirs(npcs_path, exist_ok=True)
         
         # Create filename from name

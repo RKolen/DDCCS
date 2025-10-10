@@ -1,0 +1,2 @@
+# This file ensures the campaigns/ folder is tracked in git
+# User-generated campaign content is ignored via .gitignore

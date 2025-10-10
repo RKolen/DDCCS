@@ -2,22 +2,6 @@
 
 ## 🔥 High Priority
 
-### Project Organization
-- [ ] **Reorganize game data into dedicated folder** - Create `game_data/` folder to separate user data from code
-  - **Problem**: Characters, NPCs, party config, custom items scattered in root with Python files
-  - **Solution**: Move to organized structure:
-    ```
-    game_data/
-    ├── characters/              # Character JSON files
-    ├── npcs/                    # NPC JSON files
-    ├── custom_items_registry.json  # Homebrew items
-    ├── custom_rules_registry.json  # Homebrew rules (future)
-    └── current_party.json       # Active party configuration
-    ```
-  - **Benefits**: Cleaner root directory, logical grouping, easier .gitignore patterns
-  - **Impact**: Update all file paths in Python modules, update documentation
-  - **Migration**: Create migration script to move existing files safely
-
 ### Story Management System
 - [ ] **Test story creation flow** - Verify the enhanced story manager works with CLI interface end-to-end
 
@@ -67,6 +51,7 @@
 
 ### Story Tools
 - [ ] **Character arc analysis** - Tools to analyze character development over multiple stories
+- [ ] **Custom spell highlighting** - Extend spell highlighting system to support homebrew/custom spells (currently only official D&D 5e spells via wikidot are highlighted)
 
 ### Technical Improvements
 - [ ] **Plugin architecture** - Allow custom modules/plugins for specific campaign needs  
@@ -121,56 +106,63 @@
 - [x] ✅ **Party validation notes** - Explained character name matching and git ignore behavior
 - [x] ✅ **Party usage examples** - Showed how party config affects NPC detection and story analysis
 
-### NPC Detection System - October 4, 2025
-- [x] ✅ **Automatic NPC detection** - System scans story content for NPCs (innkeepers, merchants, guards, blacksmiths)
-- [x] ✅ **Smart filtering** - Excludes party members (from current_party.json) and existing NPC profiles
-- [x] ✅ **False positive filtering** - Filters out sentence starters (Suddenly, Meanwhile, However, etc.)
-- [x] ✅ **Story hooks integration** - Automatically adds NPC profile suggestions to story hooks file
-- [x] ✅ **Ready-to-run code examples** - Includes Python snippets in hooks file for easy profile generation
-- [x] ✅ **NPC detection documentation** - Created docs/NPC_DETECTION.md with full usage guide
-- [x] ✅ **Test validation** - Updated test_final_validation.py to validate automatic NPC detection
-- [x] ✅ **Fixed literal \n bug** - Story hooks now have proper line breaks instead of literal backslash-n
+### Project Reorganization & Spell Highlighting - October 10, 2025
+- [x] **game_data/ folder structure created** - Centralized all user data into game_data/ directory
+- [x] **Characters migration** - Moved characters/ to game_data/characters/, updated 4 Python files
+- [x] **NPCs migration** - Moved npcs/ to game_data/npcs/, updated 3 Python files, fixed example file skip bug
+- [x] **Custom items migration** - Moved registry to game_data/items/, updated item_registry.py
+- [x] **Party config migration** - Moved party JSON to game_data/current_party/, updated 3 references
+- [x] **Campaigns folder setup** - Created game_data/campaigns/ for all campaign content
+- [x] **.gitignore cleanup** - Removed 40+ old patterns, added comprehensive game_data/ patterns
+- [x] **Documentation updates** - Updated README.md, copilot-instructions.md, Test_Example.md
+- [x] **Spell highlighting system** - Created spell_highlighter.py with pattern-based spell detection
+- [x] **Spell highlighting integration** - Integrated into enhanced_story_manager.py, extracts 57 known spells
+- [x] **Integration testing** - All 10/10 tests passed (characters, NPCs, items, party, campaigns, spells)
 
-### Combat Narrator Improvements - October 4, 2025
-- [x] ✅ **Auto-generated combat titles** - AI generates contextual titles from story context (e.g., "Goblin Ambush at Darkwood")
-- [x] ✅ **Combat prompt support** - Accepts simple combat descriptions, not just Fantasy Grounds logs
-- [x] ✅ **RAG integration for combat** - Uses wiki lookup for spell/ability descriptions in combat narratives
-- [x] ✅ **Test Combat Narrator** - Verified combat_narrator.py works with centralized AI configuration
-- [x] ✅ **Combat Summary conversion** - Combat narrator accepts prompts/summaries instead of requiring raw logs
+### Character System & RAG Enhancements - October 5, 2025
+- [x] **NPC species/lineage fields** - Added species and lineage fields to NPCProfile dataclass
+- [x] **Character equipment tracking** - CharacterProfile now includes equipment dict and magic_items list as dataclass fields
+- [x] **Item extraction methods** - Added get_all_character_items() and get_item_details() to CharacterConsultant
+- [x] **Dual wiki support** - Separate lore wiki (RAG_WIKI_BASE_URL) and rules wiki (RAG_RULES_BASE_URL)
+- [x] **Custom items registry** - Created item_registry.py and custom_items_registry.json for homebrew item tracking
+- [x] **Homebrew filtering** - WikiClient blocks custom items from wiki lookups, returns local data instead
+- [x] **Item integration** - CharacterProfile stores equipment, CharacterConsultant can extract and lookup items
+
+### NPC Detection & Combat Narrator - October 4, 2025
+- [x] **Automatic NPC detection** - System scans story content for NPCs (innkeepers, merchants, guards, blacksmiths)
+- [x] **Smart filtering** - Excludes party members (from current_party.json) and existing NPC profiles
+- [x] **False positive filtering** - Filters out sentence starters (Suddenly, Meanwhile, However, etc.)
+- [x] **Story hooks integration** - Automatically adds NPC profile suggestions to story hooks file
+- [x] **Ready-to-run code examples** - Includes Python snippets in hooks file for easy profile generation
+- [x] **NPC detection documentation** - Created docs/NPC_DETECTION.md with full usage guide
+- [x] **Auto-generated combat titles** - AI generates contextual titles from story context (e.g., "Goblin Ambush at Darkwood")
+- [x] **Combat prompt support** - Accepts simple combat descriptions, not just Fantasy Grounds logs
+- [x] **RAG integration for combat** - Uses wiki lookup for spell/ability descriptions in combat narratives
+- [x] **Fixed literal \n bug** - Story hooks now have proper line breaks instead of literal backslash-n
 
 ### RAG (Retrieval-Augmented Generation) System - October 2025
-- [x] ✅ **RAG architecture designed** - WikiCache, WikiClient, RAGSystem classes for wiki integration
-- [x] ✅ **Wiki scraping implementation** - Created rag_system.py with web scraping using requests + BeautifulSoup
-- [x] ✅ **Cache system implemented** - TTL-based caching in .rag_cache/ directory (git-ignored)
-- [x] ✅ **Story generation integration** - DungeonMaster extracts locations and injects wiki context into AI prompts
-- [x] ✅ **History check integration** - Created history_check_helper.py for character History checks with wiki lore
-- [x] ✅ **.env configuration** - Added RAG settings to .env.example (RAG_ENABLED, RAG_WIKI_BASE_URL, RAG_RULES_BASE_URL, cache/search settings)
-- [x] ✅ **.gitignore updated** - Added .rag_cache/, *.rag.json, rag_*.db, custom_items_registry.json patterns
-- [x] ✅ **RAG documentation** - Created RAG_INTEGRATION.md (450+ lines) and RAG_QUICKSTART.md
-- [x] ✅ **RAG testing** - Tested with wiki integration, verified location lookups
-- [x] ✅ **Dual wiki support** - Separate lore wiki (RAG_WIKI_BASE_URL) and rules wiki (RAG_RULES_BASE_URL)
-- [x] ✅ **Custom items registry** - Created item_registry.py and custom_items_registry.json for homebrew item tracking
-- [x] ✅ **Homebrew filtering** - WikiClient blocks custom items from wiki lookups, returns local data instead
-- [x] ✅ **Item integration** - CharacterProfile now stores equipment and magic_items, CharacterConsultant can extract and lookup items
+- [x] **RAG architecture designed** - WikiCache, WikiClient, RAGSystem classes for wiki integration
+- [x] **Wiki scraping implementation** - Created rag_system.py with web scraping using requests + BeautifulSoup
+- [x] **Cache system implemented** - TTL-based caching in .rag_cache/ directory (git-ignored)
+- [x] **Story generation integration** - DungeonMaster extracts locations and injects wiki context into AI prompts
+- [x] **History check integration** - Created history_check_helper.py for character History checks with wiki lore
+- [x] **.env configuration** - Added RAG settings to .env.example (RAG_ENABLED, RAG_WIKI_BASE_URL, RAG_RULES_BASE_URL, cache/search settings)
+- [x] **.gitignore updated** - Added .rag_cache/, *.rag.json, rag_*.db patterns
+- [x] **RAG documentation** - Created RAG_INTEGRATION.md (450+ lines) and RAG_QUICKSTART.md
+- [x] **RAG testing** - Tested with wiki integration, verified location lookups
 
 ### AI Integration - September 2025
-- [x] ✅ **AI Integration Complete** - Fully integrated with OpenAI SDK, supports OpenAI, Ollama, OpenRouter, and any OpenAI-compatible API
-- [x] ✅ **Per-character AI configuration** - Each character can have unique AI settings (model, temperature, system prompts)
-- [x] ✅ **AI-enhanced character reactions** - Characters respond using AI with rule-based fallback
-- [x] ✅ **AI-enhanced DC suggestions** - Intelligent difficulty calculations with AI analysis
-- [x] ✅ **Comprehensive documentation** - See docs/AI_INTEGRATION.md for complete guide
-- [x] ✅ **NPC AI integration** - NPCs can also have AI-enhanced personalities and responses
-- [x] ✅ **DM narrative generation** - AI-generated story narratives with character context
-- [x] ✅ **Folder naming validation** - Implemented validation for _Campaign, _Quest, _Story, _Adventure suffixes
-- [x] ✅ **Simplified .gitignore patterns** - Reduced to 4 clear folder patterns
-
-### Character System Improvements - October 5, 2025
-- [x] ✅ **NPC species/lineage fields** - Added species and lineage fields to NPCProfile dataclass
-- [x] ✅ **Character equipment tracking** - CharacterProfile now includes equipment dict and magic_items list as dataclass fields
-- [x] ✅ **Item extraction methods** - Added get_all_character_items() and get_item_details() to CharacterConsultant
-- [x] ✅ **Item-aware suggestions** - Foundation for AI to suggest creative item uses in action suggestions (in progress)
+- [x] **AI Integration Complete** - Fully integrated with OpenAI SDK, supports OpenAI, Ollama, OpenRouter, and any OpenAI-compatible API
+- [x] **Per-character AI configuration** - Each character can have unique AI settings (model, temperature, system prompts)
+- [x] **AI-enhanced character reactions** - Characters respond using AI with rule-based fallback
+- [x] **AI-enhanced DC suggestions** - Intelligent difficulty calculations with AI analysis
+- [x] **Comprehensive documentation** - See docs/AI_INTEGRATION.md for complete guide
+- [x] **NPC AI integration** - NPCs can also have AI-enhanced personalities and responses
+- [x] **DM narrative generation** - AI-generated story narratives with character context
+- [x] **Folder naming validation** - Implemented validation for _Campaign, _Quest, _Story, _Adventure suffixes
+- [x] **Simplified .gitignore patterns** - Reduced to 4 clear folder patterns
 
 ---
 
-**Last Updated:** October 5, 2025 (RAG Dual Wiki + Custom Items Registry)
+**Last Updated:** October 10, 2025
 **Priority Legend:** 🔥 High | 🚧 Medium | 🌟 Low | 🐛 Bugs | 📝 Docs

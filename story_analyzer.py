@@ -20,7 +20,7 @@ from character_consultants import CharacterConsultant, CharacterProfile
 class StoryAnalyzer:
     """Analyzes story content and suggests character file updates."""
     
-    def __init__(self, characters_dir: str = "characters", npcs_dir: str = "npcs"):
+    def __init__(self, characters_dir: str = "game_data/characters", npcs_dir: str = "game_data/npcs"):
         self.characters_dir = Path(characters_dir)
         self.npcs_dir = Path(npcs_dir)
         self.consultants: Dict[str, CharacterConsultant] = {}
@@ -55,6 +55,9 @@ class StoryAnalyzer:
             return
         
         for npc_file in self.npcs_dir.glob("*.json"):
+            # Skip example files
+            if npc_file.name.startswith('npc.example'):
+                continue
             try:
                 with open(npc_file, 'r', encoding='utf-8') as f:
                     npc_data = json.load(f)

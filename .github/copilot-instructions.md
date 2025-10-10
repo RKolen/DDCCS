@@ -17,19 +17,27 @@ This is a **D&D 5e (2024) Character Consultant System** that provides:
 
 ```
 D&D Campaign Workspace/
-├── character_consultants.py  # Core character consultant system
-├── story_manager.py         # Handles 001<name>.md story files
-├── combat_narrator.py       # Converts FGU combat to narrative
-├── dnd_consultant.py        # Main interactive CLI
-├── setup.py                 # Workspace initialization
-├── characters/              # Character profile JSON files
-│   ├── barbarian.json       # Customizable character backgrounds
-│   ├── bard.json           # User writes custom personalities
-│   └── ...                 # All 12 D&D classes
-├── 001_*.md                # Story sequence files
+├── game_data/               # All user campaign data (git-ignored except examples)
+│   ├── characters/          # Character profile JSON files
+│   │   ├── barbarian.json   # Customizable character backgrounds
+│   │   ├── bard.json       # User writes custom personalities
+│   │   └── ...             # All 12 D&D classes
+│   ├── npcs/               # NPC profile JSON files
+│   ├── items/              # Custom items registry
+│   ├── current_party/      # Party configuration
+│   └── campaigns/          # User campaign folders
+│       └── Your_Campaign/  # Campaign stories and analysis
+│           ├── 001_*.md    # Story sequence files
+│           └── session_results_*.md
+├── character_consultants.py # Core character consultant system
+├── story_manager.py        # Handles story files
+├── enhanced_story_manager.py # Advanced story management
+├── combat_narrator.py      # Converts FGU combat to narrative
+├── dnd_consultant.py       # Main interactive CLI
+├── setup.py               # Workspace initialization
 └── .vscode/
-    ├── tasks.json          # Quick access to consultants
-    └── settings.json       # Markdown preferences
+    ├── tasks.json         # Quick access to consultants
+    └── settings.json      # Markdown preferences
 ```
 
 ## User Workflow
@@ -89,8 +97,8 @@ REASONING: [Why they did it - for consistency]
 - Character attempts specific action
 - Another character tries challenge
 
-## Combat Summary (from FGU)
-[Fantasy Grounds Unity combat log]
+## Combat Summary
+[prompt with summary of the combat that ensued]
 
 ## Story Narrative
 [Final narrative text]

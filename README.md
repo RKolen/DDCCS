@@ -44,53 +44,51 @@ VSCode integration for story management and character consistency analysis.
 
 ```
 D&D New Beginnings/
-├── characters/              # Character profile JSON files (unlimited)
-│   ├── class.example.json   # Template for new characters
-├── npcs/                   # NPC management
-│   └── npc.example.json    # NPC template
-├── docs/                   # 📚 Public documentation
-│   ├── AI_INTEGRATION.md   # Complete AI setup guide
-│   ├── RAG_INTEGRATION.md  # RAG system deep dive
-│   ├── RAG_QUICKSTART.md   # Quick start for RAG
-│   └── Test_Example.md     # Usage examples
-├── docs_personal/          # 🔒 Personal documentation (git-ignored)
-│   ├── PARTY_CONFIG_DOCUMENTATION.md
-│   ├── CHARACTER_NAME_ANONYMIZATION.md
-│   └── FOLDER_RESTRUCTURE_SUMMARY.md
-├── templates/              # 📝 Templates
-│   └── story_template.md   # Story template with 80-char line rule
-├── 001_*.md               # Legacy story sequence files (narrative only)
-├── character_development_suggestions.md  # Legacy character analysis
-├── story_dc_suggestions.md # Legacy DC calculations
-├── Story_Series_Folders/   # NEW: Organized campaign management
-│   ├── Test_Campaign/      # Example organized story series
-│   │   ├── 001_The_Tavern_Meeting.md
-│   │   ├── 002_Journey_to_the_Woods.md
-│   │   ├── 003_The_Ancient_Seal.md
-│   │   ├── character_development_suggestions.md
-│   │   └── story_dc_suggestions.md
-│   └── Your_Next_Campaign/ # Your new organized campaigns go here
-├── .vscode/               # VSCode integration
-├── .rag_cache/            # Wiki content cache (git-ignored)
-├── .env                   # AI & RAG configuration (create from .env.example)
-├── .env.example           # Configuration template
-├── ai_client.py           # AI/LLM integration module
+├── game_data/              # 🎮 ALL YOUR CAMPAIGN DATA (git-ignored except examples)
+│   ├── characters/         # Character profile JSON files (unlimited)
+│   │   └── class.example.json   # Template for new characters
+│   ├── npcs/              # NPC management
+│   │   └── npc.example.json    # NPC template
+│   ├── items/             # Custom/homebrew item tracking
+│   │   ├── custom_items_registry.json         # Your homebrew items
+│   │   └── custom_items_registry.example.json # Example homebrew items
+│   ├── current_party/     # Party configuration
+│   │   ├── current_party.json         # Your active party
+│   │   └── current_party.example.json # Example party config
+│   └── campaigns/         # All your campaign content
+│       ├── Your_Campaign/ # Campaign folders (_Campaign, _Quest, _Story, _Adventure)
+│       │   ├── 001_First_Story.md
+│       │   ├── 002_Next_Story.md
+│       │   ├── session_results_*.md
+│       │   ├── character_development_*.md
+│       │   └── story_hooks_*.md
+│       └── Another_Quest/ # Multiple campaigns supported
+├── docs/                  # 📚 Public documentation
+│   ├── AI_INTEGRATION.md  # Complete AI setup guide
+│   ├── RAG_INTEGRATION.md # RAG system deep dive
+│   ├── RAG_QUICKSTART.md  # Quick start for RAG
+│   └── Test_Example.md    # Usage examples
+├── templates/             # 📝 Story templates
+│   └── story_template.md  # Story template with 80-char line rule
+├── .vscode/              # VSCode integration
+├── .rag_cache/           # Wiki content cache (git-ignored)
+├── .env                  # AI & RAG configuration (create from .env.example)
+├── .env.example          # Configuration template
+├── ai_client.py          # AI/LLM integration module
 ├── character_consultants.py  # Character consultant system with AI
-├── character_sheet.py     # D&D character data structures
-├── dnd_consultant.py      # Main interactive interface
-├── dungeon_master.py      # DM consultant with RAG integration
-├── story_manager.py       # Story organization system
-├── story_analyzer.py      # Story content analysis and suggestions
-├── rag_system.py          # RAG/wiki integration system
-├── item_registry.py       # Custom/homebrew item tracking
-├── custom_items_registry.json  # Your homebrew items (git-ignored)
-├── custom_items_registry.example.json  # Example homebrew items
-├── npc_agents.py          # NPC generation with AI
+├── character_sheet.py    # D&D character data structures
+├── dnd_consultant.py     # Main interactive interface
+├── dungeon_master.py     # DM consultant with RAG integration
+├── story_manager.py      # Story organization system
+├── story_analyzer.py     # Story content analysis and suggestions
+├── rag_system.py         # RAG/wiki integration system
+├── item_registry.py      # Custom/homebrew item tracking
+├── npc_agents.py         # NPC generation with AI
 ├── enhanced_story_manager.py  # Advanced story management
-├── combat_narrator.py     # Fantasy Grounds Unity integration
+├── combat_narrator.py    # Fantasy Grounds Unity integration
 ├── history_check_helper.py  # History check with wiki lore
-├── setup.py              # Project initialization
-└── README.md             # This file
+├── setup.py             # Project initialization
+└── README.md            # This file
 ```
 
 ## � Documentation
@@ -146,9 +144,9 @@ python dnd_consultant.py
 **Option 2: Manual Configuration**
 ```powershell
 # Copy the example file
-copy current_party.example.json current_party.json
+copy game_data\current_party\current_party.example.json game_data\current_party\current_party.json
 
-# Edit current_party.json with your character names
+# Edit game_data/current_party/current_party.json with your character names
 ```
 
 **Example `current_party.json`:**
@@ -167,12 +165,12 @@ copy current_party.example.json current_party.json
 
 ⚠️ **Character Names Must Match Exactly**
 - Names in `current_party.json` must match character JSON filenames
-- Example: `"Theron Brightblade"` → `characters/theron_brightblade.json`
+- Example: `"Theron Brightblade"` → `game_data/characters/theron_brightblade.json`
 - Case-insensitive matching, but exact spelling required
 
 ⚠️ **Git Ignored by Default**
-- `current_party.json` is in `.gitignore` (your personal party configuration)
-- `current_party.example.json` is tracked (template for others)
+- `game_data/current_party/current_party.json` is in `.gitignore` (your personal party configuration)
+- `game_data/current_party/current_party.example.json` is tracked (template for others)
 - This allows multiple people to work on the same repo with different parties
 
 ### Managing Your Party
@@ -213,32 +211,25 @@ story_manager.analyze_story_development()
 ## 🎯 Workflow Summary
 
 ### NEW: Story Organization System
-**Two ways to manage your stories:**
+**Campaign Story Management:**
 
-1. **Legacy Stories** (existing `001_*.md` files)
-   - Direct in root directory
-   - Shared analysis files for all stories
-   - Good for simple, single-campaign use
+All user-generated campaigns are stored in `game_data/campaigns/` and automatically git-ignored.
 
-2. **Organized Story Series** (RECOMMENDED for new campaigns)
+**Organized Story Series** (RECOMMENDED):
    - Each campaign gets its own folder (MUST end with: _Campaign, _Quest, _Story, or _Adventure)
+   - Created in `game_data/campaigns/` by default
    - Separate analysis files per campaign
-   - Prevents numbering conflicts
    - Better organization for multiple campaigns
-   - Examples: `Dragon_Heist_Campaign/`, `Rescue_Mission_Quest/`, `Lost_Mine_Adventure/`
+   - Examples: `game_data/campaigns/Dragon_Heist_Campaign/`, `game_data/campaigns/Rescue_Mission_Quest/`
 
-### Story Creation (Organized Series - Recommended)
-1. **Create new story series** via CLI menu system
+### Story Creation Workflow
+1. **Create new story series** via CLI menu system (automatically goes to `game_data/campaigns/`)
 2. **Write narrative** in `001_story_name.md` (pure story, 80-char lines)
 3. **NPCs automatically detected** - System scans story and suggests profile creation in hooks file
-4. **Analyze characters** in campaign's `character_development_suggestions.md`
+4. **Analyze characters** in campaign's `character_development_*.md`
 5. **Calculate DCs** in campaign's `story_dc_suggestions.md`
-6. **Use CHARACTER/ACTION/REASONING** blocks in suggestions files only
-
-### Story Creation (Legacy - Single Campaign)
-1. **Write narrative** in `001_story_name.md` (pure story, 80-char lines)
-2. **Analyze characters** in `character_development_suggestions.md`
-3. **Calculate DCs** in `story_dc_suggestions.md`
+6. **Session results** saved in campaign's `session_results_*.md`
+7. **Story hooks** tracked in campaign's `story_hooks_*.md`
 4. **Use CHARACTER/ACTION/REASONING** blocks in suggestions files only
 5. **Reference story scenarios** from suggestions back to narrative
 

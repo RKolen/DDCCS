@@ -138,9 +138,9 @@ def setup_workspace():
     print("=" * 50)
     
     # Verify character files exist
-    characters_dir = Path('characters')
+    characters_dir = Path('game_data/characters')
     if not characters_dir.exists():
-        print("❌ Error: 'characters' directory not found!")
+        print("❌ Error: 'game_data/characters' directory not found!")
         print("   The character JSON files should already exist in this workspace.")
         return False
     
@@ -161,7 +161,7 @@ def setup_workspace():
     print("\n🎉 Setup Complete!")
     print("=" * 50)
     print("\n📋 Next Steps:")
-    print("1. Customize character backgrounds in the 'characters/*.json' files")
+    print("1. Customize character backgrounds in the 'game_data/characters/*.json' files")
     print("2. Add relationships between characters in the JSON files")
     print("3. Run 'python dnd_consultant.py' to access the interactive consultant")
     print("4. Create story files using the 001<name>.md format")

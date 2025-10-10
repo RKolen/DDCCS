@@ -58,7 +58,7 @@ class ItemRegistry:
     Official D&D items are not registered here - they're looked up directly.
     """
     
-    def __init__(self, registry_path: str = "custom_items_registry.json"):
+    def __init__(self, registry_path: str = "game_data/items/custom_items_registry.json"):
         self.registry_path = registry_path
         self.items: Dict[str, Item] = {}
         self._load_registry()

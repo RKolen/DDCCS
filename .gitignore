@@ -26,63 +26,57 @@ desktop.ini
 *.sqlite3
 *.db
 
-# Ignore party configuration files
-current_party.json
-party_config.json
-*.party.json
+# =============================================================================
+# USER-SPECIFIC GAME DATA (in game_data/ folder)
+# =============================================================================
+# All personal campaign content, characters, NPCs, items, and party config
+# Example files are tracked for reference, actual user data is git-ignored
+
+# Characters: Ignore all JSON files except examples
+game_data/characters/*.json
+!game_data/characters/class.example.json
+
+# NPCs: Ignore all JSON files except examples  
+game_data/npcs/*.json
+!game_data/npcs/npc.example.json
+
+# Custom Items: Ignore registry, track example
+game_data/items/custom_items_registry.json
+!game_data/items/custom_items_registry.example.json
+
+# Party Configuration: Ignore config, track example
+game_data/current_party/current_party.json
+!game_data/current_party/current_party.example.json
+
+# Campaigns: Ignore ALL user-generated campaign content
+# This includes _Campaign/, _Quest/, _Story/, _Adventure/ folders with:
+# - Story files (001_*.md, etc.)
+# - Session results (session_results_*.md)
+# - Character development (*_suggestions.md, *_analysis.md)
+# - Story hooks (story_hooks_*.md)
+game_data/campaigns/*
+!game_data/campaigns/.gitkeep
+
+# Backup and temp files anywhere in game_data
+game_data/**/*.bak
+game_data/**/*.tmp
+
+# =============================================================================
+# SYSTEM CACHES AND GENERATED CONTENT
+# =============================================================================
 
 # Ignore notebook checkpoints
 .ipynb_checkpoints/
 
-# Ignore character backups and temp files
-characters/*.json
-!characters/class.example.json
-!characters/npc.example.json
-characters/*.bak
-characters/*.tmp
-
-# Ignore NPC files except example
-npcs/*.json
-!npcs/npc.example.json
-npcs/*.bak
-npcs/*.tmp
-
-# Ignore numbered story files (e.g., 000#, 001#, etc)
-0??_*.md
-00?_*.md
-000?_*.md
-
-# Ignore RAG cache directory (wiki content)
+# Ignore RAG cache directory (wiki content downloads)
 .rag_cache/
 *.rag.json
 rag_*.db
 
-# Ignore personal custom item and rule registries
-custom_items_registry.json
-custom_rules_registry.json
-items_registry.json
-
-# Ignore session results files
-session_results_*.md
-*session_results*.md
-
-# Ignore all campaign and story folders and their contents
-# Only these 4 folder suffixes are allowed: _Campaign, _Quest, _Story, _Adventure
-*_Campaign/
-*_Quest/
-*_Story/
-*_Adventure/
-
-# Ignore story series folders (any folder containing story content)
-*/0??_*.md
-*/00?_*.md
-*/000?_*.md
-*/session_results_*.md
-*/*session_results*.md
-
-# Ignore markdown analysis output (if any)
-*_suggestions.md
-*_analysis.md
+# =============================================================================
+# NOTES ON TRACKED FOLDERS
+# =============================================================================
+# Future_Campaign/ in root is kept for manual testing/reference (tracked)
 
 # Ignore Fantasy Grounds Unity exports
 FGU_exports/

@@ -40,9 +40,9 @@ class DMConsultant:
         self.rag_system = get_rag_system() if RAG_AVAILABLE else None
         
     def _load_character_consultants(self) -> Dict[str, CharacterConsultant]:
-        """Load all character consultants from the characters folder."""
+        """Load all character consultants from the game_data/characters folder."""
         consultants = {}
-        characters_dir = self.workspace_path / "characters"
+        characters_dir = self.workspace_path / "game_data" / "characters"
         if characters_dir.exists():
             for char_file in characters_dir.glob("*.json"):
                 # Skip template and example files
@@ -55,9 +55,9 @@ class DMConsultant:
         return consultants
         
     def _load_npc_agents(self) -> Dict[str, NPCAgent]:
-        """Load all NPC agents from the npcs folder."""
+        """Load all NPC agents from the game_data/npcs folder."""
         agents = {}
-        npcs_dir = self.workspace_path / "npcs"
+        npcs_dir = self.workspace_path / "game_data" / "npcs"
         if npcs_dir.exists():
             npc_agent_list = create_npc_agents(npcs_dir, ai_client=self.ai_client)
             for agent in npc_agent_list:

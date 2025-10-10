@@ -116,18 +116,22 @@ If you have Ollama installed:
 ## Expected File Structure After Test
 
 ```
-Thornhaven_Campaign/
-├── 001_The_Rusty_Tankard.md          (Your story)
-├── 002_Next_Adventure.md
-└── ...
+game_data/
+└── campaigns/
+    └── Thornhaven_Campaign/
+        ├── 001_The_Rusty_Tankard.md          (Your story)
+        ├── 002_Next_Adventure.md
+        └── ...
 ```
 
 **Optional session files** (created through Story Management):
 ```
-Thornhaven_Campaign/
-├── session_results_2025-10-04_the_rusty_tankard.md
-├── character_development_2025-10-04_the_rusty_tankard.md
-└── story_hooks_2025-10-04_the_rusty_tankard.md
+game_data/
+└── campaigns/
+    └── Thornhaven_Campaign/
+        ├── session_results_2025-10-04_the_rusty_tankard.md
+        ├── character_development_2025-10-04_the_rusty_tankard.md
+        └── story_hooks_2025-10-04_the_rusty_tankard.md
 ```
 
 ---
