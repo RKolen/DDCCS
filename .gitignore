@@ -89,6 +89,9 @@ story_drafts/
 *.coverage
 htmlcov/
 
+# Development tests (not committed until test framework complete)
+tests/
+
 # Ignore miscellaneous
 *.swp
 *.swo

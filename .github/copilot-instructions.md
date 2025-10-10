@@ -6,11 +6,15 @@ This workspace contains a Python-based D&D character consultant system designed 
 
 This is a **D&D 5e (2024) Character Consultant System** that provides:
 - 12 AI character consultants (one per D&D class)
-- Story sequence management with markdown files
+- Story sequence management with markdown files in campaign folders
 - Character background customization
 - DC suggestion engine
 - Fantasy Grounds Unity combat conversion
 - Character consistency analysis
+- Automatic NPC detection and profile generation
+- Spell highlighting in story narratives
+- RAG system integration with D&D wikis (lore + rules)
+- Custom items registry for homebrew content
 - VSCode workspace integration
 
 ## Key Files & Structure
@@ -33,6 +37,7 @@ D&D Campaign Workspace/
 ├── story_manager.py        # Handles story files
 ├── enhanced_story_manager.py # Advanced story management
 ├── combat_narrator.py      # Converts FGU combat to narrative
+├── spell_highlighter.py    # Spell detection and highlighting
 ├── dnd_consultant.py       # Main interactive CLI
 ├── setup.py               # Workspace initialization
 └── .vscode/
@@ -42,12 +47,14 @@ D&D Campaign Workspace/
 
 ## User Workflow
 
-The user creates story files in format `001<storyname>.md` and:
-1. Writes character actions and reasoning
-2. Requests DC suggestions for challenges
-3. Pastes Fantasy Grounds Unity combat results
-4. Gets character consistency analysis
-5. Converts combat to narrative text
+The user creates story files in format `001_<storyname>.md` and:
+1. Writes pure narrative in story files (dialogue, descriptions, events)
+2. System auto-detects NPCs and suggests profiles in story_hooks_*.md files
+3. Spell names are automatically highlighted when mentioned (e.g., casts **Fireball**)
+4. Character development tracked in separate character_development_*.md files
+5. DC suggestions calculated in separate story_dc_suggestions.md file
+6. Session results (rolls, DCs, outcomes) saved in session_results_*.md files
+7. Fantasy Grounds Unity combat converted to narrative and appended to story
 
 ## Character Consultant System
 
@@ -62,7 +69,7 @@ Each of the 12 character consultants provides:
 
 When working with this codebase:
 
-1. **Character Profiles**: All stored as JSON in `characters/` directory with user-customizable backgrounds
+1. **Character Profiles**: All stored as JSON in `game_data/characters/` directory with user-customizable backgrounds
 2. **Story Analysis**: Parse markdown files for CHARACTER/ACTION/REASONING blocks
 3. **DC Calculations**: Base difficulty + character modifiers + context
 4. **Narrative Style**: Character-appropriate descriptions for combat
@@ -74,35 +81,76 @@ When working with this codebase:
 {
   "name": "Character Name",
   "dnd_class": "fighter",
+  "level": 5,
   "background_story": "User's custom background...",
   "personality_summary": "User's personality description...",
   "motivations": ["list", "of", "motivations"],
   "fears_weaknesses": ["character", "vulnerabilities"],
   "relationships": {
     "Character2": "relationship description"
-  }
+  },
+  "equipment": {
+    "weapons": ["Longsword", "Shield"],
+    "armor": "Plate Armor",
+    "magic_items": ["Ring of Protection"]
+  },
+  "known_spells": ["Shield", "Misty Step", "Fireball"]
 }
 ```
 
 ## Story File Format
 
+**Primary Story Files (`001_*.md`):**
 ```markdown
-# Story Title
+# Chapter Title
 
-CHARACTER: [Character Name]
-ACTION: [What they attempted]
-REASONING: [Why they did it - for consistency]
+*Note: Keep lines to max 80 characters for improved readability*
 
-## DC Suggestions Needed
-- Character attempts specific action
-- Another character tries challenge
+## Scene Title
 
-## Combat Summary
-[prompt with summary of the combat that ensued]
+Write pure narrative story content here. Focus on:
+- Character actions and dialogue
+- Environmental descriptions  
+- Plot developments
+- NPC interactions
 
-## Story Narrative
-[Final narrative text]
+Example narrative format:
+Kael strode confidently to the bar where a portly human was cleaning 
+mugs. "Good evening, friend. My companions and I seek rooms for the 
+night, and perhaps a warm meal."
+
+The innkeeper glanced around nervously before leaning closer. "Rooms 
+I've got, but there's been strange happenings lately..."
 ```
+
+**Character Development Analysis (separate file `character_development_*.md`):**
+```markdown
+# Character Development: Story Name
+
+## Character Actions & Reasoning
+
+### CHARACTER: [Character Name]
+**ACTION:** [What they attempted]
+**REASONING:** [Why they did it - for consistency]
+**Consistency Check:** [Analysis results]
+**Development Notes:** [Suggestions]
+```
+
+**DC Suggestions (separate file `story_dc_suggestions.md`):**
+- Character-specific DC calculations
+- Action difficulty assessments
+- Alternative approach suggestions
+- Skill check requirements
+
+**Session Results (separate file `session_results_*.md`):**
+- Roll results (dice, DCs, outcomes)
+- Mechanical game data
+- Recruiting pool information
+
+**Story Hooks (separate file `story_hooks_*.md`):**
+- Unresolved plot threads
+- NPC profile suggestions (auto-detected)
+- Future session ideas
 
 ## Main Commands
 
@@ -125,6 +173,80 @@ Users should customize:
 2. **Personality traits** and motivations
 3. **Character relationships** with each other
 4. **Story hooks** and character arcs
+
+## Spell Highlighting System
+
+The spell highlighter automatically detects and formats spell names in story text:
+
+**Detection Patterns:**
+- Context words: casts, channels, invokes, summons, conjures, unleashes, weaves, etc.
+- Spell names: 1-3 capitalized words following context words
+- Smart boundaries: Stops at prepositions, punctuation, articles
+- Known spells: Extracted from character profiles' `known_spells` field
+
+**Usage:**
+```python
+from spell_highlighter import highlight_spells_in_text, extract_known_spells_from_characters
+
+# Extract known spells from all characters
+characters = load_character_data()
+known_spells = extract_known_spells_from_characters(characters)
+
+# Highlight spells in text
+text = "Gandalf casts Fireball at the approaching orcs."
+highlighted = highlight_spells_in_text(text, known_spells)
+# Result: "Gandalf casts **Fireball** at the approaching orcs."
+```
+
+**Integration:**
+- `enhanced_story_manager.py` automatically applies spell highlighting to story narratives
+- Uses `apply_spell_highlighting()` method for public API access
+- Known spells updated when characters are loaded
+
+## Testing Practices
+
+**Test Directory:**
+- All development tests are stored in `tests/` folder
+- Tests are **git-ignored** and should not be committed
+- Tests will remain local until test framework is formalized (see TODO.md)
+
+**Creating Tests:**
+- Name tests descriptively: `test_<feature>_<scenario>.py`
+- Include verification of actual behavior, not just programmatic tests
+- Clean up test data (campaigns, files) after test runs
+- Document test purpose and expected outcomes
+
+**Test Types:**
+- Integration tests: Verify multiple components work together
+- Workflow tests: Verify end-to-end user workflows (story creation, git patterns)
+- Manual tests: Quick validation scripts for development
+
+## Commit Message Standards
+
+Follow these guidelines for all commits:
+
+**Format:**
+```
+Brief summary of changes (50 chars or less)
+
+Optional detailed explanation if needed:
+- Bullet points for multiple changes
+- Keep focused on what and why, not how
+```
+
+**Rules:**
+- Keep summary line concise (50 characters max)
+- Use imperative mood: "Add feature" not "Added feature"
+- No emojis or decorative characters
+- Professional tone
+- Group related changes in single commit
+- Reference issue numbers if applicable
+
+**Examples:**
+- ✓ Good: "Reorganize user data into game_data folder and add spell highlighting"
+- ✗ Bad: "✨ Added spell highlighting ✨ and reorganized stuff 🎉"
+- ✓ Good: "Fix gitignore pattern for campaign files"
+- ✗ Bad: "Fixed the .gitignore because campaign files were showing up in git status which was annoying"
 
 ## Common Tasks
 
