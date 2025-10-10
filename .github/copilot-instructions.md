@@ -1,5 +1,21 @@
 # D&D Character Consultant System - Copilot Instructions
 
+## ⚠️ IMPORTANT: Read This First
+
+**BEFORE starting ANY task:**
+1. **ALWAYS read this entire file** to understand the current project state
+2. **If asked to "verify the entire project" or "check everything":**
+   - Read EVERY file mentioned in the project structure below
+   - NO shortcuts, NO assumptions, NO partial reads
+   - Verify actual code matches documentation
+   - Check imports, dependencies, and file relationships
+   - Confirm examples and workflows are accurate
+
+**When making plans:**
+- First verify you understand the current system by reading relevant files
+- Plans should reflect ACTUAL code structure, not assumptions
+- If uncertain about ANY detail, read the source file completely
+
 This workspace contains a Python-based D&D character consultant system designed to help with campaign management and story development.
 
 ## Project Overview
