@@ -1,6 +1,30 @@
 # TODO List - D&D Character Consultant System
 
 ## 🔥 High Priority
+### Code Quality & Testing
+- [-] **Pylint the codebase** - Systematic pylint cleanup to achieve 9.5+/10 scores across all files
+  - [x] dnd_consultant.py (8.81 → 9.88/10, 1028 → 956 lines)
+  - [x] enhanced_story_manager.py (8.71 → 10.00/10, 1064 → 433 lines)
+  - [x] All 7 extracted modules (10.00/10): character_consistency, hooks_and_analysis, npc_auto_detection, party_config_manager, session_results_manager, story_file_manager, text_formatting_utils
+  - [x] npc_auto_detection.py (9.66 → 10.00/10)
+  - [x] dungeon_master.py (8.85 → 10.00/10)
+  - [ ] character_consultants.py
+  - [ ] story_manager.py
+  - [ ] combat_narrator.py
+  - [ ] ai_client.py
+  - [ ] rag_system.py
+  - [ ] All validator files
+  - [ ] Setup and helper files
+
+  - [ ] **Comprehensive system testing** - End-to-end testing of all workflows
+  - [ ] Story creation flow (new series, in-series, standalone)
+  - [ ] Character management (create, edit, party config)
+  - [ ] Combat conversion (FGU logs and prompts)
+  - [ ] Character consultations and DC suggestions
+  - [ ] Story analysis and NPC detection
+  - [ ] RAG integration with wiki lookups
+  - [ ] AI integration with all features
+  - [ ] Validator integration (all JSON operations)
 
 ### Story Management System
 - [ ] **Test story creation flow** - Verify the enhanced story manager works with CLI interface end-to-end
@@ -64,6 +88,8 @@
 ## 🐛 Known Issues to Fix
 
 ### Bug Fixes
+- [ ] **W0611: Unused AIClient imported from ai_client (unused-import)** In dungeon_master.py
+- [ ] **R0904: Too many public methods (24/20) (too-many-public-methods)** In enhanced_story_manager.py
 - [ ] **Unicode handling** - Fix emoji/Unicode issues in Windows console output (partially resolved)
 - [ ] **File path handling** - Ensure cross-platform compatibility for file paths
 - [ ] **Memory usage** - Optimize character loading for large numbers of characters
