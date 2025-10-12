@@ -23,6 +23,7 @@ except ImportError:
 class CharacterProfile:
     """Extended character profile with custom background and consultant capabilities."""
     name: str
+    nickname: Optional[str] = None
     character_class: DnDClass
     level: int = 1
     
@@ -68,10 +69,26 @@ class CharacterProfile:
     def save_to_file(self, filepath: str):
         """Save character profile to JSON file."""
         data = self.__dict__.copy()
+        # Ensure nickname is present (can be None)
+        if 'nickname' not in data:
+            data['nickname'] = None
         # Convert ai_config if it's a CharacterAIConfig object
         if AI_AVAILABLE and hasattr(self, 'ai_config') and self.ai_config:
             if isinstance(self.ai_config, CharacterAIConfig):
                 data['ai_config'] = self.ai_config.to_dict()
+        
+        # Validate before saving
+        try:
+            from character_validator import validate_character_json
+            is_valid, errors = validate_character_json(data, filepath)
+            if not is_valid:
+                print(f"⚠️  Character profile validation failed:")
+                for error in errors:
+                    print(f"  - {error}")
+                print("  Saving anyway, but please fix these issues.")
+        except ImportError:
+            pass  # Validator not available, skip validation
+        
         with open(filepath, 'w', encoding='utf-8') as f:
             json.dump(data, f, indent=2, ensure_ascii=False)
     
@@ -80,6 +97,9 @@ class CharacterProfile:
         """Load character profile from JSON file."""
         with open(filepath, 'r', encoding='utf-8') as f:
             data = json.load(f)
+        # Ensure nickname is present (can be None)
+        if 'nickname' not in data:
+            data['nickname'] = None
         
         # Handle both 'character_class' and 'dnd_class' field names
         character_class_name = data.get('character_class', data.get('dnd_class', 'Fighter'))

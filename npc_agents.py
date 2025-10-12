@@ -50,6 +50,7 @@ def load_npc_from_json(json_path: Path) -> NPCProfile:
     
     profile = NPCProfile(
         name=data.get("name", ""),
+        nickname=data.get("nickname", None),
         role=data.get("role", "NPC"),
         species=data.get("species", "Human"),
         lineage=data.get("lineage", ""),

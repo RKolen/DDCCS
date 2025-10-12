@@ -56,6 +56,20 @@ D&D Campaign Workspace/
 ├── spell_highlighter.py    # Spell detection and highlighting
 ├── dnd_consultant.py       # Main interactive CLI
 ├── setup.py               # Workspace initialization
+├── character_validator.py  # Character JSON validation
+├── npc_validator.py        # NPC JSON validation
+├── items_validator.py      # Items registry validation
+├── party_validator.py      # Party config validation
+├── validate_all.py         # Unified validation for all game data
+├── tests/                 # Test suite (git-ignored)
+│   ├── test_character_validator.py
+│   ├── test_npc_validator.py
+│   ├── test_items_validator.py
+│   ├── test_party_validator.py
+│   └── test_all_validators.py
+├── docs/                  # Documentation
+│   ├── JSON_Validation.md
+│   └── Validator_Integration.md
 └── .vscode/
     ├── tasks.json         # Quick access to consultants
     └── settings.json      # Markdown preferences
@@ -174,11 +188,68 @@ I've got, but there's been strange happenings lately..."
 - `python setup.py` - Initialize workspace with default characters
 - VS Code tasks for quick access via Ctrl+Shift+P
 
+## JSON Validation System
+
+The system includes comprehensive JSON validation for all game data:
+
+**Validators:**
+- `character_validator.py` - Validates character profiles (12 files validated)
+- `npc_validator.py` - Validates NPC profiles
+- `items_validator.py` - Validates custom items registry
+- `party_validator.py` - Validates party configuration (with character cross-reference)
+- `validate_all.py` - Unified validator for all game data at once
+
+**Usage:**
+```bash
+# Validate specific data type
+python character_validator.py
+python npc_validator.py
+python items_validator.py
+python party_validator.py
+
+# Validate all game data
+python validate_all.py
+
+# Validate specific types with verbose output
+python validate_all.py --characters --verbose
+python validate_all.py --npcs
+python validate_all.py --items
+python validate_all.py --party
+
+# Run validation tests
+python tests/test_character_validator.py
+python tests/test_npc_validator.py
+python tests/test_items_validator.py
+python tests/test_party_validator.py
+python tests/test_all_validators.py  # Comprehensive test including consistency checks
+```
+
+**Features:**
+- Early error detection before runtime issues
+- Clear, specific error messages with field names
+- Type checking for all required fields
+- Cross-reference validation (party members vs character files)
+- Data consistency checking across all game files
+- Comprehensive test suites with edge case coverage
+
+**Integration:**
+- **Automatic validation on save** - All JSON file creation/saving includes validation
+  - `CharacterProfile.save_to_file()` - character validation
+  - `EnhancedStoryManager.save_npc_profile()` - NPC validation
+  - `StoryAnalyzer.save_npc_template()` - NPC validation
+  - `save_current_party()` - party validation
+  - `ItemRegistry.save_registry()` - items validation
+- **Automatic validation on load** - Character loading validates in story managers
+- **Standalone validators** - Can be run manually or in CI/CD
+- **Fail-soft approach** - Warnings displayed but saves continue (prevents data loss)
+- See `docs/JSON_Validation.md` and `docs/Validator_Integration.md` for details
+
 ## Technical Notes
 
 - **No external dependencies** - uses only Python standard library
 - **Type hints throughout** for better code clarity
 - **JSON-based storage** for easy character customization
+- **JSON validation** ensures data integrity across all game files
 - **Markdown integration** with VSCode workflow
 - **Modular design** for easy extension
 

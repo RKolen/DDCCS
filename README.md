@@ -38,7 +38,7 @@ VSCode integration for story management and character consistency analysis.
 
 - Does NOT automate gameplay, dice rolling, or run sessions
 - Does NOT generate random encounters or locations
-- Does NOT replace your creativity - it's a consultant tool
+- Does NOT replace your creativity, but it can suggest future plot hooks, NPCs, and story ideas to inspire you
 
 ## 📁 Current Project Structure
 

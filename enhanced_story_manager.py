@@ -69,6 +69,18 @@ def save_current_party(party_members: List[str], config_path: str = "game_data/c
     }
     
     try:
+        # Validate before saving
+        try:
+            from party_validator import validate_party_json
+            is_valid, errors = validate_party_json(data)
+            if not is_valid:
+                print(f"⚠️  Party configuration validation failed:")
+                for error in errors:
+                    print(f"  - {error}")
+                print("  Saving anyway, but please fix these issues.")
+        except ImportError:
+            pass  # Validator not available, skip validation
+        
         with open(config_path, 'w', encoding='utf-8') as f:
             json.dump(data, f, indent=2)
         print(f"[SUCCESS] Saved party configuration to {config_path}")
@@ -164,6 +176,14 @@ class EnhancedStoryManager:
         if not os.path.exists(self.characters_path):
             return
         
+        # Import validator
+        try:
+            from character_validator import validate_character_file
+            use_validation = True
+        except ImportError:
+            use_validation = False
+            print("Warning: character_validator module not found, skipping validation")
+        
         for filename in os.listdir(self.characters_path):
             # Skip template and example files
             if (filename.endswith('.json') and 
@@ -172,9 +192,21 @@ class EnhancedStoryManager:
                 not filename.startswith('template')):
                 
                 filepath = os.path.join(self.characters_path, filename)
+                
+                # Validate character JSON before loading
+                if use_validation:
+                    is_valid, errors = validate_character_file(filepath)
+                    if not is_valid:
+                        print(f"✗ Validation failed for {filename}:")
+                        for error in errors:
+                            print(f"  - {error}")
+                        continue
+                
                 try:
                     profile = CharacterProfile.load_from_file(filepath)
                     self.consultants[profile.name] = CharacterConsultant(profile, ai_client=self.ai_client)
+                    if use_validation:
+                        print(f"✓ Loaded and validated: {filename}")
                 except Exception as e:
                     print(f"Warning: Could not load character {filename}: {e}")
         
@@ -810,6 +842,18 @@ Return ONLY valid JSON in this format:
         Returns:
             Path to saved NPC file
         """
+        # Validate before saving
+        try:
+            from npc_validator import validate_npc_json
+            is_valid, errors = validate_npc_json(npc_profile)
+            if not is_valid:
+                print(f"⚠️  NPC profile validation failed:")
+                for error in errors:
+                    print(f"  - {error}")
+                print("  Saving anyway, but please fix these issues.")
+        except ImportError:
+            pass  # Validator not available, skip validation
+        
         npcs_path = os.path.join(self.workspace_path, "game_data", "npcs")
         os.makedirs(npcs_path, exist_ok=True)
         

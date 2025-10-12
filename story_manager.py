@@ -61,6 +61,14 @@ class StoryManager:
         if not os.path.exists(self.characters_path):
             return
         
+        # Import validator
+        try:
+            from character_validator import validate_character_file
+            use_validation = True
+        except ImportError:
+            use_validation = False
+            print("Warning: character_validator module not found, skipping validation")
+        
         for filename in os.listdir(self.characters_path):
             # Skip template and example files
             if (filename.endswith('.json') and 
@@ -69,9 +77,21 @@ class StoryManager:
                 not filename.startswith('template')):
                 
                 filepath = os.path.join(self.characters_path, filename)
+                
+                # Validate character JSON before loading
+                if use_validation:
+                    is_valid, errors = validate_character_file(filepath)
+                    if not is_valid:
+                        print(f"✗ Validation failed for {filename}:")
+                        for error in errors:
+                            print(f"  - {error}")
+                        continue
+                
                 try:
                     profile = CharacterProfile.load_from_file(filepath)
                     self.consultants[profile.name] = CharacterConsultant(profile, ai_client=self.ai_client)
+                    if use_validation:
+                        print(f"✓ Loaded and validated: {filename}")
                 except Exception as e:
                     print(f"Warning: Could not load character {filename}: {e}")
     

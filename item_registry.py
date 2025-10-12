@@ -78,6 +78,19 @@ class ItemRegistry:
         """Save item registry to file"""
         try:
             data = {name: item.to_dict() for name, item in self.items.items()}
+            
+            # Validate before saving
+            try:
+                from items_validator import validate_items_json
+                is_valid, errors = validate_items_json(data)
+                if not is_valid:
+                    print(f"⚠️  Items registry validation failed:")
+                    for error in errors:
+                        print(f"  - {error}")
+                    print("  Saving anyway, but please fix these issues.")
+            except ImportError:
+                pass  # Validator not available, skip validation
+            
             with open(self.registry_path, 'w', encoding='utf-8') as f:
                 json.dump(data, f, indent=2)
         except Exception as e:

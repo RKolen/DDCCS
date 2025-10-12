@@ -6,7 +6,6 @@
 - [ ] **Test story creation flow** - Verify the enhanced story manager works with CLI interface end-to-end
 
 ### Character System Improvements  
-- [ ] **Character validation** - Add validation for character JSON files during loading
 - [ ] **Level progression tracking** - Add system to track character level changes over time
 
 ### User Experience
@@ -89,22 +88,21 @@
 - [ ] **Campaign management best practices** - Tips for organizing complex campaigns
 - [ ] **Integration guide** - How to integrate with external tools
 
-## ✅ Recently Completed
+## [x] Recently Completed
 
-### Repository Organization - October 5, 2025
-- [x] ✅ **Folder restructure** - Created docs/ and templates/ folders for better organization
-- [x] ✅ **Documentation reorganization** - Moved 6 docs to docs/, moved story_template.md to templates/
-- [x] ✅ **Python code updates** - Updated enhanced_story_manager.py and story_manager.py template paths
-- [x] ✅ **README navigation** - Added Documentation section with links to all docs
-- [x] ✅ **Personal docs folder** - Created docs_personal/ (git-ignored) for internal documentation
-- [x] ✅ **Cross-reference updates** - Fixed all links between documentation files
-- [x] ✅ **Character name anonymization** - Replaced personal character names with generic examples throughout docs
-
-### Documentation Improvements - October 5, 2025
-- [x] ✅ **Party configuration documentation** - Added comprehensive section to README explaining current_party.json
-- [x] ✅ **Party management guide** - Documented CLI and manual configuration methods
-- [x] ✅ **Party validation notes** - Explained character name matching and git ignore behavior
-- [x] ✅ **Party usage examples** - Showed how party config affects NPC detection and story analysis
+### JSON Validation System & Nickname Support - October 12, 2025
+- [x] **Character validator** - Created character_validator.py with comprehensive schema validation for character JSON files
+- [x] **NPC validator** - Created npc_validator.py with schema validation for NPC profiles
+- [x] **Items validator** - Created items_validator.py with schema validation for custom items registry
+- [x] **Party validator** - Created party_validator.py with party config validation and character cross-reference checking
+- [x] **Unified validator** - Created validate_all.py to validate all game data types at once with comprehensive reporting
+- [x] **Validator integration** - All JSON save operations now validate data before writing (fail-soft with warnings)
+- [x] **Nickname field support** - Added nullable nickname field to all characters and NPCs for better name handling
+- [x] **Name constraints** - Validators now enforce character name constraints (no apostrophes, quotes, or shell-unsafe characters)
+- [x] **Clear error messages** - All validators provide specific, actionable error messages with field names and expected types
+- [x] **Test suites (local only)** - Created comprehensive test files for all validators (tests/ folder, git-ignored, not yet in repository)
+- [x] **Documentation** - Created docs/JSON_Validation.md and docs/Validator_Integration.md with usage guides
+- [x] **Validator exception handling** - Party validator throws clear exceptions when party member names don't match character files
 
 ### Project Reorganization & Spell Highlighting - October 10, 2025
 - [x] **game_data/ folder structure created** - Centralized all user data into game_data/ directory
@@ -118,6 +116,21 @@
 - [x] **Spell highlighting system** - Created spell_highlighter.py with pattern-based spell detection
 - [x] **Spell highlighting integration** - Integrated into enhanced_story_manager.py, extracts 57 known spells
 - [x] **Integration testing** - All 10/10 tests passed (characters, NPCs, items, party, campaigns, spells)
+
+### Repository Organization - October 5, 2025
+- [x]  **Folder restructure** - Created docs/ and templates/ folders for better organization
+- [x]  **Documentation reorganization** - Moved 6 docs to docs/, moved story_template.md to templates/
+- [x]  **Python code updates** - Updated enhanced_story_manager.py and story_manager.py template paths
+- [x]  **README navigation** - Added Documentation section with links to all docs
+- [x]  **Personal docs folder** - Created docs_personal/ (git-ignored) for internal documentation
+- [x]  **Cross-reference updates** - Fixed all links between documentation files
+- [x]  **Character name anonymization** - Replaced personal character names with generic examples throughout docs
+
+### Documentation Improvements - October 5, 2025
+- [x]  **Party configuration documentation** - Added comprehensive section to README explaining current_party.json
+- [x]  **Party management guide** - Documented CLI and manual configuration methods
+- [x]  **Party validation notes** - Explained character name matching and git ignore behavior
+- [x]  **Party usage examples** - Showed how party config affects NPC detection and story analysis
 
 ### Character System & RAG Enhancements - October 5, 2025
 - [x] **NPC species/lineage fields** - Added species and lineage fields to NPCProfile dataclass
@@ -164,5 +177,5 @@
 
 ---
 
-**Last Updated:** October 10, 2025
+**Last Updated:** October 12, 2025
 **Priority Legend:** 🔥 High | 🚧 Medium | 🌟 Low | 🐛 Bugs | 📝 Docs

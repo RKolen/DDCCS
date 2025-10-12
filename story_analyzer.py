@@ -159,6 +159,18 @@ class StoryAnalyzer:
     def save_npc_template(self, npc_data: Dict) -> bool:
         """Save a new NPC template to the npcs directory."""
         try:
+            # Validate before saving
+            try:
+                from npc_validator import validate_npc_json
+                is_valid, errors = validate_npc_json(npc_data)
+                if not is_valid:
+                    print(f"⚠️  NPC template validation failed:")
+                    for error in errors:
+                        print(f"  - {error}")
+                    print("  Saving anyway, but please fix these issues.")
+            except ImportError:
+                pass  # Validator not available, skip validation
+            
             if not self.npcs_dir.exists():
                 self.npcs_dir.mkdir(parents=True, exist_ok=True)
             

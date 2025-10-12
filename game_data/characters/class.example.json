@@ -1,5 +1,6 @@
 {
   "name": "Character Name",
+  "nickname": null,
   "species": "Species",
   "lineage": null,
   "dnd_class": "Class",

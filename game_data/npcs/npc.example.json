@@ -1,5 +1,6 @@
 {
   "name": "NPC Name",
+  "nickname": null,
   "role": "Role or occupation (e.g., innkeeper, merchant, guard)",
   "species": "Human",
   "lineage": "",
