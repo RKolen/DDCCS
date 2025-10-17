@@ -7,9 +7,25 @@ import os
 import re
 from typing import Dict, List, Any, Optional
 from datetime import datetime
-from src.characters.consultants.character_consultants import CharacterConsultant, CharacterProfile
+
+from src.characters.consultants.character_consultants import (
+    CharacterConsultant,
+    CharacterProfile
+)
 from src.characters.character_sheet import DnDClass
 from src.validation.character_validator import validate_character_file
+from src.utils.file_io import (
+    read_text_file,
+    write_text_file,
+    file_exists,
+    get_json_files_in_directory
+)
+from src.utils.path_utils import (
+    get_characters_dir,
+    get_campaign_path,
+    get_character_file_path
+)
+
 USE_CHARACTER_VALIDATION = True
 
 
@@ -22,7 +38,7 @@ class StoryManager:
     def __init__(self, workspace_path: str, ai_client=None):
         self.workspace_path = workspace_path
         self.stories_path = workspace_path
-        self.characters_path = os.path.join(workspace_path, "characters")
+        self.characters_path = get_characters_dir(workspace_path)
         self.consultants = {}
         self.ai_client = ai_client  # Optional AI client for character consultants
 
@@ -59,42 +75,42 @@ class StoryManager:
 
     def load_characters(self):
         """Load all character profiles and create consultants."""
-        if not os.path.exists(self.characters_path):
+        if not file_exists(self.characters_path):
             return
 
         use_validation = USE_CHARACTER_VALIDATION
         if not use_validation:
             print("Warning: character_validator module not found, skipping validation")
 
-        for filename in os.listdir(self.characters_path):
+        for filepath in get_json_files_in_directory(self.characters_path):
+            filename = os.path.basename(filepath)
+
             # Skip template and example files
             if (
-                filename.endswith(".json")
-                and not filename.startswith("class.example")
-                and not filename.endswith(".example.json")
-                and not filename.startswith("template")
+                filename.startswith("class.example")
+                or filename.endswith(".example.json")
+                or filename.startswith("template")
             ):
+                continue
 
-                filepath = os.path.join(self.characters_path, filename)
+            # Validate character JSON before loading
+            if use_validation:
+                is_valid, errors = validate_character_file(filepath)
+                if not is_valid:
+                    print(f"✗ Validation failed for {filename}:")
+                    for error in errors:
+                        print(f"  - {error}")
+                    continue
 
-                # Validate character JSON before loading
+            try:
+                profile = CharacterProfile.load_from_file(filepath)
+                self.consultants[profile.name] = CharacterConsultant(
+                    profile, ai_client=self.ai_client
+                )
                 if use_validation:
-                    is_valid, errors = validate_character_file(filepath)
-                    if not is_valid:
-                        print(f"✗ Validation failed for {filename}:")
-                        for error in errors:
-                            print(f"  - {error}")
-                        continue
-
-                try:
-                    profile = CharacterProfile.load_from_file(filepath)
-                    self.consultants[profile.name] = CharacterConsultant(
-                        profile, ai_client=self.ai_client
-                    )
-                    if use_validation:
-                        print(f"✓ Loaded and validated: {filename}")
-                except (OSError, IOError) as e:
-                    print(f"Warning: Could not load character {filename}: {e}")
+                    print(f"✓ Loaded and validated: {filename}")
+            except (OSError, IOError) as e:
+                print(f"Warning: Could not load character {filename}: {e}")
 
     def create_default_party(self) -> List[CharacterProfile]:
         """Create default character profiles for all 12 classes."""
@@ -216,8 +232,7 @@ class StoryManager:
 
     def save_character_profile(self, profile: CharacterProfile):
         """Save a character profile and update consultant."""
-        filename = f"{profile.name.lower().replace(' ', '_')}.json"
-        filepath = os.path.join(self.characters_path, filename)
+        filepath = get_character_file_path(profile.name, self.workspace_path)
         profile.save_to_file(filepath)
 
         # Update consultant with AI client
@@ -259,8 +274,8 @@ class StoryManager:
 
     def get_story_files_in_series(self, series_name: str) -> List[str]:
         """Get story files within a specific series folder."""
-        series_path = os.path.join(self.stories_path, series_name)
-        if not os.path.exists(series_path):
+        series_path = get_campaign_path(series_name, self.workspace_path)
+        if not file_exists(series_path):
             return []
 
         story_files = []
@@ -287,7 +302,7 @@ class StoryManager:
 
         # Create series folder
         clean_series_name = re.sub(r"[^a-zA-Z0-9_-]", "_", validated_name)
-        series_path = os.path.join(self.stories_path, clean_series_name)
+        series_path = get_campaign_path(clean_series_name, self.workspace_path)
         os.makedirs(series_path, exist_ok=True)
 
         # Create first story in series
@@ -298,8 +313,7 @@ class StoryManager:
         # Create story template
         template = self._create_story_template(first_story_name, description)
 
-        with open(filepath, "w", encoding="utf-8") as f:
-            f.write(template)
+        write_text_file(filepath, template)
 
         print(f"OK Created new story series: {clean_series_name}")
         print(f"OK Created first story: {filename}")
@@ -309,8 +323,8 @@ class StoryManager:
         self, series_name: str, story_name: str, description: str = ""
     ) -> str:
         """Create a new story in an existing series."""
-        series_path = os.path.join(self.stories_path, series_name)
-        if not os.path.exists(series_path):
+        series_path = get_campaign_path(series_name, self.workspace_path)
+        if not file_exists(series_path):
             raise ValueError(f"Story series '{series_name}' does not exist")
 
         # Get existing stories in series to determine next number
@@ -332,8 +346,7 @@ class StoryManager:
         # Create story template
         template = self._create_story_template(story_name, description)
 
-        with open(filepath, "w", encoding="utf-8") as f:
-            f.write(template)
+        write_text_file(filepath, template)
 
         print(f"OK Created new story in {series_name}: {filename}")
         return filepath
@@ -358,8 +371,7 @@ class StoryManager:
         # Create story template
         template = self._create_story_template(story_name, description)
 
-        with open(filepath, "w", encoding="utf-8") as f:
-            f.write(template)
+        write_text_file(filepath, template)
 
         print(f"OK Created new story: {filename}")
         return filepath
@@ -369,9 +381,8 @@ class StoryManager:
         template_path = os.path.join(
             self.workspace_path, "templates", "story_template.md"
         )
-        if os.path.exists(template_path):
-            with open(template_path, "r", encoding="utf-8") as f:
-                template = f.read()
+        if file_exists(template_path):
+            template = read_text_file(template_path)
             # Optionally inject story_name and description at the top
             header = (
                 f"# {story_name}\n\n**Created:** "
@@ -390,11 +401,10 @@ class StoryManager:
 
     def analyze_story_file(self, filepath: str) -> Dict[str, Any]:
         """Analyze a story file for character actions and consistency."""
-        if not os.path.exists(filepath):
+        if not file_exists(filepath):
             return {"error": "Story file not found"}
 
-        with open(filepath, "r", encoding="utf-8") as f:
-            content = f.read()
+        content = read_text_file(filepath)
 
         # Extract character actions
         character_actions = self._extract_character_actions(content)
@@ -551,11 +561,10 @@ class StoryManager:
 
     def update_story_with_analysis(self, filepath: str, analysis: Dict[str, Any]):
         """Update story file with consultant analysis."""
-        if not os.path.exists(filepath):
+        if not file_exists(filepath):
             return
 
-        with open(filepath, "r", encoding="utf-8") as f:
-            content = f.read()
+        content = read_text_file(filepath)
 
         # Generate consultant notes section
         consultant_notes = self._generate_consultant_notes(analysis)
@@ -572,8 +581,7 @@ class StoryManager:
         )
 
         # Write back to file
-        with open(filepath, "w", encoding="utf-8") as f:
-            f.write(content)
+        write_text_file(filepath, content)
 
         print(
             (

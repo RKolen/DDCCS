@@ -12,6 +12,8 @@ import os
 from typing import List, Dict, Any, Optional
 from datetime import datetime
 
+from src.utils.file_io import write_text_file
+
 
 def create_story_hooks_file(
     series_path: str,
@@ -92,10 +94,10 @@ def create_story_hooks_file(
 
 """
 
-    with open(filepath, "w", encoding="utf-8") as hooks_file:
-        hooks_file.write(content)
+    write_text_file(filepath, content)
 
     print(f"[SUCCESS] Created story hooks file: {filename}")
     if npc_suggestions:
         print(f"   Added {len(npc_suggestions)} NPC profile suggestion(s)")
+
     return filepath

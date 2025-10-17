@@ -14,6 +14,9 @@ import re
 from typing import List
 from datetime import datetime
 
+from src.utils.file_io import read_text_file, write_text_file, file_exists
+from src.utils.path_utils import get_campaign_path
+
 
 def get_existing_stories(stories_path: str) -> List[str]:
     """Get existing story files in the root directory (legacy stories)."""
@@ -50,8 +53,8 @@ def get_story_series(stories_path: str) -> List[str]:
 
 def get_story_files_in_series(stories_path: str, series_name: str) -> List[str]:
     """Get story files within a specific series folder."""
-    series_path = os.path.join(stories_path, series_name)
-    if not os.path.exists(series_path):
+    series_path = get_campaign_path(series_name, stories_path)
+    if not file_exists(series_path):
         return []
 
     story_files = []
@@ -82,9 +85,8 @@ def create_story_template(story_name: str, description: str,
     if use_template and workspace_path:
         # Use full template with guidance
         template_path = os.path.join(workspace_path, "templates", "story_template.md")
-        if os.path.exists(template_path):
-            with open(template_path, "r", encoding="utf-8") as template_file:
-                template = template_file.read()
+        if file_exists(template_path):
+            template = read_text_file(template_path)
             timestamp = datetime.now().strftime('%Y-%m-%d %H:%M')
             header = (f"# {story_name}\n\n**Created:** {timestamp}\n"
                      f"**Description:** {description}\n\n---\n")
@@ -109,7 +111,7 @@ def create_new_story_series(stories_path: str, workspace_path: str,
 
     # Create series folder
     clean_series_name = re.sub(r"[^a-zA-Z0-9_-]", "_", validated_name)
-    series_path = os.path.join(stories_path, clean_series_name)
+    series_path = get_campaign_path(clean_series_name, stories_path)
     os.makedirs(series_path, exist_ok=True)
 
     # Create first story in series
@@ -122,8 +124,7 @@ def create_new_story_series(stories_path: str, workspace_path: str,
                                     use_template=False,
                                     workspace_path=workspace_path)
 
-    with open(filepath, "w", encoding="utf-8") as story_file:
-        story_file.write(template)
+    write_text_file(filepath, template)
 
     print(f"OK Created new story series: {clean_series_name}")
     print(f"OK Created first story: {filename}")
@@ -134,8 +135,8 @@ def create_story_in_series(stories_path: str, workspace_path: str,
                           series_name: str, story_name: str,
                           description: str = "") -> str:
     """Create a new story in an existing series."""
-    series_path = os.path.join(stories_path, series_name)
-    if not os.path.exists(series_path):
+    series_path = get_campaign_path(series_name, stories_path)
+    if not file_exists(series_path):
         raise ValueError(f"Story series '{series_name}' does not exist")
 
     # Get existing stories in series to determine next number
@@ -157,8 +158,7 @@ def create_story_in_series(stories_path: str, workspace_path: str,
                                     use_template=False,
                                     workspace_path=workspace_path)
 
-    with open(filepath, "w", encoding="utf-8") as story_file:
-        story_file.write(template)
+    write_text_file(filepath, template)
 
     print(f"OK Created new story in {series_name}: {filename}")
     return filepath
@@ -186,8 +186,7 @@ def create_new_story(stories_path: str, workspace_path: str,
                                     use_template=False,
                                     workspace_path=workspace_path)
 
-    with open(filepath, "w", encoding="utf-8") as story_file:
-        story_file.write(template)
+    write_text_file(filepath, template)
 
     print(f"OK Created new story: {filename}")
     return filepath
@@ -200,8 +199,8 @@ def create_pure_narrative_story(stories_path: str, workspace_path: str,
     # Validate series name has proper suffix
     validated_series_name = validate_series_name(series_name)
 
-    series_path = os.path.join(stories_path, validated_series_name)
-    if not os.path.exists(series_path):
+    series_path = get_campaign_path(validated_series_name, stories_path)
+    if not file_exists(series_path):
         os.makedirs(series_path, exist_ok=True)
 
     # Get existing stories to determine number
@@ -224,8 +223,7 @@ def create_pure_narrative_story(stories_path: str, workspace_path: str,
                                     use_template=False,
                                     workspace_path=workspace_path)
 
-    with open(filepath, "w", encoding="utf-8") as story_file:
-        story_file.write(template)
+    write_text_file(filepath, template)
 
     print(f"OK Created pure narrative story: {filename}")
     return filepath
@@ -250,9 +248,8 @@ def create_pure_story_file(series_path: str, story_name: str,
     filepath = os.path.join(series_path, filename)
 
     # Write pure narrative
-    with open(filepath, "w", encoding="utf-8") as story_file:
-        story_file.write(f"# {story_name}\n\n")
-        story_file.write(narrative_content)
+    content = f"# {story_name}\n\n{narrative_content}"
+    write_text_file(filepath, content)
 
     print(f"[SUCCESS] Created pure story file: {filename}")
     return filepath

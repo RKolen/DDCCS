@@ -9,14 +9,18 @@ This module analyzes story content and provides suggestions for:
 - NPC creation based on story interactions
 """
 
-import json
 import os
 import re
+import sys
 from pathlib import Path
 from typing import Dict, List, Set
-import sys
-from src.characters.consultants.character_consultants import CharacterConsultant, CharacterProfile
+
+from src.characters.consultants.character_consultants import (
+    CharacterConsultant,
+    CharacterProfile
+)
 from src.validation.npc_validator import validate_npc_json
+from src.utils.file_io import load_json_file, save_json_file, read_text_file
 
 
 class StoryAnalyzer:
@@ -55,7 +59,7 @@ class StoryAnalyzer:
                 if profile:
                     consultant = CharacterConsultant(profile)
                     self.consultants[profile.name] = consultant
-            except (OSError, json.JSONDecodeError) as e:
+            except (OSError, ValueError) as e:
                 print(f"Error loading character from {json_file}: {e}")
 
     def _load_existing_npcs(self):
@@ -68,11 +72,10 @@ class StoryAnalyzer:
             if npc_file.name.startswith("npc.example"):
                 continue
             try:
-                with open(npc_file, "r", encoding="utf-8") as f:
-                    npc_data = json.load(f)
-                    if "name" in npc_data:
-                        self.existing_npcs.add(npc_data["name"])
-            except (OSError, json.JSONDecodeError) as e:
+                npc_data = load_json_file(str(npc_file))
+                if "name" in npc_data:
+                    self.existing_npcs.add(npc_data["name"])
+            except (OSError, ValueError) as e:
                 print(f"Error loading NPC from {npc_file}: {e}")
 
     def analyze_story_file(
@@ -88,8 +91,7 @@ class StoryAnalyzer:
             print(f"Story file '{story_file_path}' not found.")
             return {}
 
-        with open(story_file_path, "r", encoding="utf-8") as f:
-            story_content = f.read()
+        story_content = read_text_file(story_file_path)
 
         chapter_name = Path(story_file_path).stem
         all_suggestions = {}
@@ -199,8 +201,7 @@ class StoryAnalyzer:
             npc_filename = f"{npc_data['name'].replace(' ', '_')}.json"
             npc_path = self.npcs_dir / npc_filename
 
-            with open(npc_path, "w", encoding="utf-8") as f:
-                json.dump(npc_data, f, indent=2)
+            save_json_file(str(npc_path), npc_data)
 
             print(f"Created NPC template: {npc_path}")
             return True
@@ -219,8 +220,7 @@ class StoryAnalyzer:
             return False
 
         try:
-            with open(character_file, "r", encoding="utf-8") as f:
-                character_data = json.load(f)
+            character_data = load_json_file(str(character_file))
 
             # Apply updates based on update type
             if "relationships" in updates:
@@ -245,8 +245,7 @@ class StoryAnalyzer:
                 )
 
             # Save updated file
-            with open(character_file, "w", encoding="utf-8") as f:
-                json.dump(character_data, f, indent=2)
+            save_json_file(str(character_file), character_data)
 
             print(f"Updated character file: {character_file}")
             return True

@@ -8,6 +8,8 @@ import os
 from typing import List, Dict, Any
 from datetime import datetime
 
+from src.utils.file_io import write_text_file
+
 
 class StorySession:
     """Represents a single story session with results separate from narrative."""
@@ -130,8 +132,7 @@ def create_session_results_file(
     for action in session.character_actions:
         content += f"- {action}\n"
 
-    with open(filepath, "w", encoding="utf-8") as f:
-        f.write(content)
+    write_text_file(filepath, content)
 
     print(f"[SUCCESS] Created session results file: {filename}")
     return filepath

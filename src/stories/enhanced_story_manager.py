@@ -5,8 +5,18 @@ Enhanced Story Management System with User Choice and Character Agent Integratio
 import os
 import json
 from typing import Dict, List, Any, Optional
-from src.characters.consultants.character_consultants import CharacterConsultant, CharacterProfile
+
+from src.characters.consultants.character_consultants import (
+    CharacterConsultant,
+    CharacterProfile
+)
 from src.utils.spell_highlighter import highlight_spells_in_text
+from src.utils.file_io import file_exists, get_json_files_in_directory
+from src.utils.path_utils import (
+    get_campaigns_dir,
+    get_characters_dir,
+    get_party_config_path
+)
 from src.cli.party_config_manager import load_current_party, save_current_party
 from src.stories.session_results_manager import StorySession, create_session_results_file
 from src.npcs.npc_auto_detection import (
@@ -52,11 +62,9 @@ class EnhancedStoryManager:  # pylint: disable=too-many-public-methods
         self, workspace_path: str, party_config_path: str = None, ai_client=None
     ):
         self.workspace_path = workspace_path
-        self.stories_path = os.path.join(workspace_path, "game_data", "campaigns")
-        self.characters_path = os.path.join(workspace_path, "game_data", "characters")
-        self.party_config_path = party_config_path or os.path.join(
-            workspace_path, "game_data", "current_party", "current_party.json"
-        )
+        self.stories_path = get_campaigns_dir(workspace_path)
+        self.characters_path = get_characters_dir(workspace_path)
+        self.party_config_path = party_config_path or get_party_config_path(workspace_path)
         self.ai_client = ai_client  # AI client for enhanced features
         self.consultants = {}
         self.known_spells = set()  # Initialize known spells cache
@@ -98,38 +106,38 @@ class EnhancedStoryManager:  # pylint: disable=too-many-public-methods
 
     def load_characters(self):
         """Load all character profiles and create consultants."""
-        if not os.path.exists(self.characters_path):
+        if not file_exists(self.characters_path):
             return
 
-        for filename in os.listdir(self.characters_path):
+        for filepath in get_json_files_in_directory(self.characters_path):
+            filename = os.path.basename(filepath)
+
             # Skip template and example files
             if (
-                filename.endswith(".json")
-                and not filename.startswith("class.example")
-                and not filename.endswith(".example.json")
-                and not filename.startswith("template")
+                filename.startswith("class.example")
+                or filename.endswith(".example.json")
+                or filename.startswith("template")
             ):
+                continue
 
-                filepath = os.path.join(self.characters_path, filename)
+            # Validate character JSON before loading
+            if VALIDATOR_AVAILABLE:
+                is_valid, errors = validate_character_file(filepath)
+                if not is_valid:
+                    print(f"✗ Validation failed for {filename}:")
+                    for error in errors:
+                        print(f"  - {error}")
+                    continue
 
-                # Validate character JSON before loading
+            try:
+                profile = CharacterProfile.load_from_file(filepath)
+                self.consultants[profile.name] = CharacterConsultant(
+                    profile, ai_client=self.ai_client
+                )
                 if VALIDATOR_AVAILABLE:
-                    is_valid, errors = validate_character_file(filepath)
-                    if not is_valid:
-                        print(f"✗ Validation failed for {filename}:")
-                        for error in errors:
-                            print(f"  - {error}")
-                        continue
-
-                try:
-                    profile = CharacterProfile.load_from_file(filepath)
-                    self.consultants[profile.name] = CharacterConsultant(
-                        profile, ai_client=self.ai_client
-                    )
-                    if VALIDATOR_AVAILABLE:
-                        print(f"✓ Loaded and validated: {filename}")
-                except (FileNotFoundError, json.JSONDecodeError, KeyError, ValueError) as e:
-                    print(f"Warning: Could not load character {filename}: {e}")
+                    print(f"✓ Loaded and validated: {filename}")
+            except (FileNotFoundError, json.JSONDecodeError, KeyError, ValueError) as e:
+                print(f"Warning: Could not load character {filename}: {e}")
 
         # Extract known spells from all loaded characters
         self._update_known_spells()
