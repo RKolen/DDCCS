@@ -49,18 +49,46 @@ D&D Campaign Workspace/
 │       └── Your_Campaign/  # Campaign stories and analysis
 │           ├── 001_*.md    # Story sequence files
 │           └── session_results_*.md
-├── character_consultants.py # Core character consultant system
-├── story_manager.py        # Handles story files
-├── enhanced_story_manager.py # Advanced story management
-├── combat_narrator.py      # Converts FGU combat to narrative
-├── spell_highlighter.py    # Spell detection and highlighting
-├── dnd_consultant.py       # Main interactive CLI
-├── setup.py               # Workspace initialization
-├── character_validator.py  # Character JSON validation
-├── npc_validator.py        # NPC JSON validation
-├── items_validator.py      # Items registry validation
-├── party_validator.py      # Party config validation
-├── validate_all.py         # Unified validation for all game data
+├── src/                    # All source code (Phase 0 complete!)
+│   ├── characters/         # Character management
+│   │   ├── consultants/    # Character consultant system
+│   │   │   └── character_consultants.py  # Core consultant (to be split in Phase 1)
+│   │   ├── character_sheet.py       # Character and NPC data models
+│   │   └── character_consistency.py # Character consistency checking
+│   ├── npcs/              # NPC management
+│   │   ├── npc_agents.py           # NPC AI agents
+│   │   └── npc_auto_detection.py   # Automatic NPC detection
+│   ├── stories/           # Story management
+│   │   ├── story_manager.py            # Core story management
+│   │   ├── enhanced_story_manager.py   # Advanced story features
+│   │   ├── story_analyzer.py           # Story analysis
+│   │   ├── story_file_manager.py       # Story file operations
+│   │   ├── session_results_manager.py  # Session results tracking
+│   │   └── hooks_and_analysis.py       # Story hooks generation
+│   ├── combat/            # Combat system
+│   │   └── combat_narrator.py      # Fantasy Grounds combat converter
+│   ├── items/             # Items and inventory
+│   │   └── item_registry.py        # Custom items registry
+│   ├── dm/                # Dungeon Master tools
+│   │   ├── dungeon_master.py       # DM consultant
+│   │   └── history_check_helper.py # History check helper
+│   ├── validation/        # Data validation
+│   │   ├── character_validator.py  # Character JSON validation
+│   │   ├── npc_validator.py        # NPC JSON validation
+│   │   ├── items_validator.py      # Items JSON validation
+│   │   ├── party_validator.py      # Party config validation
+│   │   └── validate_all.py         # Unified validator
+│   ├── ai/                # AI integration
+│   │   ├── ai_client.py           # AI client interface
+│   │   └── rag_system.py          # RAG system
+│   ├── utils/             # Shared utilities
+│   │   ├── text_formatting_utils.py  # Text formatting
+│   │   └── spell_highlighter.py      # Spell detection
+│   └── cli/               # Command-line interface
+│       ├── dnd_consultant.py       # Main interactive CLI
+│       ├── dnd_cli_helpers.py      # CLI helper functions
+│       ├── party_config_manager.py # Party configuration
+│       └── setup.py                # Workspace initialization
 ├── tests/                 # Test suite (git-ignored)
 │   ├── test_character_validator.py
 │   ├── test_npc_validator.py
@@ -202,8 +230,8 @@ I've got, but there's been strange happenings lately..."
 
 ## Main Commands
 
-- `python setup.py` - One-time workspace initialization (creates VSCode config, verifies folders)
-- `python dnd_consultant.py` - **Main interactive tool** for all user workflows:
+- `python -m src.cli.setup` - One-time workspace initialization (creates VSCode config, verifies folders)
+- `python -m src.cli.dnd_consultant` - **Main interactive tool** for all user workflows:
   - Create and manage campaigns
   - Create and edit story files
   - Manage party configuration
@@ -225,19 +253,19 @@ The system includes comprehensive JSON validation for all game data:
 **Usage:**
 ```bash
 # Validate specific data type
-python character_validator.py
-python npc_validator.py
-python items_validator.py
-python party_validator.py
+python -m src.validation.character_validator
+python -m src.validation.npc_validator
+python -m src.validation.items_validator
+python -m src.validation.party_validator
 
 # Validate all game data
-python validate_all.py
+python -m src.validation.validate_all
 
 # Validate specific types with verbose output
-python validate_all.py --characters --verbose
-python validate_all.py --npcs
-python validate_all.py --items
-python validate_all.py --party
+python -m src.validation.validate_all --characters --verbose
+python -m src.validation.validate_all --npcs
+python -m src.validation.validate_all --items
+python -m src.validation.validate_all --party
 
 # Run validation tests
 python tests/test_character_validator.py

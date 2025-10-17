@@ -8,7 +8,7 @@ import os
 import re
 import json
 from typing import Dict, List, Any, Tuple
-from npc_validator import validate_npc_json
+from src.validation.npc_validator import validate_npc_json
 
 # NPC detection patterns - compiled at module level
 NPC_PATTERNS: List[Tuple[str, str]] = [

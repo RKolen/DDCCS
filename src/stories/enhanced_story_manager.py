@@ -5,16 +5,16 @@ Enhanced Story Management System with User Choice and Character Agent Integratio
 import os
 import json
 from typing import Dict, List, Any, Optional
-from character_consultants import CharacterConsultant, CharacterProfile
-from spell_highlighter import highlight_spells_in_text
-from party_config_manager import load_current_party, save_current_party
-from session_results_manager import StorySession, create_session_results_file
-from npc_auto_detection import (
+from src.characters.consultants.character_consultants import CharacterConsultant, CharacterProfile
+from src.utils.spell_highlighter import highlight_spells_in_text
+from src.cli.party_config_manager import load_current_party, save_current_party
+from src.stories.session_results_manager import StorySession, create_session_results_file
+from src.npcs.npc_auto_detection import (
     detect_npc_suggestions,
     generate_npc_from_story,
     save_npc_profile,
 )
-from story_file_manager import (
+from src.stories.story_file_manager import (
     get_existing_stories,
     get_story_series,
     get_story_files_in_series,
@@ -26,15 +26,15 @@ from story_file_manager import (
     create_pure_narrative_story,
     create_pure_story_file,
 )
-from hooks_and_analysis import create_story_hooks_file
-from character_consistency import (
+from src.stories.hooks_and_analysis import create_story_hooks_file
+from src.characters.character_consistency import (
     create_character_development_file,
     get_available_recruits,
 )
 
 # Optional validator import (fail-safe if not available)
 try:
-    from character_validator import validate_character_file
+    from src.validation.character_validator import validate_character_file
     VALIDATOR_AVAILABLE = True
 except ImportError:
     VALIDATOR_AVAILABLE = False

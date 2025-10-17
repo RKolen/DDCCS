@@ -15,8 +15,8 @@ import re
 from pathlib import Path
 from typing import Dict, List, Set
 import sys
-from character_consultants import CharacterConsultant, CharacterProfile
-from npc_validator import validate_npc_json
+from src.characters.consultants.character_consultants import CharacterConsultant, CharacterProfile
+from src.validation.npc_validator import validate_npc_json
 
 
 class StoryAnalyzer:

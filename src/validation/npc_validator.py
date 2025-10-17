@@ -9,7 +9,7 @@ Usage:
     python npc_validator.py [filepath]
 
     # Programmatic validation
-    from npc_validator import validate_npc_json, validate_npc_file
+    from src.validation.npc_validator import validate_npc_json, validate_npc_file
     is_valid, errors = validate_npc_file("game_data/npcs/my_npc.json")
 """
 

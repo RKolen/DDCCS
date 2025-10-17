@@ -28,28 +28,28 @@ import argparse
 
 # Import all validators
 try:
-    from character_validator import validate_character_file
+    from src.validation.character_validator import validate_character_file
 
     CHAR_AVAILABLE = True
 except ImportError:
     CHAR_AVAILABLE = False
 
 try:
-    from npc_validator import validate_npc_file
+    from src.validation.npc_validator import validate_npc_file
 
     NPC_AVAILABLE = True
 except ImportError:
     NPC_AVAILABLE = False
 
 try:
-    from items_validator import validate_items_file
+    from src.validation.items_validator import validate_items_file
 
     ITEMS_AVAILABLE = True
 except ImportError:
     ITEMS_AVAILABLE = False
 
 try:
-    from party_validator import validate_party_file
+    from src.validation.party_validator import validate_party_file
 
     PARTY_AVAILABLE = True
 except ImportError:

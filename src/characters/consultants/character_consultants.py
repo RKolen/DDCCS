@@ -8,25 +8,25 @@ that provide character knowledge, suggestions, and story consistency analysis.
 import json
 from typing import Dict, List, Any, Optional
 from dataclasses import dataclass, field
-from character_sheet import DnDClass
+from src.characters.character_sheet import DnDClass
 
 # Optional imports
 try:
-    from ai_client import CharacterAIConfig
+    from src.ai.ai_client import CharacterAIConfig
     AI_AVAILABLE = True
 except ImportError:
     AI_AVAILABLE = False
     CharacterAIConfig = None
 
 try:
-    from character_validator import validate_character_json
+    from src.validation.character_validator import validate_character_json
     VALIDATOR_AVAILABLE = True
 except ImportError:
     VALIDATOR_AVAILABLE = False
     validate_character_json = None
 
 try:
-    from rag_system import get_rag_system
+    from src.ai.rag_system import get_rag_system
     RAG_AVAILABLE = True
 except ImportError:
     RAG_AVAILABLE = False

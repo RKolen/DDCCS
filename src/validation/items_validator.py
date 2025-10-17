@@ -9,7 +9,7 @@ Usage:
     python items_validator.py [filepath]
 
     # Programmatic validation
-    from items_validator import validate_items_json, validate_items_file
+    from src.validation.items_validator import validate_items_json, validate_items_file
     is_valid, errors = validate_items_file("game_data/items/custom_items_registry.json")
 """
 

@@ -7,7 +7,7 @@ from typing import Dict, List, Optional, Any
 from dataclasses import dataclass, field
 import json
 import os
-from items_validator import validate_items_json
+from src.validation.items_validator import validate_items_json
 
 
 @dataclass

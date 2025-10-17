@@ -4,11 +4,11 @@ NPC Agent class and loader for recurring NPCs.
 
 import json
 from pathlib import Path
-from character_sheet import NPCProfile
+from src.characters.character_sheet import NPCProfile
 
 # Import AI client if available
 try:
-    from ai_client import CharacterAIConfig
+    from src.ai.ai_client import CharacterAIConfig
     AI_AVAILABLE = True
 except ImportError:
     CharacterAIConfig = None

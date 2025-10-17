@@ -5,7 +5,7 @@ Handles text wrapping and formatting for story narratives.
 """
 
 import textwrap
-from spell_highlighter import highlight_spells_in_text
+from src.utils.spell_highlighter import highlight_spells_in_text
 
 
 def wrap_narrative_text(

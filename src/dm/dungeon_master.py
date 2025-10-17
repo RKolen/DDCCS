@@ -7,12 +7,12 @@ Enhanced with RAG (Retrieval-Augmented Generation) for campaign wiki integration
 import re
 from typing import Dict, List, Any
 from pathlib import Path
-from character_consultants import CharacterConsultant, CharacterProfile
-from npc_agents import NPCAgent, create_npc_agents
+from src.characters.consultants.character_consultants import CharacterConsultant, CharacterProfile
+from src.npcs.npc_agents import NPCAgent, create_npc_agents
 
 # Import AI client if available (used for type hints and availability check)
 try:
-    from ai_client import AIClient  # pylint: disable=unused-import
+    from src.ai.ai_client import AIClient  # pylint: disable=unused-import
     AI_AVAILABLE = True
 except ImportError:
     AIClient = None
@@ -20,7 +20,7 @@ except ImportError:
 
 # Import RAG system if available
 try:
-    from rag_system import get_rag_system
+    from src.ai.rag_system import get_rag_system
 
     RAG_AVAILABLE = True
 except ImportError:

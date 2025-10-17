@@ -9,7 +9,7 @@ Usage:
     python party_validator.py [filepath]
 
     # Programmatic validation
-    from party_validator import validate_party_json, validate_party_file
+    from src.validation.party_validator import validate_party_json, validate_party_file
     is_valid, errors = validate_party_file("game_data/current_party/current_party.json")
 """
 

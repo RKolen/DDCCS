@@ -8,7 +8,7 @@ Integrates with wiki RAG system to fetch accurate campaign setting information.
 from typing import Optional, Dict, Any
 
 try:
-    from rag_system import get_rag_system
+    from src.ai.rag_system import get_rag_system
 
     RAG_AVAILABLE = True
 except ImportError:

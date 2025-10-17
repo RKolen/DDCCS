@@ -14,12 +14,12 @@ Features:
 
 import re
 from typing import Dict, List, Any, Optional
-from character_consultants import CharacterConsultant
-from text_formatting_utils import wrap_narrative_text
+from src.characters.consultants.character_consultants import CharacterConsultant
+from src.utils.text_formatting_utils import wrap_narrative_text
 
 # Import AI client if available
 try:
-    from ai_client import AIClient  # pylint: disable=unused-import
+    from src.ai.ai_client import AIClient  # pylint: disable=unused-import
 
     AI_AVAILABLE = True
 except ImportError:
@@ -28,7 +28,7 @@ except ImportError:
 
 # Import RAG system for D&D rules lookup
 try:
-    from rag_system import RAGSystem
+    from src.ai.rag_system import RAGSystem
 
     RAG_AVAILABLE = True
 except ImportError:

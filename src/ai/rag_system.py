@@ -26,7 +26,7 @@ from urllib.parse import quote
 import re
 
 try:
-    from item_registry import ItemRegistry
+    from src.items.item_registry import ItemRegistry
 except ImportError:
     ItemRegistry = None
 

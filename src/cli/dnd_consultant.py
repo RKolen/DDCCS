@@ -6,15 +6,15 @@ VSCode-integrated system for story management and character consultation.
 import argparse
 import os
 from typing import Dict, List, Any
-from story_manager import StoryManager
-from combat_narrator import CombatNarrator
-from character_consultants import CharacterProfile
-from dungeon_master import DMConsultant
-from dnd_cli_helpers import edit_character_profile_interactive
+from src.stories.story_manager import StoryManager
+from src.combat.combat_narrator import CombatNarrator
+from src.characters.consultants.character_consultants import CharacterProfile
+from src.dm.dungeon_master import DMConsultant
+from src.cli.dnd_cli_helpers import edit_character_profile_interactive
 
 # Optional AI client import
 try:
-    from ai_client import AIClient
+    from src.ai.ai_client import AIClient
     AI_CLIENT_AVAILABLE = True
 except ImportError:
     AIClient = None

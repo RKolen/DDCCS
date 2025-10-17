@@ -10,7 +10,7 @@ from typing import List
 from datetime import datetime
 
 try:
-    from party_validator import validate_party_json
+    from src.validation.party_validator import validate_party_json
 
     VALIDATOR_AVAILABLE = True
 except ImportError:
