@@ -17,13 +17,14 @@ Configuration via .env:
 """
 
 import os
-import json
 import time
 import hashlib
 from typing import Any, Dict, List, Optional
 from pathlib import Path
 from urllib.parse import quote
 import re
+
+from src.utils.file_io import load_json_file, save_json_file
 
 try:
     from src.items.item_registry import ItemRegistry
@@ -67,16 +68,14 @@ class WikiCache:
         """Load cache index from disk."""
         if self.index_file.exists():
             try:
-                with open(self.index_file, "r", encoding="utf-8") as f:
-                    return json.load(f)
-            except (OSError, json.JSONDecodeError):
+                return load_json_file(str(self.index_file))
+            except (OSError, ValueError):
                 return {}
         return {}
 
     def _save_index(self):
         """Save cache index to disk."""
-        with open(self.index_file, "w", encoding="utf-8") as f:
-            json.dump(self.index, f, indent=2)
+        save_json_file(str(self.index_file), self.index)
 
     def _get_cache_key(self, url: str) -> str:
         """Generate cache key from URL."""
@@ -107,8 +106,7 @@ class WikiCache:
         # Load cached content
         cache_file = self.cache_dir / f"{cache_key}.json"
         if cache_file.exists():
-            with open(cache_file, "r", encoding="utf-8") as f:
-                return json.load(f)
+            return load_json_file(str(cache_file))
 
         return None
 
@@ -124,8 +122,7 @@ class WikiCache:
 
         # Save content
         cache_file = self.cache_dir / f"{cache_key}.json"
-        with open(cache_file, "w", encoding="utf-8") as f:
-            json.dump(content, f, indent=2)
+        save_json_file(str(cache_file), content)
 
         # Update index
         self.index[cache_key] = {

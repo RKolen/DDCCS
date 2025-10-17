@@ -3,8 +3,9 @@ Setup script for the D&D Character Consultant System.
 Initializes workspace with default character JSON files and VSCode configuration.
 """
 
-import json
 from pathlib import Path
+
+from src.utils.file_io import save_json_file, load_json_file
 
 
 def create_vscode_configuration():
@@ -48,8 +49,7 @@ def create_vscode_configuration():
     }
 
     tasks_path = vscode_dir / "tasks.json"
-    with open(tasks_path, "w", encoding="utf-8") as f:
-        json.dump(tasks_config, f, indent=2)
+    save_json_file(str(tasks_path), tasks_config)
 
     # Create settings.json for markdown preferences
     settings_config = {
@@ -60,8 +60,7 @@ def create_vscode_configuration():
     }
 
     settings_path = vscode_dir / "settings.json"
-    with open(settings_path, "w", encoding="utf-8") as f:
-        json.dump(settings_config, f, indent=2)
+    save_json_file(str(settings_path), settings_config)
 
     return True
 
@@ -116,11 +115,10 @@ def setup_workspace():
 
         # Read the class from the JSON file
         try:
-            with open(char_file, "r", encoding="utf-8") as f:
-                data = json.load(f)
-                class_name = data.get("dnd_class", "Unknown")
-                print(f"   • {char_file.stem}.json ({class_name.title()})")
-        except (OSError, json.JSONDecodeError):
+            data = load_json_file(str(char_file))
+            class_name = data.get("dnd_class", "Unknown")
+            print(f"   • {char_file.stem}.json ({class_name.title()})")
+        except (OSError, ValueError):
             print(f"   • {char_file.name}")
 
     print("\n🎲 Ready to enhance your D&D storytelling!")

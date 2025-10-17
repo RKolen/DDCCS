@@ -8,7 +8,10 @@ import os
 import re
 import json
 from typing import Dict, List, Any, Tuple
+
 from src.validation.npc_validator import validate_npc_json
+from src.utils.file_io import save_json_file
+from src.utils.path_utils import get_npcs_dir, get_npc_file_path
 
 # NPC detection patterns - compiled at module level
 NPC_PATTERNS: List[Tuple[str, str]] = [
@@ -110,12 +113,8 @@ def detect_npc_suggestions(
             ):
 
                 # Check if NPC profile already exists
-                npc_filename = (
-                    npc_name.lower().replace(" ", "_").replace("'", "") + ".json"
-                )
-                npc_path = os.path.join(
-                    workspace_path, "game_data", "npcs", npc_filename
-                )
+                npc_filename = os.path.basename(get_npc_file_path(npc_name, workspace_path))
+                npc_path = get_npc_file_path(npc_name, workspace_path)
 
                 if not os.path.exists(npc_path):
                     # Get context around the NPC mention
@@ -282,16 +281,13 @@ def save_npc_profile(
     except ImportError:
         pass  # Validator not available, skip validation
 
-    npcs_path = os.path.join(workspace_path, "game_data", "npcs")
+    npcs_path = get_npcs_dir(workspace_path)
     os.makedirs(npcs_path, exist_ok=True)
 
     # Create filename from name
-    clean_name = re.sub(r"[^a-zA-Z0-9_-]", "_", npc_profile["name"].lower())
-    filename = f"{clean_name}.json"
-    filepath = os.path.join(npcs_path, filename)
+    filepath = get_npc_file_path(npc_profile["name"], workspace_path)
 
-    with open(filepath, "w", encoding="utf-8") as f:
-        json.dump(npc_profile, f, indent=2)
+    save_json_file(filepath, npc_profile)
 
-    print(f"[SUCCESS] Saved NPC profile: {filename}")
+    print(f"[SUCCESS] Saved NPC profile: {os.path.basename(filepath)}")
     return filepath

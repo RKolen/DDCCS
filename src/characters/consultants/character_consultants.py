@@ -5,10 +5,10 @@ that provide character knowledge, suggestions, and story consistency analysis.
 
 # pylint: disable=too-many-lines
 
-import json
 from typing import Dict, List, Any, Optional
 from dataclasses import dataclass, field
 from src.characters.character_sheet import DnDClass
+from src.utils.file_io import load_json_file, save_json_file
 
 # Optional imports
 try:
@@ -107,14 +107,12 @@ class CharacterProfile:  # pylint: disable=too-many-instance-attributes
                     print(f"  - {error}")
                 print("  Saving anyway, but please fix these issues.")
 
-        with open(filepath, "w", encoding="utf-8") as f:
-            json.dump(data, f, indent=2, ensure_ascii=False)
+        save_json_file(filepath, data)
 
     @classmethod
     def load_from_file(cls, filepath: str):
         """Load character profile from JSON file."""
-        with open(filepath, "r", encoding="utf-8") as f:
-            data = json.load(f)
+        data = load_json_file(filepath)
         # Ensure nickname is present (can be None)
         if "nickname" not in data:
             data["nickname"] = None
@@ -1254,8 +1252,7 @@ Suggest an appropriate DC (5-30) and explain why. Also suggest if the ""
     @classmethod
     def load_from_file(cls, filepath: str):
         """Load character consultant from JSON file."""
-        with open(filepath, "r", encoding="utf-8") as f:
-            data = json.load(f)
+        data = load_json_file(filepath)
 
         # Create a CharacterProfile from the JSON data
         # The JSON files use 'dnd_class' but CharacterProfile expects 'character_class'

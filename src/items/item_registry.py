@@ -5,9 +5,10 @@ Handles distinction between official D&D items and homebrew content
 
 from typing import Dict, List, Optional, Any
 from dataclasses import dataclass, field
-import json
 import os
+
 from src.validation.items_validator import validate_items_json
+from src.utils.file_io import load_json_file, save_json_file
 
 
 @dataclass
@@ -71,11 +72,10 @@ class ItemRegistry:
         """Load item registry from file"""
         if os.path.exists(self.registry_path):
             try:
-                with open(self.registry_path, "r", encoding="utf-8") as f:
-                    data = json.load(f)
-                    for item_name, item_data in data.items():
-                        self.items[item_name] = Item.from_dict(item_data)
-            except (json.JSONDecodeError, OSError) as e:
+                data = load_json_file(self.registry_path)
+                for item_name, item_data in data.items():
+                    self.items[item_name] = Item.from_dict(item_data)
+            except (ValueError, OSError) as e:
                 print(f"Warning: Could not load item registry: {e}")
 
     def save_registry(self):
@@ -91,8 +91,7 @@ class ItemRegistry:
                     print(f"  - {error}")
                 print("  Saving anyway, but please fix these issues.")
 
-            with open(self.registry_path, "w", encoding="utf-8") as f:
-                json.dump(data, f, indent=2)
+            save_json_file(self.registry_path, data)
         except (OSError, TypeError, ValueError) as e:
             print(f"Error saving item registry: {e}")
 

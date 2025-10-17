@@ -4,10 +4,10 @@ Party Configuration Manager
 Handles loading and saving of party configuration files.
 """
 
-import json
-import os
 from typing import List
 from datetime import datetime
+
+from src.utils.file_io import load_json_file, save_json_file, file_exists
 
 try:
     from src.validation.party_validator import validate_party_json
@@ -29,12 +29,11 @@ def load_current_party(
     Returns:
         List[str]: List of party member names
     """
-    if os.path.exists(config_path):
+    if file_exists(config_path):
         try:
-            with open(config_path, "r", encoding="utf-8") as f:
-                data = json.load(f)
-                return data.get("party_members", [])
-        except (OSError, json.JSONDecodeError) as e:
+            data = load_json_file(config_path)
+            return data.get("party_members", [])
+        except (OSError, ValueError) as e:
             print(f"Warning: Could not load party configuration: {e}")
 
     # Return default party if no config found
@@ -69,7 +68,6 @@ def save_current_party(
             print("  Saving anyway, but please fix these issues.")
 
     try:
-        with open(config_path, "w", encoding="utf-8") as f:
-            json.dump(data, f, indent=2)
+        save_json_file(config_path, data)
     except (OSError, TypeError) as e:
         print(f"Error: Could not save party configuration: {e}")

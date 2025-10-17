@@ -2,9 +2,10 @@
 NPC Agent class and loader for recurring NPCs.
 """
 
-import json
 from pathlib import Path
+
 from src.characters.character_sheet import NPCProfile
+from src.utils.file_io import load_json_file
 
 # Import AI client if available
 try:
@@ -62,8 +63,7 @@ class NPCAgent:
 
 def load_npc_from_json(json_path: Path) -> NPCProfile:
     """Load an NPC from a JSON file."""
-    with open(json_path, "r", encoding="utf-8") as f:
-        data = json.load(f)
+    data = load_json_file(str(json_path))
 
     profile = NPCProfile(
         name=data.get("name", ""),
