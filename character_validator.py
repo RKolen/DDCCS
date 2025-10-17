@@ -3,43 +3,45 @@ Character Profile JSON Validation
 Validates character JSON files against required schema.
 """
 
-from typing import Dict, List, Any, Optional, Tuple
+import json
+from typing import Dict, List, Any, Tuple
 
 
 class CharacterValidationError(Exception):
     """Raised when character JSON validation fails."""
-    pass
 
 
-def validate_character_json(data: Dict[str, Any], filepath: str = "") -> Tuple[bool, List[str]]:
+def validate_character_json(  # pylint: disable=too-many-locals,too-many-branches
+    data: Dict[str, Any], filepath: str = ""
+) -> Tuple[bool, List[str]]:
     """
     Validate character JSON data against required schema.
-    
+
     Args:
         data: Character JSON data to validate
         filepath: Optional file path for error reporting
-        
+
     Returns:
         Tuple of (is_valid, error_messages)
     """
     errors = []
     file_prefix = f"{filepath}: " if filepath else ""
-    
+
     # Required fields with their expected types (matching actual character file structure)
     required_fields = {
-        'name': str,
-        'nickname': (str, type(None)),
-        'species': str,
-        'dnd_class': str,
-        'level': int,
-        'ability_scores': dict,
-        'equipment': dict,
-        'known_spells': list,
-        'background': str,
-        'backstory': str,
-        'relationships': dict
+        "name": str,
+        "nickname": (str, type(None)),
+        "species": str,
+        "dnd_class": str,
+        "level": int,
+        "ability_scores": dict,
+        "equipment": dict,
+        "known_spells": list,
+        "background": str,
+        "backstory": str,
+        "relationships": dict,
     }
-    
+
     # Check for missing required fields
     for field, expected_type in required_fields.items():
         if field not in data:
@@ -54,55 +56,72 @@ def validate_character_json(data: Dict[str, Any], filepath: str = "") -> Tuple[b
 
     # Disallowed characters in name
     disallowed_chars = set("'\"`$%&|<>/\\")
-    name = data.get('name', '')
+    name = data.get("name", "")
     if any(c in name for c in disallowed_chars):
-        errors.append(f"{file_prefix}Strange characters are not allowed in character name. Please use another name (disallowed: {''.join(disallowed_chars)}). Name: '{name}'")
-    
+        errors.append(
+            f"{file_prefix}Strange characters are not allowed in character name. "
+            f"Please use another name (disallowed: {''.join(disallowed_chars)}). "
+            f"Name: '{name}'"
+        )
+
     # Validate level range
-    if 'level' in data:
-        level = data['level']
+    if "level" in data:
+        level = data["level"]
         if isinstance(level, int):
             if level < 1 or level > 20:
-                errors.append(f"{file_prefix}Level must be between 1 and 20, got {level}")
-    
+                errors.append(
+                    f"{file_prefix}Level must be between 1 and 20, got {level}"
+                )
+
     # Validate equipment structure (actual structure has weapons, armor, items, gold)
-    if 'equipment' in data and isinstance(data['equipment'], dict):
-        equipment = data['equipment']
-        required_equipment_fields = {
-            'weapons': list,
-            'armor': list,
-            'items': list
-        }
-        
+    if "equipment" in data and isinstance(data["equipment"], dict):
+        equipment = data["equipment"]
+        required_equipment_fields = {"weapons": list, "armor": list, "items": list}
+
         for field, expected_type in required_equipment_fields.items():
             if field not in equipment:
-                errors.append(f"{file_prefix}Equipment missing required field: '{field}'")
+                errors.append(
+                    f"{file_prefix}Equipment missing required field: '{field}'"
+                )
             elif not isinstance(equipment[field], expected_type):
                 errors.append(
                     f"{file_prefix}Equipment field '{field}' should be {expected_type.__name__}, "
                     f"got {type(equipment[field]).__name__}"
                 )
-    
+
     # Validate array contents
-    if 'known_spells' in data and isinstance(data['known_spells'], list):
-        if not all(isinstance(item, str) for item in data['known_spells']):
+    if "known_spells" in data and isinstance(data["known_spells"], list):
+        if not all(isinstance(item, str) for item in data["known_spells"]):
             errors.append(f"{file_prefix}All items in 'known_spells' must be strings")
-    
+
     # Validate ability_scores structure
-    if 'ability_scores' in data and isinstance(data['ability_scores'], dict):
-        required_abilities = ['strength', 'dexterity', 'constitution', 'intelligence', 'wisdom', 'charisma']
+    if "ability_scores" in data and isinstance(data["ability_scores"], dict):
+        required_abilities = [
+            "strength",
+            "dexterity",
+            "constitution",
+            "intelligence",
+            "wisdom",
+            "charisma",
+        ]
         for ability in required_abilities:
-            if ability not in data['ability_scores']:
+            if ability not in data["ability_scores"]:
                 errors.append(f"{file_prefix}Missing ability score: '{ability}'")
-            elif not isinstance(data['ability_scores'][ability], int):
-                errors.append(f"{file_prefix}Ability score '{ability}' must be an integer")
-    
+            elif not isinstance(data["ability_scores"][ability], int):
+                errors.append(
+                    f"{file_prefix}Ability score '{ability}' must be an integer"
+                )
+
     # Validate relationships structure
-    if 'relationships' in data and isinstance(data['relationships'], dict):
-        relationships = data['relationships']
-        if not all(isinstance(k, str) and isinstance(v, str) for k, v in relationships.items()):
-            errors.append(f"{file_prefix}All keys and values in 'relationships' must be strings")
-    
+    if "relationships" in data and isinstance(data["relationships"], dict):
+        relationships = data["relationships"]
+        if not all(
+            isinstance(k, str) and isinstance(v, str) for k, v in relationships.items()
+        ):
+            errors.append(
+                f"{file_prefix}All keys and values in 'relationships' must be strings"
+            )
+
     is_valid = len(errors) == 0
     return is_valid, errors
 
@@ -110,24 +129,22 @@ def validate_character_json(data: Dict[str, Any], filepath: str = "") -> Tuple[b
 def validate_character_file(filepath: str) -> Tuple[bool, List[str]]:
     """
     Validate a character JSON file.
-    
+
     Args:
         filepath: Path to character JSON file
-        
+
     Returns:
         Tuple of (is_valid, error_messages)
     """
-    import json
-    
     try:
-        with open(filepath, 'r', encoding='utf-8') as f:
+        with open(filepath, "r", encoding="utf-8") as f:
             data = json.load(f)
-        
+
         return validate_character_json(data, filepath)
-        
+
     except json.JSONDecodeError as e:
         return False, [f"{filepath}: Invalid JSON - {str(e)}"]
-    except Exception as e:
+    except (OSError, IOError, PermissionError) as e:
         return False, [f"{filepath}: Error reading file - {str(e)}"]
 
 
@@ -144,31 +161,33 @@ def print_validation_report(filepath: str, is_valid: bool, errors: List[str]) ->
 if __name__ == "__main__":
     import sys
     import os
-    
+
     if len(sys.argv) > 1:
         # Validate specific file
-        filepath = sys.argv[1]
-        is_valid, errors = validate_character_file(filepath)
-        print_validation_report(filepath, is_valid, errors)
-        sys.exit(0 if is_valid else 1)
+        file_path = sys.argv[1]
+        valid, error_list = validate_character_file(file_path)
+        print_validation_report(file_path, valid, error_list)
+        sys.exit(0 if valid else 1)
     else:
         # Validate all character files
-        characters_path = "game_data/characters"
-        if not os.path.exists(characters_path):
-            print(f"Error: {characters_path} directory not found")
+        CHARACTERS_PATH = "game_data/characters"
+        if not os.path.exists(CHARACTERS_PATH):
+            print(f"Error: {CHARACTERS_PATH} directory not found")
             sys.exit(1)
-        
-        all_valid = True
-        for filename in os.listdir(characters_path):
-            if (filename.endswith('.json') and 
-                not filename.startswith('class.example') and 
-                not filename.endswith('.example.json')):
-                
-                filepath = os.path.join(characters_path, filename)
-                is_valid, errors = validate_character_file(filepath)
-                print_validation_report(filepath, is_valid, errors)
-                
-                if not is_valid:
-                    all_valid = False
-        
-        sys.exit(0 if all_valid else 1)
+
+        ALL_VALID = True
+        for filename in os.listdir(CHARACTERS_PATH):
+            if (
+                filename.endswith(".json")
+                and not filename.startswith("class.example")
+                and not filename.endswith(".example.json")
+            ):
+
+                file_path = os.path.join(CHARACTERS_PATH, filename)
+                valid, error_list = validate_character_file(file_path)
+                print_validation_report(file_path, valid, error_list)
+
+                if not valid:
+                    ALL_VALID = False
+
+        sys.exit(0 if ALL_VALID else 1)

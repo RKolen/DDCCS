@@ -122,7 +122,7 @@ python -c "from enhanced_story_manager import EnhancedStoryManager; sm = Enhance
 ### Test Party Validation
 ```bash
 # Create invalid party (will show warnings)
-python -c "from enhanced_story_manager import save_current_party; save_current_party([])"
+python -c "from party_config_manager import save_current_party; save_current_party([])"
 ```
 
 ### Test Items Validation

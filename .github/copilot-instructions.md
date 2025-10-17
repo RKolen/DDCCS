@@ -97,7 +97,25 @@ Each of the 12 character consultants provides:
 
 ## Coding Guidelines
 
-When working with this codebase:
+### ⚠️ CRITICAL: No Pylint Disable Comments
+
+**NEVER use `# pylint: disable=...` comments** except for these specific cases:
+- `too-many-lines` (temporary, until file is split)
+- `too-many-instance-attributes` (acceptable for dataclasses representing complex D&D entities)
+- `too-many-public-methods` (acceptable for main CLI classes)
+
+**Instead, properly fix the issue:**
+- **Import outside toplevel:** Move imports to module top level
+- **Too many arguments:** Use builder pattern, config dicts, or dataclasses
+- **Too complex functions:** Extract helper functions or split into smaller methods
+- **Unused variables:** Remove them or prefix with `_` if required by API
+- **Long lines:** Split properly using parentheses and line continuations
+- **Broad exceptions:** Use specific exception types
+- **File too long (>1000 lines):** Split into multiple modules (see future_rework.md)
+
+If you encounter a pylint warning, propose a proper architectural solution and document it in `docs/docs_personal/future_rework.md` for review.
+
+### When working with this codebase:
 
 1. **Character Profiles**: All stored as JSON in `game_data/characters/` directory with user-customizable backgrounds
 2. **Story Analysis**: Parse markdown files for CHARACTER/ACTION/REASONING blocks
@@ -184,8 +202,13 @@ I've got, but there's been strange happenings lately..."
 
 ## Main Commands
 
-- `python dnd_consultant.py` - Interactive consultant interface
-- `python setup.py` - Initialize workspace with default characters
+- `python setup.py` - One-time workspace initialization (creates VSCode config, verifies folders)
+- `python dnd_consultant.py` - **Main interactive tool** for all user workflows:
+  - Create and manage campaigns
+  - Create and edit story files
+  - Manage party configuration
+  - Get character consultations and DC suggestions
+  - Convert combat logs to narratives
 - VS Code tasks for quick access via Ctrl+Shift+P
 
 ## JSON Validation System
@@ -341,7 +364,6 @@ When assisting with this project:
 - Help customize character profiles with rich backgrounds
 - Assist with story analysis and consistency checking
 - Support VSCode task configuration
-- Help integrate Fantasy Grounds Unity workflows
 - Guide DC balancing for character abilities
 
 This system enhances user creativity rather than replacing it - the user maintains full control while getting expert character consultation.

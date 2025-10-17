@@ -8,6 +8,8 @@ from enum import Enum
 
 
 class DnDClass(Enum):
+    """D&D 5e character classes."""
+
     BARBARIAN = "Barbarian"
     BARD = "Bard"
     CLERIC = "Cleric"
@@ -23,6 +25,8 @@ class DnDClass(Enum):
 
 
 class Species(Enum):
+    """D&D 5e character species/ancestries."""
+
     AASIMAR = "Aasimar"
     HUMAN = "Human"
     ELF = "Elf"
@@ -34,36 +38,54 @@ class Species(Enum):
     ORC = "Orc"
     TIEFLING = "Tiefling"
 
+
 # Lineage/subspecies definitions
 ELF_LINEAGES = ["High Elf", "Wood Elf", "Drow"]
 GNOME_LINEAGES = ["Forest Gnome", "Rock Gnome"]
 TIEFLING_LINEAGES = ["Chthonic", "Abyssal", "Infernal"]
 DRAGONBORN_LINEAGES = [
-    "Black (Chromatic)", "Blue (Chromatic)", "Green (Chromatic)", "Red (Chromatic)", "White (Chromatic)",
-    "Brass (Metallic)", "Bronze (Metallic)", "Copper (Metallic)", "Gold (Metallic)", "Silver (Metallic)"
+    "Black (Chromatic)",
+    "Blue (Chromatic)",
+    "Green (Chromatic)",
+    "Red (Chromatic)",
+    "White (Chromatic)",
+    "Brass (Metallic)",
+    "Bronze (Metallic)",
+    "Copper (Metallic)",
+    "Gold (Metallic)",
+    "Silver (Metallic)",
 ]
-GOLIATH_LINEAGES = ["Hill Giant", "Cloud Giant", "Fire Giant", "Frost Giant", "Stone Giant", "Storm Giant"]
+GOLIATH_LINEAGES = [
+    "Hill Giant",
+    "Cloud Giant",
+    "Fire Giant",
+    "Frost Giant",
+    "Stone Giant",
+    "Storm Giant",
+]
 
 
 @dataclass
 class AbilityScores:
     """D&D 5e ability scores."""
+
     strength: int = 10
     dexterity: int = 10
     constitution: int = 10
     intelligence: int = 10
     wisdom: int = 10
     charisma: int = 10
-    
+
     def get_modifier(self, ability: str) -> int:
         """Calculate the modifier for a given ability score."""
         score = getattr(self, ability.lower(), 10)
         return (score - 10) // 2
 
 
-@dataclass  
-class Skills:
+@dataclass
+class Skills:  # pylint: disable=too-many-instance-attributes
     """D&D 5e skills."""
+
     acrobatics: int = 0
     animal_handling: int = 0
     arcana: int = 0
@@ -85,8 +107,9 @@ class Skills:
 
 
 @dataclass
-class Equipment:
+class Equipment:  # pylint: disable=too-many-instance-attributes
     """D&D 5e equipment."""
+
     weapons: List[str] = field(default_factory=list)
     armor: List[str] = field(default_factory=list)
     items: List[str] = field(default_factory=list)
@@ -94,8 +117,9 @@ class Equipment:
 
 
 @dataclass
-class Spell:
+class Spell: # pylint: disable=too-many-instance-attributes
     """D&D 5e spell."""
+
     name: str
     level: int
     school: str
@@ -108,8 +132,9 @@ class Spell:
 
 
 @dataclass
-class CharacterSheet:
+class CharacterSheet:  # pylint: disable=too-many-instance-attributes
     """Complete D&D 5e character sheet matching JSON structure."""
+
     name: str
     species: str
     dnd_class: str
@@ -137,54 +162,54 @@ class CharacterSheet:
     specialized_abilities: List[str] = field(default_factory=list)
     major_plot_actions: List[dict] = field(default_factory=list)
     relationships: Dict[str, str] = field(default_factory=dict)
-    
+
     def get_major_plot_actions(self) -> List[dict]:
         """Return the character's major plot actions."""
         return self.major_plot_actions
-    
+
     def get_ability_modifier(self, ability: str) -> int:
         """Get the modifier for a given ability score."""
         score = self.ability_scores.get(ability, 10)
         return (score - 10) // 2
-    
+
     def get_skill_bonus(self, skill: str) -> int:
         """Calculate total skill bonus including ability modifier and proficiency."""
         skill_value = self.skills.get(skill, 0)
-        
+
         # Map skills to their governing abilities
         skill_abilities = {
-            'acrobatics': 'dexterity',
-            'animal_handling': 'wisdom',
-            'arcana': 'intelligence',
-            'athletics': 'strength',
-            'deception': 'charisma',
-            'history': 'intelligence',
-            'insight': 'wisdom',
-            'intimidation': 'charisma',
-            'investigation': 'intelligence',
-            'medicine': 'wisdom',
-            'nature': 'intelligence',
-            'perception': 'wisdom',
-            'performance': 'charisma',
-            'persuasion': 'charisma',
-            'religion': 'intelligence',
-            'sleight_of_hand': 'dexterity',
-            'stealth': 'dexterity',
-            'survival': 'wisdom'
+            "acrobatics": "dexterity",
+            "animal_handling": "wisdom",
+            "arcana": "intelligence",
+            "athletics": "strength",
+            "deception": "charisma",
+            "history": "intelligence",
+            "insight": "wisdom",
+            "intimidation": "charisma",
+            "investigation": "intelligence",
+            "medicine": "wisdom",
+            "nature": "intelligence",
+            "perception": "wisdom",
+            "performance": "charisma",
+            "persuasion": "charisma",
+            "religion": "intelligence",
+            "sleight_of_hand": "dexterity",
+            "stealth": "dexterity",
+            "survival": "wisdom",
         }
-        
-        ability = skill_abilities.get(skill, 'strength')
+
+        ability = skill_abilities.get(skill, "strength")
         ability_mod = self.get_ability_modifier(ability)
-        
+
         # If skill is trained (non-zero), add proficiency bonus
         proficiency = self.proficiency_bonus if skill_value > 0 else 0
-        
+
         return ability_mod + proficiency + skill_value
-    
+
     def can_cast_spell(self, spell_level: int) -> bool:
         """Check if character has spell slots for given level."""
         return self.spell_slots.get(str(spell_level), 0) > 0
-    
+
     def use_spell_slot(self, spell_level: int) -> bool:
         """Use a spell slot of given level. Returns True if successful."""
         if self.can_cast_spell(spell_level):
@@ -193,9 +218,8 @@ class CharacterSheet:
         return False
 
 
-
 # Base blank character template for manual entry
-def create_blank_character(
+def create_blank_character(  # pylint: disable=too-many-arguments,too-many-positional-arguments
     name: str = "",
     species: str = "Human",
     lineage: str = None,
@@ -205,7 +229,7 @@ def create_blank_character(
     feats: list = None,
     magic_items: list = None,
     class_abilities: list = None,
-    specialized_abilities: list = None
+    specialized_abilities: list = None,
 ) -> CharacterSheet:
     """Create a blank character sheet for manual entry."""
     # Set up default ability scores and skills
@@ -215,9 +239,9 @@ def create_blank_character(
         "constitution": 10,
         "intelligence": 10,
         "wisdom": 10,
-        "charisma": 10
+        "charisma": 10,
     }
-    
+
     default_skills = {
         "acrobatics": 0,
         "animal_handling": 0,
@@ -236,15 +260,11 @@ def create_blank_character(
         "religion": 0,
         "sleight_of_hand": 0,
         "stealth": 0,
-        "survival": 0
+        "survival": 0,
     }
-    
-    default_equipment = {
-        "weapons": [],
-        "armor": [],
-        "items": []
-    }
-    
+
+    default_equipment = {"weapons": [], "armor": [], "items": []}
+
     return CharacterSheet(
         name=name,
         species=species,
@@ -270,15 +290,20 @@ def create_blank_character(
         feats=feats if feats is not None else [],
         magic_items=magic_items if magic_items is not None else [],
         class_abilities=class_abilities if class_abilities is not None else [],
-        specialized_abilities=specialized_abilities if specialized_abilities is not None else [],
+        specialized_abilities=(
+            specialized_abilities if specialized_abilities is not None else []
+        ),
         major_plot_actions=[],
-        relationships={}
+        relationships={},
     )
 
 
 @dataclass
-class NPCProfile:
+class NPCProfile:  # pylint: disable=too-many-instance-attributes
+    """NPC character profile for D&D campaigns."""
+
     name: str
+    nickname: Optional[str] = None
     role: str = "NPC"
     species: str = "Human"  # Species/ancestry (e.g., "Elf", "Dwarf", "Human")
     lineage: str = ""  # Optional lineage/subspecies (e.g., "High Elf", "Hill Dwarf")

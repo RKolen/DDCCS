@@ -3,6 +3,7 @@ Main D&D Character Consultant Interface
 VSCode-integrated system for story management and character consultation.
 """
 
+import argparse
 import os
 from typing import Dict, List, Any
 from story_manager import StoryManager
@@ -10,6 +11,14 @@ from combat_narrator import CombatNarrator
 from character_consultants import CharacterProfile
 from dungeon_master import DMConsultant
 from dnd_cli_helpers import edit_character_profile_interactive
+
+# Optional AI client import
+try:
+    from ai_client import AIClient
+    AI_CLIENT_AVAILABLE = True
+except ImportError:
+    AIClient = None
+    AI_CLIENT_AVAILABLE = False
 
 
 class DDConsultantCLI:
@@ -123,7 +132,7 @@ class DDConsultantCLI:
             self.story_manager.save_character_profile(profile)
 
         # Reload consultants
-        self.story_manager._load_characters()
+        self.story_manager.load_characters()
         self.combat_narrator = CombatNarrator(self.story_manager.consultants)
 
         print(f"\\n✅ Created {len(default_profiles)} characters!")
@@ -697,12 +706,15 @@ class DDConsultantCLI:
 
         # Initialize AI client if needed
         if not hasattr(self, "ai_client") or self.ai_client is None:
-            try:
-                from ai_client import AIClient
-
-                self.ai_client = AIClient()
-            except (ImportError, AttributeError, ValueError) as e:
-                print(f"⚠️  Could not initialize AI client: {e}")
+            if AI_CLIENT_AVAILABLE:
+                try:
+                    self.ai_client = AIClient()
+                except (AttributeError, ValueError) as e:
+                    print(f"⚠️  Could not initialize AI client: {e}")
+                    print("   Using fallback mode...")
+                    self.ai_client = None
+            else:
+                print("⚠️  AI client not available")
                 print("   Using fallback mode...")
                 self.ai_client = None
 
@@ -910,8 +922,6 @@ class DDConsultantCLI:
 
 def main():
     """Main entry point."""
-    import argparse
-
     parser = argparse.ArgumentParser(description="D&D Character Consultant System")
     parser.add_argument("--workspace", help="Workspace directory path", default=None)
     parser.add_argument(

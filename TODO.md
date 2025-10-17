@@ -8,13 +8,13 @@
   - [x] All 7 extracted modules (10.00/10): character_consistency, hooks_and_analysis, npc_auto_detection, party_config_manager, session_results_manager, story_file_manager, text_formatting_utils
   - [x] npc_auto_detection.py (9.66 → 10.00/10)
   - [x] dungeon_master.py (8.85 → 10.00/10)
-  - [ ] character_consultants.py
-  - [ ] story_manager.py
-  - [ ] combat_narrator.py
-  - [ ] ai_client.py
-  - [ ] rag_system.py
-  - [ ] All validator files
-  - [ ] Setup and helper files
+  - [x] character_consultants.py
+  - [x] story_manager.py
+  - [x] combat_narrator.py
+  - [x] ai_client.py
+  - [x] rag_system.py
+  - [x] All validator files
+  - [x] Setup and helper files
 
   - [ ] **Comprehensive system testing** - End-to-end testing of all workflows
   - [ ] Story creation flow (new series, in-series, standalone)

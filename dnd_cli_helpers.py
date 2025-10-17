@@ -4,7 +4,6 @@ Helper functions for DND Consultant CLI
 Extracts complex UI interaction logic to reduce complexity in main CLI file.
 """
 
-import os
 from typing import List, Tuple, Optional
 from character_consultants import CharacterProfile
 
@@ -145,7 +144,7 @@ def get_combat_narrative_style() -> str:
     style_choice = input(
         "Enter choice (1-4, or press Enter for Cinematic): "
     ).strip()
-    
+
     style_map = {
         "1": "cinematic",
         "2": "gritty",
@@ -201,7 +200,7 @@ def select_story_from_series(
     series_choice = input(
         "\nSelect series number (or press Enter to skip): "
     ).strip()
-    
+
     if not series_choice.isdigit():
         return None, None
 

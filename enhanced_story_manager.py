@@ -66,7 +66,7 @@ class EnhancedStoryManager:  # pylint: disable=too-many-public-methods
         os.makedirs(self.stories_path, exist_ok=True)
 
         # Load existing characters
-        self._load_characters()
+        self.load_characters()
 
     def get_current_party(self) -> List[str]:
         """Get current party members from configuration."""
@@ -96,7 +96,7 @@ class EnhancedStoryManager:  # pylint: disable=too-many-public-methods
         else:
             print(f"[WARNING] {character_name} is not in the party")
 
-    def _load_characters(self):
+    def load_characters(self):
         """Load all character profiles and create consultants."""
         if not os.path.exists(self.characters_path):
             return

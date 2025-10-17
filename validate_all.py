@@ -10,42 +10,47 @@ Validates all JSON data files in the D&D Campaign System:
 Usage:
     # Validate all game data
     python validate_all.py
-    
+
     # Validate specific types
     python validate_all.py --characters
     python validate_all.py --npcs
     python validate_all.py --items
     python validate_all.py --party
-    
+
     # Validate with verbose output
     python validate_all.py --verbose
 """
 
 import sys
 import os
-from typing import Dict, List, Tuple
+from typing import Dict, Tuple
+import argparse
 
 # Import all validators
 try:
     from character_validator import validate_character_file
+
     CHAR_AVAILABLE = True
 except ImportError:
     CHAR_AVAILABLE = False
 
 try:
     from npc_validator import validate_npc_file
+
     NPC_AVAILABLE = True
 except ImportError:
     NPC_AVAILABLE = False
 
 try:
     from items_validator import validate_items_file
+
     ITEMS_AVAILABLE = True
 except ImportError:
     ITEMS_AVAILABLE = False
 
 try:
     from party_validator import validate_party_file
+
     PARTY_AVAILABLE = True
 except ImportError:
     PARTY_AVAILABLE = False
@@ -56,23 +61,23 @@ def validate_characters(verbose: bool = False) -> Tuple[bool, int, int]:
     if not CHAR_AVAILABLE:
         print("⚠ Character validator not available")
         return (True, 0, 0)
-    
+
     print("\n=== Validating Characters ===")
     characters_dir = os.path.join("game_data", "characters")
-    
+
     if not os.path.exists(characters_dir):
         print(f"⚠ Characters directory not found: {characters_dir}")
         return (True, 0, 0)
-    
+
     all_valid = True
     valid_count = 0
     invalid_count = 0
-    
+
     for filename in sorted(os.listdir(characters_dir)):
-        if filename.endswith('.json') and not filename.endswith('.example.json'):
+        if filename.endswith(".json") and not filename.endswith(".example.json"):
             filepath = os.path.join(characters_dir, filename)
             is_valid, errors = validate_character_file(filepath)
-            
+
             if is_valid:
                 valid_count += 1
                 if verbose:
@@ -83,13 +88,13 @@ def validate_characters(verbose: bool = False) -> Tuple[bool, int, int]:
                 print(f"  ✗ {filename}: INVALID")
                 for error in errors:
                     print(f"    - {error}")
-    
+
     if not verbose and valid_count > 0:
         print(f"  ✓ {valid_count} character(s) validated successfully")
-    
+
     if invalid_count > 0:
         print(f"  ✗ {invalid_count} character(s) failed validation")
-    
+
     return (all_valid, valid_count, invalid_count)
 
 
@@ -98,23 +103,23 @@ def validate_npcs(verbose: bool = False) -> Tuple[bool, int, int]:
     if not NPC_AVAILABLE:
         print("⚠ NPC validator not available")
         return (True, 0, 0)
-    
+
     print("\n=== Validating NPCs ===")
     npcs_dir = os.path.join("game_data", "npcs")
-    
+
     if not os.path.exists(npcs_dir):
         print(f"⚠ NPCs directory not found: {npcs_dir}")
         return (True, 0, 0)
-    
+
     all_valid = True
     valid_count = 0
     invalid_count = 0
-    
+
     for filename in sorted(os.listdir(npcs_dir)):
-        if filename.endswith('.json') and not filename.endswith('.example.json'):
+        if filename.endswith(".json") and not filename.endswith(".example.json"):
             filepath = os.path.join(npcs_dir, filename)
             is_valid, errors = validate_npc_file(filepath)
-            
+
             if is_valid:
                 valid_count += 1
                 if verbose:
@@ -125,69 +130,67 @@ def validate_npcs(verbose: bool = False) -> Tuple[bool, int, int]:
                 print(f"  ✗ {filename}: INVALID")
                 for error in errors:
                     print(f"    - {error}")
-    
+
     if not verbose and valid_count > 0:
         print(f"  ✓ {valid_count} NPC(s) validated successfully")
-    
+
     if invalid_count > 0:
         print(f"  ✗ {invalid_count} NPC(s) failed validation")
-    
+
     return (all_valid, valid_count, invalid_count)
 
 
-def validate_items(verbose: bool = False) -> Tuple[bool, int, int]:
+def validate_items() -> Tuple[bool, int, int]:
     """Validate items registry file."""
     if not ITEMS_AVAILABLE:
         print("⚠ Items validator not available")
         return (True, 0, 0)
-    
+
     print("\n=== Validating Items Registry ===")
     items_file = os.path.join("game_data", "items", "custom_items_registry.json")
-    
+
     if not os.path.exists(items_file):
         print(f"⚠ Items registry not found: {items_file}")
         return (True, 0, 0)
-    
+
     is_valid, errors = validate_items_file(items_file)
-    
+
     if is_valid:
-        print(f"  ✓ Items registry validated successfully")
+        print("  ✓ Items registry validated successfully")
         return (True, 1, 0)
-    else:
-        print(f"  ✗ Items registry: INVALID")
-        for error in errors:
-            print(f"    - {error}")
-        return (False, 0, 1)
+    print("  ✗ Items registry: INVALID")
+    for error in errors:
+        print(f"    - {error}")
+    return (False, 0, 1)
 
 
-def validate_party(verbose: bool = False) -> Tuple[bool, int, int]:
+def validate_party() -> Tuple[bool, int, int]:
     """Validate party configuration file."""
     if not PARTY_AVAILABLE:
         print("⚠ Party validator not available")
         return (True, 0, 0)
-    
+
     print("\n=== Validating Party Configuration ===")
     party_file = os.path.join("game_data", "current_party", "current_party.json")
-    
+
     if not os.path.exists(party_file):
         print(f"⚠ Party configuration not found: {party_file}")
         return (True, 0, 0)
-    
+
     # Get characters directory for cross-reference
     characters_dir = os.path.join("game_data", "characters")
     if not os.path.exists(characters_dir):
         characters_dir = None
-    
+
     is_valid, errors = validate_party_file(party_file, characters_dir)
-    
+
     if is_valid:
-        print(f"  ✓ Party configuration validated successfully")
+        print("  ✓ Party configuration validated successfully")
         return (True, 1, 0)
-    else:
-        print(f"  ✗ Party configuration: INVALID")
-        for error in errors:
-            print(f"    - {error}")
-        return (False, 0, 1)
+    print("  ✗ Party configuration: INVALID")
+    for error in errors:
+        print(f"    - {error}")
+    return (False, 0, 1)
 
 
 def print_summary(results: Dict[str, Tuple[bool, int, int]]):
@@ -195,11 +198,11 @@ def print_summary(results: Dict[str, Tuple[bool, int, int]]):
     print("\n" + "=" * 50)
     print("VALIDATION SUMMARY")
     print("=" * 50)
-    
+
     total_valid = 0
     total_invalid = 0
     all_passed = True
-    
+
     for data_type, (passed, valid, invalid) in results.items():
         status = "✓ PASS" if passed else "✗ FAIL"
         print(f"{data_type:20} {status:10} ({valid} valid, {invalid} invalid)")
@@ -207,70 +210,63 @@ def print_summary(results: Dict[str, Tuple[bool, int, int]]):
         total_invalid += invalid
         if not passed:
             all_passed = False
-    
+
     print("=" * 50)
     print(f"Total: {total_valid} valid, {total_invalid} invalid")
-    
+
     if all_passed:
         print("\n✓ All game data validated successfully!")
     else:
         print("\n✗ Some game data failed validation")
-    
+
     return all_passed
 
 
 def main():
     """Main validation function."""
-    import argparse
-    
+        # import argparse - Removed unused import
+
     parser = argparse.ArgumentParser(
         description="Validate all JSON data files in the D&D Campaign System"
     )
     parser.add_argument(
-        "--characters", action="store_true",
-        help="Validate only character files"
+        "--characters", action="store_true", help="Validate only character files"
+    )
+    parser.add_argument("--npcs", action="store_true", help="Validate only NPC files")
+    parser.add_argument(
+        "--items", action="store_true", help="Validate only items registry"
     )
     parser.add_argument(
-        "--npcs", action="store_true",
-        help="Validate only NPC files"
+        "--party", action="store_true", help="Validate only party configuration"
     )
     parser.add_argument(
-        "--items", action="store_true",
-        help="Validate only items registry"
+        "--verbose", "-v", action="store_true", help="Show validation for each file"
     )
-    parser.add_argument(
-        "--party", action="store_true",
-        help="Validate only party configuration"
-    )
-    parser.add_argument(
-        "--verbose", "-v", action="store_true",
-        help="Show validation for each file"
-    )
-    
+
     args = parser.parse_args()
-    
+
     # If no specific type selected, validate all
     validate_all = not (args.characters or args.npcs or args.items or args.party)
-    
+
     print("D&D Campaign System - Game Data Validation")
     print("=" * 50)
-    
+
     results = {}
-    
+
     if validate_all or args.characters:
         results["Characters"] = validate_characters(args.verbose)
-    
+
     if validate_all or args.npcs:
         results["NPCs"] = validate_npcs(args.verbose)
-    
+
     if validate_all or args.items:
-        results["Items Registry"] = validate_items(args.verbose)
-    
+        results["Items Registry"] = validate_items()
+
     if validate_all or args.party:
-        results["Party Config"] = validate_party(args.verbose)
-    
+        results["Party Config"] = validate_party()
+
     all_passed = print_summary(results)
-    
+
     sys.exit(0 if all_passed else 1)
 
 
