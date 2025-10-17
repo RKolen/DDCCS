@@ -6,16 +6,16 @@ and data types according to the D&D Campaign System schema.
 
 Usage:
     # Standalone validation
-    python items_validator.py [filepath]
+    python -m src.validation.items_validator [filepath]
 
     # Programmatic validation
     from src.validation.items_validator import validate_items_json, validate_items_file
     is_valid, errors = validate_items_file("game_data/items/custom_items_registry.json")
 """
 
-import json
-import os
 from typing import Dict, Any, List, Tuple
+from src.utils.file_io import load_json_file
+from src.utils.path_utils import get_items_registry_path
 
 
 class ItemsValidationError(Exception):
@@ -139,22 +139,19 @@ def validate_items_file(filepath: str) -> Tuple[bool, List[str]]:
     Returns:
         Tuple of (is_valid, list_of_errors)
     """
-
-    # Check if file exists
-    if not os.path.exists(filepath):
-        return (False, [f"File not found: {filepath}"])
-
     # Try to load and parse JSON
     try:
-        with open(filepath, "r", encoding="utf-8") as f:
-            data = json.load(f)
-    except json.JSONDecodeError as e:
+        data = load_json_file(filepath)
+        if data is None:
+            return (False, [f"File not found: {filepath}"])
+
+        # Validate the data
+        return validate_items_json(data)
+
+    except ValueError as e:  # json.JSONDecodeError is a subclass of ValueError
         return (False, [f"Invalid JSON format: {e}"])
     except OSError as e:
         return (False, [f"Error reading file: {e}"])
-
-    # Validate the data
-    return validate_items_json(data)
 
 
 def print_validation_report(filepath: str, valid_result: bool, errors: List[str]):
@@ -178,12 +175,7 @@ if __name__ == "__main__":
         sys.exit(0 if is_valid else 1)
     else:
         # Validate items registry file
-        items_file = os.path.join("game_data", "items", "custom_items_registry.json")
-
-        if not os.path.exists(items_file):
-            print(f"Error: Items registry file not found: {items_file}")
-            print("Looking for custom_items_registry.json in game_data/items/")
-            sys.exit(1)
+        items_file = get_items_registry_path()
 
         is_valid, validation_errors = validate_items_file(items_file)
         print_validation_report(items_file, is_valid, validation_errors)

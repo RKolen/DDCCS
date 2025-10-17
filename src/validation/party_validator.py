@@ -13,10 +13,15 @@ Usage:
     is_valid, errors = validate_party_file("game_data/current_party/current_party.json")
 """
 
-import json
-import os
 from typing import Dict, Any, List, Tuple
 from datetime import datetime
+
+from ..utils.file_io import (
+    load_json_file,
+    file_exists,
+    get_json_files_in_directory
+)
+from ..utils.path_utils import get_characters_dir, get_party_config_path
 
 
 class PartyValidationError(Exception):
@@ -32,7 +37,7 @@ def _validate_required_fields(data: Dict[str, Any]) -> List[str]:
         elif not isinstance(data[field], expected_type):
             errors.append(
                 f"Field '{field}' must be of type {expected_type.__name__}, "
-                "got {type(data[field]).__name__}"
+                f"got {type(data[field]).__name__}"
             )
     return errors
 
@@ -66,25 +71,25 @@ def _validate_party_cross_reference(
     if (
         not isinstance(members, list)
         or not characters_dir
-        or not os.path.exists(characters_dir)
+        or not file_exists(characters_dir)
     ):
         return errors
     available_characters = set()
-    for filename in os.listdir(characters_dir):
-        if filename.endswith(".json") and not filename.endswith(".example.json"):
-            char_path = os.path.join(characters_dir, filename)
-            try:
-                with open(char_path, "r", encoding="utf-8") as f:
-                    char_data = json.load(f)
-                    if "name" in char_data:
-                        available_characters.add(char_data["name"])
-            except (json.JSONDecodeError, OSError):
-                continue
+
+    for char_file in get_json_files_in_directory(characters_dir):
+        if char_file.endswith(".example.json"):
+            continue
+        try:
+            char_data = load_json_file(char_file)
+            if "name" in char_data:
+                available_characters.add(char_data["name"])
+        except (ValueError, OSError):
+            continue
     for member in members:
         if isinstance(member, str) and member not in available_characters:
             errors.append(
                 f"Party member '{member}' does not match any character "
-                "file in {characters_dir}"
+                f"file in {characters_dir}"
             )
     return errors
 
@@ -138,16 +143,13 @@ def validate_party_file(
         Tuple[bool, List[str]]: (is_valid, list_of_errors)
     """
     # Check if file exists
-    if not os.path.exists(party_file_path):
+    if not file_exists(party_file_path):
         return (False, [f"File not found: {party_file_path}"])
 
     try:
-        with open(party_file_path, "r", encoding="utf-8") as file:
-            data = json.load(file)
-    except json.JSONDecodeError as err:
-        return (False, [f"Invalid JSON format: {err}"])
-    except OSError as err:
-        return (False, [f"Error reading file: {err}"])
+        data = load_json_file(party_file_path)
+    except (ValueError, OSError) as err:
+        return (False, [f"Error loading file: {err}"])
     return validate_party_json(data, characters_dir)
 
 
@@ -169,27 +171,27 @@ if __name__ == "__main__":
         filepath = sys.argv[1]
 
         # Auto-detect characters directory for cross-reference
-        CHARACTERS_PATH = os.path.join("game_data", "characters")
-        if not os.path.exists(CHARACTERS_PATH):
+        CHARACTERS_PATH = get_characters_dir()
+        if not file_exists(CHARACTERS_PATH):
             CHARACTERS_PATH = None
 
-            main_valid, main_errors = validate_party_file(filepath, CHARACTERS_PATH)
-            print_validation_report(filepath, main_valid, main_errors)
-            sys.exit(0 if main_valid else 1)
+        main_valid, main_errors = validate_party_file(filepath, CHARACTERS_PATH)
+        print_validation_report(filepath, main_valid, main_errors)
+        sys.exit(0 if main_valid else 1)
     else:
         # Validate current party file
-        PARTY_FILE = os.path.join("game_data", "current_party", "current_party.json")
-        if not os.path.exists(PARTY_FILE):
+        PARTY_FILE = get_party_config_path()
+        if not file_exists(PARTY_FILE):
             print(f"Error: Party configuration file not found: {PARTY_FILE}")
             print("Looking for current_party.json in game_data/current_party/")
             sys.exit(1)
 
-        MAIN_CHARACTERS_DIR = os.path.join("game_data", "characters")
-        if not os.path.exists(MAIN_CHARACTERS_DIR):
+        MAIN_CHARACTERS_DIR = get_characters_dir()
+        if not file_exists(MAIN_CHARACTERS_DIR):
             MAIN_CHARACTERS_DIR = None
 
-            main_valid, main_errors = validate_party_file(
-                PARTY_FILE, MAIN_CHARACTERS_DIR
-            )
-            print_validation_report(PARTY_FILE, main_valid, main_errors)
-            sys.exit(0 if main_valid else 1)
+        main_valid, main_errors = validate_party_file(
+            PARTY_FILE, MAIN_CHARACTERS_DIR
+        )
+        print_validation_report(PARTY_FILE, main_valid, main_errors)
+        sys.exit(0 if main_valid else 1)

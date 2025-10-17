@@ -6,16 +6,16 @@ and proper data types according to the D&D Campaign System schema.
 
 Usage:
     # Standalone validation
-    python npc_validator.py [filepath]
+    python -m src.validation.npc_validator [filepath]
 
     # Programmatic validation
     from src.validation.npc_validator import validate_npc_json, validate_npc_file
     is_valid, errors = validate_npc_file("game_data/npcs/my_npc.json")
 """
 
-import json
-import os
 from typing import Dict, Any, List, Tuple
+from src.utils.file_io import load_json_file, get_json_files_in_directory
+from src.utils.path_utils import get_npcs_dir
 
 
 def _validate_ai_config(ai_config: dict) -> List[str]:
@@ -147,22 +147,19 @@ def validate_npc_file(filepath: str) -> Tuple[bool, List[str]]:
     Returns:
         Tuple of (is_valid, list_of_errors)
     """
-
-    # Check if file exists
-    if not os.path.exists(filepath):
-        return (False, [f"File not found: {filepath}"])
-
     # Try to load and parse JSON
     try:
-        with open(filepath, "r", encoding="utf-8") as f:
-            data = json.load(f)
-    except json.JSONDecodeError as e:
+        data = load_json_file(filepath)
+        if data is None:
+            return (False, [f"File not found: {filepath}"])
+
+        # Validate the data
+        return validate_npc_json(data, filepath)
+
+    except ValueError as e:  # json.JSONDecodeError is a subclass of ValueError
         return (False, [f"Invalid JSON format: {e}"])
     except OSError as e:
         return (False, [f"Error reading file: {e}"])
-
-    # Validate the data
-    return validate_npc_json(data, filepath)
 
 
 def print_validation_report(filepath: str, valid: bool, error_list: List[str]):
@@ -186,27 +183,23 @@ if __name__ == "__main__":
         sys.exit(0 if is_valid else 1)
     else:
         # Validate all NPC files
-        npcs_dir = os.path.join("game_data", "npcs")
+        npcs_dir = get_npcs_dir()
+        json_files = get_json_files_in_directory(
+            npcs_dir,
+            exclude_patterns=[".example"]
+        )
 
-        if not os.path.exists(npcs_dir):
-            print(f"Error: NPC directory not found: {npcs_dir}")
+        if not json_files:
+            print(f"No NPC files found in {npcs_dir}")
             sys.exit(1)
 
-    ALL_VALID = True
-    VALIDATED_COUNT = 0
+        ALL_VALID = True
 
-    for filename in sorted(os.listdir(npcs_dir)):
-        if filename.endswith(".json") and not filename.endswith(".example.json"):
-            npc_filepath = os.path.join(npcs_dir, filename)
-            is_valid, file_errors = validate_npc_file(npc_filepath)
-            print_validation_report(npc_filepath, is_valid, file_errors)
+        for npc_filepath in sorted(json_files):
+            is_valid, file_errors = validate_npc_file(str(npc_filepath))
+            print_validation_report(str(npc_filepath), is_valid, file_errors)
 
             if not is_valid:
                 ALL_VALID = False
-            VALIDATED_COUNT += 1
 
-    if VALIDATED_COUNT == 0:
-        print("No NPC files found to validate")
-        sys.exit(1)
-
-    sys.exit(0 if ALL_VALID else 1)
+        sys.exit(0 if ALL_VALID else 1)

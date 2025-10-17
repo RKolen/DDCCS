@@ -48,6 +48,7 @@
 ### Character System Improvements
 - [ ] **Character templates** - Create additional class-specific templates beyond the basic example
 - [ ] **Multi-class support** - Enhance character profiles to support multiclassing
+- [ ] **Current Party Alterations** - Consider current party to be part of campaign files instead
 
 ### Feature Enhancements
 - [ ] **Campaign templates** - Create templates for common campaign types (mystery, dungeon crawl, etc.)

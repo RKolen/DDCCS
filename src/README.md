@@ -45,6 +45,10 @@ src/
 │   └── rag_system.py          # RAG (Retrieval Augmented Generation)
 │
 ├── utils/              # Shared utilities
+│   ├── file_io.py                # JSON and file I/O operations
+│   ├── path_utils.py             # Game data path construction
+│   ├── string_utils.py           # String processing and normalization
+│   ├── validation_helpers.py     # Common validation patterns
 │   ├── text_formatting_utils.py  # Text formatting and wrapping
 │   └── spell_highlighter.py      # Spell detection and highlighting
 │

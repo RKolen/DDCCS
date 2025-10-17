@@ -22,9 +22,16 @@ Usage:
 """
 
 import sys
-import os
-from typing import Dict, Tuple
 import argparse
+from typing import Dict, Tuple
+
+from ..utils.file_io import get_json_files_in_directory, file_exists
+from ..utils.path_utils import (
+    get_characters_dir,
+    get_npcs_dir,
+    get_items_registry_path,
+    get_party_config_path
+)
 
 # Import all validators
 try:
@@ -63,9 +70,9 @@ def validate_characters(verbose: bool = False) -> Tuple[bool, int, int]:
         return (True, 0, 0)
 
     print("\n=== Validating Characters ===")
-    characters_dir = os.path.join("game_data", "characters")
+    characters_dir = get_characters_dir()
 
-    if not os.path.exists(characters_dir):
+    if not file_exists(characters_dir):
         print(f"⚠ Characters directory not found: {characters_dir}")
         return (True, 0, 0)
 
@@ -73,21 +80,23 @@ def validate_characters(verbose: bool = False) -> Tuple[bool, int, int]:
     valid_count = 0
     invalid_count = 0
 
-    for filename in sorted(os.listdir(characters_dir)):
-        if filename.endswith(".json") and not filename.endswith(".example.json"):
-            filepath = os.path.join(characters_dir, filename)
-            is_valid, errors = validate_character_file(filepath)
+    for filepath in sorted(get_json_files_in_directory(characters_dir)):
+        if filepath.endswith(".example.json"):
+            continue
 
-            if is_valid:
-                valid_count += 1
-                if verbose:
-                    print(f"  ✓ {filename}")
-            else:
-                invalid_count += 1
-                all_valid = False
-                print(f"  ✗ {filename}: INVALID")
-                for error in errors:
-                    print(f"    - {error}")
+        is_valid, errors = validate_character_file(filepath)
+        filename = filepath.split("\\")[-1]  # Get just the filename for display
+
+        if is_valid:
+            valid_count += 1
+            if verbose:
+                print(f"  ✓ {filename}")
+        else:
+            invalid_count += 1
+            all_valid = False
+            print(f"  ✗ {filename}: INVALID")
+            for error in errors:
+                print(f"    - {error}")
 
     if not verbose and valid_count > 0:
         print(f"  ✓ {valid_count} character(s) validated successfully")
@@ -105,9 +114,9 @@ def validate_npcs(verbose: bool = False) -> Tuple[bool, int, int]:
         return (True, 0, 0)
 
     print("\n=== Validating NPCs ===")
-    npcs_dir = os.path.join("game_data", "npcs")
+    npcs_dir = get_npcs_dir()
 
-    if not os.path.exists(npcs_dir):
+    if not file_exists(npcs_dir):
         print(f"⚠ NPCs directory not found: {npcs_dir}")
         return (True, 0, 0)
 
@@ -115,21 +124,23 @@ def validate_npcs(verbose: bool = False) -> Tuple[bool, int, int]:
     valid_count = 0
     invalid_count = 0
 
-    for filename in sorted(os.listdir(npcs_dir)):
-        if filename.endswith(".json") and not filename.endswith(".example.json"):
-            filepath = os.path.join(npcs_dir, filename)
-            is_valid, errors = validate_npc_file(filepath)
+    for filepath in sorted(get_json_files_in_directory(npcs_dir)):
+        if filepath.endswith(".example.json"):
+            continue
 
-            if is_valid:
-                valid_count += 1
-                if verbose:
-                    print(f"  ✓ {filename}")
-            else:
-                invalid_count += 1
-                all_valid = False
-                print(f"  ✗ {filename}: INVALID")
-                for error in errors:
-                    print(f"    - {error}")
+        is_valid, errors = validate_npc_file(filepath)
+        filename = filepath.split("\\")[-1]  # Get just the filename for display
+
+        if is_valid:
+            valid_count += 1
+            if verbose:
+                print(f"  ✓ {filename}")
+        else:
+            invalid_count += 1
+            all_valid = False
+            print(f"  ✗ {filename}: INVALID")
+            for error in errors:
+                print(f"    - {error}")
 
     if not verbose and valid_count > 0:
         print(f"  ✓ {valid_count} NPC(s) validated successfully")
@@ -147,9 +158,9 @@ def validate_items() -> Tuple[bool, int, int]:
         return (True, 0, 0)
 
     print("\n=== Validating Items Registry ===")
-    items_file = os.path.join("game_data", "items", "custom_items_registry.json")
+    items_file = get_items_registry_path()
 
-    if not os.path.exists(items_file):
+    if not file_exists(items_file):
         print(f"⚠ Items registry not found: {items_file}")
         return (True, 0, 0)
 
@@ -171,15 +182,15 @@ def validate_party() -> Tuple[bool, int, int]:
         return (True, 0, 0)
 
     print("\n=== Validating Party Configuration ===")
-    party_file = os.path.join("game_data", "current_party", "current_party.json")
+    party_file = get_party_config_path()
 
-    if not os.path.exists(party_file):
+    if not file_exists(party_file):
         print(f"⚠ Party configuration not found: {party_file}")
         return (True, 0, 0)
 
     # Get characters directory for cross-reference
-    characters_dir = os.path.join("game_data", "characters")
-    if not os.path.exists(characters_dir):
+    characters_dir = get_characters_dir()
+    if not file_exists(characters_dir):
         characters_dir = None
 
     is_valid, errors = validate_party_file(party_file, characters_dir)
@@ -224,8 +235,6 @@ def print_summary(results: Dict[str, Tuple[bool, int, int]]):
 
 def main():
     """Main validation function."""
-        # import argparse - Removed unused import
-
     parser = argparse.ArgumentParser(
         description="Validate all JSON data files in the D&D Campaign System"
     )

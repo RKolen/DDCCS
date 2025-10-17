@@ -3,8 +3,9 @@ Character Profile JSON Validation
 Validates character JSON files against required schema.
 """
 
-import json
 from typing import Dict, List, Any, Tuple
+from src.utils.file_io import load_json_file, get_json_files_in_directory
+from src.utils.path_utils import get_characters_dir
 
 
 class CharacterValidationError(Exception):
@@ -137,12 +138,13 @@ def validate_character_file(filepath: str) -> Tuple[bool, List[str]]:
         Tuple of (is_valid, error_messages)
     """
     try:
-        with open(filepath, "r", encoding="utf-8") as f:
-            data = json.load(f)
+        data = load_json_file(filepath)
+        if data is None:
+            return False, [f"{filepath}: File not found"]
 
         return validate_character_json(data, filepath)
 
-    except json.JSONDecodeError as e:
+    except ValueError as e:  # json.JSONDecodeError is a subclass of ValueError
         return False, [f"{filepath}: Invalid JSON - {str(e)}"]
     except (OSError, IOError, PermissionError) as e:
         return False, [f"{filepath}: Error reading file - {str(e)}"]
@@ -160,7 +162,6 @@ def print_validation_report(filepath: str, is_valid: bool, errors: List[str]) ->
 
 if __name__ == "__main__":
     import sys
-    import os
 
     if len(sys.argv) > 1:
         # Validate specific file
@@ -170,24 +171,22 @@ if __name__ == "__main__":
         sys.exit(0 if valid else 1)
     else:
         # Validate all character files
-        CHARACTERS_PATH = "game_data/characters"
-        if not os.path.exists(CHARACTERS_PATH):
-            print(f"Error: {CHARACTERS_PATH} directory not found")
+        characters_dir = get_characters_dir()
+        json_files = get_json_files_in_directory(
+            characters_dir,
+            exclude_patterns=["class.example", ".example"]
+        )
+
+        if not json_files:
+            print(f"Error: No character files found in {characters_dir}")
             sys.exit(1)
 
         ALL_VALID = True
-        for filename in os.listdir(CHARACTERS_PATH):
-            if (
-                filename.endswith(".json")
-                and not filename.startswith("class.example")
-                and not filename.endswith(".example.json")
-            ):
+        for file_path in json_files:
+            valid, error_list = validate_character_file(str(file_path))
+            print_validation_report(str(file_path), valid, error_list)
 
-                file_path = os.path.join(CHARACTERS_PATH, filename)
-                valid, error_list = validate_character_file(file_path)
-                print_validation_report(file_path, valid, error_list)
-
-                if not valid:
-                    ALL_VALID = False
+            if not valid:
+                ALL_VALID = False
 
         sys.exit(0 if ALL_VALID else 1)
