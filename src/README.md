@@ -93,12 +93,3 @@ from src.stories.story_manager import StoryManager
 from src.validation.validate_all import validate_all_game_data
 from src.utils.text_formatting_utils import wrap_narrative_text
 ```
-
-## Future Phases
-
-- **Phase 1**: Split `character_consultants.py` into 6 modular files
-- **Phase 0.5**: Extract additional utilities (file I/O, string processing, etc.)
-- **Phase 2**: Refactor `convert_combat()` complexity
-- **Phase 3**: Comprehensive system testing
-
-See `docs/docs_personal/REWORK_PLAN.md` for details.

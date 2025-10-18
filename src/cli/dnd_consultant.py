@@ -63,12 +63,20 @@ class DDConsultantCLI:
             else:
                 print("Invalid choice. Please try again.")
 
-    def create_default_party(self):
-        """Create default party (public API for programmatic access)."""
-        default_profiles = self.story_manager.create_default_party()
-        for profile in default_profiles:
-            self.story_manager.save_character_profile(profile)
-        return default_profiles
+    def run_command(self, command: str, story_file: str = None):
+        """
+        Run a specific command non-interactively.
+
+        Args:
+            command: Command to execute (e.g., 'analyze')
+            story_file: Optional story file path for commands that need it
+        """
+        if command == "analyze":
+            if story_file:
+                print(f"Analyzing story file: {story_file}")
+            self.story_analysis.analyze_story()
+        else:
+            print(f"Unknown command: {command}")
 
     def _show_main_menu(self):
         """Display the main menu."""
@@ -92,7 +100,7 @@ def main():
     parser.add_argument(
         "--command",
         help="Command to run",
-        choices=["interactive", "analyze", "create-party"],
+        choices=["interactive", "analyze"],
     )
     parser.add_argument("--story", help="Story file to analyze")
 
@@ -103,19 +111,9 @@ def main():
     try:
         cli = DDConsultantCLI(workspace)
 
-        if args.command == "create-party":
-            # Quick command to create default party
-            profiles = cli.create_default_party()
-            print(
-                "✅ Created default 12-character party "
-                f"({len(profiles)} characters) in {workspace}"
-            )
-
-        elif args.command == "analyze" and args.story:
-            # Quick command to analyze a story
-            # Note: analyze_story() prompts for file selection interactively
-            cli.story_analysis.analyze_story()
-
+        if args.command == "analyze":
+            # Non-interactive analyze command
+            cli.run_command("analyze", args.story)
         else:
             # Default to interactive mode
             cli.run_interactive()

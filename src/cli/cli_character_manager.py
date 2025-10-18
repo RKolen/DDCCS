@@ -29,9 +29,8 @@ class CharacterCLIManager:
             print("\n👥 CHARACTER MANAGEMENT")
             print("-" * 30)
             print("1. List Characters")
-            print("2. Create Default 12-Character Party")
-            print("3. Edit Character Profile")
-            print("4. View Character Details")
+            print("2. Edit Character Profile")
+            print("3. View Character Details")
             print("0. Back to Main Menu")
 
             choice = input("Enter your choice: ").strip()
@@ -39,10 +38,8 @@ class CharacterCLIManager:
             if choice == "1":
                 self.list_characters()
             elif choice == "2":
-                self.create_default_party()
-            elif choice == "3":
                 self.edit_character()
-            elif choice == "4":
+            elif choice == "3":
                 self.view_character_details()
             elif choice == "0":
                 break
@@ -68,21 +65,6 @@ class CharacterCLIManager:
                 if profile.personality_summary:
                     print(f"   {profile.personality_summary}")
         print()
-
-    def create_default_party(self):
-        """Create the default 12-character party."""
-        print("\n🎭 Creating default 12-character party...")
-
-        default_profiles = self.story_manager.create_default_party()
-
-        for profile in default_profiles:
-            self.story_manager.save_character_profile(profile)
-
-        # Reload consultants
-        self.story_manager.load_characters()
-
-        print(f"\n✅ Created {len(default_profiles)} characters!")
-        print("\nYou can now edit their backgrounds and personalities.")
 
     def edit_character(self):
         """Edit a character profile."""
