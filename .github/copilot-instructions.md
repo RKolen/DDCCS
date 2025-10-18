@@ -70,8 +70,11 @@ D&D Campaign Workspace/
 │   │   ├── story_file_manager.py       # Story file operations
 │   │   ├── session_results_manager.py  # Session results tracking
 │   │   └── hooks_and_analysis.py       # Story hooks generation
-│   ├── combat/            # Combat system
-│   │   └── combat_narrator.py      # Fantasy Grounds combat converter
+│   ├── combat/            # Combat system (Phase 2 complete!)
+│   │   ├── combat_narrator.py          # Main combat narrator (92 lines)
+│   │   ├── narrator_ai.py              # AI-enhanced narration component
+│   │   ├── narrator_descriptions.py    # Combat action descriptions
+│   │   └── narrator_consistency.py     # Character consistency checking
 │   ├── items/             # Items and inventory
 │   │   └── item_registry.py        # Custom items registry
 │   ├── dm/                # Dungeon Master tools
@@ -94,8 +97,12 @@ D&D Campaign Workspace/
 │   │   ├── validation_helpers.py   # Validation helpers
 │   │   ├── text_formatting_utils.py  # Text formatting
 │   │   └── spell_highlighter.py      # Spell detection
-│   └── cli/               # Command-line interface
-│       ├── dnd_consultant.py       # Main interactive CLI
+│   └── cli/               # Command-line interface (Phase 2 complete!)
+│       ├── dnd_consultant.py       # Main interactive CLI (110 lines)
+│       ├── cli_character_manager.py # Character management operations
+│       ├── cli_story_manager.py     # Story and series management
+│       ├── cli_consultations.py     # Character consultations and DCs
+│       ├── cli_story_analysis.py    # Story analysis and combat conversion
 │       ├── dnd_cli_helpers.py      # CLI helper functions
 │       ├── party_config_manager.py # Party configuration
 │       └── setup.py                # Workspace initialization
