@@ -8,7 +8,12 @@ import re
 from typing import Dict, List, Any, Optional
 from datetime import datetime
 
-from src.characters.consultants.character_profile import CharacterProfile
+from src.characters.consultants.character_profile import (
+    CharacterProfile,
+    CharacterIdentity,
+    CharacterPersonality,
+    CharacterBehavior,
+)
 from src.characters.consultants.consultant_core import CharacterConsultant
 from src.characters.character_sheet import DnDClass
 from src.validation.character_validator import validate_character_file
@@ -215,14 +220,20 @@ class StoryManager:
 
         for dnd_class, defaults in class_defaults.items():
             profile = CharacterProfile(
-                name=defaults["name"],
-                character_class=dnd_class,
-                level=3,  # Starting at level 3 for more interesting abilities
-                background_story=defaults["background"],
-                personality_summary=defaults["personality"],
-                motivations=["Serve the party's needs", "Grow in power and wisdom"],
-                goals=["Complete the current adventure", "Discover personal destiny"],
-                decision_making_style=f"As a {dnd_class.value} would - see class guidelines",
+                identity=CharacterIdentity(
+                    name=defaults["name"],
+                    character_class=dnd_class,
+                    level=3,  # Starting at level 3 for more interesting abilities
+                ),
+                personality=CharacterPersonality(
+                    background_story=defaults["background"],
+                    personality_summary=defaults["personality"],
+                    motivations=["Serve the party's needs", "Grow in power and wisdom"],
+                    goals=["Complete the current adventure", "Discover personal destiny"],
+                ),
+                behavior=CharacterBehavior(
+                    decision_making_style=f"As a {dnd_class.value} would - see class guidelines",
+                ),
             )
             default_profiles.append(profile)
 
