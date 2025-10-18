@@ -4,11 +4,7 @@ Test: Verify AI configuration is loaded from .env and uses Ollama local settings
 
 import os
 import requests
-import sys
 import test_helpers
-from pathlib import Path
-# Add tests directory to path so we can import test_helpers
-sys.path.insert(0, str(Path(__file__).parent.parent))
 
 # Import and configure test environment (UTF-8, project paths)
 project_root = test_helpers.setup_test_environment()
