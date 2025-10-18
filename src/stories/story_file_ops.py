@@ -11,7 +11,6 @@ from datetime import datetime
 from src.utils.file_io import read_text_file, write_text_file, file_exists
 from src.utils.path_utils import get_campaign_path
 
-
 class StoryFileOperations:
     """Manages story file operations including creation and discovery."""
 

@@ -13,7 +13,6 @@ import os
 from typing import List, Dict, Any, Optional
 from datetime import datetime
 
-
 def create_character_development_file(
     series_path: str,
     story_name: str,

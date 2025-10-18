@@ -19,7 +19,6 @@ except ImportError:
     get_rag_system = None
     RAG_AVAILABLE = False
 
-
 class DMConsultant:
     """AI consultant that provides DM narrative suggestions based on user prompts."""
 

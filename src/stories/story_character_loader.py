@@ -15,7 +15,6 @@ from src.utils.path_utils import get_characters_dir, get_character_file_path
 
 USE_CHARACTER_VALIDATION = True
 
-
 class CharacterLoader:
     """Loads character profiles and creates consultants for story management."""
 
@@ -59,7 +58,7 @@ class CharacterLoader:
             if use_validation:
                 is_valid, errors = validate_character_file(filepath)
                 if not is_valid:
-                    print(f"✗ Validation failed for {filename}:")
+                    print(f"[FAILED] Validation failed for {filename}:")
                     for error in errors:
                         print(f"  - {error}")
                     continue
@@ -70,7 +69,7 @@ class CharacterLoader:
                     profile, ai_client=self.ai_client
                 )
                 if use_validation:
-                    print(f"✓ Loaded and validated: {filename}")
+                    print(f"[OK] Loaded and validated: {filename}")
             except (OSError, IOError) as e:
                 print(f"Warning: Could not load character {filename}: {e}")
 
@@ -88,7 +87,7 @@ class CharacterLoader:
         self.consultants[profile.name] = CharacterConsultant(
             profile, ai_client=self.ai_client
         )
-        print(f"✅ Saved character profile: {profile.name}")
+        print(f"[SUCCESS] Saved character profile: {profile.name}")
 
     def get_character_list(self) -> List[str]:
         """

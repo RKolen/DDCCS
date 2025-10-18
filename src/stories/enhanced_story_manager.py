@@ -6,7 +6,6 @@ Refactored to use composition pattern with specialized manager classes.
 
 import os
 from typing import Dict, List, Any, Optional
-
 from src.characters.consultants.character_profile import CharacterProfile
 from src.utils.path_utils import get_campaigns_dir, get_characters_dir, get_party_config_path
 from src.stories.party_manager import PartyManager

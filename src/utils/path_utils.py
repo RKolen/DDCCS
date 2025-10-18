@@ -13,7 +13,6 @@ This module provides standardized path construction for:
 import os
 from typing import Optional
 
-
 def _sanitize_name_for_path(name: str) -> str:
     """Sanitize a name for use in file paths.
 

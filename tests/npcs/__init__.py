@@ -1,0 +1,1 @@
+"""NPC system tests package."""

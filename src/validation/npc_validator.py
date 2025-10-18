@@ -16,7 +16,7 @@ Usage:
 from typing import Dict, Any, List, Tuple
 from src.utils.file_io import load_json_file, get_json_files_in_directory
 from src.utils.path_utils import get_npcs_dir
-
+from src.utils.validation_helpers import get_type_name, print_validation_report
 
 def _validate_ai_config(ai_config: dict) -> List[str]:
     ai_errors = []
@@ -82,7 +82,6 @@ def validate_npc_json(
     # Define required fields and their expected types
     required_fields = {
         "name": str,
-        "nickname": (str, type(None)),
         "role": str,
         "species": str,
         "lineage": str,
@@ -95,6 +94,11 @@ def validate_npc_json(
         "ai_config": dict,
     }
 
+    # Define optional fields and their expected types
+    optional_fields = {
+        "nickname": (str, type(None)),
+    }
+
     # Check for required fields and types
     for field, expected_type in required_fields.items():
         if field not in data:
@@ -102,6 +106,15 @@ def validate_npc_json(
         elif not isinstance(data[field], expected_type):
             validation_errors.append(
                 f"Field '{field}' must be of type {expected_type.__name__}, got"
+                f"{type(data[field]).__name__}"
+            )
+
+    # Check optional fields (only validate type if field is present)
+    for field, expected_type in optional_fields.items():
+        if field in data and not isinstance(data[field], expected_type):
+            type_name = get_type_name(expected_type)
+            validation_errors.append(
+                f"Field '{field}' must be of type {type_name}, got "
                 f"{type(data[field]).__name__}"
             )
 
@@ -162,16 +175,6 @@ def validate_npc_file(filepath: str) -> Tuple[bool, List[str]]:
         return (False, [f"Error reading file: {e}"])
 
 
-def print_validation_report(filepath: str, valid: bool, error_list: List[str]):
-    """Print a formatted validation report."""
-    if valid:
-        print(f"✓ {filepath}: Valid")
-    else:
-        print(f"✗ {filepath}: INVALID")
-        for err in error_list:
-            print(f"  - {err}")
-
-
 if __name__ == "__main__":
     import sys
 
@@ -185,8 +188,7 @@ if __name__ == "__main__":
         # Validate all NPC files
         npcs_dir = get_npcs_dir()
         json_files = get_json_files_in_directory(
-            npcs_dir,
-            exclude_patterns=[".example"]
+            npcs_dir, exclude_patterns=[".example"]
         )
 
         if not json_files:

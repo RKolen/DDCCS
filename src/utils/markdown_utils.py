@@ -6,7 +6,6 @@ Provides utilities for updating and extracting sections from markdown files.
 
 import re
 
-
 def update_markdown_section(content: str, section_name: str, new_content: str) -> str:
     """
     Update or add a section in markdown content.

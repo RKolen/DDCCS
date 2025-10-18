@@ -12,7 +12,6 @@ import os
 from typing import Any, Dict, List, Optional
 from pathlib import Path
 
-
 def load_json_file(filepath: str) -> Optional[Dict[str, Any]]:
     """Load JSON data from a file.
 

@@ -14,7 +14,6 @@ from src.utils.story_formatting_utils import (
     generate_consistency_section
 )
 
-
 class StoryUpdater:
     """Updates story files with consultant analysis and consistency notes."""
 
@@ -47,7 +46,7 @@ class StoryUpdater:
         write_text_file(filepath, content)
 
         print(
-            f"✅ Updated story file with consultant analysis: "
+            f"[SUCCESS] Updated story file with consultant analysis: "
             f"{os.path.basename(filepath)}"
         )
 
@@ -71,6 +70,6 @@ class StoryUpdater:
         write_text_file(filepath, content)
 
         print(
-            f"✅ Appended combat narrative to story file: "
+            f"[SUCCESS] Appended combat narrative to story file: "
             f"{os.path.basename(filepath)}"
         )

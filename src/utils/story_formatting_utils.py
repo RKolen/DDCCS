@@ -6,7 +6,6 @@ Utility functions for generating formatted markdown sections from analysis resul
 
 from typing import Dict, Any
 
-
 def generate_consultant_notes(analysis: Dict[str, Any]) -> str:
     """
     Generate the consultant notes section content.
@@ -83,13 +82,13 @@ def generate_consistency_section(analysis: Dict[str, Any]) -> str:
             )
 
             if char_analysis.get("positive_notes"):
-                sections.append("✅ **Positive aspects:**")
+                sections.append("[OK] **Positive aspects:**")
                 for note in char_analysis["positive_notes"]:
                     sections.append(f"- {note}")
                 sections.append("")
 
             if char_analysis.get("issues"):
-                sections.append("⚠️ **Issues to address:**")
+                sections.append("[WARNING] **Issues to address:**")
                 for issue in char_analysis["issues"]:
                     sections.append(f"- {issue}")
                 sections.append("")

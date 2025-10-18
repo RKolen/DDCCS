@@ -257,3 +257,41 @@ def collect_errors(validation_results: List[Tuple[bool, Any]]) -> List[str]:
                 all_errors.append(str(error_data))
 
     return all_errors
+
+
+def get_type_name(expected_type) -> str:
+    """Get a human-readable type name string.
+
+    Args:
+        expected_type: A type or tuple of types
+
+    Returns:
+        String representation of the type(s)
+    """
+    if isinstance(expected_type, tuple):
+        type_parts = []
+        for type_option in expected_type:
+            if hasattr(type_option, '__name__'):
+                type_parts.append(type_option.__name__)
+            elif type_option is type(None):
+                type_parts.append('None')
+            else:
+                type_parts.append(str(type_option))
+        return " or ".join(type_parts)
+    return getattr(expected_type, '__name__', str(expected_type))
+
+
+def print_validation_report(filepath: str, is_valid: bool, errors: List[str]) -> None:
+    """Print a formatted validation report.
+
+    Args:
+        filepath: Path to the file that was validated
+        is_valid: Whether the file passed validation
+        errors: List of validation error messages
+    """
+    if is_valid:
+        print(f"[OK] {filepath}: Valid")
+    else:
+        print(f"[INVALID] {filepath}: INVALID")
+        for error in errors:
+            print(f"  - {error}")

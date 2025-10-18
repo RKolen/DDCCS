@@ -8,7 +8,6 @@ consistency with established personalities and behaviors.
 from typing import Dict, List
 from src.characters.consultants.consultant_core import CharacterConsultant
 
-
 class ConsistencyChecker:
     """Checks combat narrative consistency with character profiles."""
 

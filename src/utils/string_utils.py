@@ -11,7 +11,6 @@ This module provides reusable functions for:
 import re
 from typing import Optional
 
-
 def sanitize_filename(name: str) -> str:
     """Convert a name to a safe filename format.
 

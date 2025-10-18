@@ -19,7 +19,7 @@ def edit_character_profile_interactive(profile: CharacterProfile) -> CharacterPr
     Returns:
         Modified profile (or original if no changes)
     """
-    print(f"\n📝 EDITING: {profile.name}")
+    print(f"\n EDITING: {profile.name}")
     print("-" * 30)
 
     while True:
@@ -43,10 +43,10 @@ def edit_character_profile_interactive(profile: CharacterProfile) -> CharacterPr
         elif choice == "7":
             profile = _edit_decision_making(profile)
         elif choice == "8":
-            print("\n✅ Profile saved!")
+            print("\n[SUCCESS] Profile saved!")
             return profile
         elif choice == "0":
-            print("\n❌ Changes discarded.")
+            print("\n[ERROR] Changes discarded.")
             return profile
         else:
             print("Invalid choice. Please try again.")
@@ -395,7 +395,7 @@ def save_combat_narrative(
             with open(target_story_path, "a", encoding="utf-8") as f:
                 f.write(f"\n\n### {combat_title}\n\n")
                 f.write(narrative)
-            print(f"✅ Appended to: {target_story_path}")
+            print(f"[SUCCESS] Appended to: {target_story_path}")
     else:
         save = input("\nSave to separate file? (y/n): ").strip().lower()
         if save == "y":
@@ -405,4 +405,4 @@ def save_combat_narrative(
                 with open(filepath, "w", encoding="utf-8") as f:
                     f.write(f"# {combat_title}\n\n")
                     f.write(narrative)
-                print(f"✅ Saved to: {filepath}")
+                print(f"[SUCCESS] Saved to: {filepath}")

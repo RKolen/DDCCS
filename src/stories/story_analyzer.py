@@ -186,7 +186,7 @@ class StoryAnalyzer:
             try:
                 is_valid, errors = validate_npc_json(npc_data)
                 if not is_valid:
-                    print("⚠️  NPC template validation failed:")
+                    print("[WARNING]  NPC template validation failed:")
                     for error in errors:
                         print(f"  - {error}")
                     print("  Saving anyway, but please fix these issues.")
@@ -262,7 +262,7 @@ class StoryAnalyzer:
         print("=" * 60)
 
         for character_name, char_suggestions in suggestions.items():
-            print(f"\n📝 {character_name}")
+            print(f"\n {character_name}")
             print("-" * (len(character_name) + 2))
 
             for category, suggestion_list in char_suggestions.items():

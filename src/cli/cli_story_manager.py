@@ -25,7 +25,7 @@ class StoryCLIManager:
     def manage_stories(self):
         """Story management submenu."""
         while True:
-            print("\n📚 STORY MANAGEMENT")
+            print("\n STORY MANAGEMENT")
             print("-" * 30)
 
             # Show current existing stories
@@ -188,11 +188,11 @@ class StoryCLIManager:
             filepath = self.story_manager.create_new_story_series(
                 series_name, first_story_name, description
             )
-            print(f"\n✅ Created story series: {series_name}")
+            print(f"\n[SUCCESS] Created story series: {series_name}")
             print(f"   First story: {first_story_name}")
             print(f"   Location: {filepath}")
         except (OSError, ValueError, KeyError) as e:
-            print(f"❌ Error creating story series: {e}")
+            print(f"[ERROR] Error creating story series: {e}")
 
     def _create_story_in_series(self, series_name: str):
         """Create a new story in an existing series."""
@@ -209,10 +209,10 @@ class StoryCLIManager:
             filepath = self.story_manager.create_story_in_series(
                 series_name, story_name, description
             )
-            print(f"\n✅ Created story in {series_name}")
+            print(f"\n[SUCCESS] Created story in {series_name}")
             print(f"   Location: {filepath}")
         except (OSError, ValueError, KeyError) as e:
-            print(f"❌ Error creating story: {e}")
+            print(f"[ERROR] Error creating story: {e}")
 
     def _view_story_details(self, stories: List[str]):
         """View details of a story from a list."""
@@ -269,7 +269,7 @@ class StoryCLIManager:
                     print(f"  {line[:100]}...")
 
         except OSError as e:
-            print(f"❌ Error reading story: {e}")
+            print(f"[ERROR] Error reading story: {e}")
 
     def _create_new_story(self):
         """Create a new story file."""
@@ -281,6 +281,6 @@ class StoryCLIManager:
         description = input("Enter story description (optional): ").strip()
 
         filepath = self.story_manager.create_new_story(story_name, description)
-        print(f"\n✅ Created story file: {os.path.basename(filepath)}")
+        print(f"\n[SUCCESS] Created story file: {os.path.basename(filepath)}")
         print(f"📁 Location: {filepath}")
         print("\nYou can now open this file in VSCode and start writing your story!")

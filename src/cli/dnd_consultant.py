@@ -33,7 +33,7 @@ class DDConsultantCLI:
 
     def run_interactive(self):
         """Run the interactive command-line interface."""
-        print("🐉 D&D Character Consultant System 🐉")
+        print("[D&D] D&D Character Consultant System")
         print("=" * 50)
         print(f"Workspace: {self.workspace_path}")
         print(f"Characters loaded: {len(self.story_manager.consultants)}")
@@ -58,7 +58,7 @@ class DDConsultantCLI:
             elif choice == "7":
                 self.consultations.get_dm_narrative_suggestions()
             elif choice == "0":
-                print("Goodbye! May your adventures be epic! 🎲")
+                print("Goodbye! May your adventures be epic!")
                 break
             else:
                 print("Invalid choice. Please try again.")
@@ -80,7 +80,7 @@ class DDConsultantCLI:
 
     def _show_main_menu(self):
         """Display the main menu."""
-        print("\n📋 MAIN MENU")
+        print("\n[MENU] MAIN MENU")
         print("-" * 30)
         print("1. Manage Characters")
         print("2. Manage Stories")
@@ -119,9 +119,9 @@ def main():
             cli.run_interactive()
 
     except KeyboardInterrupt:
-        print("\n\nGoodbye! 🎲")
+        print("\n\nGoodbye!")
     except (OSError, ValueError, KeyError, AttributeError) as e:
-        print(f"\n❌ Error: {e}")
+        print(f"\n[ERROR] Error: {e}")
         print("Please check your setup and try again.")
 
 

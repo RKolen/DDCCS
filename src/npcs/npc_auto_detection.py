@@ -8,7 +8,6 @@ import os
 import re
 import json
 from typing import Dict, List, Any, Tuple
-
 from src.validation.npc_validator import validate_npc_json
 from src.utils.file_io import save_json_file
 from src.utils.path_utils import get_npcs_dir, get_npc_file_path
@@ -252,7 +251,7 @@ Return ONLY valid JSON in this format:
         return npc_profile
 
     except (KeyError, ValueError, TypeError, AttributeError) as e:
-        print(f"⚠️  AI NPC generation failed: {e}")
+        print(f"[WARNING]  AI NPC generation failed: {e}")
         # Return fallback profile when AI generation fails
         return _create_fallback_profile(npc_name, role, str(e))
 
@@ -274,7 +273,7 @@ def save_npc_profile(
     try:
         is_valid, errors = validate_npc_json(npc_profile)
         if not is_valid:
-            print("⚠️  NPC profile validation failed:")
+            print("[WARNING]  NPC profile validation failed:")
             for error in errors:
                 print(f"  - {error}")
             print("  Saving anyway, but please fix these issues.")

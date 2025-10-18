@@ -16,7 +16,7 @@ Usage:
 from typing import Dict, Any, List, Tuple
 from src.utils.file_io import load_json_file
 from src.utils.path_utils import get_items_registry_path
-
+from src.utils.validation_helpers import print_validation_report
 
 class ItemsValidationError(Exception):
     """Custom exception for items validation errors."""
@@ -149,19 +149,9 @@ def validate_items_file(filepath: str) -> Tuple[bool, List[str]]:
         return validate_items_json(data)
 
     except ValueError as e:  # json.JSONDecodeError is a subclass of ValueError
-        return (False, [f"Invalid JSON format: {e}"])
+        return (False, [f"Invalid JSON format in {filepath}: {e}"])
     except OSError as e:
-        return (False, [f"Error reading file: {e}"])
-
-
-def print_validation_report(filepath: str, valid_result: bool, errors: List[str]):
-    """Print a formatted validation report."""
-    if valid_result:
-        print(f"✓ {filepath}: Valid")
-    else:
-        print(f"✗ {filepath}: INVALID")
-        for error in errors:
-            print(f"  - {error}")
+        return (False, [f"Error reading {filepath}: {e}"])
 
 
 if __name__ == "__main__":

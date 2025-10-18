@@ -171,7 +171,24 @@ Each consultant provides:
 
 ## Coding Guidelines
 
-### ⚠️ CRITICAL: No Pylint Disable Comments
+### CRITICAL: No Emojis in Any Code
+
+**NEVER use emojis in any Python files (.py) or Markdown files (.md)**
+- Emojis cause encoding errors on Windows (cp1252 codec)
+- Break code execution even with UTF-8 configuration
+- Use ASCII alternatives instead:
+  - Instead of ✓ → use `[PASS]` or `[OK]`
+  - Instead of ✗ → use `[FAIL]` or `[ERROR]`
+  - Instead of ✅ → use `[SUCCESS]`
+  - Instead of ❌ → use `[FAILED]`
+  - Instead of 🐉 → use `[D&D]`
+  - Instead of 📋 → use `[MENU]`
+  - Instead of ⚠️ → use `[WARNING]`
+  - Remove decorative emojis entirely
+- **Rationale:** Windows console uses cp1252 encoding by default, emojis break execution
+- **Applies to:** All .py files, all .md files, all documentation
+
+### CRITICAL: No Pylint Disable Comments
 
 **NEVER use `# pylint: disable=...` comments** except for these specific cases:
 - `too-many-lines` (temporary, until file is split)
@@ -185,7 +202,7 @@ Each consultant provides:
 - **Unused variables:** Remove them or prefix with `_` if required by API
 - **Long lines:** Split properly using parentheses and line continuations
 - **Broad exceptions:** Use specific exception types
-- **File too long (>1000 lines):** Split into multiple modules (see future_rework.md)
+- **File too long (>1000 lines):** Split into multiple modules
 
 If you encounter a pylint warning, propose a proper architectural solution and document it in `docs/docs_personal/future_rework.md` for review.
 

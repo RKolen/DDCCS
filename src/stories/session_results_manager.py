@@ -7,9 +7,7 @@ Handles session results, roll tracking, and result file generation for D&D sessi
 import os
 from typing import List, Dict, Any
 from datetime import datetime
-
 from src.utils.file_io import write_text_file
-
 
 class StorySession:
     """Represents a single story session with results separate from narrative."""

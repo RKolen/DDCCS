@@ -38,7 +38,7 @@ try:
     SCRAPING_AVAILABLE = True
 except ImportError:
     SCRAPING_AVAILABLE = False
-    print("⚠️  RAG System: requests or beautifulsoup4 not installed")
+    print("[WARNING]  RAG System: requests or beautifulsoup4 not installed")
     print("   Install with: pip install requests beautifulsoup4")
 
 
@@ -289,7 +289,7 @@ class WikiClient:
             Dict with page content or None if fetch failed
         """
         if not SCRAPING_AVAILABLE:
-            print("⚠️  Cannot fetch wiki pages: requests/beautifulsoup4 not installed")
+            print("[WARNING]  Cannot fetch wiki pages: requests/beautifulsoup4 not installed")
             return None
         if self.item_registry and self.item_registry.is_custom(page_title):
             print(f"🚫 Blocked custom item lookup: {page_title} (in custom registry)")
@@ -298,11 +298,11 @@ class WikiClient:
         if not force_refresh:
             cached = self.cache.get(page_url)
             if cached:
-                print(f"✅ Cache hit: {page_title}")
+                print(f"[SUCCESS] Cache hit: {page_title}")
                 return cached
         page_data = None
         try:
-            print(f"🌐 Fetching: {page_title}...")
+            print(f" Fetching: {page_title}...")
             response = self.session.get(page_url, timeout=10)
             response.raise_for_status()
             soup = BeautifulSoup(response.text, "html.parser")
@@ -322,13 +322,13 @@ class WikiClient:
                     "fetched_at": time.time(),
                 }
                 self.cache.set(page_url, page_data)
-                print(f"✅ Fetched: {title} ({len(sections)} sections)")
+                print(f"[SUCCESS] Fetched: {title} ({len(sections)} sections)")
             else:
-                print(f"⚠️  Could not find content for {page_title}")
+                print(f"[WARNING]  Could not find content for {page_title}")
         except requests.RequestException as e:
-            print(f"❌ Failed to fetch {page_title}: {e}")
+            print(f"[ERROR] Failed to fetch {page_title}: {e}")
         except (ValueError, AttributeError) as e:
-            print(f"❌ Error parsing {page_title}: {e}")
+            print(f"[ERROR] Error parsing {page_title}: {e}")
         return page_data
 
     def search_sections(
@@ -409,7 +409,7 @@ class RAGSystem:
             return
 
         if not SCRAPING_AVAILABLE:
-            print("⚠️  RAG enabled but dependencies not installed")
+            print("[WARNING]  RAG enabled but dependencies not installed")
             print("   Install with: pip install requests beautifulsoup4")
             self.client = None
             self.rules_client = None
@@ -422,20 +422,20 @@ class RAGSystem:
         # Initialize lore wiki client (for locations, NPCs, etc.)
         if self.wiki_base_url:
             self.client = WikiClient(self.wiki_base_url, cache, self.item_registry)
-            print(f"✅ RAG Lore Wiki initialized: {self.wiki_base_url}")
+            print(f"[SUCCESS] RAG Lore Wiki initialized: {self.wiki_base_url}")
         else:
             self.client = None
-            print("⚠️  RAG_WIKI_BASE_URL not set - lore lookups disabled")
+            print("[WARNING]  RAG_WIKI_BASE_URL not set - lore lookups disabled")
 
         # Initialize rules wiki client (for items, spells, rules, etc.)
         if self.rules_base_url:
             self.rules_client = WikiClient(
                 self.rules_base_url, cache, self.item_registry
             )
-            print(f"✅ RAG Rules Wiki initialized: {self.rules_base_url}")
+            print(f"[SUCCESS] RAG Rules Wiki initialized: {self.rules_base_url}")
         else:
             self.rules_client = None
-            print("⚠️  RAG_RULES_BASE_URL not set - item/spell lookups disabled")
+            print("[WARNING]  RAG_RULES_BASE_URL not set - item/spell lookups disabled")
 
         if self.item_registry:
             custom_count = len(self.item_registry.get_all_custom_items())

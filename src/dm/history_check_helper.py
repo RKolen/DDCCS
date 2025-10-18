@@ -14,7 +14,6 @@ try:
 except ImportError:
     RAG_AVAILABLE = False
 
-
 def handle_history_check(
     topic: str, check_result: int, character_name: str = None
 ) -> Dict[str, Any]:
@@ -155,11 +154,11 @@ def search_lore(query: str, pages_to_search: list = None) -> Optional[str]:
         Formatted lore information or None if not found
     """
     if not RAG_AVAILABLE:
-        return "⚠️  RAG system not available. Install with: pip install requests beautifulsoup4"
+        return "RAG system not available. Install: pip install requests beautifulsoup4"
 
     rag_system = get_rag_system()
     if not rag_system or not rag_system.enabled:
-        return "⚠️  RAG system not enabled. Set RAG_ENABLED=true in .env"
+        return "[WARNING] RAG system not enabled. Set RAG_ENABLED=true in .env"
 
     if not pages_to_search:
         # Try to search the query term directly as a page

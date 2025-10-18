@@ -13,7 +13,6 @@ Detection Strategy:
 import re
 from typing import List, Set
 
-
 # Common spell-related context words
 SPELL_CONTEXTS = [
     r"\bcast(?:s|ing)?\b",

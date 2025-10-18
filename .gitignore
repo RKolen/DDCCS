@@ -85,12 +85,14 @@ FGU_exports/
 story_drafts/
 *.tmp
 
-# Ignore test output
+# Ignore test output and coverage reports
 *.coverage
 htmlcov/
+.pytest_cache/
 
-# Development tests (not committed until test framework complete)
-tests/
+# Ignore Python cache in tests
+tests/__pycache__/
+tests/**/__pycache__/
 
 # Ignore miscellaneous
 *.swp

@@ -13,10 +13,8 @@ import os
 import re
 from typing import List
 from datetime import datetime
-
 from src.utils.file_io import read_text_file, write_text_file, file_exists
 from src.utils.path_utils import get_campaign_path
-
 
 def get_existing_stories(stories_path: str) -> List[str]:
     """Get existing story files in the root directory (legacy stories)."""

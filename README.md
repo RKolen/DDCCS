@@ -68,42 +68,90 @@ D&D New Beginnings/
 │   ├── RAG_INTEGRATION.md # RAG system deep dive
 │   ├── RAG_QUICKSTART.md  # Quick start for RAG
 │   └── Test_Example.md    # Usage examples
+├── src/                   # � All source code (modular architecture)
+│   ├── characters/        # Character management system
+│   │   ├── consultants/   # Character consultant system (12 D&D classes)
+│   │   ├── character_sheet.py       # D&D character data structures
+│   │   └── character_consistency.py # Character consistency checking
+│   ├── npcs/              # NPC management system
+│   │   ├── npc_agents.py           # NPC AI agents
+│   │   └── npc_auto_detection.py   # Automatic NPC detection
+│   ├── stories/           # Story management system
+│   │   ├── story_manager.py            # Core story management
+│   │   ├── enhanced_story_manager.py   # Advanced story features
+│   │   ├── story_analyzer.py           # Story analysis
+│   │   └── session_results_manager.py  # Session results tracking
+│   ├── combat/            # Combat system
+│   │   ├── combat_narrator.py          # Combat narration
+│   │   ├── narrator_ai.py              # AI-enhanced narration
+│   │   ├── narrator_descriptions.py    # Combat descriptions
+│   │   └── narrator_consistency.py     # Character consistency
+│   ├── items/             # Items and inventory system
+│   │   └── item_registry.py        # Custom items registry
+│   ├── dm/                # Dungeon Master tools
+│   │   ├── dungeon_master.py       # DM consultant
+│   │   └── history_check_helper.py # History check helper
+│   ├── validation/        # Data validation system
+│   │   ├── character_validator.py  # Character JSON validation
+│   │   ├── npc_validator.py        # NPC JSON validation
+│   │   ├── items_validator.py      # Items JSON validation
+│   │   ├── party_validator.py      # Party config validation
+│   │   └── validate_all.py         # Unified validator
+│   ├── ai/                # AI integration
+│   │   ├── ai_client.py           # AI client interface
+│   │   └── rag_system.py          # RAG system
+│   ├── utils/             # Shared utilities
+│   │   ├── dnd_rules.py            # D&D 5e game rules
+│   │   ├── file_io.py              # File operations
+│   │   ├── spell_highlighter.py    # Spell detection
+│   │   └── text_formatting_utils.py # Text formatting
+│   └── cli/               # Command-line interface
+│       ├── dnd_consultant.py       # Main interactive CLI
+│       ├── setup.py                # Workspace initialization
+│       ├── cli_character_manager.py # Character operations
+│       ├── cli_story_manager.py     # Story management
+│       ├── cli_consultations.py     # Character consultations
+│       └── cli_story_analysis.py    # Story analysis
+├── tests/                 # 🧪 Test suite (6/6 passing, 10.00/10 pylint)
+│   ├── validation/        # JSON validation tests
+│   ├── ai/                # AI integration tests
+│   ├── test_helpers.py    # Shared test utilities
+│   ├── run_all_tests.py   # Unified test runner
+│   └── README.md          # Test suite documentation
+├── docs/                  # 📚 Public documentation
+│   ├── AI_INTEGRATION.md  # Complete AI setup guide
+│   ├── RAG_INTEGRATION.md # RAG system deep dive
+│   ├── RAG_QUICKSTART.md  # Quick start for RAG
+│   └── Test_Example.md    # Usage examples
 ├── templates/             # 📝 Story templates
 │   └── story_template.md  # Story template with 80-char line rule
 ├── .vscode/              # VSCode integration
 ├── .rag_cache/           # Wiki content cache (git-ignored)
 ├── .env                  # AI & RAG configuration (create from .env.example)
 ├── .env.example          # Configuration template
-├── ai_client.py          # AI/LLM integration module
-├── character_consultants.py  # Character consultant system with AI
-├── character_sheet.py    # D&D character data structures
-├── dnd_consultant.py     # Main interactive interface
-├── dungeon_master.py     # DM consultant with RAG integration
-├── story_manager.py      # Story organization system
-├── story_analyzer.py     # Story content analysis and suggestions
-├── rag_system.py         # RAG/wiki integration system
-├── item_registry.py      # Custom/homebrew item tracking
-├── npc_agents.py         # NPC generation with AI
-├── enhanced_story_manager.py  # Advanced story management
-├── combat_narrator.py    # Fantasy Grounds Unity integration
-├── history_check_helper.py  # History check with wiki lore
-├── setup.py             # Project initialization
+├── dnd_consultant.py     # Launcher shortcut for interactive CLI
+├── setup.py              # Launcher shortcut for workspace setup
 └── README.md            # This file
 ```
 
-## � Documentation
+## 📚 Documentation
 
 - **[AI Integration Guide](docs/AI_INTEGRATION.md)** - Complete AI setup (Ollama, OpenAI, Anthropic)
 - **[RAG Integration Guide](docs/RAG_INTEGRATION.md)** - Deep dive into RAG system and wiki integration
 - **[RAG Quick Start](docs/RAG_QUICKSTART.md)** - Fast track to using RAG features
 - **[Party Configuration Guide](docs/PARTY_CONFIG_DOCUMENTATION.md)** - Managing your party setup
 - **[Usage Examples](docs/Test_Example.md)** - See the system in action
-- **[Development Notes](docs/CHARACTER_NAME_ANONYMIZATION.md)** - Recent changes and updates
+- **[JSON Validation](docs/JSON_Validation.md)** - Data validation schemas and usage
+- **[Test Suite](tests/README.md)** - Comprehensive test suite
 
-## �🚀 Quick Start
+## 🚀 Quick Start
 
 1. **Setup the system:**
    ```powershell
+   # Full module path
+   python -m src.cli.setup
+   
+   # Or use the shortcut launcher
    python setup.py
    ```
 
@@ -119,6 +167,10 @@ D&D New Beginnings/
 
 3. **Start the interactive consultant:**
    ```powershell
+   # Full module path
+   python -m src.cli.dnd_consultant
+   
+   # Or use the shortcut launcher
    python dnd_consultant.py
    ```
 
@@ -137,8 +189,13 @@ The system uses `current_party.json` to track your active adventuring party. Thi
 
 **Option 1: Use the Interactive CLI (Recommended)**
 ```powershell
+# Full module path
+python -m src.cli.dnd_consultant
+
+# Or use the shortcut launcher
 python dnd_consultant.py
-# Choose: 1. Manage Characters → Create Default Party Configuration
+
+# Then choose: 1. Manage Characters → Create Default Party Configuration
 ```
 
 **Option 2: Manual Configuration**
@@ -349,4 +406,4 @@ This system **enhances your creativity** while maintaining your control:
 
 ---
 
-**Ready to enhance your D&D storytelling? Run `python setup.py` to begin!** 🎲
+**Ready to enhance your D&D storytelling? Run `python -m src.cli.setup` to begin!** 🎲

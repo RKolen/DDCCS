@@ -16,7 +16,6 @@ try:
 except ImportError:
     pass  # dotenv not available, will use system environment variables only
 
-
 class AIClient:
     """
     Flexible AI client that works with any OpenAI-compatible API.

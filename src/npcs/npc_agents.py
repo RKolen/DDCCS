@@ -3,7 +3,6 @@ NPC Agent class and loader for recurring NPCs.
 """
 
 from pathlib import Path
-
 from src.characters.character_sheet import NPCProfile
 from src.utils.file_io import load_json_file
 

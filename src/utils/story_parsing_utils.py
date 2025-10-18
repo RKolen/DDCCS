@@ -7,7 +7,6 @@ Utility functions for extracting information from story markdown files.
 import re
 from typing import Dict, List
 
-
 def extract_character_actions(content: str, character_names: List[str]) -> Dict[str, List[str]]:
     """
     Extract character actions from story content.

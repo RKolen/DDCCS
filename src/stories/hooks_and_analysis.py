@@ -11,9 +11,7 @@ This module is responsible for:
 import os
 from typing import List, Dict, Any, Optional
 from datetime import datetime
-
 from src.utils.file_io import write_text_file
-
 
 def create_story_hooks_file(
     series_path: str,

@@ -8,7 +8,6 @@ healing, damage, and status effects with character-aware styling.
 from typing import Dict, Any, Optional
 from src.characters.consultants.consultant_core import CharacterConsultant
 
-
 class CombatDescriptor:
     """Provides narrative descriptions for combat actions."""
 

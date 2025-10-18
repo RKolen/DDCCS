@@ -91,7 +91,7 @@ class AIEnhancedNarrator:
             return narrative
 
         except (ConnectionError, TimeoutError, ValueError, KeyError, AttributeError) as e:
-            print(f"⚠️  AI narration failed: {e}")
+            print(f"[WARNING]  AI narration failed: {e}")
             return self._narrate_combat_fallback(combat_prompt, style)
 
     def generate_combat_title(
@@ -141,7 +141,7 @@ class AIEnhancedNarrator:
             return title
 
         except (ConnectionError, TimeoutError, ValueError, KeyError, AttributeError) as e:
-            print(f"⚠️  Title generation failed: {e}")
+            print(f"[WARNING]  Title generation failed: {e}")
             return self._extract_creature_title(combat_prompt)
 
     def _create_system_prompt(self, style: str) -> str:

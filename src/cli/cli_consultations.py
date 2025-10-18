@@ -26,7 +26,7 @@ class ConsultationsCLI:
         """Get character consultation for a situation."""
         characters = self.story_manager.get_character_list()
         if not characters:
-            print("\n❌ No characters found.")
+            print("\n[ERROR] No characters found.")
             return
 
         print("\n🤔 CHARACTER CONSULTATION")
@@ -49,10 +49,10 @@ class ConsultationsCLI:
     def _display_character_reaction(self, reaction: Dict[str, Any]):
         """Display character reaction suggestion."""
         if "error" in reaction:
-            print(f"\n❌ {reaction['error']}")
+            print(f"\n[ERROR] {reaction['error']}")
             return
 
-        print(f"\n🎭 CHARACTER REACTION: {reaction['character']}")
+        print(f"\n CHARACTER REACTION: {reaction['character']}")
         print("=" * 50)
         print(f"Class-based reaction: {reaction['class_reaction']}")
         print(f"Personality modifier: {reaction['personality_modifier']}")
@@ -75,10 +75,10 @@ class ConsultationsCLI:
         """Get DC suggestions for an action."""
         characters = self.story_manager.get_character_list()
         if not characters:
-            print("\n❌ No characters found.")
+            print("\n[ERROR] No characters found.")
             return
 
-        print("\n🎲 DC SUGGESTIONS")
+        print("\n DC SUGGESTIONS")
         print("-" * 30)
 
         action = get_non_empty_input("Describe the action: ")
@@ -136,7 +136,7 @@ class ConsultationsCLI:
 
     def get_dm_narrative_suggestions(self):
         """Get DM narrative suggestions based on user prompt."""
-        print("\n🎭 DM NARRATIVE SUGGESTIONS")
+        print("\n DM NARRATIVE SUGGESTIONS")
         print("-" * 40)
 
         # Get user prompt
@@ -187,13 +187,13 @@ class ConsultationsCLI:
 
     def _display_dm_suggestions(self, suggestions: Dict[str, Any]):
         """Display DM narrative suggestions."""
-        print("\n🎭 NARRATIVE SUGGESTIONS")
+        print("\n NARRATIVE SUGGESTIONS")
         print("=" * 50)
         print(f"Situation: {suggestions['user_prompt']}")
 
         # Character insights
         if suggestions["character_insights"]:
-            print("\n👥 CHARACTER INSIGHTS:")
+            print("\n CHARACTER INSIGHTS:")
             for char_name, insight in suggestions["character_insights"].items():
                 print(f"\n  {char_name}:")
                 print(f"    Likely reaction: {insight['likely_reaction']}")
@@ -213,13 +213,13 @@ class ConsultationsCLI:
                     print(f"    Relationships: {insight['relationships']}")
 
         # Narrative suggestions
-        print("\n📚 NARRATIVE SUGGESTIONS:")
+        print("\n NARRATIVE SUGGESTIONS:")
         for i, suggestion in enumerate(suggestions["narrative_suggestions"], 1):
             print(f"  {i}. {suggestion}")
 
         # Consistency notes
         if suggestions["consistency_notes"]:
-            print("\n⚠️ CONSISTENCY REMINDERS:")
+            print("\n[WARNING] CONSISTENCY REMINDERS:")
             for note in suggestions["consistency_notes"]:
                 print(f"  • {note}")
 

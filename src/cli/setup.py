@@ -4,7 +4,6 @@ Initializes workspace with default character JSON files and VSCode configuration
 """
 
 from pathlib import Path
-
 from src.utils.file_io import save_json_file, load_json_file
 
 
@@ -68,14 +67,14 @@ def create_vscode_configuration():
 def setup_workspace():
     """Set up the workspace for the D&D Character Consultant System."""
 
-    print("🐉 Setting up D&D Character Consultant System...")
+    print("[SETUP] D&D Character Consultant System")
     print("=" * 50)
 
     # Verify character files exist
     characters_dir = Path("game_data/characters")
     if not characters_dir.exists():
-        print("❌ Error: 'game_data/characters' directory not found!")
-        print("   The character JSON files should already exist in this workspace.")
+        print("[ERROR] 'game_data/characters' directory not found!")
+        print("        The character JSON files should already exist in this workspace.")
         return False
 
     # Count existing character files (exclude example/template files)
@@ -85,18 +84,18 @@ def setup_workspace():
         for f in all_files
         if "example" not in f.stem.lower() and "template" not in f.stem.lower()
     ]
-    print(f"✅ Found {len(character_files)} character JSON files")
+    print(f"[OK] Found {len(character_files)} character JSON files")
 
     # Create VSCode configuration
-    print("\n📝 Creating VSCode configuration...")
+    print("\n[VSCODE] Creating VSCode configuration...")
     if create_vscode_configuration():
-        print("✅ Created VSCode tasks and settings")
+        print("[OK] Created VSCode tasks and settings")
 
-    print("\n🎉 Setup Complete!")
+    print("\n[COMPLETE] Setup Complete!")
     print("=" * 50)
-    print("\n📋 Next Steps:")
+    print("\n[NEXT STEPS]")
     print("1. Customize character backgrounds in 'game_data/characters/*.json'")
-    print("2. Run 'python dnd_consultant.py' to start the interactive consultant")
+    print("2. Run 'python -m src.cli.dnd_consultant' to start the interactive consultant")
     print("3. Use the consultant to:")
     print("   - Create campaigns and story files")
     print("   - Manage party configuration")
@@ -105,7 +104,7 @@ def setup_workspace():
         "4. Or use VSCode: Ctrl+Shift+P > 'Tasks: Run Task' > 'D&D: Interactive Consultant'"
     )
 
-    print("\n🎭 Character files ready for customization:")
+    print("\nCharacter files ready for customization:")
 
     # List the character files (exclude example/template files)
     for char_file in sorted(character_files):
@@ -121,7 +120,7 @@ def setup_workspace():
         except (OSError, ValueError):
             print(f"   • {char_file.name}")
 
-    print("\n🎲 Ready to enhance your D&D storytelling!")
+    print("\nReady to enhance your D&D storytelling!")
     return True
 
 

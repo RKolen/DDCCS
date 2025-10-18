@@ -6,9 +6,7 @@ and party validation operations.
 """
 
 from typing import List
-
 from src.cli.party_config_manager import load_current_party, save_current_party
-
 
 class PartyManager:
     """Manages party member configuration and operations."""

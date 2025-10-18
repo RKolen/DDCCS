@@ -6,7 +6,6 @@ Reusable functions for command-line interface operations.
 
 from typing import List, Optional, Tuple
 
-
 def print_section_header(title: str, width: int = 50):
     """
     Print a formatted section header.

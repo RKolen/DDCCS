@@ -6,7 +6,7 @@ Validates character JSON files against required schema.
 from typing import Dict, List, Any, Tuple
 from src.utils.file_io import load_json_file, get_json_files_in_directory
 from src.utils.path_utils import get_characters_dir
-
+from src.utils.validation_helpers import get_type_name, print_validation_report
 
 class CharacterValidationError(Exception):
     """Raised when character JSON validation fails."""
@@ -17,9 +17,10 @@ def _validate_required_fields(
 ) -> List[str]:
     """Validate presence and types of required fields."""
     errors = []
+
+    # Required fields that must be present
     required_fields = {
         "name": str,
-        "nickname": (str, type(None)),
         "species": str,
         "dnd_class": str,
         "level": int,
@@ -31,6 +32,12 @@ def _validate_required_fields(
         "relationships": dict,
     }
 
+    # Optional fields with type validation if present
+    optional_fields = {
+        "nickname": (str, type(None)),
+    }
+
+    # Validate required fields
     for field, expected_type in required_fields.items():
         if field not in data:
             errors.append(f"{file_prefix}Missing required field: '{field}'")
@@ -40,6 +47,17 @@ def _validate_required_fields(
                 f"{file_prefix}Field '{field}' should be {expected_type.__name__}, "
                 f"got {type(data[field]).__name__}"
             )
+
+    # Validate optional fields if present
+    for field, expected_type in optional_fields.items():
+        if field in data and not isinstance(data[field], expected_type):
+            # Build type name string for error message
+            type_name = get_type_name(expected_type)
+            errors.append(
+                f"{file_prefix}Field '{field}' should be {type_name}, "
+                f"got {type(data[field]).__name__}"
+            )
+
     return errors
 
 
@@ -185,16 +203,6 @@ def validate_character_file(filepath: str) -> Tuple[bool, List[str]]:
         return False, [f"{filepath}: Invalid JSON - {str(e)}"]
     except (OSError, IOError, PermissionError) as e:
         return False, [f"{filepath}: Error reading file - {str(e)}"]
-
-
-def print_validation_report(filepath: str, is_valid: bool, errors: List[str]) -> None:
-    """Print a formatted validation report."""
-    if is_valid:
-        print(f"✓ {filepath}: Valid")
-    else:
-        print(f"✗ {filepath}: INVALID")
-        for error in errors:
-            print(f"  - {error}")
 
 
 if __name__ == "__main__":

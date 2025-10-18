@@ -6,7 +6,6 @@ Handles loading and saving of party configuration files.
 
 from typing import List
 from datetime import datetime
-
 from src.utils.file_io import load_json_file, save_json_file, file_exists
 
 try:
@@ -62,7 +61,7 @@ def save_current_party(
     if VALIDATOR_AVAILABLE:
         is_valid, errors = validate_party_json(data)
         if not is_valid:
-            print("⚠️  Party configuration validation failed:")
+            print("[WARNING]  Party configuration validation failed:")
             for error in errors:
                 print(f"  - {error}")
             print("  Saving anyway, but please fix these issues.")

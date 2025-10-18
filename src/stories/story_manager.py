@@ -12,7 +12,6 @@ from src.stories.story_file_ops import StoryFileOperations
 from src.stories.story_analysis import StoryAnalyzer
 from src.stories.story_updater import StoryUpdater
 
-
 class StoryManager:
     """Manages the story sequence system using specialized components."""
 

@@ -239,7 +239,7 @@ class CharacterProfile:
         if VALIDATOR_AVAILABLE and validate_character_json:
             is_valid, errors = validate_character_json(data, filepath)
             if not is_valid:
-                print("⚠️  Character profile validation failed:")
+                print("[WARNING]  Character profile validation failed:")
                 for error in errors:
                     print(f"  - {error}")
                 print("  Saving anyway, but please fix these issues.")

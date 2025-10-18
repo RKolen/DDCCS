@@ -15,18 +15,16 @@ Usage:
 
 from typing import Dict, Any, List, Tuple
 from datetime import datetime
-
 from ..utils.file_io import (
     load_json_file,
     file_exists,
     get_json_files_in_directory
 )
 from ..utils.path_utils import get_characters_dir, get_party_config_path
-
+from ..utils.validation_helpers import print_validation_report
 
 class PartyValidationError(Exception):
     """Custom exception for party validation errors."""
-
 
 def _validate_required_fields(data: Dict[str, Any]) -> List[str]:
     errors = []
@@ -151,16 +149,6 @@ def validate_party_file(
     except (ValueError, OSError) as err:
         return (False, [f"Error loading file: {err}"])
     return validate_party_json(data, characters_dir)
-
-
-def print_validation_report(file_path: str, is_valid: bool, errors: List[str]):
-    """Print a formatted validation report."""
-    if is_valid:
-        print(f"✓ {file_path}: Valid")
-    else:
-        print(f"✗ {file_path}: INVALID")
-        for error_item in errors:
-            print(f"  - {error_item}")
 
 
 if __name__ == "__main__":

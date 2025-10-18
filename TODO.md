@@ -1,6 +1,11 @@
 # TODO List - D&D Character Consultant System
 
 ## 🔥 High Priority
+
+### CRITICAL: Remove ALL Emojis from Code ⚠️ BREAKING TESTS
+- [x] **Remove emojis from all Python source files** - Emojis cause encoding errors on Windows (cp1252)
+
+
 ### Code Quality & Testing
 - [-] **Pylint the codebase** - Systematic pylint cleanup to achieve 9.5+/10 scores across all files
   - [x] dnd_consultant.py (8.81 → 9.88/10, 1028 → 956 lines)
@@ -16,15 +21,16 @@
   - [x] All validator files
   - [x] Setup and helper files
 
-  - [ ] **Comprehensive system testing** - End-to-end testing of all workflows
+  - [x] **Test infrastructure complete** - Test framework with runner, helpers, and pylint config
+  - [x] **Validation tests complete** - All JSON validators tested
+  - [ ] **Comprehensive system testing** - End-to-end testing of remaining workflows
   - [ ] Story creation flow (new series, in-series, standalone)
   - [ ] Character management (create, edit, party config)
-  - [ ] Combat conversion (FGU logs and prompts)
+  - [ ] Combat conversion ( prompts)
   - [ ] Character consultations and DC suggestions
   - [ ] Story analysis and NPC detection
   - [ ] RAG integration with wiki lookups
   - [ ] AI integration with all features
-  - [ ] Validator integration (all JSON operations)
 
 ### Story Management System
 - [ ] **Test story creation flow** - Verify the enhanced story manager works with CLI interface end-to-end
@@ -127,7 +133,10 @@
 - [x] **Nickname field support** - Added nullable nickname field to all characters and NPCs for better name handling
 - [x] **Name constraints** - Validators now enforce character name constraints (no apostrophes, quotes, or shell-unsafe characters)
 - [x] **Clear error messages** - All validators provide specific, actionable error messages with field names and expected types
-- [x] **Test suites (local only)** - Created comprehensive test files for all validators (tests/ folder, git-ignored, not yet in repository)
+- [x] **Test suites** - Created comprehensive test files for all validators (tests/ folder, now committed to repository)
+- [x] **Test infrastructure** - Created test_helpers.py for UTF-8 encoding and path setup (10.00/10 pylint)
+- [x] **Test runner** - Created run_all_tests.py unified test runner with category support (10.00/10 pylint)
+- [x] **Test configuration** - Created tests/.pylintrc for test-specific lint rules (proper configuration, not inline disables)
 - [x] **Documentation** - Created docs/JSON_Validation.md and docs/Validator_Integration.md with usage guides
 - [x] **Validator exception handling** - Party validator throws clear exceptions when party member names don't match character files
 

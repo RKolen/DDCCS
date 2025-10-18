@@ -3,13 +3,11 @@ Equipment and Item Management System with RAG Integration
 Handles distinction between official D&D items and homebrew content
 """
 
+import os
 from typing import Dict, List, Optional, Any
 from dataclasses import dataclass, field
-import os
-
 from src.validation.items_validator import validate_items_json
 from src.utils.file_io import load_json_file, save_json_file
-
 
 @dataclass
 class Item:
@@ -86,7 +84,7 @@ class ItemRegistry:
             # Validate before saving
             is_valid, errors = validate_items_json(data)
             if not is_valid:
-                print("⚠️  Items registry validation failed:")
+                print("[WARNING]  Items registry validation failed:")
                 for error in errors:
                     print(f"  - {error}")
                 print("  Saving anyway, but please fix these issues.")
@@ -174,7 +172,7 @@ if __name__ == "__main__":
         notes="Provides +1 to AC while attuned",
     )
     registry.add_custom_item(custom_magic)
-    print(f"✅ Added custom magic item: {custom_magic.name}")
+    print(f"[SUCCESS] Added custom magic item: {custom_magic.name}")
 
     # Example: Add custom non-magic equipment
     custom_gear = Item(
@@ -186,7 +184,7 @@ if __name__ == "__main__":
         notes="Can hold 10 lbs more than standard backpack",
     )
     registry.add_custom_item(custom_gear)
-    print(f"✅ Added custom gear: {custom_gear.name}")
+    print(f"[SUCCESS] Added custom gear: {custom_gear.name}")
 
     # Check if items can be looked up on wikidot
     print("\n" + "=" * 60)

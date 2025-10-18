@@ -45,7 +45,7 @@ class StoryAnalysisCLI:
         story_files = self.story_manager.get_story_files()
 
         if not story_files:
-            print("\n❌ No story files found.")
+            print("\n[ERROR] No story files found.")
             return
 
         print("\n🔍 ANALYZE STORY FILE")
@@ -63,7 +63,7 @@ class StoryAnalysisCLI:
                 analysis = self.story_manager.analyze_story_file(filepath)
 
                 if "error" in analysis:
-                    print(f"❌ {analysis['error']}")
+                    print(f"[ERROR] {analysis['error']}")
                     return
 
                 self._display_story_analysis(analysis)
@@ -81,7 +81,7 @@ class StoryAnalysisCLI:
 
     def _display_story_analysis(self, analysis: Dict[str, Any]):
         """Display story analysis results."""
-        print(f"\n📊 STORY ANALYSIS: {analysis['story_file']}")
+        print(f"\n[Stats] STORY ANALYSIS: {analysis['story_file']}")
         print("=" * 50)
 
         # Overall consistency
@@ -92,22 +92,22 @@ class StoryAnalysisCLI:
 
         # Character analyses
         if analysis.get("consultant_analyses"):
-            print("\n👥 CHARACTER ANALYSES:")
+            print("\n CHARACTER ANALYSES:")
             for character, char_analysis in analysis["consultant_analyses"].items():
                 print(f"\n• {character}: {char_analysis['overall_rating']}")
                 print(f"  Score: {char_analysis['consistency_score']}/1.0")
 
                 if char_analysis.get("positive_notes"):
-                    print(f"  ✅ Positives: {len(char_analysis['positive_notes'])}")
+                    print(f"  [SUCCESS] Positives: {len(char_analysis['positive_notes'])}")
 
                 if char_analysis.get("issues"):
-                    print(f"  ⚠️ Issues: {len(char_analysis['issues'])}")
+                    print(f"  [WARNING] Issues: {len(char_analysis['issues'])}")
                     for issue in char_analysis["issues"][:2]:  # Show first 2
                         print(f"    - {issue}")
 
         # DC suggestions
         if analysis.get("dc_suggestions"):
-            print("\n🎲 DC SUGGESTIONS:")
+            print("\n DC SUGGESTIONS:")
             for request, suggestions in analysis["dc_suggestions"].items():
                 print(f"\n• {request}")
                 for character, suggestion in suggestions.items():
@@ -164,7 +164,7 @@ class StoryAnalysisCLI:
             combat_prompt=combat_prompt, story_context=story_context, style=style
         )
 
-        print("\n📝 COMBAT NARRATIVE:")
+        print("\n COMBAT NARRATIVE:")
         print("=" * 70)
         print(narrative)
         print("=" * 70)
@@ -181,10 +181,10 @@ class StoryAnalysisCLI:
                 try:
                     self.ai_client = AIClient()
                 except (AttributeError, ValueError) as e:
-                    print(f"⚠️  Could not initialize AI client: {e}")
+                    print(f"[WARNING]  Could not initialize AI client: {e}")
                     print("   Using fallback mode...")
                     self.ai_client = None
             else:
-                print("⚠️  AI client not available")
+                print("[WARNING]  AI client not available")
                 print("   Using fallback mode...")
                 self.ai_client = None

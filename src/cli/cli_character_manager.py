@@ -26,7 +26,7 @@ class CharacterCLIManager:
     def manage_characters(self):
         """Character management submenu."""
         while True:
-            print("\n👥 CHARACTER MANAGEMENT")
+            print("\n CHARACTER MANAGEMENT")
             print("-" * 30)
             print("1. List Characters")
             print("2. Edit Character Profile")
@@ -50,7 +50,7 @@ class CharacterCLIManager:
         """List all characters."""
         characters = self.story_manager.get_character_list()
         if not characters:
-            print("\n❌ No characters found. Create the default party first.")
+            print("\n[ERROR] No characters found. Create the default party first.")
             return
 
         print(f"\n📜 CHARACTERS ({len(characters)})")
@@ -70,7 +70,7 @@ class CharacterCLIManager:
         """Edit a character profile."""
         characters = self.story_manager.get_character_list()
         if not characters:
-            print("\n❌ No characters found. Create the default party first.")
+            print("\n[ERROR] No characters found. Create the default party first.")
             return
 
         print("\n✏️ EDIT CHARACTER")
@@ -92,7 +92,7 @@ class CharacterCLIManager:
         """View detailed character information."""
         characters = self.story_manager.get_character_list()
         if not characters:
-            print("\n❌ No characters found.")
+            print("\n[ERROR] No characters found.")
             return
 
         print("\n👁️ VIEW CHARACTER DETAILS")
@@ -107,7 +107,7 @@ class CharacterCLIManager:
 
     def _display_character_details(self, profile: CharacterProfile):
         """Display detailed character information."""
-        print(f"\n📋 CHARACTER DETAILS: {profile.name}")
+        print(f"\n[MENU] CHARACTER DETAILS: {profile.name}")
         print("=" * 50)
         print(f"Class: {profile.character_class.value}")
         print(f"Level: {profile.level}")

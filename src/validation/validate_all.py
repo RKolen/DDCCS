@@ -24,7 +24,6 @@ Usage:
 import sys
 import argparse
 from typing import Dict, Tuple
-
 from ..utils.file_io import get_json_files_in_directory, file_exists
 from ..utils.path_utils import (
     get_characters_dir,
@@ -66,14 +65,14 @@ except ImportError:
 def validate_characters(verbose: bool = False) -> Tuple[bool, int, int]:
     """Validate all character files."""
     if not CHAR_AVAILABLE:
-        print("⚠ Character validator not available")
+        print("[WARNING] Character validator not available")
         return (True, 0, 0)
 
     print("\n=== Validating Characters ===")
     characters_dir = get_characters_dir()
 
     if not file_exists(characters_dir):
-        print(f"⚠ Characters directory not found: {characters_dir}")
+        print(f"[WARNING] Characters directory not found: {characters_dir}")
         return (True, 0, 0)
 
     all_valid = True
@@ -90,19 +89,19 @@ def validate_characters(verbose: bool = False) -> Tuple[bool, int, int]:
         if is_valid:
             valid_count += 1
             if verbose:
-                print(f"  ✓ {filename}")
+                print(f"  [OK] {filename}")
         else:
             invalid_count += 1
             all_valid = False
-            print(f"  ✗ {filename}: INVALID")
+            print(f"  [FAILED] {filename}: INVALID")
             for error in errors:
                 print(f"    - {error}")
 
     if not verbose and valid_count > 0:
-        print(f"  ✓ {valid_count} character(s) validated successfully")
+        print(f"  [OK] {valid_count} character(s) validated successfully")
 
     if invalid_count > 0:
-        print(f"  ✗ {invalid_count} character(s) failed validation")
+        print(f"  [FAILED] {invalid_count} character(s) failed validation")
 
     return (all_valid, valid_count, invalid_count)
 
@@ -110,14 +109,14 @@ def validate_characters(verbose: bool = False) -> Tuple[bool, int, int]:
 def validate_npcs(verbose: bool = False) -> Tuple[bool, int, int]:
     """Validate all NPC files."""
     if not NPC_AVAILABLE:
-        print("⚠ NPC validator not available")
+        print("[WARNING] NPC validator not available")
         return (True, 0, 0)
 
     print("\n=== Validating NPCs ===")
     npcs_dir = get_npcs_dir()
 
     if not file_exists(npcs_dir):
-        print(f"⚠ NPCs directory not found: {npcs_dir}")
+        print(f"[WARNING] NPCs directory not found: {npcs_dir}")
         return (True, 0, 0)
 
     all_valid = True
@@ -134,19 +133,19 @@ def validate_npcs(verbose: bool = False) -> Tuple[bool, int, int]:
         if is_valid:
             valid_count += 1
             if verbose:
-                print(f"  ✓ {filename}")
+                print(f"  [OK] {filename}")
         else:
             invalid_count += 1
             all_valid = False
-            print(f"  ✗ {filename}: INVALID")
+            print(f"  [FAILED] {filename}: INVALID")
             for error in errors:
                 print(f"    - {error}")
 
     if not verbose and valid_count > 0:
-        print(f"  ✓ {valid_count} NPC(s) validated successfully")
+        print(f"  [OK] {valid_count} NPC(s) validated successfully")
 
     if invalid_count > 0:
-        print(f"  ✗ {invalid_count} NPC(s) failed validation")
+        print(f"  [FAILED] {invalid_count} NPC(s) failed validation")
 
     return (all_valid, valid_count, invalid_count)
 
@@ -154,22 +153,22 @@ def validate_npcs(verbose: bool = False) -> Tuple[bool, int, int]:
 def validate_items() -> Tuple[bool, int, int]:
     """Validate items registry file."""
     if not ITEMS_AVAILABLE:
-        print("⚠ Items validator not available")
+        print("[WARNING] Items validator not available")
         return (True, 0, 0)
 
     print("\n=== Validating Items Registry ===")
     items_file = get_items_registry_path()
 
     if not file_exists(items_file):
-        print(f"⚠ Items registry not found: {items_file}")
+        print(f"[WARNING] Items registry not found: {items_file}")
         return (True, 0, 0)
 
     is_valid, errors = validate_items_file(items_file)
 
     if is_valid:
-        print("  ✓ Items registry validated successfully")
+        print("  [OK] Items registry validated successfully")
         return (True, 1, 0)
-    print("  ✗ Items registry: INVALID")
+    print("  [FAILED] Items registry: INVALID")
     for error in errors:
         print(f"    - {error}")
     return (False, 0, 1)
@@ -178,14 +177,14 @@ def validate_items() -> Tuple[bool, int, int]:
 def validate_party() -> Tuple[bool, int, int]:
     """Validate party configuration file."""
     if not PARTY_AVAILABLE:
-        print("⚠ Party validator not available")
+        print("[WARNING] Party validator not available")
         return (True, 0, 0)
 
     print("\n=== Validating Party Configuration ===")
     party_file = get_party_config_path()
 
     if not file_exists(party_file):
-        print(f"⚠ Party configuration not found: {party_file}")
+        print(f"[WARNING] Party configuration not found: {party_file}")
         return (True, 0, 0)
 
     # Get characters directory for cross-reference
@@ -196,9 +195,9 @@ def validate_party() -> Tuple[bool, int, int]:
     is_valid, errors = validate_party_file(party_file, characters_dir)
 
     if is_valid:
-        print("  ✓ Party configuration validated successfully")
+        print("  [OK] Party configuration validated successfully")
         return (True, 1, 0)
-    print("  ✗ Party configuration: INVALID")
+    print("  [FAILED] Party configuration: INVALID")
     for error in errors:
         print(f"    - {error}")
     return (False, 0, 1)
@@ -215,7 +214,7 @@ def print_summary(results: Dict[str, Tuple[bool, int, int]]):
     all_passed = True
 
     for data_type, (passed, valid, invalid) in results.items():
-        status = "✓ PASS" if passed else "✗ FAIL"
+        status = "[OK] PASS" if passed else "[FAILED] FAIL"
         print(f"{data_type:20} {status:10} ({valid} valid, {invalid} invalid)")
         total_valid += valid
         total_invalid += invalid
@@ -226,9 +225,9 @@ def print_summary(results: Dict[str, Tuple[bool, int, int]]):
     print(f"Total: {total_valid} valid, {total_invalid} invalid")
 
     if all_passed:
-        print("\n✓ All game data validated successfully!")
+        print("\n[OK] All game data validated successfully!")
     else:
-        print("\n✗ Some game data failed validation")
+        print("\n[FAILED] Some game data failed validation")
 
     return all_passed
 

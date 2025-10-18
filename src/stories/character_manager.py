@@ -7,7 +7,6 @@ Handles character loading, profiles, consultants, and spell highlighting.
 import os
 import json
 from typing import Optional
-
 from src.characters.consultants.character_profile import CharacterProfile
 from src.characters.consultants.consultant_core import CharacterConsultant
 from src.utils.spell_highlighter import highlight_spells_in_text
@@ -60,7 +59,7 @@ class CharacterManager:
             if VALIDATOR_AVAILABLE:
                 is_valid, errors = validate_character_file(filepath)
                 if not is_valid:
-                    print(f"✗ Validation failed for {filename}:")
+                    print(f"[FAILED] Validation failed for {filename}:")
                     for error in errors:
                         print(f"  - {error}")
                     continue
@@ -71,7 +70,7 @@ class CharacterManager:
                     profile, ai_client=self.ai_client
                 )
                 if VALIDATOR_AVAILABLE:
-                    print(f"✓ Loaded and validated: {filename}")
+                    print(f"[OK] Loaded and validated: {filename}")
             except (FileNotFoundError, json.JSONDecodeError, KeyError, ValueError) as e:
                 print(f"Warning: Could not load character {filename}: {e}")
 
