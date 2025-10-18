@@ -7,21 +7,13 @@ Enhanced with RAG (Retrieval-Augmented Generation) for campaign wiki integration
 import re
 from typing import Dict, List, Any
 from pathlib import Path
-from src.characters.consultants.character_consultants import CharacterConsultant, CharacterProfile
+from src.characters.consultants.character_profile import CharacterProfile
+from src.characters.consultants.consultant_core import CharacterConsultant
 from src.npcs.npc_agents import NPCAgent, create_npc_agents
-
-# Import AI client if available (used for type hints and availability check)
-try:
-    from src.ai.ai_client import AIClient  # pylint: disable=unused-import
-    AI_AVAILABLE = True
-except ImportError:
-    AIClient = None
-    AI_AVAILABLE = False
 
 # Import RAG system if available
 try:
     from src.ai.rag_system import get_rag_system
-
     RAG_AVAILABLE = True
 except ImportError:
     get_rag_system = None
@@ -285,7 +277,7 @@ class DMConsultant:
         npcs_present = npcs_present or []
 
         # If AI not available, return rule-based narrative
-        if not self.ai_client or not AI_AVAILABLE:
+        if not self.ai_client:
             return self._generate_fallback_narrative(
                 story_prompt, characters_present, npcs_present
             )

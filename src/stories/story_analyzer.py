@@ -15,10 +15,8 @@ import sys
 from pathlib import Path
 from typing import Dict, List, Set
 
-from src.characters.consultants.character_consultants import (
-    CharacterConsultant,
-    CharacterProfile
-)
+from src.characters.consultants.character_profile import CharacterProfile
+from src.characters.consultants.consultant_core import CharacterConsultant
 from src.validation.npc_validator import validate_npc_json
 from src.utils.file_io import load_json_file, save_json_file, read_text_file
 

@@ -12,19 +12,11 @@ Features:
 - Character-aware combat narration
 """
 
+import os
 import re
 from typing import Dict, List, Any, Optional
-from src.characters.consultants.character_consultants import CharacterConsultant
+from src.characters.consultants.consultant_core import CharacterConsultant
 from src.utils.text_formatting_utils import wrap_narrative_text
-
-# Import AI client if available
-try:
-    from src.ai.ai_client import AIClient  # pylint: disable=unused-import
-
-    AI_AVAILABLE = True
-except ImportError:
-    AIClient = None
-    AI_AVAILABLE = False
 
 # Import RAG system for D&D rules lookup
 try:
@@ -68,8 +60,6 @@ class CombatNarrator:
         self.dnd_rag = None
         if RAG_AVAILABLE:
             try:
-                import os  # pylint: disable=import-outside-toplevel
-
                 # Use separate RAG_RULES_BASE_URL for D&D rules lookups
                 # This allows campaign wiki (RAG_WIKI_BASE_URL) and rules wiki to be different
                 rules_url = os.environ.get(
@@ -113,7 +103,7 @@ class CombatNarrator:
         Returns:
             Narrative prose describing the combat scene
         """
-        if not self.ai_client or not AI_AVAILABLE:
+        if not self.ai_client:
             return self._narrate_combat_fallback(combat_prompt, style)
 
         # Build character context
@@ -709,7 +699,27 @@ Write the combat narrative in {style} style. Remember:
 
         return enhanced
 
-    def generate_combat_title(  # pylint: disable=too-many-return-statements
+    def _extract_creature_title(self, combat_prompt: str) -> str:
+        """
+        Extract a simple creature-based title from combat prompt.
+
+        Args:
+            combat_prompt: The tactical combat description
+
+        Returns:
+            A creature-based title or generic "Combat Encounter"
+        """
+        creatures = re.findall(
+            r"\b(goblin|orc|dragon|skeleton|zombie|bandit|wolf|bear|"
+            r"cultist|spider|troll)s?\b",
+            combat_prompt.lower(),
+        )
+        if creatures:
+            creature = creatures[0].capitalize()
+            return f"The {creature} Encounter"
+        return "Combat Encounter"
+
+    def generate_combat_title(
         self, combat_prompt: str, story_context: str = ""
     ) -> str:
         """
@@ -723,16 +733,7 @@ Write the combat narrative in {style} style. Remember:
             A descriptive combat title (e.g., "The Goblin Ambush", "Showdown with the Dragon")
         """
         if not self.ai_client:
-            # Fallback: extract creatures from prompt
-            creatures = re.findall(
-                r"\b(goblin|orc|dragon|skeleton|zombie|bandit|wolf|bear|"
-                r"cultist|spider|troll)s?\b",
-                combat_prompt.lower(),
-            )
-            if creatures:
-                creature = creatures[0].capitalize()
-                return f"The {creature} Encounter"
-            return "Combat"
+            return self._extract_creature_title(combat_prompt)
 
         try:
             # Use AI to generate a contextual title
@@ -760,27 +761,10 @@ Write the combat narrative in {style} style. Remember:
 
             # Validate title length (should be short)
             if len(title.split()) > 6:
-                # Too long, use fallback
-                creatures = re.findall(
-                    r"\b(goblin|orc|dragon|skeleton|zombie|bandit|wolf|bear|"
-                    r"cultist|spider|troll)s?\b",
-                    combat_prompt.lower(),
-                )
-                if creatures:
-                    creature = creatures[0].capitalize()
-                    return f"The {creature} Encounter"
-                return "Combat Encounter"
+                return self._extract_creature_title(combat_prompt)
 
             return title
 
         except (ConnectionError, TimeoutError, ValueError, KeyError, AttributeError) as e:
             print(f"⚠️  Title generation failed: {e}")
-            # Fallback: extract creatures from prompt
-            creatures = re.findall(
-                r"\b(goblin|orc|dragon|skeleton|zombie|bandit|wolf|bear|cultist|spider|troll)s?\b",
-                combat_prompt.lower(),
-            )
-            if creatures:
-                creature = creatures[0].capitalize()
-                return f"The {creature} Encounter"
-            return "Combat Encounter"
+            return self._extract_creature_title(combat_prompt)

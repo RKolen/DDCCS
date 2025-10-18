@@ -65,9 +65,9 @@ def load_npc_from_json(json_path: Path) -> NPCProfile:
     """Load an NPC from a JSON file."""
     data = load_json_file(str(json_path))
 
-    profile = NPCProfile(
+    profile = NPCProfile.create(
         name=data.get("name", ""),
-        nickname=data.get("nickname", None),
+        nickname=data.get("nickname"),
         role=data.get("role", "NPC"),
         species=data.get("species", "Human"),
         lineage=data.get("lineage", ""),

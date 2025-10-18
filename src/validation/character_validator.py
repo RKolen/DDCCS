@@ -12,23 +12,11 @@ class CharacterValidationError(Exception):
     """Raised when character JSON validation fails."""
 
 
-def validate_character_json(  # pylint: disable=too-many-locals,too-many-branches
-    data: Dict[str, Any], filepath: str = ""
-) -> Tuple[bool, List[str]]:
-    """
-    Validate character JSON data against required schema.
-
-    Args:
-        data: Character JSON data to validate
-        filepath: Optional file path for error reporting
-
-    Returns:
-        Tuple of (is_valid, error_messages)
-    """
+def _validate_required_fields(
+    data: Dict[str, Any], file_prefix: str
+) -> List[str]:
+    """Validate presence and types of required fields."""
     errors = []
-    file_prefix = f"{filepath}: " if filepath else ""
-
-    # Required fields with their expected types (matching actual character file structure)
     required_fields = {
         "name": str,
         "nickname": (str, type(None)),
@@ -43,19 +31,21 @@ def validate_character_json(  # pylint: disable=too-many-locals,too-many-branche
         "relationships": dict,
     }
 
-    # Check for missing required fields
     for field, expected_type in required_fields.items():
         if field not in data:
             errors.append(f"{file_prefix}Missing required field: '{field}'")
             continue
-        # Check field type
         if not isinstance(data[field], expected_type):
             errors.append(
                 f"{file_prefix}Field '{field}' should be {expected_type.__name__}, "
                 f"got {type(data[field]).__name__}"
             )
+    return errors
 
-    # Disallowed characters in name
+
+def _validate_character_name(data: Dict[str, Any], file_prefix: str) -> List[str]:
+    """Validate character name doesn't contain disallowed characters."""
+    errors = []
     disallowed_chars = set("'\"`$%&|<>/\\")
     name = data.get("name", "")
     if any(c in name for c in disallowed_chars):
@@ -64,17 +54,26 @@ def validate_character_json(  # pylint: disable=too-many-locals,too-many-branche
             f"Please use another name (disallowed: {''.join(disallowed_chars)}). "
             f"Name: '{name}'"
         )
+    return errors
 
-    # Validate level range
+
+def _validate_level_range(data: Dict[str, Any], file_prefix: str) -> List[str]:
+    """Validate character level is within valid range."""
+    errors = []
     if "level" in data:
         level = data["level"]
-        if isinstance(level, int):
-            if level < 1 or level > 20:
-                errors.append(
-                    f"{file_prefix}Level must be between 1 and 20, got {level}"
-                )
+        if isinstance(level, int) and not 1 <= level <= 20:
+            errors.append(
+                f"{file_prefix}Level must be between 1 and 20, got {level}"
+            )
+    return errors
 
-    # Validate equipment structure (actual structure has weapons, armor, items, gold)
+
+def _validate_equipment_structure(
+    data: Dict[str, Any], file_prefix: str
+) -> List[str]:
+    """Validate equipment dictionary structure."""
+    errors = []
     if "equipment" in data and isinstance(data["equipment"], dict):
         equipment = data["equipment"]
         required_equipment_fields = {"weapons": list, "armor": list, "items": list}
@@ -86,16 +85,24 @@ def validate_character_json(  # pylint: disable=too-many-locals,too-many-branche
                 )
             elif not isinstance(equipment[field], expected_type):
                 errors.append(
-                    f"{file_prefix}Equipment field '{field}' should be {expected_type.__name__}, "
-                    f"got {type(equipment[field]).__name__}"
+                    f"{file_prefix}Equipment field '{field}' should be "
+                    f"{expected_type.__name__}, got {type(equipment[field]).__name__}"
                 )
+    return errors
 
-    # Validate array contents
+
+def _validate_known_spells(data: Dict[str, Any], file_prefix: str) -> List[str]:
+    """Validate known_spells list contains only strings."""
+    errors = []
     if "known_spells" in data and isinstance(data["known_spells"], list):
         if not all(isinstance(item, str) for item in data["known_spells"]):
             errors.append(f"{file_prefix}All items in 'known_spells' must be strings")
+    return errors
 
-    # Validate ability_scores structure
+
+def _validate_ability_scores(data: Dict[str, Any], file_prefix: str) -> List[str]:
+    """Validate ability_scores dictionary structure."""
+    errors = []
     if "ability_scores" in data and isinstance(data["ability_scores"], dict):
         required_abilities = [
             "strength",
@@ -112,8 +119,12 @@ def validate_character_json(  # pylint: disable=too-many-locals,too-many-branche
                 errors.append(
                     f"{file_prefix}Ability score '{ability}' must be an integer"
                 )
+    return errors
 
-    # Validate relationships structure
+
+def _validate_relationships(data: Dict[str, Any], file_prefix: str) -> List[str]:
+    """Validate relationships dictionary structure."""
+    errors = []
     if "relationships" in data and isinstance(data["relationships"], dict):
         relationships = data["relationships"]
         if not all(
@@ -122,9 +133,35 @@ def validate_character_json(  # pylint: disable=too-many-locals,too-many-branche
             errors.append(
                 f"{file_prefix}All keys and values in 'relationships' must be strings"
             )
+    return errors
 
-    is_valid = len(errors) == 0
-    return is_valid, errors
+
+def validate_character_json(
+    data: Dict[str, Any], filepath: str = ""
+) -> Tuple[bool, List[str]]:
+    """
+    Validate character JSON data against required schema.
+
+    Args:
+        data: Character JSON data to validate
+        filepath: Optional file path for error reporting
+
+    Returns:
+        Tuple of (is_valid, error_messages)
+    """
+    file_prefix = f"{filepath}: " if filepath else ""
+
+    # Run all validation checks
+    errors = []
+    errors.extend(_validate_required_fields(data, file_prefix))
+    errors.extend(_validate_character_name(data, file_prefix))
+    errors.extend(_validate_level_range(data, file_prefix))
+    errors.extend(_validate_equipment_structure(data, file_prefix))
+    errors.extend(_validate_known_spells(data, file_prefix))
+    errors.extend(_validate_ability_scores(data, file_prefix))
+    errors.extend(_validate_relationships(data, file_prefix))
+
+    return len(errors) == 0, errors
 
 
 def validate_character_file(filepath: str) -> Tuple[bool, List[str]]:

@@ -5,7 +5,7 @@ Extracts complex UI interaction logic to reduce complexity in main CLI file.
 """
 
 from typing import List, Tuple, Optional
-from src.characters.consultants.character_consultants import CharacterProfile
+from src.characters.consultants.character_profile import CharacterProfile
 
 
 def edit_character_profile_interactive(profile: CharacterProfile) -> CharacterProfile:

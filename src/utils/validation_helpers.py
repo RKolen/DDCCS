@@ -72,30 +72,31 @@ def validate_field_type(data: Dict[str, Any],
     return True, None
 
 
-def validate_list_field(  # pylint: disable=too-many-arguments
+def validate_list_field(
         data: Dict[str, Any],
         field: str,
-        *,
-        item_type: Optional[Type] = None,
-        min_length: Optional[int] = None,
-        max_length: Optional[int] = None,
-        required: bool = True) -> Tuple[bool, List[str]]:
+        required: bool = True,
+        **constraints) -> Tuple[bool, List[str]]:
     """Validate a list field with optional constraints.
-
-    Note: Multiple optional parameters needed for comprehensive list validation.
 
     Args:
         data: Dictionary containing the field
         field: Field name to validate
-        item_type: Expected type of list items (optional, keyword-only)
-        min_length: Minimum list length (optional, keyword-only)
-        max_length: Maximum list length (optional, keyword-only)
-        required: Whether the field is required (default: True, keyword-only)
+        required: Whether the field is required (default: True)
+        **constraints: Optional validation constraints:
+            - item_type: Expected type of list items
+            - min_length: Minimum list length
+            - max_length: Maximum list length
 
     Returns:
         Tuple of (is_valid: bool, errors: List[str])
     """
     errors = []
+
+    # Extract constraints with defaults
+    item_type = constraints.get('item_type')
+    min_length = constraints.get('min_length')
+    max_length = constraints.get('max_length')
 
     # Check if field exists
     if field not in data:

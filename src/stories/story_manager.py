@@ -8,10 +8,8 @@ import re
 from typing import Dict, List, Any, Optional
 from datetime import datetime
 
-from src.characters.consultants.character_consultants import (
-    CharacterConsultant,
-    CharacterProfile
-)
+from src.characters.consultants.character_profile import CharacterProfile
+from src.characters.consultants.consultant_core import CharacterConsultant
 from src.characters.character_sheet import DnDClass
 from src.validation.character_validator import validate_character_file
 from src.utils.file_io import (

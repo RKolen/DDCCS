@@ -51,8 +51,13 @@ D&D Campaign Workspace/
 │           └── session_results_*.md
 ├── src/                    # All source code (Phase 0 complete!)
 │   ├── characters/         # Character management
-│   │   ├── consultants/    # Character consultant system
-│   │   │   └── character_consultants.py  # Core consultant (to be split in Phase 1)
+│   │   ├── consultants/    # Character consultant system (Phase 1 complete!)
+│   │   │   ├── consultant_core.py         # Main CharacterConsultant class
+│   │   │   ├── consultant_dc.py           # DC calculation component
+│   │   │   ├── consultant_story.py        # Story analysis component
+│   │   │   ├── consultant_ai.py           # AI integration component
+│   │   │   ├── character_profile.py       # CharacterProfile dataclass
+│   │   │   └── class_knowledge.py         # D&D class data (12 classes)
 │   │   ├── character_sheet.py       # Character and NPC data models
 │   │   └── character_consistency.py # Character consistency checking
 │   ├── npcs/              # NPC management
@@ -82,6 +87,11 @@ D&D Campaign Workspace/
 │   │   ├── ai_client.py           # AI client interface
 │   │   └── rag_system.py          # RAG system
 │   ├── utils/             # Shared utilities
+│   │   ├── dnd_rules.py            # D&D 5e game rules (DCs, modifiers)
+│   │   ├── file_io.py              # File operations
+│   │   ├── path_utils.py           # Path utilities
+│   │   ├── string_utils.py         # String utilities
+│   │   ├── validation_helpers.py   # Validation helpers
 │   │   ├── text_formatting_utils.py  # Text formatting
 │   │   └── spell_highlighter.py      # Spell detection
 │   └── cli/               # Command-line interface
@@ -116,7 +126,36 @@ The user creates story files in format `001_<storyname>.md` and:
 
 ## Character Consultant System
 
-Each of the 12 character consultants provides:
+**Architecture (Phase 1 complete!):** Uses composition pattern with specialized components:
+
+- **consultant_core.py** - Main `CharacterConsultant` class that orchestrates components
+  - Handles character loading, core reactions, item management
+  - Delegates to specialized components via composition
+  
+- **consultant_dc.py** - `DCCalculator` component
+  - DC calculations based on action difficulty + character strengths
+  - Alternative approach suggestions
+  - Character advantage detection
+  
+- **consultant_story.py** - `StoryAnalyzer` component
+  - Story consistency checking against character profile
+  - Relationship update suggestions
+  - Character development tracking
+  - Plot action logging
+  
+- **consultant_ai.py** - `AIConsultant` component (optional)
+  - AI-enhanced reaction suggestions
+  - AI-powered DC calculations
+  - Integration with AI client
+  
+- **character_profile.py** - `CharacterProfile` dataclass
+  - 30+ fields (name, class, level, personality, equipment, etc.)
+  - JSON save/load methods
+  
+- **class_knowledge.py** - Static D&D class data
+  - All 12 D&D classes with abilities, reactions, roleplay notes
+
+Each consultant provides:
 - **Class expertise** (spell lists, abilities, tactics)
 - **DC suggestions** based on character strengths
 - **Personality guidance** from custom backgrounds

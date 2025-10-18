@@ -8,7 +8,7 @@ import os
 from typing import Dict, List, Any
 from src.stories.story_manager import StoryManager
 from src.combat.combat_narrator import CombatNarrator
-from src.characters.consultants.character_consultants import CharacterProfile
+from src.characters.consultants.character_profile import CharacterProfile
 from src.dm.dungeon_master import DMConsultant
 from src.cli.dnd_cli_helpers import edit_character_profile_interactive
 
