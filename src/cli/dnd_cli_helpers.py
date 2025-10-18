@@ -4,6 +4,7 @@ Helper functions for DND Consultant CLI
 Extracts complex UI interaction logic to reduce complexity in main CLI file.
 """
 
+import os
 from typing import List, Tuple, Optional
 from src.characters.consultants.character_profile import CharacterProfile
 
@@ -11,10 +12,10 @@ from src.characters.consultants.character_profile import CharacterProfile
 def edit_character_profile_interactive(profile: CharacterProfile) -> CharacterProfile:
     """
     Interactive editor for character profiles.
-    
+
     Args:
         profile: Character profile to edit
-        
+
     Returns:
         Modified profile (or original if no changes)
     """
@@ -131,7 +132,7 @@ def _edit_decision_making(profile: CharacterProfile) -> CharacterProfile:
 def get_combat_narrative_style() -> str:
     """
     Prompt user for combat narrative style.
-    
+
     Returns:
         Style string (cinematic, gritty, heroic, tactical)
     """
@@ -141,9 +142,7 @@ def get_combat_narrative_style() -> str:
     print("3. Heroic (valorous, inspirational)")
     print("4. Tactical (clear, precise)")
 
-    style_choice = input(
-        "Enter choice (1-4, or press Enter for Cinematic): "
-    ).strip()
+    style_choice = input("Enter choice (1-4, or press Enter for Cinematic): ").strip()
 
     style_map = {
         "1": "cinematic",
@@ -158,11 +157,11 @@ def get_combat_narrative_style() -> str:
 def get_multi_line_input(prompt: str, end_marker: str = "###") -> str:
     """
     Get multi-line input from user.
-    
+
     Args:
         prompt: Message to display before input
         end_marker: String that marks end of input
-        
+
     Returns:
         Combined input string
     """
@@ -177,54 +176,233 @@ def get_multi_line_input(prompt: str, end_marker: str = "###") -> str:
 
 
 def select_story_from_series(
-    story_series: List[str],
-    series_path_callback
+    story_series: List[str], series_path_callback
 ) -> Tuple[Optional[str], Optional[str]]:
     """
     Interactive story selection from series.
-    
+
     Args:
         story_series: List of available story series
         series_path_callback: Function to get story files for a series
-        
+
     Returns:
         Tuple of (story_path, story_context) or (None, None)
     """
     if not story_series:
         return None, None
 
+    # Select series
+    series_name = _prompt_series_selection(story_series)
+    if not series_name:
+        return None, None
+
+    # Get and select story file
+    story_files = series_path_callback(series_name)
+    story_file = _prompt_story_selection(story_files, series_name)
+
+    if not story_file:
+        return None, None
+
+    return story_file, series_name
+
+
+def _prompt_series_selection(story_series: List[str]) -> Optional[str]:
+    """Prompt user to select a series."""
     print("\nStory Series:")
     for i, series in enumerate(story_series, 1):
         print(f"{i}. {series}")
 
-    series_choice = input(
-        "\nSelect series number (or press Enter to skip): "
-    ).strip()
+    series_choice = input("\nSelect series number (or press Enter to skip): ").strip()
 
-    if not series_choice.isdigit():
-        return None, None
+    if series_choice.isdigit():
+        idx = int(series_choice) - 1
+        if 0 <= idx < len(story_series):
+            return story_series[idx]
+    return None
 
-    idx = int(series_choice) - 1
-    if not 0 <= idx < len(story_series):
-        return None, None
 
-    series_name = story_series[idx]
-    story_files = series_path_callback(series_name)
-
+def _prompt_story_selection(
+    story_files: List[str], series_name: str
+) -> Optional[str]:
+    """Prompt user to select a story file."""
     if not story_files:
         print(f"No stories found in {series_name}")
-        return None, None
+        return None
 
     print(f"\nStories in {series_name}:")
     for i, story_file in enumerate(story_files, 1):
         print(f"{i}. {story_file}")
 
     story_choice = input("\nSelect story number: ").strip()
+    if story_choice.isdigit():
+        story_idx = int(story_choice) - 1
+        if 0 <= story_idx < len(story_files):
+            return story_files[story_idx]
+    return None
+
+
+# ============================================================================
+# Combat Conversion Helper Functions
+# ============================================================================
+
+
+def get_multi_line_combat_input() -> str:
+    """
+    Get multi-line combat description from user.
+
+    Returns:
+        Combat description text, or empty string if cancelled.
+    """
+    print("Enter your combat description (end with '###' on a new line):")
+    lines = []
+    while True:
+        line = input()
+        if line.strip() == "###":
+            break
+        lines.append(line)
+    return "\n".join(lines).strip()
+
+
+def select_narrative_style() -> str:
+    """
+    Prompt user to select narrative style for combat.
+
+    Returns:
+        Selected style: 'cinematic', 'gritty', 'heroic', or 'tactical'
+    """
+    print("\n🎨 Choose narrative style:")
+    print("1. Cinematic (epic, movie-like)")
+    print("2. Gritty (realistic, visceral)")
+    print("3. Heroic (valorous, inspirational)")
+    print("4. Tactical (clear, precise)")
+
+    style_choice = input("Enter choice (1-4, or press Enter for Cinematic): ").strip()
+    style_map = {
+        "1": "cinematic",
+        "2": "gritty",
+        "3": "heroic",
+        "4": "tactical",
+        "": "cinematic",
+    }
+    return style_map.get(style_choice, "cinematic")
+
+
+def select_target_story_for_combat(
+    workspace_path: str, story_manager
+) -> Tuple[Optional[str], str]:
+    """
+    Interactive story selection for combat narrative appending.
+
+    Args:
+        workspace_path: Root workspace path
+        story_manager: Story manager instance
+
+    Returns:
+        Tuple of (story_file_path, story_context_text)
+        Returns (None, "") if no story selected
+    """
+    print("\n📖 Which story should this combat be added to?")
+    story_series = story_manager.get_story_series()
+
+    if not story_series:
+        return None, ""
+
+    # Select series
+    series_name = _select_story_series(story_series)
+    if not series_name:
+        return None, ""
+
+    # Get stories in series
+    story_files = story_manager.get_story_files_in_series(series_name)
+    if not story_files:
+        return None, ""
+
+    # Select story file
+    story_file = _select_story_file(story_files, series_name)
+    if not story_file:
+        return None, ""
+
+    # Build path and read context
+    target_path = os.path.join(workspace_path, series_name, story_file)
+    context = _read_story_context(target_path)
+
+    return target_path, context
+
+
+def _select_story_series(story_series: List[str]) -> Optional[str]:
+    """Select a story series from list."""
+    print("\nStory Series:")
+    for i, series in enumerate(story_series, 1):
+        print(f"{i}. {series}")
+
+    series_choice = input("\nSelect series number (or press Enter to skip): ").strip()
+
+    if not series_choice.isdigit():
+        return None
+
+    series_idx = int(series_choice) - 1
+    if 0 <= series_idx < len(story_series):
+        return story_series[series_idx]
+    return None
+
+
+def _select_story_file(story_files: List[str], series_name: str) -> Optional[str]:
+    """Select a story file from list."""
+    print(f"\nStories in {series_name}:")
+    for i, story_file in enumerate(story_files, 1):
+        print(f"{i}. {story_file}")
+
+    story_choice = input("\nSelect story number: ").strip()
     if not story_choice.isdigit():
-        return None, None
+        return None
 
     story_idx = int(story_choice) - 1
-    if not 0 <= story_idx < len(story_files):
-        return None, None
+    if 0 <= story_idx < len(story_files):
+        return story_files[story_idx]
+    return None
 
-    return story_files[story_idx], series_name
+
+def _read_story_context(story_path: str) -> str:
+    """Read story context from file."""
+    if os.path.exists(story_path):
+        with open(story_path, "r", encoding="utf-8") as f:
+            return f.read()
+    return ""
+
+
+def save_combat_narrative(
+    narrative: str,
+    combat_title: str,
+    target_story_path: Optional[str],
+    workspace_path: str,
+) -> None:
+    """
+    Save or append combat narrative to file.
+
+    Args:
+        narrative: Generated combat narrative text
+        combat_title: Title for the combat section
+        target_story_path: Path to story file (if appending), or None
+        workspace_path: Root workspace path for new files
+    """
+    if target_story_path:
+        append = (
+            input(f"\nAppend to {os.path.basename(target_story_path)}? (y/n): ")
+            .strip()
+            .lower()
+        )
+        if append == "y":
+            with open(target_story_path, "a", encoding="utf-8") as f:
+                f.write(f"\n\n### {combat_title}\n\n")
+                f.write(narrative)
+            print(f"✅ Appended to: {target_story_path}")
+    else:
+        save = input("\nSave to separate file? (y/n): ").strip().lower()
+        if save == "y":
+            filename = input("Enter filename (without extension): ").strip()
+            if filename:
+                filepath = os.path.join(workspace_path, f"{filename}.md")
+                with open(filepath, "w", encoding="utf-8") as f:
+                    f.write(f"# {combat_title}\n\n")
+                    f.write(narrative)
+                print(f"✅ Saved to: {filepath}")
