@@ -23,12 +23,9 @@ from pathlib import Path
 import tempfile
 import os
 import json
-import test_helpers
-# Add tests directory to path for test_helpers
-sys.path.insert(0, str(Path(__file__).parent.parent))
 
-# Import and configure test environment
-test_helpers.setup_test_environment()
+# Ensure test helpers and project root are on the import path before importing project modules
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
 # Import character components
 try:
@@ -147,8 +144,8 @@ def test_character_profile_full_initialization():
     assert profile.species == "Dwarf", "Species incorrect"
     assert profile.character_class == DnDClass.FIGHTER, "Class incorrect"
     assert profile.level == 10, "Level incorrect"
-    assert profile.nickname == "The Hammer", "Nickname incorrect"
-    assert profile.subclass == "Battle Master", "Subclass incorrect"
+    assert profile.identity.nickname == "The Hammer", "Nickname incorrect"
+    assert profile.identity.subclass == "Battle Master", "Subclass incorrect"
     assert "veteran warrior" in profile.background_story, "Background incorrect"
     assert len(profile.personality.motivations) == 2, "Motivations count incorrect"
     assert "Elara" in profile.relationships, "Relationship missing"

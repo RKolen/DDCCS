@@ -10,7 +10,7 @@ from typing import Optional
 from src.characters.consultants.character_profile import CharacterProfile
 from src.characters.consultants.consultant_core import CharacterConsultant
 from src.utils.spell_highlighter import highlight_spells_in_text
-from src.utils.file_io import file_exists, get_json_files_in_directory
+from src.utils.file_io import directory_exists, get_json_files_in_directory
 
 # Optional validator import (fail-safe if not available)
 try:
@@ -41,7 +41,7 @@ class CharacterManager:
 
     def load_characters(self):
         """Load all character profiles and create consultants."""
-        if not file_exists(self.characters_path):
+        if not directory_exists(self.characters_path):
             return
 
         for filepath in get_json_files_in_directory(self.characters_path):

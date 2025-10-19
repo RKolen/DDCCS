@@ -101,7 +101,6 @@ class CharacterPossessions:
 
     equipment: Dict[str, List[str]] = field(default_factory=dict)
     magic_items: List[str] = field(default_factory=list)
-    background: str = ""  # Background profession (e.g., "Noble", "Soldier")
 
 
 @dataclass
@@ -131,7 +130,9 @@ class CharacterProfile:
     story: CharacterStory = field(default_factory=CharacterStory)
     mechanics: CharacterMechanics = field(default_factory=CharacterMechanics)
     possessions: CharacterPossessions = field(default_factory=CharacterPossessions)
-    ai_config: Optional[Dict[str, Any]] = None    # Backward compatibility properties
+    ai_config: Optional[Dict[str, Any]] = None
+
+    # Backward compatibility properties for accessing nested dataclass fields
     @property
     def name(self) -> str:
         """Character name."""
@@ -158,24 +159,29 @@ class CharacterProfile:
         return self.identity.lineage
 
     @property
-    def nickname(self) -> Optional[str]:
-        """Character nickname."""
-        return self.identity.nickname
-
-    @property
     def subclass(self) -> Optional[str]:
         """Character subclass."""
         return self.identity.subclass
 
     @property
     def background_story(self) -> str:
-        """Background story."""
+        """Character background story."""
         return self.personality.background_story
+
+    @background_story.setter
+    def background_story(self, value: str):
+        """Set character background story."""
+        self.personality.background_story = value
 
     @property
     def personality_summary(self) -> str:
-        """Personality summary."""
+        """Character personality summary."""
         return self.personality.personality_summary
+
+    @personality_summary.setter
+    def personality_summary(self, value: str):
+        """Set character personality summary."""
+        self.personality.personality_summary = value
 
     @property
     def motivations(self) -> List[str]:
@@ -203,36 +209,6 @@ class CharacterProfile:
         return self.personality.relationships
 
     @property
-    def preferred_strategies(self) -> List[str]:
-        """Preferred strategies."""
-        return self.behavior.preferred_strategies
-
-    @property
-    def speech_patterns(self) -> List[str]:
-        """Speech patterns."""
-        return self.behavior.speech_patterns
-
-    @property
-    def decision_making_style(self) -> str:
-        """Decision making style."""
-        return self.behavior.decision_making_style
-
-    @property
-    def known_spells(self) -> List[str]:
-        """Known spells."""
-        return self.mechanics.abilities.known_spells
-
-    @property
-    def ability_scores(self) -> Dict[str, int]:
-        """Ability scores."""
-        return self.mechanics.stats.ability_scores
-
-    @property
-    def major_plot_actions(self) -> List[Any]:
-        """Major plot actions."""
-        return self.story.major_plot_actions
-
-    @property
     def equipment(self) -> Dict[str, List[str]]:
         """Character equipment."""
         return self.possessions.equipment
@@ -242,6 +218,16 @@ class CharacterProfile:
         """Character magic items."""
         return self.possessions.magic_items
 
+    @property
+    def known_spells(self) -> List[str]:
+        """Character known spells."""
+        return self.mechanics.abilities.known_spells
+
+    @property
+    def ability_scores(self) -> Dict[str, int]:
+        """Character ability scores."""
+        return self.mechanics.stats.ability_scores
+
     def save_to_file(self, filepath: str):
         """Save character profile to JSON file (flattened format for compatibility)."""
         # Flatten nested structure to match original JSON format
@@ -249,7 +235,10 @@ class CharacterProfile:
 
         # Identity fields
         data.update(asdict(self.identity))
-        data["character_class"] = self.identity.character_class.value
+        data["dnd_class"] = self.identity.character_class.value
+        # Remove character_class as it's replaced by dnd_class
+        if "character_class" in data:
+            del data["character_class"]
 
         # Personality fields
         data.update(asdict(self.personality))
@@ -268,6 +257,10 @@ class CharacterProfile:
 
         # Possessions fields
         data.update(asdict(self.possessions))
+
+        # Add background field if not present (from possessions for JSON compatibility)
+        if "background" not in data:
+            data["background"] = ""
 
         # AI config
         if AI_AVAILABLE and self.ai_config:
@@ -301,8 +294,8 @@ class CharacterProfile:
             data["nickname"] = None
 
         # Handle both 'character_class' and 'dnd_class' field names
-        character_class_name = data.get(
-            "character_class", data.get("dnd_class", "Fighter")
+        character_class_name = (
+            data.get("dnd_class") or data.get("character_class") or "fighter"
         )
         try:
             character_class = DnDClass(character_class_name)
@@ -372,7 +365,6 @@ class CharacterProfile:
         possessions = CharacterPossessions(
             equipment=data.get("equipment", {}),
             magic_items=data.get("magic_items", []),
-            background=data.get("background", ""),
         )
 
         # Load AI configuration if present

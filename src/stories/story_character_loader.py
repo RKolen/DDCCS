@@ -10,7 +10,7 @@ from typing import Dict, List, Optional
 from src.characters.consultants.character_profile import CharacterProfile
 from src.characters.consultants.consultant_core import CharacterConsultant
 from src.validation.character_validator import validate_character_file
-from src.utils.file_io import file_exists, get_json_files_in_directory
+from src.utils.file_io import directory_exists, get_json_files_in_directory
 from src.utils.path_utils import get_characters_dir, get_character_file_path
 
 USE_CHARACTER_VALIDATION = True
@@ -36,7 +36,7 @@ class CharacterLoader:
 
     def load_characters(self):
         """Load all character profiles and create consultants."""
-        if not file_exists(self.characters_path):
+        if not directory_exists(self.characters_path):
             return
 
         use_validation = USE_CHARACTER_VALIDATION
