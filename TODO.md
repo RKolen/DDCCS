@@ -2,41 +2,106 @@
 
 ## 🔥 High Priority
 
-### CRITICAL: Remove ALL Emojis from Code ⚠️ BREAKING TESTS
-- [x] **Remove emojis from all Python source files** - Emojis cause encoding errors on Windows (cp1252)
+### Phase 3: Comprehensive Testing (ACTIVE)
 
+**See:** `docs/docs_personal/PHASE3_TESTING_PLAN.md` for detailed plan
 
-### Code Quality & Testing
-- [-] **Pylint the codebase** - Systematic pylint cleanup to achieve 9.5+/10 scores across all files
+**Current Status:** Step 8 Complete, Ready for Steps 1-7
+
+- [x] **Step 8: Validation Tests** - COMPLETE ✅
+  - [x] test_character_validator.py
+  - [x] test_npc_validator.py
+  - [x] test_party_validator.py
+  - [x] test_items_validator.py
+  - [x] test_all_validators.py
+  - [x] tests/validation/README.md
+
+**Next Steps (Priority Order):**
+- [x] **Step 1: AI Integration Tests** (ai/)
+  - [x] Fix test_ai_env_config.py
+  - [x] Create test_ai_client.py
+  - [x] Create test_rag_system.py
+  - [x] Create test_all_ai.py
+  - [x] Create tests/ai/README.md
+
+- [ ] **Step 2: Character System Tests** (characters/)
+  - [ ] test_character_profile.py
+  - [ ] test_consultant_core.py
+  - [ ] test_consultant_dc.py
+  - [ ] test_consultant_story.py
+  - [ ] test_consultant_ai.py
+  - [ ] test_class_knowledge.py
+  - [ ] test_character_sheet.py
+  - [ ] test_character_consistency.py
+  - [ ] test_all_characters.py
+  - [ ] tests/characters/README.md
+
+- [ ] **Step 3: NPC System Tests** (npcs/)
+  - [ ] test_npc_agents.py
+  - [ ] test_npc_auto_detection.py
+  - [ ] test_all_npcs.py
+  - [ ] tests/npcs/README.md
+
+- [ ] **Step 4: Story System Tests** (stories/) - LARGEST SUBSYSTEM
+  - [ ] test_story_manager.py
+  - [ ] test_enhanced_story_manager.py
+  - [ ] test_story_analyzer.py
+  - [ ] test_story_file_manager.py
+  - [ ] test_session_results_manager.py
+  - [ ] test_hooks_and_analysis.py
+  - [ ] test_party_manager.py
+  - [ ] test_story_updater.py
+  - [ ] test_character_consistency.py
+  - [ ] test_all_stories.py
+  - [ ] tests/stories/README.md
+
+- [ ] **Step 5: Combat System Tests** (combat/)
+  - [ ] test_combat_narrator.py
+  - [ ] test_narrator_ai.py
+  - [ ] test_narrator_descriptions.py
+  - [ ] test_narrator_consistency.py
+  - [ ] test_all_combat.py
+  - [ ] tests/combat/README.md
+
+- [ ] **Step 6: Items System Tests** (items/)
+  - [ ] test_item_registry.py
+  - [ ] test_all_items.py
+  - [ ] tests/items/README.md
+
+- [ ] **Step 7: DM Tools Tests** (dm/)
+  - [ ] test_dungeon_master.py
+  - [ ] test_history_check_helper.py
+  - [ ] test_all_dm.py
+  - [ ] tests/dm/README.md
+
+- [ ] **Step 9: CLI Tests** (cli/) - AFTER STEPS 1-7
+  - [ ] test_dnd_consultant.py
+  - [ ] test_setup.py
+  - [ ] test_cli_character_manager.py
+  - [ ] test_cli_story_manager.py
+  - [ ] test_cli_consultations.py
+  - [ ] test_cli_story_analysis.py
+  - [ ] test_all_cli.py
+  - [ ] tests/cli/README.md
+
+**Testing Standards:**
+- ✅ Every test must achieve 10.00/10 pylint (NO disable comments)
+- ✅ Every test must work with `run_all_tests.py`
+- ✅ Common code goes in `test_helpers.py` (DRY principle)
+- ✅ Every test folder has README.md (what/why/tests list)
+- ✅ Every subsystem has `test_all_<subsystem>.py` runner
+
+### Code Quality & Pylint
+- [x] **Pylint cleanup complete** - All core files 10.00/10
   - [x] dnd_consultant.py (8.81 → 9.88/10, 1028 → 956 lines)
   - [x] enhanced_story_manager.py (8.71 → 10.00/10, 1064 → 433 lines)
-  - [x] All 7 extracted modules (10.00/10): character_consistency, hooks_and_analysis, npc_auto_detection, party_config_manager, session_results_manager, story_file_manager, text_formatting_utils
+  - [x] All 7 extracted modules (10.00/10)
   - [x] npc_auto_detection.py (9.66 → 10.00/10)
   - [x] dungeon_master.py (8.85 → 10.00/10)
-  - [x] character_consultants.py
-  - [x] story_manager.py
-  - [x] combat_narrator.py
-  - [x] ai_client.py
-  - [x] rag_system.py
-  - [x] All validator files
-  - [x] Setup and helper files
-
-  - [x] **Test infrastructure complete** - Test framework with runner, helpers, and pylint config
-  - [x] **Validation tests complete** - All JSON validators tested
-  - [ ] **Comprehensive system testing** - End-to-end testing of remaining workflows
-  - [ ] Story creation flow (new series, in-series, standalone)
-  - [ ] Character management (create, edit, party config)
-  - [ ] Combat conversion ( prompts)
-  - [ ] Character consultations and DC suggestions
-  - [ ] Story analysis and NPC detection
-  - [ ] RAG integration with wiki lookups
-  - [ ] AI integration with all features
-
-### Story Management System
-- [ ] **Test story creation flow** - Verify the enhanced story manager works with CLI interface end-to-end
-
-### Character System Improvements  
-- [ ] **Level progression tracking** - Add system to track character level changes over time
+  - [x] All validators (10.00/10 with shared helpers)
+  - [x] combat_narrator.py (10.00/10)
+  - [x] story_manager.py (10.00/10)
+  - [x] **Emoji removal complete** - All emojis removed (29 files, no UTF-8 workarounds)
 
 ### User Experience
 - [ ] **Error handling** - Improve error messages throughout the system for better user guidance

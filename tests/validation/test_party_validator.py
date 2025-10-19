@@ -18,7 +18,6 @@ except ImportError as e:
     print("Make sure you're running from the project root directory")
     sys.exit(1)
 
-
 def test_valid_party():
     """Test that a valid party configuration passes validation."""
     valid_party = {
@@ -30,7 +29,6 @@ def test_valid_party():
     assert is_valid, f"Valid party failed validation: {errors}"
     assert len(errors) == 0
     print("[OK] Valid party test passed")
-
 
 def test_missing_required_field():
     """Test that missing required fields are detected."""
@@ -44,7 +42,6 @@ def test_missing_required_field():
     assert any("last_updated" in error for error in errors)
     print("[OK] Missing required field test passed")
 
-
 def test_empty_party_members():
     """Test that empty party_members list is detected."""
     invalid_party = {
@@ -56,7 +53,6 @@ def test_empty_party_members():
     assert not is_valid, "Party with empty members should fail validation"
     assert any("empty" in error.lower() for error in errors)
     print("[OK] Empty party_members test passed")
-
 
 def test_wrong_field_type():
     """Test that wrong field types are detected."""
@@ -71,7 +67,6 @@ def test_wrong_field_type():
     assert any("last_updated" in error and "str" in error for error in errors)
     print("[OK] Wrong field type test passed")
 
-
 def test_invalid_timestamp():
     """Test that invalid ISO timestamp is detected."""
     invalid_party = {
@@ -83,7 +78,6 @@ def test_invalid_timestamp():
     assert not is_valid, "Party with invalid timestamp should fail validation"
     assert any("ISO format" in error for error in errors)
     print("[OK] Invalid timestamp test passed")
-
 
 def test_non_string_party_member():
     """Test that non-string party members are detected."""
@@ -97,7 +91,6 @@ def test_non_string_party_member():
     assert any("party_members[1]" in error and "string" in error for error in errors)
     print("[OK] Non-string party member test passed")
 
-
 def test_empty_string_party_member():
     """Test that empty string party members are detected."""
     invalid_party = {
@@ -110,7 +103,6 @@ def test_empty_string_party_member():
     assert any("party_members[1]" in error and "empty" in error for error in errors)
     print("[OK] Empty string party member test passed")
 
-
 def test_duplicate_party_members():
     """Test that duplicate party members are detected."""
     invalid_party = {
@@ -122,7 +114,6 @@ def test_duplicate_party_members():
     assert not is_valid, "Party with duplicate members should fail validation"
     assert any("duplicate" in error.lower() for error in errors)
     print("[OK] Duplicate party members test passed")
-
 
 def test_validate_actual_party_file():
     """Test validation of actual party file in the game_data directory."""
@@ -146,7 +137,6 @@ def test_validate_actual_party_file():
 
     assert is_valid, "Party configuration file failed validation"
     print("[OK] Actual party configuration file validated successfully")
-
 
 def test_cross_reference_with_characters():
     """Test that party members are cross-referenced with character files."""
@@ -175,7 +165,6 @@ def test_cross_reference_with_characters():
             "[WARNING] Cross-reference test: No character files found or validation too permissive"
         )
 
-
 def test_valid_iso_timestamp_formats():
     """Test that various valid ISO timestamp formats are accepted."""
     valid_timestamps = [
@@ -192,7 +181,6 @@ def test_valid_iso_timestamp_formats():
         assert is_valid, f"Valid timestamp '{timestamp}' failed validation: {errors}"
 
     print("[OK] Valid ISO timestamp formats test passed")
-
 
 if __name__ == "__main__":
     print("Running party validator tests...\n")

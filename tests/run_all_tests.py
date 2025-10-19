@@ -10,6 +10,7 @@ Usage:
     python tests/run_all_tests.py validation ai      # Run multiple categories
 """
 
+import os
 import sys
 import subprocess
 from pathlib import Path
@@ -89,11 +90,20 @@ def _run_single_test(test_file):
     test_name = f"{test_file.parent.name}/{test_file.name}"
     print(f"Running: {test_name}")
 
+    # Set up environment with tests directory in PYTHONPATH
+    env = os.environ.copy()
+    tests_dir = str(test_file.parent.parent)
+    if "PYTHONPATH" in env:
+        env["PYTHONPATH"] = f"{tests_dir}{os.pathsep}{env['PYTHONPATH']}"
+    else:
+        env["PYTHONPATH"] = tests_dir
+
     result = subprocess.run(
         [sys.executable, str(test_file)],
         capture_output=True,
         text=True,
         cwd=test_file.parent.parent.parent,  # Project root
+        env=env,
         check=False,
     )
 

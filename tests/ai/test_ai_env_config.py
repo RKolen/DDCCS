@@ -3,8 +3,12 @@ Test: Verify AI configuration is loaded from .env and uses Ollama local settings
 """
 
 import os
+import sys
+from pathlib import Path
 import requests
 import test_helpers
+# Add tests directory to path for test_helpers
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
 # Import and configure test environment (UTF-8, project paths)
 project_root = test_helpers.setup_test_environment()
@@ -19,7 +23,6 @@ def load_env(env_path):
                 key, value = line.split("=", 1)
                 env_vars[key.strip()] = value.strip()
     return env_vars
-
 
 EXPECTED = {
     "OPENAI_API_KEY": os.environ.get("OPENAI_API_KEY"),

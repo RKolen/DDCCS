@@ -160,7 +160,7 @@ class WikiCache:
 
         if expired_keys:
             self._save_index()
-            print(f"🧹 Cleared {len(expired_keys)} expired cache entries")
+            print(f"[CACHE] Cleared {len(expired_keys)} expired cache entries")
 
     def get_stats(self) -> Dict:
         """Get cache statistics."""
@@ -292,7 +292,7 @@ class WikiClient:
             print("[WARNING]  Cannot fetch wiki pages: requests/beautifulsoup4 not installed")
             return None
         if self.item_registry and self.item_registry.is_custom(page_title):
-            print(f"🚫 Blocked custom item lookup: {page_title} (in custom registry)")
+            print(f"[BLOCKED] Custom item lookup: {page_title} (in custom registry)")
             return None
         page_url = f"{self.base_url}/{quote(page_title.replace(' ', '_'))}"
         if not force_refresh:
