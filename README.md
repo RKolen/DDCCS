@@ -1,16 +1,16 @@
 # D&D Character Consultant System
 
-A Python-based system for managing D&D## 📚 Documentation
+A Python-based system for managing D&D##  Documentation
 
 - **[AI Integration Guide](docs/AI_INTEGRATION.md)** - Complete AI setup (Ollama, OpenAI, Anthropic)
 - **[RAG Integration Guide](docs/RAG_INTEGRATION.md)** - Deep dive into RAG system and wiki integration
 - **[RAG Quick Start](docs/RAG_QUICKSTART.md)** - Fast track to using RAG features
 - **[Usage Examples](docs/Test_Example.md)** - See the system in action
 
-> **Note:** Personal documentation and development notes are kept in `docs_personal/` (git-ignored)4) character consultants with 
+> **Note:** Personal documentation and development notes are kept in `docs_personal/` (git-ignored) character consultants with 
 VSCode integration for story management and character consistency analysis.
 
-## 📋 What This System Does
+##  What This System Does
 
 - **Unlimited Character Support** - Add as many character JSON files as you need
 - **Class Expertise** - Each character can be customized for any D&D class, 
@@ -24,27 +24,27 @@ VSCode integration for story management and character consistency analysis.
   based on character stats and abilities
 - **Fantasy Grounds Unity Integration** - Converts combat logs to narrative with auto-generated titles
 - **NPC Management** - Track recurring NPCs with relationships and traits
-- **🆕 Automatic NPC Detection** - System automatically detects NPCs in stories and suggests profile creation
+- ** Automatic NPC Detection** - System automatically detects NPCs in stories and suggests profile creation
 - **VSCode Integration** - Tasks, settings, and markdown workflow support
-- **🆕 AI Integration** - Optional AI/LLM enhancement with OpenAI, Ollama, or any OpenAI-compatible API
-- **🆕 RAG System** - Dual wiki integration: campaign lore + D&D 5e rules (items, spells)
-- **🆕 Custom Items Registry** - Track homebrew items separately, blocks wiki lookups for custom content
+- ** AI Integration** - Optional AI/LLM enhancement with OpenAI, Ollama, or any OpenAI-compatible API
+- ** RAG System** - Dual wiki integration: campaign lore + D&D 5e rules (items, spells)
+- ** Custom Items Registry** - Track homebrew items separately, blocks wiki lookups for custom content
 
-> **📖 [AI Integration Guide](docs/AI_INTEGRATION.md)** - Complete guide for adding AI capabilities to your characters
+> ** [AI Integration Guide](docs/AI_INTEGRATION.md)** - Complete guide for adding AI capabilities to your characters
 > 
-> **🌐 [RAG Integration Guide](docs/RAG_INTEGRATION.md)** - Wiki integration for accurate campaign lore in stories
+> ** [RAG Integration Guide](docs/RAG_INTEGRATION.md)** - Wiki integration for accurate campaign lore in stories
 
-## 🚫 What This System Does NOT Do
+##  What This System Does NOT Do
 
 - Does NOT automate gameplay, dice rolling, or run sessions
 - Does NOT generate random encounters or locations
 - Does NOT replace your creativity, but it can suggest future plot hooks, NPCs, and story ideas to inspire you
 
-## 📁 Current Project Structure
+##  Current Project Structure
 
 ```
 D&D New Beginnings/
-├── game_data/              # 🎮 ALL YOUR CAMPAIGN DATA (git-ignored except examples)
+├── game_data/              #  ALL YOUR CAMPAIGN DATA (git-ignored except examples)
 │   ├── characters/         # Character profile JSON files (unlimited)
 │   │   └── class.example.json   # Template for new characters
 │   ├── npcs/              # NPC management
@@ -63,12 +63,12 @@ D&D New Beginnings/
 │       │   ├── character_development_*.md
 │       │   └── story_hooks_*.md
 │       └── Another_Quest/ # Multiple campaigns supported
-├── docs/                  # 📚 Public documentation
+├── docs/                  #  Public documentation
 │   ├── AI_INTEGRATION.md  # Complete AI setup guide
 │   ├── RAG_INTEGRATION.md # RAG system deep dive
 │   ├── RAG_QUICKSTART.md  # Quick start for RAG
 │   └── Test_Example.md    # Usage examples
-├── src/                   # � All source code (modular architecture)
+├── src/                   # All source code (modular architecture)
 │   ├── characters/        # Character management system
 │   │   ├── consultants/   # Character consultant system (12 D&D classes)
 │   │   ├── character_sheet.py       # D&D character data structures
@@ -112,18 +112,18 @@ D&D New Beginnings/
 │       ├── cli_story_manager.py     # Story management
 │       ├── cli_consultations.py     # Character consultations
 │       └── cli_story_analysis.py    # Story analysis
-├── tests/                 # 🧪 Test suite (6/6 passing, 10.00/10 pylint)
+├── tests/                 #  Test suite (6/6 passing, 10.00/10 pylint)
 │   ├── validation/        # JSON validation tests
 │   ├── ai/                # AI integration tests
 │   ├── test_helpers.py    # Shared test utilities
 │   ├── run_all_tests.py   # Unified test runner
 │   └── README.md          # Test suite documentation
-├── docs/                  # 📚 Public documentation
+├── docs/                  #  Public documentation
 │   ├── AI_INTEGRATION.md  # Complete AI setup guide
 │   ├── RAG_INTEGRATION.md # RAG system deep dive
 │   ├── RAG_QUICKSTART.md  # Quick start for RAG
 │   └── Test_Example.md    # Usage examples
-├── templates/             # 📝 Story templates
+├── templates/             #  Story templates
 │   └── story_template.md  # Story template with 80-char line rule
 ├── .vscode/              # VSCode integration
 ├── .rag_cache/           # Wiki content cache (git-ignored)
@@ -134,7 +134,7 @@ D&D New Beginnings/
 └── README.md            # This file
 ```
 
-## 📚 Documentation
+##  Documentation
 
 - **[AI Integration Guide](docs/AI_INTEGRATION.md)** - Complete AI setup (Ollama, OpenAI, Anthropic)
 - **[RAG Integration Guide](docs/RAG_INTEGRATION.md)** - Deep dive into RAG system and wiki integration
@@ -144,7 +144,7 @@ D&D New Beginnings/
 - **[JSON Validation](docs/JSON_Validation.md)** - Data validation schemas and usage
 - **[Test Suite](tests/README.md)** - Comprehensive test suite
 
-## 🚀 Quick Start
+##  Quick Start
 
 1. **Setup the system:**
    ```powershell
@@ -177,7 +177,7 @@ D&D New Beginnings/
 4. **Or use VSCode tasks:**
    - Press `Ctrl+Shift+P` → "Tasks: Run Task" → "D&D: Interactive Consultant"
 
-## 👥 Party Configuration Management
+## Party Configuration Management
 
 The system uses `current_party.json` to track your active adventuring party. This is crucial for:
 - **NPC Detection** - System excludes party members when suggesting NPC profiles
@@ -220,12 +220,12 @@ copy game_data\current_party\current_party.example.json game_data\current_party\
 
 ### Important Notes
 
-⚠️ **Character Names Must Match Exactly**
+ **Character Names Must Match Exactly**
 - Names in `current_party.json` must match character JSON filenames
 - Example: `"Theron Brightblade"` → `game_data/characters/theron_brightblade.json`
 - Case-insensitive matching, but exact spelling required
 
-⚠️ **Git Ignored by Default**
+ **Git Ignored by Default**
 - `game_data/current_party/current_party.json` is in `.gitignore` (your personal party configuration)
 - `game_data/current_party/current_party.example.json` is tracked (template for others)
 - This allows multiple people to work on the same repo with different parties
@@ -254,8 +254,8 @@ copy game_data\current_party\current_party.example.json game_data\current_party\
 Story: "The innkeeper, Marcus, greets Theron, Mira, and Garrick..."
 
 System detects:
-✅ Marcus (Innkeeper) - NEW NPC, suggests profile
-❌ Theron, Mira, Garrick - Party members, excluded from NPC suggestions
+[COMPLETE] Marcus (Innkeeper) - NEW NPC, suggests profile
+ Theron, Mira, Garrick - Party members, excluded from NPC suggestions
 ```
 
 **Story Analysis:**
@@ -265,7 +265,7 @@ story_manager.analyze_story_development()
 # Only analyzes: Theron, Mira, Garrick (from current_party.json)
 ```
 
-## 🎯 Workflow Summary
+##  Workflow Summary
 
 ### NEW: Story Organization System
 **Campaign Story Management:**
@@ -302,7 +302,7 @@ All user-generated campaigns are stored in `game_data/campaigns/` and automatica
 3. **Convert to narrative** with character-appropriate descriptions using RAG for spell/ability details
 4. **Maintain story flow** while preserving mechanical accuracy
 
-## 🤖 AI Features (Optional)
+##  AI Features (Optional)
 
 ### What AI Adds
 - **AI-Enhanced Character Reactions** - Characters respond with personality-driven dialogue and actions
@@ -316,7 +316,7 @@ All user-generated campaigns are stored in `game_data/campaigns/` and automatica
 - **OpenRouter** - Access to many models with one API key
 - **Any OpenAI-Compatible API** - Works with custom endpoints
 
-## 🧙 Automatic NPC Detection
+##  Automatic NPC Detection
 
 ### What It Does
 - **Automatic Scanning** - System scans story files for NPCs (innkeepers, merchants, guards, blacksmiths, etc.)
@@ -342,9 +342,9 @@ story_manager.save_npc_profile(npc_profile)
 ```
 ```
 
-**📖 Full Documentation:** [docs/NPC_DETECTION.md](docs/NPC_DETECTION.md)
+** Full Documentation:** [docs/NPC_DETECTION.md](docs/NPC_DETECTION.md)
 
-## 🌐 RAG Features (Optional)
+##  RAG Features (Optional)
 
 ### What RAG Adds
 - **Wiki Integration** - Automatically fetch accurate campaign lore from any wiki (Fandom.com, MediaWiki, custom)
@@ -362,7 +362,7 @@ RAG_ENABLED=true
 RAG_WIKI_BASE_URL=https://your-campaign-wiki.com/wiki
 ```
 
-**📖 Full Guide:** [RAG_INTEGRATION.md](RAG_INTEGRATION.md)
+** Full Guide:** [RAG_INTEGRATION.md](RAG_INTEGRATION.md)
 
 ### Quick AI Setup
 ```powershell
@@ -378,24 +378,24 @@ copy .env.example .env
 # Edit character JSON and set ai_config.enabled = true
 ```
 
-**📖 Full Guide:** [docs/AI_INTEGRATION.md](docs/AI_INTEGRATION.md)
+** Full Guide:** [docs/AI_INTEGRATION.md](docs/AI_INTEGRATION.md)
 
-## 📋 Technical Verification
+##  Technical Verification
 
-✅ **All systems operational:**
+[COMPLETE] **All systems operational:**
 - Unlimited character JSON files supported
 - Movement speeds, specialized abilities, and stats are customizable
 - Story/analysis/DC separation implemented (3 separate files)
 - Template files for git-friendly development
 - 80-character line limit for improved readability
 
-## 🔧 Prerequisites
+##  Prerequisites
 
 - **Python 3.8+**
 - **Dependencies for AI features:** `pip install -r requirements.txt` (optional, for AI integration)
 - **VSCode** with Markdown extensions (recommended)
 
-## 🎮 Philosophy
+##  Philosophy
 
 This system **enhances your creativity** while maintaining your control:
 
@@ -406,4 +406,4 @@ This system **enhances your creativity** while maintaining your control:
 
 ---
 
-**Ready to enhance your D&D storytelling? Run `python -m src.cli.setup` to begin!** 🎲
+**Ready to enhance your D&D storytelling? Run `python -m src.cli.setup` to begin!** 

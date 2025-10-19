@@ -3,7 +3,7 @@
 
 This guide explains how to integrate AI/LLM capabilities into the D&D Character Consultant System.
 
-## 🌟 Features
+##  Features
 
 The AI integration provides:
 - **AI-Enhanced Character Reactions** - Characters respond with AI-generated dialogue and actions
@@ -12,7 +12,7 @@ The AI integration provides:
 - **Provider Flexibility** - Works with OpenAI, Ollama (local), OpenRouter, and any OpenAI-compatible API
 - **Graceful Fallback** - System works perfectly without AI (rule-based suggestions)
 
-## 📦 Installation
+##  Installation
 
 ### 1. Install Dependencies
 
@@ -57,7 +57,7 @@ python test_ai_integration.py
 
 This will verify your configuration and test basic AI functionality.
 
-## 🎯 Provider Configuration
+##  Provider Configuration
 
 ### OpenAI
 
@@ -103,7 +103,7 @@ OPENAI_BASE_URL=https://your-provider-url/v1
 OPENAI_MODEL=your-model-name
 ```
 
-## 🎨 Per-Character AI Configuration
+##  Per-Character AI Configuration
 
 Each character can have individual AI settings in their JSON file:
 
@@ -152,7 +152,7 @@ Create unique AI personalities for each character:
 }
 ```
 
-## 💡 Usage Examples
+##  Usage Examples
 
 ### In Interactive CLI
 
@@ -214,7 +214,7 @@ profile.ai_config = config
 profile.save_to_file("characters/rogue.json")
 ```
 
-## 🔧 Advanced Configuration
+##  Advanced Configuration
 
 ### Temperature Settings
 
@@ -246,7 +246,7 @@ Some providers support additional parameters:
 }
 ```
 
-## 🛡️ Fallback Behavior
+##  Fallback Behavior
 
 The system is designed to work without AI:
 
@@ -255,14 +255,14 @@ The system is designed to work without AI:
 3. **AI Not Configured**: Uses only rule-based suggestions
 4. **Dependencies Missing**: System works normally without AI features
 
-## 🔒 Security & Privacy
+##  Security & Privacy
 
 - **Local LLMs**: Use Ollama for complete privacy
 - **API Keys**: Stored in `.env` (gitignored)
 - **Character Data**: Never sent to AI unless explicitly requested
 - **Story Content**: AI only processes what you explicitly ask
 
-## 📊 Cost Considerations
+##  Cost Considerations
 
 ### OpenAI Pricing (approximate)
 - **GPT-3.5-Turbo**: ~$0.002 per request
@@ -277,7 +277,7 @@ The system is designed to work without AI:
 - **Varies**: By model selected
 - **Llama models**: Often very cheap or free
 
-## 🐛 Troubleshooting
+##  Troubleshooting
 
 ### "Import openai could not be resolved"
 ```powershell
@@ -302,7 +302,7 @@ Check your `.env` file has `OPENAI_API_KEY` set correctly
 - Use smaller OpenRouter models
 - Use GPT-3.5-Turbo instead of GPT-4
 
-## 📚 API Reference
+##  API Reference
 
 ### AIClient
 
@@ -338,7 +338,7 @@ CharacterAIConfig(
 - **`_get_ai_client()`** - Get appropriate AI client for character
 - **`_build_character_system_prompt()`** - Build character roleplay prompt
 
-## 🎯 Best Practices
+##  Best Practices
 
 1. **Start Small**: Test with one character first
 2. **Use Templates**: Create reusable system prompts
@@ -348,7 +348,7 @@ CharacterAIConfig(
 6. **Character Voice**: Use system prompts to maintain consistent character voice
 7. **Privacy**: Use local models for sensitive campaign content
 
-## 🚀 Future Enhancements
+##  Future Enhancements
 
 Planned AI features:
 - **Story generation** - AI-assisted plot development

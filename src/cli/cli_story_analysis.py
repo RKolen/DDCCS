@@ -48,7 +48,7 @@ class StoryAnalysisCLI:
             print("\n[ERROR] No story files found.")
             return
 
-        print("\n🔍 ANALYZE STORY FILE")
+        print("\n ANALYZE STORY FILE")
         print("-" * 30)
         for i, filename in enumerate(story_files, 1):
             print(f"{i}. {filename}")
@@ -59,7 +59,7 @@ class StoryAnalysisCLI:
                 filename = story_files[choice]
                 filepath = os.path.join(self.story_manager.stories_path, filename)
 
-                print(f"\n🔄 Analyzing {filename}...")
+                print(f"\n Analyzing {filename}...")
                 analysis = self.story_manager.analyze_story_file(filepath)
 
                 if "error" in analysis:
@@ -120,7 +120,7 @@ class StoryAnalysisCLI:
 
     def convert_combat(self):
         """Convert combat description to narrative."""
-        print("\n⚔️ CONVERT COMBAT TO NARRATIVE")
+        print("\n CONVERT COMBAT TO NARRATIVE")
         print("-" * 50)
         print("Describe what happened in combat tactically. Example:")
         print("  Theron charges forward and strikes the goblin with his longsword.")
@@ -142,7 +142,7 @@ class StoryAnalysisCLI:
             self.workspace_path, self.story_manager
         )
 
-        print(f"\n🔄 Converting to {style} narrative...")
+        print(f"\n Converting to {style} narrative...")
 
         # Initialize AI client if needed
         self._ensure_ai_client_initialized()
@@ -153,7 +153,7 @@ class StoryAnalysisCLI:
         )
 
         # Generate combat title automatically
-        print("🏷️  Generating combat title...")
+        print("  Generating combat title...")
         combat_title = self.combat_narrator.generate_combat_title(
             combat_prompt, story_context
         )

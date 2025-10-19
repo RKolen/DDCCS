@@ -115,7 +115,7 @@ class ConsultationsCLI:
         self, character: str, action: str, suggestion: Dict[str, Any]
     ):
         """Display DC suggestion."""
-        print(f"\n🎯 DC SUGGESTION FOR: {character}")
+        print(f"\n DC SUGGESTION FOR: {character}")
         print("=" * 50)
         print(f"Action: {action}")
         print(f"Action Type: {suggestion['action_type']}")

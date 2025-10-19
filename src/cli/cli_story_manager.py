@@ -33,13 +33,13 @@ class StoryCLIManager:
             story_series = self.story_manager.get_story_series()
 
             if existing_stories:
-                print(f"📖 Existing Stories ({len(existing_stories)})")
+                print(f" Existing Stories ({len(existing_stories)})")
                 for story in existing_stories:
                     print(f"   • {story}")
                 print()
 
             if story_series:
-                print(f"📂 Story Series ({len(story_series)})")
+                print(f" Story Series ({len(story_series)})")
                 for series in story_series:
                     series_stories = self.story_manager.get_story_files_in_series(
                         series
@@ -72,7 +72,7 @@ class StoryCLIManager:
     def _manage_existing_stories(self):
         """Manage existing stories in root directory."""
         while True:
-            print("\n📖 EXISTING STORIES")
+            print("\n EXISTING STORIES")
             print("-" * 25)
 
             existing_stories = self.story_manager.get_existing_stories()
@@ -114,11 +114,11 @@ class StoryCLIManager:
         story_series = self.story_manager.get_story_series()
 
         if not story_series:
-            print("\n📂 No story series found.")
+            print("\n No story series found.")
             print("Create a new story series from the main story menu.")
             return
 
-        print("\n📂 STORY SERIES")
+        print("\n STORY SERIES")
         print("-" * 20)
         for i, series in enumerate(story_series, 1):
             series_stories = self.story_manager.get_story_files_in_series(series)
@@ -139,7 +139,7 @@ class StoryCLIManager:
     def _manage_single_series(self, series_name: str):
         """Manage a single story series."""
         while True:
-            print(f"\n📂 SERIES: {series_name}")
+            print(f"\n SERIES: {series_name}")
             print("-" * (len(series_name) + 10))
 
             series_stories = self.story_manager.get_story_files_in_series(series_name)
@@ -169,7 +169,7 @@ class StoryCLIManager:
 
     def _create_new_story_series(self):
         """Create a new story series."""
-        print("\n📁 CREATE NEW STORY SERIES")
+        print("\n CREATE NEW STORY SERIES")
         print("-" * 30)
 
         series_name = input("Enter series name: ").strip()
@@ -248,7 +248,7 @@ class StoryCLIManager:
             with open(story_path, "r", encoding="utf-8") as f:
                 content = f.read()
 
-            print(f"\n📖 STORY: {display_name}")
+            print(f"\n STORY: {display_name}")
             print("-" * (len(display_name) + 10))
 
             lines = content.split("\n")
@@ -282,5 +282,5 @@ class StoryCLIManager:
 
         filepath = self.story_manager.create_new_story(story_name, description)
         print(f"\n[SUCCESS] Created story file: {os.path.basename(filepath)}")
-        print(f"📁 Location: {filepath}")
+        print(f" Location: {filepath}")
         print("\nYou can now open this file in VSCode and start writing your story!")

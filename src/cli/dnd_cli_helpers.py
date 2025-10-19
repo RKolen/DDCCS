@@ -136,7 +136,7 @@ def get_combat_narrative_style() -> str:
     Returns:
         Style string (cinematic, gritty, heroic, tactical)
     """
-    print("\n🎨 Choose narrative style:")
+    print("\n Choose narrative style:")
     print("1. Cinematic (epic, movie-like)")
     print("2. Gritty (realistic, visceral)")
     print("3. Heroic (valorous, inspirational)")
@@ -270,7 +270,7 @@ def select_narrative_style() -> str:
     Returns:
         Selected style: 'cinematic', 'gritty', 'heroic', or 'tactical'
     """
-    print("\n🎨 Choose narrative style:")
+    print("\n Choose narrative style:")
     print("1. Cinematic (epic, movie-like)")
     print("2. Gritty (realistic, visceral)")
     print("3. Heroic (valorous, inspirational)")
@@ -301,7 +301,7 @@ def select_target_story_for_combat(
         Tuple of (story_file_path, story_context_text)
         Returns (None, "") if no story selected
     """
-    print("\n📖 Which story should this combat be added to?")
+    print("\n Which story should this combat be added to?")
     story_series = story_manager.get_story_series()
 
     if not story_series:

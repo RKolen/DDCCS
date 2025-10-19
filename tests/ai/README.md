@@ -82,27 +82,27 @@ All test files can be run directly and will execute all their test functions.
 ## Test Coverage
 
 ### What's Tested
-- ✅ Environment variable loading and defaults
-- ✅ AI client initialization (all configuration modes)
-- ✅ Message creation helpers
-- ✅ CharacterAIConfig serialization
-- ✅ WikiCache operations (set, get, delete, stats)
-- ✅ Cache TTL expiration
-- ✅ WikiClient initialization
-- ✅ Custom item filtering
+-  Environment variable loading and defaults
+-  AI client initialization (all configuration modes)
+-  Message creation helpers
+-  CharacterAIConfig serialization
+-  WikiCache operations (set, get, delete, stats)
+-  Cache TTL expiration
+-  WikiClient initialization
+-  Custom item filtering
 
 ### What's NOT Tested (Intentionally)
-- ❌ **Actual API calls** - Requires live connection + API keys
+-  **Actual API calls** - Requires live connection + API keys
   - Would make tests slow and dependent on external services
   - Would consume API credits
   - Network issues would cause false failures
   
-- ❌ **Actual web scraping** - Requires internet connection
+-  **Actual web scraping** - Requires internet connection
   - Would be slow and unreliable
   - Fandom wikis may change structure
   - Rate limiting could cause failures
 
-- ❌ **AI response quality** - Subjective and model-dependent
+-  **AI response quality** - Subjective and model-dependent
   - Different models produce different outputs
   - No objective "correct" answer
   - Would require human evaluation
@@ -177,13 +177,13 @@ RAG_CACHE_TTL=604800  # 7 days in seconds
 ## Quality Standards
 
 All tests in this folder:
-- ✅ Achieve 10.00/10 pylint rating
-- ✅ Use no pylint disable comments
-- ✅ Follow DRY principle (common code in test_helpers.py)
-- ✅ Include comprehensive docstrings
-- ✅ Clean up test data (use tempfile for caching tests)
-- ✅ Work with run_all_tests.py master runner
-- ✅ Provide clear, descriptive output
+-  Achieve 10.00/10 pylint rating
+-  Use no pylint disable comments
+-  Follow DRY principle (common code in test_helpers.py)
+-  Include comprehensive docstrings
+-  Clean up test data (use tempfile for caching tests)
+-  Work with run_all_tests.py master runner
+-  Provide clear, descriptive output
 
 ## Maintenance Notes
 

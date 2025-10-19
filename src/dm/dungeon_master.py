@@ -292,7 +292,7 @@ class DMConsultant:
             potential_locations = self._extract_locations_from_prompt(story_prompt)
             if potential_locations:
                 print(
-                    f"🔍 RAG: Searching wiki for: {', '.join(potential_locations)}"
+                    f" RAG: Searching wiki for: {', '.join(potential_locations)}"
                 )
                 rag_context = self.rag_system.get_context_for_query(
                     story_prompt, potential_locations, max_results=2

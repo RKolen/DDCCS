@@ -1,6 +1,6 @@
 # D&D Character Consultant System - Copilot Instructions
 
-## ⚠️ IMPORTANT: Read This First
+##  IMPORTANT: Read This First
 
 **BEFORE starting ANY task:**
 1. **ALWAYS read this entire file** to understand the current project state
@@ -176,24 +176,16 @@ Each consultant provides:
 **NEVER use emojis in any Python files (.py) or Markdown files (.md)**
 - Emojis cause encoding errors on Windows (cp1252 codec)
 - Break code execution even with UTF-8 configuration
-- Use ASCII alternatives instead:
-  - Instead of ✓ → use `[PASS]` or `[OK]`
-  - Instead of ✗ → use `[FAIL]` or `[ERROR]`
-  - Instead of ✅ → use `[SUCCESS]`
-  - Instead of ❌ → use `[FAILED]`
-  - Instead of 🐉 → use `[D&D]`
-  - Instead of 📋 → use `[MENU]`
-  - Instead of ⚠️ → use `[WARNING]`
-  - Remove decorative emojis entirely
+- Use ASCII alternatives instead
 - **Rationale:** Windows console uses cp1252 encoding by default, emojis break execution
 - **Applies to:** All .py files, all .md files, all documentation
 
 ### CRITICAL: No Pylint Disable Comments
 
-**NEVER use `# pylint: disable=...` comments** except for these specific cases:
-- `too-many-lines` (temporary, until file is split)
-- `too-many-instance-attributes` (acceptable for dataclasses representing complex D&D entities)
-- `too-many-public-methods` (acceptable for main CLI classes)
+**NEVER use `# pylint: disable=...` comments**
+**NEVER!**
+**Never create a .pylintrc file to cheat this rule**
+**NEVER!**
 
 **Instead, properly fix the issue:**
 - **Import outside toplevel:** Move imports to module top level
@@ -444,10 +436,10 @@ Optional detailed explanation if needed:
 - Reference issue numbers if applicable
 
 **Examples:**
-- ✓ Good: "Reorganize user data into game_data folder and add spell highlighting"
-- ✗ Bad: "✨ Added spell highlighting ✨ and reorganized stuff 🎉"
-- ✓ Good: "Fix gitignore pattern for campaign files"
-- ✗ Bad: "Fixed the .gitignore because campaign files were showing up in git status which was annoying"
+-  Good: "Reorganize user data into game_data folder and add spell highlighting"
+-  Bad: " Added spell highlighting  and reorganized stuff "
+-  Good: "Fix gitignore pattern for campaign files"
+-  Bad: "Fixed the .gitignore because campaign files were showing up in git status which was annoying"
 
 ## Common Tasks
 

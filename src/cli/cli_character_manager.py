@@ -53,7 +53,7 @@ class CharacterCLIManager:
             print("\n[ERROR] No characters found. Create the default party first.")
             return
 
-        print(f"\n📜 CHARACTERS ({len(characters)})")
+        print(f"\n CHARACTERS ({len(characters)})")
         print("-" * 40)
         for i, name in enumerate(characters, 1):
             profile = self.story_manager.get_character_profile(name)
@@ -73,7 +73,7 @@ class CharacterCLIManager:
             print("\n[ERROR] No characters found. Create the default party first.")
             return
 
-        print("\n✏️ EDIT CHARACTER")
+        print("\n EDIT CHARACTER")
         print("-" * 20)
 
         result = select_character_from_list(characters)
@@ -95,7 +95,7 @@ class CharacterCLIManager:
             print("\n[ERROR] No characters found.")
             return
 
-        print("\n👁️ VIEW CHARACTER DETAILS")
+        print("\n VIEW CHARACTER DETAILS")
         print("-" * 30)
 
         result = select_character_from_list(characters)

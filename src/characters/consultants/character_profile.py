@@ -173,9 +173,49 @@ class CharacterProfile:
         return self.personality.background_story
 
     @property
+    def personality_summary(self) -> str:
+        """Personality summary."""
+        return self.personality.personality_summary
+
+    @property
+    def motivations(self) -> List[str]:
+        """Character motivations."""
+        return self.personality.motivations
+
+    @property
+    def fears_weaknesses(self) -> List[str]:
+        """Character fears and weaknesses."""
+        return self.personality.fears_weaknesses
+
+    @property
+    def goals(self) -> List[str]:
+        """Character goals."""
+        return self.personality.goals
+
+    @property
+    def secrets(self) -> List[str]:
+        """Character secrets."""
+        return self.personality.secrets
+
+    @property
     def relationships(self) -> Dict[str, str]:
         """Character relationships."""
         return self.personality.relationships
+
+    @property
+    def preferred_strategies(self) -> List[str]:
+        """Preferred strategies."""
+        return self.behavior.preferred_strategies
+
+    @property
+    def speech_patterns(self) -> List[str]:
+        """Speech patterns."""
+        return self.behavior.speech_patterns
+
+    @property
+    def decision_making_style(self) -> str:
+        """Decision making style."""
+        return self.behavior.decision_making_style
 
     @property
     def known_spells(self) -> List[str]:
@@ -196,6 +236,11 @@ class CharacterProfile:
     def equipment(self) -> Dict[str, List[str]]:
         """Character equipment."""
         return self.possessions.equipment
+
+    @property
+    def magic_items(self) -> List[str]:
+        """Character magic items."""
+        return self.possessions.magic_items
 
     def save_to_file(self, filepath: str):
         """Save character profile to JSON file (flattened format for compatibility)."""
