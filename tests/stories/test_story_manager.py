@@ -57,23 +57,24 @@ def test_create_new_story_series_and_add_story():
 
     with tempfile.TemporaryDirectory() as tmpdir:
         manager = StoryManager(tmpdir)
-
-        # Series name must end with a valid suffix (use _Quest)
+        # Use the new API to create a campaign-local series (this creates under game_data/campaigns)
         series_name = "MyCampaign_Quest"
         first_path = manager.create_new_story_series(series_name, "First Tale", "desc")
         assert os.path.exists(first_path), "First story in series should exist"
 
-        # Ensure series is discoverable
+        # Ensure series is discoverable via new discovery (includes campaigns)
         series_list = manager.get_story_series()
         assert series_name in series_list, "New series should appear in series list"
 
-        # Add second story
+        # Add second story via API
         second_path = manager.create_story_in_series(series_name, "Second Tale", "desc2")
         assert os.path.exists(second_path), "Second story should exist"
 
         files = manager.get_story_files_in_series(series_name)
         assert any(f.startswith('001_') for f in files)
         assert any(f.startswith('002_') for f in files)
+
+    # (No extra checks here; API-level assertions above validate created files)
 
     print("[PASS] Create New Story Series and Add Story")
 

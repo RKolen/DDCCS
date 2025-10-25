@@ -8,8 +8,8 @@ import os
 import re
 from typing import List
 from datetime import datetime
-from src.utils.file_io import read_text_file, write_text_file, file_exists
-from src.utils.path_utils import get_campaign_path
+from src.utils.file_io import read_text_file, write_text_file, file_exists, directory_exists
+from src.utils.path_utils import get_campaign_path, get_campaigns_dir
 
 class StoryFileOperations:
     """Manages story file operations including creation and discovery."""
@@ -74,23 +74,42 @@ class StoryFileOperations:
         Returns:
             Sorted list of series folder names
         """
-        series_folders = []
-        for item in os.listdir(self.stories_path):
-            item_path = os.path.join(self.stories_path, item)
-            if (
-                os.path.isdir(item_path)
-                and not item.startswith(".")
-                and item != "characters"
-                and item != "npcs"
-                and item != "__pycache__"
-            ):
-                # Check if folder contains numbered story files
-                if any(
-                    re.match(r"\d{3}.*\.md$", f)
-                    for f in os.listdir(item_path)
-                    if f.endswith(".md")
+        series_folders = set()
+
+        # Check legacy location (workspace root)
+        try:
+            for item in os.listdir(self.stories_path):
+                item_path = os.path.join(self.stories_path, item)
+                if (
+                    os.path.isdir(item_path)
+                    and not item.startswith(".")
+                    and item != "characters"
+                    and item != "npcs"
+                    and item != "__pycache__"
                 ):
-                    series_folders.append(item)
+                    # Check if folder contains numbered story files
+                    if any(
+                        re.match(r"\d{3}.*\.md$", f)
+                        for f in os.listdir(item_path)
+                        if f.endswith(".md")
+                    ):
+                        series_folders.add(item)
+        except FileNotFoundError:
+            # If workspace root is missing, ignore
+            pass
+
+        # Also check campaigns directory under game_data for series
+        campaigns_dir = get_campaigns_dir(self.workspace_path)
+        if os.path.isdir(campaigns_dir):
+            for item in os.listdir(campaigns_dir):
+                item_path = os.path.join(campaigns_dir, item)
+                if os.path.isdir(item_path) and not item.startswith("."):
+                    if any(
+                        re.match(r"\d{3}.*\.md$", f)
+                        for f in os.listdir(item_path)
+                        if f.endswith(".md")
+                    ):
+                        series_folders.add(item)
 
         return sorted(series_folders)
 
@@ -105,7 +124,7 @@ class StoryFileOperations:
             Sorted list of story filenames in the series
         """
         series_path = get_campaign_path(series_name, self.workspace_path)
-        if not file_exists(series_path):
+        if not directory_exists(series_path):
             return []
 
         story_files = []
@@ -172,7 +191,7 @@ class StoryFileOperations:
             ValueError: If series does not exist
         """
         series_path = get_campaign_path(series_name, self.workspace_path)
-        if not file_exists(series_path):
+        if not directory_exists(series_path):
             raise ValueError(f"Story series '{series_name}' does not exist")
 
         # Get existing stories in series to determine next number

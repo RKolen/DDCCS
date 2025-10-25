@@ -5,6 +5,7 @@ VSCode-integrated system for story management and character consultation.
 
 import argparse
 import os
+from src.stories.enhanced_story_manager import EnhancedStoryManager
 from src.stories.story_manager import StoryManager
 from src.dm.dungeon_master import DMConsultant
 from src.cli.cli_character_manager import CharacterCLIManager
@@ -16,9 +17,18 @@ from src.cli.cli_story_analysis import StoryAnalysisCLI
 class DDConsultantCLI:
     """Command-line interface for the D&D Character Consultant system."""
 
-    def __init__(self, workspace_path: str = None):
+    def __init__(self, workspace_path: str = None, campaign_name: str = None):
         self.workspace_path = workspace_path or os.getcwd()
-        self.story_manager = StoryManager(self.workspace_path)
+        # By default use the original StoryManager to preserve existing
+        # behavior. Only use the EnhancedStoryManager when a campaign name is
+        # explicitly provided so the CLI's --campaign flag enables the richer
+        # per-campaign behavior without changing the default runtime.
+        if campaign_name:
+            self.story_manager = EnhancedStoryManager(
+                self.workspace_path, campaign_name=campaign_name
+            )
+        else:
+            self.story_manager = StoryManager(self.workspace_path)
         self.dm_consultant = DMConsultant(self.workspace_path)
 
         # Initialize manager modules
@@ -98,6 +108,11 @@ def main():
     parser = argparse.ArgumentParser(description="D&D Character Consultant System")
     parser.add_argument("--workspace", help="Workspace directory path", default=None)
     parser.add_argument(
+        "--campaign",
+        help="Campaign name to use for campaign-local settings (uses game_data/campaigns/<name>/)",
+        default=None,
+    )
+    parser.add_argument(
         "--command",
         help="Command to run",
         choices=["interactive", "analyze"],
@@ -107,9 +122,10 @@ def main():
     args = parser.parse_args()
 
     workspace = args.workspace or os.getcwd()
+    campaign = args.campaign
 
     try:
-        cli = DDConsultantCLI(workspace)
+        cli = DDConsultantCLI(workspace, campaign)
 
         if args.command == "analyze":
             # Non-interactive analyze command

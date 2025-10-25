@@ -52,6 +52,11 @@ def run_all_story_tests():
         ("test_party_manager", "Party Manager Tests"),
         ("test_hooks_and_analysis", "Hooks and Analysis Tests"),
         ("test_character_manager", "Character Manager Integration Tests"),
+        ("test_enhanced_story_manager", "Enhanced Story Manager Tests"),
+        ("test_story_manager", "Story Manager Tests"),
+        ("test_story_file_manager", "Story File Manager Tests"),
+        ("test_story_analyzer", "Story Analyzer Tests"),
+        ("test_character_consistency_integration", "Character Consistency Analysis Tests"),
     ]
 
     results = {}

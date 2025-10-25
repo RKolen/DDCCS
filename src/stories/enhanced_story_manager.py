@@ -41,7 +41,11 @@ class EnhancedStoryManager:
     """
 
     def __init__(
-        self, workspace_path: str, party_config_path: str = None, ai_client=None
+        self,
+        workspace_path: str,
+        party_config_path: str = None,
+        campaign_name: str = None,
+        ai_client=None,
     ):
         """Initialize enhanced story manager with specialized managers.
 
@@ -56,7 +60,12 @@ class EnhancedStoryManager:
         self.ai_client = ai_client
 
         # Initialize specialized managers
-        party_config = party_config_path or get_party_config_path(workspace_path)
+        # Determine party configuration path. If a campaign_name is provided,
+        # prefer the campaign-local current_party.json; otherwise use provided
+        # party_config_path or the default global path.
+        party_config = party_config_path or get_party_config_path(
+            workspace_path, campaign_name
+        )
         self.party_manager = PartyManager(party_config)
         self.character_manager = CharacterManager(self.characters_path, ai_client)
 

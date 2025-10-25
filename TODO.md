@@ -44,18 +44,18 @@
   - [x] tests/npcs/README.md
 
 - [] **Step 4: Story System Tests** (stories/) - LARGEST SUBSYSTEM
-  - [ ] test_story_manager.py
-  - [ ] test_enhanced_story_manager.py
-  - [ ] test_story_analyzer.py
-  - [ ] test_story_file_manager.py
+  - [x] test_story_manager.py
+  - [x] test_enhanced_story_manager.py
+  - [x] test_story_analyzer.py
+  - [x] test_story_file_manager.py
   - [x] test_session_results_manager.py
   - [x] test_hooks_and_analysis.py
   - [x] test_party_manager.py
   - [x] test_story_updater.py
   - [x] test_character_manager.py
-  - [ ] test_character_consistency.py
-  - [ ] test_story_file_ops.py
-  - [ ] test_all_stories.py
+  - [x] test_character_consistency.py
+  - [x] test_story_file_ops.py
+  - [x] test_all_stories.py
   - [ ] tests/stories/README.md
 
 - [ ] **Step 5: Combat System Tests** (combat/)
@@ -87,6 +87,21 @@
   - [ ] test_all_cli.py
   - [ ] tests/cli/README.md
 
+- [ ] **Step 10: Utils Tests** (utiles/)
+  - [x] test_path_utils.py
+  - [ ] test_behaviour_generation.py
+  - [ ] test_cli_utils.py
+  - [ ] test_dnd_ruls.py
+  - [ ] tests_file_io.py
+  - [ ] test_markdown_utils.py
+  - [ ] test_spell_highlighter.py
+  - [ ] test_story_formatting_utils.py
+  - [ ] test_story_parsing_utils.py
+  - [ ] test_string_utils.py
+  - [ ] test_text_formatting_utils.py
+  - [ ] test_validation_helpers.py
+  - [ ] tests/utils/README.md
+  
 **Testing Standards:**
 - [COMPLETE] Every test must achieve 10.00/10 pylint (NO disable comments)
 - [COMPLETE] Every test must work with `run_all_tests.py`
