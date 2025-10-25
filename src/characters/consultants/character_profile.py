@@ -26,7 +26,16 @@ try:
 except ImportError:
     VALIDATOR_AVAILABLE = False
     validate_character_json = None
+# Optional behaviour generator (in-memory only). Import at top-level but
+# keep it optional; the generator now returns plain dicts so we don't
+# introduce a cyclic import at runtime.
+try:
+    from src.utils.behaviour_generation import generate_behavior_from_personality
 
+    BEHAVIOUR_GENERATOR_AVAILABLE = True
+except ImportError:
+    generate_behavior_from_personality = None  # type: ignore
+    BEHAVIOUR_GENERATOR_AVAILABLE = False
 # Optional behaviour generator (in-memory only). We keep this optional so tests
 # and environments without the utils module still import cleanly.
 try:
@@ -180,8 +189,18 @@ class CharacterProfile:
             generated = generate_behavior_from_personality(
                 personality_traits, ideals, bonds, flaws, backstory
             )
-            # Assign only if we got a CharacterBehavior-like object back.
-            if generated is not None:
+            # Assign only if we got a result back. The generator returns a
+            # dict (not a dataclass) to avoid import cycles; convert to the
+            # dataclass here for runtime use.
+            if isinstance(generated, dict):
+                self.behavior = CharacterBehavior(
+                    preferred_strategies=list(generated.get("preferred_strategies", [])),
+                    typical_reactions=dict(generated.get("typical_reactions", {})),
+                    speech_patterns=list(generated.get("speech_patterns", [])),
+                    decision_making_style=str(generated.get("decision_making_style", "")),
+                )
+            elif generated is not None:
+                # If generator already returned a CharacterBehavior (future-proof), accept it.
                 self.behavior = generated
         except (ValueError, TypeError, RuntimeError) as exc:
             LOGGER.warning("Behavior generation failed during profile init: %s", exc)

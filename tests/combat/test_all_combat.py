@@ -1,8 +1,8 @@
 """
-AI Subsystem Test Runner
+Combat Subsystem Test Runner
 
-Runs all AI integration tests using the module-runner pattern (subprocess
-invocation of each test module) and prints a concise summary.
+This module runs all tests for the combat subsystem and provides
+a consolidated report of test results.
 """
 
 import sys
@@ -12,7 +12,14 @@ from pathlib import Path
 
 def run_test_file(test_file: str, test_name: str) -> bool:
     """
-    Run a single AI test module via `python -m ai.<module>` and return success.
+    Run a single test file as a module and return success status.
+
+    Args:
+        test_file: Module name (without .py) under the combat package
+        test_name: Human-readable test name
+
+    Returns:
+        True if tests passed, False otherwise
     """
     print(f"\n{'=' * 70}")
     print(f"Running: {test_name}")
@@ -20,7 +27,7 @@ def run_test_file(test_file: str, test_name: str) -> bool:
 
     try:
         result = subprocess.run(
-            [sys.executable, "-m", f"ai.{test_file}"],
+            [sys.executable, "-m", f"combat.{test_file}"],
             cwd=Path(__file__).parent.parent,
             capture_output=False,
             check=False,
@@ -31,18 +38,19 @@ def run_test_file(test_file: str, test_name: str) -> bool:
         return False
 
 
-def run_all_ai_tests():
-    """Run all AI subsystem tests and summarize results."""
+def run_all_combat_tests():
+    """Run all combat subsystem tests."""
     print("=" * 70)
-    print("AI INTEGRATION - COMPREHENSIVE TEST SUITE")
+    print("COMBAT SUBSYSTEM - FULL TEST SUITE")
     print("=" * 70)
     print()
 
     tests = [
-        ("test_ai_env_config", "AI Environment Configuration"),
-        ("test_ai_client", "AI Client Interface"),
-        ("test_rag_system", "RAG System Tests"),
-        ("test_behavior_generation_ai_mock", "Behavior Generation (Mock)"),
+        ("test_combat_narrator", "Combat Narrator Tests"),
+        ("test_narrator_ai", "Narrator AI Integration Tests"),
+        ("test_narrator_descriptions", "Narrator Descriptions Tests"),
+        ("test_narrator_consistency", "Narrator Consistency Tests"),
+        ("test_combat_conversion", "Combat Conversion Tests"),
     ]
 
     results = {}
@@ -51,7 +59,7 @@ def run_all_ai_tests():
 
     # Summary
     print("\n" + "=" * 70)
-    print("AI SUBSYSTEM - TEST SUMMARY")
+    print("COMBAT SUBSYSTEM - TEST SUMMARY")
     print("=" * 70)
 
     total_tests = len(tests)
@@ -69,14 +77,14 @@ def run_all_ai_tests():
     print("-" * 70)
 
     if failed_tests == 0:
-        print("\n[SUCCESS] ALL AI INTEGRATION TESTS PASSED")
+        print("\n[SUCCESS] All combat subsystem tests passed!")
         print("=" * 70)
         return 0
 
-    print("\n[FAILED] SOME AI INTEGRATION TESTS FAILED")
+    print(f"\n[FAILURE] {failed_tests} test file(s) failed")
     print("=" * 70)
     return 1
 
 
 if __name__ == "__main__":
-    sys.exit(run_all_ai_tests())
+    sys.exit(run_all_combat_tests())

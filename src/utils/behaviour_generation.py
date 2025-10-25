@@ -12,10 +12,13 @@ Design notes:
   instance for runtime use.
 """
 
-from typing import Dict, List
+from typing import Dict, List, Tuple, TYPE_CHECKING
 import logging
 
-from src.characters.consultants.character_profile import CharacterBehavior
+if TYPE_CHECKING:
+    # Import for type checking only; avoid runtime import to prevent cyclic
+    # dependency with src.characters.consultants.character_profile.
+    from src.characters.consultants.character_profile import CharacterBehavior  # pragma: no cover
 
 try:
     from src.ai.ai_client import call_ai_for_behavior_block
@@ -28,6 +31,74 @@ except ImportError:
 LOGGER = logging.getLogger(__name__)
 
 
+def _lower_set(items: List[str]) -> set:
+    """Return a set of lowercase, non-empty strings."""
+    return {it.lower() for it in items if it}
+
+
+def _strategies_from_ideals(ideals_list: List[str]) -> List[str]:
+    out: List[str] = []
+    for ideal in ideals_list:
+        low = ideal.lower()
+        if "protect" in low or "defend" in low:
+            out.append("prioritize protection of allies")
+        if "freedom" in low or "liberty" in low:
+            out.append("avoid unnecessary constraints")
+        if "justice" in low or "honor" in low:
+            out.append("act to uphold justice")
+    return out
+
+
+def _strategies_from_bonds(bonds_list: List[str]) -> List[str]:
+    return [f"protect {b}" for b in bonds_list if b]
+
+
+def _reactions_from_flaws(flaws_list: List[str]) -> Dict[str, str]:
+    out: Dict[str, str] = {}
+    for flaw in flaws_list:
+        low = flaw.lower()
+        if "fear" in low or "coward" in low:
+            out.setdefault("fear", "hesitate or avoid")
+        if "temptation" in low or "greed" in low:
+            out.setdefault("temptation", "struggle and weigh consequences")
+    return out
+
+
+def _patterns_from_backstory(back: str) -> List[str]:
+    out: List[str] = []
+    if not back:
+        return out
+    low = back.lower()
+    if "ranger" in low or "tracker" in low:
+        out.append("uses pragmatic, fieldwise language")
+    if "heir" in low or "noble" in low:
+        out.append("formal and measured")
+    return out
+
+
+def _traits_influence(traits_set: set) -> Tuple[List[str], List[str], Dict[str, str]]:
+    pats: List[str] = []
+    strs: List[str] = []
+    reacts: Dict[str, str] = {}
+    if "stoic" in traits_set or "reserved" in traits_set:
+        pats.append("measured and quiet")
+        strs.append("assess before acting")
+        reacts.setdefault("threat", "hold position and evaluate")
+    if "wise" in traits_set or "sage" in traits_set or "intelligent" in traits_set:
+        pats.append("thoughtful and advisory")
+        strs.append("seek counsel and gather information")
+        reacts.setdefault("mystery", "gather information and advise")
+    if "compassionate" in traits_set or "kind" in traits_set:
+        pats.append("warm and reassuring")
+        strs.append("protect the vulnerable")
+        reacts.setdefault("injury", "offer aid and comfort")
+    if "wary of power" in traits_set or "cautious" in traits_set:
+        pats.append("cautious about authority")
+        strs.append("avoid unnecessary displays of power")
+        reacts.setdefault("temptation", "reflect on duty and resist")
+    return pats, strs, reacts
+
+
 def _heuristic_behavior(
     personality_traits: List[str],
     ideals: List[str],
@@ -35,66 +106,23 @@ def _heuristic_behavior(
     flaws: List[str],
     backstory: str,
 ) -> Dict:
-    """Deterministic fallback to synthesize a behavior dict from fields.
-
-    This is intentionally simple: it maps common keywords to a few canned
-    choices so downstream code always gets a valid structure.
-    """
     strategies: List[str] = []
     reactions: Dict[str, str] = {}
     patterns: List[str] = []
 
-    traits = {t.lower() for t in personality_traits}
+    traits = _lower_set(personality_traits)
 
-    # Use ideals to influence preferred strategies
-    for ideal in ideals:
-        low = ideal.lower()
-        if "protect" in low or "defend" in low:
-            strategies.append("prioritize protection of allies")
-        if "freedom" in low or "liberty" in low:
-            strategies.append("avoid unnecessary constraints")
-        if "justice" in low or "honor" in low:
-            strategies.append("act to uphold justice")
+    strategies.extend(_strategies_from_ideals(ideals))
+    strategies.extend(_strategies_from_bonds(bonds))
+    for k, v in _reactions_from_flaws(flaws).items():
+        reactions.setdefault(k, v)
+    patterns.extend(_patterns_from_backstory(backstory))
 
-    # Bonds typically create protective or cooperative strategies
-    for bond in bonds:
-        if bond:
-            strategies.append(f"protect {bond}")
-
-    # Flaws introduce likely internal struggles or reaction tendencies
-    for flaw in flaws:
-        low = flaw.lower()
-        if "fear" in low or "coward" in low:
-            reactions.setdefault("fear", "hesitate or avoid")
-        if "temptation" in low or "greed" in low:
-            reactions.setdefault("temptation", "struggle and weigh consequences")
-
-    # Backstory can influence speech patterns (refer to origins or role)
-    if backstory:
-        if "ranger" in backstory.lower() or "tracker" in backstory.lower():
-            patterns.append("uses pragmatic, fieldwise language")
-        if "heir" in backstory.lower() or "noble" in backstory.lower():
-            patterns.append("formal and measured")
-
-    if "stoic" in traits or "reserved" in traits:
-        patterns.append("measured and quiet")
-        strategies.append("assess before acting")
-        reactions.setdefault("threat", "hold position and evaluate")
-
-    if "wise" in traits or "sage" in traits or "intelligent" in traits:
-        patterns.append("thoughtful and advisory")
-        strategies.append("seek counsel and gather information")
-        reactions.setdefault("mystery", "gather information and advise")
-
-    if "compassionate" in traits or "kind" in traits:
-        patterns.append("warm and reassuring")
-        strategies.append("protect the vulnerable")
-        reactions.setdefault("injury", "offer aid and comfort")
-
-    if "wary of power" in traits or "cautious" in traits:
-        patterns.append("cautious about authority")
-        strategies.append("avoid unnecessary displays of power")
-        reactions.setdefault("temptation", "reflect on duty and resist")
+    t_pats, t_strs, t_reacts = _traits_influence(traits)
+    patterns.extend(t_pats)
+    strategies.extend(t_strs)
+    for k, v in t_reacts.items():
+        reactions.setdefault(k, v)
 
     # Generic fallbacks to ensure non-empty lists
     if not strategies:
@@ -121,7 +149,7 @@ def generate_behavior_from_personality(
     bonds: List[str],
     flaws: List[str],
     backstory: str,
-) -> CharacterBehavior:
+) -> Dict:
     """
     Generate a `CharacterBehavior` instance from the given character fields.
 
@@ -179,9 +207,12 @@ def generate_behavior_from_personality(
     if not isinstance(decision, str):
         decision = str(decision)
 
-    return CharacterBehavior(
-        preferred_strategies=list(preferred),
-        typical_reactions=dict(reactions),
-        speech_patterns=list(speech),
-        decision_making_style=decision,
-    )
+    # Return a plain dict so callers (typically CharacterProfile) can
+    # decide how to convert into a dataclass. This avoids importing the
+    # CharacterProfile module here and prevents cyclic imports.
+    return {
+        "preferred_strategies": list(preferred),
+        "typical_reactions": dict(reactions),
+        "speech_patterns": list(speech),
+        "decision_making_style": decision,
+    }

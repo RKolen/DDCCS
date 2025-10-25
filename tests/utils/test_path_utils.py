@@ -3,7 +3,6 @@
 import os
 import sys
 import tempfile
-
 import test_helpers
 
 # Configure test environment so 'src' package can be imported
