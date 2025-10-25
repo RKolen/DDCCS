@@ -17,7 +17,7 @@ from pathlib import Path
 
 # Test categories matching src/ structure
 TEST_CATEGORIES = [
-    "validation",
+    "validators",
     "ai",
     "characters",
     "npcs",
@@ -54,7 +54,13 @@ def find_test_files(categories=None):
         if not category_path.exists():
             continue
 
-        # Find all test_*.py files in category
+        # Prefer a per-category aggregator file named test_all_<category>.py
+        aggregator = category_path / f"test_all_{category}.py"
+        if aggregator.exists():
+            test_files.append(aggregator)
+            continue
+
+        # Fallback: if no aggregator present, include any test_*.py files
         for test_file in category_path.glob("test_*.py"):
             test_files.append(test_file)
 

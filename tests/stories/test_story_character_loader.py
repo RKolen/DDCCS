@@ -11,6 +11,9 @@ import json
 import tempfile
 from pathlib import Path
 
+# Add parent directory to path for imports
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+
 # Try direct imports first; if they fail add the workspace root to sys.path and retry.
 try:
     from src.stories.story_character_loader import CharacterLoader

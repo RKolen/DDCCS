@@ -153,21 +153,30 @@ def validate_party_file(
 
 if __name__ == "__main__":
     import sys
+    # CLI usage:
+    #   python party_validator.py [filepath]
+    #   python party_validator.py --campaign "Example_Campaign"
+    # validate campaign-local current_party.json
 
     if len(sys.argv) > 1:
-        # Validate specific file
-        filepath = sys.argv[1]
+        # If --campaign provided, validate the campaign's current_party.json
+        if sys.argv[1] == "--campaign" and len(sys.argv) > 2:
+            campaign_name = sys.argv[2]
+            PARTY_FILE = get_party_config_path(campaign_name=campaign_name)
+        else:
+            # Validate specific file provided as first arg
+            PARTY_FILE = sys.argv[1]
 
         # Auto-detect characters directory for cross-reference
         CHARACTERS_PATH = get_characters_dir()
         if not file_exists(CHARACTERS_PATH):
             CHARACTERS_PATH = None
 
-        main_valid, main_errors = validate_party_file(filepath, CHARACTERS_PATH)
-        print_validation_report(filepath, main_valid, main_errors)
+        main_valid, main_errors = validate_party_file(PARTY_FILE, CHARACTERS_PATH)
+        print_validation_report(PARTY_FILE, main_valid, main_errors)
         sys.exit(0 if main_valid else 1)
     else:
-        # Validate current party file
+        # Validate default current party file
         PARTY_FILE = get_party_config_path()
         if not file_exists(PARTY_FILE):
             print(f"Error: Party configuration file not found: {PARTY_FILE}")

@@ -4,9 +4,10 @@ Party Configuration Manager
 Handles loading and saving of party configuration files.
 """
 
-from typing import List
+from typing import List, Optional
 from datetime import datetime
 from src.utils.file_io import load_json_file, save_json_file, file_exists
+from src.utils.path_utils import get_party_config_path
 
 try:
     from src.validation.party_validator import validate_party_json
@@ -17,8 +18,10 @@ except ImportError:
 
 
 def load_current_party(
-    config_path: str = "game_data/current_party/current_party.json",
-) -> List[str]:
+    config_path: Optional[str] = None,
+    workspace_path: Optional[str] = None,
+    campaign_name: Optional[str] = None,
+ ) -> List[str]:
     """
     Load current party members from configuration file.
 
@@ -28,6 +31,10 @@ def load_current_party(
     Returns:
         List[str]: List of party member names
     """
+    # Compute default config path if not provided
+    if config_path is None:
+        config_path = get_party_config_path(workspace_path, campaign_name)
+
     if file_exists(config_path):
         try:
             data = load_json_file(config_path)
@@ -46,7 +53,9 @@ def load_current_party(
 
 def save_current_party(
     party_members: List[str],
-    config_path: str = "game_data/current_party/current_party.json",
+    config_path: Optional[str] = None,
+    workspace_path: Optional[str] = None,
+    campaign_name: Optional[str] = None,
 ):
     """
     Save current party members to configuration file.
@@ -56,6 +65,10 @@ def save_current_party(
         config_path (str): Path to party configuration JSON file
     """
     data = {"party_members": party_members, "last_updated": datetime.now().isoformat()}
+
+    # Compute default config path if not provided
+    if config_path is None:
+        config_path = get_party_config_path(workspace_path, campaign_name)
 
     # Validate before saving if validator is available
     if VALIDATOR_AVAILABLE:

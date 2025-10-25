@@ -187,10 +187,13 @@ class CharacterConsultant:
         Returns:
             Dialogue suggestion string
         """
-        if self.profile.speech_patterns:
-            speech_note = (
-                f"Speaking in their typical {self.profile.speech_patterns[0]} manner"
-            )
+        # Use behavior.speech_patterns (nested dataclass). Fall back to class style.
+        speech_patterns = []
+        if getattr(self.profile, "behavior", None):
+            speech_patterns = getattr(self.profile.behavior, "speech_patterns", []) or []
+
+        if speech_patterns:
+            speech_note = f"Speaking in their typical {speech_patterns[0]} manner"
         else:
             speech_note = f"Speaking as a {self.profile.character_class.value} would"
 

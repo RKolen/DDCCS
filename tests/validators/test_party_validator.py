@@ -18,6 +18,12 @@ except ImportError as e:
     print("Make sure you're running from the project root directory")
     sys.exit(1)
 
+# Use path helper to locate current_party (supports campaign-local files)
+try:
+    from src.utils.path_utils import get_party_config_path
+except ImportError:
+    get_party_config_path = None
+
 def test_valid_party():
     """Test that a valid party configuration passes validation."""
     valid_party = {
@@ -117,7 +123,10 @@ def test_duplicate_party_members():
 
 def test_validate_actual_party_file():
     """Test validation of actual party file in the game_data directory."""
-    party_file = os.path.join("game_data", "current_party", "current_party.json")
+    if get_party_config_path:
+        party_file = get_party_config_path()
+    else:
+        party_file = os.path.join("game_data", "current_party", "current_party.json")
 
     if not os.path.exists(party_file):
         print("[WARNING] Party configuration file not found, skipping actual file test")

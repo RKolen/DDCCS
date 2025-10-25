@@ -129,12 +129,13 @@ class CharacterCLIManager:
             for fear in profile.fears_weaknesses:
                 print(f"  • {fear}")
 
-        if profile.speech_patterns:
+        # Behavior: speech patterns and decision making style (nested dataclass)
+        if getattr(profile, "behavior", None) and profile.behavior.speech_patterns:
             print("\nSpeech Patterns:")
-            for pattern in profile.speech_patterns:
+            for pattern in profile.behavior.speech_patterns:
                 print(f"  • {pattern}")
 
-        if profile.decision_making_style:
-            print(f"\nDecision Making Style: {profile.decision_making_style}")
+        if getattr(profile, "behavior", None) and profile.behavior.decision_making_style:
+            print(f"\nDecision Making Style: {profile.behavior.decision_making_style}")
 
         input("\nPress Enter to continue...")

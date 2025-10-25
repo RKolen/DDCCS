@@ -25,6 +25,11 @@ except ImportError as e:
     print("Make sure you're running from the project root directory")
     sys.exit(1)
 
+try:
+    from src.utils.path_utils import get_party_config_path
+except ImportError:
+    get_party_config_path = None
+
 
 def test_all_characters():
     """Test that all character files are valid."""
@@ -101,7 +106,10 @@ def test_items_registry():
 
 def test_party_configuration():
     """Test that party configuration is valid."""
-    party_file = os.path.join("game_data", "current_party", "current_party.json")
+    if get_party_config_path:
+        party_file = get_party_config_path()
+    else:
+        party_file = os.path.join("game_data", "current_party", "current_party.json")
 
     if not os.path.exists(party_file):
         print("[WARNING] Party configuration not found, skipping")
@@ -124,7 +132,10 @@ def test_party_configuration():
 
 def test_cross_validation():
     """Test that party members match actual character files."""
-    party_file = os.path.join("game_data", "current_party", "current_party.json")
+    if get_party_config_path:
+        party_file = get_party_config_path()
+    else:
+        party_file = os.path.join("game_data", "current_party", "current_party.json")
     characters_dir = os.path.join("game_data", "characters")
 
     if not os.path.exists(party_file) or not os.path.exists(characters_dir):
@@ -230,7 +241,10 @@ def _check_relationships(entities, all_known, entity_type):
 def test_data_consistency():
     """Test consistency across all game data files."""
     # Check that all party members have character files
-    party_file = os.path.join("game_data", "current_party", "current_party.json")
+    if get_party_config_path:
+        party_file = get_party_config_path()
+    else:
+        party_file = os.path.join("game_data", "current_party", "current_party.json")
     characters_dir = os.path.join("game_data", "characters")
     npcs_dir = os.path.join("game_data", "npcs")
 

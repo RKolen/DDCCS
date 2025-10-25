@@ -6,7 +6,10 @@ Extracts complex UI interaction logic to reduce complexity in main CLI file.
 
 import os
 from typing import List, Tuple, Optional
-from src.characters.consultants.character_profile import CharacterProfile
+from src.characters.consultants.character_profile import (
+    CharacterProfile,
+    CharacterBehavior,
+)
 
 
 def edit_character_profile_interactive(profile: CharacterProfile) -> CharacterProfile:
@@ -117,7 +120,11 @@ def _edit_speech_patterns(profile: CharacterProfile) -> CharacterProfile:
     """Edit speech patterns field."""
     new_value = input("Enter new speech patterns: ").strip()
     if new_value:
-        profile.speech_patterns = new_value
+        # Accept comma-separated patterns and store them on the nested behavior dataclass
+        patterns = [v.strip() for v in new_value.split(",") if v.strip()]
+        if not getattr(profile, "behavior", None):
+            profile.behavior = CharacterBehavior()
+        profile.behavior.speech_patterns = patterns
     return profile
 
 
@@ -125,7 +132,10 @@ def _edit_decision_making(profile: CharacterProfile) -> CharacterProfile:
     """Edit decision making style field."""
     new_value = input("Enter new decision making style: ").strip()
     if new_value:
-        profile.decision_making = new_value
+        # Store decision making style on nested behavior dataclass
+        if not getattr(profile, "behavior", None):
+            profile.behavior = CharacterBehavior()
+        profile.behavior.decision_making_style = new_value
     return profile
 
 

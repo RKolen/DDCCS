@@ -106,19 +106,31 @@ def get_items_registry_path(workspace_path: Optional[str] = None) -> str:
     )
 
 
-def get_party_config_path(workspace_path: Optional[str] = None) -> str:
+def get_party_config_path(
+    workspace_path: Optional[str] = None, campaign_name: Optional[str] = None
+) -> str:
     """Get the path to the current party configuration file.
+
+    By default this returns the global `game_data/current_party/current_party.json`.
+    If `campaign_name` is provided, returns the campaign-local
+    `game_data/campaigns/<campaign_name>/current_party.json` so each campaign can
+    have its own party configuration.
 
     Args:
         workspace_path: Optional workspace root path
+        campaign_name: Optional campaign folder name to use for campaign-local party
 
     Returns:
-        Path to game_data/current_party/current_party.json
+        Path to the selected current_party.json file
     """
+    if campaign_name:
+        campaign_path = get_campaign_path(campaign_name, workspace_path)
+        return os.path.join(campaign_path, "current_party.json")
+
     return os.path.join(
         get_game_data_path(workspace_path),
         "current_party",
-        "current_party.json"
+        "current_party.json",
     )
 
 

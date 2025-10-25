@@ -25,7 +25,7 @@ import os
 import json
 
 # Ensure test helpers and project root are on the import path before importing project modules
-sys.path.insert(0, str(Path(__file__).parent.parent))
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 # Import character components
 try:
@@ -38,7 +38,7 @@ try:
         CharacterStats,
         CharacterAbilities,
         CharacterMechanics,
-        CharacterPossessions
+        CharacterPossessions,
     )
     from src.characters.character_sheet import DnDClass
 except ImportError as e:
@@ -48,38 +48,46 @@ except ImportError as e:
 
 
 def test_character_profile_initialization():
-    """Test CharacterProfile can be initialized with minimal data."""
-    print("\n[TEST] CharacterProfile Initialization")
+    """Test CharacterProfile can be loaded from canonical Aragorn profile."""
+    print("\n[TEST] CharacterProfile Initialization (Aragorn)")
 
-    # Create minimal profile with new nested structure
-    identity = CharacterIdentity(
-        name="Test Character",
-        character_class=DnDClass.FIGHTER,
-        level=5
+    # Load Aragorn profile from canonical JSON
+    aragorn_path = (
+        Path(__file__).parent.parent.parent / "game_data" / "characters" / "aragorn.json"
     )
-    profile = CharacterProfile(identity=identity)
+    assert aragorn_path.exists(), f"Aragorn profile not found at {aragorn_path}"
+    profile = CharacterProfile.load_from_file(str(aragorn_path))
 
-    assert profile.name == "Test Character", "Name not set"
-    assert profile.character_class == DnDClass.FIGHTER, "Class not set"
-    assert profile.level == 5, "Level not set"
-    print("  [OK] Minimal initialization works")
+    # Basic identity checks
+    assert profile.name == "Aragorn", "Name not set to Aragorn"
+    assert profile.character_class == DnDClass.RANGER, "Class not set to Ranger"
+    assert profile.level == 10, "Level not set"
+    print("  [OK] Canonical Aragorn profile loaded")
 
-    # Check default values for nested dataclasses
-    assert isinstance(profile.personality, CharacterPersonality), "Personality not initialized"
+    # Check nested dataclasses
+    assert isinstance(
+        profile.personality, CharacterPersonality
+    ), "Personality not initialized"
     assert isinstance(profile.behavior, CharacterBehavior), "Behavior not initialized"
     assert isinstance(profile.story, CharacterStory), "Story not initialized"
-    assert isinstance(profile.mechanics, CharacterMechanics), "Mechanics not initialized"
-    assert isinstance(profile.possessions, CharacterPossessions), "Possessions not initialized"
+    assert isinstance(
+        profile.mechanics, CharacterMechanics
+    ), "Mechanics not initialized"
+    assert isinstance(
+        profile.possessions, CharacterPossessions
+    ), "Possessions not initialized"
     print("  [OK] Nested dataclasses initialized correctly")
 
-    # Check default property values
-    assert profile.background_story == "", "Default background not empty string"
+    # Check property values
+    assert (
+        "Dúnedain" in profile.background_story or "Ranger" in profile.background_story
+    ), "Background missing Aragorn lore"
     assert isinstance(profile.relationships, dict), "Relationships not dict"
     assert isinstance(profile.known_spells, list), "Known spells not list"
     assert isinstance(profile.equipment, dict), "Equipment not dict"
-    print("  [OK] Default property values correct")
+    print("  [OK] Canonical property values correct")
 
-    print("[PASS] CharacterProfile Initialization")
+    print("[PASS] CharacterProfile Initialization (Aragorn)")
 
 
 def test_character_profile_full_initialization():
@@ -93,7 +101,7 @@ def test_character_profile_full_initialization():
         species="Dwarf",
         level=10,
         nickname="The Hammer",
-        subclass="Battle Master"
+        subclass="Battle Master",
     )
 
     personality = CharacterPersonality(
@@ -101,43 +109,43 @@ def test_character_profile_full_initialization():
         personality_summary="Brave, loyal, and honor-bound",
         motivations=["Protect the innocent", "Honor ancestors"],
         fears_weaknesses=["Fear of drowning", "Stubborn pride"],
-        relationships={
-            "Elara": "Trusted ally and friend",
-            "Grimlock": "Bitter rival"
-        },
+        relationships={"Elara": "Trusted ally and friend", "Grimlock": "Bitter rival"},
         goals=["Reclaim ancestral homeland"],
-        secrets=["Harbors guilt from past failure"]
+        secrets=["Harbors guilt from past failure"],
     )
 
     abilities = CharacterAbilities(
         known_spells=["Shield", "Misty Step"],
         feats=["Great Weapon Master"],
-        class_abilities=["Second Wind", "Action Surge"]
+        class_abilities=["Second Wind", "Action Surge"],
     )
 
     mechanics = CharacterMechanics(
         stats=CharacterStats(
             ability_scores={"strength": 18, "constitution": 16},
             armor_class=18,
-            max_hit_points=95
+            max_hit_points=95,
         ),
-        abilities=abilities
+        abilities=abilities,
     )
 
     possessions = CharacterPossessions(
-        equipment={
-            "weapons": ["Battleaxe", "Shield"],
-            "armor": ["Plate Armor"]
-        },
-        magic_items=["Ring of Protection"]
+        equipment={"weapons": ["Battleaxe", "Shield"], "armor": ["Plate Armor"]},
+        magic_items=["Ring of Protection"],
     )
 
     profile = CharacterProfile(
         identity=identity,
         personality=personality,
         mechanics=mechanics,
-        possessions=possessions
+        possessions=possessions,
     )
+
+    # Behavior should be generated in-memory for profiles that don't provide one
+    assert isinstance(profile.behavior, CharacterBehavior), "Behavior not generated"
+    assert isinstance(profile.behavior.preferred_strategies, list), "preferred_strategies not list"
+    assert isinstance(profile.behavior.typical_reactions, dict), "typical_reactions not dict"
+    assert isinstance(profile.behavior.speech_patterns, list), "speech_patterns not list"
 
     # Verify all fields via properties
     assert profile.name == "Thorin Ironforge", "Name incorrect"
@@ -162,7 +170,7 @@ def test_character_profile_save_and_load():
     print("\n[TEST] CharacterProfile Save and Load")
 
     # Create temporary file
-    with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
         temp_path = f.name
 
     try:
@@ -171,26 +179,23 @@ def test_character_profile_save_and_load():
             name="File Test Character",
             character_class=DnDClass.BARD,
             level=4,
-            species="Half-Elf"
+            species="Half-Elf",
         )
 
         personality = CharacterPersonality(
             background_story="A traveling musician",
             motivations=["Spread joy through music"],
-            relationships={"Tavern Owner": "Friend and patron"}
+            relationships={"Tavern Owner": "Friend and patron"},
         )
 
         abilities = CharacterAbilities(
-            known_spells=["Vicious Mockery", "Healing Word"],
-            feats=["War Caster"]
+            known_spells=["Vicious Mockery", "Healing Word"], feats=["War Caster"]
         )
 
         mechanics = CharacterMechanics(abilities=abilities)
 
         original = CharacterProfile(
-            identity=identity,
-            personality=personality,
-            mechanics=mechanics
+            identity=identity, personality=personality, mechanics=mechanics
         )
 
         # Save to file
@@ -214,6 +219,7 @@ def test_character_profile_save_and_load():
         assert loaded.name == original.name, "Name mismatch"
         assert loaded.level == original.level, "Level mismatch"
         assert loaded.character_class == original.character_class, "Class mismatch"
+        assert isinstance(loaded.behavior, CharacterBehavior), "Behavior missing on loaded profile"
         print("  [OK] Properties work on loaded profile")
 
     finally:
@@ -229,7 +235,7 @@ def test_character_profile_backward_compatibility():
     print("\n[TEST] CharacterProfile Backward Compatibility")
 
     # Create temporary file with old format
-    with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
         temp_path = f.name
 
     try:
@@ -245,10 +251,10 @@ def test_character_profile_backward_compatibility():
             "flaws": ["Overconfident"],  # Old field name (fears_weaknesses)
             "relationships": {},
             "equipment": {"weapons": ["Staff"]},
-            "known_spells": ["Fireball"]
+            "known_spells": ["Fireball"],
         }
 
-        with open(temp_path, 'w', encoding='utf-8') as f:
+        with open(temp_path, "w", encoding="utf-8") as f:
             json.dump(old_format, f, indent=2)
 
         # Load using new CharacterProfile
@@ -258,10 +264,16 @@ def test_character_profile_backward_compatibility():
         assert loaded.name == "Legacy Character", "Name not loaded"
         assert loaded.character_class == DnDClass.WIZARD, "Class not mapped"
         assert loaded.level == 5, "Level not loaded"
-        assert "old character" in loaded.background_story.lower(), "Backstory not mapped"
+        assert (
+            "old character" in loaded.background_story.lower()
+        ), "Backstory not mapped"
         assert "Curious" in loaded.personality.personality_summary, "Traits not mapped"
-        assert "Seek lost knowledge" in loaded.personality.motivations, "Bonds not mapped"
-        assert "Overconfident" in loaded.personality.fears_weaknesses, "Flaws not mapped"
+        assert (
+            "Seek lost knowledge" in loaded.personality.motivations
+        ), "Bonds not mapped"
+        assert (
+            "Overconfident" in loaded.personality.fears_weaknesses
+        ), "Flaws not mapped"
         print("  [OK] Old JSON format loaded and mapped correctly")
 
     finally:

@@ -4,6 +4,9 @@ Supports OpenAI, Ollama, OpenRouter, and other OpenAI-compatible providers
 """
 
 import os
+import json
+import re
+import ast
 from typing import Dict, List, Any, Optional
 from dataclasses import dataclass, field
 from openai import OpenAI
@@ -234,3 +237,41 @@ def load_ai_config_from_env() -> Dict[str, str]:
         "temperature": float(os.getenv("AI_TEMPERATURE", "0.7")),
         "max_tokens": int(os.getenv("AI_MAX_TOKENS", "1000")),
     }
+
+# Create a default AI client using .env or environment variables
+_default_ai_client = AIClient()
+
+def call_ai_for_behavior_block(prompt: str) -> dict:
+    """
+    Calls the LLM to generate a CharacterBehavior block from a prompt.
+    Returns a dict with keys: preferred_strategies, typical_reactions, "
+    "speech_patterns, decision_making_style.
+    """
+    # Compose messages for chat completion
+    messages = [
+        _default_ai_client.create_system_message(
+            "You are a D&D character consultant AI."
+            "Respond ONLY with a JSON object for the CharacterBehavior dataclass."),
+        _default_ai_client.create_user_message(prompt)
+    ]
+    response = _default_ai_client.chat_completion(messages)
+    # Try to extract JSON from the response (handles code block formatting)
+    match = re.search(r'```json\n(.*?)```', response, re.DOTALL)
+    if match:
+        json_str = match.group(1)
+    else:
+        # Fallback: try to parse the whole response
+        json_str = response
+
+    try:
+        return json.loads(json_str)
+    except (json.JSONDecodeError, ValueError):
+        # Fallback: attempt a safe Python literal evaluation (safer than eval)
+        try:
+            return ast.literal_eval(json_str)
+        except (ValueError, SyntaxError) as e:
+            # Provide a clear error including the raw response for debugging
+            raise RuntimeError(
+                "Failed to parse AI response as JSON or Python literal. "
+                f"Original error: {e}. Response content: {response!r}"
+            ) from e

@@ -8,7 +8,7 @@
 
 **Current Status:** Step 8 Complete, Ready for Steps 1-7
 
-- [x] **Step 8: Validation Tests** - COMPLETE [COMPLETE]
+- [x] **Step 8: Validators Tests** - COMPLETE [COMPLETE]
   - [x] test_character_validator.py
   - [x] test_npc_validator.py
   - [x] test_party_validator.py
@@ -22,36 +22,39 @@
   - [x] Create test_ai_client.py
   - [x] Create test_rag_system.py
   - [x] Create test_all_ai.py
+  - [x] Create test_behavior_generation_ai_mock.py
   - [x] Create tests/ai/README.md
 
-- [ ] **Step 2: Character System Tests** (characters/)
-  - [ ] test_character_profile.py
-  - [ ] test_consultant_core.py
-  - [ ] test_consultant_dc.py
-  - [ ] test_consultant_story.py
-  - [ ] test_consultant_ai.py
-  - [ ] test_class_knowledge.py
-  - [ ] test_character_sheet.py
-  - [ ] test_character_consistency.py
-  - [ ] test_all_characters.py
-  - [ ] tests/characters/README.md
+- [x] **Step 2: Character System Tests** (characters/)
+  - [x] test_character_profile.py
+  - [x] test_consultant_core.py
+  - [x] test_consultant_dc.py
+  - [x] test_consultant_story.py
+  - [x] test_consultant_ai.py
+  - [x] test_class_knowledge.py
+  - [x] test_character_sheet.py
+  - [x] test_character_consistency.py
+  - [x] test_all_characters.py
+  - [x] tests/characters/README.md
 
-- [ ] **Step 3: NPC System Tests** (npcs/)
-  - [ ] test_npc_agents.py
-  - [ ] test_npc_auto_detection.py
-  - [ ] test_all_npcs.py
-  - [ ] tests/npcs/README.md
+- [x] **Step 3: NPC System Tests** (npcs/)
+  - [x] test_npc_agents.py
+  - [x] test_npc_auto_detection.py
+  - [x] test_all_npcs.py
+  - [x] tests/npcs/README.md
 
-- [ ] **Step 4: Story System Tests** (stories/) - LARGEST SUBSYSTEM
+- [] **Step 4: Story System Tests** (stories/) - LARGEST SUBSYSTEM
   - [ ] test_story_manager.py
   - [ ] test_enhanced_story_manager.py
   - [ ] test_story_analyzer.py
   - [ ] test_story_file_manager.py
-  - [ ] test_session_results_manager.py
-  - [ ] test_hooks_and_analysis.py
-  - [ ] test_party_manager.py
-  - [ ] test_story_updater.py
+  - [x] test_session_results_manager.py
+  - [x] test_hooks_and_analysis.py
+  - [x] test_party_manager.py
+  - [x] test_story_updater.py
+  - [x] test_character_manager.py
   - [ ] test_character_consistency.py
+  - [ ] test_story_file_ops.py
   - [ ] test_all_stories.py
   - [ ] tests/stories/README.md
 

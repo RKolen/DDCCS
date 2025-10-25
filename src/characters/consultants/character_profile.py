@@ -7,6 +7,7 @@ into logical groupings while maintaining JSON compatibility.
 
 from typing import Dict, List, Any, Optional
 from dataclasses import dataclass, field, asdict
+import logging
 
 from src.characters.character_sheet import DnDClass
 from src.utils.file_io import load_json_file, save_json_file
@@ -25,6 +26,18 @@ try:
 except ImportError:
     VALIDATOR_AVAILABLE = False
     validate_character_json = None
+
+# Optional behaviour generator (in-memory only). We keep this optional so tests
+# and environments without the utils module still import cleanly.
+try:
+    from src.utils.behaviour_generation import generate_behavior_from_personality
+
+    BEHAVIOUR_GENERATOR_AVAILABLE = True
+except ImportError:
+    generate_behavior_from_personality = None  # type: ignore
+    BEHAVIOUR_GENERATOR_AVAILABLE = False
+
+LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
@@ -132,6 +145,47 @@ class CharacterProfile:
     possessions: CharacterPossessions = field(default_factory=CharacterPossessions)
     ai_config: Optional[Dict[str, Any]] = None
 
+    def __post_init__(self):
+        """Populate an in-memory `behavior` from personality fields if empty.
+
+        This will call `generate_behavior_from_personality` when available.
+        It never writes back to disk; it only mutates the in-memory instance so
+        downstream code (consultants, tests) get a sensible `CharacterBehavior`.
+        """
+        # If generator unavailable or behavior already populated, do nothing.
+        if not BEHAVIOUR_GENERATOR_AVAILABLE or generate_behavior_from_personality is None:
+            return
+
+        beh = self.behavior
+        if (
+            beh.preferred_strategies
+            or beh.speech_patterns
+            or beh.typical_reactions
+            or beh.decision_making_style
+        ):
+            return
+
+        # Reconstruct personality-like fields expected by the generator.
+        personality_traits: List[str] = []
+        if self.personality.personality_summary:
+            personality_traits = [p.strip() for p in
+            self.personality.personality_summary.split(";") if p.strip()]
+
+        ideals = list(self.personality.goals)
+        bonds = list(self.personality.motivations)
+        flaws = list(self.personality.fears_weaknesses)
+        backstory = self.personality.background_story or ""
+
+        try:
+            generated = generate_behavior_from_personality(
+                personality_traits, ideals, bonds, flaws, backstory
+            )
+            # Assign only if we got a CharacterBehavior-like object back.
+            if generated is not None:
+                self.behavior = generated
+        except (ValueError, TypeError, RuntimeError) as exc:
+            LOGGER.warning("Behavior generation failed during profile init: %s", exc)
+
     # Backward compatibility properties for accessing nested dataclass fields
     @property
     def name(self) -> str:
@@ -227,6 +281,11 @@ class CharacterProfile:
     def ability_scores(self) -> Dict[str, int]:
         """Character ability scores."""
         return self.mechanics.stats.ability_scores
+
+    # Note: Top-level accessors for behavior fields were intentionally removed.
+    # Callers should use `profile.behavior.<field>` (e.g. profile.behavior.speech_patterns)
+    # to access behavior-related properties. This keeps the data model explicit
+    # and avoids API surface duplication.
 
     def save_to_file(self, filepath: str):
         """Save character profile to JSON file (flattened format for compatibility)."""
