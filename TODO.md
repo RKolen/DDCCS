@@ -93,23 +93,24 @@
   - [x] test_all_cli.py
   - [x] tests/cli/README.md
 
-- [ ] **Step 10: Utils Tests** (utiles/)
+- [x] **Step 10: Utils Tests** COMPLETE [COMPLETE]
   - [x] test_path_utils.py
-  - [ ] test_behaviour_generation.py
-  - [ ] test_cli_utils.py
-  - [ ] test_dnd_ruls.py
-  - [ ] tests_file_io.py
-  - [ ] test_markdown_utils.py
-  - [ ] test_spell_highlighter.py
-  - [ ] test_story_formatting_utils.py
-  - [ ] test_story_parsing_utils.py
-  - [ ] test_string_utils.py
-  - [ ] test_text_formatting_utils.py
-  - [ ] test_validation_helpers.py
-  - [ ] tests/utils/README.md
+  - [x] test_behaviour_generation.py
+  - [x] test_cli_utils.py
+  - [x] test_dnd_rules.py
+  - [x] tests_file_io.py
+  - [x] test_markdown_utils.py
+  - [x] test_spell_highlighter.py
+  - [x] test_story_formatting_utils.py
+  - [x] test_story_parsing_utils.py
+  - [x] test_string_utils.py
+  - [x] test_text_formatting_utils.py
+  - [x] test_validation_helpers.py
+  - [x] test_all_utils.py
+  - [x] tests/utils/README.md
   
 **Testing Standards:**
-- [COMPLETE] Every test must achieve 10.00/10 pylint (NO disable comments)
+- [COMPLETE] Every test must achieve 10.00/10 pylint (NO disable comments no pragma)
 - [COMPLETE] Every test must work with `run_all_tests.py`
 - [COMPLETE] Common code goes in `test_helpers.py` (DRY principle)
 - [COMPLETE] Every test folder has README.md (what/why/tests list)
