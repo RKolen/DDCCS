@@ -61,24 +61,6 @@ This folder contains tests for the AI integration subsystem, which provides opti
 python tests/run_all_tests.py ai
 ```
 
-### Run Individual Test Files
-```bash
-# Environment configuration
-python tests/ai/test_ai_env_config.py
-
-# AI client interface
-python tests/ai/test_ai_client.py
-
-# RAG system
-python tests/ai/test_rag_system.py
-
-# Behavior generation
-python test/ai/test_behaviour_generation_ai_mock.py
-
-# All AI tests with comprehensive output
-python tests/ai/test_all_ai.py
-```
-
 ### Run Specific Test Functions
 All test files can be run directly and will execute all their test functions.
 

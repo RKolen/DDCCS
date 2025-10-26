@@ -20,14 +20,7 @@ consistency checks that ensure character actions match profiles.
 From the project root run the combat aggregator which runs the group:
 
 ```powershell
-python -m tests.combat.test_all_combat
 python tests\run_all_tests.py combat
-```
-
-Or run an individual test module:
-
-```powershell
-python -m tests.combat.test_narrator_descriptions
 ```
 
 ## Conventions and patterns

@@ -75,6 +75,25 @@ class ItemRegistry:
                     self.items[item_name] = Item.from_dict(item_data)
             except (ValueError, OSError) as e:
                 print(f"Warning: Could not load item registry: {e}")
+        # Also load a fallback `custom_items.json` if present. This file is
+        # included in the repository for testing and provides additional
+        # custom/homebrew items (used by test fixtures like aragorn/frodo).
+        # Entries in the explicit registry file take precedence.
+        try:
+            base_dir = os.path.dirname(self.registry_path)
+            fallback = os.path.join(base_dir, "custom_items.json")
+            if os.path.exists(fallback):
+                try:
+                    fallback_data = load_json_file(fallback)
+                    for item_name, item_data in fallback_data.items():
+                        if item_name not in self.items:
+                            self.items[item_name] = Item.from_dict(item_data)
+                except (ValueError, OSError) as e:
+                    print(f"Warning: Could not load fallback custom items: {e}")
+        except (OSError, ValueError):
+            # Be defensive: do not let fallback loading break the registry.
+            # These are the expected failure modes for file operations / JSON.
+            pass
 
     def save_registry(self):
         """Save item registry to file"""

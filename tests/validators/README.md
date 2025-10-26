@@ -53,13 +53,7 @@ JSON validation for all game data files (characters, NPCs, items, party configur
 
 ```bash
 # Run all validation tests
-python tests/validation/test_all_validators.py
-
-# Run individual validators
-python tests/validation/test_character_validator.py
-python tests/validation/test_npc_validator.py
-python tests/validation/test_party_validator.py
-python tests/validation/test_items_validator.py
+python tests/run_all_tests.py validatiors
 
 # Run from root with full suite
 python tests/run_all_tests.py

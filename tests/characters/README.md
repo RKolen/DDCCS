@@ -90,23 +90,10 @@ suggestions, personality guidance, and story consistency checking.
 
 ## Usage
 
-Run individual test files:
-```bash
-cd tests
-python -m characters.test_character_profile
-python -m characters.test_class_knowledge
-python -m characters.test_character_sheet
-python -m characters.test_character_consistency
-python -m characters.test_consultant_core
-python -m characters.test_consultant_dc
-python -m characters.test_consultant_story
-python -m characters.test_consultant_ai
-```
-
 Run entire character test suite:
 ```bash
 cd tests
-python -m characters.test_all_characters
+python .\tests\run_all_tests.py characters
 ```
 
 ## Source Code Tested

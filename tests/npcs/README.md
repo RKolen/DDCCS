@@ -52,15 +52,7 @@ generation, and NPC agent management for recurring characters.
 
 Run individual test files:
 ```bash
-cd tests
-python -m npcs.test_npc_agents
-python -m npcs.test_npc_auto_detection
-```
-
-Run entire NPC test suite:
-```bash
-cd tests
-python -m npcs.test_all_npcs
+python .\tests\run_all_tests.py npcs
 ```
 
 ## Source Code Tested

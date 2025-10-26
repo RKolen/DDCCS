@@ -66,10 +66,13 @@
   - [x] test_all_combat.py
   - [x] tests/combat/README.md
 
-- [ ] **Step 6: Items System Tests** (items/)
-  - [ ] test_item_registry.py
-  - [ ] test_all_items.py
-  - [ ] tests/items/README.md
+- [x] **Step 6: Items System Tests** COMPLETE [COMPLETE]
+  - [x] test_item_registry.py
+  - [x] test_all_items.py
+  - [x] test_load_precedence_registry_over_fallback
+  - [x] test_load_fallback_only_items_present
+  - [x] test_get_item_and_is_custom_api
+  - [x] tests/items/README.md
 
 - [ ] **Step 7: DM Tools Tests** (dm/)
   - [ ] test_dungeon_master.py
