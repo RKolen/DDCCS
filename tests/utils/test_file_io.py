@@ -6,7 +6,7 @@ helpers in an isolated temporary directory.
 from typing import Dict
 from pathlib import Path
 
-from test_helpers import setup_test_environment, import_module
+from tests.test_helpers import setup_test_environment, import_module
 
 
 setup_test_environment()

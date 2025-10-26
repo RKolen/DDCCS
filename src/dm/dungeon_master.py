@@ -9,8 +9,7 @@ from typing import Dict, List, Any
 from pathlib import Path
 from src.characters.consultants.consultant_core import CharacterConsultant
 from src.npcs.npc_agents import NPCAgent, create_npc_agents
-from src.utils.story_file_helpers import list_character_json_candidates
-from src.stories.character_load_helper import load_character_consultant
+from src.stories.character_loader import load_all_character_consultants
 
 # Import RAG system if available
 try:
@@ -35,15 +34,10 @@ class DMConsultant:
 
     def _load_character_consultants(self) -> Dict[str, CharacterConsultant]:
         """Load all character consultants from the game_data/characters folder."""
-        consultants = {}
-        characters_dir = self.workspace_path / "game_data" / "characters"
-        if characters_dir.exists():
-            for fp in list_character_json_candidates(str(characters_dir)):
-                consultant = load_character_consultant(fp, ai_client=self.ai_client, verbose=False)
-                if consultant is None:
-                    continue
-                consultants[consultant.profile.name] = consultant
-        return consultants
+        characters_dir = str(self.workspace_path / "game_data" / "characters")
+        return load_all_character_consultants(
+            characters_dir, ai_client=self.ai_client, verbose=False
+        )
 
     def _load_npc_agents(self) -> Dict[str, NPCAgent]:
         """Load all NPC agents from the game_data/npcs folder."""

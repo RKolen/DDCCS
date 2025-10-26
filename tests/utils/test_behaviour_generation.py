@@ -5,7 +5,7 @@ public `generate_behavior_from_personality` function with controlled inputs
 and asserting on the returned structure.
 """
 
-from test_helpers import setup_test_environment, import_module
+from tests.test_helpers import setup_test_environment, import_module
 
 setup_test_environment()
 

@@ -23,6 +23,7 @@ Files in this folder
 - `test_string_utils.py` — string utilities and normalization helpers.
 - `test_text_formatting_utils.py` — text wrapping and optional spell highlighting.
 - `test_validation_helpers.py` — validation helper functions and formatting.
+- `test_story_file_helpers.py` - file helper for story functionality.
 
 Running the tests
 Use the repository test runner to execute the utils tests only (PowerShell):

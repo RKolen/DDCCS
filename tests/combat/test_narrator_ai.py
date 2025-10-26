@@ -7,8 +7,8 @@ frodo, gandalf) to exercise character-context building and AI integration.
 
 from pathlib import Path
 
-import test_helpers
-from test_helpers import FakeAIClient
+from tests.test_helpers import FakeAIClient
+from tests import test_helpers
 
 # Configure test environment for imports
 test_helpers.setup_test_environment()

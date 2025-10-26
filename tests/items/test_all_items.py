@@ -8,6 +8,7 @@ so the top-level test runner can pick it up.
 import sys
 import subprocess
 from pathlib import Path
+from tests.test_runner_common import print_subsystem_summary
 
 
 def run_test_file(test_file: str, test_name: str) -> bool:
@@ -46,33 +47,8 @@ def run_all_items_tests() -> int:
     for test_file, test_name in tests:
         results[test_name] = run_test_file(test_file, test_name)
 
-    # Summary
-    print("\n" + "=" * 70)
-    print("ITEMS SUBSYSTEM - TEST SUMMARY")
-    print("=" * 70)
-
-    total = len(tests)
-    passed = sum(1 for ok in results.values() if ok)
-    failed = total - passed
-
-    for name, ok in results.items():
-        status = "[PASS]" if ok else "[FAIL]"
-        print(f"{status} {name}")
-
-    print("\n" + "-" * 70)
-    print(f"Total: {total} test files")
-    print(f"Passed: {passed}")
-    print(f"Failed: {failed}")
-    print("-" * 70)
-
-    if failed == 0:
-        print("\n[SUCCESS] All items subsystem tests passed!")
-        print("=" * 70)
-        return 0
-
-    print(f"\n[FAILURE] {failed} test file(s) failed")
-    print("=" * 70)
-    return 1
+        # Summary (delegate to shared helper)
+        return print_subsystem_summary(results, "ITEMS SUBSYSTEM - TEST SUMMARY")
 
 
 if __name__ == "__main__":

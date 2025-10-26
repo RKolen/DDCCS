@@ -4,7 +4,7 @@ These tests use small fakes and monkeypatching to avoid interactive I/O and
 heavy dependencies (AI, real CombatNarrator).
 """
 
-from test_helpers import setup_test_environment, import_module
+from tests.test_helpers import setup_test_environment, import_module
 
 setup_test_environment()
 

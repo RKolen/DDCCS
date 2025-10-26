@@ -8,6 +8,7 @@ a comprehensive report of test results.
 import sys
 import subprocess
 from pathlib import Path
+from tests.test_runner_common import print_subsystem_summary
 
 
 def run_test_file(test_file: str, test_name: str) -> bool:
@@ -57,33 +58,8 @@ def run_all_npc_tests():
     for test_file, test_name in tests:
         results[test_name] = run_test_file(test_file, test_name)
 
-    # Print summary
-    print("\n" + "=" * 70)
-    print("NPC SUBSYSTEM - TEST SUMMARY")
-    print("=" * 70)
-
-    total_tests = len(tests)
-    passed_tests = sum(1 for passed in results.values() if passed)
-    failed_tests = total_tests - passed_tests
-
-    for test_name, passed in results.items():
-        status = "[PASS]" if passed else "[FAIL]"
-        print(f"{status} {test_name}")
-
-    print("\n" + "-" * 70)
-    print(f"Total: {total_tests} test files")
-    print(f"Passed: {passed_tests}")
-    print(f"Failed: {failed_tests}")
-    print("-" * 70)
-
-    if failed_tests == 0:
-        print("\n[SUCCESS] All NPC subsystem tests passed!")
-        print("=" * 70)
-        return 0
-
-    print(f"\n[FAILURE] {failed_tests} test file(s) failed")
-    print("=" * 70)
-    return 1
+    # Summary (delegate to shared helper)
+    return print_subsystem_summary(results, "NPC SUBSYSTEM - TEST SUMMARY")
 
 
 if __name__ == "__main__":

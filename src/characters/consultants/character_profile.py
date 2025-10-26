@@ -11,14 +11,7 @@ import logging
 
 from src.characters.character_sheet import DnDClass
 from src.utils.file_io import load_json_file, save_json_file
-
-# Optional imports
-try:
-    from src.ai.ai_client import CharacterAIConfig
-    AI_AVAILABLE = True
-except ImportError:
-    AI_AVAILABLE = False
-    CharacterAIConfig = None
+from src.ai.availability import AI_AVAILABLE, CharacterAIConfig
 
 try:
     from src.validation.character_validator import validate_character_json

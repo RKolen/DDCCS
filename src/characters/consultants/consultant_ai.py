@@ -6,13 +6,7 @@ Provides AI-powered consultation features with graceful fallback to rule-based m
 
 from typing import Dict, Any
 
-# Optional imports with availability flags
-try:
-    from src.ai.ai_client import CharacterAIConfig
-    AI_AVAILABLE = True
-except ImportError:
-    AI_AVAILABLE = False
-    CharacterAIConfig = None
+from src.ai.availability import AI_AVAILABLE, CharacterAIConfig
 
 
 class AIConsultant:

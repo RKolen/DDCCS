@@ -1,9 +1,9 @@
 """Test AI branch of `DMConsultant.generate_narrative_content`
 with a fake AI client and mocked RAG."""
 
-import test_helpers
+from tests import test_helpers
 
-from test_helpers import setup_test_environment, DM_DUNGEON_MASTER
+from tests.test_helpers import setup_test_environment, DM_DUNGEON_MASTER
 
 setup_test_environment()
 

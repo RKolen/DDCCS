@@ -4,7 +4,7 @@ These tests verify DC estimation, detail level mapping, fallback behavior when
 RAG is not available, and behavior when a mocked RAG system is provided.
 """
 
-from test_helpers import setup_test_environment, import_module, DM_HISTORY_HELPER
+from tests.test_helpers import setup_test_environment, import_module, DM_HISTORY_HELPER
 
 # Configure test environment and import module via shared helpers
 setup_test_environment()

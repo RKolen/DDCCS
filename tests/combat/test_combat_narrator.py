@@ -7,8 +7,8 @@ so we exercise CharacterProfile and CharacterConsultant wiring.
 import sys
 from pathlib import Path
 import unittest
-import test_helpers
-from test_helpers import FakeAIClient
+from tests.test_helpers import FakeAIClient
+from tests import test_helpers
 # Ensure tests package and project root are importable
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 

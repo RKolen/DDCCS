@@ -10,7 +10,7 @@ import re
 import sys
 import tempfile
 
-import test_helpers
+from tests import test_helpers
 
 # Configure test environment so `src` imports work during test execution.
 project_root = test_helpers.setup_test_environment()

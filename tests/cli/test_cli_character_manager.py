@@ -5,7 +5,7 @@ Focuses on `list_characters` and `_display_character_details` using minimal
 fakes to avoid user input blocking.
 """
 
-from test_helpers import setup_test_environment, import_module
+from tests.test_helpers import setup_test_environment, import_module
 
 setup_test_environment()
 

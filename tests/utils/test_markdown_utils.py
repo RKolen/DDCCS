@@ -1,6 +1,6 @@
 """Unit tests for markdown utilities in src.utils.markdown_utils."""
 
-from test_helpers import setup_test_environment, import_module
+from tests.test_helpers import setup_test_environment, import_module
 
 
 setup_test_environment()

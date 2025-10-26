@@ -4,7 +4,7 @@ from typing import Any, Dict
 import io
 from contextlib import redirect_stdout
 
-from test_helpers import setup_test_environment, import_module
+from tests.test_helpers import setup_test_environment, import_module
 
 
 setup_test_environment()

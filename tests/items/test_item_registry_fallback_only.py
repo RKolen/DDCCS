@@ -6,7 +6,7 @@ import json
 import os
 import tempfile
 
-import test_helpers
+from tests import test_helpers
 
 # Configure test environment for imports
 test_helpers.setup_test_environment()

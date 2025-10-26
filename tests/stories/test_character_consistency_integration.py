@@ -9,7 +9,7 @@ consultant) detects in-character vs out-of-character actions.
 import os
 import sys
 import tempfile
-import test_helpers
+from tests import test_helpers
 
 # Prepare test environment
 project_root = test_helpers.setup_test_environment()

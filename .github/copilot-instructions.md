@@ -182,7 +182,7 @@ Each consultant provides:
 
 ### CRITICAL: No Pylint Disable Comments
 
-**NEVER use `# pylint: disable=...` or `# pragma ...` comments**
+**NEVER use `# pylint: disable=...` , `# noqa ...`or `# pragma ...` comments**
 **NEVER!**
 **Never create a .pylintrc file to cheat this rule**
 **NEVER!**

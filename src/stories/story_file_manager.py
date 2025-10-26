@@ -15,15 +15,15 @@ from typing import List
 from datetime import datetime
 from src.utils.file_io import read_text_file, write_text_file, file_exists
 from src.utils.path_utils import get_campaign_path
+from src.utils.story_file_helpers import (
+    list_story_files,
+    has_numbered_story_files,
+    next_filename_for_dir,
+)
 
 def get_existing_stories(stories_path: str) -> List[str]:
     """Get existing story files in the root directory (legacy stories)."""
-    story_files = []
-    for filename in os.listdir(stories_path):
-        if re.match(r"\d{3}.*\.md$", filename):
-            story_files.append(filename)
-
-    return sorted(story_files)
+    return list_story_files(stories_path)
 
 
 def get_story_series(stories_path: str) -> List[str]:
@@ -38,12 +38,8 @@ def get_story_series(stories_path: str) -> List[str]:
             and item != "npcs"
             and item != "__pycache__"
         ):
-            # Check if folder contains numbered story files
-            if any(
-                re.match(r"\d{3}.*\.md$", f)
-                for f in os.listdir(item_path)
-                if f.endswith(".md")
-            ):
+            # Delegate numbered-file detection to helper
+            if has_numbered_story_files(item_path):
                 series_folders.append(item)
 
     return sorted(series_folders)
@@ -54,13 +50,7 @@ def get_story_files_in_series(stories_path: str, series_name: str) -> List[str]:
     series_path = get_campaign_path(series_name, stories_path)
     if not file_exists(series_path):
         return []
-
-    story_files = []
-    for filename in os.listdir(series_path):
-        if re.match(r"\d{3}.*\.md$", filename):
-            story_files.append(filename)
-
-    return sorted(story_files)
+    return list_story_files(series_path)
 
 
 def validate_series_name(series_name: str) -> str:
@@ -137,19 +127,8 @@ def create_story_in_series(stories_path: str, workspace_path: str,
     if not file_exists(series_path):
         raise ValueError(f"Story series '{series_name}' does not exist")
 
-    # Get existing stories in series to determine next number
-    existing_stories = get_story_files_in_series(stories_path, series_name)
-
-    if existing_stories:
-        last_number = max(int(f[:3]) for f in existing_stories)
-        next_number = last_number + 1
-    else:
-        next_number = 1
-
-    # Create filename
-    clean_name = re.sub(r"[^a-zA-Z0-9_-]", "_", story_name)
-    filename = f"{next_number:03d}_{clean_name}.md"
-    filepath = os.path.join(series_path, filename)
+    # Compute next filename via helper
+    filename, filepath = next_filename_for_dir(series_path, story_name)
 
     # Create story template
     template = create_story_template(story_name, description,
@@ -165,19 +144,8 @@ def create_story_in_series(stories_path: str, workspace_path: str,
 def create_new_story(stories_path: str, workspace_path: str,
                     story_name: str, description: str = "") -> str:
     """Create new story file with next sequence number (for legacy stories in root)."""
-    existing_stories = get_existing_stories(stories_path)
-
-    # Determine next sequence number
-    if existing_stories:
-        last_number = max(int(f[:3]) for f in existing_stories)
-        next_number = last_number + 1
-    else:
-        next_number = 1
-
-    # Create filename
-    clean_name = re.sub(r"[^a-zA-Z0-9_-]", "_", story_name)
-    filename = f"{next_number:03d}_{clean_name}.md"
-    filepath = os.path.join(stories_path, filename)
+    # Compute next filename via helper
+    filename, filepath = next_filename_for_dir(stories_path, story_name)
 
     # Create story template
     template = create_story_template(story_name, description,
@@ -201,20 +169,8 @@ def create_pure_narrative_story(stories_path: str, workspace_path: str,
     if not file_exists(series_path):
         os.makedirs(series_path, exist_ok=True)
 
-    # Get existing stories to determine number
-    existing_stories = [
-        f for f in os.listdir(series_path) if re.match(r"\d{3}.*\.md$", f)
-    ]
-    if existing_stories:
-        last_number = max(int(f[:3]) for f in existing_stories)
-        next_number = last_number + 1
-    else:
-        next_number = 1
-
-    # Create filename
-    clean_name = re.sub(r"[^a-zA-Z0-9_-]", "_", story_name)
-    filename = f"{next_number:03d}_{clean_name}.md"
-    filepath = os.path.join(series_path, filename)
+    # Compute next filename via helper
+    filename, filepath = next_filename_for_dir(series_path, story_name)
 
     # Create pure narrative template
     template = create_story_template(story_name, description,
@@ -230,20 +186,8 @@ def create_pure_narrative_story(stories_path: str, workspace_path: str,
 def create_pure_story_file(series_path: str, story_name: str,
                           narrative_content: str) -> str:
     """Create a story file with pure narrative content only."""
-    # Determine story number
-    existing_stories = [
-        f for f in os.listdir(series_path) if re.match(r"\d{3}.*\.md$", f)
-    ]
-    if existing_stories:
-        last_number = max(int(f[:3]) for f in existing_stories)
-        next_number = last_number + 1
-    else:
-        next_number = 1
-
-    # Create filename
-    clean_name = re.sub(r"[^a-zA-Z0-9_-]", "_", story_name)
-    filename = f"{next_number:03d}_{clean_name}.md"
-    filepath = os.path.join(series_path, filename)
+    # Compute next filename via helper
+    filename, filepath = next_filename_for_dir(series_path, story_name)
 
     # Write pure narrative
     content = f"# {story_name}\n\n{narrative_content}"

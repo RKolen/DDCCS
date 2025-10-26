@@ -1,6 +1,6 @@
 """Test DMConsultant consistency notes when NPC relationships exist."""
 
-from test_helpers import setup_test_environment, DM_DUNGEON_MASTER, import_module
+from tests.test_helpers import setup_test_environment, DM_DUNGEON_MASTER, import_module
 
 setup_test_environment()
 

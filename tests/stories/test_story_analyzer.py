@@ -8,7 +8,7 @@ analyze temporary story files created in a tempdir.
 import os
 import sys
 import tempfile
-import test_helpers
+from tests import test_helpers
 
 # Prepare test environment and get project root
 project_root = test_helpers.setup_test_environment()

@@ -4,13 +4,10 @@ Character Management for Story System
 Handles character loading, profiles, consultants, and spell highlighting.
 """
 
-import os
 from typing import Optional
 from src.characters.consultants.character_profile import CharacterProfile
 from src.utils.spell_highlighter import highlight_spells_in_text
-from src.utils.file_io import directory_exists
-from src.utils.story_file_helpers import list_character_json_candidates
-from src.stories.character_load_helper import load_character_consultant
+from src.stories.character_loader import load_all_character_consultants
 
 
 class CharacterManager:
@@ -28,21 +25,15 @@ class CharacterManager:
         self.consultants = {}
         self.known_spells = set()
 
-        # Ensure directory exists
-        os.makedirs(self.characters_path, exist_ok=True)
+    # Directory existence is ensured by the centralized loader when needed.
 
     def load_characters(self):
         """Load all character profiles and create consultants."""
-        if not directory_exists(self.characters_path):
-            return
-        for filepath in list_character_json_candidates(self.characters_path):
-            consultant = load_character_consultant(filepath, ai_client=self.ai_client,
-                                                   verbose=False)
-            if consultant is None:
-                # load_character_consultant already prints details when verbose=True
-                continue
-            profile = consultant.profile
-            self.consultants[profile.name] = consultant
+        # Delegate loading to centralized helper which will ensure the
+        # directory exists and return a mapping of name -> consultant.
+        self.consultants = load_all_character_consultants(
+            self.characters_path, ai_client=self.ai_client, verbose=False
+        )
 
         # Extract known spells from all loaded characters
         self._update_known_spells()

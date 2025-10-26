@@ -7,7 +7,7 @@ workspace directories and the shared `test_helpers` fakes where needed.
 
 import tempfile
 
-from test_helpers import setup_test_environment, import_module, DM_DUNGEON_MASTER
+from tests.test_helpers import setup_test_environment, import_module, DM_DUNGEON_MASTER
 
 # Configure test environment and import the DM module via shared helpers
 setup_test_environment()

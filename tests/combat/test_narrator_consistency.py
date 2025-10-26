@@ -3,8 +3,8 @@
 import sys
 from pathlib import Path
 import unittest
-import test_helpers
-from test_helpers import FakeConsultant
+from tests import test_helpers
+from tests.test_helpers import FakeConsultant
 # Ensure tests package and project root are importable and configured
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 

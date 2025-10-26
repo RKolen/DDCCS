@@ -10,6 +10,11 @@ from typing import List
 from datetime import datetime
 from src.utils.file_io import read_text_file, write_text_file, file_exists, directory_exists
 from src.utils.path_utils import get_campaign_path, get_campaigns_dir
+from src.utils.story_file_helpers import (
+    list_story_files,
+    has_numbered_story_files,
+    next_filename_for_dir,
+)
 
 class StoryFileOperations:
     """Manages story file operations including creation and discovery."""
@@ -60,12 +65,7 @@ class StoryFileOperations:
         Returns:
             Sorted list of story filenames
         """
-        story_files = []
-        for filename in os.listdir(self.stories_path):
-            if re.match(r"\d{3}.*\.md$", filename):
-                story_files.append(filename)
-
-        return sorted(story_files)
+        return list_story_files(self.stories_path)
 
     def get_story_series(self) -> List[str]:
         """
@@ -87,12 +87,8 @@ class StoryFileOperations:
                     and item != "npcs"
                     and item != "__pycache__"
                 ):
-                    # Check if folder contains numbered story files
-                    if any(
-                        re.match(r"\d{3}.*\.md$", f)
-                        for f in os.listdir(item_path)
-                        if f.endswith(".md")
-                    ):
+                    # Delegate detection of numbered stories to helper
+                    if has_numbered_story_files(item_path):
                         series_folders.add(item)
         except FileNotFoundError:
             # If workspace root is missing, ignore
@@ -104,11 +100,7 @@ class StoryFileOperations:
             for item in os.listdir(campaigns_dir):
                 item_path = os.path.join(campaigns_dir, item)
                 if os.path.isdir(item_path) and not item.startswith("."):
-                    if any(
-                        re.match(r"\d{3}.*\.md$", f)
-                        for f in os.listdir(item_path)
-                        if f.endswith(".md")
-                    ):
+                    if has_numbered_story_files(item_path):
                         series_folders.add(item)
 
         return sorted(series_folders)
@@ -127,12 +119,7 @@ class StoryFileOperations:
         if not directory_exists(series_path):
             return []
 
-        story_files = []
-        for filename in os.listdir(series_path):
-            if re.match(r"\d{3}.*\.md$", filename):
-                story_files.append(filename)
-
-        return sorted(story_files)
+        return list_story_files(series_path)
 
     def create_new_story_series(
         self, series_name: str, first_story_name: str, description: str = ""
@@ -194,19 +181,8 @@ class StoryFileOperations:
         if not directory_exists(series_path):
             raise ValueError(f"Story series '{series_name}' does not exist")
 
-        # Get existing stories in series to determine next number
-        existing_stories = self.get_story_files_in_series(series_name)
-
-        if existing_stories:
-            last_number = max(int(f[:3]) for f in existing_stories)
-            next_number = last_number + 1
-        else:
-            next_number = 1
-
-        # Create filename
-        clean_name = re.sub(r"[^a-zA-Z0-9_-]", "_", story_name)
-        filename = f"{next_number:03d}_{clean_name}.md"
-        filepath = os.path.join(series_path, filename)
+        # Compute next filename via helper
+        filename, filepath = next_filename_for_dir(series_path, story_name)
 
         # Create story template
         template = self._create_story_template(story_name, description)
@@ -229,19 +205,8 @@ class StoryFileOperations:
         Returns:
             Path to the created story file
         """
-        existing_stories = self.get_existing_stories()
-
-        # Determine next sequence number
-        if existing_stories:
-            last_number = max(int(f[:3]) for f in existing_stories)
-            next_number = last_number + 1
-        else:
-            next_number = 1
-
-        # Create filename
-        clean_name = re.sub(r"[^a-zA-Z0-9_-]", "_", story_name)
-        filename = f"{next_number:03d}_{clean_name}.md"
-        filepath = os.path.join(self.stories_path, filename)
+        # Compute next filename via helper
+        filename, filepath = next_filename_for_dir(self.stories_path, story_name)
 
         # Create story template
         template = self._create_story_template(story_name, description)

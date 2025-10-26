@@ -9,7 +9,7 @@ from datetime import datetime
 
 # Import validators from src.validation
 try:
-    import test_helpers
+    from tests import test_helpers
     from src.validation.party_validator import validate_party_json, validate_party_file
 except ImportError as e:
     print(f"Error importing party_validator: {e}")

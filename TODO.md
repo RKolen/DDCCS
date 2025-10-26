@@ -23,6 +23,7 @@
   - [x] Create test_rag_system.py
   - [x] Create test_all_ai.py
   - [x] Create test_behavior_generation_ai_mock.py
+  - [x] Create test_availability.py
   - [x] Create tests/ai/README.md
 
 - [x] **Step 2: Character System Tests** COMPLETE [COMPLETE]
@@ -53,6 +54,7 @@
   - [x] test_party_manager.py
   - [x] test_story_updater.py
   - [x] test_character_manager.py
+  - [x] test_character_loader.py
   - [x] test_character_consistency.py
   - [x] test_character_consistency_integration.py
   - [x] test_all_stories.py
@@ -106,6 +108,7 @@
   - [x] test_string_utils.py
   - [x] test_text_formatting_utils.py
   - [x] test_validation_helpers.py
+  - [x] test_story_file_helpers.py
   - [x] test_all_utils.py
   - [x] tests/utils/README.md
   

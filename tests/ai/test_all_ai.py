@@ -1,3 +1,4 @@
+
 """
 AI Subsystem Test Runner
 
@@ -8,6 +9,8 @@ invocation of each test module) and prints a concise summary.
 import sys
 import subprocess
 from pathlib import Path
+from tests.test_runner_common import print_subsystem_summary
+
 
 
 def run_test_file(test_file: str, test_name: str) -> bool:
@@ -17,6 +20,7 @@ def run_test_file(test_file: str, test_name: str) -> bool:
     print(f"\n{'=' * 70}")
     print(f"Running: {test_name}")
     print('=' * 70)
+
 
     try:
         result = subprocess.run(
@@ -31,6 +35,7 @@ def run_test_file(test_file: str, test_name: str) -> bool:
         return False
 
 
+
 def run_all_ai_tests():
     """Run all AI subsystem tests and summarize results."""
     print("=" * 70)
@@ -38,44 +43,24 @@ def run_all_ai_tests():
     print("=" * 70)
     print()
 
+
     tests = [
         ("test_ai_env_config", "AI Environment Configuration"),
         ("test_ai_client", "AI Client Interface"),
         ("test_rag_system", "RAG System Tests"),
         ("test_behavior_generation_ai_mock", "Behavior Generation (Mock)"),
+        ("test_availability", "AI Availability Tests"),
     ]
+
 
     results = {}
     for test_file, test_name in tests:
         results[test_name] = run_test_file(test_file, test_name)
 
-    # Summary
-    print("\n" + "=" * 70)
-    print("AI SUBSYSTEM - TEST SUMMARY")
-    print("=" * 70)
 
-    total_tests = len(tests)
-    passed_tests = sum(1 for passed in results.values() if passed)
-    failed_tests = total_tests - passed_tests
+    # Summary (use shared helper)
+    return print_subsystem_summary(results, "AI SUBSYSTEM - TEST SUMMARY")
 
-    for test_name, passed in results.items():
-        status = "[PASS]" if passed else "[FAIL]"
-        print(f"{status} {test_name}")
-
-    print("\n" + "-" * 70)
-    print(f"Total: {total_tests} test files")
-    print(f"Passed: {passed_tests}")
-    print(f"Failed: {failed_tests}")
-    print("-" * 70)
-
-    if failed_tests == 0:
-        print("\n[SUCCESS] ALL AI INTEGRATION TESTS PASSED")
-        print("=" * 70)
-        return 0
-
-    print("\n[FAILED] SOME AI INTEGRATION TESTS FAILED")
-    print("=" * 70)
-    return 1
 
 
 if __name__ == "__main__":

@@ -69,8 +69,8 @@ class EnhancedStoryManager:
         self.party_manager = PartyManager(party_config)
         self.character_manager = CharacterManager(self.characters_path, ai_client)
 
-        # Ensure directories exist
-        os.makedirs(self.characters_path, exist_ok=True)
+        # Ensure stories directory exists (characters directory is created
+        # lazily by the centralized loader when characters are loaded).
         os.makedirs(self.stories_path, exist_ok=True)
 
         # Load characters on initialization

@@ -5,7 +5,7 @@ Fantasy Grounds parser) and verifies that `CombatDescriptor` produces
 character-aware narrative fragments that can be combined into a story.
 """
 from pathlib import Path
-import test_helpers
+from tests import test_helpers
 
 # Configure test environment for imports
 test_helpers.setup_test_environment()

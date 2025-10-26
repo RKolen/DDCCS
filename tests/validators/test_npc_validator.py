@@ -5,7 +5,7 @@ Verifies that NPC validator correctly identifies valid and invalid NPC files.
 
 import os
 import sys
-import test_helpers
+from tests import test_helpers
 # Import and configure test environment (UTF-8, project paths)
 test_helpers.setup_test_environment()
 

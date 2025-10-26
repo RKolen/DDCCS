@@ -1,9 +1,9 @@
 """Test that `DMConsultant.suggest_narrative` includes character
 insights when character consultants are present."""
 
-import test_helpers
+from tests import test_helpers
 
-from test_helpers import setup_test_environment, DM_DUNGEON_MASTER
+from tests.test_helpers import setup_test_environment, DM_DUNGEON_MASTER
 
 setup_test_environment()
 

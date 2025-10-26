@@ -17,7 +17,7 @@ Why we test this:
 
 import sys
 from pathlib import Path
-import test_helpers
+from tests import test_helpers
 # Add tests directory to path for test_helpers
 sys.path.insert(0, str(Path(__file__).parent.parent))
 

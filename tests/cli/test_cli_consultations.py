@@ -4,7 +4,7 @@ This test uses `FakeDMConsultant` from `tests.test_helpers` and monkeypatches
 `input()` to simulate user prompts for the narrative request.
 """
 
-from test_helpers import (
+from tests.test_helpers import (
     setup_test_environment,
     import_module,
     FakeDMConsultant,

@@ -31,7 +31,7 @@ if str(project_root) not in sys.path:
 
 # Import consultant components
 try:
-    import test_helpers
+    from tests import test_helpers
     from src.characters.consultants.character_profile import CharacterBehavior
     from src.characters.consultants.consultant_core import CharacterConsultant
     from src.characters.consultants.character_profile import (
@@ -322,7 +322,6 @@ def test_different_class_behaviors():
         "Wizard and Ranger should have different reactions"
     print("  [OK] Class-specific reactions differ")
     print("[PASS] Different Class Behaviors")
-
 
 
 def test_load_from_file():

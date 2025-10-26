@@ -5,7 +5,7 @@ These tests verify that the registry loads both the committed
 fallback and exposes items via the public API.
 """
 
-import test_helpers
+from tests import test_helpers
 
 # Configure test environment for imports
 test_helpers.setup_test_environment()

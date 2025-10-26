@@ -18,8 +18,7 @@ from typing import Dict, List, Set
 from src.characters.consultants.consultant_core import CharacterConsultant
 from src.validation.npc_validator import validate_npc_json
 from src.utils.file_io import load_json_file, save_json_file, read_text_file
-from src.utils.story_file_helpers import list_character_json_candidates
-from src.stories.character_load_helper import load_character_consultant
+from src.stories.character_loader import load_all_character_consultants
 
 
 class StoryAnalyzer:
@@ -41,17 +40,11 @@ class StoryAnalyzer:
 
     def _load_character_consultants(self):
         """Load all character consultants from JSON files."""
-        if not self.characters_dir.exists():
-            print(f"Characters directory '{self.characters_dir}' not found.")
-            return
-
-        for fp in list_character_json_candidates(str(self.characters_dir)):
-            try:
-                consultant = load_character_consultant(fp, verbose=False)
-                if consultant:
-                    self.consultants[consultant.profile.name] = consultant
-            except (OSError, ValueError) as e:
-                print(f"Error loading character from {fp}: {e}")
+        # Delegate to centralized loader which will ensure directory
+        # existence and handle loading errors internally.
+        self.consultants = load_all_character_consultants(
+            str(self.characters_dir), verbose=False
+        )
 
     def _load_existing_npcs(self):
         """Load list of existing NPCs."""

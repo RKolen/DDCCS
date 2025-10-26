@@ -5,7 +5,7 @@ Covers non-interactive command handling (run_command) by wiring in a fake
 analyze flow is invoked.
 """
 
-from test_helpers import setup_test_environment, import_module, FakeStoryAnalysis
+from tests.test_helpers import setup_test_environment, import_module, FakeStoryAnalysis
 
 
 setup_test_environment()
