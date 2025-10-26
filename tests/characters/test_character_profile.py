@@ -184,8 +184,11 @@ def test_character_profile_save_and_load():
 
     try:
         # Create profile with nested structure
-        identity = test_helpers.make_identity(name="File Test Character",
-                                              dnd_class=DnDClass.BARD, level=4)
+        identity = test_helpers.make_identity(
+            name="File Test Character", dnd_class=DnDClass.BARD, level=4
+        )
+        # Ensure species matches the original explicit test value before saving
+        identity.species = "Half-Elf"
 
         personality = CharacterPersonality(
             background_story="A traveling musician",
@@ -213,7 +216,8 @@ def test_character_profile_save_and_load():
         assert loaded.name == "File Test Character", "Loaded name incorrect"
         assert loaded.character_class == DnDClass.BARD, "Loaded class incorrect"
         assert loaded.level == 4, "Loaded level incorrect"
-        assert loaded.species == "Half-Elf", "Loaded species incorrect"
+        identity.species = "Half-Elf"
+        assert loaded.species == identity.species, "Loaded species incorrect"
         assert "musician" in loaded.background_story, "Loaded background incorrect"
         assert len(loaded.known_spells) == 2, "Loaded spells count incorrect"
         assert "Vicious Mockery" in loaded.known_spells, "Spell not loaded"

@@ -9,9 +9,11 @@ management.
 from tests import test_helpers
 
 # Import production symbols via centralized helper
-StoryAnalyzer, CharacterProfile, CharacterIdentity = test_helpers.safe_from_import(
-    "src.characters.consultants.consultant_story",
-    "StoryAnalyzer",
+StoryAnalyzer = test_helpers.safe_from_import(
+    "src.characters.consultants.consultant_story", "StoryAnalyzer"
+)
+CharacterProfile, CharacterIdentity = test_helpers.safe_from_import(
+    "src.characters.consultants.character_profile",
     "CharacterProfile",
     "CharacterIdentity",
 )

@@ -7,7 +7,7 @@ character-aware narrative fragments that can be combined into a story.
 from tests import test_helpers
 
 # Configure test environment and import required symbols
-CombatDescriptor, CharacterProfile, CharacterConsultant = test_helpers.safe_from_import(
+CombatDescriptor = test_helpers.safe_from_import(
     "src.combat.narrator_descriptions",
     "CombatDescriptor",
 )

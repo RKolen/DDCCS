@@ -9,11 +9,14 @@ from tests.test_helpers import FakeAIClient
 from tests import test_helpers
 
 # Import production symbols using centralized helper
-CombatNarrator, CharacterProfile, CharacterConsultant = test_helpers.safe_from_import(
-    "src.combat.combat_narrator",
-    "CombatNarrator",
-    "CharacterProfile",
-    "CharacterConsultant",
+CombatNarrator = test_helpers.safe_from_import(
+    "src.combat.combat_narrator", "CombatNarrator"
+)
+CharacterProfile = test_helpers.safe_from_import(
+    "src.characters.consultants.character_profile", "CharacterProfile"
+)
+CharacterConsultant = test_helpers.safe_from_import(
+    "src.characters.consultants.consultant_core", "CharacterConsultant"
 )
 
 

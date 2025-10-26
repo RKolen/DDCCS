@@ -71,8 +71,12 @@ def run_test_file(test_file: str, module_prefix: str, test_name: str) -> bool:
     print('=' * 70)
 
     try:
+        # Run the test module under the `tests` package so imports like
+        # `from tests import ...` or `import characters.*` resolve correctly
+        # when the subprocess current working directory is the project root.
+        module_name = f"tests.{module_prefix}.{test_file}"
         result = subprocess.run(
-            [sys.executable, "-m", f"{module_prefix}.{test_file}"],
+            [sys.executable, "-m", module_name],
             cwd=Path(__file__).parent.parent,
             capture_output=False,
             check=False,

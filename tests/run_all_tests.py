@@ -96,13 +96,15 @@ def _run_single_test(test_file):
     test_name = f"{test_file.parent.name}/{test_file.name}"
     print(f"Running: {test_name}")
 
-    # Set up environment with tests directory in PYTHONPATH
+    # Set up environment with project root in PYTHONPATH so the `tests`
+    # package can be imported by subprocesses (they import
+    # `tests.test_runner_common`, which requires the project root on path).
     env = os.environ.copy()
-    tests_dir = str(test_file.parent.parent)
+    project_root = str(Path(__file__).parent.parent)
     if "PYTHONPATH" in env:
-        env["PYTHONPATH"] = f"{tests_dir}{os.pathsep}{env['PYTHONPATH']}"
+        env["PYTHONPATH"] = f"{project_root}{os.pathsep}{env['PYTHONPATH']}"
     else:
-        env["PYTHONPATH"] = tests_dir
+        env["PYTHONPATH"] = project_root
 
     result = subprocess.run(
         [sys.executable, str(test_file)],
