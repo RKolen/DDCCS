@@ -20,25 +20,15 @@ Why we test this:
 - Verifies RAG system configuration works
 """
 
-import sys
 from pathlib import Path
 import time
 import tempfile
 from tests import test_helpers
-# Add tests directory to path for test_helpers
-sys.path.insert(0, str(Path(__file__).parent.parent))
 
-
-# Import and configure test environment
-test_helpers.setup_test_environment()
-
-# Import RAG system components
-try:
-    from src.ai.rag_system import WikiCache, WikiClient
-except ImportError as e:
-    print(f"Error importing RAG system: {e}")
-    print("Make sure you're running from the project root directory")
-    sys.exit(1)
+# Import RAG system components using centralized helper
+WikiCache, WikiClient = test_helpers.safe_from_import(
+    "src.ai.rag_system", "WikiCache", "WikiClient"
+)
 
 
 def test_wiki_cache_initialization():

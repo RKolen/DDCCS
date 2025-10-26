@@ -1,24 +1,14 @@
 """Unit tests for `src.combat.narrator_consistency.ConsistencyChecker`."""
 
-import sys
-from pathlib import Path
 import unittest
 from tests import test_helpers
 from tests.test_helpers import FakeConsultant
-# Ensure tests package and project root are importable and configured
-sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-# configure environment so 'src' package can be imported
-test_helpers.setup_test_environment()
-
-try:
-    from src.combat.narrator_consistency import ConsistencyChecker
-except ImportError as e:
-    print(f"[ERROR] Failed to import module under test: {e}")
-    raise
-
-# Use FakeConsultant from test_helpers for reusable fake consultant implementations
-
+# Use the canonical test helper to configure the test environment and
+# import the module-under-test to avoid repeated sys.path manipulation
+ConsistencyChecker = test_helpers.safe_from_import(
+    "src.combat.narrator_consistency", "ConsistencyChecker"
+)
 class TestConsistencyChecker(unittest.TestCase):
     """Unit tests for the ConsistencyChecker component."""
 

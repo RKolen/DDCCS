@@ -18,33 +18,42 @@ Why we test this:
 - Serialization must preserve all character information
 """
 
-import sys
 from pathlib import Path
 import tempfile
 import os
 import json
 
-# Ensure test helpers and project root are on the import path before importing project modules
-sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+from tests import test_helpers
 
-# Import character components
-try:
-    from src.characters.consultants.character_profile import (
-        CharacterProfile,
-        CharacterIdentity,
-        CharacterPersonality,
-        CharacterBehavior,
-        CharacterStory,
-        CharacterStats,
-        CharacterAbilities,
-        CharacterMechanics,
-        CharacterPossessions,
-    )
-    from src.characters.character_sheet import DnDClass
-except ImportError as e:
-    print(f"Error importing CharacterProfile: {e}")
-    print("Make sure you're running from the project root directory")
-    sys.exit(1)
+# Import required character profile symbols via canonical test helper
+CharacterProfile = test_helpers.safe_from_import(
+    "src.characters.consultants.character_profile", "CharacterProfile"
+)
+CharacterIdentity = test_helpers.safe_from_import(
+    "src.characters.consultants.character_profile", "CharacterIdentity"
+)
+CharacterPersonality = test_helpers.safe_from_import(
+    "src.characters.consultants.character_profile", "CharacterPersonality"
+)
+CharacterBehavior = test_helpers.safe_from_import(
+    "src.characters.consultants.character_profile", "CharacterBehavior"
+)
+CharacterStory = test_helpers.safe_from_import(
+    "src.characters.consultants.character_profile", "CharacterStory"
+)
+CharacterStats = test_helpers.safe_from_import(
+    "src.characters.consultants.character_profile", "CharacterStats"
+)
+CharacterAbilities = test_helpers.safe_from_import(
+    "src.characters.consultants.character_profile", "CharacterAbilities"
+)
+CharacterMechanics = test_helpers.safe_from_import(
+    "src.characters.consultants.character_profile", "CharacterMechanics"
+)
+CharacterPossessions = test_helpers.safe_from_import(
+    "src.characters.consultants.character_profile", "CharacterPossessions"
+)
+DnDClass = test_helpers.safe_from_import("src.characters.character_sheet", "DnDClass")
 
 
 def test_character_profile_initialization():

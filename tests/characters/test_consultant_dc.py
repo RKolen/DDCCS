@@ -5,28 +5,24 @@ This module tests the DCCalculator component that provides DC
 (Difficulty Class) calculations for character actions.
 """
 
-import sys
-from pathlib import Path
 from tests import test_helpers
 
-# Add tests directory to path for test_helpers
-sys.path.insert(0, str(Path(__file__).parent.parent))
-
-# Import and configure test environment
-test_helpers.setup_test_environment()
-
-# Import character components
-try:
-    from src.characters.consultants.consultant_dc import DCCalculator
-    from src.characters.consultants.character_profile import (
-        CharacterProfile, CharacterIdentity
-    )
-    from src.characters.character_sheet import DnDClass
-    from src.utils.dnd_rules import DC_MEDIUM
-except ImportError as e:
-    print(f"Error importing DC calculator components: {e}")
-    print("Make sure you're running from the project root directory")
-    sys.exit(1)
+# Use canonical test helper to import required symbols and configure env
+DCCalculator = test_helpers.safe_from_import(
+    "src.characters.consultants.consultant_dc", "DCCalculator"
+)
+CharacterProfile = test_helpers.safe_from_import(
+    "src.characters.consultants.character_profile", "CharacterProfile"
+)
+CharacterIdentity = test_helpers.safe_from_import(
+    "src.characters.consultants.character_profile", "CharacterIdentity"
+)
+DnDClass = test_helpers.safe_from_import(
+    "src.characters.character_sheet", "DnDClass"
+)
+DC_MEDIUM = test_helpers.safe_from_import(
+    "src.utils.dnd_rules", "DC_MEDIUM"
+)
 
 
 def test_dc_calculator_initialization():

@@ -15,21 +15,12 @@ Why we test this:
 - Ensures consistency across all character classes
 """
 
-import sys
-from pathlib import Path
 from tests import test_helpers
-# Add tests directory to path for test_helpers
-sys.path.insert(0, str(Path(__file__).parent.parent))
 
-# Import and configure test environment
-test_helpers.setup_test_environment()
-
-# Import class knowledge
-try:
-    from src.characters.consultants.class_knowledge import CLASS_KNOWLEDGE
-except ImportError as e:
-    print(f"[ERROR] Failed to import class_knowledge: {e}")
-    sys.exit(1)
+# Import CLASS_KNOWLEDGE using centralized helper
+CLASS_KNOWLEDGE = test_helpers.safe_from_import(
+    "src.characters.consultants.class_knowledge", "CLASS_KNOWLEDGE"
+)
 
 
 def test_all_classes_present():

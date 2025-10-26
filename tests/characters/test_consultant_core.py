@@ -19,29 +19,18 @@ Why we test this:
 - Component delegation must work correctly
 """
 
-import sys
-from pathlib import Path
+from tests import test_helpers
 
-# Ensure tests directory is on sys.path before importing test helpers
-sys.path.insert(0, str(Path(__file__).parent.parent))
-# Ensure project root is on sys.path so `src` imports resolve
-project_root = Path(__file__).parent.parent.parent.resolve()
-if str(project_root) not in sys.path:
-    sys.path.insert(0, str(project_root))
+# Configure project root and import production symbols via test_helpers
+project_root = test_helpers.setup_test_environment()
 
-# Import consultant components
-try:
-    from tests import test_helpers
-    from src.characters.consultants.consultant_core import CharacterConsultant
-    from src.characters.consultants.character_profile import (
-        CharacterProfile,
-    )
-    from src.characters.character_sheet import DnDClass
-except ImportError as e:
-    print(f"[ERROR] Failed to import consultant_core: {e}")
-    sys.exit(1)
-
-test_helpers.setup_test_environment()
+CharacterConsultant = test_helpers.safe_from_import(
+    "src.characters.consultants.consultant_core", "CharacterConsultant"
+)
+CharacterProfile = test_helpers.safe_from_import(
+    "src.characters.consultants.character_profile", "CharacterProfile"
+)
+DnDClass = test_helpers.safe_from_import("src.characters.character_sheet", "DnDClass")
 
 def test_character_profile_initialization():
     """Test loading Aragorn profile and consultant initialization."""

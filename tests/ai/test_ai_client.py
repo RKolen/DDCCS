@@ -21,27 +21,21 @@ Why we test this:
 
 # flake8: noqa
 import os
-import sys
-from pathlib import Path
 from tests import test_helpers
-# Add tests directory to path for test_helpers
-sys.path.insert(0, str(Path(__file__).parent.parent))
 
-# Import and configure test environment
-project_root = test_helpers.setup_test_environment()
-
-# Import AI client components
-try:
-    from src.ai.ai_client import (
-        AIClient,
-        CharacterAIConfig,
-        AIRequestParams,
-        load_ai_config_from_env
-    )
-except ImportError as e:
-    print(f"Error importing AI client: {e}")
-    print("Make sure you're running from the project root directory")
-    sys.exit(1)
+# Import AI client components via centralized helper
+(
+    AIClient,
+    CharacterAIConfig,
+    AIRequestParams,
+    load_ai_config_from_env,
+) = test_helpers.safe_from_import(
+    "src.ai.ai_client",
+    "AIClient",
+    "CharacterAIConfig",
+    "AIRequestParams",
+    "load_ai_config_from_env",
+)
 
 
 def test_ai_client_initialization():

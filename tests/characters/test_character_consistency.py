@@ -15,29 +15,24 @@ Why we test this:
 - File generation must create valid markdown
 """
 
-import sys
-from pathlib import Path
 import tempfile
 import os
 from tests import test_helpers
 
-# Add tests directory to path for test_helpers
-sys.path.insert(0, str(Path(__file__).parent.parent))
-
-# Import and configure test environment
-test_helpers.setup_test_environment()
-
-# Import character consistency
-try:
-    from src.characters.character_consistency import (
-        create_character_development_file,
-        get_available_recruits
-    )
-    from src.characters.consultants.character_profile import CharacterProfile, CharacterIdentity
-    from src.characters.character_sheet import DnDClass
-except ImportError as e:
-    print(f"[ERROR] Failed to import modules: {e}")
-    sys.exit(1)
+# Import required symbols via canonical helper (sets up environment if needed)
+create_character_development_file = test_helpers.safe_from_import(
+    "src.characters.character_consistency", "create_character_development_file"
+)
+get_available_recruits = test_helpers.safe_from_import(
+    "src.characters.character_consistency", "get_available_recruits"
+)
+CharacterProfile = test_helpers.safe_from_import(
+    "src.characters.consultants.character_profile", "CharacterProfile"
+)
+CharacterIdentity = test_helpers.safe_from_import(
+    "src.characters.consultants.character_profile", "CharacterIdentity"
+)
+DnDClass = test_helpers.safe_from_import("src.characters.character_sheet", "DnDClass")
 
 
 def test_create_development_file_basic():

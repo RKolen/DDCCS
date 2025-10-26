@@ -6,25 +6,21 @@ and character retrieval operations.
 """
 
 import os
-import sys
 import json
 import tempfile
-from pathlib import Path
 
-# Add parent directory to path for imports
-sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+from tests import test_helpers
 
-# Try direct imports first; if they fail add the workspace root to sys.path and retry.
-try:
-    from src.stories.story_character_loader import CharacterLoader
-    from src.characters.consultants.character_profile import CharacterProfile
-    from src.characters.character_sheet import DnDClass
-except ImportError:
-    # Insert workspace root (two levels up from tests/stories)
-    sys.path.insert(0, str(Path(__file__).parent.parent))
-    from src.stories.story_character_loader import CharacterLoader
-    from src.characters.consultants.character_profile import CharacterProfile
-    from src.characters.character_sheet import DnDClass
+# Use canonical test helper to configure environment and import modules under test.
+CharacterLoader = test_helpers.safe_from_import(
+    "src.stories.story_character_loader", "CharacterLoader"
+)
+CharacterProfile = test_helpers.safe_from_import(
+    "src.characters.consultants.character_profile", "CharacterProfile"
+)
+DnDClass = test_helpers.safe_from_import(
+    "src.characters.character_sheet", "DnDClass"
+)
 
 def create_test_character_file(workspace_path: str, character_name: str):
     """Create a valid test character JSON file."""

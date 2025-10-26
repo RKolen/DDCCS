@@ -8,19 +8,13 @@ coerces values into the expected types for `CharacterBehavior`.
 The test is written so it can be run with pytest or executed directly.
 """
 
-import sys
-from pathlib import Path
+from tests import test_helpers
 
-# Ensure project root is importable
-sys.path.insert(0, str(Path(__file__).parent.parent.parent))
-
-try:
-    from src.utils import behaviour_generation as bg
-    from src.characters.consultants.character_profile import CharacterBehavior
-except ImportError as e:
-    print(f"Error importing story analyzer components: {e}")
-    print("Make sure you're running from the project root directory")
-    sys.exit(1)
+# Import module and types via test_helpers helpers
+bg = test_helpers.import_module("src.utils.behaviour_generation")
+CharacterBehavior = test_helpers.safe_from_import(
+    "src.characters.consultants.character_profile", "CharacterBehavior"
+)
 
 def test_ai_malformed_output_coercion():
     """When AI returns malformed types, generator coerces them correctly."""

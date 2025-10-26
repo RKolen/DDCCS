@@ -16,32 +16,22 @@ Why we test this:
 - NPC profiles are used by story manager and auto-detection
 """
 
-import sys
-from pathlib import Path
 from tests import test_helpers
-# Add tests directory to path for test_helpers
-sys.path.insert(0, str(Path(__file__).parent.parent))
 
-# Import and configure test environment
-test_helpers.setup_test_environment()
-
-# Import character sheet components
-try:
-    from src.characters.character_sheet import (
-        DnDClass,
-        Species,
-        ELF_LINEAGES,
-        GNOME_LINEAGES,
-        TIEFLING_LINEAGES,
-        DRAGONBORN_LINEAGES,
-        NPCBasicInfo,
-        NPCPhysicalInfo,
-        NPCCharacterInfo,
-        NPCProfile
-    )
-except ImportError as e:
-    print(f"[ERROR] Failed to import character_sheet: {e}")
-    sys.exit(1)
+# Import required symbols via canonical helper (sets up environment as needed)
+DnDClass = test_helpers.safe_from_import("src.characters.character_sheet", "DnDClass")
+Species = test_helpers.safe_from_import("src.characters.character_sheet", "Species")
+ELF_LINEAGES = test_helpers.safe_from_import("src.characters.character_sheet", "ELF_LINEAGES")
+GNOME_LINEAGES = test_helpers.safe_from_import("src.characters.character_sheet", "GNOME_LINEAGES")
+TIEFLING_LINEAGES = test_helpers.safe_from_import("src.characters.character_sheet",
+                                                  "TIEFLING_LINEAGES")
+DRAGONBORN_LINEAGES = test_helpers.safe_from_import("src.characters.character_sheet",
+                                                    "DRAGONBORN_LINEAGES")
+NPCBasicInfo = test_helpers.safe_from_import("src.characters.character_sheet", "NPCBasicInfo")
+NPCPhysicalInfo = test_helpers.safe_from_import("src.characters.character_sheet", "NPCPhysicalInfo")
+NPCCharacterInfo = test_helpers.safe_from_import("src.characters.character_sheet",
+                                                 "NPCCharacterInfo")
+NPCProfile = test_helpers.safe_from_import("src.characters.character_sheet", "NPCProfile")
 
 
 def test_dnd_class_enum():
