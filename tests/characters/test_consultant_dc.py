@@ -213,12 +213,8 @@ def test_suggest_alternative_approaches():
     print("  [OK] Bard alternatives appropriate")
 
     # Test Fighter alternatives
-    fighter_identity = CharacterIdentity(
-        name="BraveFighter",
-        character_class=DnDClass.FIGHTER,
-        level=5
-    )
-    fighter_profile = CharacterProfile(identity=fighter_identity)
+    fighter_profile = test_helpers.make_profile(name="BraveFighter",
+                                                dnd_class=DnDClass.FIGHTER, level=5)
     fighter_calc = DCCalculator(fighter_profile, {})
 
     fighter_alternatives = fighter_calc.suggest_alternative_approaches("any action")

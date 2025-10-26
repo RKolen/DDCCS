@@ -184,12 +184,8 @@ def test_character_profile_save_and_load():
 
     try:
         # Create profile with nested structure
-        identity = CharacterIdentity(
-            name="File Test Character",
-            character_class=DnDClass.BARD,
-            level=4,
-            species="Half-Elf",
-        )
+        identity = test_helpers.make_identity(name="File Test Character",
+                                              dnd_class=DnDClass.BARD, level=4)
 
         personality = CharacterPersonality(
             background_story="A traveling musician",

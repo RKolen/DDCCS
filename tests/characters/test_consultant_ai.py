@@ -187,12 +187,7 @@ def test_suggest_reaction_ai_requires_base():
     """Test that AI reaction suggestion requires base suggestion."""
     print("\n[TEST] AI Consultant - Reaction Requires Base Suggestion")
 
-    identity = CharacterIdentity(
-        name="TestChar",
-        character_class=DnDClass.FIGHTER,
-        level=5
-    )
-    profile = CharacterProfile(identity=identity)
+    profile = test_helpers.make_profile(name="TestChar", dnd_class=DnDClass.FIGHTER, level=5)
     consultant = AIConsultant(profile, {})
 
     # Should raise ValueError when base_suggestion is None
@@ -212,12 +207,7 @@ def test_suggest_reaction_ai_without_ai():
     """Test AI reaction fallback when AI not available."""
     print("\n[TEST] AI Consultant - Reaction Fallback (No AI)")
 
-    identity = CharacterIdentity(
-        name="BraveFighter",
-        character_class=DnDClass.FIGHTER,
-        level=5
-    )
-    profile = CharacterProfile(identity=identity)
+    profile = test_helpers.make_profile(name="BraveFighter", dnd_class=DnDClass.FIGHTER, level=5)
     consultant = AIConsultant(profile, {})
 
     base_suggestion = {
@@ -243,12 +233,7 @@ def test_suggest_dc_for_action_ai_requires_base():
     """Test that AI DC suggestion requires base suggestion."""
     print("\n[TEST] AI Consultant - DC Requires Base Suggestion")
 
-    identity = CharacterIdentity(
-        name="TestChar",
-        character_class=DnDClass.ROGUE,
-        level=5
-    )
-    profile = CharacterProfile(identity=identity)
+    profile = test_helpers.make_profile(name="TestChar", dnd_class=DnDClass.ROGUE, level=5)
     consultant = AIConsultant(profile, {})
 
     # Should raise ValueError when base_suggestion is None
@@ -271,12 +256,7 @@ def test_suggest_dc_for_action_ai_without_ai():
     """Test AI DC fallback when AI not available."""
     print("\n[TEST] AI Consultant - DC Fallback (No AI)")
 
-    identity = CharacterIdentity(
-        name="SneakyRogue",
-        character_class=DnDClass.ROGUE,
-        level=5
-    )
-    profile = CharacterProfile(identity=identity)
+    profile = test_helpers.make_profile(name="SneakyRogue", dnd_class=DnDClass.ROGUE, level=5)
     consultant = AIConsultant(profile, {})
 
     base_suggestion = {
@@ -302,12 +282,7 @@ def test_ai_consultant_error_handling():
     """Test AI consultant handles errors gracefully."""
     print("\n[TEST] AI Consultant - Error Handling")
 
-    identity = CharacterIdentity(
-        name="TestChar",
-        character_class=DnDClass.WIZARD,
-        level=5
-    )
-    profile = CharacterProfile(identity=identity)
+    profile = test_helpers.make_profile(name="TestChar", dnd_class=DnDClass.WIZARD, level=5)
 
     # Create a mock client that will fail
     mock_client = type('FailingClient', (), {

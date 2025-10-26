@@ -229,15 +229,9 @@ def test_get_available_recruits_with_exclusions():
 
     # Create mock consultants using factory function
     def create_mock_consultant(name, char_class, level):
-        """Create a mock consultant for testing."""
-        identity = CharacterIdentity(
-            name=name,
-            character_class=char_class,
-            level=level
-        )
-        return type('MockConsultant', (), {
-            'profile': CharacterProfile(identity=identity)
-        })()
+        """Create a mock consultant for testing using test_helpers.make_profile."""
+        profile = test_helpers.make_profile(name=name, dnd_class=char_class, level=level)
+        return type('MockConsultant', (), {'profile': profile})()
 
     consultants = {
         "Fighter": create_mock_consultant("Fighter", DnDClass.FIGHTER, 5),
