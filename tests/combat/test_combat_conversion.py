@@ -4,7 +4,6 @@ This test simulates a parsed combat sequence (as might be produced by a
 Fantasy Grounds parser) and verifies that `CombatDescriptor` produces
 character-aware narrative fragments that can be combined into a story.
 """
-from pathlib import Path
 from tests import test_helpers
 
 # Configure test environment and import required symbols
@@ -25,10 +24,8 @@ CharacterConsultant = test_helpers.safe_from_import(
 
 
 def _load_fixture(name: str):
-    base = Path(__file__).parent.parent.parent
-    fp = base / "game_data" / "characters" / f"{name}.json"
-    profile = CharacterProfile.load_from_file(str(fp))
-    return CharacterConsultant(profile)
+    # Use the shared test helper to load consultant fixtures
+    return test_helpers.load_consultant_fixture(name)
 
 
 def test_parsed_actions_convert_to_narrative():

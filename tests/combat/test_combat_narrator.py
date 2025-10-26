@@ -5,7 +5,6 @@ so we exercise CharacterProfile and CharacterConsultant wiring.
 """
 
 import unittest
-from pathlib import Path
 from tests.test_helpers import FakeAIClient
 from tests import test_helpers
 
@@ -19,10 +18,7 @@ CombatNarrator, CharacterProfile, CharacterConsultant = test_helpers.safe_from_i
 
 
 def _load_fixture(name: str):
-    base = Path(__file__).parent.parent.parent
-    fp = base / "game_data" / "characters" / f"{name}.json"
-    profile = CharacterProfile.load_from_file(str(fp))
-    return CharacterConsultant(profile)
+    return test_helpers.load_consultant_fixture(name)
 
 
 class TestCombatNarrator(unittest.TestCase):

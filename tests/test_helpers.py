@@ -59,6 +59,45 @@ def import_module(module_name: str):
     return importlib.import_module(module_name)
 
 
+def _build_possessions(possessions_cls, kw):
+    """Module-level helper to build CharacterPossessions from kwargs."""
+    equipment = {
+        "weapons": kw.get("weapons") or [],
+        "armor": kw.get("armor") or [],
+        "items": kw.get("items_list") or [],
+    }
+    magic_items_local = kw.get("magic_items") or []
+    return possessions_cls(equipment=equipment, magic_items=magic_items_local)
+
+
+def _build_behavior(behavior_cls, kw):
+    """Module-level helper to build CharacterBehavior from kwargs."""
+    return behavior_cls(speech_patterns=kw.get("speech_patterns") or [])
+
+
+def _build_personality(personality_cls, kw):
+    """Module-level helper to build CharacterPersonality from kwargs."""
+    return personality_cls(relationships=kw.get("relationships") or {})
+
+
+def load_consultant_fixture(name: str):
+    """Load a CharacterProfile from game_data and wrap it in a CharacterConsultant.
+
+    This centralizes the common `_load_fixture` helper used across many tests.
+    """
+    setup_test_environment()
+    cp_mod = import_module("src.characters.consultants.character_profile")
+    core_mod = import_module("src.characters.consultants.consultant_core")
+
+    character_profile_cls = getattr(cp_mod, "CharacterProfile")
+    character_consultant_cls = getattr(core_mod, "CharacterConsultant")
+
+    base = Path(__file__).parent.parent
+    fp = base / "game_data" / "characters" / f"{name}.json"
+    profile = character_profile_cls.load_from_file(str(fp))
+    return character_consultant_cls(profile)
+
+
 def safe_from_import(module_name: str, *names):
     """Safely import attributes from a module for tests.
 
@@ -151,28 +190,15 @@ def make_profile(name: str = "TestChar", dnd_class=None, level: int = 1, **kwarg
 
     identity = make_identity(name=name, dnd_class=dnd_class, level=level)
 
-    equipment = {
-        "weapons": kwargs.get("weapons") or [],
-        "armor": kwargs.get("armor") or [],
-        "items": kwargs.get("items_list") or [],
-    }
+    possessions = _build_possessions(character_possessions_cls, kwargs)
+    behavior = _build_behavior(character_behavior_cls, kwargs)
+    personality = _build_personality(character_personality_cls, kwargs)
 
-    magic_items = kwargs.get("magic_items") or []
-    speech_patterns = kwargs.get("speech_patterns") or []
-    relationships = kwargs.get("relationships") or {}
-
-    possessions = character_possessions_cls(equipment=equipment, magic_items=magic_items)
-
-    behavior = character_behavior_cls(speech_patterns=speech_patterns)
-    personality = character_personality_cls(relationships=relationships)
-
-    return (
-        character_profile_cls(
-            identity=identity,
-            possessions=possessions,
-            behavior=behavior,
-            personality=personality,
-        )
+    return character_profile_cls(
+        identity=identity,
+        possessions=possessions,
+        behavior=behavior,
+        personality=personality,
     )
 
 

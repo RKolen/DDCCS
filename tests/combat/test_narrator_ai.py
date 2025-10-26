@@ -5,8 +5,6 @@ These tests use the shared `FakeAIClient` and `FakeConsultant` from
 frodo, gandalf) to exercise character-context building and AI integration.
 """
 
-from pathlib import Path
-
 from tests.test_helpers import FakeAIClient
 from tests import test_helpers
 
@@ -21,10 +19,7 @@ CharacterConsultant = test_helpers.safe_from_import(
 
 
 def _load_fixture(name: str):
-    base = Path(__file__).parent.parent.parent
-    fp = base / "game_data" / "characters" / f"{name}.json"
-    profile = CharacterProfile.load_from_file(str(fp))
-    return CharacterConsultant(profile)
+    return test_helpers.load_consultant_fixture(name)
 
 
 def test_ai_narration_uses_ai_client():
