@@ -43,3 +43,71 @@ def setup_test_environment():
         sys.path.insert(0, str(project_root))
 
     return project_root
+
+
+class FakeAIClient:
+    """Reusable fake AI client for tests.
+
+    Provides a minimal `chat_completion` and `ping` interface compatible with
+    the production ai_client. `chat_completion` accepts arbitrary positional
+    and keyword arguments (e.g., `messages=`, `temperature=`) and returns a
+    canned narrative with an optional preview suffix derived from the
+    provided arguments.
+    """
+
+    def chat_completion(self, *args, **kwargs):
+        """Return a canned narrative; accepts arbitrary args/kwargs.
+
+        When `messages` is provided in kwargs, a short preview is appended
+        to the returned string to help tests assert on processed content.
+        """
+        # Use args/kwargs to avoid pylint unused-arg warnings and provide a
+        # small preview when tests pass messages.
+        parts = []
+        if args:
+            parts.append("args:" + ",".join(map(str, args)))
+
+        if kwargs:
+            if "messages" in kwargs:
+                msgs = kwargs.get("messages")
+                try:
+                    first = msgs[0]
+                    if isinstance(first, dict):
+                        content = first.get("content") or first.get("message")
+                        if content:
+                            parts.append("msg_preview:" + str(content)[:40])
+                    else:
+                        parts.append("msg_preview:" + str(first)[:40])
+                except (IndexError, TypeError, KeyError, AttributeError):
+                    parts.append("messages=" + str(msgs))
+            else:
+                parts.append("kwargs:" + ",".join(f"{k}={v}" for k, v in kwargs.items()))
+
+        suffix = " -- " + " | ".join(parts) if parts else ""
+        return "A generated combat narrative describing Aragorn's daring strike." + suffix
+
+    def ping(self) -> bool:
+        """Simple health-check returning True to indicate availability."""
+        return True
+
+class FakeConsultant:
+    """Reusable fake character consultant for tests.
+
+    Provides a minimal `suggest_reaction(prompt=None)` and `ping()` API
+    compatible with production `CharacterConsultant` used by consistency
+    checks. Initialize with a preset reaction dict that will be returned by
+    `suggest_reaction`.
+    """
+
+    def __init__(self, reaction: dict):
+        """Create the fake with a preset reaction dict."""
+        self._reaction = reaction
+
+    def suggest_reaction(self, prompt=None):
+        """Return the preset reaction dict; accepts an optional prompt."""
+        _ = prompt
+        return self._reaction
+
+    def ping(self) -> bool:
+        """Health-check method to satisfy interfaces expecting availability."""
+        return True

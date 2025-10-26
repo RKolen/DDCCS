@@ -28,7 +28,7 @@ class TestCombatDescriptor(unittest.TestCase):
         self.descriptor = CombatDescriptor(character_consultants={})
 
     def test_describe_attack_hit(self):
-        """An ordinary attack that deals moderate damage producesexpected phrasing and bucket."""
+        """An ordinary attack that deals moderate damage produces expected phrasing and bucket."""
         action = {"type": "attack", "target": "goblin", "roll": 10, "damage": 6}
         result = self.descriptor.describe_action(action, consultant=None, style="cinematic")
         self.assertIn("strikes at goblin", result)

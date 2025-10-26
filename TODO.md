@@ -17,7 +17,7 @@
   - [x] tests/validation/README.md
 
 **Next Steps (Priority Order):**
-- [x] **Step 1: AI Integration Tests** (ai/)
+- [x] **Step 1: AI Integration Tests** COMPLETE [COMPLETE]
   - [x] Fix test_ai_env_config.py
   - [x] Create test_ai_client.py
   - [x] Create test_rag_system.py
@@ -25,7 +25,7 @@
   - [x] Create test_behavior_generation_ai_mock.py
   - [x] Create tests/ai/README.md
 
-- [x] **Step 2: Character System Tests** (characters/)
+- [x] **Step 2: Character System Tests** COMPLETE [COMPLETE]
   - [x] test_character_profile.py
   - [x] test_consultant_core.py
   - [x] test_consultant_dc.py
@@ -37,13 +37,13 @@
   - [x] test_all_characters.py
   - [x] tests/characters/README.md
 
-- [x] **Step 3: NPC System Tests** (npcs/)
+- [x] **Step 3: NPC System Tests** COMPLETE [COMPLETE]
   - [x] test_npc_agents.py
   - [x] test_npc_auto_detection.py
   - [x] test_all_npcs.py
   - [x] tests/npcs/README.md
 
-- [] **Step 4: Story System Tests** (stories/) - LARGEST SUBSYSTEM
+- [x] **Step 4: Story System Tests** COMPLETE [COMPLETE]
   - [x] test_story_manager.py
   - [x] test_enhanced_story_manager.py
   - [x] test_story_analyzer.py
@@ -54,17 +54,17 @@
   - [x] test_story_updater.py
   - [x] test_character_manager.py
   - [x] test_character_consistency.py
-  - [x] test_story_file_ops.py
+  - [x] test_character_consistency_integration.py
   - [x] test_all_stories.py
-  - [ ] tests/stories/README.md
+  - [x] tests/stories/README.md
 
-- [ ] **Step 5: Combat System Tests** (combat/)
-  - [ ] test_combat_narrator.py
-  - [ ] test_narrator_ai.py
-  - [ ] test_narrator_descriptions.py
-  - [ ] test_narrator_consistency.py
-  - [ ] test_all_combat.py
-  - [ ] tests/combat/README.md
+- [x] **Step 5: Combat System Tests** COMPLETE [COMPLETE]
+  - [x] test_combat_narrator.py
+  - [x] test_narrator_ai.py
+  - [x] test_narrator_descriptions.py
+  - [x] test_narrator_consistency.py
+  - [x] test_all_combat.py
+  - [x] tests/combat/README.md
 
 - [ ] **Step 6: Items System Tests** (items/)
   - [ ] test_item_registry.py
