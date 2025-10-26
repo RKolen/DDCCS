@@ -23,7 +23,8 @@
 - [ ] **Multi-class support** - Enhance character profiles to support multiclassing
 - [ ] **Current Party Alterations** - Consider current party to be part of campaign files instead
 - [ ] **Profile Verification** - Check if JSON templates need to be updated for profile updates and consistency usage
-- [ ] **background in possesions** - Fix background key being in possessions not identity
+- [ ] **Update Readmes** - Update Readmes with new structure and use the example characters in examples.
+
 ### Feature Enhancements
 - [ ] **Campaign templates** - Create templates for common campaign types (mystery, dungeon crawl, etc.)
 - [ ] **Character relationship mapping** - Visual or structured relationship tracking between characters
