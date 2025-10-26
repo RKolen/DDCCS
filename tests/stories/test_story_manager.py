@@ -15,7 +15,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 try:
     from src.stories.story_manager import StoryManager
-except ImportError as exc:  # pragma: no cover - import guard for test run
+except ImportError as exc:
     print(f"[ERROR] Failed to import StoryManager: {exc}")
     print("Make sure you're running tests from project root")
     raise

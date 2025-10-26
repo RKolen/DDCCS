@@ -18,8 +18,7 @@ import logging
 if TYPE_CHECKING:
     # Import for type checking only; avoid runtime import to prevent cyclic
     # dependency with src.characters.consultants.character_profile.
-    from src.characters.consultants.character_profile import CharacterBehavior  # pragma: no cover
-
+    from src.characters.consultants.character_profile import CharacterBehavior
 try:
     from src.ai.ai_client import call_ai_for_behavior_block
 

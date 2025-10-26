@@ -74,11 +74,14 @@
   - [x] test_get_item_and_is_custom_api
   - [x] tests/items/README.md
 
-- [ ] **Step 7: DM Tools Tests** (dm/)
-  - [ ] test_dungeon_master.py
-  - [ ] test_history_check_helper.py
-  - [ ] test_all_dm.py
-  - [ ] tests/dm/README.md
+- [x] **Step 7: DM Tools Tests**  COMPLETE [COMPLETE]
+  - [x] test_dungeon_master.py
+  - [x] test_history_check_helper.py
+  - [x] test_suggest_narrative_with_character_insights
+  - [x] test_generate_narrative_with_ai_client_and_rag
+  - [x] test_check_consistency_relationships
+  - [x] test_all_dm.py
+  - [x] tests/dm/README.md
 
 - [ ] **Step 9: CLI Tests** (cli/) - AFTER STEPS 1-7
   - [ ] test_dnd_consultant.py

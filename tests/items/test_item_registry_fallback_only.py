@@ -13,7 +13,7 @@ test_helpers.setup_test_environment()
 
 try:
     from src.items.item_registry import ItemRegistry
-except ImportError as exc:  # pragma: no cover - import error should fail the test
+except ImportError as exc:
     print(f"[ERROR] Import failed: {exc}")
     raise
 

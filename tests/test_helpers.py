@@ -10,10 +10,10 @@ Usage in test files:
     # Standard imports
     import sys
     from pathlib import Path
-    
+
     # Add tests directory to path (required to find test_helpers)
     sys.path.insert(0, str(Path(__file__).parent.parent))
-    
+
     # Import test helpers and configure environment
     import test_helpers
     project_root = test_helpers.setup_test_environment()
@@ -25,6 +25,8 @@ Usage in test files:
 
 import sys
 from pathlib import Path
+import importlib
+
 
 def setup_test_environment():
     """
@@ -43,6 +45,33 @@ def setup_test_environment():
         sys.path.insert(0, str(project_root))
 
     return project_root
+
+
+def import_module(module_name: str):
+    """Import a module by name after ensuring the test environment is configured.
+
+    This centralizes imports for tests and prevents duplicated try/except
+    import blocks across many test files (reduces lint duplication warnings).
+    """
+    # Ensure project root is on sys.path before importing
+    setup_test_environment()
+    # Delegate to importlib and allow ImportError to propagate to the caller.
+    return importlib.import_module(module_name)
+
+
+# Pre-import commonly used DM modules to keep tests DRY and avoid
+# duplicated import blocks across test files (helps pylint R0801).
+DM_HISTORY_HELPER = None
+DM_DUNGEON_MASTER = None
+try:
+    DM_HISTORY_HELPER = import_module("src.dm.history_check_helper")
+except ImportError:
+    DM_HISTORY_HELPER = None
+
+try:
+    DM_DUNGEON_MASTER = import_module("src.dm.dungeon_master")
+except ImportError:
+    DM_DUNGEON_MASTER = None
 
 
 class FakeAIClient:
@@ -81,14 +110,19 @@ class FakeAIClient:
                 except (IndexError, TypeError, KeyError, AttributeError):
                     parts.append("messages=" + str(msgs))
             else:
-                parts.append("kwargs:" + ",".join(f"{k}={v}" for k, v in kwargs.items()))
+                parts.append(
+                    "kwargs:" + ",".join(f"{k}={v}" for k, v in kwargs.items())
+                )
 
         suffix = " -- " + " | ".join(parts) if parts else ""
-        return "A generated combat narrative describing Aragorn's daring strike." + suffix
+        return (
+            "A generated combat narrative describing Aragorn's daring strike." + suffix
+        )
 
     def ping(self) -> bool:
         """Simple health-check returning True to indicate availability."""
         return True
+
 
 class FakeConsultant:
     """Reusable fake character consultant for tests.
