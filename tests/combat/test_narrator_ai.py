@@ -10,19 +10,17 @@ from pathlib import Path
 from tests.test_helpers import FakeAIClient
 from tests import test_helpers
 
-# Configure test environment for imports
-test_helpers.setup_test_environment()
-
-try:
-    from src.combat.narrator_ai import AIEnhancedNarrator
-    from src.characters.consultants.character_profile import CharacterProfile
-    from src.characters.consultants.consultant_core import CharacterConsultant
-except ImportError as exc:
-    print(f"[ERROR] Import failed: {exc}")
-    raise
+# Configure test environment and import required symbols
+AIEnhancedNarrator = test_helpers.safe_from_import("src.combat.narrator_ai", "AIEnhancedNarrator")
+CharacterProfile = test_helpers.safe_from_import(
+    "src.characters.consultants.character_profile", "CharacterProfile"
+)
+CharacterConsultant = test_helpers.safe_from_import(
+    "src.characters.consultants.consultant_core", "CharacterConsultant"
+)
 
 
-def _load_fixture(name: str) -> CharacterConsultant:
+def _load_fixture(name: str):
     base = Path(__file__).parent.parent.parent
     fp = base / "game_data" / "characters" / f"{name}.json"
     profile = CharacterProfile.load_from_file(str(fp))

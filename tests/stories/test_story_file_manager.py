@@ -7,27 +7,27 @@ creation, story numbering, and file content writing.
 
 import os
 import re
-import sys
 import tempfile
 
 from tests import test_helpers
 
 # Configure test environment so `src` imports work during test execution.
 project_root = test_helpers.setup_test_environment()
-try:
-    from src.utils.path_utils import get_campaigns_dir
-    from src.stories.story_file_manager import (
-        create_new_story_series,
-        create_story_in_series,
-        get_story_series,
-        get_story_files_in_series,
-        create_new_story,
-        create_pure_story_file,
-    )
-except ImportError as e:
-    print(f"[ERROR] Failed to import required modules: {e}")
-    print("[ERROR] Make sure you're running from the tests directory")
-    sys.exit(1)
+get_campaigns_dir = test_helpers.safe_from_import("src.utils.path_utils", "get_campaigns_dir")
+(create_new_story_series,
+ create_story_in_series,
+ get_story_series,
+ get_story_files_in_series,
+ create_new_story,
+ create_pure_story_file) = test_helpers.safe_from_import(
+    "src.stories.story_file_manager",
+    "create_new_story_series",
+    "create_story_in_series",
+    "get_story_series",
+    "get_story_files_in_series",
+    "create_new_story",
+    "create_pure_story_file",
+)
 
 def _find_numbered_file(files, number: int):
     pattern = re.compile(rf"^{number:03d}_.*\.md$")

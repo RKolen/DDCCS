@@ -4,21 +4,14 @@ Party Manager Tests
 Tests for party configuration management.
 """
 
-import sys
 import os
 import tempfile
 import json
-from pathlib import Path
+from tests import test_helpers
 
-# Add parent directory to path for imports
-sys.path.insert(0, str(Path(__file__).parent.parent.parent))
-
-try:
-    from src.stories.party_manager import PartyManager
-except ImportError as e:
-    print(f"[ERROR] Failed to import required modules: {e}")
-    print("[ERROR] Make sure you're running from the tests directory")
-    sys.exit(1)
+PartyManager = test_helpers.safe_from_import(
+    "src.stories.party_manager", "PartyManager"
+)
 
 
 def test_party_manager_initialization():

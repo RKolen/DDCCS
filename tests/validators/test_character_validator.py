@@ -4,18 +4,14 @@ Verifies that character validator correctly identifies valid and invalid charact
 """
 
 import os
-import sys
 from tests import test_helpers
-# Import and configure test environment (UTF-8, project paths)
-test_helpers.setup_test_environment()
 
-# Import validators from src.validation
-try:
-    from src.validation.character_validator import validate_character_json, validate_character_file
-except ImportError as e:
-    print(f"Error importing character_validator: {e}")
-    print("Make sure you're running from the project root directory")
-    sys.exit(1)
+# Import validators via centralized helper
+validate_character_json, validate_character_file = test_helpers.safe_from_import(
+    "src.validation.character_validator",
+    "validate_character_json",
+    "validate_character_file",
+)
 
 
 def test_valid_character():

@@ -5,20 +5,13 @@ Tests for the `StoryManager` wrapper that coordinates file operations,
 character loading, analysis and updates.
 """
 
-import sys
 import tempfile
 import os
-from pathlib import Path
 
-# Ensure project root is on sys.path so src.* imports work
-sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+from tests import test_helpers
 
-try:
-    from src.stories.story_manager import StoryManager
-except ImportError as exc:
-    print(f"[ERROR] Failed to import StoryManager: {exc}")
-    print("Make sure you're running tests from project root")
-    raise
+# Import StoryManager using centralized safe import helper
+StoryManager = test_helpers.safe_from_import("src.stories.story_manager", "StoryManager")
 
 
 def test_story_manager_initialization():

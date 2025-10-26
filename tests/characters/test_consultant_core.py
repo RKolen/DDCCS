@@ -32,13 +32,9 @@ if str(project_root) not in sys.path:
 # Import consultant components
 try:
     from tests import test_helpers
-    from src.characters.consultants.character_profile import CharacterBehavior
     from src.characters.consultants.consultant_core import CharacterConsultant
     from src.characters.consultants.character_profile import (
         CharacterProfile,
-        CharacterIdentity,
-        CharacterPersonality,
-        CharacterPossessions,
     )
     from src.characters.character_sheet import DnDClass
 except ImportError as e:
@@ -177,24 +173,16 @@ def test_get_all_character_items():
     print("\n[TEST] Get All Character Items")
 
     # Create profile with equipment
-    identity = CharacterIdentity(
+    profile = test_helpers.make_profile(
         name="Equipped Character",
-        character_class=DnDClass.FIGHTER,
-        level=5
+        dnd_class=DnDClass.FIGHTER,
+        level=5,
+        weapons=["Longsword", "Shield"],
+        armor=["Plate Armor"],
+        items_list=["Rope", "Torch"],
+        magic_items=["Ring of Protection"],
+        speech_patterns=["measured, formal"],
     )
-
-    possessions = CharacterPossessions(
-        equipment={
-            "weapons": ["Longsword", "Shield"],
-            "armor": ["Plate Armor"],
-            "items": ["Rope", "Torch"]
-        },
-        magic_items=["Ring of Protection"]
-    )
-
-    # Add minimal behavior with speech_patterns for compatibility
-    behavior = CharacterBehavior(speech_patterns=["measured, formal"])
-    profile = CharacterProfile(identity=identity, possessions=possessions, behavior=behavior)
     consultant = CharacterConsultant(profile)
 
     items = consultant.get_all_character_items()
@@ -213,18 +201,13 @@ def test_get_relationships():
     """Test relationship retrieval."""
     print("\n[TEST] Get Relationships")
 
-    identity = CharacterIdentity(
+    profile = test_helpers.make_profile(
         name="Social Character",
-        character_class=DnDClass.BARD,
-        level=3
+        dnd_class=DnDClass.BARD,
+        level=3,
+        speech_patterns=["charming, musical"],
+        relationships={"NPC1": "Friend", "NPC2": "Rival"},
     )
-
-    personality = CharacterPersonality(
-        relationships={"NPC1": "Friend", "NPC2": "Rival"}
-    )
-
-    behavior = CharacterBehavior(speech_patterns=["charming, musical"])
-    profile = CharacterProfile(identity=identity, personality=personality, behavior=behavior)
     consultant = CharacterConsultant(profile)
 
     relationships = consultant.get_relationships()

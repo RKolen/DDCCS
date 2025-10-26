@@ -12,14 +12,8 @@ import tempfile
 
 from tests import test_helpers
 
-# Configure test environment for imports
-test_helpers.setup_test_environment()
-
-try:
-    from src.items.item_registry import ItemRegistry
-except ImportError as exc:
-    print(f"[ERROR] Import failed: {exc}")
-    raise
+# Import ItemRegistry using centralized safe import
+ItemRegistry = test_helpers.safe_from_import("src.items.item_registry", "ItemRegistry")
 
 
 def test_load_precedence_registry_over_fallback():

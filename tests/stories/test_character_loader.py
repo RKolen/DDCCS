@@ -11,20 +11,15 @@ The tests are written in the same style as other story tests and expose a
 standalone test (via `python -m stories.test_character_loader`).
 """
 
-import sys
 import os
 import tempfile
-from pathlib import Path
 
-# Ensure project root is importable
-sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+from tests import test_helpers
 
-try:
-    from src.stories.character_loader import load_all_character_consultants
-except ImportError:
-    # Ensure tests root is on path and retry
-    sys.path.insert(0, str(Path(__file__).parent.parent.parent))
-    from src.stories.character_loader import load_all_character_consultants
+# Import target helper via centralized safe import
+load_all_character_consultants = test_helpers.safe_from_import(
+    "src.stories.character_loader", "load_all_character_consultants"
+)
 
 
 def copy_sample_characters(workspace_path: str):

@@ -9,32 +9,8 @@ runners so linting and duplication checks are consistent.
 """
 
 import sys
-import subprocess
-from pathlib import Path
 from typing import Dict, Tuple
-
-from tests.test_runner_common import print_subsystem_summary
-
-
-def run_test_file(test_file: str, test_name: str) -> bool:
-    """Run a single validators test module via `python -m validators.<module>`.
-
-    Returns True when the module returns exit code 0.
-    """
-    print(f"\n{'=' * 70}")
-    print(f"Running: {test_name}")
-    print('=' * 70)
-
-    try:
-        result = subprocess.run(
-            [sys.executable, "-m", f"validators.{test_file}"],
-            cwd=Path(__file__).parent.parent,
-            check=False,
-        )
-        return result.returncode == 0
-    except (subprocess.SubprocessError, FileNotFoundError) as exc:
-        print(f"[ERROR] Failed to run {test_name}: {exc}")
-        return False
+from tests.test_runner_common import print_subsystem_summary, run_test_file
 
 
 def run_all_validators_tests() -> int:
@@ -56,7 +32,7 @@ def run_all_validators_tests() -> int:
 
     results: Dict[str, bool] = {}
     for test_file, test_name in tests:
-        results[test_name] = run_test_file(test_file, test_name)
+        results[test_name] = run_test_file(test_file, "validators", test_name)
 
     return print_subsystem_summary(results, "VALIDATORS SUBSYSTEM - TEST SUMMARY")
 

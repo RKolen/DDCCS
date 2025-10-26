@@ -1,19 +1,15 @@
 """Tests for path utility functions."""
 
 import os
-import sys
 import tempfile
 from tests import test_helpers
 
 # Configure test environment so 'src' package can be imported
 test_helpers.setup_test_environment()
 
-try:
-    from src.utils.path_utils import get_party_config_path
-except ImportError as e:
-    print(f"[ERROR] Failed to import required modules: {e}")
-    print("[ERROR] Make sure you're running from the tests directory")
-    sys.exit(1)
+get_party_config_path = test_helpers.safe_from_import(
+    "src.utils.path_utils", "get_party_config_path"
+)
 
 
 def test_get_party_config_path_global():

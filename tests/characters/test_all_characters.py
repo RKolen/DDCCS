@@ -70,8 +70,8 @@ def run_all_character_tests():
     for test_file, test_name in tests:
         results[test_name] = run_test_file(test_file, test_name)
 
-        # Summary (delegate to shared helper)
-        return print_subsystem_summary(results, "CHARACTERS SUBSYSTEM - TEST SUMMARY")
+    # Summary (delegate to shared helper)
+    return print_subsystem_summary(results, "CHARACTERS SUBSYSTEM - TEST SUMMARY")
 
 
 if __name__ == "__main__":

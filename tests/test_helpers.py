@@ -59,8 +59,124 @@ def import_module(module_name: str):
     return importlib.import_module(module_name)
 
 
+def safe_from_import(module_name: str, *names):
+    """Safely import attributes from a module for tests.
+
+    This helper ensures the test environment is configured, imports the
+    requested module, and returns the requested attributes. On failure it
+    prints a helpful error and exits the test process (matching the
+    existing per-test-file behavior).
+
+    Usage:
+        StoryManager = test_helpers.safe_from_import("src.stories.story_manager", "StoryManager")
+        get_campaigns_dir = test_helpers.safe_from_import("src.utils.path_utils",
+            "get_campaigns_dir")
+
+    Returns:
+        Single object when one name is requested, or a tuple when multiple
+        names are requested.
+    """
+    setup_test_environment()
+    try:
+        module = importlib.import_module(module_name)
+    except ImportError as exc:
+        print(f"[ERROR] Failed to import required module '{module_name}': {exc}")
+        print("[ERROR] Make sure you're running from the tests directory")
+        sys.exit(1)
+
+    results = []
+    for name in names:
+        try:
+            results.append(getattr(module, name))
+        except AttributeError as exc:
+            print(f"[ERROR] Failed to import '{name}' from '{module_name}': {exc}")
+            print("[ERROR] Make sure you're running from the tests directory")
+            sys.exit(1)
+
+    if len(results) == 1:
+        return results[0]
+    return tuple(results)
+
+
+def make_identity(name: str = "TestChar", dnd_class=None, level: int = 1):
+    """Create a CharacterIdentity instance for tests.
+
+    dnd_class may be either a `src.characters.character_sheet.DnDClass`
+    enum member or a string name (case-insensitive). This function imports
+    the required class at runtime to avoid top-level import errors in
+    partial test environments.
+    """
+    # Import CharacterIdentity and DnDClass at runtime
+    cp_mod = import_module("src.characters.consultants.character_profile")
+    sheet_mod = import_module("src.characters.character_sheet")
+
+    character_identity_cls = getattr(cp_mod, "CharacterIdentity")
+    dnd_class_enum = getattr(sheet_mod, "DnDClass")
+
+    # Resolve string class names to enum members
+    if isinstance(dnd_class, str):
+        key = dnd_class.strip().upper()
+        try:
+            dnd_enum = dnd_class_enum[key]
+        except KeyError:
+            # Fallback: try matching by value (case-insensitive)
+            dnd_enum = None
+            for member in dnd_class_enum:
+                if member.value.lower() == dnd_class.strip().lower():
+                    dnd_enum = member
+                    break
+            if dnd_enum is None:
+                # Default to Fighter to keep tests predictable
+                dnd_enum = dnd_class_enum.FIGHTER
+    elif dnd_class is None:
+        dnd_enum = dnd_class_enum.FIGHTER
+    else:
+        dnd_enum = dnd_class
+
+    return character_identity_cls(name=name, character_class=dnd_enum, level=level)
+
+
+def make_profile(name: str = "TestChar", dnd_class=None, level: int = 1, **kwargs):
+    """Create a minimal CharacterProfile instance for tests.
+
+    This helper constructs the nested dataclasses (Identity, Possessions,
+    Behavior, Personality) used by production `CharacterProfile` so tests
+    can avoid boilerplate fixture construction.
+    """
+    cp_mod = import_module("src.characters.consultants.character_profile")
+    character_profile_cls = getattr(cp_mod, "CharacterProfile")
+    character_possessions_cls = getattr(cp_mod, "CharacterPossessions")
+    character_behavior_cls = getattr(cp_mod, "CharacterBehavior")
+    character_personality_cls = getattr(cp_mod, "CharacterPersonality")
+
+    identity = make_identity(name=name, dnd_class=dnd_class, level=level)
+
+    equipment = {
+        "weapons": kwargs.get("weapons") or [],
+        "armor": kwargs.get("armor") or [],
+        "items": kwargs.get("items_list") or [],
+    }
+
+    magic_items = kwargs.get("magic_items") or []
+    speech_patterns = kwargs.get("speech_patterns") or []
+    relationships = kwargs.get("relationships") or {}
+
+    possessions = character_possessions_cls(equipment=equipment, magic_items=magic_items)
+
+    behavior = character_behavior_cls(speech_patterns=speech_patterns)
+    personality = character_personality_cls(relationships=relationships)
+
+    return (
+        character_profile_cls(
+            identity=identity,
+            possessions=possessions,
+            behavior=behavior,
+            personality=personality,
+        )
+    )
+
+
 # Pre-import commonly used DM modules to keep tests DRY and avoid
-# duplicated import blocks across test files (helps pylint R0801).
 DM_HISTORY_HELPER = None
 DM_DUNGEON_MASTER = None
 try:

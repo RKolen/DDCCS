@@ -4,23 +4,14 @@ Session Results Manager Tests
 Tests for session results tracking and file generation.
 """
 
-import sys
 import os
 import tempfile
-from pathlib import Path
 
-# Add parent directory to path for imports
-sys.path.insert(0, str(Path(__file__).parent.parent.parent))
-
-try:
-    from src.stories.session_results_manager import (
-        StorySession,
-        create_session_results_file,
-    )
-except ImportError as e:
-    print(f"[ERROR] Failed to import required modules: {e}")
-    print("[ERROR] Make sure you're running from the tests directory")
-    sys.exit(1)
+# Use test_helpers to set up environment and import required symbols
+from tests import test_helpers
+StorySession, create_session_results_file = test_helpers.safe_from_import(
+    "src.stories.session_results_manager", "StorySession", "create_session_results_file"
+)
 
 
 def test_story_session_initialization():

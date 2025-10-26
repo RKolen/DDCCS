@@ -4,27 +4,21 @@ Uses real character JSON fixtures (aragorn, frodo, gandalf) from game_data
 so we exercise CharacterProfile and CharacterConsultant wiring.
 """
 
-import sys
-from pathlib import Path
 import unittest
+from pathlib import Path
 from tests.test_helpers import FakeAIClient
 from tests import test_helpers
-# Ensure tests package and project root are importable
-sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-# Configure test environment so 'src' package can be imported
-test_helpers.setup_test_environment()
-
-try:
-    from src.combat.combat_narrator import CombatNarrator
-    from src.characters.consultants.character_profile import CharacterProfile
-    from src.characters.consultants.consultant_core import CharacterConsultant
-except ImportError as exc:
-    print(f"[ERROR] Import failed: {exc}")
-    raise
+# Import production symbols using centralized helper
+CombatNarrator, CharacterProfile, CharacterConsultant = test_helpers.safe_from_import(
+    "src.combat.combat_narrator",
+    "CombatNarrator",
+    "CharacterProfile",
+    "CharacterConsultant",
+)
 
 
-def _load_fixture(name: str) -> CharacterConsultant:
+def _load_fixture(name: str):
     base = Path(__file__).parent.parent.parent
     fp = base / "game_data" / "characters" / f"{name}.json"
     profile = CharacterProfile.load_from_file(str(fp))

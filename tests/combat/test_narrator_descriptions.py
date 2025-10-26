@@ -4,17 +4,13 @@ Adds the project root to sys.path so tests can import the `src` package
 when executed directly (common test runner environment difference).
 """
 
-import sys
-from pathlib import Path
 import unittest
+from tests import test_helpers
 
-sys.path.insert(0, str(Path(__file__).parent.parent.parent))
-try:
-    from src.combat.narrator_descriptions import CombatDescriptor
-except ImportError as e:
-    print(f"[ERROR] Failed to import required modules: {e}")
-    print("[ERROR] Make sure you're running from the tests directory")
-    sys.exit(1)
+# Import production symbol via centralized helper
+CombatDescriptor = test_helpers.safe_from_import(
+    "src.combat.narrator_descriptions", "CombatDescriptor"
+)
 
 class TestCombatDescriptor(unittest.TestCase):
     """Unit tests for the CombatDescriptor narrative generation helpers.

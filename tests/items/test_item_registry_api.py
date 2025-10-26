@@ -10,8 +10,8 @@ import os
 import tempfile
 from tests import test_helpers
 
-# Configure test environment for imports
-test_helpers.setup_test_environment()
+# Configure test environment so `src` imports work during test execution.
+project_root = test_helpers.setup_test_environment()
 
 try:
     from src.items.item_registry import ItemRegistry

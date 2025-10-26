@@ -5,35 +5,8 @@ alongside other per-subsystem aggregators so the top-level test runner can pick 
 """
 
 import sys
-import subprocess
-from pathlib import Path
 from typing import Dict, Tuple
-from tests.test_runner_common import print_subsystem_summary
-
-
-def run_test_file(test_file: str, test_name: str) -> bool:
-    """Run a single test file as a module and return success status.
-
-    Args:
-        test_file: Module name (without package prefix) under `tests/utils`.
-        test_name: Human-friendly test name used in output.
-    Returns:
-        True if the test module exited with return code 0, False otherwise.
-    """
-    print(f"\n{'=' * 70}")
-    print(f"Running: {test_name}")
-    print('=' * 70)
-
-    try:
-        result = subprocess.run(
-            [sys.executable, "-m", f"utils.{test_file}"],
-            cwd=Path(__file__).parent.parent,
-            check=False,
-        )
-        return result.returncode == 0
-    except (subprocess.SubprocessError, FileNotFoundError) as exc:
-        print(f"[ERROR] Failed to run {test_name}: {exc}")
-        return False
+from tests.test_runner_common import print_subsystem_summary, run_test_file
 
 
 def run_all_utils_tests() -> int:
@@ -65,7 +38,7 @@ def run_all_utils_tests() -> int:
 
     results: Dict[str, bool] = {}
     for test_file, test_name in tests:
-        results[test_name] = run_test_file(test_file, test_name)
+        results[test_name] = run_test_file(test_file, "utils", test_name)
 
     # Summary (delegate to shared helper)
     return print_subsystem_summary(results, "UTILS SUBSYSTEM - TEST SUMMARY")

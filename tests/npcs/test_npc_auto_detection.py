@@ -4,25 +4,24 @@ NPC Auto-Detection Tests
 Tests for automatic NPC detection and profile generation.
 """
 
-import sys
 import os
 import tempfile
 from pathlib import Path
 
-# Add parent directory to path for imports
-sys.path.insert(0, str(Path(__file__).parent.parent.parent))
-
-try:
-    from src.npcs.npc_auto_detection import (
-        detect_npc_suggestions,
-        generate_npc_from_story,
-        save_npc_profile,
-        _create_fallback_profile,
-    )
-except ImportError as e:
-    print(f"[ERROR] Failed to import required modules: {e}")
-    print("[ERROR] Make sure you're running from the tests directory")
-    sys.exit(1)
+# Use test_helpers to set up environment and import required symbols
+from tests import test_helpers
+(
+    detect_npc_suggestions,
+    generate_npc_from_story,
+    save_npc_profile,
+    _create_fallback_profile,
+) = test_helpers.safe_from_import(
+    "src.npcs.npc_auto_detection",
+    "detect_npc_suggestions",
+    "generate_npc_from_story",
+    "save_npc_profile",
+    "_create_fallback_profile",
+)
 
 
 def test_detect_npc_innkeeper_named():

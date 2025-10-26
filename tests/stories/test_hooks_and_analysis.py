@@ -4,20 +4,15 @@ Hooks and Analysis Tests
 Tests for story hooks file generation and NPC suggestions.
 """
 
-import sys
 import os
 import tempfile
-from pathlib import Path
 
-# Add parent directory to path for imports
-sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+from tests import test_helpers
 
-try:
-    from src.stories.hooks_and_analysis import create_story_hooks_file
-except ImportError as e:
-    print(f"[ERROR] Failed to import required modules: {e}")
-    print("[ERROR] Make sure you're running from the tests directory")
-    sys.exit(1)
+# Configure test environment and import target symbol via centralized helper
+create_story_hooks_file = test_helpers.safe_from_import(
+    "src.stories.hooks_and_analysis", "create_story_hooks_file"
+)
 
 
 def test_create_story_hooks_basic():

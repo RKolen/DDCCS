@@ -33,12 +33,7 @@ def test_dc_calculator_initialization():
     """Test DC calculator initialization."""
     print("\n[TEST] DC Calculator - Initialization")
 
-    identity = CharacterIdentity(
-        name="TestChar",
-        character_class=DnDClass.FIGHTER,
-        level=5
-    )
-    profile = CharacterProfile(identity=identity)
+    profile = test_helpers.make_profile(name="TestChar", dnd_class=DnDClass.FIGHTER, level=5)
     class_knowledge = {"Fighter": {"abilities": ["Action Surge"]}}
 
     calculator = DCCalculator(profile, class_knowledge)
@@ -54,12 +49,7 @@ def test_suggest_dc_basic_action():
     """Test basic DC suggestion for common actions."""
     print("\n[TEST] DC Calculator - Basic Action")
 
-    identity = CharacterIdentity(
-        name="TestChar",
-        character_class=DnDClass.FIGHTER,
-        level=5
-    )
-    profile = CharacterProfile(identity=identity)
+    profile = test_helpers.make_profile(name="TestChar", dnd_class=DnDClass.FIGHTER, level=5)
     calculator = DCCalculator(profile, {})
 
     result = calculator.suggest_dc_for_action("persuade the guard")
@@ -81,12 +71,7 @@ def test_suggest_dc_with_difficulty_modifiers():
     print("\n[TEST] DC Calculator - Difficulty Modifiers")
 
     # Use Fighter to avoid class bonuses interfering with tests
-    identity = CharacterIdentity(
-        name="TestChar",
-        character_class=DnDClass.FIGHTER,
-        level=5
-    )
-    profile = CharacterProfile(identity=identity)
+    profile = test_helpers.make_profile(name="TestChar", dnd_class=DnDClass.FIGHTER, level=5)
     calculator = DCCalculator(profile, {})
 
     # Easy action (no class bonus for Fighter on Investigation)
@@ -114,12 +99,7 @@ def test_suggest_dc_with_class_bonuses():
     print("\n[TEST] DC Calculator - Class Bonuses")
 
     # Rogue with stealth (should get -2 DC bonus)
-    rogue_identity = CharacterIdentity(
-        name="SneakyRogue",
-        character_class=DnDClass.ROGUE,
-        level=5
-    )
-    rogue_profile = CharacterProfile(identity=rogue_identity)
+    rogue_profile = test_helpers.make_profile(name="SneakyRogue", dnd_class=DnDClass.ROGUE, level=5)
     rogue_calc = DCCalculator(rogue_profile, {})
 
     rogue_result = rogue_calc.suggest_dc_for_action("sneak past guards")
@@ -131,12 +111,11 @@ def test_suggest_dc_with_class_bonuses():
     print("  [OK] Rogue stealth bonus applied")
 
     # Bard with persuasion (should get -2 DC bonus)
-    bard_identity = CharacterIdentity(
+    bard_profile = test_helpers.make_profile(
         name="CharmingBard",
-        character_class=DnDClass.BARD,
-        level=5
+        dnd_class=DnDClass.BARD,
+        level=5,
     )
-    bard_profile = CharacterProfile(identity=bard_identity)
     bard_calc = DCCalculator(bard_profile, {})
 
     bard_result = bard_calc.suggest_dc_for_action("persuade the merchant")
@@ -147,12 +126,11 @@ def test_suggest_dc_with_class_bonuses():
     print("  [OK] Bard persuasion bonus applied")
 
     # Barbarian with intimidation (should get -2 DC bonus)
-    barb_identity = CharacterIdentity(
+    barb_profile = test_helpers.make_profile(
         name="AngryBarbarian",
-        character_class=DnDClass.BARBARIAN,
-        level=5
+        dnd_class=DnDClass.BARBARIAN,
+        level=5,
     )
-    barb_profile = CharacterProfile(identity=barb_identity)
     barb_calc = DCCalculator(barb_profile, {})
 
     barb_result = barb_calc.suggest_dc_for_action("intimidate the bandit")
@@ -169,12 +147,7 @@ def test_suggest_dc_action_type_detection():
     """Test detection of different action types."""
     print("\n[TEST] DC Calculator - Action Type Detection")
 
-    identity = CharacterIdentity(
-        name="TestChar",
-        character_class=DnDClass.FIGHTER,
-        level=5
-    )
-    profile = CharacterProfile(identity=identity)
+    profile = test_helpers.make_profile(name="TestChar", dnd_class=DnDClass.FIGHTER, level=5)
     calculator = DCCalculator(profile, {})
 
     # Test various action types
@@ -205,12 +178,7 @@ def test_suggest_dc_minimum_dc():
     print("\n[TEST] DC Calculator - Minimum DC")
 
     # Create a Rogue (strong stealth) doing easy stealth
-    identity = CharacterIdentity(
-        name="SneakyRogue",
-        character_class=DnDClass.ROGUE,
-        level=5
-    )
-    profile = CharacterProfile(identity=identity)
+    profile = test_helpers.make_profile(name="SneakyRogue", dnd_class=DnDClass.ROGUE, level=5)
     calculator = DCCalculator(profile, {})
 
     # Easy stealth for Rogue: base 15 - 5 (easy) - 2 (class) = 8
@@ -226,12 +194,7 @@ def test_suggest_alternative_approaches():
     print("\n[TEST] DC Calculator - Alternative Approaches")
 
     # Test Rogue alternatives
-    rogue_identity = CharacterIdentity(
-        name="SneakyRogue",
-        character_class=DnDClass.ROGUE,
-        level=5
-    )
-    rogue_profile = CharacterProfile(identity=rogue_identity)
+    rogue_profile = test_helpers.make_profile(name="SneakyRogue", dnd_class=DnDClass.ROGUE, level=5)
     rogue_calc = DCCalculator(rogue_profile, {})
 
     rogue_alternatives = rogue_calc.suggest_alternative_approaches("any action")
@@ -243,12 +206,7 @@ def test_suggest_alternative_approaches():
     print("  [OK] Rogue alternatives appropriate")
 
     # Test Bard alternatives
-    bard_identity = CharacterIdentity(
-        name="CharmingBard",
-        character_class=DnDClass.BARD,
-        level=5
-    )
-    bard_profile = CharacterProfile(identity=bard_identity)
+    bard_profile = test_helpers.make_profile(name="CharmingBard", dnd_class=DnDClass.BARD, level=5)
     bard_calc = DCCalculator(bard_profile, {})
 
     bard_alternatives = bard_calc.suggest_alternative_approaches("any action")

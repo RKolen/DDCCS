@@ -4,21 +4,15 @@ Character Manager Tests
 Tests for character loading, profiles, consultants, and spell highlighting.
 """
 
-import sys
 import os
 import tempfile
 import json
-from pathlib import Path
+from tests import test_helpers
 
-# Add parent directory to path for imports
-sys.path.insert(0, str(Path(__file__).parent.parent.parent))
-
-try:
-    from src.stories.character_manager import CharacterManager
-except ImportError as e:
-    print(f"[ERROR] Failed to import required modules: {e}")
-    print("[ERROR] Make sure you're running from the tests directory")
-    sys.exit(1)
+# Import CharacterManager via centralized safe import helper
+CharacterManager = test_helpers.safe_from_import(
+    "src.stories.character_manager", "CharacterManager"
+)
 
 
 def create_test_character_file(directory, name, dnd_class="fighter", spells=None):

@@ -5,41 +5,23 @@ This module tests the AIConsultant component that provides AI-powered
 consultation features with graceful fallback to rule-based methods.
 """
 
-import sys
-from pathlib import Path
 from tests import test_helpers
 
-# Add tests directory to path for test_helpers
-sys.path.insert(0, str(Path(__file__).parent.parent))
-
-# Import and configure test environment
-test_helpers.setup_test_environment()
-
-# Import character components
-try:
-    from src.characters.consultants.consultant_ai import (
-        AIConsultant, AI_AVAILABLE
-    )
-    from src.characters.consultants.character_profile import (
-        CharacterProfile, CharacterIdentity
-    )
-    from src.characters.character_sheet import DnDClass
-except ImportError as e:
-    print(f"Error importing AI consultant components: {e}")
-    print("Make sure you're running from the project root directory")
-    sys.exit(1)
+# Import production symbols via centralized helper
+AIConsultant, AI_AVAILABLE = test_helpers.safe_from_import(
+    "src.characters.consultants.consultant_ai", "AIConsultant", "AI_AVAILABLE"
+)
+CharacterProfile, CharacterIdentity = test_helpers.safe_from_import(
+    "src.characters.consultants.character_profile", "CharacterProfile", "CharacterIdentity"
+)
+DnDClass = test_helpers.safe_from_import("src.characters.character_sheet", "DnDClass")
 
 
 def test_ai_consultant_initialization():
     """Test AI consultant initialization."""
     print("\n[TEST] AI Consultant - Initialization")
 
-    identity = CharacterIdentity(
-        name="TestChar",
-        character_class=DnDClass.FIGHTER,
-        level=5
-    )
-    profile = CharacterProfile(identity=identity)
+    profile = test_helpers.make_profile(name="TestChar", dnd_class=DnDClass.FIGHTER, level=5)
     class_knowledge = {"key_features": ["Action Surge"]}
 
     consultant = AIConsultant(profile, class_knowledge)
@@ -56,12 +38,7 @@ def test_ai_consultant_initialization_with_client():
     """Test AI consultant initialization with AI client."""
     print("\n[TEST] AI Consultant - Initialization with Client")
 
-    identity = CharacterIdentity(
-        name="TestChar",
-        character_class=DnDClass.WIZARD,
-        level=5
-    )
-    profile = CharacterProfile(identity=identity)
+    profile = test_helpers.make_profile(name="TestChar", dnd_class=DnDClass.WIZARD, level=5)
 
     # Create mock AI client
     mock_client = type('MockAIClient', (), {})()
@@ -78,12 +55,7 @@ def test_get_ai_client_no_ai():
     """Test get_ai_client when AI is not available."""
     print("\n[TEST] AI Consultant - Get AI Client (No AI)")
 
-    identity = CharacterIdentity(
-        name="TestChar",
-        character_class=DnDClass.FIGHTER,
-        level=5
-    )
-    profile = CharacterProfile(identity=identity)
+    profile = test_helpers.make_profile(name="TestChar", dnd_class=DnDClass.FIGHTER, level=5)
     consultant = AIConsultant(profile, {})
 
     # If AI is not available, should return None
@@ -101,12 +73,7 @@ def test_get_ai_client_with_global():
     """Test get_ai_client with global AI client."""
     print("\n[TEST] AI Consultant - Get AI Client (Global)")
 
-    identity = CharacterIdentity(
-        name="TestChar",
-        character_class=DnDClass.WIZARD,
-        level=5
-    )
-    profile = CharacterProfile(identity=identity)
+    profile = test_helpers.make_profile(name="TestChar", dnd_class=DnDClass.WIZARD, level=5)
 
     mock_global_client = type('MockGlobalClient', (), {})()
     consultant = AIConsultant(profile, {}, ai_client=mock_global_client)
@@ -130,12 +97,7 @@ def test_build_character_system_prompt_basic():
     """Test building basic character system prompt."""
     print("\n[TEST] AI Consultant - Build System Prompt Basic")
 
-    identity = CharacterIdentity(
-        name="BraveKnight",
-        character_class=DnDClass.FIGHTER,
-        level=5
-    )
-    profile = CharacterProfile(identity=identity)
+    profile = test_helpers.make_profile(name="BraveKnight", dnd_class=DnDClass.FIGHTER, level=5)
     consultant = AIConsultant(profile, {})
 
     prompt = consultant.build_character_system_prompt()
@@ -154,12 +116,7 @@ def test_build_character_system_prompt_with_background():
     """Test system prompt with character background."""
     print("\n[TEST] AI Consultant - Build System Prompt with Background")
 
-    identity = CharacterIdentity(
-        name="MysteriousRogue",
-        character_class=DnDClass.ROGUE,
-        level=7
-    )
-    profile = CharacterProfile(identity=identity)
+    profile = test_helpers.make_profile(name="MysteriousRogue", dnd_class=DnDClass.ROGUE, level=7)
     profile.personality.background_story = (
         "Former thief turned adventurer seeking redemption"
     )
@@ -185,12 +142,7 @@ def test_build_character_system_prompt_with_motivations():
     """Test system prompt with motivations and goals."""
     print("\n[TEST] AI Consultant - Build System Prompt with Motivations")
 
-    identity = CharacterIdentity(
-        name="NobleCleric",
-        character_class=DnDClass.CLERIC,
-        level=8
-    )
-    profile = CharacterProfile(identity=identity)
+    profile = test_helpers.make_profile(name="NobleCleric", dnd_class=DnDClass.CLERIC, level=8)
     profile.personality.motivations = ["Protect the innocent", "Serve my deity"]
     profile.personality.goals = ["Establish a temple", "Become a saint"]
     profile.personality.fears_weaknesses = ["Fear of failure"]
@@ -212,12 +164,7 @@ def test_build_character_system_prompt_with_class_knowledge():
     """Test system prompt with class knowledge."""
     print("\n[TEST] AI Consultant - Build System Prompt with Class Knowledge")
 
-    identity = CharacterIdentity(
-        name="WiseMage",
-        character_class=DnDClass.WIZARD,
-        level=10
-    )
-    profile = CharacterProfile(identity=identity)
+    profile = test_helpers.make_profile(name="WiseMage", dnd_class=DnDClass.WIZARD, level=10)
 
     class_knowledge = {
         "decision_style": "analyze carefully before acting",

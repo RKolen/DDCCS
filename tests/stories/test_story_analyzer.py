@@ -6,18 +6,12 @@ analyze temporary story files created in a tempdir.
 """
 
 import os
-import sys
 import tempfile
 from tests import test_helpers
 
 # Prepare test environment and get project root
 project_root = test_helpers.setup_test_environment()
-try:
-    from src.stories.story_manager import StoryManager
-except ImportError as e:
-    print(f"[ERROR] Failed to import required modules: {e}")
-    print("[ERROR] Make sure you're running from the tests directory")
-    sys.exit(1)
+StoryManager = test_helpers.safe_from_import("src.stories.story_manager", "StoryManager")
 
 
 def test_analyze_missing_file_returns_error():

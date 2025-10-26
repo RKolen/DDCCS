@@ -4,20 +4,13 @@ Story Updater Tests
 Tests for story file updating with analysis and combat narratives.
 """
 
-import sys
 import os
 import tempfile
-from pathlib import Path
 
-# Add parent directory to path for imports
-sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+from tests import test_helpers
 
-try:
-    from src.stories.story_updater import StoryUpdater
-except ImportError as e:
-    print(f"[ERROR] Failed to import required modules: {e}")
-    print("[ERROR] Make sure you're running from the tests directory")
-    sys.exit(1)
+# Import StoryUpdater via centralized safe import helper
+StoryUpdater = test_helpers.safe_from_import("src.stories.story_updater", "StoryUpdater")
 
 
 def test_story_updater_initialization():

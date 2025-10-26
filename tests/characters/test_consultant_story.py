@@ -6,27 +6,16 @@ consistency analysis, character development tracking, and relationship
 management.
 """
 
-import sys
-from pathlib import Path
 from tests import test_helpers
 
-# Add tests directory to path for test_helpers
-sys.path.insert(0, str(Path(__file__).parent.parent))
-
-# Import and configure test environment
-test_helpers.setup_test_environment()
-
-# Import character components
-try:
-    from src.characters.consultants.consultant_story import StoryAnalyzer
-    from src.characters.consultants.character_profile import (
-        CharacterProfile, CharacterIdentity
-    )
-    from src.characters.character_sheet import DnDClass
-except ImportError as e:
-    print(f"Error importing story analyzer components: {e}")
-    print("Make sure you're running from the project root directory")
-    sys.exit(1)
+# Import production symbols via centralized helper
+StoryAnalyzer, CharacterProfile, CharacterIdentity = test_helpers.safe_from_import(
+    "src.characters.consultants.consultant_story",
+    "StoryAnalyzer",
+    "CharacterProfile",
+    "CharacterIdentity",
+)
+DnDClass = test_helpers.safe_from_import("src.characters.character_sheet", "DnDClass")
 
 
 def test_story_analyzer_initialization():

@@ -4,25 +4,16 @@ NPC Agents Tests
 Tests for the NPCAgent class and NPC loading functionality.
 """
 
-import sys
 import os
 import tempfile
 from pathlib import Path
 
-# Add parent directory to path for imports
-sys.path.insert(0, str(Path(__file__).parent.parent.parent))
-
-try:
-    from src.npcs.npc_agents import (
-        NPCAgent,
-        load_npc_from_json,
-        create_npc_agents,
-    )
-    from src.characters.character_sheet import NPCProfile
-except ImportError as e:
-    print(f"[ERROR] Failed to import required modules: {e}")
-    print("[ERROR] Make sure you're running from the tests directory")
-    sys.exit(1)
+# Use test_helpers to set up environment and import required names
+from tests import test_helpers
+NPCAgent, load_npc_from_json, create_npc_agents = test_helpers.safe_from_import(
+    "src.npcs.npc_agents", "NPCAgent", "load_npc_from_json", "create_npc_agents"
+)
+NPCProfile = test_helpers.safe_from_import("src.characters.character_sheet", "NPCProfile")
 
 
 def test_npc_agent_initialization():
