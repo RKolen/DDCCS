@@ -2,11 +2,96 @@
 
 ##  High Priority
 
-### Phase 3: Comprehensive Testing (ACTIVE)
+### Manual Testing
+- [ ] - The code recently undergone many code refactors and while tests are added for everything we need to check if the donsultant still does what we want.
 
-**See:** `docs/docs_personal/PHASE3_TESTING_PLAN.md` for detailed plan
+### User Experience
+- [ ] **Error handling** - Improve error messages throughout the system for better user guidance
+- [ ] **VSCode tasks update** - Ensure all VSCode tasks work with the new enhanced system
 
-**Current Status:** Step 8 Complete, Ready for Steps 1-7
+### Combat & Story Editing
+- [ ] **Story amender functionality** - Add system to suggest character reassignments (e.g., "Character A did X but Character B is a better fit for this action")
+
+### AI Integration
+- [ ] **AI-powered story suggestions** - Use AI to suggest story developments and narrative improvements (future enhancement)
+- [ ] **Intelligent character matching** - AI-assisted character selection for actions (future enhancement)
+
+##  Medium Priority
+
+### Character System Improvements
+- [ ] **Character templates** - Create additional class-specific templates beyond the basic example
+- [ ] **Multi-class support** - Enhance character profiles to support multiclassing
+- [ ] **Current Party Alterations** - Consider current party to be part of campaign files instead
+- [ ] **Profile Verification** - Check if JSON templates need to be updated for profile updates and consistency usage
+- [ ] **background in possesions** - Fix background key being in possessions not identity
+### Feature Enhancements
+- [ ] **Campaign templates** - Create templates for common campaign types (mystery, dungeon crawl, etc.)
+- [ ] **Character relationship mapping** - Visual or structured relationship tracking between characters
+- [ ] **Session notes integration** - Better integration between session results and story narrative
+- [ ] **DC difficulty scaling** - Add optional level-based DC scaling recommendations
+
+### Story Tools
+- [ ] **Story timeline tracking** - Track chronological order of events across campaigns
+- [ ] **Combat narrative templates** - Pre-built templates for different combat scenarios
+
+### Technical Improvements
+- [ ] **Configuration system** - Centralized config file for system settings
+- [ ] **Optional SQLite integration** - Add optional database support for:
+  - Character knowledge tracking (History check results)
+  - Session history and analytics
+  - Campaign statistics and insights
+  - Keep JSON as default for simplicity
+
+##  Low Priority / Nice to Have
+
+### Advanced Features
+- [ ] **In-world calendar tracking** - Track campaign timeline, seasons, and story chronology within the game world
+
+### Story Tools
+- [ ] **Character arc analysis** - Tools to analyze character development over multiple stories
+- [ ] **Custom spell highlighting** - Extend spell highlighting system to support homebrew/custom spells (currently only official D&D 5e spells via wikidot are highlighted)
+
+### Technical Improvements
+- [ ] **Plugin architecture** - Allow custom modules/plugins for specific campaign needs  
+- [ ] **Export functionality** - Export stories to different formats (PDF, HTML, etc.)
+- [ ] **Backup system** - Automated backup of character profiles and party configurations
+
+### User Experience
+- [ ] **Interactive setup** - Make setup.py more interactive for first-time users
+- [ ] **Quick start guide** - Create a step-by-step tutorial for new users
+
+##  Known Issues to Fix
+
+### Bug Fixes
+- [ ] **W0611: Unused AIClient imported from ai_client (unused-import)** In dungeon_master.py
+- [ ] **R0904: Too many public methods (24/20) (too-many-public-methods)** In enhanced_story_manager.py
+- [ ] **Unicode handling** - Fix emoji/Unicode issues in Windows console output (partially resolved)
+- [ ] **File path handling** - Ensure cross-platform compatibility for file paths
+- [ ] **Memory usage** - Optimize character loading for large numbers of characters
+- [ ] **Git integration** - Test git functionality with different repository structures
+
+### Quality of Life
+- [ ] **Startup time** - Optimize initial loading of character consultants
+- [ ] **Tab completion** - Add tab completion for character names in CLI
+- [ ] **Command history** - Save and recall previous commands in interactive mode
+- [ ] **Batch operations** - Support for bulk character or story operations
+
+##  Documentation TODOs
+
+### README Updates
+- [ ] **Remove outdated references** to Story_Series_Folders structure
+- [ ] **Update workflow examples** with real use cases
+- [ ] **Add troubleshooting section** for common issues
+
+### New Documentation
+- [ ] **API documentation** - For developers who want to extend the system
+- [ ] **Character creation guide** - Detailed guide for creating rich character profiles
+- [ ] **Campaign management best practices** - Tips for organizing complex campaigns
+- [ ] **Integration guide** - How to integrate with external tools
+
+## [x] Recently Completed
+
+### Comprehensive Testing  October 26, 2025
 
 - [x] **Step 8: Validators Tests** - COMPLETE [COMPLETE]
   - [x] test_character_validator.py
@@ -113,11 +198,35 @@
   - [x] tests/utils/README.md
   
 **Testing Standards:**
-- [COMPLETE] Every test must achieve 10.00/10 pylint (NO disable comments no pragma)
+- [COMPLETE] Every test must achieve 10.00/10 pylint (NO disable comments no pragma no noqa)
 - [COMPLETE] Every test must work with `run_all_tests.py`
 - [COMPLETE] Common code goes in `test_helpers.py` (DRY principle)
 - [COMPLETE] Every test folder has README.md (what/why/tests list)
 - [COMPLETE] Every subsystem has `test_all_<subsystem>.py` runner
+
+### Refactor & test-harness cleanup — October 26, 2025
+
+- [x] Centralized duplicated test helpers into `tests/test_helpers.py`
+  - Replaced per-file fixtures and import-try scaffolds with canonical
+    helpers to reduce duplication and increase clarity.
+- [x] Added `tests/test_runner_common.py` and updated per-subsystem
+  aggregators to use a shared subprocess runner and summary helpers.
+- [x] Fixed subprocess import / module-resolution issues by setting
+  `PYTHONPATH` for child processes and invoking modules with `-m
+  tests.<module>` to ensure reliable imports.
+- [x] Resolved Pylint duplicate-code (R0801) across `tests/` by
+  centralizing shared logic and removing local duplicates.
+- [x] Fixed a complexity warning (R0914) in `tests/test_helpers.py`
+  by extracting nested logic into module-level functions.
+- [x] Updated many tests (combat, cli, characters, validators, utils)
+  to use the canonical helpers; replaced inline fixtures and fake
+  input helpers with `tests.test_helpers` utilities.
+- [x] Repaired failing combat-suite tests found during refactors
+  (import/unpacking fixes) and re-ran the suite to green.
+- [x] Completed repository reorganization into `src/`, added
+  `game_data/` fixtures, and updated tests to the new package layout.
+- [x] Achieved Pylint 10.00/10 for tests and removed emojis that
+  caused Windows console encoding issues.
 
 ### Code Quality & Pylint
 - [x] **Pylint cleanup complete** - All core files 10.00/10
@@ -131,91 +240,6 @@
   - [x] story_manager.py (10.00/10)
   - [x] **Emoji removal complete** - All emojis removed (29 files, no UTF-8 workarounds)
 
-### User Experience
-- [ ] **Error handling** - Improve error messages throughout the system for better user guidance
-- [ ] **VSCode tasks update** - Ensure all VSCode tasks work with the new enhanced system
-
-### Combat & Story Editing
-- [ ] **Story amender functionality** - Add system to suggest character reassignments (e.g., "Character A did X but Character B is a better fit for this action")
-
-### AI Integration
-- [ ] **AI-powered story suggestions** - Use AI to suggest story developments and narrative improvements (future enhancement)
-- [ ] **Intelligent character matching** - AI-assisted character selection for actions (future enhancement)
-
-##  Medium Priority
-
-### Character System Improvements
-- [ ] **Character templates** - Create additional class-specific templates beyond the basic example
-- [ ] **Multi-class support** - Enhance character profiles to support multiclassing
-- [ ] **Current Party Alterations** - Consider current party to be part of campaign files instead
-- [ ] **Profile Verification** - Check if JSON templates need to be updated for profile updates and consistency usage
-- [ ] **background in possesions** - Fix background key being in possessions not identity
-### Feature Enhancements
-- [ ] **Campaign templates** - Create templates for common campaign types (mystery, dungeon crawl, etc.)
-- [ ] **Character relationship mapping** - Visual or structured relationship tracking between characters
-- [ ] **Session notes integration** - Better integration between session results and story narrative
-- [ ] **DC difficulty scaling** - Add optional level-based DC scaling recommendations
-
-### Story Tools
-- [ ] **Story timeline tracking** - Track chronological order of events across campaigns
-- [ ] **Combat narrative templates** - Pre-built templates for different combat scenarios
-
-### Technical Improvements
-- [ ] **Configuration system** - Centralized config file for system settings
-- [ ] **Optional SQLite integration** - Add optional database support for:
-  - Character knowledge tracking (History check results)
-  - Session history and analytics
-  - Campaign statistics and insights
-  - Keep JSON as default for simplicity
-
-##  Low Priority / Nice to Have
-
-### Advanced Features
-- [ ] **In-world calendar tracking** - Track campaign timeline, seasons, and story chronology within the game world
-
-### Story Tools
-- [ ] **Character arc analysis** - Tools to analyze character development over multiple stories
-- [ ] **Custom spell highlighting** - Extend spell highlighting system to support homebrew/custom spells (currently only official D&D 5e spells via wikidot are highlighted)
-
-### Technical Improvements
-- [ ] **Plugin architecture** - Allow custom modules/plugins for specific campaign needs  
-- [ ] **Export functionality** - Export stories to different formats (PDF, HTML, etc.)
-- [ ] **Backup system** - Automated backup of character profiles and party configurations
-
-### User Experience
-- [ ] **Interactive setup** - Make setup.py more interactive for first-time users
-- [ ] **Quick start guide** - Create a step-by-step tutorial for new users
-
-##  Known Issues to Fix
-
-### Bug Fixes
-- [ ] **W0611: Unused AIClient imported from ai_client (unused-import)** In dungeon_master.py
-- [ ] **R0904: Too many public methods (24/20) (too-many-public-methods)** In enhanced_story_manager.py
-- [ ] **Unicode handling** - Fix emoji/Unicode issues in Windows console output (partially resolved)
-- [ ] **File path handling** - Ensure cross-platform compatibility for file paths
-- [ ] **Memory usage** - Optimize character loading for large numbers of characters
-- [ ] **Git integration** - Test git functionality with different repository structures
-
-### Quality of Life
-- [ ] **Startup time** - Optimize initial loading of character consultants
-- [ ] **Tab completion** - Add tab completion for character names in CLI
-- [ ] **Command history** - Save and recall previous commands in interactive mode
-- [ ] **Batch operations** - Support for bulk character or story operations
-
-##  Documentation TODOs
-
-### README Updates
-- [ ] **Remove outdated references** to Story_Series_Folders structure
-- [ ] **Update workflow examples** with real use cases
-- [ ] **Add troubleshooting section** for common issues
-
-### New Documentation
-- [ ] **API documentation** - For developers who want to extend the system
-- [ ] **Character creation guide** - Detailed guide for creating rich character profiles
-- [ ] **Campaign management best practices** - Tips for organizing complex campaigns
-- [ ] **Integration guide** - How to integrate with external tools
-
-## [x] Recently Completed
 
 ### JSON Validation System & Nickname Support - October 12, 2025
 - [x] **Character validator** - Created character_validator.py with comprehensive schema validation for character JSON files
@@ -307,5 +331,5 @@
 
 ---
 
-**Last Updated:** October 12, 2025
+**Last Updated:** October 26, 2025
 **Priority Legend:**  High |  Medium |  Low |  Bugs |  Docs
