@@ -16,29 +16,12 @@ validate_character_json, validate_character_file = test_helpers.safe_from_import
 
 def test_valid_character():
     """Test that a valid character passes validation."""
-    valid_character = {
-        "name": "Test Character",
-        "species": "Human",
-        "dnd_class": "fighter",
-        "level": 5,
-        "ability_scores": {
-            "strength": 16,
-            "dexterity": 14,
-            "constitution": 15,
-            "intelligence": 10,
-            "wisdom": 12,
-            "charisma": 8,
-        },
-        "equipment": {
-            "weapons": ["Longsword", "Shield"],
-            "armor": ["Plate Armor"],
-            "items": ["Backpack", "Rope"],
-        },
-        "known_spells": [],
-        "background": "Soldier",
-        "backstory": "A veteran warrior seeking redemption.",
-        "relationships": {},
-    }
+    valid_character = test_helpers.sample_character_data(
+        name="Test Character",
+        dnd_class="fighter",
+        level=5,
+        overrides={"backstory": "A veteran warrior seeking redemption."},
+    )
 
     is_valid, errors = validate_character_json(valid_character)
     assert is_valid, f"Valid character failed validation: {errors}"
@@ -48,20 +31,13 @@ def test_valid_character():
 
 def test_missing_required_field():
     """Test that missing required fields are detected."""
-    invalid_character = {
-        "name": "Test Character",
-        "species": "Human",
-        # Missing dnd_class
-        "level": 5,
-        "ability_scores": {
-            "strength": 16,
-            "dexterity": 14,
-            "constitution": 15,
-            "intelligence": 10,
-            "wisdom": 12,
-            "charisma": 8,
-        },
-    }
+    invalid_character = test_helpers.sample_character_data(
+        name="Test Character",
+        dnd_class="fighter",
+        level=5,
+    )
+    # remove required field to simulate invalid file
+    invalid_character.pop("dnd_class", None)
 
     is_valid, errors = validate_character_json(invalid_character)
     assert not is_valid, "Invalid character passed validation"
@@ -71,25 +47,11 @@ def test_missing_required_field():
 
 def test_invalid_level_range():
     """Test that invalid level values are detected."""
-    invalid_character = {
-        "name": "Test Character",
-        "species": "Human",
-        "dnd_class": "wizard",
-        "level": 25,  # Invalid: > 20
-        "ability_scores": {
-            "strength": 10,
-            "dexterity": 10,
-            "constitution": 10,
-            "intelligence": 10,
-            "wisdom": 10,
-            "charisma": 10,
-        },
-        "equipment": {"weapons": [], "armor": [], "items": []},
-        "known_spells": [],
-        "background": "Scholar",
-        "backstory": "A wizard.",
-        "relationships": {},
-    }
+    invalid_character = test_helpers.sample_character_data(
+        name="Test Character",
+        dnd_class="wizard",
+        level=25,  # Invalid: > 20
+    )
 
     is_valid, errors = validate_character_json(invalid_character)
     assert not is_valid, "Invalid level passed validation"
@@ -99,25 +61,11 @@ def test_invalid_level_range():
 
 def test_wrong_field_type():
     """Test that incorrect field types are detected."""
-    invalid_character = {
-        "name": "Test Character",
-        "species": "Human",
-        "dnd_class": "rogue",
-        "level": "5",  # Should be int, not str
-        "ability_scores": {
-            "strength": 10,
-            "dexterity": 18,
-            "constitution": 12,
-            "intelligence": 14,
-            "wisdom": 10,
-            "charisma": 10,
-        },
-        "equipment": {"weapons": ["Dagger"], "armor": [], "items": []},
-        "known_spells": [],
-        "background": "Criminal",
-        "backstory": "A rogue.",
-        "relationships": {},
-    }
+    invalid_character = test_helpers.sample_character_data(
+        name="Test Character",
+        dnd_class="rogue",
+        level="5",  # Should be int, not str
+    )
 
     is_valid, errors = validate_character_json(invalid_character)
     assert not is_valid, "Wrong field type passed validation"
@@ -159,11 +107,11 @@ def test_validate_actual_character_files():
 
 if __name__ == "__main__":
     print("Running character validator tests...\n")
-
-    test_valid_character()
-    test_missing_required_field()
-    test_invalid_level_range()
-    test_wrong_field_type()
-    test_validate_actual_character_files()
-
-    print("\n[OK] All validator tests passed!")
+    test_list = [
+        test_valid_character,
+        test_missing_required_field,
+        test_invalid_level_range,
+        test_wrong_field_type,
+        test_validate_actual_character_files,
+    ]
+    test_helpers.run_tests_safely(test_list, success_message="[OK] All validator tests passed!")

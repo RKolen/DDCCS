@@ -22,12 +22,7 @@ def test_story_analyzer_initialization():
     """Test story analyzer initialization."""
     print("\n[TEST] Story Analyzer - Initialization")
 
-    identity = CharacterIdentity(
-        name="TestChar",
-        character_class=DnDClass.FIGHTER,
-        level=5
-    )
-    profile = CharacterProfile(identity=identity)
+    profile = test_helpers.make_profile(name="TestChar", dnd_class=DnDClass.FIGHTER, level=5)
     class_knowledge = {"common_reactions": {"danger": "charge forward"}}
 
     analyzer = StoryAnalyzer(profile, class_knowledge)
@@ -43,12 +38,7 @@ def test_get_relationships():
     """Test retrieving character relationships."""
     print("\n[TEST] Story Analyzer - Get Relationships")
 
-    identity = CharacterIdentity(
-        name="TestChar",
-        character_class=DnDClass.FIGHTER,
-        level=5
-    )
-    profile = CharacterProfile(identity=identity)
+    profile = test_helpers.make_profile(name="TestChar", dnd_class=DnDClass.FIGHTER, level=5)
     profile.personality.relationships = {
         "Gandalf": "Trusted mentor",
         "Aragorn": "Fellow warrior"
@@ -69,12 +59,7 @@ def test_analyze_story_consistency_basic():
     """Test basic story consistency analysis."""
     print("\n[TEST] Story Analyzer - Story Consistency Basic")
 
-    identity = CharacterIdentity(
-        name="BraveKnight",
-        character_class=DnDClass.FIGHTER,
-        level=5
-    )
-    profile = CharacterProfile(identity=identity)
+    profile = test_helpers.make_profile(name="BraveKnight", dnd_class=DnDClass.FIGHTER, level=5)
     profile.personality.personality_summary = "brave and honorable"
     profile.personality.motivations = ["Protect the innocent"]
 
@@ -107,12 +92,7 @@ def test_analyze_story_consistency_with_personality():
     """Test consistency analysis considering personality."""
     print("\n[TEST] Story Analyzer - Consistency with Personality")
 
-    identity = CharacterIdentity(
-        name="CautiousRogue",
-        character_class=DnDClass.ROGUE,
-        level=5
-    )
-    profile = CharacterProfile(identity=identity)
+    profile = test_helpers.make_profile(name="CautiousRogue", dnd_class=DnDClass.ROGUE, level=5)
     profile.personality.personality_summary = "cautious and stealthy"
     profile.personality.motivations = ["Survive at all costs"]
 
@@ -134,12 +114,7 @@ def test_analyze_story_consistency_with_fears():
     """Test consistency analysis with character fears."""
     print("\n[TEST] Story Analyzer - Consistency with Fears")
 
-    identity = CharacterIdentity(
-        name="FearfulMage",
-        character_class=DnDClass.WIZARD,
-        level=5
-    )
-    profile = CharacterProfile(identity=identity)
+    profile = test_helpers.make_profile(name="FearfulMage", dnd_class=DnDClass.WIZARD, level=5)
     profile.personality.fears_weaknesses = ["Fear of fire"]
 
     analyzer = StoryAnalyzer(profile, {})
@@ -173,12 +148,7 @@ def test_consistency_rating_levels():
     """Test consistency rating conversion through public API."""
     print("\n[TEST] Story Analyzer - Consistency Rating Levels")
 
-    identity = CharacterIdentity(
-        name="TestChar",
-        character_class=DnDClass.FIGHTER,
-        level=5
-    )
-    profile = CharacterProfile(identity=identity)
+    profile = test_helpers.make_profile(name="TestChar", dnd_class=DnDClass.FIGHTER, level=5)
     profile.personality.personality_summary = "brave and strong"
 
     analyzer = StoryAnalyzer(profile, {})
@@ -209,12 +179,8 @@ def test_suggest_relationship_update_new():
     print("\n[TEST] Story Analyzer - Suggest New Relationship")
 
     # Paladin should suggest positive relationships
-    paladin_identity = CharacterIdentity(
-        name="HolyPaladin",
-        character_class=DnDClass.PALADIN,
-        level=5
-    )
-    paladin_profile = CharacterProfile(identity=paladin_identity)
+    paladin_profile = test_helpers.make_profile(name="HolyPaladin",
+                                                dnd_class=DnDClass.PALADIN, level=5)
     paladin_profile.personality.relationships = {}
 
     paladin_analyzer = StoryAnalyzer(paladin_profile, {})
@@ -228,12 +194,7 @@ def test_suggest_relationship_update_new():
     print("  [OK] Paladin suggests positive relationship")
 
     # Rogue should suggest suspicious relationships
-    rogue_identity = CharacterIdentity(
-        name="SneakyRogue",
-        character_class=DnDClass.ROGUE,
-        level=5
-    )
-    rogue_profile = CharacterProfile(identity=rogue_identity)
+    rogue_profile = test_helpers.make_profile(name="SneakyRogue", dnd_class=DnDClass.ROGUE, level=5)
     rogue_profile.personality.relationships = {}
 
     rogue_analyzer = StoryAnalyzer(rogue_profile, {})
@@ -253,12 +214,7 @@ def test_suggest_relationship_update_existing():
     """Test suggesting updates to existing relationships."""
     print("\n[TEST] Story Analyzer - Update Existing Relationship")
 
-    identity = CharacterIdentity(
-        name="TestChar",
-        character_class=DnDClass.FIGHTER,
-        level=5
-    )
-    profile = CharacterProfile(identity=identity)
+    profile = test_helpers.make_profile(name="TestChar", dnd_class=DnDClass.FIGHTER, level=5)
     profile.personality.relationships = {"OldFriend": "Childhood companion"}
 
     analyzer = StoryAnalyzer(profile, {})
@@ -281,12 +237,7 @@ def test_suggest_plot_action_logging():
     """Test plot action logging suggestions."""
     print("\n[TEST] Story Analyzer - Plot Action Logging")
 
-    identity = CharacterIdentity(
-        name="TestChar",
-        character_class=DnDClass.FIGHTER,
-        level=5
-    )
-    profile = CharacterProfile(identity=identity)
+    profile = test_helpers.make_profile(name="TestChar", dnd_class=DnDClass.FIGHTER, level=5)
     analyzer = StoryAnalyzer(profile, {})
 
     suggestion = analyzer.suggest_plot_action_logging(
@@ -310,12 +261,7 @@ def test_suggest_character_development():
     """Test character development suggestions."""
     print("\n[TEST] Story Analyzer - Character Development")
 
-    identity = CharacterIdentity(
-        name="TestChar",
-        character_class=DnDClass.FIGHTER,
-        level=5
-    )
-    profile = CharacterProfile(identity=identity)
+    profile = test_helpers.make_profile(name="TestChar", dnd_class=DnDClass.FIGHTER, level=5)
     analyzer = StoryAnalyzer(profile, {})
 
     # Test courage detection
@@ -365,12 +311,7 @@ def test_analyze_story_content():
     """Test comprehensive story content analysis."""
     print("\n[TEST] Story Analyzer - Story Content Analysis")
 
-    identity = CharacterIdentity(
-        name="Aragorn",
-        character_class=DnDClass.RANGER,
-        level=10
-    )
-    profile = CharacterProfile(identity=identity)
+    profile = test_helpers.make_profile(name="Aragorn", dnd_class=DnDClass.RANGER, level=10)
     analyzer = StoryAnalyzer(profile, {})
 
     story_text = """
@@ -402,12 +343,7 @@ def test_extract_character_names():
     """Test character name extraction through story content analysis."""
     print("\n[TEST] Story Analyzer - Extract Character Names")
 
-    identity = CharacterIdentity(
-        name="Aragorn",
-        character_class=DnDClass.FIGHTER,
-        level=5
-    )
-    profile = CharacterProfile(identity=identity)
+    profile = test_helpers.make_profile(name="Aragorn", dnd_class=DnDClass.FIGHTER, level=5)
     analyzer = StoryAnalyzer(profile, {})
 
     # Test indirectly through analyze_story_content

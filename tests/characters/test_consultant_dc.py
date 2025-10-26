@@ -236,12 +236,9 @@ def test_check_character_advantages():
     print("\n[TEST] DC Calculator - Character Advantages")
 
     # Rogue with stealth action
-    rogue_identity = CharacterIdentity(
-        name="SneakyRogue",
-        character_class=DnDClass.ROGUE,
-        level=5
+    rogue_profile = test_helpers.make_profile(
+        name="SneakyRogue", dnd_class=DnDClass.ROGUE, level=5
     )
-    rogue_profile = CharacterProfile(identity=rogue_identity)
     rogue_calc = DCCalculator(rogue_profile, {})
 
     rogue_advantages = rogue_calc.check_character_advantages("Stealth")
@@ -253,12 +250,9 @@ def test_check_character_advantages():
     print("  [OK] Rogue stealth advantages detected")
 
     # Bard with persuasion action
-    bard_identity = CharacterIdentity(
-        name="CharmingBard",
-        character_class=DnDClass.BARD,
-        level=5
+    bard_profile = test_helpers.make_profile(
+        name="CharmingBard", dnd_class=DnDClass.BARD, level=5
     )
-    bard_profile = CharacterProfile(identity=bard_identity)
     bard_calc = DCCalculator(bard_profile, {})
 
     bard_advantages = bard_calc.check_character_advantages("Persuasion")
@@ -266,12 +260,9 @@ def test_check_character_advantages():
     print("  [OK] Bard persuasion advantages detected")
 
     # Fighter with non-specialty action
-    fighter_identity = CharacterIdentity(
-        name="BraveFighter",
-        character_class=DnDClass.FIGHTER,
-        level=5
+    fighter_profile = test_helpers.make_profile(
+        name="BraveFighter", dnd_class=DnDClass.FIGHTER, level=5
     )
-    fighter_profile = CharacterProfile(identity=fighter_identity)
     fighter_calc = DCCalculator(fighter_profile, {})
 
     fighter_advantages = fighter_calc.check_character_advantages("Persuasion")
@@ -287,12 +278,9 @@ def test_check_character_advantages_with_background():
     print("\n[TEST] DC Calculator - Background Advantages")
 
     # Noble background with persuasion
-    noble_identity = CharacterIdentity(
-        name="NobleChar",
-        character_class=DnDClass.FIGHTER,
-        level=5
+    noble_profile = test_helpers.make_profile(
+        name="NobleChar", dnd_class=DnDClass.FIGHTER, level=5
     )
-    noble_profile = CharacterProfile(identity=noble_identity)
     # Set background through the personality field (using backward-compat property)
     noble_profile.personality.background_story = (
         "Born into a noble family, trained in diplomacy"
@@ -306,12 +294,9 @@ def test_check_character_advantages_with_background():
     print("  [OK] Noble background advantage detected")
 
     # Criminal background with stealth
-    criminal_identity = CharacterIdentity(
-        name="CriminalChar",
-        character_class=DnDClass.FIGHTER,
-        level=5
+    criminal_profile = test_helpers.make_profile(
+        name="CriminalChar", dnd_class=DnDClass.FIGHTER, level=5
     )
-    criminal_profile = CharacterProfile(identity=criminal_identity)
     criminal_profile.personality.background_story = (
         "Former criminal who learned to survive on the streets"
     )

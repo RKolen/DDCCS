@@ -4,35 +4,29 @@ Verifies that NPC validator correctly identifies valid and invalid NPC files.
 """
 
 import os
-import sys
 from tests import test_helpers
-# Import and configure test environment (UTF-8, project paths)
-test_helpers.setup_test_environment()
 
-# Import validators from src.validation
-try:
-    from src.validation.npc_validator import validate_npc_json, validate_npc_file
-except ImportError as e:
-    print(f"Error importing npc_validator: {e}")
-    print("Make sure you're running from the project root directory")
-    sys.exit(1)
+# Import validators using the centralized safe importer
+validate_npc_json, validate_npc_file = test_helpers.safe_from_import(
+    "src.validation.npc_validator", "validate_npc_json", "validate_npc_file"
+)
 
 
 def test_valid_npc():
     """Test that a valid NPC passes validation."""
-    valid_npc = {
-        "name": "Test NPC",
-        "role": "Merchant",
-        "species": "Human",
-        "lineage": "",
-        "personality": "Friendly and helpful",
-        "relationships": {"Hero": "Respects their courage"},
-        "key_traits": ["Honest", "Resourceful"],
-        "abilities": ["Bargain", "Appraise"],
-        "recurring": True,
-        "notes": "Important merchant in the story",
-        "ai_config": {"enabled": False, "temperature": 0.7, "max_tokens": 1000},
-    }
+    # Use canonical NPC fixture helper to avoid duplicating literal dicts
+    valid_npc = test_helpers.sample_npc_data(
+        name="Test NPC",
+        overrides={
+            "personality": "Friendly and helpful",
+            "relationships": {"Hero": "Respects their courage"},
+            "key_traits": ["Honest", "Resourceful"],
+            "abilities": ["Bargain", "Appraise"],
+            "recurring": True,
+            "notes": "Important merchant in the story",
+            "ai_config": {"enabled": False, "temperature": 0.7, "max_tokens": 1000},
+        },
+    )
 
     is_valid, errors = validate_npc_json(valid_npc)
     assert is_valid, f"Valid NPC failed validation: {errors}"
@@ -178,20 +172,13 @@ def test_npc_trait_validation():
 
 if __name__ == "__main__":
     print("Running NPC validator tests...\n")
-
-    try:
-        test_valid_npc()
-        test_missing_required_field()
-        test_wrong_field_type()
-        test_invalid_ai_config()
-        test_npc_relationships_validation()
-        test_npc_trait_validation()
-        test_validate_actual_npc_files()
-
-        print("\n[OK] All NPC validator tests passed!")
-    except AssertionError as e:
-        print(f"\n[FAILED] Test failed: {e}")
-        sys.exit(1)
-    except (ImportError, ValueError, KeyError, OSError) as e:
-        print(f"\n[FAILED] Unexpected error: {e}")
-        sys.exit(1)
+    test_list = [
+        test_valid_npc,
+        test_missing_required_field,
+        test_wrong_field_type,
+        test_invalid_ai_config,
+        test_npc_relationships_validation,
+        test_npc_trait_validation,
+        test_validate_actual_npc_files,
+    ]
+    test_helpers.run_tests_safely(test_list, success_message="[OK] All NPC validator tests passed!")

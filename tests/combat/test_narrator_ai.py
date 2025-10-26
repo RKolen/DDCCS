@@ -17,16 +17,11 @@ CharacterConsultant = test_helpers.safe_from_import(
     "src.characters.consultants.consultant_core", "CharacterConsultant"
 )
 
-
-def _load_fixture(name: str):
-    return test_helpers.load_consultant_fixture(name)
-
-
 def test_ai_narration_uses_ai_client():
     """AIEnhancedNarrator should use the AI client's output when provided."""
-    aragorn = _load_fixture("aragorn")
-    frodo = _load_fixture("frodo")
-    gandalf = _load_fixture("gandalf")
+    aragorn = test_helpers.load_consultant_fixture("aragorn")
+    frodo = test_helpers.load_consultant_fixture("frodo")
+    gandalf = test_helpers.load_consultant_fixture("gandalf")
 
     consultants = {
         aragorn.profile.name: aragorn,

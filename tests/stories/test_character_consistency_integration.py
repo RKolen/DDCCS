@@ -7,18 +7,14 @@ consultant) detects in-character vs out-of-character actions.
 """
 
 import os
-import sys
 import tempfile
 from tests import test_helpers
 
 # Prepare test environment
 project_root = test_helpers.setup_test_environment()
-try:
-    from src.stories.story_manager import StoryManager
-except ImportError as e:
-    print(f"[ERROR] Failed to import required modules: {e}")
-    print("[ERROR] Make sure you're running from the tests directory")
-    sys.exit(1)
+StoryManager = test_helpers.safe_from_import(
+    "src.stories.story_manager", "StoryManager"
+)
 
 def _get_consultant_analysis_for(manager, story_path, character_name):
     result = manager.analyze_story_file(story_path)

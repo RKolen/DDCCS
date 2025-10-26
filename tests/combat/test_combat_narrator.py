@@ -17,18 +17,14 @@ CombatNarrator, CharacterProfile, CharacterConsultant = test_helpers.safe_from_i
 )
 
 
-def _load_fixture(name: str):
-    return test_helpers.load_consultant_fixture(name)
-
-
 class TestCombatNarrator(unittest.TestCase):
     """Tests for CombatNarrator using real character fixtures."""
 
     def setUp(self) -> None:
         """Load real character fixtures and prepare consultants mapping."""
-        self.aragorn = _load_fixture("aragorn")
-        self.frodo = _load_fixture("frodo")
-        self.gandalf = _load_fixture("gandalf")
+        self.aragorn = test_helpers.load_consultant_fixture("aragorn")
+        self.frodo = test_helpers.load_consultant_fixture("frodo")
+        self.gandalf = test_helpers.load_consultant_fixture("gandalf")
 
         self.consultants = {
             self.aragorn.profile.name: self.aragorn,

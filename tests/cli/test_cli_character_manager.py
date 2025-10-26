@@ -6,6 +6,7 @@ fakes to avoid user input blocking.
 """
 
 from tests.test_helpers import setup_test_environment, import_module
+from tests import test_helpers
 
 setup_test_environment()
 
@@ -140,13 +141,5 @@ def test_list_and_display_character_details(monkeypatch):
     # view_character_details will prompt for selection and then pause for Enter;
     # provide two inputs: select '1' then press Enter to continue.
     inputs = ["1", ""]
-
-    def _fake_input(prompt=""):
-        _ = prompt
-        try:
-            return inputs.pop(0)
-        except IndexError:
-            return ""
-
-    monkeypatch.setattr("builtins.input", _fake_input)
+    monkeypatch.setattr("builtins.input", test_helpers.make_fake_input(inputs))
     cli.view_character_details()

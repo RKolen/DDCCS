@@ -9,6 +9,7 @@ from tests.test_helpers import (
     import_module,
     FakeDMConsultant,
 )
+from tests import test_helpers
 
 setup_test_environment()
 
@@ -28,15 +29,7 @@ def test_get_dm_narrative_suggestions_with_fake_dm(monkeypatch):
     # Prepare inputs: prompt, characters input (blank), npcs input (blank), final Enter to continue
     inputs = ["A quiet tavern scene", "", "", ""]
 
-    def fake_input(prompt=""):
-        # Pop from inputs list to simulate user interaction
-        _ = prompt
-        try:
-            return inputs.pop(0)
-        except IndexError:
-            return ""
-
-    monkeypatch.setattr("builtins.input", fake_input)
+    monkeypatch.setattr("builtins.input", test_helpers.make_fake_input(inputs))
 
     # Should run without raising
     cli.get_dm_narrative_suggestions()

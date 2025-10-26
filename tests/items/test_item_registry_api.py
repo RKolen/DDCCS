@@ -10,14 +10,8 @@ import os
 import tempfile
 from tests import test_helpers
 
-# Configure test environment so `src` imports work during test execution.
-project_root = test_helpers.setup_test_environment()
-
-try:
-    from src.items.item_registry import ItemRegistry
-except ImportError as exc:
-    print(f"[ERROR] Import failed: {exc}")
-    raise
+# Import ItemRegistry using the centralized safe importer
+ItemRegistry = test_helpers.safe_from_import("src.items.item_registry", "ItemRegistry")
 
 
 def test_get_item_and_is_custom_api():

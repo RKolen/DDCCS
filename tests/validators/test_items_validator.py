@@ -4,22 +4,15 @@ Verifies that items validator correctly identifies valid and invalid item regist
 """
 
 import os
-import sys
 from tests import test_helpers
-# Import and configure test environment (UTF-8, project paths)
-test_helpers.setup_test_environment()
 
-# Import validators from src.validation
-try:
-    from src.validation.items_validator import (
-        validate_items_json,
-        validate_items_file,
-        validate_item_entry,
-    )
-except ImportError as e:
-    print(f"Error importing items_validator: {e}")
-    print("Make sure you're running from the project root directory")
-    sys.exit(1)
+# Import validators from src.validation using the centralized safe importer
+validate_items_json, validate_items_file, validate_item_entry = test_helpers.safe_from_import(
+    "src.validation.items_validator",
+    "validate_items_json",
+    "validate_items_file",
+    "validate_item_entry",
+)
 
 
 def test_valid_item_entry():
@@ -195,22 +188,16 @@ def test_non_dict_item_entry():
 
 if __name__ == "__main__":
     print("Running items validator tests...\n")
-
-    try:
-        test_valid_item_entry()
-        test_valid_items_registry()
-        test_missing_required_field()
-        test_invalid_item_type()
-        test_wrong_field_type()
-        test_invalid_property_values()
-        test_empty_registry()
-        test_non_dict_item_entry()
-        test_validate_actual_items_file()
-
-        print("\n[OK] All items validator tests passed!")
-    except AssertionError as e:
-        print(f"\n[FAILED] Test failed: {e}")
-        sys.exit(1)
-    except (ImportError, ValueError, KeyError, OSError) as e:
-        print(f"\n[FAILED] Unexpected error: {e}")
-        sys.exit(1)
+    test_list = [
+        test_valid_item_entry,
+        test_valid_items_registry,
+        test_missing_required_field,
+        test_invalid_item_type,
+        test_wrong_field_type,
+        test_invalid_property_values,
+        test_empty_registry,
+        test_non_dict_item_entry,
+        test_validate_actual_items_file,
+    ]
+    test_helpers.run_tests_safely(test_list, success_message=
+    "[OK] All items validator tests passed!")

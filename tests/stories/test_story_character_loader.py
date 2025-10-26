@@ -24,46 +24,8 @@ DnDClass = test_helpers.safe_from_import(
 
 def create_test_character_file(workspace_path: str, character_name: str):
     """Create a valid test character JSON file."""
-    characters_dir = os.path.join(workspace_path, "game_data", "characters")
-    os.makedirs(characters_dir, exist_ok=True)
-
-    character_data = {
-        "name": character_name,
-        "species": "Human",
-        "background": "Soldier",
-        "backstory": "A veteran warrior.",
-        "dnd_class": "Fighter",  # Must match DnDClass enum value
-        "subclass": "Champion",
-        "level": 5,
-        "ability_scores": {
-            "strength": 16,
-            "dexterity": 14,
-            "constitution": 15,
-            "intelligence": 10,
-            "wisdom": 12,
-            "charisma": 8
-        },
-        "background_story": "A veteran warrior.",
-        "personality_summary": "Brave and loyal.",
-        "motivations": ["Protect allies", "Seek glory"],
-        "fears_weaknesses": ["Fear of failure"],
-        "relationships": {
-            "Gandalf": "Trusted mentor"
-        },
-        "equipment": {
-            "weapons": ["Longsword", "Shield"],
-            "armor": ["Plate Armor"],
-            "items": [],
-            "magic_items": []
-        },
-        "known_spells": []
-    }
-
-    filepath = os.path.join(characters_dir, f"{character_name.lower()}.json")
-    with open(filepath, 'w', encoding='utf-8') as file:
-        json.dump(character_data, file, indent=2)
-
-    return filepath
+    # Delegate to shared helper to reduce duplicated fixture literals
+    return test_helpers.write_character_file(workspace_path, character_name)
 
 
 def test_character_loader_initialization():

@@ -22,17 +22,11 @@ CharacterConsultant = test_helpers.safe_from_import(
     "CharacterConsultant",
 )
 
-
-def _load_fixture(name: str):
-    # Use the shared test helper to load consultant fixtures
-    return test_helpers.load_consultant_fixture(name)
-
-
 def test_parsed_actions_convert_to_narrative():
     """A small parsed combat sequence should convert into readable narrative."""
     # Load character consultants
-    aragorn = _load_fixture("aragorn")
-    frodo = _load_fixture("frodo")
+    aragorn = test_helpers.load_consultant_fixture("aragorn")
+    frodo = test_helpers.load_consultant_fixture("frodo")
 
     consultants = {aragorn.profile.name: aragorn, frodo.profile.name: frodo}
 

@@ -279,25 +279,10 @@ def test_save_npc_profile_basic():
     """Test saving NPC profile to file."""
     print("\n[TEST] Save NPC Profile - Basic")
 
-    npc_profile = {
-        "name": "TestNPC",
-        "nickname": None,
-        "role": "Merchant",
-        "species": "Human",
-        "lineage": "",
-        "personality": "Friendly",
-        "relationships": {},
-        "key_traits": ["Honest"],
-        "abilities": ["Appraisal"],
-        "recurring": False,
-        "notes": "Test NPC",
-        "ai_config": {
-            "enabled": False,
-            "temperature": 0.7,
-            "max_tokens": 1000,
-            "system_prompt": "",
-        },
-    }
+    # Use canonical NPC fixture to avoid duplicated inline dicts
+    npc_profile = test_helpers.sample_npc_data(
+        name="TestNPC", overrides={"name": "TestNPC"}
+    )
 
     with tempfile.TemporaryDirectory() as temp_dir:
         saved_path = save_npc_profile(npc_profile, temp_dir)

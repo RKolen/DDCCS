@@ -22,11 +22,10 @@ Usage in test files:
     from src.validation.character_validator import validate_character_json
 
 """
-
+import json
 import sys
 from pathlib import Path
 import importlib
-
 
 def setup_test_environment():
     """
@@ -96,6 +95,135 @@ def load_consultant_fixture(name: str):
     fp = base / "game_data" / "characters" / f"{name}.json"
     profile = character_profile_cls.load_from_file(str(fp))
     return character_consultant_cls(profile)
+
+
+def sample_character_data(
+    name: str = "Test Character",
+    dnd_class: str = "fighter",
+    level: int = 5,
+    ability_scores: dict | None = None,
+    overrides: dict | None = None,
+):
+    """Return a canonical character dict for use in tests.
+
+    Tests should use this helper instead of inlining large dict literals.
+    """
+    if ability_scores is None:
+        ability_scores = {
+            "strength": 16,
+            "dexterity": 14,
+            "constitution": 15,
+            "intelligence": 10,
+            "wisdom": 12,
+            "charisma": 8,
+        }
+
+    base = {
+        "name": name,
+        "species": "Human",
+        "dnd_class": dnd_class,
+        "level": level,
+        "ability_scores": ability_scores,
+        "equipment": {
+            "weapons": ["Longsword", "Shield"],
+            "armor": ["Plate Armor"],
+            "items": ["Backpack", "Rope"],
+        },
+        "known_spells": [],
+        "background": "Soldier",
+        "backstory": "A veteran warrior.",
+        "relationships": {},
+    }
+
+    if overrides:
+        base.update(overrides)
+
+    return base
+
+
+def write_character_file(workspace_path: str, character_name: str, data: dict | None = None):
+    """Write a character JSON file under the provided workspace path and return the filepath.
+
+    Creates the `game_data/characters` directory if required. If `data` is None,
+    uses `sample_character_data(character_name)`.
+    """
+
+    characters_dir = Path(workspace_path) / "game_data" / "characters"
+    characters_dir.mkdir(parents=True, exist_ok=True)
+
+    if data is None:
+        data = sample_character_data(character_name)
+
+    filepath = characters_dir / f"{character_name.lower()}.json"
+    with open(filepath, "w", encoding="utf-8") as fh:
+        json.dump(data, fh, indent=2)
+
+    return str(filepath)
+
+
+def sample_npc_data(name: str = "Test NPC", role: str = "Merchant",
+                    species: str = "Human", overrides: dict | None = None):
+    """Return a canonical NPC dict for tests.
+
+    Use this instead of inlining NPC dictionaries in multiple tests.
+    """
+    base = {
+        "name": name,
+        "nickname": None,
+        "role": role,
+        "species": species,
+        "lineage": "",
+        "personality": "Friendly",
+        "relationships": {},
+        "key_traits": ["Honest"],
+        "abilities": ["Appraisal"],
+        "recurring": False,
+        "notes": "Test NPC",
+        "ai_config": {"enabled": False, "temperature": 0.7,
+                      "max_tokens": 1000, "system_prompt": ""},
+    }
+
+    if overrides:
+        base.update(overrides)
+
+    return base
+
+
+def make_fake_input(inputs: list):
+    """Return a callable that can be used to monkeypatch builtins.input.
+
+    The returned function will pop values from the provided list and return
+    an empty string when the list is exhausted. This centralizes the small
+    fake-input implementations used across CLI tests.
+    """
+
+    def _fake_input(prompt=""):
+        _ = prompt
+        try:
+            return inputs.pop(0)
+        except IndexError:
+            return ""
+
+    return _fake_input
+
+
+def run_tests_safely(tests: list, success_message: str = "[OK] All tests passed!"):
+    """Run a list of test callables, printing failures and exiting on unexpected errors.
+
+    Each item in `tests` should be a callable (no-arg). This reproduces the
+    repeated `if __name__ == '__main__'` pattern present in many test files.
+    """
+    try:
+        for t in tests:
+            t()
+
+        print("\n" + success_message)
+    except AssertionError as e:
+        print(f"\n[FAILED] Test failed: {e}")
+        sys.exit(1)
+    except (ImportError, ValueError, KeyError, OSError) as e:
+        print(f"\n[FAILED] Unexpected error: {e}")
+        sys.exit(1)
 
 
 def safe_from_import(module_name: str, *names):
