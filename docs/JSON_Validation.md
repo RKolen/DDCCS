@@ -123,12 +123,12 @@ All validators use consistent output formatting:
 
 ### Valid File
 ```
-✓ game_data/characters/barbarian.json: Valid
+ game_data/characters/barbarian.json: Valid
 ```
 
 ### Invalid File
 ```
-✗ game_data/npcs/invalid_npc.json: INVALID
+ game_data/npcs/invalid_npc.json: INVALID
   - Missing required field: role
   - Field 'recurring' must be of type bool, got str
   - ai_config.enabled must be a boolean
@@ -150,12 +150,12 @@ All validators use consistent output formatting:
 ## Test Results
 
 All validators and tests pass successfully:
-- ✓ Character Validator: 12 files validated, all tests passing
-- ✓ NPC Validator: 1 file validated, all tests passing
-- ✓ Items Validator: 1 file validated, all tests passing
-- ✓ Party Validator: 1 file validated, all tests passing
-- ✓ Unified Validator: 15 total files validated (12 characters + 1 NPC + 1 items + 1 party)
-- ✓ Comprehensive Tests: All tests passing, including cross-validation and consistency checks
+-  Character Validator: 12 files validated, all tests passing
+-  NPC Validator: 1 file validated, all tests passing
+-  Items Validator: 1 file validated, all tests passing
+-  Party Validator: 1 file validated, all tests passing
+-  Unified Validator: 15 total files validated (12 characters + 1 NPC + 1 items + 1 party)
+-  Comprehensive Tests: All tests passing, including cross-validation and consistency checks
 
 ## Command Reference
 

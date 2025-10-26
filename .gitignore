@@ -35,18 +35,19 @@ desktop.ini
 # Characters: Ignore all JSON files except examples
 game_data/characters/*.json
 !game_data/characters/class.example.json
+!game_data/characters/aragorn.json
+!game_data/characters/frodo.json
+!game_data/characters/gandalf.json
 
 # NPCs: Ignore all JSON files except examples  
 game_data/npcs/*.json
 !game_data/npcs/npc.example.json
+!game_data/npcs/butterbur.json
 
 # Custom Items: Ignore registry, track example
 game_data/items/custom_items_registry.json
 !game_data/items/custom_items_registry.example.json
-
-# Party Configuration: Ignore config, track example
-game_data/current_party/current_party.json
-!game_data/current_party/current_party.example.json
+!game_data/items/custom_items.json
 
 # Campaigns: Ignore ALL user-generated campaign content
 # This includes _Campaign/, _Quest/, _Story/, _Adventure/ folders with:
@@ -56,7 +57,7 @@ game_data/current_party/current_party.json
 # - Story hooks (story_hooks_*.md)
 game_data/campaigns/*
 !game_data/campaigns/.gitkeep
-
+!game_data/campaigns/Example_Campaign/
 # Backup and temp files anywhere in game_data
 game_data/**/*.bak
 game_data/**/*.tmp
@@ -76,21 +77,19 @@ rag_*.db
 # =============================================================================
 # NOTES ON TRACKED FOLDERS
 # =============================================================================
-# Future_Campaign/ in root is kept for manual testing/reference (tracked)
-
-# Ignore Fantasy Grounds Unity exports
-FGU_exports/
 
 # Ignore story drafts and temp files
 story_drafts/
 *.tmp
 
-# Ignore test output
+# Ignore test output and coverage reports
 *.coverage
 htmlcov/
+.pytest_cache/
 
-# Development tests (not committed until test framework complete)
-tests/
+# Ignore Python cache in tests
+tests/__pycache__/
+tests/**/__pycache__/
 
 # Ignore miscellaneous
 *.swp

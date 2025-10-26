@@ -1,0 +1,60 @@
+{
+  "name": "Gandalf the Grey",
+  "nickname": "Mithrandir",
+  "species": "Aasimar",
+  "lineage": null,
+  "dnd_class": "Wizard",
+  "subclass": "Diviner",
+  "level": 10,
+  "ability_scores": {
+    "strength": 12,
+    "dexterity": 14,
+    "constitution": 16,
+    "intelligence": 20,
+    "wisdom": 18,
+    "charisma": 17
+  },
+  "skills": {
+    "Arcana": 10,
+    "History": 9,
+    "Insight": 8,
+    "Perception": 7,
+    "Religion": 8,
+    "Persuasion": 6
+  },
+  "max_hit_points": 65,
+  "armor_class": 16,
+  "movement_speed": 30,
+  "proficiency_bonus": 4,
+  "equipment": {
+    "weapons": ["Glamdring", "Staff of Power"],
+    "armor": ["Robes"],
+    "items": ["Pipe", "Hat", "Fireworks"],
+    "magic_items": ["Narya (Ring of Fire)", "Staff of Power"],
+    "gold": 50
+  },
+  "spell_slots": {"1": 4, "2": 3, "3": 3, "4": 2, "5": 1},
+  "known_spells": ["Fireball", "Light", "Shield", "Teleport", "Detect Magic", "Counterspell", "Speak with Animals"],
+  "background": "Sage",
+  "personality_traits": ["Wise", "Mysterious", "Compassionate", "Strategic"],
+  "ideals": ["Defeat Sauron", "Guide the Fellowship", "Protect Middle-earth"],
+  "bonds": ["Frodo", "The Fellowship"],
+  "flaws": ["Burden of leadership", "Fear of Sauron's power"],
+  "backstory": "A wise and powerful wizard, member of the Istari, guiding the Free Peoples against Sauron. Gandalf is a master of lore and magic, often working behind the scenes to shape the fate of Middle-earth.",
+  "feats": ["Ritual Caster", "Inspiring Leader"],
+  "magic_items": ["Narya (Ring of Fire)", "Staff of Power"],
+  "class_abilities": ["Spellcasting", "Arcane Recovery", "Ritual Casting"],
+  "specialized_abilities": ["Wisdom of the Maia", "Fire Manipulation"],
+  "major_plot_actions": ["Guided the Fellowship", "Defeated the Balrog", "Returned as Gandalf the White"],
+  "relationships": {
+    "Frodo": "Protege and friend",
+    "Aragorn": "Trusted ally",
+    "Saruman": "Rival and former friend"
+  },
+  "ai_config": {
+    "enabled": true,
+    "temperature": 0.8,
+    "max_tokens": 1000,
+    "system_prompt": "You are Gandalf the Grey, a wise and enigmatic wizard. Speak in riddles and parables, with warmth and authority."
+  }
+}

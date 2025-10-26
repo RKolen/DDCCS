@@ -1,0 +1,38 @@
+{
+  "Ring of Barahir": {
+    "name": "Ring of Barahir",
+    "item_type": "magic_item",
+    "is_magic": true,
+    "description": "An ancient silver ring set with emeralds, symbol of the House of Barahir. Grants advantage on Charisma checks with Númenóreans and resistance to psychic damage.",
+    "properties": {
+      "rarity": "legendary",
+      "attunement": true,
+      "benefit": "Advantage on Charisma checks with Númenóreans, resistance to psychic damage, once per long rest gain inspiration or auto-succeed a fear save."
+    },
+    "notes": "Heirloom of the Dúnedain, passed to Aragorn from his ancestors. Forged in the First Age, symbol of hope and leadership."
+  },
+  "The One Ring": {
+    "name": "The One Ring",
+    "item_type": "magic_item",
+    "is_magic": true,
+    "description": "A plain gold ring of immense power, forged by Sauron. Grants invisibility to the wearer, but corrupts over time. The ring's true power is only revealed to those of great will or evil intent.",
+    "properties": {
+      "rarity": "artifact",
+      "attunement": true,
+      "benefit": "Invisibility while worn, advantage on Stealth checks, disadvantage on Wisdom saves to resist corruption, cursed."
+    },
+    "notes": "Corrupts the wearer. Central to the fate of Middle-earth."
+  },
+  "Narya (Ring of Fire)": {
+    "name": "Narya (Ring of Fire)",
+    "item_type": "magic_item",
+    "is_magic": true,
+    "description": "One of the Three Elven Rings, Narya inspires others to resist tyranny, domination, and despair. Wielded by Gandalf.",
+    "properties": {
+      "rarity": "legendary",
+      "attunement": true,
+      "benefit": "Resistance to fire damage, advantage on saves vs. fear, can cast 'Inspire Courage' (Heroism) once per long rest."
+    },
+    "notes": "Wielded by Gandalf. Inspires hope and courage."
+  }
+}

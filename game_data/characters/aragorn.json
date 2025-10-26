@@ -1,0 +1,63 @@
+{
+  "name": "Aragorn",
+  "nickname": "Strider",
+  "species": "Human",
+  "lineage": null,
+  "dnd_class": "Ranger",
+  "subclass": "Hunter",
+  "level": 10,
+  "ability_scores": {
+    "strength": 18,
+    "dexterity": 16,
+    "constitution": 16,
+    "intelligence": 14,
+    "wisdom": 15,
+    "charisma": 16
+  },
+  "skills": {
+    "Survival": 9,
+    "Perception": 8,
+    "Stealth": 7,
+    "Athletics": 8,
+    "Insight": 7,
+    "Medicine": 6
+  },
+  "max_hit_points": 85,
+  "armor_class": 17,
+  "movement_speed": 35,
+  "proficiency_bonus": 4,
+  "equipment": {
+    "weapons": ["Andúril", "Dagger"],
+    "armor": ["Leather Armor", "Cloak of Elvenkind"],
+    "items": ["Pipe", "Healing Herbs", "Elven Brooch"],
+    "magic_items": ["Ring of Barahir"],
+    "gold": 0
+  },
+  "spell_slots": {"1": 4, "2": 3, "3": 2},
+  "known_spells": ["Hunter's Mark", "Goodberry", "Pass without Trace"],
+  "background": "Noble",
+  "personality_traits": ["Stoic", "Wise", "Compassionate", "Wary of power"],
+  "ideals": ["Protect the Free Peoples of Middle-earth", "Fulfill his destiny as king"],
+  "bonds": ["Defend his friends", "Unite Gondor and Arnor"],
+  "flaws": ["Fear of failing his ancestors", "Temptation of the Ring", "Isolation"],
+  "backstory": "Heir of Isildur, raised in Rivendell, hidden from Sauron's gaze. Ranger of the North, destined to reclaim the throne of Gondor. Aragorn is the last of the line of kings, a skilled tracker and swordsman, haunted by the burden of his ancestry.",
+  "feats": ["Alert", "Skilled", "Resilient"],
+  "magic_items": ["Ring of Barahir"],
+  "class_abilities": ["Favored Enemy: Orcs", "Natural Explorer", "Primeval Awareness"],
+  "specialized_abilities": ["Leadership", "Tracking"],
+  "major_plot_actions": ["Led the Fellowship", "Healed Faramir", "Claimed the throne"],
+  "relationships": {
+    "Arwen": "Beloved",
+    "Gandalf": "Mentor and friend",
+    "Legolas": "Trusted companion",
+    "Gimli": "Trusted companion",
+    "Boromir": "Comrade, wary respect",
+    "Frodo": "Protector"
+  },
+  "ai_config": {
+    "enabled": true,
+    "temperature": 0.5,
+    "max_tokens": 1000,
+    "system_prompt": "You are Aragorn, a stoic and wise ranger, heir to the throne of Gondor. Speak with measured confidence, always considering the safety of your companions and the fate of Middle-earth."
+  }
+}

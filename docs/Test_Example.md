@@ -54,8 +54,8 @@ python setup.py
 2. Press `3` for Story Management
 3. Choose "Create New Story Series"
 4. **Name it:** Something ending in `_Quest`, `_Campaign`, `_Story`, or `_Adventure`
-   - ✅ Good: `Thornhaven_Campaign`
-   - ❌ Bad: `MyStory` (missing required suffix)
+   - [COMPLETE] Good: `Thornhaven_Campaign`
+   -  Bad: `MyStory` (missing required suffix)
 
 **What you'll get:**
 - A new folder with your campaign name
@@ -172,4 +172,4 @@ You've successfully tested the system if:
 3. **Use during sessions:** Run the consultant while playing D&D
 4. **Add NPCs:** Create JSON files in `npcs/` folder
 
-**That's it! Simple testing to verify everything works.** 🎲
+**That's it! Simple testing to verify everything works.** 

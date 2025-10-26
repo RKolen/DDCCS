@@ -1,6 +1,6 @@
 # D&D Character Consultant System - Copilot Instructions
 
-## ⚠️ IMPORTANT: Read This First
+##  IMPORTANT: Read This First
 
 **BEFORE starting ANY task:**
 1. **ALWAYS read this entire file** to understand the current project state
@@ -49,18 +49,63 @@ D&D Campaign Workspace/
 │       └── Your_Campaign/  # Campaign stories and analysis
 │           ├── 001_*.md    # Story sequence files
 │           └── session_results_*.md
-├── character_consultants.py # Core character consultant system
-├── story_manager.py        # Handles story files
-├── enhanced_story_manager.py # Advanced story management
-├── combat_narrator.py      # Converts FGU combat to narrative
-├── spell_highlighter.py    # Spell detection and highlighting
-├── dnd_consultant.py       # Main interactive CLI
-├── setup.py               # Workspace initialization
-├── character_validator.py  # Character JSON validation
-├── npc_validator.py        # NPC JSON validation
-├── items_validator.py      # Items registry validation
-├── party_validator.py      # Party config validation
-├── validate_all.py         # Unified validation for all game data
+├── src/                    # All source code (Phase 0 complete!)
+│   ├── characters/         # Character management
+│   │   ├── consultants/    # Character consultant system (Phase 1 complete!)
+│   │   │   ├── consultant_core.py         # Main CharacterConsultant class
+│   │   │   ├── consultant_dc.py           # DC calculation component
+│   │   │   ├── consultant_story.py        # Story analysis component
+│   │   │   ├── consultant_ai.py           # AI integration component
+│   │   │   ├── character_profile.py       # CharacterProfile dataclass
+│   │   │   └── class_knowledge.py         # D&D class data (12 classes)
+│   │   ├── character_sheet.py       # Character and NPC data models
+│   │   └── character_consistency.py # Character consistency checking
+│   ├── npcs/              # NPC management
+│   │   ├── npc_agents.py           # NPC AI agents
+│   │   └── npc_auto_detection.py   # Automatic NPC detection
+│   ├── stories/           # Story management
+│   │   ├── story_manager.py            # Core story management
+│   │   ├── enhanced_story_manager.py   # Advanced story features
+│   │   ├── story_analyzer.py           # Story analysis
+│   │   ├── story_file_manager.py       # Story file operations
+│   │   ├── session_results_manager.py  # Session results tracking
+│   │   └── hooks_and_analysis.py       # Story hooks generation
+│   ├── combat/            # Combat system (Phase 2 complete!)
+│   │   ├── combat_narrator.py          # Main combat narrator (92 lines)
+│   │   ├── narrator_ai.py              # AI-enhanced narration component
+│   │   ├── narrator_descriptions.py    # Combat action descriptions
+│   │   └── narrator_consistency.py     # Character consistency checking
+│   ├── items/             # Items and inventory
+│   │   └── item_registry.py        # Custom items registry
+│   ├── dm/                # Dungeon Master tools
+│   │   ├── dungeon_master.py       # DM consultant
+│   │   └── history_check_helper.py # History check helper
+│   ├── validation/        # Data validation
+│   │   ├── character_validator.py  # Character JSON validation
+│   │   ├── npc_validator.py        # NPC JSON validation
+│   │   ├── items_validator.py      # Items JSON validation
+│   │   ├── party_validator.py      # Party config validation
+│   │   └── validate_all.py         # Unified validator
+│   ├── ai/                # AI integration
+│   │   ├── ai_client.py           # AI client interface
+│   │   └── rag_system.py          # RAG system
+│   ├── utils/             # Shared utilities
+│   │   ├── dnd_rules.py            # D&D 5e game rules (DCs, modifiers)
+│   │   ├── file_io.py              # File operations
+│   │   ├── path_utils.py           # Path utilities
+│   │   ├── string_utils.py         # String utilities
+│   │   ├── validation_helpers.py   # Validation helpers
+│   │   ├── text_formatting_utils.py  # Text formatting
+│   │   └── spell_highlighter.py      # Spell detection
+│   └── cli/               # Command-line interface (Phase 2 complete!)
+│       ├── dnd_consultant.py       # Main interactive CLI (110 lines)
+│       ├── cli_character_manager.py # Character management operations
+│       ├── cli_story_manager.py     # Story and series management
+│       ├── cli_consultations.py     # Character consultations and DCs
+│       ├── cli_story_analysis.py    # Story analysis and combat conversion
+│       ├── dnd_cli_helpers.py      # CLI helper functions
+│       ├── party_config_manager.py # Party configuration
+│       └── setup.py                # Workspace initialization
 ├── tests/                 # Test suite (git-ignored)
 │   ├── test_character_validator.py
 │   ├── test_npc_validator.py
@@ -88,7 +133,36 @@ The user creates story files in format `001_<storyname>.md` and:
 
 ## Character Consultant System
 
-Each of the 12 character consultants provides:
+**Architecture (Phase 1 complete!):** Uses composition pattern with specialized components:
+
+- **consultant_core.py** - Main `CharacterConsultant` class that orchestrates components
+  - Handles character loading, core reactions, item management
+  - Delegates to specialized components via composition
+  
+- **consultant_dc.py** - `DCCalculator` component
+  - DC calculations based on action difficulty + character strengths
+  - Alternative approach suggestions
+  - Character advantage detection
+  
+- **consultant_story.py** - `StoryAnalyzer` component
+  - Story consistency checking against character profile
+  - Relationship update suggestions
+  - Character development tracking
+  - Plot action logging
+  
+- **consultant_ai.py** - `AIConsultant` component (optional)
+  - AI-enhanced reaction suggestions
+  - AI-powered DC calculations
+  - Integration with AI client
+  
+- **character_profile.py** - `CharacterProfile` dataclass
+  - 30+ fields (name, class, level, personality, equipment, etc.)
+  - JSON save/load methods
+  
+- **class_knowledge.py** - Static D&D class data
+  - All 12 D&D classes with abilities, reactions, roleplay notes
+
+Each consultant provides:
 - **Class expertise** (spell lists, abilities, tactics)
 - **DC suggestions** based on character strengths
 - **Personality guidance** from custom backgrounds
@@ -97,7 +171,34 @@ Each of the 12 character consultants provides:
 
 ## Coding Guidelines
 
-When working with this codebase:
+### CRITICAL: No Emojis in Any Code
+
+**NEVER use emojis in any Python files (.py) or Markdown files (.md)**
+- Emojis cause encoding errors on Windows (cp1252 codec)
+- Break code execution even with UTF-8 configuration
+- Use ASCII alternatives instead
+- **Rationale:** Windows console uses cp1252 encoding by default, emojis break execution
+- **Applies to:** All .py files, all .md files, all documentation
+
+### CRITICAL: No Pylint Disable Comments
+
+**NEVER use `# pylint: disable=...` , `# noqa ...`or `# pragma ...` comments**
+**NEVER!**
+**Never create a .pylintrc file to cheat this rule**
+**NEVER!**
+
+**Instead, properly fix the issue:**
+- **Import outside toplevel:** Move imports to module top level
+- **Too many arguments:** Use builder pattern, config dicts, or dataclasses
+- **Too complex functions:** Extract helper functions or split into smaller methods
+- **Unused variables:** Remove them or prefix with `_` if required by API
+- **Long lines:** Split properly using parentheses and line continuations
+- **Broad exceptions:** Use specific exception types
+- **File too long (>1000 lines):** Split into multiple modules
+
+If you encounter a pylint warning, propose a proper architectural solution and document it in `docs/docs_personal/future_rework.md` for review.
+
+### When working with this codebase:
 
 1. **Character Profiles**: All stored as JSON in `game_data/characters/` directory with user-customizable backgrounds
 2. **Story Analysis**: Parse markdown files for CHARACTER/ACTION/REASONING blocks
@@ -184,8 +285,13 @@ I've got, but there's been strange happenings lately..."
 
 ## Main Commands
 
-- `python dnd_consultant.py` - Interactive consultant interface
-- `python setup.py` - Initialize workspace with default characters
+- `python -m src.cli.setup` - One-time workspace initialization (creates VSCode config, verifies folders)
+- `python -m src.cli.dnd_consultant` - **Main interactive tool** for all user workflows:
+  - Create and manage campaigns
+  - Create and edit story files
+  - Manage party configuration
+  - Get character consultations and DC suggestions
+  - Convert combat logs to narratives
 - VS Code tasks for quick access via Ctrl+Shift+P
 
 ## JSON Validation System
@@ -202,19 +308,19 @@ The system includes comprehensive JSON validation for all game data:
 **Usage:**
 ```bash
 # Validate specific data type
-python character_validator.py
-python npc_validator.py
-python items_validator.py
-python party_validator.py
+python -m src.validation.character_validator
+python -m src.validation.npc_validator
+python -m src.validation.items_validator
+python -m src.validation.party_validator
 
 # Validate all game data
-python validate_all.py
+python -m src.validation.validate_all
 
 # Validate specific types with verbose output
-python validate_all.py --characters --verbose
-python validate_all.py --npcs
-python validate_all.py --items
-python validate_all.py --party
+python -m src.validation.validate_all --characters --verbose
+python -m src.validation.validate_all --npcs
+python -m src.validation.validate_all --items
+python -m src.validation.validate_all --party
 
 # Run validation tests
 python tests/test_character_validator.py
@@ -330,10 +436,10 @@ Optional detailed explanation if needed:
 - Reference issue numbers if applicable
 
 **Examples:**
-- ✓ Good: "Reorganize user data into game_data folder and add spell highlighting"
-- ✗ Bad: "✨ Added spell highlighting ✨ and reorganized stuff 🎉"
-- ✓ Good: "Fix gitignore pattern for campaign files"
-- ✗ Bad: "Fixed the .gitignore because campaign files were showing up in git status which was annoying"
+-  Good: "Reorganize user data into game_data folder and add spell highlighting"
+-  Bad: " Added spell highlighting  and reorganized stuff "
+-  Good: "Fix gitignore pattern for campaign files"
+-  Bad: "Fixed the .gitignore because campaign files were showing up in git status which was annoying"
 
 ## Common Tasks
 
@@ -341,7 +447,6 @@ When assisting with this project:
 - Help customize character profiles with rich backgrounds
 - Assist with story analysis and consistency checking
 - Support VSCode task configuration
-- Help integrate Fantasy Grounds Unity workflows
 - Guide DC balancing for character abilities
 
 This system enhances user creativity rather than replacing it - the user maintains full control while getting expert character consultation.

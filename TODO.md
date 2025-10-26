@@ -1,12 +1,9 @@
 # TODO List - D&D Character Consultant System
 
-## 🔥 High Priority
+##  High Priority
 
-### Story Management System
-- [ ] **Test story creation flow** - Verify the enhanced story manager works with CLI interface end-to-end
-
-### Character System Improvements  
-- [ ] **Level progression tracking** - Add system to track character level changes over time
+### Manual Testing
+- [ ] - The code recently undergone many code refactors and while tests are added for everything we need to check if the donsultant still does what we want.
 
 ### User Experience
 - [ ] **Error handling** - Improve error messages throughout the system for better user guidance
@@ -19,12 +16,14 @@
 - [ ] **AI-powered story suggestions** - Use AI to suggest story developments and narrative improvements (future enhancement)
 - [ ] **Intelligent character matching** - AI-assisted character selection for actions (future enhancement)
 
-## 🚧 Medium Priority
+##  Medium Priority
 
 ### Character System Improvements
 - [ ] **Character templates** - Create additional class-specific templates beyond the basic example
 - [ ] **Multi-class support** - Enhance character profiles to support multiclassing
-
+- [ ] **Current Party Alterations** - Consider current party to be part of campaign files instead
+- [ ] **Profile Verification** - Check if JSON templates need to be updated for profile updates and consistency usage
+- [ ] **background in possesions** - Fix background key being in possessions not identity
 ### Feature Enhancements
 - [ ] **Campaign templates** - Create templates for common campaign types (mystery, dungeon crawl, etc.)
 - [ ] **Character relationship mapping** - Visual or structured relationship tracking between characters
@@ -43,7 +42,7 @@
   - Campaign statistics and insights
   - Keep JSON as default for simplicity
 
-## 🌟 Low Priority / Nice to Have
+##  Low Priority / Nice to Have
 
 ### Advanced Features
 - [ ] **In-world calendar tracking** - Track campaign timeline, seasons, and story chronology within the game world
@@ -61,9 +60,11 @@
 - [ ] **Interactive setup** - Make setup.py more interactive for first-time users
 - [ ] **Quick start guide** - Create a step-by-step tutorial for new users
 
-## 🐛 Known Issues to Fix
+##  Known Issues to Fix
 
 ### Bug Fixes
+- [ ] **W0611: Unused AIClient imported from ai_client (unused-import)** In dungeon_master.py
+- [ ] **R0904: Too many public methods (24/20) (too-many-public-methods)** In enhanced_story_manager.py
 - [ ] **Unicode handling** - Fix emoji/Unicode issues in Windows console output (partially resolved)
 - [ ] **File path handling** - Ensure cross-platform compatibility for file paths
 - [ ] **Memory usage** - Optimize character loading for large numbers of characters
@@ -75,7 +76,7 @@
 - [ ] **Command history** - Save and recall previous commands in interactive mode
 - [ ] **Batch operations** - Support for bulk character or story operations
 
-## 📝 Documentation TODOs
+##  Documentation TODOs
 
 ### README Updates
 - [ ] **Remove outdated references** to Story_Series_Folders structure
@@ -90,6 +91,156 @@
 
 ## [x] Recently Completed
 
+### Comprehensive Testing  October 26, 2025
+
+- [x] **Step 8: Validators Tests** - COMPLETE [COMPLETE]
+  - [x] test_character_validator.py
+  - [x] test_npc_validator.py
+  - [x] test_party_validator.py
+  - [x] test_items_validator.py
+  - [x] test_all_validators.py
+  - [x] tests/validation/README.md
+
+**Next Steps (Priority Order):**
+- [x] **Step 1: AI Integration Tests** COMPLETE [COMPLETE]
+  - [x] Fix test_ai_env_config.py
+  - [x] Create test_ai_client.py
+  - [x] Create test_rag_system.py
+  - [x] Create test_all_ai.py
+  - [x] Create test_behavior_generation_ai_mock.py
+  - [x] Create test_availability.py
+  - [x] Create tests/ai/README.md
+
+- [x] **Step 2: Character System Tests** COMPLETE [COMPLETE]
+  - [x] test_character_profile.py
+  - [x] test_consultant_core.py
+  - [x] test_consultant_dc.py
+  - [x] test_consultant_story.py
+  - [x] test_consultant_ai.py
+  - [x] test_class_knowledge.py
+  - [x] test_character_sheet.py
+  - [x] test_character_consistency.py
+  - [x] test_all_characters.py
+  - [x] tests/characters/README.md
+
+- [x] **Step 3: NPC System Tests** COMPLETE [COMPLETE]
+  - [x] test_npc_agents.py
+  - [x] test_npc_auto_detection.py
+  - [x] test_all_npcs.py
+  - [x] tests/npcs/README.md
+
+- [x] **Step 4: Story System Tests** COMPLETE [COMPLETE]
+  - [x] test_story_manager.py
+  - [x] test_enhanced_story_manager.py
+  - [x] test_story_analyzer.py
+  - [x] test_story_file_manager.py
+  - [x] test_session_results_manager.py
+  - [x] test_hooks_and_analysis.py
+  - [x] test_party_manager.py
+  - [x] test_story_updater.py
+  - [x] test_character_manager.py
+  - [x] test_character_loader.py
+  - [x] test_character_consistency.py
+  - [x] test_character_consistency_integration.py
+  - [x] test_all_stories.py
+  - [x] tests/stories/README.md
+
+- [x] **Step 5: Combat System Tests** COMPLETE [COMPLETE]
+  - [x] test_combat_narrator.py
+  - [x] test_narrator_ai.py
+  - [x] test_narrator_descriptions.py
+  - [x] test_narrator_consistency.py
+  - [x] test_all_combat.py
+  - [x] tests/combat/README.md
+
+- [x] **Step 6: Items System Tests** COMPLETE [COMPLETE]
+  - [x] test_item_registry.py
+  - [x] test_all_items.py
+  - [x] test_load_precedence_registry_over_fallback
+  - [x] test_load_fallback_only_items_present
+  - [x] test_get_item_and_is_custom_api
+  - [x] tests/items/README.md
+
+- [x] **Step 7: DM Tools Tests**  COMPLETE [COMPLETE]
+  - [x] test_dungeon_master.py
+  - [x] test_history_check_helper.py
+  - [x] test_suggest_narrative_with_character_insights
+  - [x] test_generate_narrative_with_ai_client_and_rag
+  - [x] test_check_consistency_relationships
+  - [x] test_all_dm.py
+  - [x] tests/dm/README.md
+
+ - [x] **Step 9: CLI Tests** COMPLETE [COMPLETE]
+  - [x] test_dnd_consultant.py
+  - [x] test_setup.py
+  - [x] test_cli_character_manager.py
+  - [x] test_cli_story_manager.py
+  - [x] test_cli_consultations.py
+  - [x] test_cli_story_analysis.py
+  - [x] test_all_cli.py
+  - [x] tests/cli/README.md
+
+- [x] **Step 10: Utils Tests** COMPLETE [COMPLETE]
+  - [x] test_path_utils.py
+  - [x] test_behaviour_generation.py
+  - [x] test_cli_utils.py
+  - [x] test_dnd_rules.py
+  - [x] tests_file_io.py
+  - [x] test_markdown_utils.py
+  - [x] test_spell_highlighter.py
+  - [x] test_story_formatting_utils.py
+  - [x] test_story_parsing_utils.py
+  - [x] test_string_utils.py
+  - [x] test_text_formatting_utils.py
+  - [x] test_validation_helpers.py
+  - [x] test_story_file_helpers.py
+  - [x] test_all_utils.py
+  - [x] tests/utils/README.md
+  
+**Testing Standards:**
+- [COMPLETE] Every test must achieve 10.00/10 pylint (NO disable comments no pragma no noqa)
+- [COMPLETE] Every test must work with `run_all_tests.py`
+- [COMPLETE] Common code goes in `test_helpers.py` (DRY principle)
+- [COMPLETE] Every test folder has README.md (what/why/tests list)
+- [COMPLETE] Every subsystem has `test_all_<subsystem>.py` runner
+
+### Refactor & test-harness cleanup — October 26, 2025
+
+- [x] Centralized duplicated test helpers into `tests/test_helpers.py`
+  - Replaced per-file fixtures and import-try scaffolds with canonical
+    helpers to reduce duplication and increase clarity.
+- [x] Added `tests/test_runner_common.py` and updated per-subsystem
+  aggregators to use a shared subprocess runner and summary helpers.
+- [x] Fixed subprocess import / module-resolution issues by setting
+  `PYTHONPATH` for child processes and invoking modules with `-m
+  tests.<module>` to ensure reliable imports.
+- [x] Resolved Pylint duplicate-code (R0801) across `tests/` by
+  centralizing shared logic and removing local duplicates.
+- [x] Fixed a complexity warning (R0914) in `tests/test_helpers.py`
+  by extracting nested logic into module-level functions.
+- [x] Updated many tests (combat, cli, characters, validators, utils)
+  to use the canonical helpers; replaced inline fixtures and fake
+  input helpers with `tests.test_helpers` utilities.
+- [x] Repaired failing combat-suite tests found during refactors
+  (import/unpacking fixes) and re-ran the suite to green.
+- [x] Completed repository reorganization into `src/`, added
+  `game_data/` fixtures, and updated tests to the new package layout.
+- [x] Achieved Pylint 10.00/10 for tests and removed emojis that
+  caused Windows console encoding issues.
+
+### Code Quality & Pylint
+- [x] **Pylint cleanup complete** - All core files 10.00/10
+  - [x] dnd_consultant.py (8.81 → 9.88/10, 1028 → 956 lines)
+  - [x] enhanced_story_manager.py (8.71 → 10.00/10, 1064 → 433 lines)
+  - [x] All 7 extracted modules (10.00/10)
+  - [x] npc_auto_detection.py (9.66 → 10.00/10)
+  - [x] dungeon_master.py (8.85 → 10.00/10)
+  - [x] All validators (10.00/10 with shared helpers)
+  - [x] combat_narrator.py (10.00/10)
+  - [x] story_manager.py (10.00/10)
+  - [x] **Emoji removal complete** - All emojis removed (29 files, no UTF-8 workarounds)
+
+
 ### JSON Validation System & Nickname Support - October 12, 2025
 - [x] **Character validator** - Created character_validator.py with comprehensive schema validation for character JSON files
 - [x] **NPC validator** - Created npc_validator.py with schema validation for NPC profiles
@@ -100,7 +251,10 @@
 - [x] **Nickname field support** - Added nullable nickname field to all characters and NPCs for better name handling
 - [x] **Name constraints** - Validators now enforce character name constraints (no apostrophes, quotes, or shell-unsafe characters)
 - [x] **Clear error messages** - All validators provide specific, actionable error messages with field names and expected types
-- [x] **Test suites (local only)** - Created comprehensive test files for all validators (tests/ folder, git-ignored, not yet in repository)
+- [x] **Test suites** - Created comprehensive test files for all validators (tests/ folder, now committed to repository)
+- [x] **Test infrastructure** - Created test_helpers.py for UTF-8 encoding and path setup (10.00/10 pylint)
+- [x] **Test runner** - Created run_all_tests.py unified test runner with category support (10.00/10 pylint)
+- [x] **Test configuration** - Created tests/.pylintrc for test-specific lint rules (proper configuration, not inline disables)
 - [x] **Documentation** - Created docs/JSON_Validation.md and docs/Validator_Integration.md with usage guides
 - [x] **Validator exception handling** - Party validator throws clear exceptions when party member names don't match character files
 
@@ -177,5 +331,5 @@
 
 ---
 
-**Last Updated:** October 12, 2025
-**Priority Legend:** 🔥 High | 🚧 Medium | 🌟 Low | 🐛 Bugs | 📝 Docs
+**Last Updated:** October 26, 2025
+**Priority Legend:**  High |  Medium |  Low |  Bugs |  Docs
