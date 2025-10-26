@@ -83,15 +83,15 @@
   - [x] test_all_dm.py
   - [x] tests/dm/README.md
 
-- [ ] **Step 9: CLI Tests** (cli/) - AFTER STEPS 1-7
-  - [ ] test_dnd_consultant.py
-  - [ ] test_setup.py
-  - [ ] test_cli_character_manager.py
-  - [ ] test_cli_story_manager.py
-  - [ ] test_cli_consultations.py
-  - [ ] test_cli_story_analysis.py
-  - [ ] test_all_cli.py
-  - [ ] tests/cli/README.md
+ - [x] **Step 9: CLI Tests** COMPLETE [COMPLETE]
+  - [x] test_dnd_consultant.py
+  - [x] test_setup.py
+  - [x] test_cli_character_manager.py
+  - [x] test_cli_story_manager.py
+  - [x] test_cli_consultations.py
+  - [x] test_cli_story_analysis.py
+  - [x] test_all_cli.py
+  - [x] tests/cli/README.md
 
 - [ ] **Step 10: Utils Tests** (utiles/)
   - [x] test_path_utils.py

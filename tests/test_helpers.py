@@ -145,3 +145,76 @@ class FakeConsultant:
     def ping(self) -> bool:
         """Health-check method to satisfy interfaces expecting availability."""
         return True
+
+
+class FakeStoryAnalysis:
+    """Minimal fake for the StoryAnalysisCLI used in CLI tests.
+
+    Exposes an `analyze_story` method that records it was called. Tests can
+    replace the real StoryAnalysisCLI with this fake to avoid filesystem or
+    complex behavior.
+    """
+
+    def __init__(self):
+        self.analyzed = False
+        self.last_story = None
+
+    def analyze_story(self):
+        """Mark that analyze_story was invoked."""
+        self.analyzed = True
+
+    def was_analyzed(self) -> bool:
+        """Return True if analyze_story was called since construction or last reset."""
+        return bool(self.analyzed)
+
+    def reset(self) -> None:
+        """Reset the analyzed state and last_story for reuse in multiple tests."""
+        self.analyzed = False
+        self.last_story = None
+
+
+class FakeStoryManager:
+    """Minimal fake story manager used by CLI tests.
+
+    Implements the small subset of StoryManager API used by CLI modules.
+    """
+
+    def __init__(self, characters=None, existing_stories=None):
+        self.consultants = {}
+        self._characters = characters or []
+        self._existing = existing_stories or []
+
+    def get_character_list(self):
+        """Return a list of character names."""
+        return list(self._characters)
+
+    def get_existing_stories(self):
+        """Return a list of existing story filenames."""
+        return list(self._existing)
+
+
+class FakeDMConsultant:
+    """Minimal fake DM consultant exposing the small API used by ConsultationsCLI."""
+
+    def __init__(self, characters=None, npcs=None):
+        self._characters = characters or []
+        self._npcs = npcs or []
+
+    def get_available_characters(self):
+        """Return available character names."""
+        return list(self._characters)
+
+    def get_available_npcs(self):
+        """Return available NPC names."""
+        return list(self._npcs)
+
+    def suggest_narrative(self, prompt, characters_present=None, npcs_present=None):
+        """Return a deterministic suggestion structure for tests."""
+        _ = (prompt, characters_present, npcs_present)
+        return {
+            "user_prompt": prompt,
+            "character_insights": {},
+            "npc_insights": {},
+            "narrative_suggestions": ["A short generated narrative."],
+            "consistency_notes": [],
+        }
