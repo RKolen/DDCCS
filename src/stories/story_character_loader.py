@@ -9,9 +9,10 @@ import os
 from typing import Dict, List, Optional
 from src.characters.consultants.character_profile import CharacterProfile
 from src.characters.consultants.consultant_core import CharacterConsultant
-from src.validation.character_validator import validate_character_file
-from src.utils.file_io import directory_exists, get_json_files_in_directory
+from src.utils.file_io import directory_exists
 from src.utils.path_utils import get_characters_dir, get_character_file_path
+from src.utils.story_file_helpers import list_character_json_candidates
+from src.stories.character_load_helper import load_character_consultant
 
 USE_CHARACTER_VALIDATION = True
 
@@ -38,40 +39,13 @@ class CharacterLoader:
         """Load all character profiles and create consultants."""
         if not directory_exists(self.characters_path):
             return
-
-        use_validation = USE_CHARACTER_VALIDATION
-        if not use_validation:
-            print("Warning: character_validator module not found, skipping validation")
-
-        for filepath in get_json_files_in_directory(self.characters_path):
-            filename = os.path.basename(filepath)
-
-            # Skip template and example files
-            if (
-                filename.startswith("class.example")
-                or filename.endswith(".example.json")
-                or filename.startswith("template")
-            ):
+        for filepath in list_character_json_candidates(self.characters_path):
+            consultant = load_character_consultant(filepath, ai_client=self.ai_client,
+                                                   verbose=USE_CHARACTER_VALIDATION)
+            if consultant is None:
                 continue
-
-            # Validate character JSON before loading
-            if use_validation:
-                is_valid, errors = validate_character_file(filepath)
-                if not is_valid:
-                    print(f"[FAILED] Validation failed for {filename}:")
-                    for error in errors:
-                        print(f"  - {error}")
-                    continue
-
-            try:
-                profile = CharacterProfile.load_from_file(filepath)
-                self.consultants[profile.name] = CharacterConsultant(
-                    profile, ai_client=self.ai_client
-                )
-                if use_validation:
-                    print(f"[OK] Loaded and validated: {filename}")
-            except (OSError, IOError) as e:
-                print(f"Warning: Could not load character {filename}: {e}")
+            profile = consultant.profile
+            self.consultants[profile.name] = consultant
 
     def save_character_profile(self, profile: CharacterProfile):
         """

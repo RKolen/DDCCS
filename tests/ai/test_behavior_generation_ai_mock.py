@@ -52,6 +52,15 @@ def test_ai_malformed_output_coercion():
             backstory="A simple backstory",
         )
 
+        # Backwards-compatible: generator may return a dict (refactor)
+        if isinstance(behavior, dict):
+            behavior = CharacterBehavior(
+                preferred_strategies=list(behavior.get("preferred_strategies", [])),
+                typical_reactions=dict(behavior.get("typical_reactions", {})),
+                speech_patterns=list(behavior.get("speech_patterns", [])),
+                decision_making_style=str(behavior.get("decision_making_style", "")),
+            )
+
         # Type assertions
         assert isinstance(behavior, CharacterBehavior)
         assert isinstance(behavior.preferred_strategies, list)

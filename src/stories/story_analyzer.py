@@ -15,10 +15,11 @@ import sys
 from pathlib import Path
 from typing import Dict, List, Set
 
-from src.characters.consultants.character_profile import CharacterProfile
 from src.characters.consultants.consultant_core import CharacterConsultant
 from src.validation.npc_validator import validate_npc_json
 from src.utils.file_io import load_json_file, save_json_file, read_text_file
+from src.utils.story_file_helpers import list_character_json_candidates
+from src.stories.character_load_helper import load_character_consultant
 
 
 class StoryAnalyzer:
@@ -44,21 +45,13 @@ class StoryAnalyzer:
             print(f"Characters directory '{self.characters_dir}' not found.")
             return
 
-        for json_file in self.characters_dir.glob("*.json"):
-            # Skip template/example files
-            if (
-                "example" in json_file.name.lower()
-                or "template" in json_file.name.lower()
-            ):
-                continue
-
+        for fp in list_character_json_candidates(str(self.characters_dir)):
             try:
-                profile = CharacterProfile.load_from_file(str(json_file))
-                if profile:
-                    consultant = CharacterConsultant(profile)
-                    self.consultants[profile.name] = consultant
+                consultant = load_character_consultant(fp, verbose=False)
+                if consultant:
+                    self.consultants[consultant.profile.name] = consultant
             except (OSError, ValueError) as e:
-                print(f"Error loading character from {json_file}: {e}")
+                print(f"Error loading character from {fp}: {e}")
 
     def _load_existing_npcs(self):
         """Load list of existing NPCs."""

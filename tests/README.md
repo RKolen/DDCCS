@@ -30,12 +30,35 @@ All tests achieve 10.00/10 pylint score.
 
 ## Running Tests
 
+Tests are ran from root and can be run complete or as a suite(s):
+
 `Bash
 python tests/run_all_tests.py
 python tests/run_all_tests.py validation
 python tests/run_all_tests.py ai characters
-python tests/validation/test_character_validator.py
 `
+It is not possible to run a single test with a command due to pathing
+of the test_helpers. A workaround is to go into the test_all_[categoryname].py
+and uncomment all tests you dont want to run. Example in test_all_characters.py:
+`
+    # Define all tests to run
+    tests = [
+      #  ("test_character_profile", "Character Profile Tests"),
+      #  ("test_class_knowledge", "Class Knowledge Tests"),
+      #  ("test_character_sheet", "Character Sheet Tests"),
+      #  ("test_character_consistency", "Character Consistency Tests"),
+        ("test_consultant_core", "Consultant Core Tests"),
+      #  ("test_consultant_dc", "DC Calculator Tests"),
+      #  ("test_consultant_story", "Story Analyzer Tests"),
+      #  ("test_consultant_ai", "AI Consultant Tests"),
+    ]
+`
+If you then run python tests/run_all_tests.py characters
+it will only run the test_consultant_core.py test.
+
+Especially the character and story tests are very long (they are almost 1,5 min
+each). If you run (all) the tests be patient they are not stuck it just takes
+a long time.
 
 ## Related Documentation
 

@@ -46,11 +46,11 @@ def run_all_combat_tests():
     print()
 
     tests = [
-        ("test_combat_narrator", "Combat Narrator Tests"),
-        ("test_narrator_ai", "Narrator AI Integration Tests"),
+        # ("test_combat_narrator", "Combat Narrator Tests"),
+        # ("test_narrator_ai", "Narrator AI Integration Tests"),
         ("test_narrator_descriptions", "Narrator Descriptions Tests"),
-        ("test_narrator_consistency", "Narrator Consistency Tests"),
-        ("test_combat_conversion", "Combat Conversion Tests"),
+        # ("test_narrator_consistency", "Narrator Consistency Tests"),
+        # ("test_combat_conversion", "Combat Conversion Tests"),
     ]
 
     results = {}

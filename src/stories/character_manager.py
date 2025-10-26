@@ -5,20 +5,12 @@ Handles character loading, profiles, consultants, and spell highlighting.
 """
 
 import os
-import json
 from typing import Optional
 from src.characters.consultants.character_profile import CharacterProfile
-from src.characters.consultants.consultant_core import CharacterConsultant
 from src.utils.spell_highlighter import highlight_spells_in_text
-from src.utils.file_io import directory_exists, get_json_files_in_directory
-
-# Optional validator import (fail-safe if not available)
-try:
-    from src.validation.character_validator import validate_character_file
-    VALIDATOR_AVAILABLE = True
-except ImportError:
-    VALIDATOR_AVAILABLE = False
-    validate_character_file = None
+from src.utils.file_io import directory_exists
+from src.utils.story_file_helpers import list_character_json_candidates
+from src.stories.character_load_helper import load_character_consultant
 
 
 class CharacterManager:
@@ -43,36 +35,14 @@ class CharacterManager:
         """Load all character profiles and create consultants."""
         if not directory_exists(self.characters_path):
             return
-
-        for filepath in get_json_files_in_directory(self.characters_path):
-            filename = os.path.basename(filepath)
-
-            # Skip template and example files
-            if (
-                filename.startswith("class.example")
-                or filename.endswith(".example.json")
-                or filename.startswith("template")
-            ):
+        for filepath in list_character_json_candidates(self.characters_path):
+            consultant = load_character_consultant(filepath, ai_client=self.ai_client,
+                                                   verbose=False)
+            if consultant is None:
+                # load_character_consultant already prints details when verbose=True
                 continue
-
-            # Validate character JSON before loading
-            if VALIDATOR_AVAILABLE:
-                is_valid, errors = validate_character_file(filepath)
-                if not is_valid:
-                    print(f"[FAILED] Validation failed for {filename}:")
-                    for error in errors:
-                        print(f"  - {error}")
-                    continue
-
-            try:
-                profile = CharacterProfile.load_from_file(filepath)
-                self.consultants[profile.name] = CharacterConsultant(
-                    profile, ai_client=self.ai_client
-                )
-                if VALIDATOR_AVAILABLE:
-                    print(f"[OK] Loaded and validated: {filename}")
-            except (FileNotFoundError, json.JSONDecodeError, KeyError, ValueError) as e:
-                print(f"Warning: Could not load character {filename}: {e}")
+            profile = consultant.profile
+            self.consultants[profile.name] = consultant
 
         # Extract known spells from all loaded characters
         self._update_known_spells()

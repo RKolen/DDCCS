@@ -7,9 +7,10 @@ Enhanced with RAG (Retrieval-Augmented Generation) for campaign wiki integration
 import re
 from typing import Dict, List, Any
 from pathlib import Path
-from src.characters.consultants.character_profile import CharacterProfile
 from src.characters.consultants.consultant_core import CharacterConsultant
 from src.npcs.npc_agents import NPCAgent, create_npc_agents
+from src.utils.story_file_helpers import list_character_json_candidates
+from src.stories.character_load_helper import load_character_consultant
 
 # Import RAG system if available
 try:
@@ -37,16 +38,11 @@ class DMConsultant:
         consultants = {}
         characters_dir = self.workspace_path / "game_data" / "characters"
         if characters_dir.exists():
-            for char_file in characters_dir.glob("*.json"):
-                # Skip template and example files
-                if (
-                    not char_file.name.startswith("class.example")
-                    and not char_file.name.endswith(".example.json")
-                    and not char_file.name.startswith("template")
-                ):
-                    profile = CharacterProfile.load_from_file(str(char_file))
-                    consultant = CharacterConsultant(profile, ai_client=self.ai_client)
-                    consultants[profile.name] = consultant
+            for fp in list_character_json_candidates(str(characters_dir)):
+                consultant = load_character_consultant(fp, ai_client=self.ai_client, verbose=False)
+                if consultant is None:
+                    continue
+                consultants[consultant.profile.name] = consultant
         return consultants
 
     def _load_npc_agents(self) -> Dict[str, NPCAgent]:
