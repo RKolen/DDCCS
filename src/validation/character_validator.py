@@ -18,7 +18,9 @@ def _validate_required_fields(
     """Validate presence and types of required fields."""
     errors = []
 
-    # Required fields that must be present
+    # Required fields that must be present. Note: background/backstory
+    # historically used multiple keys. We validate presence of one of the
+    # accepted background keys below instead of requiring multiple names.
     required_fields = {
         "name": str,
         "species": str,
@@ -27,8 +29,6 @@ def _validate_required_fields(
         "ability_scores": dict,
         "equipment": dict,
         "known_spells": list,
-        "background": str,
-        "backstory": str,
         "relationships": dict,
     }
 
@@ -46,6 +46,20 @@ def _validate_required_fields(
             errors.append(
                 f"{file_prefix}Field '{field}' should be {expected_type.__name__}, "
                 f"got {type(data[field]).__name__}"
+            )
+
+    # Background field compatibility: accept any of these keys
+    background_keys = ("background", "backstory", "background_story")
+    present_bg_key = next((k for k in background_keys if k in data), None)
+    if not present_bg_key:
+        errors.append(
+            f"{file_prefix}Missing required background field: one of {background_keys}"
+        )
+    else:
+        if not isinstance(data[present_bg_key], str):
+            errors.append(
+                f"{file_prefix}Background field '{present_bg_key}' should be str, "
+                f"got {type(data[present_bg_key]).__name__}"
             )
 
     # Validate optional fields if present
