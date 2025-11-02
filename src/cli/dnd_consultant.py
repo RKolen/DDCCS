@@ -12,6 +12,8 @@ from src.cli.cli_character_manager import CharacterCLIManager
 from src.cli.cli_story_manager import StoryCLIManager
 from src.cli.cli_consultations import ConsultationsCLI
 from src.cli.cli_story_analysis import StoryAnalysisCLI
+from src.ai.availability import AI_AVAILABLE
+from src.ai.ai_client import AIClient
 
 
 class DDConsultantCLI:
@@ -19,16 +21,26 @@ class DDConsultantCLI:
 
     def __init__(self, workspace_path: str = None, campaign_name: str = None):
         self.workspace_path = workspace_path or os.getcwd()
+
+        # Initialize AI client if available
+        ai_client = None
+        if AI_AVAILABLE:
+            try:
+                ai_client = AIClient()
+            except (OSError, ValueError) as e:
+                print(f"[INFO] AI client initialization failed: {e}")
+                print("[INFO] Continuing with AI features disabled.")
+
         # By default use the original StoryManager to preserve existing
         # behavior. Only use the EnhancedStoryManager when a campaign name is
         # explicitly provided so the CLI's --campaign flag enables the richer
         # per-campaign behavior without changing the default runtime.
         if campaign_name:
             self.story_manager = EnhancedStoryManager(
-                self.workspace_path, campaign_name=campaign_name
+                self.workspace_path, campaign_name=campaign_name, ai_client=ai_client
             )
         else:
-            self.story_manager = StoryManager(self.workspace_path)
+            self.story_manager = StoryManager(self.workspace_path, ai_client=ai_client)
         self.dm_consultant = DMConsultant(self.workspace_path)
 
         # Initialize manager modules

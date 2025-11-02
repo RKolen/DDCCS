@@ -9,6 +9,11 @@ import json
 from typing import List
 
 from src.cli.party_config_manager import save_current_party, load_current_party
+from src.stories.story_workflow_orchestrator import (
+    coordinate_story_workflow,
+    StoryWorkflowContext,
+    WorkflowOptions,
+)
 
 
 class StoryCLIManager:
@@ -197,6 +202,65 @@ class StoryCLIManager:
             else:
                 print("Invalid choice.")
 
+    def _orchestrate_story_creation(
+        self, story_path: str, series_path: str, party_names: List[str]
+    ) -> None:
+        """Execute workflow orchestration after story file is created.
+
+        Calls coordinate_story_workflow to generate auxiliary files
+        (NPC profiles, story hooks, character development, session results).
+
+        Args:
+            story_path: Path to the created story file
+            series_path: Path to the campaign series folder
+            party_names: List of party member names
+        """
+        try:
+            with open(story_path, "r", encoding="utf-8") as f:
+                story_content = f.read()
+        except OSError as e:
+            print(f"[WARNING] Could not read story file: {e}")
+            return
+
+        # Extract story name from filename
+        story_filename = os.path.basename(story_path)
+        story_name = os.path.splitext(story_filename)[0]
+
+        # Build context and run orchestrator
+        ctx = StoryWorkflowContext(
+            story_name=story_name,
+            story_content=story_content,
+            series_path=series_path,
+            workspace_path=self.workspace_path,
+            party_names=party_names,
+            ai_client=self.story_manager.ai_client,
+        )
+
+        try:
+            options = WorkflowOptions(ai_client=self.story_manager.ai_client)
+            results = coordinate_story_workflow(ctx, options=options)
+
+            # Display results to user
+            if results.get("npcs_suggested"):
+                npcs = results["npcs_suggested"]
+                print(f"\n[INFO] Auto-detected {len(npcs)} NPCs in your story:")
+                for npc in npcs:
+                    print(f"   - {npc}")
+
+            if results.get("hooks_file"):
+                print("[OK] Story hooks file created")
+            if results.get("character_dev_file"):
+                print("[OK] Character development file created")
+            if results.get("session_file"):
+                print("[OK] Session results file created")
+
+            if results.get("errors"):
+                print("\n[WARNINGS]")
+                for err in results["errors"]:
+                    print(f"   - {err}")
+        except (ValueError, OSError, KeyError, AttributeError) as e:
+            print(f"[WARNING] Workflow orchestration encountered issues: {e}")
+
     def _create_new_story_series(self):
         """Create a new story series."""
         print("\n CREATE NEW STORY SERIES")
@@ -243,6 +307,10 @@ class StoryCLIManager:
             print(f"   First story: {first_story_name}")
             print(f"   Location: {filepath}")
             print(f"   Current party saved: {party_config_path}")
+
+            # Run workflow orchestration to create auxiliary files
+            print("\n[INFO] Processing story for NPCs, hooks, and analysis...")
+            self._orchestrate_story_creation(filepath, campaign_folder, party_members)
         except (OSError, ValueError, KeyError) as e:
             print(f"[ERROR] Error creating story series: {e}")
 
@@ -263,6 +331,20 @@ class StoryCLIManager:
             )
             print(f"\n[SUCCESS] Created story in {series_name}")
             print(f"   Location: {filepath}")
+
+            # Load party members for this series
+            series_path = os.path.dirname(filepath)
+            party_names = []
+            try:
+                party_names = load_current_party(
+                    workspace_path=self.workspace_path, campaign_name=series_name
+                )
+            except (ImportError, OSError, ValueError):
+                pass
+
+            # Run workflow orchestration to create auxiliary files
+            print("\n[INFO] Processing story for NPCs, hooks, and analysis...")
+            self._orchestrate_story_creation(filepath, series_path, party_names)
         except (OSError, ValueError, KeyError) as e:
             print(f"[ERROR] Error creating story: {e}")
 
