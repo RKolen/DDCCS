@@ -14,6 +14,13 @@ from src.stories.story_workflow_orchestrator import (
     StoryWorkflowContext,
     WorkflowOptions,
 )
+from src.stories.story_ai_generator import generate_story_from_prompt
+from src.stories.story_file_manager import (
+    StoryFileContext,
+    StoryCreationOptions,
+    create_new_story_series,
+    create_story_in_series,
+)
 
 
 class StoryCLIManager:
@@ -261,8 +268,48 @@ class StoryCLIManager:
         except (ValueError, OSError, KeyError, AttributeError) as e:
             print(f"[WARNING] Workflow orchestration encountered issues: {e}")
 
+    def _collect_story_creation_options(self, story_type: str = "initial") -> StoryCreationOptions:
+        """Collect template and AI generation options from user.
+
+        Args:
+            story_type: Type of story (e.g., "initial", "continuation")
+
+        Returns:
+            StoryCreationOptions with user's choices
+        """
+        use_template = False
+        template_choice = input("\nUse story template with guidance? (y/n): ").strip().lower()
+        if template_choice == 'y':
+            use_template = True
+
+        ai_generated_content = ""
+        if self.story_manager.ai_client:
+            ai_choice = input("Generate initial story with AI? (y/n): ").strip().lower()
+            if ai_choice == 'y':
+                if story_type == "initial":
+                    print("\nDescribe the story you want to create.")
+                    print("Example: 'The party arrives at a mysterious inn during a storm'")
+                else:
+                    print("\nDescribe the story continuation.")
+                    print("Example: 'A courier arrives with urgent news'")
+
+                story_prompt = input("Story prompt: ").strip()
+                if story_prompt:
+                    try:
+                        ai_generated_content = generate_story_from_prompt(
+                            self.story_manager.ai_client,
+                            story_prompt,
+                        ) or ""
+                    except (ValueError, AttributeError) as e:
+                        print(f"[WARNING] AI generation failed: {e}")
+
+        return StoryCreationOptions(
+            use_template=use_template,
+            ai_generated_content=ai_generated_content,
+        )
+
     def _create_new_story_series(self):
-        """Create a new story series."""
+        """Create a new story series with optional AI generation and templates."""
         print("\n CREATE NEW STORY SERIES")
         print("-" * 30)
 
@@ -292,9 +339,19 @@ class StoryCLIManager:
         available = self._list_available_characters()
         party_members = self._select_party_members(available, series_name)
 
+        # Collect template and AI options from user
+        options = self._collect_story_creation_options(story_type="initial")
+
         try:
-            filepath = self.story_manager.create_new_story_series(
-                series_name, first_story_name, description
+            # Create story with context
+            ctx = StoryFileContext(
+                stories_path=os.path.join(self.workspace_path, "game_data", "campaigns"),
+                workspace_path=self.workspace_path,
+            )
+            filepath = create_new_story_series(
+                ctx, series_name, first_story_name,
+                description=description,
+                options=options,
             )
 
             # Save party configuration into campaign folder (always write a file,
@@ -315,7 +372,7 @@ class StoryCLIManager:
             print(f"[ERROR] Error creating story series: {e}")
 
     def _create_story_in_series(self, series_name: str):
-        """Create a new story in an existing series."""
+        """Create a new story in an existing series with optional AI generation."""
         story_name = input(
             f"\nEnter story name for series '{series_name}': "
         ).strip()
@@ -325,9 +382,19 @@ class StoryCLIManager:
 
         description = input("Enter story description (optional): ").strip()
 
+        # Collect template and AI options from user
+        options = self._collect_story_creation_options(story_type="continuation")
+
         try:
-            filepath = self.story_manager.create_story_in_series(
-                series_name, story_name, description
+            # Create story with context
+            ctx = StoryFileContext(
+                stories_path=os.path.join(self.workspace_path, "game_data", "campaigns"),
+                workspace_path=self.workspace_path,
+            )
+            filepath = create_story_in_series(
+                ctx, series_name, story_name,
+                description=description,
+                options=options,
             )
             print(f"\n[SUCCESS] Created story in {series_name}")
             print(f"   Location: {filepath}")
