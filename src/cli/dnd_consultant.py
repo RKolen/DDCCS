@@ -125,6 +125,9 @@ def main():
     campaign = args.campaign
 
     try:
+        # Inform the user that game data is being prepared; this can take a
+        # short while on first run while characters and caches are loaded.
+        print("[INFO] Setting up game data and loading resources — this may take a while...")
         cli = DDConsultantCLI(workspace, campaign)
 
         if args.command == "analyze":
