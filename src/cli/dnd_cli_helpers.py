@@ -5,7 +5,7 @@ Extracts complex UI interaction logic to reduce complexity in main CLI file.
 """
 
 import os
-from typing import List, Tuple, Optional
+from typing import List, Tuple, Optional, Dict, Any
 from src.characters.consultants.character_profile import (
     CharacterProfile,
     CharacterBehavior,
@@ -416,3 +416,126 @@ def save_combat_narrative(
                     f.write(f"# {combat_title}\n\n")
                     f.write(narrative)
                 print(f"[SUCCESS] Saved to: {filepath}")
+
+
+def _prompt_for_series_selection(
+    series_list: List[str],
+) -> Optional[str]:
+    """Prompt user to select a series from list.
+
+    Args:
+        series_list: List of available series
+
+    Returns:
+        Selected series name or None
+    """
+    print("\nAvailable story series:")
+    for i, series in enumerate(series_list, 1):
+        print(f"{i}. {series}")
+
+    try:
+        series_choice = int(input("Select series (0 to cancel): "))
+        if series_choice == 0:
+            return None
+        if 1 <= series_choice <= len(series_list):
+            return series_list[series_choice - 1]
+        print("Invalid choice.")
+    except ValueError:
+        print("Invalid input.")
+    return None
+
+
+def _prompt_for_story_selection(
+    story_files: List[str], series_name: str
+) -> Optional[str]:
+    """Prompt user to select a story from list.
+
+    Args:
+        story_files: List of available story files
+        series_name: Name of the series (for display)
+
+    Returns:
+        Selected story filename or None
+    """
+    print(f"\nStories in {series_name}:")
+    for i, story in enumerate(story_files, 1):
+        print(f"{i}. {story}")
+
+    try:
+        story_choice = int(input("Select story (0 to cancel): "))
+        if story_choice == 0:
+            return None
+        if 1 <= story_choice <= len(story_files):
+            return story_files[story_choice - 1]
+        print("Invalid choice.")
+    except ValueError:
+        print("Invalid input.")
+    return None
+
+
+def get_series_and_story_from_manager(
+    story_manager
+) -> Optional[Tuple[str, str]]:
+    """Prompt user to select a series and story from story manager.
+
+    Args:
+        story_manager: StoryManager instance with get_story_series and
+                      get_story_files_in_series methods
+
+    Returns:
+        Tuple of (series_name, story_filename) or None if cancelled
+    """
+    series_list = story_manager.get_story_series()
+    if not series_list:
+        print("No story series found.")
+        return None
+
+    series_name = _prompt_for_series_selection(series_list)
+    if series_name is None:
+        return None
+
+    story_files = story_manager.get_story_files_in_series(series_name)
+    if not story_files:
+        print(f"No stories in series '{series_name}'.")
+        return None
+
+    story_filename = _prompt_for_story_selection(story_files, series_name)
+    if story_filename is None:
+        return None
+
+    return (series_name, story_filename)
+
+
+def collect_generic_input(
+    fields: List[Tuple[str, str, Optional[str]]]
+) -> Optional[Dict[str, Any]]:
+    """Collect generic input from user for multiple fields.
+
+    Args:
+        fields: List of (field_name, prompt_text, default_value) tuples
+               If default_value is provided, it's used when input is empty
+               If default_value is None, empty input causes error/retry
+
+    Returns:
+        Dictionary with field_name: value pairs, or None if user cancels
+    """
+    result = {}
+
+    for field_name, prompt_text, default_value in fields:
+        user_input = input(prompt_text).strip()
+
+        # Check for cancel command
+        if user_input.lower() == 'done':
+            return None
+
+        # Handle empty input
+        if not user_input:
+            if default_value is not None:
+                result[field_name] = default_value
+            else:
+                print(f"{field_name.replace('_', ' ').title()} cannot be empty.")
+                return None
+        else:
+            result[field_name] = user_input
+
+    return result

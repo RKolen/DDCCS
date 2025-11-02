@@ -15,6 +15,7 @@ from tests import test_helpers
 project_root = test_helpers.setup_test_environment()
 get_campaigns_dir = test_helpers.safe_from_import("src.utils.path_utils", "get_campaigns_dir")
 (StoryFileContext,
+ StoryCreationOptions,
  create_new_story_series,
  create_story_in_series,
  get_story_series,
@@ -23,6 +24,7 @@ get_campaigns_dir = test_helpers.safe_from_import("src.utils.path_utils", "get_c
  create_pure_story_file) = test_helpers.safe_from_import(
     "src.stories.story_file_manager",
     "StoryFileContext",
+    "StoryCreationOptions",
     "create_new_story_series",
     "create_story_in_series",
     "get_story_series",
@@ -128,3 +130,77 @@ def test_create_new_story_root_numbering_and_pure_file():
         with open(pure_path, "r", encoding="utf-8") as fh:
             data = fh.read()
         assert content in data
+
+
+def test_create_story_with_ai_generated_content():
+    """Creating story with AI-generated content should include it in file."""
+    with tempfile.TemporaryDirectory() as tmp:
+        campaigns_dir = get_campaigns_dir(tmp)
+        ctx = StoryFileContext(stories_path=campaigns_dir, workspace_path=tmp)
+
+        ai_content = "The party enters an ancient temple filled with mystery."
+        options = StoryCreationOptions(
+            use_template=False,
+            ai_generated_content=ai_content,
+        )
+
+        filepath = create_new_story_series(
+            ctx, "MyQuest", "Opening", description="AI-generated start",
+            options=options
+        )
+
+        # Verify file exists and contains AI content
+        assert os.path.exists(filepath)
+        with open(filepath, "r", encoding="utf-8") as fh:
+            content = fh.read()
+        assert ai_content in content
+        assert "MyQuest" in content
+        assert "AI-generated start" in content
+
+
+def test_create_story_with_template_option():
+    """Creating story with template option should include template header."""
+    with tempfile.TemporaryDirectory() as tmp:
+        campaigns_dir = get_campaigns_dir(tmp)
+        ctx = StoryFileContext(stories_path=campaigns_dir, workspace_path=tmp)
+
+        # Note: Without actual template file, should fall back to default
+        options = StoryCreationOptions(
+            use_template=True,
+            ai_generated_content="",
+        )
+
+        filepath = create_new_story_series(
+            ctx, "Campaign", "Ch1", description="Template story",
+            options=options
+        )
+
+        assert os.path.exists(filepath)
+        with open(filepath, "r", encoding="utf-8") as fh:
+            content = fh.read()
+        # Should have header at minimum
+        assert "Ch1" in content
+        assert "Template story" in content
+
+
+def test_ai_content_takes_priority_over_template():
+    """AI-generated content should take priority over template option."""
+    with tempfile.TemporaryDirectory() as tmp:
+        campaigns_dir = get_campaigns_dir(tmp)
+        ctx = StoryFileContext(stories_path=campaigns_dir, workspace_path=tmp)
+
+        ai_content = "The dragon roars!"
+        options = StoryCreationOptions(
+            use_template=True,  # Template requested but should be overridden
+            ai_generated_content=ai_content,  # AI content provided
+        )
+
+        filepath = create_new_story(
+            ctx, "DragonStory", description="Dragon encounter", options=options
+        )
+
+        assert os.path.exists(filepath)
+        with open(filepath, "r", encoding="utf-8") as fh:
+            content = fh.read()
+        # AI content should be present
+        assert ai_content in content

@@ -111,3 +111,61 @@ def test_orchestrate_story_creation_valid_file(tmp_path):
 
     # Should not raise when processing valid file
     cli.orchestrate_story_creation_public(str(story_file), str(tmp_path), ["Hero"])
+
+
+def test_collect_story_creation_options_template_only(tmp_path, monkeypatch):
+    """_collect_story_creation_options should handle template request."""
+    class _FakeStoryManagerNoAI(_FakeStoryManager):
+        def __init__(self, stories_path: str):
+            super().__init__(stories_path)
+            self.ai_client = None
+
+    fake_manager = _FakeStoryManagerNoAI(str(tmp_path))
+
+    class _TestableStoryCLIManager(StoryCLIManager):
+        def collect_options_public(self):
+            """Public wrapper for testing."""
+            return self._collect_story_creation_options(story_type="initial")
+
+        def noop(self):
+            """Satisfy too-few-public-methods."""
+            return True
+
+    cli = _TestableStoryCLIManager(fake_manager, str(tmp_path))
+
+    # Mock user input: template yes, no AI (client is None anyway)
+    monkeypatch.setattr("builtins.input", lambda _: "y")
+
+    options = cli.collect_options_public()
+
+    assert options.use_template is True
+    assert options.ai_generated_content == ""
+
+
+def test_collect_story_creation_options_no_selections(tmp_path, monkeypatch):
+    """_collect_story_creation_options should handle user declining both options."""
+    class _FakeStoryManagerNoAI(_FakeStoryManager):
+        def __init__(self, stories_path: str):
+            super().__init__(stories_path)
+            self.ai_client = None
+
+    fake_manager = _FakeStoryManagerNoAI(str(tmp_path))
+
+    class _TestableStoryCLIManager(StoryCLIManager):
+        def collect_options_public(self):
+            """Public wrapper for testing."""
+            return self._collect_story_creation_options(story_type="initial")
+
+        def noop(self):
+            """Satisfy too-few-public-methods."""
+            return True
+
+    cli = _TestableStoryCLIManager(fake_manager, str(tmp_path))
+
+    # Mock user input: both no
+    monkeypatch.setattr("builtins.input", lambda _: "n")
+
+    options = cli.collect_options_public()
+
+    assert options.use_template is False
+    assert options.ai_generated_content == ""
