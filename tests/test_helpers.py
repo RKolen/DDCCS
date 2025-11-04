@@ -344,6 +344,63 @@ except ImportError:
     DM_DUNGEON_MASTER = None
 
 
+def assert_system_prompt_contains(mock_ai, *keywords):
+    """Helper to verify system prompt contains specific keywords.
+
+    Args:
+        mock_ai: Mock AI client with call history
+        *keywords: Keywords that must be in system prompt
+
+    Raises:
+        AssertionError: If keywords not found in system prompt
+    """
+    call_args = mock_ai.client.chat.completions.create.call_args
+    messages = call_args[1]["messages"]
+    system_msg = next((m for m in messages if m["role"] == "system"), None)
+
+    assert system_msg is not None, "System message should exist"
+    for keyword in keywords:
+        assert keyword in system_msg["content"].lower(), (
+            f"System prompt should contain '{keyword}'"
+        )
+
+
+def run_test_suite(test_suite_name, test_functions):
+    """Run a suite of tests with consistent output formatting.
+
+    Args:
+        test_suite_name: Name of the test suite (e.g., "CLI Continuation")
+        test_functions: List of test functions to run
+
+    Returns:
+        Exit code: 0 if all tests pass, 1 if any fail
+    """
+    print("\n" + "=" * 70)
+    print(test_suite_name.upper())
+    print("=" * 70)
+
+    passed = 0
+    failed = 0
+
+    for test_func in test_functions:
+        try:
+            test_func()
+            print(f"[PASS] {test_func.__name__}")
+            passed += 1
+        except AssertionError as exc:
+            print(f"[FAIL] {test_func.__name__}: {exc}")
+            failed += 1
+        except (ValueError, OSError, KeyError, AttributeError, TypeError) as exc:
+            print(f"[ERROR] {test_func.__name__}: {type(exc).__name__}: {exc}")
+            failed += 1
+
+    print("\n" + "=" * 70)
+    print(f"{test_suite_name}: {passed} passed, {failed} failed")
+    print("=" * 70)
+
+    return 0 if failed == 0 else 1
+
+
 class FakeAIClient:
     """Reusable fake AI client for tests.
 

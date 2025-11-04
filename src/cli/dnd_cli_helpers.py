@@ -139,6 +139,50 @@ def _edit_decision_making(profile: CharacterProfile) -> CharacterProfile:
     return profile
 
 
+def get_continuation_scene_type() -> Optional[bool]:
+    """Prompt user to select continuation scene type.
+
+    Returns:
+        True for combat, False for exploration/social, None if user cancels
+    """
+    print("\nWhat type of scene is this?")
+    print("1. Combat/Action scene")
+    print("2. Exploration/Social/Roleplay scene")
+
+    scene_type = input("\nChoice (1-2): ").strip()
+    if scene_type == "1":
+        return True
+    if scene_type == "2":
+        return False
+
+    print("Invalid choice. Canceling.")
+    return None
+
+
+def get_continuation_prompt(is_combat: bool) -> str:
+    """Prompt user for continuation narrative.
+
+    Args:
+        is_combat: True for combat prompt, False for exploration
+
+    Returns:
+        User's continuation prompt or empty string if user cancels
+    """
+    if is_combat:
+        print("\nDescribe the tactical combat situation.")
+        print("Example: 'Goblins ambush the party on the forest road'")
+    else:
+        print("\nDescribe what happens next in the story.")
+        print("Example: 'A mysterious stranger enters the tavern'")
+
+    story_prompt = input("\nContinuation prompt: ").strip()
+    if not story_prompt:
+        print("No prompt provided. Canceling.")
+        return ""
+
+    return story_prompt
+
+
 def get_combat_narrative_style() -> str:
     """
     Prompt user for combat narrative style.

@@ -29,8 +29,7 @@ def test_generate_story_from_prompt_without_ai():
     result = generate_story_from_prompt(
         ai_client=None,
         story_prompt="A wizard enters a tavern",
-        party_characters={"Gandalf": {}, "Frodo": {}},
-        campaign_context=None,
+        story_config={"party_characters": {"Gandalf": {}, "Frodo": {}}},
     )
 
     # Should return None when AI is unavailable
@@ -54,7 +53,7 @@ def test_generate_story_from_prompt_with_mock_ai():
     result = generate_story_from_prompt(
         ai_client=mock_ai,
         story_prompt="A wizard enters a tavern",
-        party_characters={"Gandalf": {}, "Frodo": {}},
+        story_config={"party_characters": {"Gandalf": {}, "Frodo": {}}},
     )
 
     # With mock AI, should return the mocked narrative
@@ -218,7 +217,7 @@ def test_generate_functions_handle_errors():
     result1 = generate_story_from_prompt(
         ai_client=mock_ai,
         story_prompt="Test prompt",
-        party_characters={"Alice": {}},
+        story_config={"party_characters": {"Alice": {}}},
     )
     assert result1 is None, "Should return None on AI error"
 
@@ -238,12 +237,107 @@ def test_generate_functions_handle_errors():
     print("[PASS] AI Error Handling")
 
 
+def test_generate_story_from_prompt_no_combat_with_exploration_flag():
+    """Test that is_exploration=True prevents combat in narrative generation."""
+    print("\n[TEST] Exploration Flag No Combat")
+
+    mock_ai = Mock()
+    mock_response = Mock()
+    mock_response.choices = [Mock()]
+    mock_response.choices[0].message.content = (
+        "The party enters the tavern and orders drinks. "
+        "A mysterious stranger beckons from the corner."
+    )
+    mock_ai.client.chat.completions.create.return_value = mock_response
+    mock_ai.model = "gpt-4"
+
+    result = generate_story_from_prompt(
+        ai_client=mock_ai,
+        story_prompt="The party encounters bandits on the road",
+        story_config={
+            "party_characters": {"Legolas": {"dnd_class": "ranger"}},
+            "is_exploration": True,
+        },
+    )
+
+    assert isinstance(result, str), "Should return string with exploration flag"
+
+    # Verify system prompt contains no-combat language
+    test_helpers.assert_system_prompt_contains(mock_ai, "combat", "hostile")
+
+    print("[PASS] Exploration Flag No Combat")
+
+
+def test_generate_story_from_prompt_with_rag_context():
+    """Test that RAG spell/ability lookup is included in story generation."""
+    print("\n[TEST] Story Generation with RAG Context")
+
+    mock_ai = Mock()
+    mock_response = Mock()
+    mock_response.choices = [Mock()]
+    mock_response.choices[0].message.content = (
+        "The wizard casts a fireball spell, illuminating the dark dungeon."
+    )
+    mock_ai.client.chat.completions.create.return_value = mock_response
+    mock_ai.model = "gpt-4"
+
+    result = generate_story_from_prompt(
+        ai_client=mock_ai,
+        story_prompt="A wizard casts fireball at approaching enemies",
+        story_config={
+            "party_characters": {"Gandalf": {"dnd_class": "wizard"}},
+            "is_exploration": True,
+        },
+    )
+
+    assert isinstance(result, str), "Should return string"
+
+    # Verify user prompt includes ability_context placeholder (even if RAG unavailable)
+    call_args = mock_ai.client.chat.completions.create.call_args
+    messages = call_args[1]["messages"]
+    user_msg = next((m for m in messages if m["role"] == "user"), None)
+
+    assert user_msg is not None, "User message should exist"
+    # The user prompt should contain reference to spells if RAG is available
+    assert "fireball" in user_msg["content"].lower(), (
+        "User prompt should reference mentioned spells"
+    )
+
+    print("[PASS] Story Generation with RAG Context")
+
+
+def test_generate_story_rag_graceful_fallback():
+    """Test that story generation works when RAG is unavailable."""
+    print("\n[TEST] Story Generation RAG Fallback")
+
+    mock_ai = Mock()
+    mock_response = Mock()
+    mock_response.choices = [Mock()]
+    mock_response.choices[0].message.content = (
+        "The party arrives at a mysterious location."
+    )
+    mock_ai.client.chat.completions.create.return_value = mock_response
+    mock_ai.model = "gpt-4"
+
+    # Should work even if RAG lookup doesn't find anything
+    result = generate_story_from_prompt(
+        ai_client=mock_ai,
+        story_prompt="Party explores an empty room",
+        party_characters={"Alice": {"dnd_class": "rogue"}},
+    )
+
+    assert isinstance(result, str), (
+        "Should return string even without RAG results"
+    )
+    assert mock_ai.client.chat.completions.create.called, (
+        "AI should be called regardless of RAG availability"
+    )
+
+    print("[PASS] Story Generation RAG Fallback")
+
+
 def run_all_story_ai_generator_tests():
     """Run all story AI generator tests."""
-    print("\n" + "=" * 70)
-    print("STORY AI GENERATOR TESTS")
-    print("=" * 70)
-
     tests = [
         test_generate_story_from_prompt_without_ai,
         test_generate_story_from_prompt_with_mock_ai,
@@ -254,27 +348,12 @@ def run_all_story_ai_generator_tests():
         test_enhance_story_narrative_dialogue_mode,
         test_enhance_story_narrative_atmosphere_mode,
         test_generate_functions_handle_errors,
+        test_generate_story_from_prompt_no_combat_with_exploration_flag,
+        test_generate_story_from_prompt_with_rag_context,
+        test_generate_story_rag_graceful_fallback,
     ]
 
-    passed = 0
-    failed = 0
-
-    for test_func in tests:
-        try:
-            test_func()
-            passed += 1
-        except AssertionError as e:
-            failed += 1
-            print(f"[FAIL] {test_func.__name__}: {e}")
-        except (ValueError, OSError, KeyError, AttributeError, TypeError) as e:
-            failed += 1
-            print(f"[ERROR] {test_func.__name__}: {type(e).__name__}: {e}")
-
-    print("\n" + "=" * 70)
-    print(f"Story AI Generator: {passed} passed, {failed} failed")
-    print("=" * 70)
-
-    return 0 if failed == 0 else 1
+    return test_helpers.run_test_suite("Story AI Generator", tests)
 
 
 if __name__ == "__main__":

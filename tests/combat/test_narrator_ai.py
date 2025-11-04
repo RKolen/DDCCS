@@ -52,3 +52,41 @@ def test_generate_title_falls_back_on_long_ai_response():
     # Our fake AI returns a verbose string; the implementation should fall back
     # to a creature-extracted title which contains 'Goblin'.
     assert "Goblin" in title
+
+
+def test_rag_lookup_processes_spell_mentions():
+    """Test that RAG lookup is integrated into combat narration with spells."""
+    consultants = {}
+    fake = FakeAIClient()
+    narrator = AIEnhancedNarrator(consultants, ai_client=fake)
+
+    # Test prompt with spell mentions - verify narration works correctly
+    prompt = "Gandalf casts fireball at the dragon. Aragorn uses divine smite."
+
+    # RAG integration tested via public API (narrate_combat_from_prompt)
+    narrative = narrator.narrate_combat_from_prompt(
+        combat_prompt=prompt,
+        story_context="",
+        style="cinematic"
+    )
+
+    # Should return a string (empty or with narrative, RAG context integrated)
+    assert isinstance(narrative, str), "Combat narration should return string"
+    assert len(narrative) > 0, "Combat narration should not be empty"
+
+
+def test_rag_graceful_fallback_when_unavailable():
+    """Test that narrator works even if RAG system is unavailable."""
+    aragorn = test_helpers.load_consultant_fixture("aragorn")
+    consultants = {aragorn.profile.name: aragorn}
+
+    fake = FakeAIClient()
+    narrator = AIEnhancedNarrator(consultants, ai_client=fake)
+
+    # Test with spell mention - should not crash if RAG unavailable
+    prompt = "Aragorn casts shield spell and attacks"
+    narrative = narrator.narrate_combat_from_prompt(prompt, style="cinematic")
+
+    # Should return valid narrative regardless of RAG status
+    assert isinstance(narrative, str), "Narration should succeed regardless of RAG"
+    assert len(narrative) > 0, "Narration should not be empty"

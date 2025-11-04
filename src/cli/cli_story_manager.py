@@ -8,7 +8,11 @@ import os
 import json
 from typing import List
 
-from src.cli.party_config_manager import save_current_party, load_current_party
+from src.cli.party_config_manager import (
+    save_current_party,
+    load_current_party,
+    load_party_with_profiles,
+)
 from src.stories.story_workflow_orchestrator import (
     coordinate_story_workflow,
     StoryWorkflowContext,
@@ -20,6 +24,13 @@ from src.stories.story_file_manager import (
     StoryCreationOptions,
     create_new_story_series,
     create_story_in_series,
+)
+from src.stories.story_updater import StoryUpdater
+from src.combat.combat_narrator import CombatNarrator
+from src.cli.dnd_cli_helpers import (
+    get_continuation_scene_type,
+    get_continuation_prompt,
+    get_combat_narrative_style,
 )
 
 
@@ -36,6 +47,7 @@ class StoryCLIManager:
         """
         self.story_manager = story_manager
         self.workspace_path = workspace_path
+        self.story_updater = StoryUpdater()
 
     def get_series_count(self) -> int:
         """Public helper: return number of story series available.
@@ -421,7 +433,10 @@ class StoryCLIManager:
             choice = int(input(f"\nSelect story to view (1-{len(stories)}): "))
             if 1 <= choice <= len(stories):
                 story_file = stories[choice - 1]
-                story_path = os.path.join(self.story_manager.stories_path, story_file)
+                stories_base = os.path.join(
+                    self.workspace_path, "game_data", "campaigns"
+                )
+                story_path = os.path.join(stories_base, story_file)
                 self._display_story_info(story_path, story_file)
             else:
                 print("Invalid choice.")
@@ -434,9 +449,10 @@ class StoryCLIManager:
             choice = int(input(f"\nSelect story to view (1-{len(stories)}): "))
             if 1 <= choice <= len(stories):
                 story_file = stories[choice - 1]
-                story_path = os.path.join(
-                    self.story_manager.stories_path, series_name, story_file
+                stories_base = os.path.join(
+                    self.workspace_path, "game_data", "campaigns"
                 )
+                story_path = os.path.join(stories_base, series_name, story_file)
                 self._display_story_info(story_path, f"{series_name}/{story_file}")
             else:
                 print("Invalid choice.")
@@ -444,7 +460,7 @@ class StoryCLIManager:
             print("Invalid input.")
 
     def _display_story_info(self, story_path: str, display_name: str):
-        """Display information about a story file."""
+        """Display information about a story file and offer AI continuation."""
         try:
             with open(story_path, "r", encoding="utf-8") as f:
                 content = f.read()
@@ -469,8 +485,115 @@ class StoryCLIManager:
                 if line.strip():
                     print(f"  {line[:100]}...")
 
+            # Offer AI continuation if AI is available
+            if self.story_manager.ai_client:
+                print("\n" + "=" * 60)
+                add_content = input(
+                    "\nGenerate AI continuation for this story? (y/n): "
+                ).strip().lower()
+                if add_content == 'y':
+                    self._add_ai_continuation_to_story(story_path, display_name)
+            else:
+                print("\n[INFO] AI features not available - cannot generate continuation.")
+
         except OSError as e:
             print(f"[ERROR] Error reading story: {e}")
+
+    def _add_ai_continuation_to_story(self, story_path: str, display_name: str):
+        """Add AI-generated continuation to an existing story.
+
+        Prompts user to select continuation type (combat or exploration/social),
+        then generates AI content using appropriate generator and party context.
+        Appends to story file with supporting files.
+
+        Args:
+            story_path: Full path to the story file
+            display_name: Display name for the story (for messages)
+        """
+        print("\n GENERATE AI CONTINUATION")
+        print("-" * 40)
+
+        # Get scene type from user
+        is_combat = get_continuation_scene_type()
+        if is_combat is None:
+            return
+
+        # Get continuation prompt from user
+        story_prompt = get_continuation_prompt(is_combat)
+        if not story_prompt:
+            return
+
+        print("\n[INFO] Generating story continuation with AI...")
+        try:
+            campaign_dir = os.path.dirname(story_path)
+
+            if is_combat:
+                self._handle_combat_continuation(story_path, display_name, story_prompt)
+            else:
+                self._handle_exploration_continuation(
+                    story_path, display_name, story_prompt, campaign_dir
+                )
+
+        except (ValueError, AttributeError, OSError) as e:
+            print(f"[ERROR] Failed to generate continuation: {e}")
+
+    def _handle_combat_continuation(
+        self, story_path: str, display_name: str, story_prompt: str
+    ):
+        """Handle combat narrative generation."""
+        style = get_combat_narrative_style()
+        combat_narrator = CombatNarrator(
+            self.story_manager.consultants,
+            self.story_manager.ai_client,
+        )
+        ai_content = combat_narrator.narrate_combat_from_prompt(
+            combat_prompt=story_prompt,
+            story_context="",
+            style=style,
+        )
+        if ai_content:
+            combat_title = combat_narrator.generate_combat_title(
+                story_prompt, ""
+            )
+            self.story_updater.append_combat_narrative(
+                story_path, ai_content
+            )
+            print(f"\n[SUCCESS] Added combat narrative to {display_name}")
+            print(f"   Title: {combat_title}")
+            print("You can now edit and refine the generated content.")
+        else:
+            print("[WARNING] AI generation returned no content.")
+
+    def _handle_exploration_continuation(
+        self,
+        story_path: str,
+        display_name: str,
+        story_prompt: str,
+        campaign_dir: str,
+    ):
+        """Handle exploration/social narrative generation."""
+        party_characters = load_party_with_profiles(
+            campaign_dir, self.workspace_path
+        )
+        ai_content = generate_story_from_prompt(
+            self.story_manager.ai_client,
+            story_prompt,
+            {
+                "party_characters": party_characters,
+                "is_exploration": True,
+            },
+        )
+        if ai_content:
+            success = self.story_updater.append_ai_continuation(
+                story_path, ai_content, campaign_dir, self.workspace_path
+            )
+            if success:
+                print(
+                    f"\n[SUCCESS] Added exploration narrative to {display_name}"
+                )
+                print("You can now edit and refine the generated content.")
+        else:
+            print("[WARNING] AI generation returned no content.")
 
     def _create_new_story(self):
         """Create a new story file."""

@@ -2,11 +2,14 @@
 Story AI Generator Module
 
 Generates story narratives using AI based on user prompts and character context.
-Integrates party member personalities and background information into generated stories.
+Integrates party member personalities and background information into generated
+stories. Includes RAG (Retrieval-Augmented Generation) integration for accurate
+D&D spell/ability descriptions via dnd5e.wikidot.com.
 """
 
 from typing import Optional, Dict, Any
 from src.ai.availability import AI_AVAILABLE
+from src.utils.spell_lookup_helper import lookup_spells_and_abilities
 
 
 def _build_story_context(
@@ -37,9 +40,7 @@ def _build_story_context(
 def generate_story_from_prompt(
     ai_client,
     story_prompt: str,
-    party_characters: Optional[Dict[str, Any]] = None,
-    campaign_context: Optional[str] = None,
-    max_tokens: int = 2000,
+    story_config: Optional[Dict[str, Any]] = None,
 ) -> Optional[str]:
     """
     Generate a story narrative using AI based on a user prompt.
@@ -48,16 +49,20 @@ def generate_story_from_prompt(
     a rich narrative that incorporates party member personalities and campaign
     context. The generated story respects D&D 5e conventions and character traits.
 
+    Automatically performs RAG lookup for D&D spells and abilities mentioned in
+    the prompt, enriching the narrative with accurate mechanical descriptions
+    from dnd5e.wikidot.com.
+
     Args:
         ai_client: Initialized AIClient instance for making AI requests.
         story_prompt: User's story concept or prompt (e.g., "The party arrives
             at a mysterious tavern in the woods").
-        party_characters: Optional dictionary of party members with their
-            profiles. Maps character name to profile dict with fields like
-            'dnd_class', 'personality_summary', 'background_story'.
-        campaign_context: Optional campaign setting information to help ground
-            the narrative in the campaign world.
-        max_tokens: Maximum tokens for the AI response (default 2000).
+        story_config: Optional dict with generation settings:
+            - 'party_characters': Dict of party members with profiles
+            - 'campaign_context': Campaign setting information
+            - 'max_tokens': Maximum tokens for response (default 2000)
+            - 'is_exploration': If True, avoids combat, focuses on exploration
+              and social dynamics (default False)
 
     Returns:
         Generated story narrative as a string, or None if AI is unavailable
@@ -73,11 +78,23 @@ def generate_story_from_prompt(
     if ai_client is None or not AI_AVAILABLE:
         return None
 
+    # Extract configuration with defaults
+    if story_config is None:
+        story_config = {}
+
+    party_characters = story_config.get("party_characters")
+    campaign_context = story_config.get("campaign_context")
+    max_tokens = story_config.get("max_tokens", 2000)
+    is_exploration = story_config.get("is_exploration", False)
+
     # Build combined context
     context = _build_story_context(party_characters, campaign_context)
 
+    # Look up D&D spells/abilities for accurate descriptions
+    ability_context = lookup_spells_and_abilities(story_prompt)
+
     # Construct the system prompt for D&D storytelling
-    system_prompt = (
+    base_prompt = (
         "You are an experienced D&D Dungeon Master crafting engaging narrative. "
         "Write story descriptions in third person. Focus on atmosphere, character "
         "reactions, and plot development. Keep descriptions vivid but concise "
@@ -86,10 +103,20 @@ def generate_story_from_prompt(
         "meta-game information in the narrative."
     )
 
+    # Add exploration constraint if requested
+    if is_exploration:
+        base_prompt += (
+            " Do NOT include combat, fighting, or hostile action. Focus on "
+            "character interactions, exploration, discovery, and social dynamics."
+        )
+
+    system_prompt = base_prompt
+
     # Construct the user prompt
     user_prompt = (
         f"Write a D&D story scene based on this prompt:\n{story_prompt}"
-        f"{context}\n\n"
+        f"{context}"
+        f"{ability_context}\n\n"
         "Generate an engaging narrative that incorporates the party members "
         "and respects their personalities and backgrounds. Format as pure "
         "narrative prose suitable for a story file."

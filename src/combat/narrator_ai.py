@@ -10,14 +10,7 @@ import re
 from typing import Dict
 from src.characters.consultants.consultant_core import CharacterConsultant
 from src.utils.text_formatting_utils import wrap_narrative_text
-
-# Import RAG system for D&D rules lookup
-try:
-    from src.ai.rag_system import RAGSystem
-
-    RAG_AVAILABLE = True
-except ImportError:
-    RAG_AVAILABLE = False
+from src.utils.spell_lookup_helper import lookup_spells_and_abilities
 
 
 class AIEnhancedNarrator:
@@ -28,15 +21,6 @@ class AIEnhancedNarrator:
     ):
         self.consultants = character_consultants
         self.ai_client = ai_client
-
-        # Initialize D&D rules RAG system
-        self.dnd_rag = None
-        if RAG_AVAILABLE:
-            try:
-                self.dnd_rag = RAGSystem()
-
-            except (ImportError, AttributeError, KeyError, OSError) as e:
-                print(f"WARNING: Could not initialize D&D rules RAG: {e}")
 
     def narrate_combat_from_prompt(
         self, combat_prompt: str, story_context: str = "", style: str = "cinematic"
@@ -59,7 +43,7 @@ class AIEnhancedNarrator:
         character_context = self._build_character_context(combat_prompt)
 
         # Look up D&D spells/abilities for accurate descriptions
-        ability_context = self._lookup_spells_and_abilities(combat_prompt)
+        ability_context = lookup_spells_and_abilities(combat_prompt)
 
         # Create AI prompt
         system_prompt = self._create_system_prompt(style)
@@ -226,77 +210,6 @@ Write the combat narrative in {style} style. Remember:
         if context_parts:
             return "\nCharacter Information (for authentic portrayal):" + "".join(
                 context_parts
-            )
-        return ""
-
-    def _lookup_spells_and_abilities(self, combat_prompt: str) -> str:
-        """
-        Look up D&D spells and abilities mentioned in combat.
-        Uses dnd5e.wikidot.com via RAG system.
-        """
-        if not self.dnd_rag:
-            return ""
-
-        # Common D&D spell/ability patterns to look for
-        spell_patterns = [
-            r"\b(vicious mockery)\b",
-            r"\b(eldritch blast)\b",
-            r"\b(fireball)\b",
-            r"\b(healing word)\b",
-            r"\b(cure wounds)\b",
-            r"\b(sacred flame)\b",
-            r"\b(thunderwave)\b",
-            r"\b(magic missile)\b",
-            r"\b(shield)\b",
-            r"\b(mage armor)\b",
-            r"\b(wild shape)\b",
-            r"\b(sneak attack)\b",
-            r"\b(divine smite)\b",
-            r"\b(lay on hands)\b",
-            r"\b(bardic inspiration)\b",
-            r"\b(rage)\b",
-            r"\b(action surge)\b",
-            r"\b(second wind)\b",
-        ]
-
-        found_abilities = []
-        for pattern in spell_patterns:
-            matches = re.finditer(pattern, combat_prompt, re.IGNORECASE)
-            for match in matches:
-                ability_name = match.group(1)
-                found_abilities.append(ability_name)
-
-        if not found_abilities:
-            return ""
-
-        # Look up each ability
-        ability_descriptions = []
-        for ability in set(found_abilities):
-            try:
-                # Format for wikidot URL
-                page_name = ability.lower().replace(" ", "-")
-
-                # Try different page formats
-                possible_pages = [
-                    f"spell:{page_name}",
-                    f"feat:{page_name}",
-                    f"class:{page_name}",
-                ]
-
-                for page in possible_pages:
-                    result = self.dnd_rag.search_rules_wiki(page, max_results=1)
-                    if result:
-                        ability_descriptions.append(
-                            f"\n**{ability.title()}**: {result[0]['content'][:300]}..."
-                        )
-                        break
-            except (AttributeError, KeyError, IndexError, TypeError):
-                # Silently skip failed lookups
-                pass
-
-        if ability_descriptions:
-            return "\n\nD&D Rules Context (for accurate portrayal):" + "".join(
-                ability_descriptions
             )
         return ""
 
