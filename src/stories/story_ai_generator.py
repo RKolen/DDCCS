@@ -430,4 +430,3 @@ def _parse_session_analysis(
                 results[current_section].append(bullet_text)
 
     return results
-
