@@ -338,6 +338,94 @@ CharacterAIConfig(
 - **`_get_ai_client()`** - Get appropriate AI client for character
 - **`_build_character_system_prompt()`** - Build character roleplay prompt
 
+##  RAG Integration: Spell and Ability Lookup
+
+The system includes Retrieval-Augmented Generation (RAG) integration for accurate D&D spell and ability descriptions from dnd5e.wikidot.com.
+
+### Shared Spell Lookup Helper
+
+Located in `src/utils/spell_lookup_helper.py`, this utility provides spell/ability lookup for both story and combat narratives:
+
+```python
+from src.utils.spell_lookup_helper import lookup_spells_and_abilities
+
+# Look up spells/abilities mentioned in text
+prompt = "The wizard casts Fireball and the paladin uses Divine Smite"
+context = lookup_spells_and_abilities(prompt)
+
+# Returns formatted context with descriptions or empty string if none found
+# Example output:
+# "\n\nD&D Rules Context (for accurate portrayal):
+#  **Fireball**: 3rd-level evocation spell that creates an explosion...
+#  **Divine Smite**: Paladin ability allowing weapon attacks to be enhanced..."
+```
+
+### Usage in Story Generation
+
+Story narratives (exploration, social, roleplay) automatically include RAG context:
+
+```python
+from src.stories.story_ai_generator import generate_story_from_prompt
+
+prompt = "A wizard casts magic missile at approaching skeletons"
+
+story_config = {
+    "party_characters": party_dict,
+    "campaign_context": "Dark cave dungeon",
+    "is_exploration": True,  # No combat, focus on roleplay
+}
+
+narrative = generate_story_from_prompt(ai_client, prompt, story_config)
+
+# RAG lookup happens automatically - spell descriptions included in AI context
+```
+
+### Usage in Combat Narration
+
+Combat narratives include spell lookup for tactical descriptions:
+
+```python
+from src.combat.combat_narrator import CombatNarrator
+
+narrator = CombatNarrator(consultants, ai_client)
+
+prompt = "Gandalf casts Thunderwave at the goblins. Aragorn attacks with his sword."
+narrative = narrator.narrate_combat_from_prompt(
+    combat_prompt=prompt,
+    style="cinematic"
+)
+
+# RAG context automatically enhances the narrative with spell descriptions
+```
+
+### Supported Spells and Abilities
+
+The lookup supports 18+ common D&D spells and abilities:
+- Vicious Mockery, Eldritch Blast
+- Fireball, Healing Word, Cure Wounds
+- Sacred Flame, Thunderwave, Magic Missile
+- Shield, Mage Armor, Wild Shape
+- Sneak Attack, Divine Smite, Lay on Hands
+- Bardic Inspiration, Rage, Action Surge
+- Second Wind
+
+### Graceful Fallback
+
+If RAG system is unavailable:
+- Stories and combat narratives still generate normally
+- No RAG context is added
+- System continues to function without errors
+- No changes to user experience
+
+### Configuration
+
+RAG uses `dnd5e.wikidot.com` as the knowledge source via `src/ai/rag_system.py`.
+
+To disable RAG (if desired):
+1. The system auto-detects RAG availability
+2. If import fails, RAG is gracefully disabled
+3. Stories/combat still work perfectly without RAG
+
 ##  Best Practices
 
 1. **Start Small**: Test with one character first

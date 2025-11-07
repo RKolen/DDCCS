@@ -1,18 +1,22 @@
 """
 Story Updater Component.
 
-Handles updating story files with analysis results, including consultant notes
-and consistency sections.
+Handles updating story files with analysis results, including consultant notes,
+consistency sections, combat narratives, and AI-generated continuations.
 """
 
 import os
-from typing import Dict, Any
+import json
+from typing import Dict, Any, List
 from src.utils.file_io import read_text_file, write_text_file, file_exists
 from src.utils.markdown_utils import update_markdown_section
 from src.utils.story_formatting_utils import (
     generate_consultant_notes,
     generate_consistency_section
 )
+from src.npcs.npc_auto_detection import detect_npc_suggestions
+from src.stories.hooks_and_analysis import create_story_hooks_file
+from src.stories.session_results_manager import StorySession, create_session_results_file
 
 class StoryUpdater:
     """Updates story files with consultant analysis and consistency notes."""
@@ -73,3 +77,329 @@ class StoryUpdater:
             f"[SUCCESS] Appended combat narrative to story file: "
             f"{os.path.basename(filepath)}"
         )
+
+    def append_ai_continuation(
+        self,
+        filepath: str,
+        continuation: str,
+        campaign_dir: str,
+        workspace_path: str,
+    ) -> bool:
+        """
+        Append AI-generated continuation to story and generate supporting files.
+
+        Cleans existing content, appends continuation with appropriate section
+        title, and generates story_hooks and session_results files with NPC
+        detection.
+
+        Args:
+            filepath: Path to the story file
+            continuation: AI-generated continuation text
+            campaign_dir: Path to the campaign directory
+            workspace_path: Path to the workspace root
+
+        Returns:
+            True if successful, False if an error occurred
+        """
+        if not file_exists(filepath):
+            return False
+
+        try:
+            # Read and clean current content
+            current_content = read_text_file(filepath)
+            cleaned_content = self._clean_story_content(current_content)
+            continuation_title = self._extract_narrative_title(continuation)
+
+            # Build final content with new continuation appended
+            new_content = self._build_story_content_with_continuation(
+                cleaned_content, continuation_title, continuation
+            )
+
+            # Write updated content
+            write_text_file(filepath, new_content)
+
+            # Generate supporting files
+            self._generate_supporting_files(
+                filepath, campaign_dir, workspace_path
+            )
+
+            print(
+                f"[SUCCESS] Appended AI continuation to story file: "
+                f"{os.path.basename(filepath)}"
+            )
+            return True
+
+        except OSError as e:
+            print(f"[ERROR] Failed to update story: {e}")
+            return False
+
+    def _clean_story_content(self, content: str) -> str:
+        """Remove duplicate headers and metadata from story content.
+
+        Args:
+            content: Raw story content with potential duplicates
+
+        Returns:
+            Cleaned story content
+        """
+        lines = content.split("\n")
+        cleaned_lines = []
+        seen_header = False
+
+        for line in lines:
+            # Skip duplicate headers
+            if line.startswith("# "):
+                if seen_header:
+                    continue
+                seen_header = True
+                cleaned_lines.append(line)
+            # Skip duplicate metadata
+            elif line.startswith("**Created:**") or \
+                 line.startswith("**Description:**"):
+                if cleaned_lines and any(
+                    "**Created:**" in l or "**Description:**" in l
+                    for l in cleaned_lines[-5:]
+                ):
+                    continue
+                cleaned_lines.append(line)
+            # Skip duplicate separators
+            elif line.strip() == "---":
+                if cleaned_lines and cleaned_lines[-1].strip() == "---":
+                    continue
+                cleaned_lines.append(line)
+            # Keep other lines
+            else:
+                cleaned_lines.append(line)
+
+        return "\n".join(cleaned_lines)
+
+    def _filter_template_text(self, content: str) -> str:
+        """Remove template guidance, keep only story content.
+
+        Strips template sections and guidance keywords that should not appear
+        in finalized story narratives.
+
+        Args:
+            content: Story content that may include template text
+
+        Returns:
+            Content with template text removed
+        """
+        lines = content.split("\n")
+        kept_lines = []
+        skip_until_next_section = False
+
+        template_sections = [
+            "Scene Title",
+            "Character Development",
+            "DC Suggestions",
+            "Combat Summary",
+            "Story Narrative (Final)",
+        ]
+
+        template_keywords = [
+            "[Add",
+            "[Paste",
+            "[Clean",
+            "[Include",
+            "Write pure narrative",
+            "Focus on:",
+            "Character actions and dialogue",
+            "Environmental descriptions",
+            "Plot developments",
+            "NPC interactions",
+            "Example narrative",
+            "For character",
+            "For DC",
+            "- CHARACTER/",
+            "- Personality trait",
+            "- Relationship developments",
+            "- Major plot",
+            "- Character consistency",
+            "`character_development",
+            "`story_dc_suggestions",
+        ]
+
+        for line in lines:
+            # Detect start of template section
+            if line.startswith("## "):
+                is_template = any(x in line for x in template_sections)
+                if is_template:
+                    skip_until_next_section = True
+                    continue
+
+                skip_until_next_section = False
+                kept_lines.append(line)
+            # Skip template content while in template section
+            elif skip_until_next_section:
+                if line.startswith("## "):
+                    skip_until_next_section = False
+                    kept_lines.append(line)
+                continue
+            # Skip lines containing template keywords
+            elif any(keyword in line for keyword in template_keywords):
+                continue
+            # Keep narrative content
+            else:
+                kept_lines.append(line)
+
+        return "\n".join(kept_lines).strip()
+
+    def _extract_narrative_title(self, text: str) -> str:
+        """Extract a narrative title from the first line of text.
+
+        Attempts to identify location names or key subjects from the opening
+        text and constructs an appropriate section title.
+
+        Args:
+            text: The continuation text
+
+        Returns:
+            A narrative title for the section (e.g., "The Prancing Pony")
+        """
+        if not text or not text.strip():
+            return "Story Continuation"
+
+        # Get first line and extract location/subject
+        first_line = text.split("\n")[0].strip()
+
+        # Common location patterns
+        locations = [
+            "tavern", "inn", "castle", "village", "town", "city", "forest",
+            "dungeon", "cave", "tower", "temple", "shrine", "market",
+            "garden", "hall", "chamber", "room", "passage", "throne",
+        ]
+
+        # Try to find a location name (capitalize first noun before location)
+        words = first_line.split()
+        for i, word in enumerate(words):
+            word_lower = word.lower().strip(".,!?;:")
+            if word_lower in locations:
+                # Try to get the name before the location
+                if i > 0:
+                    prev_word = words[i - 1].strip(".,!?;:")
+                    if prev_word and prev_word[0].isupper():
+                        return f"The {prev_word} {word_lower.capitalize()}"
+                return f"The {word_lower.capitalize()}"
+
+        # Fallback: use first few capitalized words
+        capitalized = [
+            w.strip(".,!?;:") for w in words
+            if w and w[0].isupper() and w.lower() not in ["a", "an", "the"]
+        ]
+        if capitalized:
+            return " ".join(capitalized[:3])
+
+        return "Story Continuation"
+
+    def _build_story_content_with_continuation(
+        self, cleaned_content: str, title: str, continuation: str
+    ) -> str:
+        """Build story content with template removal and new continuation.
+
+        Combines the cleaned existing content with a new continuation section,
+        preserving headers and removing leftover template text.
+
+        Args:
+            cleaned_content: Cleaned story content (from _clean_story_content)
+            title: Narrative title for the continuation
+            continuation: AI-generated continuation text
+
+        Returns:
+            Final story content with continuation appended
+        """
+        # Find header section
+        parts = cleaned_content.split("---", 2)
+        if len(parts) >= 2:
+            header_section = parts[0] + "---"
+            rest = "---".join(parts[1:]) if len(parts) > 2 else ""
+        else:
+            header_section = cleaned_content
+            rest = ""
+
+        # Remove template text, keep only story content
+        kept_content = self._filter_template_text(rest)
+
+        # Combine: header + kept content + new continuation
+        if kept_content.strip():
+            new_content = (
+                f"{header_section}\n{kept_content}\n\n"
+                f"## {title}\n\n{continuation}\n"
+            )
+        else:
+            new_content = (
+                f"{header_section}\n\n## {title}\n\n"
+                f"{continuation}\n"
+            )
+
+        return new_content
+
+    def _generate_supporting_files(
+        self, filepath: str, campaign_dir: str, workspace_path: str
+    ) -> None:
+        """Generate story_hooks and session_results files.
+
+        Uses the canonical NPC detection and file creation functions to ensure
+        consistency with the rest of the story management system.
+
+        Args:
+            filepath: Path to the story file
+            campaign_dir: Path to the campaign directory
+            workspace_path: Path to the workspace root
+        """
+        try:
+            story_content = read_text_file(filepath)
+            story_name = os.path.basename(filepath)[:-3]  # Remove .md
+            party_names = self._load_party_members(campaign_dir)
+
+            # Detect NPCs and generate files
+            npc_suggestions = detect_npc_suggestions(
+                story_content, party_names, workspace_path
+            )
+
+            # Generate story_hooks file
+            hooks_path = os.path.join(campaign_dir, "story_hooks_001.md")
+            if not os.path.exists(hooks_path):
+                hooks = ["[Primary plot thread to pursue]",
+                         "[Secondary subplot]"]
+                create_story_hooks_file(
+                    campaign_dir, story_name, hooks,
+                    npc_suggestions=npc_suggestions
+                )
+
+            # Generate session_results file
+            results_path = os.path.join(campaign_dir, "session_results_001.md")
+            if not os.path.exists(results_path):
+                session = StorySession(story_name)
+                for member in party_names:
+                    session.character_actions.append(
+                        f"{member}: [Action/outcome]"
+                    )
+                create_session_results_file(campaign_dir, session)
+
+        except OSError as e:
+            print(f"[WARNING] Could not generate supporting files: {e}")
+
+    def _load_party_members(self, campaign_dir: str) -> List[str]:
+        """Load party member names from campaign configuration.
+
+        Args:
+            campaign_dir: Path to the campaign directory
+
+        Returns:
+            List of party member names
+        """
+
+        party_names = []
+        try:
+            party_config_path = os.path.join(
+                campaign_dir, "current_party.json"
+            )
+            if os.path.exists(party_config_path):
+                with open(party_config_path, "r", encoding="utf-8") as f:
+                    party_data = json.load(f)
+                    party_names = party_data.get("party_members", [])
+        except (OSError, json.JSONDecodeError):
+            pass
+
+        return party_names

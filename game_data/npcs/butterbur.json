@@ -15,7 +15,7 @@
   "recurring": true,
   "notes": "Runs The Prancing Pony in Bree. Often caught up in events beyond his understanding. Trusted by locals and travelers alike.",
   "ai_config": {
-    "enabled": false,
+    "enabled": true,
     "model": "llama3.1:8b",
     "base_url": "http://localhost:11434/v1",
     "api_key": "ollama",

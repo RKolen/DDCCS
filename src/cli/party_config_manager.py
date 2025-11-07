@@ -4,7 +4,9 @@ Party Configuration Manager
 Handles loading and saving of party configuration files.
 """
 
-from typing import List, Optional
+import os
+import json
+from typing import List, Optional, Dict, Any
 from datetime import datetime
 from src.utils.file_io import load_json_file, save_json_file, file_exists
 from src.utils.path_utils import get_party_config_path
@@ -44,10 +46,9 @@ def load_current_party(
 
     # Return default party if no config found
     return [
-        "Theron Brightblade",
-        "Mira Shadowstep",
-        "Garrick Stonefist",
-        "Elara Moonwhisper",
+        "Aragorn",
+        "Frodo",
+        "Gandalf",
     ]
 
 
@@ -83,3 +84,59 @@ def save_current_party(
         save_json_file(config_path, data)
     except (OSError, TypeError) as e:
         print(f"Error: Could not save party configuration: {e}")
+
+
+def load_party_with_profiles(
+    campaign_dir: str, workspace_path: str
+) -> Dict[str, Any]:
+    """Load party members and their character profiles for a campaign.
+
+    Reads the campaign's current_party.json and loads corresponding character
+    profiles from game_data/characters/ directory.
+
+    Args:
+        campaign_dir: Path to the campaign directory
+        workspace_path: Path to the workspace root
+
+    Returns:
+        Dictionary mapping character name to profile dict (JSON format)
+    """
+    party_dict: Dict[str, Any] = {}
+    try:
+        party_config_path = os.path.join(campaign_dir, "current_party.json")
+        if not file_exists(party_config_path):
+            return party_dict
+
+        party_config = load_json_file(party_config_path)
+        party_members = party_config.get("party_members", [])
+
+        # Load character profiles
+        characters_dir = os.path.join(workspace_path, "game_data", "characters")
+
+        for member_name in party_members:
+            # Try to find character file (match name to filename)
+            char_file = None
+            member_normalized = member_name.lower().replace(" ", "")
+
+            for filename in os.listdir(characters_dir):
+                if filename.endswith(".json") and filename != "class.example.json":
+                    # Normalize filename for comparison
+                    file_normalized = filename[:-5].lower().replace(" ", "")
+
+                    # Check for exact match or starting match
+                    if file_normalized == member_normalized or \
+                       member_normalized.startswith(file_normalized):
+                        char_file = os.path.join(characters_dir, filename)
+                        break
+
+            if char_file and file_exists(char_file):
+                try:
+                    profile = load_json_file(char_file)
+                    party_dict[member_name] = profile
+                except (json.JSONDecodeError, OSError):
+                    print(f"[WARNING] Could not load character file: {char_file}")
+
+    except (OSError, json.JSONDecodeError) as e:
+        print(f"[WARNING] Could not load party configuration: {e}")
+
+    return party_dict
