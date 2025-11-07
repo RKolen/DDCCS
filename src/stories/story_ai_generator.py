@@ -306,3 +306,128 @@ def enhance_story_narrative(
     except (AttributeError, TypeError, KeyError) as e:
         print(f"[ERROR] Failed to enhance narrative: {e}")
         return None
+
+
+def generate_session_results_from_story(
+    ai_client,
+    story_content: str,
+    party_names: list,
+) -> Optional[Dict[str, Any]]:
+    """
+    Generate session results from AI-created story narrative.
+
+    Analyzes story content to extract character actions, suggested rolls,
+    and key narrative events. Returns structured data for population into
+    session_results_*.md file.
+
+    Args:
+        ai_client: Initialized AIClient instance for AI requests
+        story_content: The narrative story that was generated
+        party_names: List of party member names participating in session
+
+    Returns:
+        Dict with keys:
+        - 'character_actions': List of strings (character: action/outcome)
+        - 'narrative_events': List of key events from the narrative
+        - 'suggested_rolls': List of dicts with roll suggestions
+        - 'npc_interactions': List of NPCs encountered
+
+        Returns None if AI is unavailable or generation fails.
+    """
+    if not story_content or not story_content.strip():
+        return None
+
+    if ai_client is None or not AI_AVAILABLE:
+        return None
+
+    party_list_str = ", ".join(party_names)
+
+    system_prompt = (
+        "You are a D&D session analyzer. Extract session results from "
+        "story narratives. Format your response as structured data with "
+        "character actions, suggested rolls, narrative events, and NPCs. "
+        "Be concise and specific."
+    )
+
+    user_prompt = (
+        f"Analyze this D&D story and extract session results:\n\n"
+        f"{story_content}\n\n"
+        f"Party members: {party_list_str}\n\n"
+        f"Provide structured analysis:\n"
+        f"1. Each character's main actions and outcomes\n"
+        f"2. Suggested rolls (skill checks, saves, attacks) with DCs\n"
+        f"3. Key narrative events that occurred\n"
+        f"4. NPCs encountered and their significance\n"
+        f"Format as SECTION headers followed by bullet points."
+    )
+
+    try:
+        response = ai_client.client.chat.completions.create(
+            model=ai_client.model,
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt},
+            ],
+            max_tokens=1500,
+            temperature=0.6,
+        )
+
+        analysis = response.choices[0].message.content.strip()
+
+        # Parse the AI response into structured data
+        return _parse_session_analysis(analysis, party_names)
+
+    except (AttributeError, TypeError, KeyError) as e:
+        print(f"[ERROR] Failed to generate session results: {e}")
+        return None
+
+
+def _parse_session_analysis(
+    analysis: str,
+    party_names: list
+) -> Dict[str, Any]:
+    """
+    Parse AI-generated session analysis into structured format.
+
+    Args:
+        analysis: Raw text from AI analysis
+        party_names: List of party member names (used for context in parsing)
+
+    Returns:
+        Dict with organized session results
+    """
+    # party_names used for potential context in future enhancements
+    _ = party_names
+
+    results = {
+        "character_actions": [],
+        "narrative_events": [],
+        "suggested_rolls": [],
+        "npc_interactions": [],
+    }
+
+    lines = analysis.split("\n")
+    current_section = None
+
+    for line in lines:
+        line = line.strip()
+        if not line:
+            continue
+
+        # Detect section headers
+        if "character" in line.lower() and "action" in line.lower():
+            current_section = "character_actions"
+        elif "roll" in line.lower():
+            current_section = "suggested_rolls"
+        elif "event" in line.lower() or "narrative" in line.lower():
+            current_section = "narrative_events"
+        elif "npc" in line.lower() or "encounter" in line.lower():
+            current_section = "npc_interactions"
+        elif line.startswith("-") or line.startswith("*"):
+            # Process bullet points
+            bullet_text = line.lstrip("-* ").strip()
+            if bullet_text and current_section:
+                results[current_section].append(bullet_text)
+
+    return results
+

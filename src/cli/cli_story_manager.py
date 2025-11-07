@@ -595,7 +595,11 @@ class StoryCLIManager:
         )
         if ai_content:
             success = self.story_updater.append_ai_continuation(
-                story_path, ai_content, campaign_dir, self.workspace_path
+                story_path,
+                ai_content,
+                campaign_dir,
+                self.workspace_path,
+                ai_client=self.story_manager.ai_client,
             )
             if success:
                 print(
