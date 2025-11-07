@@ -15,8 +15,9 @@ from src.utils.spell_lookup_helper import lookup_spells_and_abilities
 def _build_story_context(
     party_characters: Optional[Dict[str, Any]] = None,
     campaign_context: Optional[str] = None,
+    known_npcs: Optional[list] = None,
 ) -> str:
-    """Build combined character and campaign context string."""
+    """Build combined character, NPC, and campaign context string."""
     context_parts = []
 
     # Add character context from party
@@ -29,6 +30,22 @@ def _build_story_context(
                 descriptions.append(f"- {name} ({char_class}): {personality}")
         if descriptions:
             context_parts.append("\nParty Members:\n" + "\n".join(descriptions))
+
+    # Add NPC context from known NPCs relevant to the location
+    if known_npcs:
+        npc_descriptions = []
+        for npc in known_npcs:
+            name = npc.get("name", "Unknown")
+            role = npc.get("role", "NPC")
+            personality = npc.get("personality", "")
+            location = npc.get("location", "")
+            npc_descriptions.append(
+                f"- {name} ({role} at {location}): {personality}"
+            )
+        if npc_descriptions:
+            context_parts.append(
+                "\nKnown NPCs at this location:\n" + "\n".join(npc_descriptions)
+            )
 
     # Add campaign context
     if campaign_context:
@@ -46,8 +63,9 @@ def generate_story_from_prompt(
     Generate a story narrative using AI based on a user prompt.
 
     This function takes a user's story concept and uses an AI model to generate
-    a rich narrative that incorporates party member personalities and campaign
-    context. The generated story respects D&D 5e conventions and character traits.
+    a rich narrative that incorporates party member personalities, NPC context,
+    and campaign information. The generated story respects D&D 5e conventions
+    and character traits.
 
     Automatically performs RAG lookup for D&D spells and abilities mentioned in
     the prompt, enriching the narrative with accurate mechanical descriptions
@@ -59,6 +77,7 @@ def generate_story_from_prompt(
             at a mysterious tavern in the woods").
         story_config: Optional dict with generation settings:
             - 'party_characters': Dict of party members with profiles
+            - 'known_npcs': List of NPC dicts relevant to location
             - 'campaign_context': Campaign setting information
             - 'max_tokens': Maximum tokens for response (default 2000)
             - 'is_exploration': If True, avoids combat, focuses on exploration
@@ -83,12 +102,15 @@ def generate_story_from_prompt(
         story_config = {}
 
     party_characters = story_config.get("party_characters")
+    known_npcs = story_config.get("known_npcs")
     campaign_context = story_config.get("campaign_context")
     max_tokens = story_config.get("max_tokens", 2000)
     is_exploration = story_config.get("is_exploration", False)
 
-    # Build combined context
-    context = _build_story_context(party_characters, campaign_context)
+    # Build combined context (including NPC context now)
+    context = _build_story_context(
+        party_characters, campaign_context, known_npcs
+    )
 
     # Look up D&D spells/abilities for accurate descriptions
     ability_context = lookup_spells_and_abilities(story_prompt)

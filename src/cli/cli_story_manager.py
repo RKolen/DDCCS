@@ -27,6 +27,7 @@ from src.stories.story_file_manager import (
 )
 from src.stories.story_updater import StoryUpdater
 from src.combat.combat_narrator import CombatNarrator
+from src.utils.npc_lookup_helper import load_relevant_npcs_for_prompt
 from src.cli.dnd_cli_helpers import (
     get_continuation_scene_type,
     get_continuation_prompt,
@@ -579,11 +580,16 @@ class StoryCLIManager:
         party_characters = load_party_with_profiles(
             campaign_dir, self.workspace_path
         )
+        # Load relevant NPCs based on locations mentioned in the prompt
+        known_npcs = load_relevant_npcs_for_prompt(
+            story_prompt, self.workspace_path
+        )
         ai_content = generate_story_from_prompt(
             self.story_manager.ai_client,
             story_prompt,
             {
                 "party_characters": party_characters,
+                "known_npcs": known_npcs,
                 "is_exploration": True,
             },
         )
