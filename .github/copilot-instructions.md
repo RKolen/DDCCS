@@ -452,6 +452,13 @@ Optional detailed explanation if needed:
 - Group related changes in single commit
 - Reference issue numbers if applicable
 
+**CRITICAL: Do NOT commit code automatically.**
+- Never commit code without explicit user approval.
+- Always pause and request user confirmation before any commit.
+- Do not batch or auto-commit after edits, even if pylint is 10.00/10.
+- User must review and approve every commit step.
+- Just Do not offer to commit.
+
 **Examples:**
 -  Good: "Reorganize user data into game_data folder and add spell highlighting"
 -  Bad: " Added spell highlighting  and reorganized stuff "

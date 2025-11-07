@@ -13,6 +13,7 @@ def run_all_story_tests():
     """Run all story subsystem tests."""
     print("=" * 70)
     print("STORY SUBSYSTEM - FULL TEST SUITE")
+    print("This one may take a while...")
     print("=" * 70)
     print()
 

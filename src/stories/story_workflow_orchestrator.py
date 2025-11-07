@@ -14,11 +14,16 @@ from src.npcs.npc_auto_detection import (
     generate_npc_from_story,
     save_npc_profile,
 )
-from src.stories.hooks_and_analysis import create_story_hooks_file
+from src.stories.hooks_and_analysis import (
+    create_story_hooks_file,
+    convert_ai_hooks_to_list
+)
 from src.stories.session_results_manager import (
     StorySession,
     create_session_results_file,
 )
+from src.stories.story_ai_generator import generate_story_hooks_from_content
+from src.cli.party_config_manager import load_party_with_profiles
 from src.characters.character_consistency import create_character_development_file
 
 
@@ -127,12 +132,33 @@ def _process_npc_workflow(ctx: StoryWorkflowContext, opt: WorkflowOptions) -> No
 
 
 def _process_hooks_workflow(ctx: StoryWorkflowContext, opt: WorkflowOptions) -> None:
-    """Process story hooks file creation workflow step."""
+    """Process story hooks file creation workflow step.
+
+    Uses AI-powered hook generation if AI client available, falls back to
+    keyword extraction for reliability.
+    """
     if not opt.create_hooks_file:
         return
 
     try:
-        hooks = _extract_story_hooks(ctx.story_content)
+        hooks = None
+
+        # Try AI-powered generation if available
+        if opt.ai_client:
+            party_characters = load_party_with_profiles(
+                ctx.series_path, ctx.workspace_path
+            )
+            ai_hooks = generate_story_hooks_from_content(
+                opt.ai_client, ctx.story_content,
+                party_characters, ctx.party_names
+            )
+            if ai_hooks:
+                hooks = convert_ai_hooks_to_list(ai_hooks)
+
+        # Fall back to keyword extraction if AI not available
+        if hooks is None:
+            hooks = _extract_story_hooks(ctx.story_content)
+
         npc_suggestions = detect_npc_suggestions(
             ctx.story_content, ctx.party_names, ctx.workspace_path
         )

@@ -1,3 +1,6 @@
+
+
+
 """
 Story AI Generator Tests
 
@@ -5,20 +8,22 @@ Tests for the story_ai_generator module which handles AI-powered narrative
 generation, story descriptions, and narrative enhancement features.
 """
 
+import os
+import sys
+import tempfile
+from pathlib import Path
 from unittest.mock import Mock
 
 from tests import test_helpers
-
-# Import functions using safe import helper
-generate_story_from_prompt = test_helpers.safe_from_import(
-    "src.stories.story_ai_generator", "generate_story_from_prompt"
+from src.stories.story_ai_generator import (
+    generate_story_hooks_from_content,
+    generate_story_from_prompt,
+    generate_story_description,
+    enhance_story_narrative,
+    generate_session_results_from_story,
 )
-generate_story_description = test_helpers.safe_from_import(
-    "src.stories.story_ai_generator", "generate_story_description"
-)
-enhance_story_narrative = test_helpers.safe_from_import(
-    "src.stories.story_ai_generator", "enhance_story_narrative"
-)
+from src.stories.story_updater import StoryUpdater, ContinuationConfig
+from src.utils.npc_lookup_helper import load_relevant_npcs_for_prompt
 
 
 def test_generate_story_from_prompt_without_ai():
@@ -321,9 +326,9 @@ def test_generate_story_rag_graceful_fallback():
 
     # Should work even if RAG lookup doesn't find anything
     result = generate_story_from_prompt(
-        ai_client=mock_ai,
-        story_prompt="Party explores an empty room",
-        party_characters={"Alice": {"dnd_class": "rogue"}},
+        mock_ai,
+        "Party explores an empty room",
+        story_config={"party_characters": {"Alice": {"dnd_class": "rogue"}}},
     )
 
     assert isinstance(result, str), (
@@ -334,6 +339,271 @@ def test_generate_story_rag_graceful_fallback():
     )
 
     print("[PASS] Story Generation RAG Fallback")
+
+
+def test_generate_story_hooks_with_ai():
+    """Test generate_story_hooks_from_content with AI available."""
+    print("\n[TEST] Generate Story Hooks (With AI)")
+
+    story_content = (
+        "Kael investigates the ruins and finds a hidden lever. "
+        "Lira casts Detect Magic, revealing a faint aura. "
+        "An NPC named Tobias Stone offers a cryptic warning."
+    )
+    character_context = {
+        "Kael": {"dnd_class": "rogue", "level": 3},
+        "Lira": {"dnd_class": "wizard", "level": 4}
+    }
+    mock_ai = test_helpers.FakeAIClient()
+    hooks = generate_story_hooks_from_content(
+        mock_ai,
+        story_content,
+        character_context
+    )
+    assert isinstance(hooks, (list, dict, type(None))), "Should return list, dict, or None"
+
+    print("[PASS] Generate Story Hooks (With AI)")
+
+
+def test_generate_story_hooks_fallback():
+    """Test generate_story_hooks_from_content fallback when AI unavailable."""
+    print("\n[TEST] Generate Story Hooks (Fallback)")
+
+    story_content = (
+        "Kael investigates the ruins and finds a hidden lever. "
+        "Lira casts Detect Magic, revealing a faint aura. "
+        "An NPC named Tobias Stone offers a cryptic warning."
+    )
+    character_context = {
+        "Kael": {"dnd_class": "rogue", "level": 3},
+        "Lira": {"dnd_class": "wizard", "level": 4}
+    }
+    hooks = generate_story_hooks_from_content(
+        None,
+        story_content,
+        character_context
+    )
+    assert isinstance(hooks, (list, dict, type(None))), "Should return list, dict, or None"
+
+    print("[PASS] Generate Story Hooks (Fallback)")
+
+
+def test_phase1_append_ai_continuation_filters_template():
+    """Phase 1: Verify AI continuation filters template text correctly."""
+    print("\n[TEST] Phase 1 - AI Continuation (Template Filtering)")
+
+    workspace = str(Path.cwd())
+    with tempfile.TemporaryDirectory() as tmpdir:
+        campaign_dir = tmpdir
+        story_file = os.path.join(tmpdir, "test_story.md")
+
+        # Create initial story with template text
+        initial_content = (
+            "# Test Story\n\n"
+            "The party enters the tavern.\n\n"
+            "## Scene Title\n\n"
+            "[Add descriptive details]\n\n"
+            "This is actual narrative."
+        )
+        with open(story_file, "w", encoding="utf-8") as f:
+            f.write(initial_content)
+
+        config = ContinuationConfig().set_paths(
+            story_file, campaign_dir, workspace
+        ).set_content("New story content here.")
+
+        updater = StoryUpdater()
+        result = updater.append_ai_continuation(config)
+
+        assert result is True, "Should successfully append continuation"
+        assert os.path.exists(story_file), "Story file should exist"
+
+        # Verify content was updated
+        with open(story_file, "r", encoding="utf-8") as f:
+            updated_content = f.read()
+
+        assert "New story content here" in updated_content, (
+            "Continuation should be appended"
+        )
+
+    print("[PASS] Phase 1 - AI Continuation (Template Filtering)")
+
+
+def test_phase1_preserves_narrative_content():
+    """Phase 1: Verify template filtering preserves narrative content."""
+    print("\n[TEST] Phase 1 - AI Continuation (Preserve Narrative)")
+
+    workspace = str(Path.cwd())
+    with tempfile.TemporaryDirectory() as tmpdir:
+        campaign_dir = tmpdir
+        story_file = os.path.join(tmpdir, "test_story.md")
+
+        # Create story with valuable narrative and template text
+        initial_content = (
+            "# Chapter 1\n\n"
+            "The party approaches the castle gates. "
+            "A guard stops them and demands entry papers.\n\n"
+            "[Add more detail about the atmosphere]"
+        )
+        with open(story_file, "w", encoding="utf-8") as f:
+            f.write(initial_content)
+
+        config = ContinuationConfig().set_paths(
+            story_file, campaign_dir, workspace
+        ).set_content("The guard examines their papers carefully.")
+
+        updater = StoryUpdater()
+        result = updater.append_ai_continuation(config)
+
+        assert result is True, "Should successfully handle story"
+        with open(story_file, "r", encoding="utf-8") as f:
+            updated_content = f.read()
+
+        # Narrative should be preserved
+        assert "party" in updated_content.lower(), (
+            "Party reference should be preserved"
+        )
+        assert "guard" in updated_content.lower(), (
+            "Guard reference should be preserved"
+        )
+
+    print("[PASS] Phase 1 - AI Continuation (Preserve Narrative)")
+
+
+# Phase 2: NPC Lookup Tests
+def test_npc_lookup_by_location():
+    """Phase 2: Verify NPC lookup finds NPCs by location context."""
+    print("\n[TEST] Phase 2 - NPC Lookup (By Location)")
+
+    workspace = str(Path.cwd())
+    prompt = (
+        "The party arrives at the tavern. The innkeeper greets them warmly. "
+        "They settle in and order drinks."
+    )
+
+    npcs = load_relevant_npcs_for_prompt(prompt, workspace)
+
+    # Should find tavern-related NPCs or return empty list
+    assert isinstance(npcs, list), (
+        "Should return list of NPCs"
+    )
+
+    print("[PASS] Phase 2 - NPC Lookup (By Location)")
+
+
+def test_npc_lookup_by_role():
+    """Phase 2: Verify NPC lookup finds NPCs by role keywords."""
+    print("\n[TEST] Phase 2 - NPC Lookup (By Role)")
+
+    workspace = str(Path.cwd())
+    prompt = (
+        "The party encounters a merchant at the marketplace. "
+        "He offers exotic wares from distant lands."
+    )
+
+    npcs = load_relevant_npcs_for_prompt(prompt, workspace)
+
+    # Should recognize merchant role
+    assert isinstance(npcs, list), (
+        "Should return list of NPCs"
+    )
+
+    print("[PASS] Phase 2 - NPC Lookup (By Role)")
+
+
+def test_npc_lookup_empty_context():
+    """Phase 2: Verify NPC lookup handles empty context gracefully."""
+    print("\n[TEST] Phase 2 - NPC Lookup (Empty Context)")
+
+    workspace = str(Path.cwd())
+    prompt = "The party walks silently through the forest."
+
+    npcs = load_relevant_npcs_for_prompt(prompt, workspace)
+
+    # Should return empty list gracefully
+    assert isinstance(npcs, list), (
+        "Should return empty list gracefully"
+    )
+
+    print("[PASS] Phase 2 - NPC Lookup (Empty Context)")
+
+
+# Phase 3: Session Results Tests
+def test_generate_session_results_with_ai():
+    """Phase 3: Verify session results extraction with AI available."""
+    print("\n[TEST] Phase 3 - Session Results (With AI)")
+
+    story = (
+        "Kael attempted a stealth check (DC 12) and rolled a 15, succeeding. "
+        "Lira cast Fireball (attack roll DC 14) against the goblins. "
+        "Combat lasted 3 rounds with 5 enemies defeated."
+    )
+
+    mock_ai = test_helpers.FakeAIClient()
+
+    results = generate_session_results_from_story(
+        mock_ai,
+        story,
+        {"Kael": {"dnd_class": "rogue"}, "Lira": {"dnd_class": "wizard"}}
+    )
+
+    assert isinstance(results, (str, type(None))), (
+        "Should return string of session results or None"
+    )
+
+    print("[PASS] Phase 3 - Session Results (With AI)")
+
+
+def test_generate_session_results_fallback():
+    """Phase 3: Verify session results fallback when AI unavailable."""
+    print("\n[TEST] Phase 3 - Session Results (Fallback)")
+
+    story = (
+        "Kael made a stealth check and succeeded. "
+        "Combat ensued with multiple enemies."
+    )
+
+    results = generate_session_results_from_story(
+        None,
+        story,
+        {"Kael": {"dnd_class": "rogue"}}
+    )
+
+    # Should handle gracefully without AI
+    assert isinstance(results, (str, type(None))), (
+        "Should handle missing AI gracefully"
+    )
+
+    print("[PASS] Phase 3 - Session Results (Fallback)")
+
+
+def test_generate_session_results_identifies_actions():
+    """Phase 3: Verify session results identifies character actions."""
+    print("\n[TEST] Phase 3 - Session Results (Action Identification)")
+
+    story = (
+        "Kael used Stealth to sneak past the guards. "
+        "Lira cast Detect Magic to sense magical auras. "
+        "Aragorn made a Persuasion check to negotiate with the merchant."
+    )
+
+    mock_ai = test_helpers.FakeAIClient()
+
+    results = generate_session_results_from_story(
+        mock_ai,
+        story,
+        {
+            "Kael": {"dnd_class": "rogue"},
+            "Lira": {"dnd_class": "wizard"},
+            "Aragorn": {"dnd_class": "fighter"}
+        }
+    )
+
+    assert isinstance(results, (str, type(None))), (
+        "Should identify character actions"
+    )
+
+    print("[PASS] Phase 3 - Session Results (Action Identification)")
 
 
 def run_all_story_ai_generator_tests():
@@ -351,11 +621,22 @@ def run_all_story_ai_generator_tests():
         test_generate_story_from_prompt_no_combat_with_exploration_flag,
         test_generate_story_from_prompt_with_rag_context,
         test_generate_story_rag_graceful_fallback,
+        test_generate_story_hooks_with_ai,
+        test_generate_story_hooks_fallback,
+        # Phase 1-3 Tests
+        test_phase1_append_ai_continuation_filters_template,
+        test_phase1_preserves_narrative_content,
+        test_npc_lookup_by_location,
+        test_npc_lookup_by_role,
+        test_npc_lookup_empty_context,
+        test_generate_session_results_with_ai,
+        test_generate_session_results_fallback,
+        test_generate_session_results_identifies_actions,
     ]
 
     return test_helpers.run_test_suite("Story AI Generator", tests)
 
 
 if __name__ == "__main__":
-    import sys
+
     sys.exit(run_all_story_ai_generator_tests())

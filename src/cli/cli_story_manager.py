@@ -19,6 +19,7 @@ from src.stories.story_workflow_orchestrator import (
     WorkflowOptions,
 )
 from src.stories.story_ai_generator import generate_story_from_prompt
+from src.stories.story_updater import ContinuationConfig
 from src.stories.story_file_manager import (
     StoryFileContext,
     StoryCreationOptions,
@@ -594,13 +595,11 @@ class StoryCLIManager:
             },
         )
         if ai_content:
-            success = self.story_updater.append_ai_continuation(
-                story_path,
-                ai_content,
-                campaign_dir,
-                self.workspace_path,
-                ai_client=self.story_manager.ai_client,
-            )
+            config = (ContinuationConfig()
+                      .set_paths(story_path, campaign_dir, self.workspace_path)
+                      .set_content(ai_content)
+                      .set_ai_client(self.story_manager.ai_client))
+            success = self.story_updater.append_ai_continuation(config)
             if success:
                 print(
                     f"\n[SUCCESS] Added exploration narrative to {display_name}"

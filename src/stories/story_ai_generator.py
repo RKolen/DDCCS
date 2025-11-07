@@ -22,29 +22,16 @@ def _build_story_context(
 
     # Add character context from party
     if party_characters:
-        descriptions = []
-        for name, profile in party_characters.items():
-            if isinstance(profile, dict):
-                char_class = profile.get("dnd_class", "Unknown")
-                personality = profile.get("personality_summary", "")
-                descriptions.append(f"- {name} ({char_class}): {personality}")
-        if descriptions:
-            context_parts.append("\nParty Members:\n" + "\n".join(descriptions))
+        char_descriptions = _format_character_descriptions(party_characters)
+        if char_descriptions:
+            context_parts.append("\nParty Members:\n" + char_descriptions)
 
     # Add NPC context from known NPCs relevant to the location
     if known_npcs:
-        npc_descriptions = []
-        for npc in known_npcs:
-            name = npc.get("name", "Unknown")
-            role = npc.get("role", "NPC")
-            personality = npc.get("personality", "")
-            location = npc.get("location", "")
-            npc_descriptions.append(
-                f"- {name} ({role} at {location}): {personality}"
-            )
+        npc_descriptions = _format_npc_descriptions(known_npcs)
         if npc_descriptions:
             context_parts.append(
-                "\nKnown NPCs at this location:\n" + "\n".join(npc_descriptions)
+                "\nKnown NPCs at this location:\n" + npc_descriptions
             )
 
     # Add campaign context
@@ -52,6 +39,33 @@ def _build_story_context(
         context_parts.append(f"\nCampaign Setting: {campaign_context}")
 
     return "".join(context_parts)
+
+
+def _format_character_descriptions(
+    party_characters: Dict[str, Any],
+) -> str:
+    """Format character descriptions for context."""
+    descriptions = []
+    for name, profile in party_characters.items():
+        if isinstance(profile, dict):
+            char_class = profile.get("dnd_class", "Unknown")
+            personality = profile.get("personality_summary", "")
+            descriptions.append(f"- {name} ({char_class}): {personality}")
+    return "\n".join(descriptions)
+
+
+def _format_npc_descriptions(known_npcs: list) -> str:
+    """Format NPC descriptions for context."""
+    npc_descriptions = []
+    for npc in known_npcs:
+        name = npc.get("name", "Unknown")
+        role = npc.get("role", "NPC")
+        personality = npc.get("personality", "")
+        location = npc.get("location", "")
+        npc_descriptions.append(
+            f"- {name} ({role} at {location}): {personality}"
+        )
+    return "\n".join(npc_descriptions)
 
 
 def generate_story_from_prompt(
@@ -97,44 +111,25 @@ def generate_story_from_prompt(
     if ai_client is None or not AI_AVAILABLE:
         return None
 
-    # Extract configuration with defaults
+    # Normalize configuration
     if story_config is None:
         story_config = {}
 
-    party_characters = story_config.get("party_characters")
-    known_npcs = story_config.get("known_npcs")
-    campaign_context = story_config.get("campaign_context")
-    max_tokens = story_config.get("max_tokens", 2000)
-    is_exploration = story_config.get("is_exploration", False)
-
-    # Build combined context (including NPC context now)
+    # Build combined context (including NPC context)
     context = _build_story_context(
-        party_characters, campaign_context, known_npcs
+        story_config.get("party_characters"),
+        story_config.get("campaign_context"),
+        story_config.get("known_npcs"),
     )
 
     # Look up D&D spells/abilities for accurate descriptions
     ability_context = lookup_spells_and_abilities(story_prompt)
 
-    # Construct the system prompt for D&D storytelling
-    base_prompt = (
-        "You are an experienced D&D Dungeon Master crafting engaging narrative. "
-        "Write story descriptions in third person. Focus on atmosphere, character "
-        "reactions, and plot development. Keep descriptions vivid but concise "
-        "(max 80 chars per line). Respect D&D 5e conventions and the party's "
-        "character personalities. Do not include dice rolls, mechanics, or "
-        "meta-game information in the narrative."
+    # Build system and user prompts
+    system_prompt = _build_story_system_prompt(
+        story_config.get("is_exploration", False)
     )
 
-    # Add exploration constraint if requested
-    if is_exploration:
-        base_prompt += (
-            " Do NOT include combat, fighting, or hostile action. Focus on "
-            "character interactions, exploration, discovery, and social dynamics."
-        )
-
-    system_prompt = base_prompt
-
-    # Construct the user prompt
     user_prompt = (
         f"Write a D&D story scene based on this prompt:\n{story_prompt}"
         f"{context}"
@@ -152,7 +147,7 @@ def generate_story_from_prompt(
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt},
             ],
-            max_tokens=max_tokens,
+            max_tokens=story_config.get("max_tokens", 2000),
             temperature=0.8,
         )
 
@@ -163,6 +158,34 @@ def generate_story_from_prompt(
     except (AttributeError, TypeError, KeyError) as e:
         print(f"[ERROR] Failed to generate story: {e}")
         return None
+
+
+def _build_story_system_prompt(is_exploration: bool = False) -> str:
+    """
+    Build system prompt for D&D story generation.
+
+    Args:
+        is_exploration: If True, avoid combat and focus on exploration/roleplay
+
+    Returns:
+        Formatted system prompt string
+    """
+    base_prompt = (
+        "You are an experienced D&D Dungeon Master crafting engaging narrative. "
+        "Write story descriptions in third person. Focus on atmosphere, character "
+        "reactions, and plot development. Keep descriptions vivid but concise "
+        "(max 80 chars per line). Respect D&D 5e conventions and the party's "
+        "character personalities. Do not include dice rolls, mechanics, or "
+        "meta-game information in the narrative."
+    )
+
+    if is_exploration:
+        base_prompt += (
+            " Do NOT include combat, fighting, or hostile action. Focus on "
+            "character interactions, exploration, discovery, and social dynamics."
+        )
+
+    return base_prompt
 
 
 def generate_story_description(
@@ -430,3 +453,286 @@ def _parse_session_analysis(
                 results[current_section].append(bullet_text)
 
     return results
+
+
+def generate_story_hooks_from_content(
+    ai_client,
+    story_content: str,
+    party_characters: Optional[Dict[str, Any]] = None,
+    party_names: Optional[list] = None,
+) -> Optional[Dict[str, Any]]:
+    """
+    Generate AI-powered story hooks from story content with character context.
+
+    Analyzes story narrative using AI to extract unresolved plot threads,
+    character-specific hooks based on backgrounds and motivations, next session
+    ideas, and NPC follow-ups. Incorporates party character personalities and
+    motivations for personalized hook generation.
+
+    Args:
+        ai_client: Initialized AIClient instance for AI requests
+        story_content: The narrative story that was generated
+        party_characters: Dict of character name -> profile with motivations,
+                         fears, goals, background_story
+        party_names: List of party member names (used for context)
+
+    Returns:
+        Dict with keys:
+        - 'unresolved_threads': List of main plot threads
+        - 'character_specific_hooks': Dict mapping char names to hook lists
+        - 'next_session_ideas': List of future session suggestions
+        - 'npc_follow_ups': List of NPC-related follow-up opportunities
+
+        Returns None if AI is unavailable or generation fails.
+
+    Raises:
+        ValueError: If story_content is empty or party_characters is invalid
+    """
+    if not story_content or not story_content.strip():
+        return None
+
+    if ai_client is None or not AI_AVAILABLE:
+        return None
+
+    if not party_names and not party_characters:
+        party_names = []
+    elif party_names is None:
+        party_names = list(party_characters.keys()) if party_characters else []
+
+    # Build character context from profiles
+    character_context = _build_character_context_for_hooks(party_characters)
+    party_list_str = ", ".join(party_names) if party_names else "Unknown party"
+
+    system_prompt = (
+        "You are a D&D campaign planner analyzing story sessions. Extract "
+        "unresolved plot threads, generate character-specific hooks based on "
+        "character backgrounds and motivations, and suggest future campaign "
+        "directions. Be creative and tie hooks to character arcs."
+    )
+
+    user_prompt = (
+        f"Analyze this D&D story and generate comprehensive story hooks:\n\n"
+        f"{story_content}\n\n"
+        f"Party Members:\n{character_context}\n\n"
+        f"Provide:\n"
+        f"1. 3-5 unresolved plot threads from this session\n"
+        f"2. Character-specific hooks for {party_list_str} based on their "
+        f"backgrounds and motivations\n"
+        f"3. 2-3 potential next session ideas\n"
+        f"4. NPC follow-ups and relationship developments\n"
+        f"Format sections clearly with headers: "
+        f"UNRESOLVED THREADS, CHARACTER HOOKS, NEXT SESSIONS, NPC FOLLOW-UPS"
+    )
+
+    try:
+        response = ai_client.client.chat.completions.create(
+            model=ai_client.model,
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt},
+            ],
+            max_tokens=2000,
+            temperature=0.7,
+        )
+
+        analysis = response.choices[0].message.content.strip()
+
+        # Parse the AI response into structured hooks data
+        return _parse_hooks_analysis(analysis, party_names)
+
+    except (AttributeError, TypeError, KeyError) as e:
+        print(f"[ERROR] Failed to generate story hooks: {e}")
+        return None
+
+
+def _build_character_context_for_hooks(
+    party_characters: Optional[Dict[str, Any]] = None,
+) -> str:
+    """
+    Build character context string for hooks generation AI prompt.
+
+    Extracts motivations, goals, fears, and backgrounds from character profiles
+    to provide rich context for personalized hook generation.
+
+    Args:
+        party_characters: Dict of character name -> profile
+
+    Returns:
+        Formatted character context string
+    """
+    if not party_characters:
+        return "No character profiles available"
+
+    descriptions = []
+    for name, profile in party_characters.items():
+        if not isinstance(profile, dict):
+            continue
+
+        dnd_class = profile.get("dnd_class", "Unknown")
+        desc_parts = [f"- {name} ({dnd_class})"]
+
+        # Add personality
+        if profile.get("personality_summary"):
+            desc_parts.append(f"  Personality: {profile['personality_summary']}")
+
+        # Add motivations
+        motivations = profile.get("motivations", [])
+        if motivations:
+            desc_parts.append(f"  Motivations: {', '.join(motivations[:2])}")
+
+        # Add goals and fears
+        goals = profile.get("goals", [])
+        if goals:
+            desc_parts.append(f"  Goals: {', '.join(goals[:2])}")
+
+        fears = profile.get("fears_weaknesses", [])
+        if fears:
+            desc_parts.append(f"  Fears: {', '.join(fears[:2])}")
+
+        descriptions.append("\n".join(desc_parts))
+
+    return "\n\n".join(descriptions) if descriptions else "No character data"
+
+
+def _parse_hooks_analysis(
+    analysis: str, party_names: Optional[list] = None
+) -> Dict[str, Any]:
+    """
+    Parse AI-generated hooks analysis into structured format.
+
+    Extracts sections from AI response and organizes them into hooks,
+    character-specific hooks, session ideas, and NPC follow-ups.
+
+    Args:
+        analysis: Raw text from AI analysis
+        party_names: List of party member names (for context in parsing)
+
+    Returns:
+        Dict with organized hooks data
+    """
+    results = {
+        "unresolved_threads": [],
+        "character_specific_hooks": {},
+        "next_session_ideas": [],
+        "npc_follow_ups": [],
+    }
+
+    if party_names is None:
+        party_names = []
+
+    lines = analysis.split("\n")
+    current_section = None
+    current_character = None
+
+    for line in lines:
+        line_stripped = line.strip()
+        if not line_stripped:
+            continue
+
+        # Update section or character based on line content
+        section, char = _detect_hooks_section_and_character(
+            line_stripped, party_names
+        )
+        if section:
+            current_section = section
+            current_character = char
+            continue
+
+        # Process bullet points
+        if line_stripped.startswith("-") or line_stripped.startswith("*"):
+            bullet_text = line_stripped.lstrip("-* ").strip()
+            if not bullet_text:
+                continue
+
+            _add_hook_to_results(
+                results,
+                current_section,
+                bullet_text,
+                current_character,
+                party_names,
+            )
+
+    return results
+
+
+def _detect_hooks_section_and_character(
+    line: str, party_names: Optional[list] = None
+) -> tuple:
+    """
+    Detect if line contains section header or character name.
+
+    Args:
+        line: Stripped line from analysis text
+        party_names: List of party member names
+
+    Returns:
+        Tuple of (section_name, character_name) or (None, None)
+    """
+    if party_names is None:
+        party_names = []
+
+    line_upper = line.upper()
+
+    # Check for section headers
+    if "UNRESOLVED" in line_upper and "THREAD" in line_upper:
+        return ("unresolved_threads", None)
+    if "CHARACTER" in line_upper and "HOOK" in line_upper:
+        return ("character_hooks", None)
+    if "NEXT" in line_upper and "SESSION" in line_upper:
+        return ("next_session_ideas", None)
+    if "NPC" in line_upper and (
+        "FOLLOW" in line_upper or "RELATION" in line_upper
+    ):
+        return ("npc_follow_ups", None)
+
+    # Check for character name headers
+    for char_name in party_names:
+        if char_name.lower() in line.lower():
+            return ("character_hooks", char_name)
+
+    return (None, None)
+
+
+def _add_hook_to_results(
+    results: Dict[str, Any],
+    section: Optional[str],
+    hook_text: str,
+    character: Optional[str],
+    party_names: Optional[list] = None,
+) -> None:
+    """
+    Add a hook entry to the results dictionary.
+
+    Args:
+        results: Results dict to update
+        section: Current section name
+        hook_text: Hook text to add
+        character: Current character name (if any)
+        party_names: List of party names for detection
+    """
+    if party_names is None:
+        party_names = []
+
+    if section == "character_hooks":
+        # Detect character in hook text if not set
+        detected_char = character
+        if not detected_char:
+            for char_name in party_names:
+                if char_name.lower() in hook_text.lower():
+                    detected_char = char_name
+                    break
+
+        if detected_char:
+            if detected_char not in results["character_specific_hooks"]:
+                results["character_specific_hooks"][detected_char] = []
+            results["character_specific_hooks"][detected_char].append(
+                hook_text
+            )
+        else:
+            if "unassigned" not in results["character_specific_hooks"]:
+                results["character_specific_hooks"]["unassigned"] = []
+            results["character_specific_hooks"]["unassigned"].append(
+                hook_text
+            )
+    elif section:
+        results[section].append(hook_text)

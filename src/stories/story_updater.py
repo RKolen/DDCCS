@@ -15,12 +15,87 @@ from src.utils.story_formatting_utils import (
     generate_consistency_section
 )
 from src.npcs.npc_auto_detection import detect_npc_suggestions
-from src.stories.hooks_and_analysis import create_story_hooks_file
+from src.stories.hooks_and_analysis import (
+    create_story_hooks_file,
+    convert_ai_hooks_to_list
+)
 from src.stories.session_results_manager import (
     StorySession,
     create_session_results_file
 )
-from src.stories.story_ai_generator import generate_session_results_from_story
+from src.stories.story_ai_generator import (
+    generate_session_results_from_story,
+    generate_story_hooks_from_content
+)
+from src.cli.party_config_manager import load_party_with_profiles
+
+
+class ContinuationConfig:
+    """Configuration builder for story continuation operations."""
+
+    def __init__(self):
+        """Initialize empty config."""
+        self.filepath = None
+        self.continuation = None
+        self.campaign_dir = None
+        self.workspace_path = None
+        self.ai_client = None
+
+    def set_paths(
+        self, filepath: str, campaign_dir: str, workspace_path: str
+    ) -> 'ContinuationConfig':
+        """Set file and directory paths.
+
+        Args:
+            filepath: Path to the story file
+            campaign_dir: Path to the campaign directory
+            workspace_path: Path to the workspace root
+
+        Returns:
+            Self for method chaining
+        """
+        self.filepath = filepath
+        self.campaign_dir = campaign_dir
+        self.workspace_path = workspace_path
+        return self
+
+    def set_content(self, continuation: str) -> 'ContinuationConfig':
+        """Set continuation content.
+
+        Args:
+            continuation: AI-generated continuation text
+
+        Returns:
+            Self for method chaining
+        """
+        self.continuation = continuation
+        return self
+
+    def set_ai_client(self, ai_client) -> 'ContinuationConfig':
+        """Set optional AI client.
+
+        Args:
+            ai_client: Optional AI client for analysis
+
+        Returns:
+            Self for method chaining
+        """
+        self.ai_client = ai_client
+        return self
+
+    def validate(self) -> bool:
+        """Validate that all required fields are set.
+
+        Returns:
+            True if valid, False otherwise
+        """
+        return all([
+            self.filepath,
+            self.continuation,
+            self.campaign_dir,
+            self.workspace_path,
+        ])
+
 
 class StoryUpdater:
     """Updates story files with consultant analysis and consistency notes."""
@@ -82,56 +157,58 @@ class StoryUpdater:
             f"{os.path.basename(filepath)}"
         )
 
-    def append_ai_continuation(
-        self,
-        filepath: str,
-        continuation: str,
-        campaign_dir: str,
-        workspace_path: str,
-        ai_client=None,
-    ) -> bool:
-        """
-        Append AI-generated continuation to story and generate supporting files.
+    def append_ai_continuation(self, config: ContinuationConfig) -> bool:
+        """Append AI-generated continuation to story and supporting files.
 
-        Cleans existing content, appends continuation with appropriate section
-        title, and generates story_hooks and session_results files with NPC
-        detection. Optionally uses AI to generate session results from story.
+        Cleans existing content, appends continuation with section title, and
+        generates story_hooks and session_results files with NPC detection.
 
         Args:
-            filepath: Path to the story file
-            continuation: AI-generated continuation text
-            campaign_dir: Path to the campaign directory
-            workspace_path: Path to the workspace root
-            ai_client: Optional AI client for generating session results
+            config: ContinuationConfig with filepath, continuation text,
+                   campaign_dir, workspace_path, and optional ai_client
 
         Returns:
             True if successful, False if an error occurred
         """
-        if not file_exists(filepath):
+        if not config.validate():
+            print("[ERROR] Invalid continuation config: missing required fields")
+            return False
+
+        return self._append_continuation(config)
+
+    def _append_continuation(self, config: ContinuationConfig) -> bool:
+        """Append continuation using config object.
+
+        Args:
+            config: ContinuationConfig with all parameters
+
+        Returns:
+            True if successful, False if an error occurred
+        """
+        if not file_exists(config.filepath):
             return False
 
         try:
-            # Read and clean current content
-            current_content = read_text_file(filepath)
+            current_content = read_text_file(config.filepath)
             cleaned_content = self._clean_story_content(current_content)
-            continuation_title = self._extract_narrative_title(continuation)
-
-            # Build final content with new continuation appended
-            new_content = self._build_story_content_with_continuation(
-                cleaned_content, continuation_title, continuation
+            continuation_title = self._extract_narrative_title(
+                config.continuation
             )
 
-            # Write updated content
-            write_text_file(filepath, new_content)
+            new_content = self._build_story_content_with_continuation(
+                cleaned_content, continuation_title, config.continuation
+            )
 
-            # Generate supporting files (with AI client if available)
+            write_text_file(config.filepath, new_content)
+
             self._generate_supporting_files(
-                filepath, campaign_dir, workspace_path, ai_client=ai_client
+                config.filepath, config.campaign_dir,
+                config.workspace_path, ai_client=config.ai_client
             )
 
             print(
                 f"[SUCCESS] Appended AI continuation to story file: "
-                f"{os.path.basename(filepath)}"
+                f"{os.path.basename(config.filepath)}"
             )
             return True
 
@@ -367,6 +444,92 @@ class StoryUpdater:
 
         return new_content
 
+    def _generate_story_hooks_file(self, hooks_config: Dict[str, Any]) -> None:
+        """Generate or append story hooks from story content.
+
+        Generates story hooks using AI if available, falls back to placeholders.
+
+        Args:
+            hooks_config: Dict with keys:
+                - campaign_dir: Path to the campaign directory
+                - story_name: Name of the story file
+                - story_content: Full story text content
+                - workspace_path: Path to the workspace root
+                - party_names: List of party member names
+                - npc_suggestions: NPC detection results
+                - ai_client: Optional AI client for generation
+        """
+        hooks_path = os.path.join(
+            hooks_config["campaign_dir"], "story_hooks_001.md"
+        )
+        if os.path.exists(hooks_path):
+            return
+
+        hooks = None
+        if hooks_config.get("ai_client"):
+            party_characters = load_party_with_profiles(
+                hooks_config["campaign_dir"], hooks_config["workspace_path"]
+            )
+            ai_hooks = generate_story_hooks_from_content(
+                hooks_config["ai_client"], hooks_config["story_content"],
+                party_characters, hooks_config["party_names"]
+            )
+            if ai_hooks:
+                hooks = convert_ai_hooks_to_list(ai_hooks)
+
+        if hooks is None:
+            hooks = ["[Primary plot thread to pursue]",
+                     "[Secondary subplot]"]
+
+        create_story_hooks_file(
+            hooks_config["campaign_dir"], hooks_config["story_name"], hooks,
+            npc_suggestions=hooks_config["npc_suggestions"]
+        )
+
+    def _generate_session_results_file(self, results_config: Dict[str, Any]) -> None:
+        """Generate or update session results file.
+
+        Creates session results with AI generation or placeholders.
+
+        Args:
+            results_config: Dict with keys:
+                - campaign_dir: Path to the campaign directory
+                - story_name: Name of the story
+                - story_content: Full story text
+                - party_names: List of party member names
+                - ai_client: Optional AI client for generation
+        """
+        results_path = os.path.join(
+            results_config["campaign_dir"], "session_results_001.md"
+        )
+        if os.path.exists(results_path):
+            return
+
+        session = StorySession(results_config["story_name"])
+
+        if results_config.get("ai_client"):
+            ai_results = generate_session_results_from_story(
+                results_config["ai_client"], results_config["story_content"],
+                results_config["party_names"]
+            )
+            if ai_results:
+                for action in ai_results.get("character_actions", []):
+                    session.character_actions.append(action)
+                for event in ai_results.get("narrative_events", []):
+                    session.narrative_events.append(event)
+            else:
+                for member in results_config["party_names"]:
+                    session.character_actions.append(
+                        f"{member}: [Action/outcome]"
+                    )
+        else:
+            for member in results_config["party_names"]:
+                session.character_actions.append(
+                    f"{member}: [Action/outcome]"
+                )
+
+        create_session_results_file(results_config["campaign_dir"], session)
+
     def _generate_supporting_files(
         self,
         filepath: str,
@@ -378,13 +541,13 @@ class StoryUpdater:
 
         Uses the canonical NPC detection and file creation functions to ensure
         consistency with the rest of the story management system. Optionally
-        uses AI to generate session results from story narrative.
+        uses AI to generate story hooks and session results from story narrative.
 
         Args:
             filepath: Path to the story file
             campaign_dir: Path to the campaign directory
             workspace_path: Path to the workspace root
-            ai_client: Optional AI client for generating session results
+            ai_client: Optional AI client for AI-powered analysis
         """
         try:
             story_content = read_text_file(filepath)
@@ -397,45 +560,26 @@ class StoryUpdater:
             )
 
             # Generate story_hooks file
-            hooks_path = os.path.join(campaign_dir, "story_hooks_001.md")
-            if not os.path.exists(hooks_path):
-                hooks = ["[Primary plot thread to pursue]",
-                         "[Secondary subplot]"]
-                create_story_hooks_file(
-                    campaign_dir, story_name, hooks,
-                    npc_suggestions=npc_suggestions
-                )
+            hooks_config = {
+                "campaign_dir": campaign_dir,
+                "story_name": story_name,
+                "story_content": story_content,
+                "workspace_path": workspace_path,
+                "party_names": party_names,
+                "npc_suggestions": npc_suggestions,
+                "ai_client": ai_client,
+            }
+            self._generate_story_hooks_file(hooks_config)
 
             # Generate session_results file
-            results_path = os.path.join(campaign_dir, "session_results_001.md")
-            if not os.path.exists(results_path):
-                session = StorySession(story_name)
-
-                # Try to generate AI-based session results
-                if ai_client:
-                    ai_results = generate_session_results_from_story(
-                        ai_client, story_content, party_names
-                    )
-                    if ai_results:
-                        # Populate session with AI-generated data
-                        for action in ai_results.get("character_actions", []):
-                            session.character_actions.append(action)
-                        for event in ai_results.get("narrative_events", []):
-                            session.narrative_events.append(event)
-                    else:
-                        # Fallback to placeholders if AI generation fails
-                        for member in party_names:
-                            session.character_actions.append(
-                                f"{member}: [Action/outcome]"
-                            )
-                else:
-                    # Use placeholders when AI unavailable
-                    for member in party_names:
-                        session.character_actions.append(
-                            f"{member}: [Action/outcome]"
-                        )
-
-                create_session_results_file(campaign_dir, session)
+            results_config = {
+                "campaign_dir": campaign_dir,
+                "story_name": story_name,
+                "story_content": story_content,
+                "party_names": party_names,
+                "ai_client": ai_client,
+            }
+            self._generate_session_results_file(results_config)
 
         except OSError as e:
             print(f"[WARNING] Could not generate supporting files: {e}")

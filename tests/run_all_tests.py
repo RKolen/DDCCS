@@ -134,6 +134,7 @@ def run_tests(categories=None):
         True if all tests passed, False otherwise
     """
     print("[D&D] D&D Character Consultant System - Test Suite")
+    print("Characters and Stories take a while to test; please be patient.")
     print("=" * 70)
 
     if categories:

@@ -4,6 +4,7 @@ Focuses on selection and validation methods that are safe to run in unit tests.
 Tests validate series/story selection logic and character action validation.
 """
 
+from tests import test_helpers
 from tests.test_helpers import setup_test_environment, import_module
 
 setup_test_environment()
@@ -152,17 +153,8 @@ def test_select_story_from_series_no_stories():
 def test_get_series_and_story_no_series():
     """get_series_and_story should return None when no series exist."""
 
-    class _NoSeriesFakeManager:
-        """Fake story manager with no series."""
-
-        def get_story_series(self):
-            """Return empty list."""
-            return []
-
-        def get_story_files_in_series(self, _series_name: str):
-            """Return story files (not used in this test)."""
-            return []
-
-    manager = CharacterDevelopmentCLIManager(_NoSeriesFakeManager(), "")
+    manager = CharacterDevelopmentCLIManager(
+        test_helpers.NoSeriesFakeStoryManager(), ""
+    )
     result = manager.get_series_and_story()
     assert result is None

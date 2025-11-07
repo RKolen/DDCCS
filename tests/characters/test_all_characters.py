@@ -16,6 +16,7 @@ def run_all_character_tests():
     """Run all character subsystem tests."""
     print("=" * 70)
     print("CHARACTER SUBSYSTEM - FULL TEST SUITE")
+    print("This one may take a while...")
     print("=" * 70)
     print("\nThis test suite covers:")
     print("  - Character Profile (nested dataclass structure)")

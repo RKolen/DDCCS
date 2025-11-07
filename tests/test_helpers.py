@@ -545,3 +545,15 @@ class FakeDMConsultant:
             "narrative_suggestions": ["A short generated narrative."],
             "consistency_notes": [],
         }
+
+
+class NoSeriesFakeStoryManager:
+    """Fake story manager with no series - reused across CLI tests."""
+
+    def get_story_series(self):
+        """Return empty list."""
+        return []
+
+    def get_story_files_in_series(self, _series_name: str):
+        """Return story files (not used in this test)."""
+        return []

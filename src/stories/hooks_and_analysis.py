@@ -13,6 +13,26 @@ from typing import List, Dict, Any, Optional
 from datetime import datetime
 from src.utils.file_io import write_text_file
 
+
+def convert_ai_hooks_to_list(ai_hooks: Dict[str, Any]) -> List[str]:
+    """
+    Convert AI-generated hooks dictionary to hooks list.
+
+    Args:
+        ai_hooks: Dictionary with 'unresolved_threads' and/or
+                  'next_session_ideas' keys
+
+    Returns:
+        Combined list of all hooks from both sections
+    """
+    hooks = []
+    if ai_hooks.get("unresolved_threads"):
+        hooks.extend(ai_hooks["unresolved_threads"])
+    if ai_hooks.get("next_session_ideas"):
+        hooks.extend(ai_hooks["next_session_ideas"])
+    return hooks
+
+
 def create_story_hooks_file(
     series_path: str,
     story_name: str,
