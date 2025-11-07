@@ -177,7 +177,8 @@ class StoryUpdater:
         """Remove template guidance, keep only story content.
 
         Strips template sections and guidance keywords that should not appear
-        in finalized story narratives.
+        in finalized story narratives. Also removes trailing separators and
+        excessive blank lines.
 
         Args:
             content: Story content that may include template text
@@ -191,6 +192,7 @@ class StoryUpdater:
 
         template_sections = [
             "Scene Title",
+            "Story Content",
             "Character Development",
             "DC Suggestions",
             "Combat Summary",
@@ -202,6 +204,7 @@ class StoryUpdater:
             "[Paste",
             "[Clean",
             "[Include",
+            "[Write your narrative",
             "Write pure narrative",
             "Focus on:",
             "Character actions and dialogue",
@@ -243,7 +246,18 @@ class StoryUpdater:
             else:
                 kept_lines.append(line)
 
-        return "\n".join(kept_lines).strip()
+        # Post-process: remove trailing separators and clean up blank lines
+        result = "\n".join(kept_lines).strip()
+
+        # Remove trailing separator lines
+        while result.endswith("\n---"):
+            result = result[:-4].rstrip()
+
+        # Clean up excessive consecutive blank lines (keep max 2)
+        while "\n\n\n" in result:
+            result = result.replace("\n\n\n", "\n\n")
+
+        return result
 
     def _extract_narrative_title(self, text: str) -> str:
         """Extract a narrative title from the first line of text.
@@ -308,29 +322,42 @@ class StoryUpdater:
         Returns:
             Final story content with continuation appended
         """
-        # Find header section
+        # Try to find header section (separated by ---)
         parts = cleaned_content.split("---", 2)
         if len(parts) >= 2:
+            # File has header section with metadata
             header_section = parts[0] + "---"
             rest = "---".join(parts[1:]) if len(parts) > 2 else ""
         else:
-            header_section = cleaned_content
-            rest = ""
+            # No header section - content is all story/template
+            header_section = ""
+            rest = cleaned_content
 
-        # Remove template text, keep only story content
+        # Remove template text from story content
         kept_content = self._filter_template_text(rest)
 
-        # Combine: header + kept content + new continuation
-        if kept_content.strip():
-            new_content = (
-                f"{header_section}\n{kept_content}\n\n"
-                f"## {title}\n\n{continuation}\n"
-            )
+        # Combine: header (if any) + kept content + new continuation
+        if header_section:
+            if kept_content.strip():
+                new_content = (
+                    f"{header_section}\n{kept_content}\n\n"
+                    f"## {title}\n\n{continuation}\n"
+                )
+            else:
+                new_content = (
+                    f"{header_section}\n\n## {title}\n\n"
+                    f"{continuation}\n"
+                )
         else:
-            new_content = (
-                f"{header_section}\n\n## {title}\n\n"
-                f"{continuation}\n"
-            )
+            if kept_content.strip():
+                new_content = (
+                    f"{kept_content}\n\n"
+                    f"## {title}\n\n{continuation}\n"
+                )
+            else:
+                new_content = (
+                    f"## {title}\n\n{continuation}\n"
+                )
 
         return new_content
 

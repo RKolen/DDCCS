@@ -446,6 +446,10 @@ class StoryCLIManager:
     def _view_story_details_in_series(self, series_name: str, stories: List[str]):
         """View details of a story within a series."""
         try:
+            print("\nStories available:")
+            for i, story in enumerate(stories, 1):
+                print(f"  {i}. {story}")
+
             choice = int(input(f"\nSelect story to view (1-{len(stories)}): "))
             if 1 <= choice <= len(stories):
                 story_file = stories[choice - 1]
