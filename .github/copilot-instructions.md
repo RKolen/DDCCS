@@ -96,7 +96,8 @@ D&D Campaign Workspace/
 │   │   ├── string_utils.py         # String utilities
 │   │   ├── validation_helpers.py   # Validation helpers
 │   │   ├── text_formatting_utils.py  # Text formatting
-│   │   └── spell_highlighter.py      # Spell detection
+│   │   ├── spell_highlighter.py      # Spell detection
+│   │   └── spell_lookup_helper.py    # Shared D&D spell/ability RAG lookup
 │   └── cli/               # Command-line interface (Phase 2 complete!)
 │       ├── dnd_consultant.py       # Main interactive CLI (110 lines)
 │       ├── cli_character_manager.py # Character management operations
@@ -403,15 +404,31 @@ highlighted = highlight_spells_in_text(text, known_spells)
 - Tests are **git-ignored** and should not be committed
 - Tests will remain local until test framework is formalized (see TODO.md)
 
+**Code Quality Standards:**
+- **Maintain 10.00/10 pylint score** for all test files
+- **No pylint disable comments** - fix issues properly instead:
+  - Duplicate code: Extract to helper functions
+  - Protected access: Test public APIs only
+  - Too many arguments: Use config dicts or dataclasses
+  - Import organization: Place at module top-level
+- **No code duplication** in tests - use `tests/test_helpers.py` for:
+  - `run_test_suite(test_suite_name, test_functions)` - Execute test suites with consistent output
+  - `assert_system_prompt_contains(mock_ai, *keywords)` - Verify AI system prompts
+  - `FakeAIClient` - Mock AI client for isolated testing
+  - Custom assertions and fixtures
+
 **Creating Tests:**
 - Name tests descriptively: `test_<feature>_<scenario>.py`
+- Test PUBLIC APIs only (not protected/private methods)
+- Extract common patterns to `test_helpers.py` to avoid duplication
 - Include verification of actual behavior, not just programmatic tests
 - Clean up test data (campaigns, files) after test runs
 - Document test purpose and expected outcomes
 
 **Test Types:**
-- Integration tests: Verify multiple components work together
-- Workflow tests: Verify end-to-end user workflows (story creation, git patterns)
+- Unit tests: Single component functionality
+- Integration tests: Multiple components working together
+- Workflow tests: End-to-end user workflows (story creation, AI continuation)
 - Manual tests: Quick validation scripts for development
 
 ## Commit Message Standards
