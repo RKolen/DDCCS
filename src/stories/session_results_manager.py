@@ -90,27 +90,62 @@ def create_session_results_file(
     series_path: str, session: StorySession
 ) -> str:
     """
-    Create a separate file for session results (rolls, mechanics, etc.).
+    Create or append to session results file.
+
+    If file exists on same day, appends new session results instead of
+    overwriting.
 
     Args:
         series_path: Path to the story series directory
         session: StorySession instance with session data
 
     Returns:
-        Path to the created file
+        Path to the created or updated file
     """
     story_slug = session.story_name.lower().replace(' ', '_')
     filename = f"session_results_{session.session_date}_{story_slug}.md"
     filepath = os.path.join(series_path, filename)
 
-    content = f"""# Session Results: {session.story_name}
+    # Check if file exists - if so, append new session results
+    file_exists = os.path.exists(filepath)
+
+    if file_exists:
+        # Append mode: read existing and add new section
+        with open(filepath, "r", encoding="utf-8") as f:
+            existing_content = f.read()
+
+        # Build new session section to append
+        append_content = "\n## Session Update\n"
+        append_content += f"**Updated:** {datetime.now().strftime('%H:%M:%S')}\n\n"
+
+        # Add roll results
+        if session.roll_results:
+            append_content += "### New Roll Results\n"
+            for roll in session.roll_results:
+                success_text = "SUCCESS" if roll['success'] else "FAILURE"
+                append_content += f"""- **{roll['character']}** - {roll['action']}
+  - Roll: {roll['roll_value']} vs DC {roll['dc']} - {success_text}
+  - Outcome: {roll['outcome']}
+"""
+
+        # Add character actions
+        if session.character_actions:
+            append_content += "\n### New Character Actions\n"
+            for action in session.character_actions:
+                append_content += f"- {action}\n"
+
+        write_text_file(filepath, existing_content + append_content)
+        print(f"[SUCCESS] Appended to session results file: {filename}")
+    else:
+        # Create new file
+        content = f"""# Session Results: {session.story_name}
 **Date:** {session.session_date}
 
 ## Roll Results
 """
-    for roll in session.roll_results:
-        success_text = "SUCCESS" if roll['success'] else "FAILURE"
-        content += f"""
+        for roll in session.roll_results:
+            success_text = "SUCCESS" if roll['success'] else "FAILURE"
+            content += f"""
 ### {roll['character']} - {roll['action']}
 - **Roll Type:** {roll['roll_type']}
 - **Roll Value:** {roll['roll_value']} vs DC {roll['dc']}
@@ -118,19 +153,19 @@ def create_session_results_file(
 - **Outcome:** {roll['outcome']}
 """
 
-    if session.recruiting_pool:
-        content += "\n## Available Recruits\n"
-        for recruit in session.recruiting_pool:
-            content += f"- **{recruit['name']}** ({recruit['class']}) - "
-            content += f"{recruit['personality']}\n"
+        if session.recruiting_pool:
+            content += "\n## Available Recruits\n"
+            for recruit in session.recruiting_pool:
+                content += f"- **{recruit['name']}** ({recruit['class']}) - "
+                content += f"{recruit['personality']}\n"
 
-    content += """
+        content += """
 ## Character Actions
 """
-    for action in session.character_actions:
-        content += f"- {action}\n"
+        for action in session.character_actions:
+            content += f"- {action}\n"
 
-    write_text_file(filepath, content)
+        write_text_file(filepath, content)
+        print(f"[SUCCESS] Created session results file: {filename}")
 
-    print(f"[SUCCESS] Created session results file: {filename}")
     return filepath
