@@ -192,7 +192,7 @@ class StoryUpdater:
             current_content = read_text_file(config.filepath)
             cleaned_content = self._clean_story_content(current_content)
             continuation_title = self._extract_narrative_title(
-                config.continuation
+                config.continuation, ai_client=config.ai_client
             )
 
             new_content = self._build_story_content_with_continuation(
@@ -342,52 +342,152 @@ class StoryUpdater:
 
         return result
 
-    def _extract_narrative_title(self, text: str) -> str:
-        """Extract a narrative title from the first line of text.
+    def _extract_narrative_title(self, text: str, ai_client=None) -> str:
+        """Extract an inventive narrative title from story content.
 
-        Attempts to identify location names or key subjects from the opening
-        text and constructs an appropriate section title.
+        Attempts to identify key entities (locations, actions, NPCs) and uses
+        AI if available to generate descriptive titles. Falls back to pattern
+        matching for location/action-based titles.
+
+        Args:
+            text: The continuation text
+            ai_client: Optional AI client for title generation
+
+        Returns:
+            A narrative title for the section (e.g., "Quest at the Pony")
+        """
+        if not text or not text.strip():
+            return "Story Continuation"
+
+        # Try AI title generation first if available
+        if ai_client:
+            ai_title = self._generate_ai_narrative_title(text, ai_client)
+            if ai_title and ai_title != "Story Continuation":
+                return ai_title
+
+        # Fallback: Use pattern-based extraction
+        return self._extract_pattern_based_title(text)
+
+    def _generate_ai_narrative_title(self, text: str, ai_client) -> str:
+        """Generate a narrative title using AI.
+
+        Args:
+            text: The narrative content
+            ai_client: AI client for title generation
+
+        Returns:
+            An AI-generated title or empty string if generation fails
+        """
+        if not ai_client:
+            return ""
+
+        try:
+            # Use first 500 chars as context
+            context = text[:500]
+            prompt = (
+                f"Based on this story narrative, generate a SHORT, "
+                f"inventive title (3-5 words maximum) that captures "
+                f"the main event or location.\n\n"
+                f"Narrative: {context}\n\n"
+                f"Generate ONLY the title, nothing else. "
+                f"Make it vivid and specific.\n"
+                f'Examples: "The Prancing Pony Quest", "Goblins of Breehill", '
+                f'"The Vanishing Travelers", "Ambush in the Woods"\n\nTitle:'
+            )
+
+            title = ai_client.chat_completion(
+                messages=[{"role": "user", "content": prompt}], temperature=0.7
+            ).strip()
+
+            # Clean up the title
+            title = title.strip("\"'.")
+
+            # Validate title length
+            if len(title.split()) > 6:
+                return ""
+
+            return title if title else ""
+
+        except (ConnectionError, TimeoutError, ValueError, KeyError, AttributeError):
+            return ""
+
+    def _extract_pattern_based_title(self, text: str) -> str:
+        """Extract title using pattern matching on narrative content.
+
+        Looks for locations, NPCs, and action keywords to build descriptive
+        titles when AI is unavailable.
 
         Args:
             text: The continuation text
 
         Returns:
-            A narrative title for the section (e.g., "The Prancing Pony")
+            A pattern-based narrative title
         """
-        if not text or not text.strip():
-            return "Story Continuation"
+        # Get first few lines for analysis
+        first_lines = " ".join(text.split("\n")[:3]).lower()
 
-        # Get first line and extract location/subject
-        first_line = text.split("\n")[0].strip()
+        # Try named locations first (with articles or proper names)
+        named_locs = {
+            "prancing pony": "Prancing Pony",
+            "breehill forest": "Breehill Forest",
+            "castle": "Castle",
+            "temple": "Temple",
+            "tavern": "Tavern",
+            "inn": "Inn",
+            "village": "Village",
+        }
 
-        # Common location patterns
-        locations = [
+        # Action keywords matching (paired with action titles)
+        actions = [
+            ("quest", "Quest"),
+            ("ambush", "Ambush"),
+            ("battle", "Battle"),
+            ("meeting", "Meeting"),
+            ("investigation", "Investigation"),
+            ("discovery", "Discovery"),
+            ("vanishing", "Vanishing Travelers"),
+            ("goblins", "Goblin Attack"),
+            ("ambushed", "Ambush"),
+        ]
+
+        # Check named locations
+        for loc_key, loc_name in named_locs.items():
+            if loc_key in first_lines:
+                for keyword, action_title in actions:
+                    if keyword in first_lines:
+                        return f"{action_title} at {loc_name}"
+                return f"The {loc_name}"
+
+        # Generic locations list
+        generic_locs = [
             "tavern", "inn", "castle", "village", "town", "city", "forest",
             "dungeon", "cave", "tower", "temple", "shrine", "market",
-            "garden", "hall", "chamber", "room", "passage", "throne",
+            "garden", "hall", "chamber", "room", "passage", "woods",
         ]
 
-        # Try to find a location name (capitalize first noun before location)
-        words = first_line.split()
-        for i, word in enumerate(words):
-            word_lower = word.lower().strip(".,!?;:")
-            if word_lower in locations:
-                # Try to get the name before the location
-                if i > 0:
-                    prev_word = words[i - 1].strip(".,!?;:")
-                    if prev_word and prev_word[0].isupper():
-                        return f"The {prev_word} {word_lower.capitalize()}"
-                return f"The {word_lower.capitalize()}"
+        # Generic action keywords
+        generic_actions = [
+            "quest", "ambush", "battle", "meeting", "investigation",
+            "discovery", "escape", "ritual", "ceremony", "negotiation",
+            "confrontation", "retreat", "advance", "attack", "defend",
+        ]
 
-        # Fallback: use first few capitalized words
+        # Find first matching generic location
+        for location in generic_locs:
+            if location in first_lines:
+                for action in generic_actions:
+                    if action in first_lines:
+                        return f"{action.title()} at the {location}"
+                return f"The {location.title()}"
+
+        # Last resort: capitalized words from first line
+        first_line = text.split("\n")[0].strip()
         capitalized = [
-            w.strip(".,!?;:") for w in words
+            w.strip(".,!?;:") for w in first_line.split()
             if w and w[0].isupper() and w.lower() not in ["a", "an", "the"]
         ]
-        if capitalized:
-            return " ".join(capitalized[:3])
 
-        return "Story Continuation"
+        return " ".join(capitalized[:3]) if capitalized else "Story Continuation"
 
     def _build_story_content_with_continuation(
         self, cleaned_content: str, title: str, continuation: str

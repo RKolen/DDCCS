@@ -453,11 +453,25 @@ Optional detailed explanation if needed:
 - Reference issue numbers if applicable
 
 **CRITICAL: Do NOT commit code automatically.**
-- Never commit code without explicit user approval.
-- Always pause and request user confirmation before any commit.
-- Do not batch or auto-commit after edits, even if pylint is 10.00/10.
-- User must review and approve every commit step.
-- Just Do not offer to commit.
+
+## Pylint Command Usage Instruction
+
+**CRITICAL: Never use pipes or output-shortening commands with pylint checks.**
+
+- When checking pylint, always use the full command:
+  `python -m pylint <file-or-folder>`
+- Do NOT use pipes (`|`), Select-String, grep, head, tail, or any output-shortening or filtering commands.
+- Do NOT attempt to shorten, filter, or post-process pylint output in any way.
+- Always show the full pylint output as produced by the command above.
+- Rationale: Ensures full visibility of all warnings, errors, and code quality issues for review.
+
+**Examples:**
+- Good: `python -m pylint src/`  
+- Bad: `python -m pylint src/ | grep "Your code"`  
+- Bad: `python -m pylint src/ | Select-String "Your code"`  
+- Bad: `python -m pylint src/ | head -10`
+
+**This rule applies to all Copilot, agent, and automated workflows.**
 
 **Examples:**
 -  Good: "Reorganize user data into game_data folder and add spell highlighting"
