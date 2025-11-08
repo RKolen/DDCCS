@@ -33,10 +33,50 @@ def convert_ai_hooks_to_list(ai_hooks: Dict[str, Any]) -> List[str]:
     return hooks
 
 
+def _build_hooks_content_from_dict(hooks_dict: Dict[str, Any]) -> str:
+    """Build markdown content from structured hooks dictionary.
+
+    Args:
+        hooks_dict: Dictionary with AI-structured hooks
+
+    Returns:
+        Markdown content for hooks sections
+    """
+    content = ""
+
+    # Add session ideas
+    next_ideas = hooks_dict.get("next_session_ideas", [])
+    if next_ideas:
+        content += "### Session Ideas\n"
+        for idea in next_ideas:
+            content += f"- {idea}\n"
+        content += "\n"
+
+    # Add NPC follow-ups
+    npc_followups = hooks_dict.get("npc_follow_ups", [])
+    if npc_followups:
+        content += "### NPC Follow-ups\n"
+        for followup in npc_followups:
+            content += f"- {followup}\n"
+        content += "\n"
+
+    # Add character-specific hooks
+    char_hooks = hooks_dict.get("character_specific_hooks", {})
+    if char_hooks:
+        content += "### Character Development\n"
+        for char_name, char_hook_list in char_hooks.items():
+            content += f"#### {char_name}\n"
+            for hook in char_hook_list:
+                content += f"- {hook}\n"
+            content += "\n"
+
+    return content
+
+
 def create_story_hooks_file(
     series_path: str,
     story_name: str,
-    hooks: List[str],
+    hooks: Any,
     session_date: Optional[str] = None,
     npc_suggestions: Optional[List[Dict[str, Any]]] = None,
 ) -> str:
@@ -46,7 +86,7 @@ def create_story_hooks_file(
     Args:
         series_path: Path to campaign folder
         story_name: Name of the story
-        hooks: List of story hook strings
+        hooks: Either a Dict with AI-structured hooks or List of hook strings
         session_date: Date of session (defaults to today)
         npc_suggestions: Pre-detected NPC suggestions (if already scanned)
     """
@@ -58,14 +98,31 @@ def create_story_hooks_file(
     )
     filepath = os.path.join(series_path, filename)
 
+    # Handle both structured dict (from AI) and simple list (from fallback)
+    is_structured = isinstance(hooks, dict)
+    if not is_structured and (not hooks or len(hooks) == 0):
+        print("[WARNING] Empty hooks list provided to create_story_hooks_file")
+        hooks = [
+            "[Analyze story content to identify plot threads]",
+            "[Review character actions for development opportunities]",
+        ]
+
     content = f"""# Story Hooks & Future Sessions: {story_name}
 **Date:** {session_date}
 
 ## Unresolved Plot Threads
 
 """
-    for i, hook in enumerate(hooks, 1):
-        content += f"{i}. {hook}\n"
+
+    # Handle structured dict from AI
+    if is_structured:
+        unresolved = hooks.get("unresolved_threads", [])
+        for i, thread in enumerate(unresolved, 1):
+            content += f"{i}. {thread}\n"
+    else:
+        # Handle simple list from fallback
+        for i, hook in enumerate(hooks, 1):
+            content += f"{i}. {hook}\n"
 
     # Add NPC suggestions if provided
     if npc_suggestions:
@@ -95,10 +152,14 @@ def create_story_hooks_file(
                 "personality traits, relationships, and story hooks.\n\n"
             )
 
-    content += """
-## Potential Next Sessions
+    # Add Potential Next Sessions from structured AI data
+    content += "\n## Potential Next Sessions\n\n"
 
-### Session Ideas
+    if is_structured:
+        content += _build_hooks_content_from_dict(hooks)
+    else:
+        # Fallback template if not structured
+        content += """### Session Ideas
 - [Future session idea based on current events]
 
 ### NPC Follow-ups
@@ -109,9 +170,9 @@ def create_story_hooks_file(
 
 ### Faction Developments
 - [Faction activities and consequences]
-
 """
 
+    content += "\n"
     write_text_file(filepath, content)
 
     print(f"[SUCCESS] Created story hooks file: {filename}")

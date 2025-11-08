@@ -536,12 +536,25 @@ def generate_story_hooks_from_content(
         )
 
         analysis = response.choices[0].message.content.strip()
+        print(f"[DEBUG] AI generated {len(analysis)} chars of hooks analysis")
 
         # Parse the AI response into structured hooks data
-        return _parse_hooks_analysis(analysis, party_names)
+        parsed_hooks = _parse_hooks_analysis(analysis, party_names)
+
+        # Validate parsed results
+        if parsed_hooks:
+            total_hooks = (
+                len(parsed_hooks.get("unresolved_threads", [])) +
+                len(parsed_hooks.get("next_session_ideas", []))
+            )
+            print(f"[DEBUG] Parsed {total_hooks} total hooks from AI response")
+
+        return parsed_hooks
 
     except (AttributeError, TypeError, KeyError) as e:
         print(f"[ERROR] Failed to generate story hooks: {e}")
+        print(f"[ERROR] AI client type: {type(ai_client)}")
+        print(f"[ERROR] AI_AVAILABLE: {AI_AVAILABLE}")
         return None
 
 

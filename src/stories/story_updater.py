@@ -7,6 +7,7 @@ consistency sections, combat narratives, and AI-generated continuations.
 
 import os
 import json
+from datetime import datetime
 from typing import Dict, Any, List
 from src.utils.file_io import read_text_file, write_text_file, file_exists
 from src.utils.markdown_utils import update_markdown_section
@@ -16,8 +17,7 @@ from src.utils.story_formatting_utils import (
 )
 from src.npcs.npc_auto_detection import detect_npc_suggestions
 from src.stories.hooks_and_analysis import (
-    create_story_hooks_file,
-    convert_ai_hooks_to_list
+    create_story_hooks_file
 )
 from src.stories.session_results_manager import (
     StorySession,
@@ -444,6 +444,70 @@ class StoryUpdater:
 
         return new_content
 
+    def _extract_story_based_hooks(self, story_content: str, party_names: list) -> list:
+        """Extract story-aware hooks from narrative content.
+
+        Analyzes story narrative to extract meaningful hooks when AI is unavailable.
+        Looks for locations, actions, and character developments.
+
+        Args:
+            story_content: The story narrative text
+            party_names: List of party member names
+
+        Returns:
+            List of extracted hook strings, or empty list if extraction fails
+        """
+        if not story_content or not story_content.strip():
+            return []
+
+        hooks = []
+        locations = [
+            "tavern", "inn", "castle", "village", "town", "city", "forest",
+            "dungeon", "cave", "tower", "temple", "shrine", "market",
+            "garden", "hall", "chamber", "room", "passage", "throne",
+            "cemetery", "mansion", "ship", "boat", "river", "mountain"
+        ]
+
+        # Extract location from first line
+        first_line = story_content.split("\n")[0].strip() if story_content else ""
+        words = first_line.split()
+        for i, word in enumerate(words):
+            word_lower = word.lower().strip(".,!?;:")
+            if word_lower in locations:
+                location = (
+                    f"{words[i - 1].strip('.,!?;:')} {word_lower}"
+                    if i > 0 and words[i - 1][0].isupper()
+                    else word_lower
+                )
+                hooks.append(f"Explore {location} further and uncover its secrets")
+                break
+
+        # Extract action-based hooks
+        action_pairs = [
+            ("quest", "Complete the quest that was presented"),
+            ("mission", "Execute the mission objectives"),
+            ("danger", "Face the danger that was introduced"),
+            ("mystery", "Solve the mystery that was revealed"),
+            ("threat", "Address the threat that emerged"),
+        ]
+        story_lower = story_content.lower()
+        for keyword, hook_text in action_pairs:
+            if keyword in story_lower:
+                hooks.append(hook_text)
+                break
+
+        # Character development hook
+        if party_names:
+            hooks.append(
+                f"Develop {party_names[0]}'s character through the events"
+            )
+
+        # Ensure minimum hooks
+        while len(hooks) < 3:
+            hooks.append("[Character development opportunity]")
+
+        return hooks
+
     def _generate_story_hooks_file(self, hooks_config: Dict[str, Any]) -> None:
         """Generate or append story hooks from story content.
 
@@ -459,27 +523,60 @@ class StoryUpdater:
                 - npc_suggestions: NPC detection results
                 - ai_client: Optional AI client for generation
         """
-        hooks_path = os.path.join(
-            hooks_config["campaign_dir"], "story_hooks_001.md"
+        # Build the actual filename that will be created
+        # This must match the logic in create_story_hooks_file()
+        session_date = datetime.now().strftime("%Y-%m-%d")
+        story_name = hooks_config["story_name"]
+        filename = (
+            f"story_hooks_{session_date}_{story_name.lower().replace(' ', '_')}.md"
         )
+        hooks_path = os.path.join(hooks_config["campaign_dir"], filename)
+
+        # If file already exists, log info and continue to regenerate/update
         if os.path.exists(hooks_path):
-            return
+            print(f"[INFO] Story hooks file already exists, regenerating: {filename}")
 
         hooks = None
         if hooks_config.get("ai_client"):
+            print("[DEBUG] AI client available, attempting hooks generation...")
             party_characters = load_party_with_profiles(
                 hooks_config["campaign_dir"], hooks_config["workspace_path"]
+            )
+            print(
+                f"[DEBUG] Loaded {len(party_characters)} party characters, "
+                f"story content: {len(hooks_config['story_content'])} chars"
             )
             ai_hooks = generate_story_hooks_from_content(
                 hooks_config["ai_client"], hooks_config["story_content"],
                 party_characters, hooks_config["party_names"]
             )
             if ai_hooks:
-                hooks = convert_ai_hooks_to_list(ai_hooks)
+                print(
+                    f"[DEBUG] AI generated hooks: {list(ai_hooks.keys())}"
+                )
+                # Pass structured dict directly to preserve all sections
+                hooks = ai_hooks
+        else:
+            print("[DEBUG] No AI client available, using fallback extraction")
 
+        # Fallback 1: If AI didn't generate hooks, try story-aware extraction
         if hooks is None:
-            hooks = ["[Primary plot thread to pursue]",
-                     "[Secondary subplot]"]
+            extracted_hooks = self._extract_story_based_hooks(
+                hooks_config["story_content"],
+                hooks_config["party_names"]
+            )
+            if extracted_hooks and len(extracted_hooks) > 0:
+                print("[INFO] Using story-aware extraction for hooks (AI unavailable)")
+                hooks = extracted_hooks
+
+        # Fallback 2: If extraction didn't work, use generic placeholders
+        if hooks is None or (isinstance(hooks, list) and len(hooks) == 0):
+            print("[WARNING] No hooks generated, using generic placeholders")
+            hooks = [
+                "[Primary plot thread to pursue]",
+                "[Secondary subplot to explore]",
+                "[Character development opportunity]"
+            ]
 
         create_story_hooks_file(
             hooks_config["campaign_dir"], hooks_config["story_name"], hooks,
