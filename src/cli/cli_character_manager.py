@@ -85,8 +85,14 @@ class CharacterCLIManager:
 
     def _edit_character_profile(self, profile: CharacterProfile):
         """Edit a specific character profile."""
-        profile = edit_character_profile_interactive(profile)
-        self.story_manager.save_character_profile(profile)
+        character_name = profile.name
+        edited_profile, should_save = edit_character_profile_interactive(profile)
+        if should_save:
+            self.story_manager.save_character_profile(edited_profile)
+        else:
+            # Clear the cache and reload from disk to discard in-memory changes
+            self.story_manager.reload_character_from_disk(character_name)
+            print("Profile reloaded from disk - changes discarded.")
 
     def view_character_details(self):
         """View detailed character information."""

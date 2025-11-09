@@ -22,6 +22,7 @@ def run_all_utils_tests() -> int:
 
     tests: Tuple[Tuple[str, str], ...] = (
         ("test_path_utils", "Path Utilities Tests"),
+        ("test_cache_utils", "Cache Utilities Tests"),
         ("test_behaviour_generation", "Behaviour Generation Tests"),
         ("test_cli_utils", "CLI Utilities Tests"),
         ("test_dnd_rules", "DND Rules Utilities Tests"),

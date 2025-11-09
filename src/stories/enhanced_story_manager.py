@@ -109,6 +109,32 @@ class EnhancedStoryManager:
         """Get a specific character's profile."""
         return self.character_manager.get_character_profile(character_name)
 
+    def clear_character_cache(self, character_name: str):
+        """Clear a character from the in-memory cache.
+
+        Removes the character from cache so the next call to get_character_profile
+        will reload it from disk. Used when user chooses "Exit without Saving"
+        to discard in-memory modifications.
+
+        Args:
+            character_name: Name of character to clear from cache
+        """
+        self.character_manager.clear_character_cache(character_name)
+
+    def reload_character_from_disk(self, character_name: str) -> bool:
+        """Reload a character from disk, refreshing the cache.
+
+        Clears the character from cache and reloads from disk. Useful after
+        "Exit without Saving" to get fresh data.
+
+        Args:
+            character_name: Name of character to reload
+
+        Returns:
+            True if reload succeeded, False if character file not found
+        """
+        return self.character_manager.reload_character_from_disk(character_name)
+
     def get_available_recruits(
         self, exclude_characters: List[str] = None
     ) -> List[Dict[str, Any]]:

@@ -8,6 +8,11 @@ from typing import Optional
 from src.characters.consultants.character_profile import CharacterProfile
 from src.utils.spell_highlighter import highlight_spells_in_text
 from src.stories.character_loader import load_all_character_consultants
+from src.utils.cache_utils import (
+    clear_character_from_cache,
+    reload_character_from_disk,
+    get_character_profile_from_cache,
+)
 
 
 class CharacterManager:
@@ -67,7 +72,39 @@ class CharacterManager:
 
     def get_character_profile(self, character_name: str) -> Optional[CharacterProfile]:
         """Get a specific character's profile."""
-        consultant = self.consultants.get(character_name)
-        if consultant:
-            return consultant.profile
-        return None
+        return get_character_profile_from_cache(self.consultants, character_name)
+
+    def clear_character_cache(self, character_name: str):
+        """Clear a character from the in-memory cache.
+
+        Removes the character from the consultants dict so the next call to
+        get_character_profile will reload it from disk, getting fresh data
+        without in-memory modifications.
+
+        Args:
+            character_name: Name of character to clear from cache
+        """
+        clear_character_from_cache(self.consultants, character_name)
+
+    def reload_character_from_disk(self, character_name: str) -> bool:
+        """Reload a character from disk, refreshing the cache.
+
+        Clears the character from cache and attempts to reload it from disk.
+        This ensures fresh data without in-memory modifications.
+
+        Args:
+            character_name: Name of character to reload
+
+        Returns:
+            True if reload succeeded, False if character file not found
+        """
+        success = reload_character_from_disk(
+            self.consultants,
+            self.characters_path,
+            character_name,
+            ai_client=self.ai_client,
+        )
+        # Update known spells after reload
+        if success:
+            self._update_known_spells()
+        return success

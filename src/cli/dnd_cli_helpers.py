@@ -12,7 +12,7 @@ from src.characters.consultants.character_profile import (
 )
 
 
-def edit_character_profile_interactive(profile: CharacterProfile) -> CharacterProfile:
+def edit_character_profile_interactive(profile: CharacterProfile) -> Tuple[CharacterProfile, bool]:
     """
     Interactive editor for character profiles.
 
@@ -20,7 +20,9 @@ def edit_character_profile_interactive(profile: CharacterProfile) -> CharacterPr
         profile: Character profile to edit
 
     Returns:
-        Modified profile (or original if no changes)
+        Tuple of (modified profile, should_save)
+        should_save is True if user chose "Save and Exit" (option 8)
+        should_save is False if user chose "Exit without Saving" (option 0)
     """
     print(f"\n EDITING: {profile.name}")
     print("-" * 30)
@@ -47,10 +49,10 @@ def edit_character_profile_interactive(profile: CharacterProfile) -> CharacterPr
             profile = _edit_decision_making(profile)
         elif choice == "8":
             print("\n[SUCCESS] Profile saved!")
-            return profile
+            return (profile, True)
         elif choice == "0":
-            print("\n[ERROR] Changes discarded.")
-            return profile
+            print("\n[INFO] Changes discarded.")
+            return (profile, False)
         else:
             print("Invalid choice. Please try again.")
 
@@ -84,6 +86,8 @@ def _display_edit_menu():
 
 def _edit_personality_summary(profile: CharacterProfile) -> CharacterProfile:
     """Edit personality summary field."""
+    current = profile.personality_summary
+    print(f"\nCurrent: Personality summary: {current}")
     new_value = input("Enter new personality summary: ").strip()
     if new_value:
         profile.personality_summary = new_value
@@ -92,6 +96,8 @@ def _edit_personality_summary(profile: CharacterProfile) -> CharacterProfile:
 
 def _edit_background_story(profile: CharacterProfile) -> CharacterProfile:
     """Edit background story field (multi-line input)."""
+    current = profile.background_story
+    print(f"\nCurrent: Background story: {current}")
     print("Enter new background story (end with empty line):")
     lines = []
     while True:
@@ -118,7 +124,9 @@ def _edit_list_field(
 
 def _edit_speech_patterns(profile: CharacterProfile) -> CharacterProfile:
     """Edit speech patterns field."""
-    new_value = input("Enter new speech patterns: ").strip()
+    current = getattr(profile.behavior, "speech_patterns", [])
+    print(f"\nCurrent: Speech patterns: {', '.join(current)}")
+    new_value = input("Enter new speech patterns (comma-separated): ").strip()
     if new_value:
         # Accept comma-separated patterns and store them on the nested behavior dataclass
         patterns = [v.strip() for v in new_value.split(",") if v.strip()]
@@ -130,6 +138,8 @@ def _edit_speech_patterns(profile: CharacterProfile) -> CharacterProfile:
 
 def _edit_decision_making(profile: CharacterProfile) -> CharacterProfile:
     """Edit decision making style field."""
+    current = getattr(profile.behavior, "decision_making_style", "")
+    print(f"\nCurrent: Decision making style: {current}")
     new_value = input("Enter new decision making style: ").strip()
     if new_value:
         # Store decision making style on nested behavior dataclass

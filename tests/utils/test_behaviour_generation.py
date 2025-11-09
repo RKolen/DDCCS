@@ -5,9 +5,12 @@ public `generate_behavior_from_personality` function with controlled inputs
 and asserting on the returned structure.
 """
 
-from tests.test_helpers import setup_test_environment, import_module
+from tests.test_helpers import setup_test_environment, import_module, enable_behaviour_generation
 
 setup_test_environment()
+
+# Re-enable behaviour_generation since this test specifically tests it
+enable_behaviour_generation()
 
 behave_mod = import_module("src.utils.behaviour_generation")
 generate = behave_mod.generate_behavior_from_personality

@@ -27,9 +27,45 @@ import sys
 from pathlib import Path
 import importlib
 
-# Disable behavior generation IMMEDIATELY to prevent AI hangs when importing
-# modules that depend on character_profile.py
-sys.modules["src.utils.behaviour_generation"] = None
+
+# Configuration for behaviour generation module handling
+class _BehaviourConfig:
+    """Configuration state for behaviour generation handling."""
+    should_disable = True
+
+    @classmethod
+    def disable(cls):
+        """Set flag to disable behaviour generation."""
+        cls.should_disable = True
+
+    @classmethod
+    def enable(cls):
+        """Set flag to enable behaviour generation."""
+        cls.should_disable = False
+
+
+def disable_behaviour_generation():
+    """Disable behaviour generation to prevent AI hangs during tests."""
+    sys.modules["src.utils.behaviour_generation"] = None
+
+
+def enable_behaviour_generation():
+    """Re-enable behaviour generation for tests that specifically test it.
+
+    Clears the None placeholder from sys.modules to allow fresh import.
+    Must be called BEFORE trying to import behaviour_generation module.
+    """
+    # Remove the None placeholder to allow actual import
+    if "src.utils.behaviour_generation" in sys.modules:
+        if sys.modules["src.utils.behaviour_generation"] is None:
+            del sys.modules["src.utils.behaviour_generation"]
+
+    # Signal to setup_test_environment to NOT re-disable it
+    _BehaviourConfig.enable()
+
+    # Invalidate importlib caches to force fresh load
+    importlib.invalidate_caches()
+
 
 def setup_test_environment():
     """
@@ -48,10 +84,12 @@ def setup_test_environment():
     if str(project_root) not in sys.path:
         sys.path.insert(0, str(project_root))
 
-    # Disable behavior generation to prevent AI client hangs during testing.
+    # Disable behavior generation to prevent AI client hangs during testing,
+    # unless explicitly enabled for tests that need to test behaviour_generation itself.
     # This prevents __post_init__ from trying to call the AI when loading
     # character profiles that don't have behavior fields pre-populated.
-    sys.modules["src.utils.behaviour_generation"] = None
+    if _BehaviourConfig.should_disable:
+        disable_behaviour_generation()
 
     return project_root
 
@@ -343,6 +381,21 @@ def make_identity(name: str = "TestChar", dnd_class=None, level: int = 1):
     return character_identity_cls(name=name, character_class=dnd_enum, level=level)
 
 
+def _get_character_classes():
+    """Get all character profile-related classes from the character_profile module."""
+    cp_mod = import_module("src.characters.consultants.character_profile")
+    return {
+        "profile": getattr(cp_mod, "CharacterProfile"),
+        "personality": getattr(cp_mod, "CharacterPersonality"),
+        "behavior": getattr(cp_mod, "CharacterBehavior"),
+        "story": getattr(cp_mod, "CharacterStory"),
+        "mechanics": getattr(cp_mod, "CharacterMechanics"),
+        "stats": getattr(cp_mod, "CharacterStats"),
+        "abilities": getattr(cp_mod, "CharacterAbilities"),
+        "possessions": getattr(cp_mod, "CharacterPossessions"),
+    }
+
+
 def make_profile(name: str = "TestChar", dnd_class=None, level: int = 1, **kwargs):
     """Create a minimal CharacterProfile instance for tests.
 
@@ -350,26 +403,18 @@ def make_profile(name: str = "TestChar", dnd_class=None, level: int = 1, **kwarg
     Behavior, Story, Mechanics, Possessions) used by production `CharacterProfile`
     so tests can avoid boilerplate fixture construction.
     """
-    cp_mod = import_module("src.characters.consultants.character_profile")
-    character_profile_cls = getattr(cp_mod, "CharacterProfile")
-    character_personality_cls = getattr(cp_mod, "CharacterPersonality")
-    character_behavior_cls = getattr(cp_mod, "CharacterBehavior")
-    character_story_cls = getattr(cp_mod, "CharacterStory")
-    character_mechanics_cls = getattr(cp_mod, "CharacterMechanics")
-    character_stats_cls = getattr(cp_mod, "CharacterStats")
-    character_abilities_cls = getattr(cp_mod, "CharacterAbilities")
-    character_possessions_cls = getattr(cp_mod, "CharacterPossessions")
+    classes = _get_character_classes()
 
     identity = make_identity(name=name, dnd_class=dnd_class, level=level)
-    personality = _build_personality(character_personality_cls, kwargs)
-    behavior = _build_behavior(character_behavior_cls, kwargs)
-    story = _build_story(character_story_cls, kwargs)
+    personality = _build_personality(classes["personality"], kwargs)
+    behavior = _build_behavior(classes["behavior"], kwargs)
+    story = _build_story(classes["story"], kwargs)
     mechanics = _build_mechanics(
-        character_mechanics_cls, character_stats_cls, character_abilities_cls, kwargs
+        classes["mechanics"], classes["stats"], classes["abilities"], kwargs
     )
-    possessions = _build_possessions(character_possessions_cls, kwargs)
+    possessions = _build_possessions(classes["possessions"], kwargs)
 
-    return character_profile_cls(
+    return classes["profile"](
         identity=identity,
         personality=personality,
         behavior=behavior,
