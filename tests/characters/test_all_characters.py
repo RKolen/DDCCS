@@ -31,6 +31,7 @@ def run_all_character_tests():
     # Define all tests to run
     tests = [
         ("test_character_profile", "Character Profile Tests"),
+        ("test_character_profile_roundtrip", "Character Profile Roundtrip Tests"),
         ("test_class_knowledge", "Class Knowledge Tests"),
         ("test_character_sheet", "Character Sheet Tests"),
         ("test_character_consistency", "Character Consistency Tests"),

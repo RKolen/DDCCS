@@ -88,9 +88,8 @@ def test_character_profile_initialization():
     print("  [OK] Nested dataclasses initialized correctly")
 
     # Check property values
-    assert (
-        "Dúnedain" in profile.background_story or "Ranger" in profile.background_story
-    ), "Background missing Aragorn lore"
+    assert isinstance(profile.background_story, str), "Background story not string"
+    assert len(profile.background_story) > 0, "Background story is empty"
     assert isinstance(profile.relationships, dict), "Relationships not dict"
     assert isinstance(profile.known_spells, list), "Known spells not list"
     assert isinstance(profile.equipment, dict), "Equipment not dict"

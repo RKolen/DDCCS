@@ -20,7 +20,7 @@ def test_extract_character_actions_from_action_log() -> None:
         "ACTION: Stand guard\n"
     )
     # Call the extractor; type ignored to keep the line length within limits
-    result = extract_character_actions(content, ["Frodo", "Sam"])  # type: ignore
+    result = extract_character_actions(content, ["Frodo", "Sam"])
     assert "Frodo" in result
     assert any("Open the chest" in a for a in result["Frodo"])
     assert "Sam" in result
@@ -36,7 +36,7 @@ def test_extract_character_actions_from_narrative_mentions() -> None:
         "A loud crash echoed as Gandalf strode through the hall. "
         "He shouted and charged forward."
     )
-    result = extract_character_actions(content, ["Gandalf"])  # type: ignore
+    result = extract_character_actions(content, ["Gandalf"])
     assert "Gandalf" in result
     assert any("Gandalf" in s for s in result["Gandalf"])
 

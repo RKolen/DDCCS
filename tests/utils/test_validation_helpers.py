@@ -24,11 +24,11 @@ print_validation_report = vh.print_validation_report
 def test_validate_required_fields_and_format() -> None:
     """Required field validation detects missing and empty values."""
     good = {"name": "Sam", "age": 30}
-    ok, errs = validate_required_fields(good, ["name"])  # type: ignore
+    ok, errs = validate_required_fields(good, ["name"])  
     assert ok and not errs
 
     bad = {"name": "", "age": None}
-    ok2, errs2 = validate_required_fields(bad, ["name", "age", "title"])  # type: ignore
+    ok2, errs2 = validate_required_fields(bad, ["name", "age", "title"])  
     assert not ok2
     formatted = format_validation_errors(errs2, data_type="character")
     assert "Validation errors for character" in formatted
@@ -68,6 +68,6 @@ def test_print_validation_report_outputs() -> None:
     """print_validation_report writes OK/INVALID lines to stdout."""
     buf = io.StringIO()
     with redirect_stdout(buf):
-        print_validation_report("file.json", False, ["oops"])  # type: ignore
+        print_validation_report("file.json", False, ["oops"])  
     out = buf.getvalue()
     assert "[INVALID] file.json" in out

@@ -27,11 +27,16 @@ import sys
 from pathlib import Path
 import importlib
 
+# Disable behavior generation IMMEDIATELY to prevent AI hangs when importing
+# modules that depend on character_profile.py
+sys.modules["src.utils.behaviour_generation"] = None
+
 def setup_test_environment():
     """
     Configure test environment for proper execution.
 
     - Adds project root to Python path for imports
+    - Disables behavior generation to prevent AI hangs in tests
     - Returns project root path for test use
 
     Returns:
@@ -42,6 +47,11 @@ def setup_test_environment():
     project_root = Path(__file__).parent.parent
     if str(project_root) not in sys.path:
         sys.path.insert(0, str(project_root))
+
+    # Disable behavior generation to prevent AI client hangs during testing.
+    # This prevents __post_init__ from trying to call the AI when loading
+    # character profiles that don't have behavior fields pre-populated.
+    sys.modules["src.utils.behaviour_generation"] = None
 
     return project_root
 
@@ -77,6 +87,36 @@ def _build_behavior(behavior_cls, kw):
 def _build_personality(personality_cls, kw):
     """Module-level helper to build CharacterPersonality from kwargs."""
     return personality_cls(relationships=kw.get("relationships") or {})
+
+
+def _build_story(story_cls, kw):
+    """Module-level helper to build CharacterStory from kwargs."""
+    return story_cls(
+        story_hooks=kw.get("story_hooks") or [],
+        character_arcs=kw.get("character_arcs") or [],
+        major_plot_actions=kw.get("major_plot_actions") or []
+    )
+
+
+def _build_mechanics(mechanics_cls, stats_cls, abilities_cls, kw):
+    """Module-level helper to build CharacterMechanics from kwargs."""
+    stats = stats_cls(
+        ability_scores=kw.get("ability_scores") or {},
+        skills=kw.get("skills") or {},
+        max_hit_points=kw.get("max_hit_points") or 0,
+        armor_class=kw.get("armor_class") or 10,
+        movement_speed=kw.get("movement_speed") or 30,
+        proficiency_bonus=kw.get("proficiency_bonus") or 2,
+        background=kw.get("background") or ""
+    )
+    abilities = abilities_cls(
+        feats=kw.get("feats") or [],
+        class_abilities=kw.get("class_abilities") or [],
+        specialized_abilities=kw.get("specialized_abilities") or [],
+        spell_slots=kw.get("spell_slots") or {},
+        known_spells=kw.get("known_spells") or []
+    )
+    return mechanics_cls(stats=stats, abilities=abilities)
 
 
 def load_consultant_fixture(name: str):
@@ -306,27 +346,36 @@ def make_identity(name: str = "TestChar", dnd_class=None, level: int = 1):
 def make_profile(name: str = "TestChar", dnd_class=None, level: int = 1, **kwargs):
     """Create a minimal CharacterProfile instance for tests.
 
-    This helper constructs the nested dataclasses (Identity, Possessions,
-    Behavior, Personality) used by production `CharacterProfile` so tests
-    can avoid boilerplate fixture construction.
+    This helper constructs the nested dataclasses (Identity, Personality,
+    Behavior, Story, Mechanics, Possessions) used by production `CharacterProfile`
+    so tests can avoid boilerplate fixture construction.
     """
     cp_mod = import_module("src.characters.consultants.character_profile")
     character_profile_cls = getattr(cp_mod, "CharacterProfile")
-    character_possessions_cls = getattr(cp_mod, "CharacterPossessions")
-    character_behavior_cls = getattr(cp_mod, "CharacterBehavior")
     character_personality_cls = getattr(cp_mod, "CharacterPersonality")
+    character_behavior_cls = getattr(cp_mod, "CharacterBehavior")
+    character_story_cls = getattr(cp_mod, "CharacterStory")
+    character_mechanics_cls = getattr(cp_mod, "CharacterMechanics")
+    character_stats_cls = getattr(cp_mod, "CharacterStats")
+    character_abilities_cls = getattr(cp_mod, "CharacterAbilities")
+    character_possessions_cls = getattr(cp_mod, "CharacterPossessions")
 
     identity = make_identity(name=name, dnd_class=dnd_class, level=level)
-
-    possessions = _build_possessions(character_possessions_cls, kwargs)
-    behavior = _build_behavior(character_behavior_cls, kwargs)
     personality = _build_personality(character_personality_cls, kwargs)
+    behavior = _build_behavior(character_behavior_cls, kwargs)
+    story = _build_story(character_story_cls, kwargs)
+    mechanics = _build_mechanics(
+        character_mechanics_cls, character_stats_cls, character_abilities_cls, kwargs
+    )
+    possessions = _build_possessions(character_possessions_cls, kwargs)
 
     return character_profile_cls(
         identity=identity,
-        possessions=possessions,
-        behavior=behavior,
         personality=personality,
+        behavior=behavior,
+        story=story,
+        mechanics=mechanics,
+        possessions=possessions,
     )
 
 

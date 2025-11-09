@@ -6,7 +6,7 @@ into logical groupings while maintaining JSON compatibility.
 """
 
 from typing import Dict, List, Any, Optional
-from dataclasses import dataclass, field, asdict
+from dataclasses import dataclass, field
 import logging
 
 from src.characters.character_sheet import DnDClass
@@ -27,7 +27,7 @@ try:
 
     BEHAVIOUR_GENERATOR_AVAILABLE = True
 except ImportError:
-    generate_behavior_from_personality = None  # type: ignore
+    generate_behavior_from_personality = None
     BEHAVIOUR_GENERATOR_AVAILABLE = False
 # Optional behaviour generator (in-memory only). We keep this optional so tests
 # and environments without the utils module still import cleanly.
@@ -36,7 +36,7 @@ try:
 
     BEHAVIOUR_GENERATOR_AVAILABLE = True
 except ImportError:
-    generate_behavior_from_personality = None  # type: ignore
+    generate_behavior_from_personality = None
     BEHAVIOUR_GENERATOR_AVAILABLE = False
 
 LOGGER = logging.getLogger(__name__)
@@ -97,6 +97,7 @@ class CharacterStats:
     armor_class: int = 10
     movement_speed: int = 30
     proficiency_bonus: int = 2
+    background: str = ""
 
 
 @dataclass
@@ -299,50 +300,26 @@ class CharacterProfile:
     # to access behavior-related properties. This keeps the data model explicit
     # and avoids API surface duplication.
 
+    @staticmethod
+    def _update_if_exists(data: Dict[str, Any], key: str, value: Any) -> None:
+        """Update data dict key only if key exists in data and value is not empty."""
+        if key in data and value:
+            data[key] = value
+
     def save_to_file(self, filepath: str):
-        """Save character profile to JSON file (flattened format for compatibility)."""
-        # Flatten nested structure to match original JSON format
-        data = {}
+        """Save character profile to JSON file.
 
-        # Identity fields
-        data.update(asdict(self.identity))
-        data["dnd_class"] = self.identity.character_class.value
-        # Remove character_class as it's replaced by dnd_class
-        if "character_class" in data:
-            del data["character_class"]
+        Preserves original file structure and all existing fields.
+        Only updates the fields managed by CharacterProfile.
+        """
+        # Load existing data to preserve unknown fields and original structure
+        try:
+            data = load_json_file(filepath)
+        except (FileNotFoundError, ValueError):
+            data = {}
 
-        # Personality fields
-        data.update(asdict(self.personality))
-
-        # Behavior fields
-        data.update(asdict(self.behavior))
-
-        # Story fields
-        data.update(asdict(self.story))
-
-        # Stats fields
-        data.update(asdict(self.mechanics.stats))
-
-        # Abilities fields
-        data.update(asdict(self.mechanics.abilities))
-
-        # Possessions fields
-        data.update(asdict(self.possessions))
-
-        # Add background field if not present (from possessions for JSON compatibility)
-        if "background" not in data:
-            data["background"] = ""
-
-        # AI config
-        if AI_AVAILABLE and self.ai_config:
-            if isinstance(self.ai_config, CharacterAIConfig):
-                data["ai_config"] = self.ai_config.to_dict()
-            else:
-                data["ai_config"] = self.ai_config
-
-        # Ensure nickname is present (can be None)
-        if "nickname" not in data:
-            data["nickname"] = None
+        # Update all managed fields in data dict
+        self._update_all_fields(data)
 
         # Validate before saving
         if VALIDATOR_AVAILABLE and validate_character_json:
@@ -354,6 +331,80 @@ class CharacterProfile:
                 print("  Saving anyway, but please fix these issues.")
 
         save_json_file(filepath, data)
+
+    def _update_all_fields(self, data: Dict[str, Any]) -> None:
+        """Update all fields in data dict from character profile."""
+        # Identity fields
+        data["name"] = self.identity.name
+        data["nickname"] = self.identity.nickname
+        data["dnd_class"] = self.identity.character_class.value
+        data["level"] = self.identity.level
+        data["species"] = self.identity.species
+        data["lineage"] = self.identity.lineage
+        data["subclass"] = self.identity.subclass
+
+        # Personality fields - map BACK to aragorn.json field names
+        data["backstory"] = self.personality.background_story
+        summary = self.personality.personality_summary
+        data["personality_traits"] = summary.split("; ") if summary else []
+        data["bonds"] = self.personality.motivations
+        data["flaws"] = self.personality.fears_weaknesses
+        data["ideals"] = self.personality.goals
+        data["relationships"] = self.personality.relationships
+        # Only write secrets if it exists in original data
+        if "secrets" in data:
+            data["secrets"] = self.personality.secrets
+
+        # Behavior fields - only write if they exist in original data
+        self._update_if_exists(data, "preferred_strategies",
+                               self.behavior.preferred_strategies)
+        self._update_if_exists(data, "typical_reactions",
+                               self.behavior.typical_reactions)
+        self._update_if_exists(data, "speech_patterns",
+                               self.behavior.speech_patterns)
+        self._update_if_exists(data, "decision_making_style",
+                               self.behavior.decision_making_style)
+
+        # Story fields - only write if they exist in original data
+        self._update_if_exists(data, "story_hooks", self.story.story_hooks)
+        self._update_if_exists(data, "character_arcs", self.story.character_arcs)
+        self._update_if_exists(data, "major_plot_actions",
+                               self.story.major_plot_actions)
+
+        # Stats fields
+        data["ability_scores"] = self.mechanics.stats.ability_scores
+        data["skills"] = self.mechanics.stats.skills
+        data["max_hit_points"] = self.mechanics.stats.max_hit_points
+        data["armor_class"] = self.mechanics.stats.armor_class
+        data["movement_speed"] = self.mechanics.stats.movement_speed
+        data["proficiency_bonus"] = self.mechanics.stats.proficiency_bonus
+        # Only write background if it exists in original data AND has a value
+        if "background" in data and self.mechanics.stats.background:
+            data["background"] = self.mechanics.stats.background
+
+        # Abilities fields
+        data["feats"] = self.mechanics.abilities.feats
+        data["class_abilities"] = self.mechanics.abilities.class_abilities
+        data["specialized_abilities"] = self.mechanics.abilities.specialized_abilities
+        data["spell_slots"] = self.mechanics.abilities.spell_slots
+        data["known_spells"] = self.mechanics.abilities.known_spells
+
+        # Possessions fields
+        data["equipment"] = self.possessions.equipment
+        data["magic_items"] = self.possessions.magic_items
+
+        # AI config - only update if it exists in original data
+        if "ai_config" in data and AI_AVAILABLE and self.ai_config:
+            # Preserve original structure, only update changed values
+            original_ai_config = data["ai_config"]
+            if isinstance(self.ai_config, CharacterAIConfig):
+                updated = self.ai_config.to_dict()
+                # Only update fields that existed in the original
+                for key in original_ai_config:
+                    if key in updated:
+                        original_ai_config[key] = updated[key]
+            else:
+                data["ai_config"] = self.ai_config
 
     @classmethod
     def load_from_file(cls, filepath: str):
@@ -418,6 +469,7 @@ class CharacterProfile:
             armor_class=data.get("armor_class", 10),
             movement_speed=data.get("movement_speed", 30),
             proficiency_bonus=data.get("proficiency_bonus", 2),
+            background=data.get("background", ""),
         )
 
         # Create abilities
