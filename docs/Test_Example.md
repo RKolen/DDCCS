@@ -66,7 +66,14 @@ python setup.py
 2. Select your campaign folder
 3. **Name it:** A descriptive story title (e.g., "The Rusty Tankard")
 4. **What happens:** Creates `001_The_Rusty_Tankard.md`
-5. Open the file and write your narrative
+5. Open the file and write your narrative with your party (e.g., Aragorn, Frodo, Gandalf)
+
+**IMPORTANT:** Set up party configuration first (see Step 2 note about party selection during series creation)
+
+**The system automatically generates (after story is created):**
+- `story_hooks_YYYY-MM-DD_story_name.md` - NPCs detected, plot hooks, unresolved threads
+- `character_development_YYYY-MM-DD_story_name.md` - Created when party is configured AND story mentions party members
+- `session_results_YYYY-MM-DD_story_name.md` - AI-analyzed character actions and events (if AI enabled)
 
 ### Step 4: Add Combat Narrative (Optional - Requires AI)
 
@@ -83,33 +90,22 @@ python setup.py
 - Removes game mechanics (dice rolls, DCs, saves)
 - Appends to your story as a new section
 
-### Step 5: Test AI Features (Optional)
+### Step 5: Test Character Consultation with Real Characters
 
-If you have Ollama installed:
+The system includes example characters: Aragorn, Frodo, and Gandalf
 
-1. Create `.env` file (copy from `.env.example`)
-2. Make sure Ollama is running
-3. Configure the AI model in `.env`:
-   ```properties
-   OPENAI_MODEL=qwen2.5:14b       # Your chosen model
-   OPENAI_BASE_URL=http://localhost:11434/v1
-   OPENAI_API_KEY=ollama
-   ```
-4. Edit a character JSON file's `ai_config` section:
-   ```json
-   "ai_config": {
-     "enabled": true,
-     "temperature": 0.7,
-     "system_prompt": "You are [Character Name], a [class] who..."
-   }
-   ```
-   **Note:** Model, base_url, and api_key are now centralized in `.env`. Characters only need `enabled`, `temperature`, and `system_prompt`.
+1. Run: `python dnd_consultant.py`
+2. Press `1` for Character Consultation
+3. Select **Aragorn**, **Frodo**, or **Gandalf**
+4. **Ask a question:** "What would you do if guards approached?"
+5. **Expect:** Class-appropriate advice based on their ranger/hobbit/wizard abilities
 
-5. Run `python dnd_consultant.py` again
-6. Press `1` for Character Consultation
-7. Select your character
-8. **Ask:** "What would you do if a dragon appeared?"
-9. **Expect:** AI-generated response in that character's voice
+**Character Development Workflow (Optional):**
+1. Make sure you set up party members when creating the campaign series
+2. Write a story featuring party member names (e.g., "Aragorn entered cautiously")
+3. After story creation, the system auto-generates `character_development_YYYY-MM-DD_story_name.md`
+4. Open the file and review how each character acted
+5. Edit CHARACTER/ACTION/REASONING fields to analyze consistency against character traits
 
 ---
 
@@ -117,21 +113,79 @@ If you have Ollama installed:
 
 ```
 game_data/
+├── characters/
+│   ├── aragorn.json          # Example ranger character
+│   ├── frodo.json            # Example hobbit character
+│   ├── gandalf.json          # Example wizard character
+│   └── ... (other classes)
 └── campaigns/
     └── Thornhaven_Campaign/
-        ├── 001_The_Rusty_Tankard.md          (Your story)
-        ├── 002_Next_Adventure.md
-        └── ...
+        ├── current_party.json                              # Party configuration
+        ├── 001_The_Rusty_Tankard.md                        # Your story file
+        ├── story_hooks_2025-11-14_the_rusty_tankard.md     # Auto-generated (always)
+        ├── character_development_2025-11-14_the_rusty_tankard.md    # Auto-generated (if party configured)
+        └── session_results_2025-11-14_the_rusty_tankard.md          # Auto-generated (if party configured)
 ```
 
-**Optional session files** (created through Story Management):
+**Note:** File naming uses actual creation date (YYYY-MM-DD) instead of story number prefix
+
+**Example character_development file content:**
+
+*(Created automatically by extracting character mentions from your story)*
+
+```markdown
+# Character Development: The Rusty Tankard
+**Date:** 2025-11-14
+
+## Character Actions & Reasoning
+
+### CHARACTER: Aragorn
+**ACTION:** Aragorn entered the tavern cautiously, scanning the common room for threats. The ranger moved to a corner table where he could watch both entrances.
+**REASONING:** To be analyzed
+**Consistency Check:** Pending review
+**Development Notes:** Extract from narrative
+
+---
+
+### CHARACTER: Frodo
+**ACTION:** Frodo asked the innkeeper about previous visitors and listened carefully to gossip. He seemed concerned about being recognized.
+**REASONING:** To be analyzed
+**Consistency Check:** Pending review
+**Development Notes:** Extract from narrative
+
+---
+
+### CHARACTER: Gandalf
+**ACTION:** Gandalf ordered ale and settled by the fireplace, apparently listening to tavern gossip while seemingly lost in thought.
+**REASONING:** To be analyzed
+**Consistency Check:** Pending review
+**Development Notes:** Extract from narrative
+
+---
 ```
-game_data/
-└── campaigns/
-    └── Thornhaven_Campaign/
-        ├── session_results_2025-10-04_the_rusty_tankard.md
-        ├── character_development_2025-10-04_the_rusty_tankard.md
-        └── story_hooks_2025-10-04_the_rusty_tankard.md
+
+**How to use this file:**
+1. The system automatically extracts character mentions and context from your story
+2. You fill in the REASONING field with why each character acted that way
+3. Update CONSISTENCY CHECK to verify it matches their established traits
+4. Add DEVELOPMENT NOTES to track character growth and changes
+
+**Example session_results file content:**
+```markdown
+# Session Results: The Rusty Tankard
+
+## Character Actions Performed
+- Aragorn: Established base of operations in tavern
+- Frodo: Gathered information about local merchants
+- Gandalf: Eavesdropped on merchant guild discussions
+
+## Notable Events
+- Met hooded stranger interested in party's journey
+- Learned of bandit activity on northern road
+- Accepted supply merchant's offer for equipment discount
+
+## Session Summary
+Party established presence in Thornhaven and gathered intelligence on local situation.
 ```
 
 ---
