@@ -14,8 +14,8 @@ import re
 from dataclasses import dataclass
 from typing import List
 from datetime import datetime
-from src.utils.file_io import read_text_file, write_text_file, file_exists
-from src.utils.path_utils import get_campaign_path
+from src.utils.file_io import read_text_file, write_text_file, file_exists, directory_exists
+from src.utils.path_utils import get_campaign_path, get_campaigns_dir
 from src.utils.story_file_helpers import (
     list_story_files,
     has_numbered_story_files,
@@ -44,21 +44,39 @@ def get_existing_stories(stories_path: str) -> List[str]:
     return list_story_files(stories_path)
 
 
+def _is_valid_series_folder(folder_name: str) -> bool:
+    """Check if folder name should be considered as a potential story series."""
+    excluded = {"game_data", "characters", "npcs", "__pycache__"}
+    return not folder_name.startswith(".") and folder_name not in excluded
+
+
 def get_story_series(stories_path: str) -> List[str]:
-    """Get available story series (folders with numbered stories)."""
-    series_folders = []
-    for item in os.listdir(stories_path):
-        item_path = os.path.join(stories_path, item)
-        if (
-            os.path.isdir(item_path)
-            and not item.startswith(".")
-            and item != "game_data"
-            and item != "npcs"
-            and item != "__pycache__"
-        ):
-            # Delegate numbered-file detection to helper
-            if has_numbered_story_files(item_path):
-                series_folders.append(item)
+    """Get available story series (folders with numbered stories).
+    
+    Checks both legacy location (workspace root) and new location (game_data/campaigns/).
+    """
+    series_folders = set()
+
+    # Check legacy location (workspace root)
+    try:
+        for item in os.listdir(stories_path):
+            item_path = os.path.join(stories_path, item)
+            if os.path.isdir(item_path) and _is_valid_series_folder(item):
+                # Delegate numbered-file detection to helper
+                if has_numbered_story_files(item_path):
+                    series_folders.add(item)
+    except FileNotFoundError:
+        # If workspace root is missing, ignore
+        pass
+
+    # Also check campaigns directory under game_data for series
+    campaigns_dir = get_campaigns_dir(stories_path)
+    if os.path.isdir(campaigns_dir):
+        for item in os.listdir(campaigns_dir):
+            item_path = os.path.join(campaigns_dir, item)
+            if os.path.isdir(item_path) and _is_valid_series_folder(item):
+                if has_numbered_story_files(item_path):
+                    series_folders.add(item)
 
     return sorted(series_folders)
 
@@ -66,7 +84,7 @@ def get_story_series(stories_path: str) -> List[str]:
 def get_story_files_in_series(stories_path: str, series_name: str) -> List[str]:
     """Get story files within a specific series folder."""
     series_path = get_campaign_path(series_name, stories_path)
-    if not file_exists(series_path):
+    if not directory_exists(series_path):
         return []
     return list_story_files(series_path)
 
@@ -212,7 +230,7 @@ def create_story_in_series(
         options = StoryCreationOptions()
 
     series_path = get_campaign_path(series_name, ctx.stories_path)
-    if not file_exists(series_path):
+    if not directory_exists(series_path):
         raise ValueError(f"Story series '{series_name}' does not exist")
 
     # Compute next filename via helper

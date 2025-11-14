@@ -8,7 +8,15 @@ story file operations, analysis, and updates.
 from typing import Dict, List, Any, Optional
 from src.characters.consultants.character_profile import CharacterProfile
 from src.stories.story_character_loader import CharacterLoader
-from src.stories.story_file_ops import StoryFileOperations
+from src.stories.story_file_manager import (
+    StoryFileContext,
+    get_existing_stories,
+    get_story_series,
+    get_story_files_in_series,
+    create_new_story_series,
+    create_story_in_series,
+    create_new_story,
+)
 from src.stories.story_analysis import StoryAnalyzer
 from src.stories.story_updater import StoryUpdater
 
@@ -26,9 +34,14 @@ class StoryManager:
         self.workspace_path = workspace_path
         self.ai_client = ai_client
 
+        # Initialize context for story file operations
+        self.story_context = StoryFileContext(
+            stories_path=workspace_path,
+            workspace_path=workspace_path
+        )
+
         # Initialize components using composition
         self.character_loader = CharacterLoader(workspace_path, ai_client)
-        self.file_ops = StoryFileOperations(workspace_path)
         self.updater = StoryUpdater()
 
         # Load characters (creates analyzer after consultants are loaded)
@@ -107,7 +120,7 @@ class StoryManager:
         Returns:
             Sorted list of story filenames
         """
-        return self.file_ops.get_existing_stories()
+        return get_existing_stories(self.workspace_path)
 
     def get_story_series(self) -> List[str]:
         """
@@ -116,7 +129,7 @@ class StoryManager:
         Returns:
             Sorted list of series folder names
         """
-        return self.file_ops.get_story_series()
+        return get_story_series(self.workspace_path)
 
     def get_story_files_in_series(self, series_name: str) -> List[str]:
         """
@@ -128,7 +141,7 @@ class StoryManager:
         Returns:
             Sorted list of story filenames in the series
         """
-        return self.file_ops.get_story_files_in_series(series_name)
+        return get_story_files_in_series(self.workspace_path, series_name)
 
     def get_story_files(self) -> List[str]:
         """
@@ -156,8 +169,8 @@ class StoryManager:
         Raises:
             ValueError: If series name is invalid
         """
-        return self.file_ops.create_new_story_series(
-            series_name, first_story_name, description
+        return create_new_story_series(
+            self.story_context, series_name, first_story_name, description=description
         )
 
     def create_story_in_series(
@@ -177,7 +190,9 @@ class StoryManager:
         Raises:
             ValueError: If series does not exist
         """
-        return self.file_ops.create_story_in_series(series_name, story_name, description)
+        return create_story_in_series(
+            self.story_context, series_name, story_name, description=description
+        )
 
     def create_new_story(self, story_name: str, description: str = "") -> str:
         """
@@ -190,7 +205,9 @@ class StoryManager:
         Returns:
             Path to the created story file
         """
-        return self.file_ops.create_new_story(story_name, description)
+        return create_new_story(
+            self.story_context, story_name, description=description
+        )
 
     # Story Analysis Methods
     def analyze_story_file(self, filepath: str) -> Dict[str, Any]:

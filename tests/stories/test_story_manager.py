@@ -7,6 +7,7 @@ character loading, analysis and updates.
 
 import tempfile
 import os
+import shutil
 
 from tests import test_helpers
 
@@ -48,14 +49,29 @@ def test_create_new_story_series_and_add_story():
     """Create a new series (valid suffix) then add another story to it."""
     print("\n[TEST] Create New Story Series and Add Story")
 
-    with tempfile.TemporaryDirectory() as tmpdir:
-        manager = StoryManager(tmpdir)
-        # Use the new API to create a campaign-local series (this creates under game_data/campaigns)
-        series_name = "MyCampaign_Quest"
+    # Use the project workspace root, not Example_Campaign directly
+    workspace_path = os.path.join(
+        os.path.dirname(__file__),
+        "..",
+        ".."
+    )
+
+    manager = StoryManager(workspace_path)
+
+    # Use a test series name
+    series_name = "TestSeries_Quest"
+
+    # Clean up if test series exists from previous run
+    series_path = os.path.join(workspace_path, "game_data", "campaigns", series_name)
+    if os.path.exists(series_path):
+        shutil.rmtree(series_path)
+
+    try:
+        # Create first story in series
         first_path = manager.create_new_story_series(series_name, "First Tale", "desc")
         assert os.path.exists(first_path), "First story in series should exist"
 
-        # Ensure series is discoverable via new discovery (includes campaigns)
+        # Ensure series is discoverable
         series_list = manager.get_story_series()
         assert series_name in series_list, "New series should appear in series list"
 
@@ -64,14 +80,16 @@ def test_create_new_story_series_and_add_story():
         assert os.path.exists(second_path), "Second story should exist"
 
         files = manager.get_story_files_in_series(series_name)
-        assert any(f.startswith('001_') for f in files)
-        assert any(f.startswith('002_') for f in files)
+        assert len(files) >= 2, f"Should have at least 2 story files, got {files}"
+        assert any(f.startswith('001_') for f in files), f"Missing 001_ file in {files}"
+        assert any(f.startswith('002_') for f in files), f"Missing 002_ file in {files}"
 
-    # (No extra checks here; API-level assertions above validate created files)
+    finally:
+        # Clean up test series
+        if os.path.exists(series_path):
+            shutil.rmtree(series_path)
 
     print("[PASS] Create New Story Series and Add Story")
-
-
 def test_create_story_in_nonexistent_series_raises():
     """Creating a story inside a non-existent series should raise ValueError."""
     print("\n[TEST] Create Story in Nonexistent Series")
