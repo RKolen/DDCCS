@@ -29,6 +29,8 @@ from src.stories.story_ai_generator import (
     generate_story_hooks_from_content
 )
 from src.cli.party_config_manager import load_party_with_profiles
+from src.characters.character_consistency import create_character_development_file
+from src.stories.character_action_analyzer import extract_character_actions
 
 
 class ContinuationConfig:
@@ -769,8 +771,42 @@ class StoryUpdater:
             }
             self._generate_session_results_file(results_config)
 
+            # Generate character_development file
+            if party_names:
+                character_actions = extract_character_actions(
+                    story_content,
+                    party_names,
+                    self._truncate_at_sentence
+                )
+                if character_actions:
+                    create_character_development_file(
+                        campaign_dir, story_name, character_actions
+                    )
+
         except OSError as e:
             print(f"[WARNING] Could not generate supporting files: {e}")
+
+    def _truncate_at_sentence(self, text: str, max_length: int) -> str:
+        """Truncate text at sentence boundary to avoid cutting off words.
+
+        Args:
+            text: Text to truncate
+            max_length: Maximum length before truncation
+
+        Returns:
+            Truncated text ending at sentence boundary
+        """
+        if len(text) <= max_length:
+            return text
+
+        truncated = text[:max_length]
+        sentence_endings = [".", "!", "?"]
+        for ending in sentence_endings:
+            last_ending = truncated.rfind(ending)
+            if last_ending > max_length // 2:
+                return truncated[:last_ending + 1]
+
+        return truncated
 
     def _load_party_members(self, campaign_dir: str) -> List[str]:
         """Load party member names from campaign configuration.

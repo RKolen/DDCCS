@@ -178,20 +178,46 @@ def _process_character_dev_workflow(
 ) -> None:
     """Process character development file creation workflow step."""
     if not opt.create_character_dev_file:
+        print("[DEBUG] Character dev workflow skipped - option disabled")
         return
 
+    print(f"[DEBUG] Character dev workflow starting - party: {ctx.party_names}")
     try:
         character_actions = _extract_character_actions(
             ctx.story_content, ctx.party_names
         )
-        char_dev_path = create_character_development_file(
-            ctx.series_path,
-            ctx.story_name,
-            character_actions,
-        )
-        ctx.results["character_dev_file"] = char_dev_path
+        print(f"[DEBUG] Extracted {len(character_actions)} character actions")
+
+        # If no actions extracted but we have party names, create placeholder entries
+        if not character_actions and ctx.party_names:
+            print(f"[DEBUG] Creating placeholders for {len(ctx.party_names)} party members")
+            character_actions = [
+                {
+                    "character": name,
+                    "action": "No actions detected yet - write your story and this will update",
+                    "reasoning": "To be added after story is written",
+                    "consistency": "Pending story content",
+                    "notes": "System will auto-extract when character is mentioned in story",
+                }
+                for name in ctx.party_names
+            ]
+
+        # Only create file if we have party members
+        if character_actions:
+            print(f"[DEBUG] Creating character dev file with {len(character_actions)} entries")
+            char_dev_path = create_character_development_file(
+                ctx.series_path,
+                ctx.story_name,
+                character_actions,
+            )
+            ctx.results["character_dev_file"] = char_dev_path
+            print(f"[DEBUG] Character dev file created: {char_dev_path}")
+        else:
+            print("[DEBUG] No character actions to save - skipping file creation")
     except (ValueError, OSError, KeyError, AttributeError) as e:
-        ctx.results["errors"].append(f"Character development file creation failed: {e}")
+        error_msg = f"Character development file creation failed: {e}"
+        print(f"[DEBUG] ERROR: {error_msg}")
+        ctx.results["errors"].append(error_msg)
 
 
 def _process_session_workflow(
