@@ -638,12 +638,10 @@ class StoryUpdater:
 
         hooks = None
         if hooks_config.get("ai_client"):
-            print("[DEBUG] AI client available, attempting hooks generation...")
             party_characters = load_party_with_profiles(
                 hooks_config["campaign_dir"], hooks_config["workspace_path"]
             )
             print(
-                f"[DEBUG] Loaded {len(party_characters)} party characters, "
                 f"story content: {len(hooks_config['story_content'])} chars"
             )
             ai_hooks = generate_story_hooks_from_content(
@@ -651,13 +649,8 @@ class StoryUpdater:
                 party_characters, hooks_config["party_names"]
             )
             if ai_hooks:
-                print(
-                    f"[DEBUG] AI generated hooks: {list(ai_hooks.keys())}"
-                )
                 # Pass structured dict directly to preserve all sections
                 hooks = ai_hooks
-        else:
-            print("[DEBUG] No AI client available, using fallback extraction")
 
         # Fallback 1: If AI didn't generate hooks, try story-aware extraction
         if hooks is None:
