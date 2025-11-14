@@ -40,5 +40,5 @@ def load_character_consultant(filepath: str, ai_client=None,
         return consultant
     except (FileNotFoundError, json.JSONDecodeError, OSError, IOError, KeyError, ValueError) as exc:
         if verbose:
-            print(f"Warning: Could not load character {filepath}: {exc}")
+            print(f"[WARNING] Could not load character {filepath}: {exc}")
         return None

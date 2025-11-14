@@ -1,4 +1,4 @@
-"""Tests for StoryAnalyzer using real character JSONs present in game_data/characters.
+"""Tests for NPCProfileAnalyzer via StoryManager.
 
 These tests avoid writing to repository data. They instantiate the project
 StoryManager (which loads consultants from the project `game_data/characters`) and

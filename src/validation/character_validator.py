@@ -237,7 +237,7 @@ if __name__ == "__main__":
         )
 
         if not json_files:
-            print(f"Error: No character files found in {characters_dir}")
+            print(f"[ERROR] No character files found in {characters_dir}")
             sys.exit(1)
 
         ALL_VALID = True

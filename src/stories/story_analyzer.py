@@ -21,8 +21,8 @@ from src.utils.file_io import load_json_file, save_json_file, read_text_file
 from src.stories.character_loader import load_all_character_consultants
 
 
-class StoryAnalyzer:
-    """Analyzes story content and suggests character file updates."""
+class NPCProfileAnalyzer:
+    """Analyzes story content and suggests NPC profile creation."""
 
     def __init__(
         self,
@@ -264,7 +264,7 @@ def main():
     """Interactive story analysis tool."""
     # import already at top
 
-    analyzer = StoryAnalyzer()
+    analyzer = NPCProfileAnalyzer()
 
     if len(sys.argv) > 1:
         # Analyze specific file

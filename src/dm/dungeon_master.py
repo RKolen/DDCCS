@@ -344,7 +344,7 @@ Keep the narrative between 300-500 words.
             )
 
         except (ConnectionError, TimeoutError, ValueError, KeyError) as e:
-            print(f"Warning: AI narrative generation failed: {e}")
+            print(f"[WARNING] AI narrative generation failed: {e}")
             return self._generate_fallback_narrative(
                 story_prompt, characters_present, npcs_present
             )

@@ -179,7 +179,7 @@ if __name__ == "__main__":
         # Validate default current party file
         PARTY_FILE = get_party_config_path()
         if not file_exists(PARTY_FILE):
-            print(f"Error: Party configuration file not found: {PARTY_FILE}")
+            print(f"[ERROR] Party configuration file not found: {PARTY_FILE}")
             print("Looking for current_party.json in game_data/current_party/")
             sys.exit(1)
 
