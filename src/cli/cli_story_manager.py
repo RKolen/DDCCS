@@ -7,6 +7,7 @@ Handles all story-related menu interactions and operations.
 import os
 import json
 from typing import List
+from datetime import datetime
 
 from src.cli.party_config_manager import (
     save_current_party,
@@ -29,6 +30,12 @@ from src.stories.story_file_manager import (
 from src.stories.story_updater import StoryUpdater
 from src.combat.combat_narrator import CombatNarrator
 from src.utils.npc_lookup_helper import load_relevant_npcs_for_prompt
+from src.stories.session_results_manager import (
+    StorySession,
+    create_session_results_file,
+)
+from src.utils.file_io import read_text_file
+from src.stories.story_ai_generator import generate_session_results_from_story
 from src.cli.dnd_cli_helpers import (
     get_continuation_scene_type,
     get_continuation_prompt,
@@ -210,6 +217,7 @@ class StoryCLIManager:
             print("\nOptions:")
             print("1. Add New Story to Series")
             print("2. View Story Details")
+            print("3. Generate Session Results")
             print("0. Back")
 
             choice = input("Enter your choice: ").strip()
@@ -218,6 +226,8 @@ class StoryCLIManager:
                 self._create_story_in_series(series_name)
             elif choice == "2" and series_stories:
                 self._view_story_details_in_series(series_name, series_stories)
+            elif choice == "3" and series_stories:
+                self._generate_session_results_for_story(series_name, series_stories)
             elif choice == "0":
                 break
             else:
@@ -607,6 +617,139 @@ class StoryCLIManager:
                 print("You can now edit and refine the generated content.")
         else:
             print("[WARNING] AI generation returned no content.")
+
+    def _generate_session_results_for_story(
+        self, series_name: str, stories: List[str]
+    ):
+        """Generate session results for a story in the series.
+
+        Args:
+            series_name: Name of the story series (campaign)
+            stories: List of story files in the series
+        """
+        try:
+            selected_story = self._select_story_from_list(
+                stories, series_name
+            )
+            if not selected_story:
+                return
+
+            story_file, story_name, campaign_path = selected_story
+
+            # Load story content
+            story_path = os.path.join(campaign_path, story_file)
+            story_content = read_text_file(story_path)
+
+            if not story_content:
+                print("[ERROR] Story file is empty.")
+                return
+
+            # Load party members
+            party_members = load_current_party(
+                workspace_path=self.workspace_path, campaign_name=series_name
+            )
+
+            if not party_members:
+                print("[ERROR] No party configured. Set up party first.")
+                return
+
+            print(f"\nParty members: {', '.join(party_members)}")
+
+            # Load party with profiles for AI context
+            party_characters = load_party_with_profiles(
+                campaign_path, self.workspace_path
+            )
+
+            # Generate session results using AI (same as automated generation)
+            print("\n[INFO] Analyzing story and generating session results...")
+
+            session = StorySession(story_name, datetime.now().strftime("%Y-%m-%d"))
+
+            # Use AI to analyze story if available
+            if self.story_manager.ai_client:
+                self._populate_session_with_ai_analysis(
+                    session, story_content, party_characters
+                )
+            else:
+                print("[WARNING] AI not available. Using basic session structure.")
+
+            # Save session results
+            try:
+                filepath = create_session_results_file(campaign_path, session)
+                print(f"\n[SUCCESS] Session results saved: {filepath}")
+            except OSError as error:
+                print(f"[ERROR] Error saving session results: {error}")
+
+        except ValueError:
+            print("Invalid input.")
+        except (OSError, AttributeError) as e:
+            print(f"[ERROR] Failed to generate session results: {e}")
+
+    def _select_story_from_list(self, stories: List[str], series_name: str):
+        """Select a story from a list and return its details.
+
+        Args:
+            stories: List of story files
+            series_name: Name of the series/campaign
+
+        Returns:
+            Tuple of (story_file, story_name, campaign_path) or None if invalid
+        """
+        print("\nStories available:")
+        for i, story in enumerate(stories, 1):
+            print(f"  {i}. {story}")
+
+        choice_input = input(f"\nSelect story (1-{len(stories)}): ").strip()
+        choice = int(choice_input)
+
+        if choice < 1 or choice > len(stories):
+            print("Invalid choice.")
+            return None
+
+        story_file = stories[choice - 1]
+        story_name = os.path.splitext(story_file)[0]
+        campaign_path = os.path.join(
+            self.workspace_path, "game_data", "campaigns", series_name
+        )
+
+        return (story_file, story_name, campaign_path)
+
+    def _populate_session_with_ai_analysis(
+        self, session: StorySession, story_content: str, party_characters: dict
+    ):
+        """Populate session with AI-analyzed character actions and events.
+
+        Uses the same AI generation function as automated story prompting.
+
+        Args:
+            session: StorySession instance to populate
+            story_content: Full story narrative text
+            party_characters: Dictionary mapping character names to profiles
+        """
+        if not self.story_manager.ai_client:
+            return
+
+        try:
+            party_names = list(party_characters.keys())
+
+            # Use the same generation function as automated prompting
+            ai_results = generate_session_results_from_story(
+                self.story_manager.ai_client,
+                story_content,
+                party_names
+            )
+
+            if ai_results:
+                # Populate character actions
+                for action in ai_results.get("character_actions", []):
+                    session.character_actions.append(action)
+
+                # Populate narrative events
+                for event in ai_results.get("narrative_events", []):
+                    session.narrative_events.append(event)
+
+        except (AttributeError, ValueError, KeyError, TypeError):
+            pass
 
     def _create_new_story(self):
         """Create a new story file."""

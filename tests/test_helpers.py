@@ -498,11 +498,12 @@ def run_test_suite(test_suite_name, test_functions):
 class FakeAIClient:
     """Reusable fake AI client for tests.
 
-    Provides a minimal `chat_completion` and `ping` interface compatible with
-    the production ai_client. `chat_completion` accepts arbitrary positional
-    and keyword arguments (e.g., `messages=`, `temperature=`) and returns a
-    canned narrative with an optional preview suffix derived from the
-    provided arguments.
+    Provides a minimal `chat_completion`, `send_prompt`, and `ping` interface
+    compatible with the production ai_client. `chat_completion` accepts
+    arbitrary positional and keyword arguments (e.g., `messages=`,
+    `temperature=`) and returns a canned narrative with an optional preview
+    suffix. `send_prompt` accepts system and user prompts and returns
+    structured response for testing.
     """
 
     def chat_completion(self, *args, **kwargs):
@@ -538,6 +539,20 @@ class FakeAIClient:
         suffix = " -- " + " | ".join(parts) if parts else ""
         return (
             "A generated combat narrative describing Aragorn's daring strike." + suffix
+        )
+
+    def send_prompt(self, system_prompt: str, user_prompt: str) -> str:
+        """Send system and user prompts and return structured response.
+
+        This method is used for structured AI tasks like session analysis.
+        Returns a generic structured response for testing.
+        """
+        del system_prompt, user_prompt
+        return (
+            "ACTIONS:\n"
+            "- Character: Performed an action\n"
+            "EVENTS:\n"
+            "- A narrative event occurred\n"
         )
 
     def ping(self) -> bool:

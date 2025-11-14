@@ -10,6 +10,9 @@ The test is written so it can be run with pytest or executed directly.
 
 from tests import test_helpers
 
+# Enable behaviour_generation BEFORE importing it
+test_helpers.enable_behaviour_generation()
+
 # Import module and types via test_helpers helpers
 bg = test_helpers.import_module("src.utils.behaviour_generation")
 CharacterBehavior = test_helpers.safe_from_import(
