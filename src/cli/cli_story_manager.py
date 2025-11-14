@@ -33,6 +33,7 @@ from src.utils.npc_lookup_helper import load_relevant_npcs_for_prompt
 from src.stories.session_results_manager import (
     StorySession,
     create_session_results_file,
+    populate_session_from_ai_results,
 )
 from src.utils.file_io import read_text_file
 from src.stories.story_ai_generator import generate_session_results_from_story
@@ -740,13 +741,7 @@ class StoryCLIManager:
             )
 
             if ai_results:
-                # Populate character actions
-                for action in ai_results.get("character_actions", []):
-                    session.character_actions.append(action)
-
-                # Populate narrative events
-                for event in ai_results.get("narrative_events", []):
-                    session.narrative_events.append(event)
+                populate_session_from_ai_results(session, ai_results)
 
         except (AttributeError, ValueError, KeyError, TypeError):
             pass

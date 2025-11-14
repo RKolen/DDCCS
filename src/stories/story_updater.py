@@ -21,7 +21,8 @@ from src.stories.hooks_and_analysis import (
 )
 from src.stories.session_results_manager import (
     StorySession,
-    create_session_results_file
+    create_session_results_file,
+    populate_session_from_ai_results,
 )
 from src.stories.story_ai_generator import (
     generate_session_results_from_story,
@@ -703,10 +704,7 @@ class StoryUpdater:
                 results_config["party_names"]
             )
             if ai_results:
-                for action in ai_results.get("character_actions", []):
-                    session.character_actions.append(action)
-                for event in ai_results.get("narrative_events", []):
-                    session.narrative_events.append(event)
+                populate_session_from_ai_results(session, ai_results)
             else:
                 for member in results_config["party_names"]:
                     session.character_actions.append(

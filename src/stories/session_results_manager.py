@@ -169,3 +169,22 @@ def create_session_results_file(
         print(f"[SUCCESS] Created session results file: {filename}")
 
     return filepath
+
+
+def populate_session_from_ai_results(session: "StorySession",
+                                     ai_results: Dict[str, Any]) -> None:
+    """
+    Populate session with AI-generated character actions and narrative events.
+
+    Extracts character_actions and narrative_events from AI results dict and
+    appends them to the provided session object.
+
+    Args:
+        session: StorySession object to populate
+        ai_results: Dictionary with character_actions and narrative_events keys
+    """
+    if ai_results:
+        for action in ai_results.get("character_actions", []):
+            session.character_actions.append(action)
+        for event in ai_results.get("narrative_events", []):
+            session.narrative_events.append(event)
