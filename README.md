@@ -13,22 +13,19 @@ VSCode integration for story management and character consistency analysis.
 ##  What This System Does
 
 - **Unlimited Character Support** - Add as many character JSON files as you need
-- **Class Expertise** - Each character can be customized for any D&D class, 
-  background, or personality
-- **Story Sequence Management** - Write narrative stories in `001*.md` files 
-  with 80-character line limits for readability
-- **Character Development Tracking** - Separate analytical file 
-  (`character_development_suggestions.md`) for CHARACTER/ACTION/REASONING 
-  analysis
-- **DC Suggestion Engine** - Calculates appropriate challenge difficulties 
-  based on character stats and abilities
+- **Class Expertise** - Each character can be customized for any D&D class, background, or personality
+- **Story Sequence Management** - Write narrative stories in `001*.md` files with 80-character line limits for readability
+- **Character Development Tracking** - Automatic generation of `character_development_*.md` files analyzing character actions and consistency against established traits
+- **Session Recording with AI Analysis** - Automatically generate `session_results_*.md` files populated with AI-analyzed character actions and narrative events
+- **Story Continuation** - AI-powered story generation for combat and exploration scenes with automatic spell/ability context
+- **DC Suggestion Engine** - Calculates appropriate challenge difficulties based on character stats and abilities
 - **Fantasy Grounds Unity Integration** - Converts combat logs to narrative with auto-generated titles
 - **NPC Management** - Track recurring NPCs with relationships and traits
-- ** Automatic NPC Detection** - System automatically detects NPCs in stories and suggests profile creation
+- **Automatic NPC Detection** - System automatically detects NPCs in stories and suggests profile creation
 - **VSCode Integration** - Tasks, settings, and markdown workflow support
-- ** AI Integration** - Optional AI/LLM enhancement with OpenAI, Ollama, or any OpenAI-compatible API
-- ** RAG System** - Dual wiki integration: campaign lore + D&D 5e rules (items, spells)
-- ** Custom Items Registry** - Track homebrew items separately, blocks wiki lookups for custom content
+- **AI Integration** - Optional AI/LLM enhancement with OpenAI, Ollama, or any OpenAI-compatible API
+- **RAG System** - Dual wiki integration: campaign lore + D&D 5e rules (items, spells)
+- **Custom Items Registry** - Track homebrew items separately, blocks wiki lookups for custom content
 
 > ** [AI Integration Guide](docs/AI_INTEGRATION.md)** - Complete guide for adding AI capabilities to your characters
 > 
@@ -273,22 +270,100 @@ story_manager.analyze_story_development()
 All user-generated campaigns are stored in `game_data/campaigns/` and automatically git-ignored.
 
 **Organized Story Series** (RECOMMENDED):
-   - Each campaign gets its own folder (MUST end with: _Campaign, _Quest, _Story, or _Adventure)
-   - Created in `game_data/campaigns/` by default
-   - Separate analysis files per campaign
-   - Better organization for multiple campaigns
-   - Examples: `game_data/campaigns/Dragon_Heist_Campaign/`, `game_data/campaigns/Rescue_Mission_Quest/`
+- Each campaign gets its own folder (MUST end with: _Campaign, _Quest, _Story, or _Adventure)
+- Created in `game_data/campaigns/` by default
+- Separate analysis files per campaign
+- Better organization for multiple campaigns
+- Examples: `game_data/campaigns/Dragon_Heist_Campaign/`, `game_data/campaigns/Rescue_Mission_Quest/`
 
-### Story Creation Workflow
-1. **Create new story series** via CLI menu system (automatically goes to `game_data/campaigns/`)
-2. **Write narrative** in `001_story_name.md` (pure story, 80-char lines)
-3. **NPCs automatically detected** - System scans story and suggests profile creation in hooks file
-4. **Analyze characters** in campaign's `character_development_*.md`
-5. **Calculate DCs** in campaign's `story_dc_suggestions.md`
-6. **Session results** saved in campaign's `session_results_*.md`
-7. **Story hooks** tracked in campaign's `story_hooks_*.md`
-4. **Use CHARACTER/ACTION/REASONING** blocks in suggestions files only
-5. **Reference story scenarios** from suggestions back to narrative
+### Complete Story Creation Workflow
+
+**1. Write Story**
+```markdown
+game_data/campaigns/Your_Campaign/
+├── 001_The_Tavern_Meeting.md      # Your narrative (pure story)
+```
+
+**2. Character Development Auto-Generated**
+System automatically creates `character_development_001_The_Tavern_Meeting.md` containing:
+- CHARACTER/ACTION/REASONING analysis blocks
+- Character consistency checking against established traits
+- Development tracking for your party members
+
+**3. Session Results Auto-Generated**
+System automatically creates `session_results_001_The_Tavern_Meeting.md` containing:
+- AI-analyzed character actions and events
+- Narrative summary of party activities
+- Ready for DM notes and session outcomes
+
+**4. Story Hooks Auto-Generated**
+System automatically creates `story_hooks_001_The_Tavern_Meeting.md` containing:
+- NPC profile suggestions (with ready-to-run code)
+- Plot hooks and connections
+- Unresolved threads
+
+**5. DC Suggestions**
+System creates `story_dc_suggestions.md` with:
+- Character-appropriate difficulty calculations
+- Alternative approach suggestions for each party action
+- Skill check recommendations
+
+### Using Character Development Files
+
+**What Gets Tracked:**
+```markdown
+### CHARACTER: Aragorn
+**ACTION:** Attempted to persuade the merchant
+**REASONING:** Maintains diplomatic approach consistent with noble background
+**Consistency Check:** ✓ Aligns with "Honorable and diplomatic" personality
+
+### CHARACTER: Frodo
+**ACTION:** Examined the tavern keeper's reactions
+**REASONING:** Cautious of strangers, consistent with mission-conscious personality
+**Consistency Check:** ✓ Shows vigilance established in prior adventures
+
+### CHARACTER: Gandalf
+**ACTION:** Gathered information about stranger's origins
+**REASONING:** Seeks knowledge, maintains mystery-solver role
+**Consistency Check:** ✓ Uses wizard's natural curiosity and intelligence
+```
+
+### Using Session Results Files
+
+**Auto-Populated With:**
+```markdown
+# Session Results: The Tavern Meeting
+
+## Character Actions Performed
+- Aragorn: Persuaded merchant to provide information about caravan
+- Frodo: Determined stranger was following them
+- Gandalf: Learned about mysterious patron hiring mercenaries
+
+## Notable Events
+- Stranger revealed mercenary group tracking the party
+- Merchant provided safe house location
+- Party decided to gather more intelligence before moving
+
+## Session Summary
+Party encountered unexpected pursuit and made contact with merchant information broker.
+```
+
+### Story Creation in Practice
+
+**Menu Access:**
+1. Main Menu → 2 (Manage Stories)
+2. Choose 2 (Work with Stories)
+3. Select series and choose 1 (Add New Story to Series)
+
+**Automatic File Generation:**
+```
+[Your_Campaign/]
+├── 001_Story_Name.md                           # Your narrative
+├── character_development_001_Story_Name.md     # Auto-generated
+├── session_results_001_Story_Name.md           # Auto-generated
+├── story_hooks_001_Story_Name.md               # Auto-generated
+└── story_dc_suggestions.md                     # Updated per story
+```
 
 ### Character Consultation  
 1. **Load character data** from any number of JSON files

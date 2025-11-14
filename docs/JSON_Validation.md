@@ -117,13 +117,43 @@ python tests/test_all_validators.py  # Comprehensive test including consistency 
 - last_updated must be a valid ISO timestamp
 - Optionally cross-references party_members with character files
 
+### Example Configuration
+The system includes example characters: Aragorn, Frodo, and Gandalf
+
+**Valid configuration:**
+```json
+{
+  "party_members": [
+    "Aragorn",
+    "Frodo Baggins",
+    "Gandalf the Grey"
+  ],
+  "last_updated": "2025-11-14T10:30:00.000000"
+}
+```
+
+**Character files referenced:**
+- `game_data/characters/aragorn.json` → "Aragorn"
+- `game_data/characters/frodo.json` → "Frodo Baggins"
+- `game_data/characters/gandalf.json` → "Gandalf the Grey"
+
+### Running Party Validation
+```bash
+# Validate party configuration
+python -m src.validation.party_validator
+
+# Output
+ game_data/current_party/current_party.json: Valid
+ All 3 party members have valid character profiles
+```
+
 ## Output Format
 
 All validators use consistent output formatting:
 
 ### Valid File
 ```
- game_data/characters/barbarian.json: Valid
+ game_data/characters/aragorn.json: Valid
 ```
 
 ### Invalid File
@@ -146,36 +176,3 @@ All validators use consistent output formatting:
 - Character validation automatically integrated into `enhanced_story_manager.py` and `story_manager.py`
 - Other validators available for standalone or programmatic use
 - See this document for details
-
-## Test Results
-
-All validators and tests pass successfully:
--  Character Validator: 12 files validated, all tests passing
--  NPC Validator: 1 file validated, all tests passing
--  Items Validator: 1 file validated, all tests passing
--  Party Validator: 1 file validated, all tests passing
--  Unified Validator: 15 total files validated (12 characters + 1 NPC + 1 items + 1 party)
--  Comprehensive Tests: All tests passing, including cross-validation and consistency checks
-
-## Command Reference
-
-```bash
-# Validate all NPCs
-python npc_validator.py
-
-# Validate items registry
-python items_validator.py
-
-# Validate party configuration
-python party_validator.py
-
-# Validate all game data
-python validate_all.py
-
-# Run all validation tests
-python tests/test_character_validator.py
-python tests/test_npc_validator.py
-python tests/test_items_validator.py
-python tests/test_party_validator.py
-python tests/test_all_validators.py
-```

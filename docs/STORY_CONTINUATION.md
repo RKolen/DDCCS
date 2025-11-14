@@ -106,12 +106,16 @@ spell that would create an explosive burst of flame..."
 ```
 Prompt: "A mysterious bard arrives at the tavern with news of the King's decree"
 
+Party: Aragorn, Frodo, Gandalf
+
 Generated narrative (excerpt):
-"As the party sat by the fireplace, the tavern door swung open. A cloaked
-figure entered, their lute catching the lamplight. They approached the bar
-and spoke quietly to the innkeeper, occasionally glancing toward your group.
-After exchanging a few words and coins, the bard turned and walked directly
-toward your table..."
+"As Aragorn sat with Frodo and Gandalf by the fireplace, the tavern door 
+swung open. A cloaked figure entered, their lute catching the lamplight. 
+They approached the bar and spoke quietly to the innkeeper, occasionally 
+glancing toward your group. After exchanging a few words and coins, the 
+bard turned and walked directly toward your table. Aragorn's hand moved 
+cautiously to his sword hilt, while Gandalf raised a curious eyebrow. 
+The bard bowed respectfully and spoke..."
 ```
 
 ## Implementation Details
