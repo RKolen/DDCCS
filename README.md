@@ -207,11 +207,11 @@ copy game_data\current_party\current_party.example.json game_data\current_party\
 ```json
 {
   "party_members": [
-    "Theron Brightblade",
-    "Mira Shadowstep",
-    "Garrick Stonefist"
+    "Aragorn",
+    "Frodo Baggins",
+    "Gandalf the Grey"
   ],
-  "last_updated": "2025-10-05T10:30:00.000000"
+  "last_updated": "2025-11-14T14:30:00.000000"
 }
 ```
 
@@ -219,7 +219,7 @@ copy game_data\current_party\current_party.example.json game_data\current_party\
 
  **Character Names Must Match Exactly**
 - Names in `current_party.json` must match character JSON filenames
-- Example: `"Theron Brightblade"` → `game_data/characters/theron_brightblade.json`
+- Example: `"Aragorn"` → `game_data/characters/aragorn.json`
 - Case-insensitive matching, but exact spelling required
 
  **Git Ignored by Default**
@@ -248,18 +248,18 @@ copy game_data\current_party\current_party.example.json game_data\current_party\
 
 **NPC Detection:**
 ```markdown
-Story: "The innkeeper, Marcus, greets Theron, Mira, and Garrick..."
+Story: "The innkeeper, Barliman Butterbur, greets Aragorn, Frodo, and Gandalf..."
 
 System detects:
-[COMPLETE] Marcus (Innkeeper) - NEW NPC, suggests profile
- Theron, Mira, Garrick - Party members, excluded from NPC suggestions
+[COMPLETE] Barliman Butterbur (Innkeeper) - NEW NPC, suggests profile
+ Aragorn, Frodo Baggins, Gandalf the Grey - Party members, excluded from NPC suggestions
 ```
 
 **Story Analysis:**
 ```python
 # System automatically focuses on your party
 story_manager.analyze_story_development()
-# Only analyzes: Theron, Mira, Garrick (from current_party.json)
+# Only analyzes: Aragorn, Frodo Baggins, Gandalf the Grey (from current_party.json)
 ```
 
 ##  Workflow Summary
