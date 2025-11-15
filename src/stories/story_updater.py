@@ -15,6 +15,7 @@ from src.utils.story_formatting_utils import (
     generate_consultant_notes,
     generate_consistency_section
 )
+from src.utils.text_formatting_utils import wrap_narrative_text
 from src.npcs.npc_auto_detection import detect_npc_suggestions
 from src.stories.hooks_and_analysis import (
     create_story_hooks_file
@@ -43,6 +44,7 @@ class ContinuationConfig:
         self.campaign_dir = None
         self.workspace_path = None
         self.ai_client = None
+        self.prompt = None
 
     def set_paths(
         self, filepath: str, campaign_dir: str, workspace_path: str
@@ -84,6 +86,18 @@ class ContinuationConfig:
             Self for method chaining
         """
         self.ai_client = ai_client
+        return self
+
+    def set_prompt(self, prompt: str) -> 'ContinuationConfig':
+        """Set user prompt for spell extraction.
+
+        Args:
+            prompt: User prompt for narrative generation
+
+        Returns:
+            Self for method chaining
+        """
+        self.prompt = prompt
         return self
 
     def validate(self) -> bool:
@@ -136,21 +150,46 @@ class StoryUpdater:
             f"{os.path.basename(filepath)}"
         )
 
-    def append_combat_narrative(self, filepath: str, narrative: str):
+    def _process_narrative(self, narrative: str, prompt: str = None) -> str:
+        """Process narrative by wrapping to 80 chars and highlighting spells.
+
+        Args:
+            narrative: Raw narrative text
+            prompt: Optional user prompt to extract spells from
+
+        Returns:
+            Processed narrative with wrapping and spell highlighting
+        """
+        # Wrap to 80 characters and highlight spells from prompt
+        narrative = wrap_narrative_text(narrative, prompt=prompt)
+
+        return narrative
+
+    def append_combat_narrative(
+        self, filepath: str, narrative: str, title: str = None, prompt: str = None
+    ):
         """
         Append combat narrative to story file.
 
         Args:
             filepath: Path to the story file
             narrative: Combat narrative text to append
+            title: Combat section title (optional, defaults to "Combat Scene")
+            prompt: User prompt for spell extraction (optional)
         """
         if not file_exists(filepath):
             return
 
         content = read_text_file(filepath)
 
-        # Add combat section
-        combat_section = f"\n\n## Combat Scene\n\n{narrative}\n"
+        # Use provided title or default to "Combat Scene"
+        section_title = title if title else "Combat Scene"
+
+        # Process narrative: wrap and highlight spells from prompt
+        processed_narrative = self._process_narrative(narrative, prompt)
+
+        # Add combat section with level 3 header for indentation
+        combat_section = f"\n\n### {section_title}\n\n{processed_narrative}\n"
         content += combat_section
 
         write_text_file(filepath, content)
@@ -199,7 +238,7 @@ class StoryUpdater:
             )
 
             new_content = self._build_story_content_with_continuation(
-                cleaned_content, continuation_title, config.continuation
+                cleaned_content, continuation_title, config.continuation, config.prompt
             )
 
             write_text_file(config.filepath, new_content)
@@ -493,7 +532,7 @@ class StoryUpdater:
         return " ".join(capitalized[:3]) if capitalized else "Story Continuation"
 
     def _build_story_content_with_continuation(
-        self, cleaned_content: str, title: str, continuation: str
+        self, cleaned_content: str, title: str, continuation: str, prompt: str = None
     ) -> str:
         """Build story content with template removal and new continuation.
 
@@ -504,10 +543,14 @@ class StoryUpdater:
             cleaned_content: Cleaned story content (from _clean_story_content)
             title: Narrative title for the continuation
             continuation: AI-generated continuation text
+            prompt: Optional user prompt for spell extraction
 
         Returns:
             Final story content with continuation appended
         """
+        # Process continuation: wrap and highlight spells from prompt
+        processed_continuation = self._process_narrative(continuation, prompt)
+
         # Try to find header section (separated by ---)
         parts = cleaned_content.split("---", 2)
         if len(parts) >= 2:
@@ -527,22 +570,22 @@ class StoryUpdater:
             if kept_content.strip():
                 new_content = (
                     f"{header_section}\n{kept_content}\n\n"
-                    f"## {title}\n\n{continuation}\n"
+                    f"## {title}\n\n{processed_continuation}\n"
                 )
             else:
                 new_content = (
                     f"{header_section}\n\n## {title}\n\n"
-                    f"{continuation}\n"
+                    f"{processed_continuation}\n"
                 )
         else:
             if kept_content.strip():
                 new_content = (
                     f"{kept_content}\n\n"
-                    f"## {title}\n\n{continuation}\n"
+                    f"## {title}\n\n{processed_continuation}\n"
                 )
             else:
                 new_content = (
-                    f"## {title}\n\n{continuation}\n"
+                    f"## {title}\n\n{processed_continuation}\n"
                 )
 
         return new_content

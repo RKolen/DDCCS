@@ -635,7 +635,7 @@ class StoryCLIManager:
                 story_prompt, ""
             )
             self.story_updater.append_combat_narrative(
-                story_path, ai_content
+                story_path, ai_content, combat_title, story_prompt
             )
             print(f"\n[SUCCESS] Added combat narrative to {display_name}")
             print(f"   Title: {combat_title}")
@@ -671,7 +671,8 @@ class StoryCLIManager:
             config = (ContinuationConfig()
                       .set_paths(story_path, campaign_dir, self.workspace_path)
                       .set_content(ai_content)
-                      .set_ai_client(self.story_manager.ai_client))
+                      .set_ai_client(self.story_manager.ai_client)
+                      .set_prompt(story_prompt))
             success = self.story_updater.append_ai_continuation(config)
             if success:
                 print(

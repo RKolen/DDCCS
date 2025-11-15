@@ -5,13 +5,17 @@ Handles text wrapping and formatting for story narratives.
 """
 
 import textwrap
-from src.utils.spell_highlighter import highlight_spells_in_text
+from src.utils.spell_highlighter import (
+    highlight_spells_in_text,
+    extract_spells_from_prompt
+)
 
 def wrap_narrative_text(
     text: str,
     width: int = 80,
     apply_spell_highlighting: bool = True,
     known_spells: set = None,
+    prompt: str = None,
 ) -> str:
     """
     Wrap narrative text to specified width while preserving paragraphs.
@@ -22,10 +26,15 @@ def wrap_narrative_text(
         width (int): Maximum line width (default 80 characters)
         apply_spell_highlighting (bool): Whether to highlight spell names (default True)
         known_spells (set): Set of known spell names for better matching
+        prompt (str): User prompt to extract spells from (overrides known_spells)
 
     Returns:
         str: Text wrapped to specified width with optional spell highlighting
     """
+    # Extract spells from prompt if provided (takes precedence)
+    if prompt and apply_spell_highlighting:
+        known_spells = extract_spells_from_prompt(prompt)
+
     # Apply spell highlighting first if requested
     if apply_spell_highlighting:
         text = highlight_spells_in_text(text, known_spells)

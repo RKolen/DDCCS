@@ -63,9 +63,52 @@ FALSE_POSITIVES = {
 }
 
 
+def extract_spells_from_prompt(prompt: str) -> Set[str]:
+    """Extract spell/ability names mentioned in a user prompt.
+
+    Searches for spells/abilities in spell contexts (casts, channels, uses, etc.)
+    and returns the set of identified spells for use in highlighting.
+
+    Args:
+        prompt: User prompt text (e.g., "aragorn shoots an arrow, gandalf casts
+                fireball")
+
+    Returns:
+        Set of spell/ability names found in the prompt
+
+    Example:
+        >>> extract_spells_from_prompt("aragorn shoots a fireball")
+        {'Fireball'}
+    """
+    if not prompt:
+        return set()
+
+    spells = set()
+
+    # Find all spell contexts and their following spell names
+    for match in SPELL_PATTERN.finditer(prompt):
+        spell_full = match.group("spell")
+        words = spell_full.split()
+
+        # Try to find valid spell name (1-3 words)
+        # Prioritize 2-word spells, then 1-word
+        for spell_candidate in [
+            " ".join(words[:2]) if len(words) >= 2 else words[0],
+            words[0],
+        ]:
+            if spell_candidate and spell_candidate not in FALSE_POSITIVES:
+                spells.add(spell_candidate)
+                break
+
+    return spells
+
+
 def highlight_spells_in_text(text: str, known_spells: Set[str] = None) -> str:
     """
     Highlight spell names in story text by wrapping them in bold markdown.
+
+    When known_spells is provided (from user prompt), ONLY those spells are highlighted.
+    When known_spells is empty, falls back to pattern-based detection.
 
     Args:
         text: Story text to process
@@ -76,7 +119,7 @@ def highlight_spells_in_text(text: str, known_spells: Set[str] = None) -> str:
 
     Example:
         >>> text = "Elara casts Fireball at the goblin."
-        >>> highlight_spells_in_text(text)
+        >>> highlight_spells_in_text(text, {"Fireball"})
         "Elara casts **Fireball** at the goblin."
     """
     if not text:
@@ -86,7 +129,29 @@ def highlight_spells_in_text(text: str, known_spells: Set[str] = None) -> str:
     result_text = text
     highlighted_spells = set()
 
-    # First pass: Find spells in spell contexts (cast, channels, etc.)
+    # If we have known spells from the prompt, ONLY highlight those
+    # This prevents false positives like "arrow" being highlighted
+    if known_spells:
+        for spell in known_spells:
+            if spell.lower() in highlighted_spells:
+                continue
+
+            # Create case-insensitive pattern to find the spell in text
+            # Use word boundaries to avoid partial matches
+            pattern = re.compile(
+                r"\b" + re.escape(spell) + r"\b",
+                re.IGNORECASE
+            )
+
+            def replace_known_spell(match):
+                return f"**{match.group(0)}**"
+
+            result_text = pattern.sub(replace_known_spell, result_text)
+            highlighted_spells.add(spell.lower())
+
+        return result_text
+
+    # Fallback: Pattern-based detection when no known spells provided
     def replace_spell_context(match):
         context = match.group("context")
         spell_full = match.group("spell")
@@ -115,7 +180,6 @@ def highlight_spells_in_text(text: str, known_spells: Set[str] = None) -> str:
                     "word",
                     "hand",
                     "wall",
-                    "arrow",
                     "missile",
                 )
             ):

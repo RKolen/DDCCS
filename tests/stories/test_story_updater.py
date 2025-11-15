@@ -105,8 +105,10 @@ def test_append_combat_narrative():
         with open(temp_path, "r", encoding="utf-8") as f:
             content = f.read()
 
-        assert "Combat Scene" in content, "Should have combat section"
-        assert narrative in content, "Should contain narrative"
+        assert "### Combat Scene" in content, "Should have combat section"
+        # Check for key phrases (narrative gets wrapped and spells highlighted)
+        assert "Theron" in content, "Should contain character name"
+        assert "goblin" in content, "Should contain creature"
         assert "Previous story content" in content, "Should preserve original"
         print("  [OK] Combat narrative appended correctly")
     finally:

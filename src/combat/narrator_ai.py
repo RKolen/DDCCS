@@ -9,6 +9,7 @@ post-processing.
 import re
 from typing import Dict
 from src.characters.consultants.consultant_core import CharacterConsultant
+from src.utils.text_formatting_utils import wrap_narrative_text
 
 
 class AIEnhancedNarrator:
@@ -63,6 +64,9 @@ class AIEnhancedNarrator:
 
             # Post-process to ensure no mechanics leaked through
             narrative = self._remove_mechanics_terms(narrative)
+
+            # Wrap narrative to 80 characters per line and highlight spells
+            narrative = wrap_narrative_text(narrative)
 
             return narrative
 
@@ -266,6 +270,9 @@ Write the combat narrative in {style} style. Remember:
                 narrative_lines.append(line)
 
         narrative = ". ".join(narrative_lines) + "."
+
+        # Wrap narrative to 80 characters per line and highlight spells
+        narrative = wrap_narrative_text(narrative)
 
         return (
             f"**Combat Scene:**\n\n{narrative}\n\n"
