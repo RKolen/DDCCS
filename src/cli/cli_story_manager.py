@@ -288,7 +288,7 @@ class StoryCLIManager:
         elif method_name == "_generate_character_development_for_story":
             self._generate_character_development_for_story(series_name, series_stories)
         elif method_name == "_analyze_story_cli":
-            self.analysis_cli.analyze_story(series_name)
+            self.analysis_cli.analyze_story()
         elif method_name == "_convert_combat_cli":
             self.analysis_cli.convert_combat()
         elif method_name == "_get_dc_suggestions_cli":

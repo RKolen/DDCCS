@@ -9,8 +9,6 @@ post-processing.
 import re
 from typing import Dict
 from src.characters.consultants.consultant_core import CharacterConsultant
-from src.utils.text_formatting_utils import wrap_narrative_text
-from src.utils.spell_lookup_helper import lookup_spells_and_abilities
 
 
 class AIEnhancedNarrator:
@@ -42,16 +40,13 @@ class AIEnhancedNarrator:
         # Build character context
         character_context = self._build_character_context(combat_prompt)
 
-        # Look up D&D spells/abilities for accurate descriptions
-        ability_context = lookup_spells_and_abilities(combat_prompt)
-
         # Create AI prompt
         system_prompt = self._create_system_prompt(style)
         user_prompt = self._create_user_prompt(
             {
                 "combat_prompt": combat_prompt,
                 "character_context": character_context,
-                "ability_context": ability_context,
+                "ability_context": "",
                 "story_context": story_context,
                 "style": style,
             }
@@ -63,14 +58,11 @@ class AIEnhancedNarrator:
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_prompt},
                 ],
-                temperature=0.8,  # Higher temperature for creative combat descriptions
+                temperature=0.8,
             )
 
             # Post-process to ensure no mechanics leaked through
             narrative = self._remove_mechanics_terms(narrative)
-
-            # Wrap text to 80 characters for readability
-            narrative = wrap_narrative_text(narrative)
 
             return narrative
 

@@ -10,6 +10,7 @@ from src.characters.consultants.character_profile import (
     CharacterProfile,
     CharacterBehavior,
 )
+from src.utils.path_utils import get_campaign_path
 
 
 def edit_character_profile_interactive(profile: CharacterProfile) -> Tuple[CharacterProfile, bool]:
@@ -386,8 +387,9 @@ def select_target_story_for_combat(
     if not story_file:
         return None, ""
 
-    # Build path and read context
-    target_path = os.path.join(workspace_path, series_name, story_file)
+    # Build path using get_campaign_path (resolves to game_data/campaigns/SeriesName/)
+    series_path = get_campaign_path(series_name, workspace_path)
+    target_path = os.path.join(series_path, story_file)
     context = _read_story_context(target_path)
 
     return target_path, context

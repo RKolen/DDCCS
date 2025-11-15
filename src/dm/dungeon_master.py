@@ -65,10 +65,16 @@ class DMConsultant:
             if char_name in self.character_consultants:
                 consultant = self.character_consultants[char_name]
                 reaction = consultant.suggest_reaction(user_prompt, {})
+                suggested_approach = reaction.get(
+                    "suggested_approach", "Act according to character nature"
+                )
+                class_reaction = reaction.get("class_reaction", "")
+                personality = reaction.get("personality_modifier", "")
                 character_insights[char_name] = {
-                    "likely_reaction": reaction["suggested_reaction"],
-                    "reasoning": reaction["reasoning"],
-                    "class_expertise": reaction.get("class_expertise", ""),
+                    "likely_reaction": suggested_approach,
+                    "reasoning": f"Class: {class_reaction}. Personality: {personality}",
+                    "class_expertise": class_reaction,
+                    "dialogue": reaction.get("dialogue_suggestion", ""),
                 }
 
         # Get NPC insights for present NPCs

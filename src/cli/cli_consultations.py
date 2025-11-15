@@ -4,8 +4,11 @@ Consultations CLI Module
 Handles character consultations, DC suggestions, and DM narrative suggestions.
 """
 
+import os
 from typing import Dict, Any
 from src.utils.cli_utils import select_character_from_list, get_non_empty_input
+from src.utils.path_utils import get_campaign_path
+from src.cli.party_config_manager import load_current_party
 
 
 class ConsultationsCLI:
@@ -134,7 +137,7 @@ class ConsultationsCLI:
 
         input("\nPress Enter to continue...")
 
-    def get_dm_narrative_suggestions(self):
+    def get_dm_narrative_suggestions(self, series_name: str = None):
         """Get DM narrative suggestions based on user prompt."""
         print("\n DM NARRATIVE SUGGESTIONS")
         print("-" * 40)
@@ -145,45 +148,76 @@ class ConsultationsCLI:
             print("Prompt cannot be empty.")
             return
 
-        # Get available characters and NPCs
-        characters = self.dm_consultant.get_available_characters()
+        # Get characters and NPCs
+        characters = self._get_party_for_series(series_name)
         npcs = self.dm_consultant.get_available_npcs()
 
-        # Let user select which characters are present
-        characters_present = []
-        if characters:
-            print(f"\nAvailable characters: {', '.join(characters)}")
-            char_input = input(
-                "Enter character names present (comma-separated, or 'all', or leave blank): "
-            ).strip()
-            if char_input.lower() == "all":
-                characters_present = characters
-            elif char_input:
-                characters_present = [
-                    name.strip()
-                    for name in char_input.split(",")
-                    if name.strip() in characters
-                ]
+        # Get selections from user
+        characters_present = self._select_characters(characters)
+        npcs_present = self._select_npcs(npcs)
 
-        # Let user select which NPCs are present
-        npcs_present = []
-        if npcs:
-            print(f"\nAvailable NPCs: {', '.join(npcs)}")
-            npc_input = input(
-                "Enter NPC names present (comma-separated, or leave blank): "
-            ).strip()
-            if npc_input:
-                npcs_present = [
-                    name.strip()
-                    for name in npc_input.split(",")
-                    if name.strip() in npcs
-                ]
-
-        # Get narrative suggestions
+        # Get and display narrative suggestions
         suggestions = self.dm_consultant.suggest_narrative(
             prompt, characters_present, npcs_present
         )
         self._display_dm_suggestions(suggestions)
+
+    def _get_party_for_series(self, series_name: str = None):
+        """Get party members for a series (or overall party if not specified)."""
+        characters = []
+        if series_name:
+            workspace_path = self.story_manager.workspace_path
+            series_path = get_campaign_path(series_name, workspace_path)
+            party_config_path = os.path.join(series_path, "current_party.json")
+            if os.path.isfile(party_config_path):
+                characters = load_current_party(party_config_path)
+
+        if not characters:
+            characters = self.story_manager.get_current_party()
+
+        return characters
+
+    def _select_characters(self, characters):
+        """Prompt user to select party members (numbered list)."""
+        characters_present = []
+        if characters:
+            print("\nParty Members:")
+            for i, char in enumerate(characters, 1):
+                print(f"{i}. {char}")
+            char_input = input(
+                "Enter character numbers (comma-separated), 'all', or leave blank: "
+            ).strip()
+            if char_input.lower() == "all":
+                characters_present = characters
+            elif char_input:
+                try:
+                    indices = [int(x.strip()) - 1 for x in char_input.split(",")]
+                    characters_present = [
+                        characters[i] for i in indices if 0 <= i < len(characters)
+                    ]
+                except (ValueError, IndexError):
+                    pass
+
+        return characters_present
+
+    def _select_npcs(self, npcs):
+        """Prompt user to select NPCs (numbered list)."""
+        npcs_present = []
+        if npcs:
+            print("\nAvailable NPCs:")
+            for i, npc in enumerate(npcs, 1):
+                print(f"{i}. {npc}")
+            npc_input = input(
+                "Enter NPC numbers (comma-separated), or leave blank: "
+            ).strip()
+            if npc_input:
+                try:
+                    indices = [int(x.strip()) - 1 for x in npc_input.split(",")]
+                    npcs_present = [npcs[i] for i in indices if 0 <= i < len(npcs)]
+                except (ValueError, IndexError):
+                    pass
+
+        return npcs_present
 
     def _display_dm_suggestions(self, suggestions: Dict[str, Any]):
         """Display DM narrative suggestions."""
@@ -198,8 +232,10 @@ class ConsultationsCLI:
                 print(f"\n  {char_name}:")
                 print(f"    Likely reaction: {insight['likely_reaction']}")
                 print(f"    Reasoning: {insight['reasoning']}")
-                if insight["class_expertise"]:
+                if insight.get("class_expertise"):
                     print(f"    Class expertise: {insight['class_expertise']}")
+                if insight.get("dialogue"):
+                    print(f"    Suggested dialogue: {insight['dialogue']}")
 
         # NPC insights
         if suggestions["npc_insights"]:
@@ -209,7 +245,7 @@ class ConsultationsCLI:
                 print(f"    Personality: {insight['personality']}")
                 print(f"    Role: {insight['role']}")
                 print(f"    Likely behavior: {insight['likely_behavior']}")
-                if insight["relationships"]:
+                if insight.get("relationships"):
                     print(f"    Relationships: {insight['relationships']}")
 
         # Narrative suggestions
