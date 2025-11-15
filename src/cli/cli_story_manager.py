@@ -35,6 +35,8 @@ from src.stories.session_results_manager import (
     create_session_results_file,
     populate_session_from_ai_results,
 )
+from src.stories.character_action_analyzer import extract_character_actions
+from src.characters.character_consistency import create_character_development_file
 from src.utils.file_io import read_text_file
 from src.stories.story_ai_generator import generate_session_results_from_story
 from src.cli.dnd_cli_helpers import (
@@ -219,6 +221,7 @@ class StoryCLIManager:
             print("1. Add New Story to Series")
             print("2. View Story Details")
             print("3. Generate Session Results")
+            print("4. Generate Character Development")
             print("0. Back")
 
             choice = input("Enter your choice: ").strip()
@@ -229,6 +232,8 @@ class StoryCLIManager:
                 self._view_story_details_in_series(series_name, series_stories)
             elif choice == "3" and series_stories:
                 self._generate_session_results_for_story(series_name, series_stories)
+            elif choice == "4" and series_stories:
+                self._generate_character_development_for_story(series_name, series_stories)
             elif choice == "0":
                 break
             else:
@@ -685,6 +690,104 @@ class StoryCLIManager:
             print("Invalid input.")
         except (OSError, AttributeError) as e:
             print(f"[ERROR] Failed to generate session results: {e}")
+
+    def _generate_character_development_for_story(
+        self, series_name: str, stories: List[str]
+    ):
+        """Generate character development analysis for a story in the series.
+
+        Args:
+            series_name: Name of the story series (campaign)
+            stories: List of story files in the series
+        """
+        try:
+            selected_story = self._select_story_from_list(
+                stories, series_name
+            )
+            if not selected_story:
+                return
+
+            story_file, story_name, campaign_path = selected_story
+
+            # Load story content
+            story_path = os.path.join(campaign_path, story_file)
+            story_content = read_text_file(story_path)
+
+            if not story_content:
+                print("[ERROR] Story file is empty.")
+                return
+
+            # Load party members
+            party_members = load_current_party(
+                workspace_path=self.workspace_path, campaign_name=series_name
+            )
+
+            if not party_members:
+                print("[ERROR] No party configured. Set up party first.")
+                return
+
+            print(f"\nParty members: {', '.join(party_members)}")
+
+            # Generate character development
+            print("\n[INFO] Analyzing story and generating character development...")
+
+            # Extract character actions using personality-aware analysis
+            character_actions = extract_character_actions(
+                story_content,
+                party_members,
+                self._truncate_at_sentence,
+                character_profiles=self._load_character_profiles_for_analysis(
+                    party_members, campaign_path
+                )
+            )
+
+            if not character_actions:
+                print("[WARNING] No character actions found in story.")
+                return
+
+            # Save character development file
+            try:
+                filepath = create_character_development_file(
+                    campaign_path, story_name, character_actions
+                )
+                print(f"\n[SUCCESS] Character development saved: {filepath}")
+            except OSError as error:
+                print(f"[ERROR] Error saving character development: {error}")
+
+        except ValueError:
+            print("Invalid input.")
+        except (OSError, AttributeError) as e:
+            print(f"[ERROR] Failed to generate character development: {e}")
+
+    def _truncate_at_sentence(self, text: str, max_length: int) -> str:
+        """Truncate text at sentence boundary."""
+        if len(text) <= max_length:
+            return text
+
+        truncated = text[:max_length]
+        last_period = truncated.rfind(".")
+        if last_period > max_length * 0.7:
+            return truncated[:last_period + 1]
+        return truncated + "..."
+
+    def _load_character_profiles_for_analysis(
+        self, party_names: List[str], _campaign_path: str
+    ) -> dict:
+        """Load character profiles for personality-aware analysis."""
+        profiles = {}
+        for character_name in party_names:
+            # Try to find character profile in workspace
+            char_path = os.path.join(
+                self.workspace_path, "game_data", "characters",
+                f"{character_name.lower().replace(' ', '_')}.json"
+            )
+            if os.path.exists(char_path):
+                try:
+                    with open(char_path, 'r', encoding='utf-8') as f:
+                        profiles[character_name] = json.load(f)
+                except (OSError, json.JSONDecodeError):
+                    pass
+        return profiles
 
     def _select_story_from_list(self, stories: List[str], series_name: str):
         """Select a story from a list and return its details.

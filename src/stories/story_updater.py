@@ -773,10 +773,14 @@ class StoryUpdater:
 
             # Generate character_development file
             if party_names:
+                character_profiles = self._load_character_profiles(
+                    party_names, workspace_path
+                )
                 character_actions = extract_character_actions(
                     story_content,
                     party_names,
-                    self._truncate_at_sentence
+                    self._truncate_at_sentence,
+                    character_profiles
                 )
                 if character_actions:
                     create_character_development_file(
@@ -831,3 +835,47 @@ class StoryUpdater:
             pass
 
         return party_names
+
+    def _load_character_profiles(
+        self, party_names: List[str], workspace_path: str
+    ) -> Dict[str, Dict[str, Any]]:
+        """Load character profiles to access personality traits and background.
+
+        Args:
+            party_names: List of character names to load
+            workspace_path: Path to the workspace root
+
+        Returns:
+            Dict mapping character names to their trait dictionaries
+        """
+        profiles = {}
+        characters_dir = os.path.join(workspace_path, "game_data", "characters")
+
+        for character_name in party_names:
+            try:
+                # Convert character name to filename
+                filename = f"{character_name.lower().replace(' ', '_')}.json"
+                filepath = os.path.join(characters_dir, filename)
+
+                if os.path.exists(filepath):
+                    with open(filepath, "r", encoding="utf-8") as f:
+                        char_data = json.load(f)
+                        profiles[character_name] = {
+                            "personality_summary": char_data.get(
+                                "personality_summary", ""
+                            ),
+                            "background_story": char_data.get(
+                                "background_story", ""
+                            ),
+                            "motivations": char_data.get("motivations", []),
+                            "fears_weaknesses": char_data.get(
+                                "fears_weaknesses", []
+                            ),
+                            "goals": char_data.get("goals", []),
+                            "relationships": char_data.get("relationships", {}),
+                            "secrets": char_data.get("secrets", []),
+                        }
+            except (OSError, json.JSONDecodeError, KeyError):
+                pass
+
+        return profiles

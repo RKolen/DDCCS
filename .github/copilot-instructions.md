@@ -1,490 +1,139 @@
 # D&D Character Consultant System - Copilot Instructions
 
-##  IMPORTANT: Read This First
+**For detailed project context, see `docs/docs_personal/COPILOT_CONTEXT.md`**
 
-**BEFORE starting ANY task:**
-1. **ALWAYS read this entire file** to understand the current project state
-2. **If asked to "verify the entire project" or "check everything":**
-   - Read EVERY file mentioned in the project structure below
-   - NO shortcuts, NO assumptions, NO partial reads
-   - Verify actual code matches documentation
-   - Check imports, dependencies, and file relationships
-   - Confirm examples and workflows are accurate
+## Critical Rules (Non-Negotiable)
 
-**When making plans:**
-- First verify you understand the current system by reading relevant files
-- Plans should reflect ACTUAL code structure, not assumptions
-- If uncertain about ANY detail, read the source file completely
-
-This workspace contains a Python-based D&D character consultant system designed to help with campaign management and story development.
-
-## Project Overview
-
-This is a **D&D 5e (2024) Character Consultant System** that provides:
-- 12 AI character consultants (one per D&D class)
-- Story sequence management with markdown files in campaign folders
-- Character background customization
-- DC suggestion engine
-- Fantasy Grounds Unity combat conversion
-- Character consistency analysis
-- Automatic NPC detection and profile generation
-- Spell highlighting in story narratives
-- RAG system integration with D&D wikis (lore + rules)
-- Custom items registry for homebrew content
-- VSCode workspace integration
-
-## Key Files & Structure
-
-```
-D&D Campaign Workspace/
-├── game_data/               # All user campaign data (git-ignored except examples)
-│   ├── characters/          # Character profile JSON files
-│   │   ├── barbarian.json   # Customizable character backgrounds
-│   │   ├── bard.json       # User writes custom personalities
-│   │   └── ...             # All 12 D&D classes
-│   ├── npcs/               # NPC profile JSON files
-│   ├── items/              # Custom items registry
-│   ├── current_party/      # Party configuration
-│   └── campaigns/          # User campaign folders
-│       └── Your_Campaign/  # Campaign stories and analysis
-│           ├── 001_*.md    # Story sequence files
-│           └── session_results_*.md
-├── src/                    # All source code (Phase 0 complete!)
-│   ├── characters/         # Character management
-│   │   ├── consultants/    # Character consultant system (Phase 1 complete!)
-│   │   │   ├── consultant_core.py         # Main CharacterConsultant class
-│   │   │   ├── consultant_dc.py           # DC calculation component
-│   │   │   ├── consultant_story.py        # Story analysis component
-│   │   │   ├── consultant_ai.py           # AI integration component
-│   │   │   ├── character_profile.py       # CharacterProfile dataclass
-│   │   │   └── class_knowledge.py         # D&D class data (12 classes)
-│   │   ├── character_sheet.py       # Character and NPC data models
-│   │   └── character_consistency.py # Character consistency checking
-│   ├── npcs/              # NPC management
-│   │   ├── npc_agents.py           # NPC AI agents
-│   │   └── npc_auto_detection.py   # Automatic NPC detection
-│   ├── stories/           # Story management
-│   │   ├── story_manager.py            # Core story management
-│   │   ├── enhanced_story_manager.py   # Advanced story features
-│   │   ├── story_analyzer.py           # Story analysis
-│   │   ├── story_file_manager.py       # Story file operations
-│   │   ├── session_results_manager.py  # Session results tracking
-│   │   └── hooks_and_analysis.py       # Story hooks generation
-│   ├── combat/            # Combat system (Phase 2 complete!)
-│   │   ├── combat_narrator.py          # Main combat narrator (92 lines)
-│   │   ├── narrator_ai.py              # AI-enhanced narration component
-│   │   ├── narrator_descriptions.py    # Combat action descriptions
-│   │   └── narrator_consistency.py     # Character consistency checking
-│   ├── items/             # Items and inventory
-│   │   └── item_registry.py        # Custom items registry
-│   ├── dm/                # Dungeon Master tools
-│   │   ├── dungeon_master.py       # DM consultant
-│   │   └── history_check_helper.py # History check helper
-│   ├── validation/        # Data validation
-│   │   ├── character_validator.py  # Character JSON validation
-│   │   ├── npc_validator.py        # NPC JSON validation
-│   │   ├── items_validator.py      # Items JSON validation
-│   │   ├── party_validator.py      # Party config validation
-│   │   └── validate_all.py         # Unified validator
-│   ├── ai/                # AI integration
-│   │   ├── ai_client.py           # AI client interface
-│   │   └── rag_system.py          # RAG system
-│   ├── utils/             # Shared utilities
-│   │   ├── dnd_rules.py            # D&D 5e game rules (DCs, modifiers)
-│   │   ├── file_io.py              # File operations
-│   │   ├── path_utils.py           # Path utilities
-│   │   ├── string_utils.py         # String utilities
-│   │   ├── validation_helpers.py   # Validation helpers
-│   │   ├── text_formatting_utils.py  # Text formatting
-│   │   ├── spell_highlighter.py      # Spell detection
-│   │   └── spell_lookup_helper.py    # Shared D&D spell/ability RAG lookup
-│   └── cli/               # Command-line interface (Phase 2 complete!)
-│       ├── dnd_consultant.py       # Main interactive CLI (110 lines)
-│       ├── cli_character_manager.py # Character management operations
-│       ├── cli_story_manager.py     # Story and series management
-│       ├── cli_consultations.py     # Character consultations and DCs
-│       ├── cli_story_analysis.py    # Story analysis and combat conversion
-│       ├── dnd_cli_helpers.py      # CLI helper functions
-│       ├── party_config_manager.py # Party configuration
-│       └── setup.py                # Workspace initialization
-├── tests/                 # Test suite (git-ignored)
-│   ├── test_character_validator.py
-│   ├── test_npc_validator.py
-│   ├── test_items_validator.py
-│   ├── test_party_validator.py
-│   └── test_all_validators.py
-├── docs/                  # Documentation
-│   ├── JSON_Validation.md
-│   └── Validator_Integration.md
-└── .vscode/
-    ├── tasks.json         # Quick access to consultants
-    └── settings.json      # Markdown preferences
-```
-
-## User Workflow
-
-The user creates story files in format `001_<storyname>.md` and:
-1. Writes pure narrative in story files (dialogue, descriptions, events)
-2. System auto-detects NPCs and suggests profiles in story_hooks_*.md files
-3. Spell names are automatically highlighted when mentioned (e.g., casts **Fireball**)
-4. Character development tracked in separate character_development_*.md files
-5. DC suggestions calculated in separate story_dc_suggestions.md file
-6. Session results (rolls, DCs, outcomes) saved in session_results_*.md files
-7. Fantasy Grounds Unity combat converted to narrative and appended to story
-
-## Character Consultant System
-
-**Architecture (Phase 1 complete!):** Uses composition pattern with specialized components:
-
-- **consultant_core.py** - Main `CharacterConsultant` class that orchestrates components
-  - Handles character loading, core reactions, item management
-  - Delegates to specialized components via composition
-  
-- **consultant_dc.py** - `DCCalculator` component
-  - DC calculations based on action difficulty + character strengths
-  - Alternative approach suggestions
-  - Character advantage detection
-  
-- **consultant_story.py** - `StoryAnalyzer` component
-  - Story consistency checking against character profile
-  - Relationship update suggestions
-  - Character development tracking
-  - Plot action logging
-  
-- **consultant_ai.py** - `AIConsultant` component (optional)
-  - AI-enhanced reaction suggestions
-  - AI-powered DC calculations
-  - Integration with AI client
-  
-- **character_profile.py** - `CharacterProfile` dataclass
-  - 30+ fields (name, class, level, personality, equipment, etc.)
-  - JSON save/load methods
-  
-- **class_knowledge.py** - Static D&D class data
-  - All 12 D&D classes with abilities, reactions, roleplay notes
-
-Each consultant provides:
-- **Class expertise** (spell lists, abilities, tactics)
-- **DC suggestions** based on character strengths
-- **Personality guidance** from custom backgrounds
-- **Consistency checking** against established character traits
-- **Alternative approaches** that fit the character class
-
-## Coding Guidelines
-
-### CRITICAL: No Emojis in Any Code
-
-**NEVER use emojis in any Python files (.py) or Markdown files (.md)**
-- Emojis cause encoding errors on Windows (cp1252 codec)
-- Break code execution even with UTF-8 configuration
+### NO Emojis in Any Code
+**NEVER use emojis in .py or .md files**
+- Causes Windows cp1252 codec failures
+- Breaks execution even with UTF-8 configuration
 - Use ASCII alternatives instead
-- **Rationale:** Windows console uses cp1252 encoding by default, emojis break execution
-- **Applies to:** All .py files, all .md files, all documentation
 
-### CRITICAL: No Pylint Disable Comments
+### 10.00/10 Pylint Score Required
+**NEVER use `# pylint: disable=...`, `# noqa`, or `# pragma` comments**
+- Fix code properly: refactor functions, extract helpers, use decision tables
+- This includes tests
+- Document architectural solutions in `docs/docs_personal/future_rework.md`
+- Upon big code changes also pyltin the folder src and the tests folder and fix every issue
 
-**NEVER use `# pylint: disable=...` , `# noqa ...`or `# pragma ...` comments**
-**NEVER!**
-**Never create a .pylintrc file to cheat this rule**
-**NEVER!**
+### Full Pylint Output (No Pipes)
+Always use: `python pylint <file-or-folder>`
+- Never use pipes, grep, Select-String, or any output filtering
+- Full visibility ensures all issues are addressed
 
-**Instead, properly fix the issue:**
-- **Import outside toplevel:** Move imports to module top level
-- **Too many arguments:** Use builder pattern, config dicts, or dataclasses
-- **Too complex functions:** Extract helper functions or split into smaller methods
-- **Unused variables:** Remove them or prefix with `_` if required by API
-- **Long lines:** Split properly using parentheses and line continuations
-- **Broad exceptions:** Use specific exception types
-- **File too long (>1000 lines):** Split into multiple modules
+## Key Instructions
 
-If you encounter a pylint warning, propose a proper architectural solution and document it in `docs/docs_personal/future_rework.md` for review.
+### Before Starting Any Task
+1. Read the full project structure in `docs/docs_personal/COPILOT_CONTEXT.md`
+2. Verify code matches documentation
+3. Check imports and file relationships
+4. If uncertain about ANY detail, read the entire source folder
 
-### When working with this codebase:
+### When Making Plans
+- Plans must reflect ACTUAL code structure, not assumptions
+- Base decisions on current implementation, not previous versions
+- Base it on the entire source folder
+- Test examples on real party members: Aragorn, Frodo Baggins, Gandalf the Grey
 
-1. **Character Profiles**: All stored as JSON in `game_data/characters/` directory with user-customizable backgrounds
-2. **Story Analysis**: Parse markdown files for CHARACTER/ACTION/REASONING blocks
-3. **DC Calculations**: Base difficulty + character modifiers + context
-4. **Narrative Style**: Character-appropriate descriptions for combat
-5. **VSCode Integration**: Use tasks.json for quick access to consultant features
+### Code Quality Standards
+- **Pylint 10.00/10** - Fix issues by refactoring, not disabling
+- **Decision tables** for multiple conditions (eliminates nested ifs)
+- **Data-driven design** for pattern matching (motivation/goal extraction)
+- **Helper functions** to reduce local variables and complexity
+- **Type hints** throughout all code
 
-## Example Character Profile Structure
+### When Verifying the Project
+If asked to "verify everything" or "check all files":
+- Read EVERY file mentioned in the project structure
+- NO shortcuts, NO assumptions
+- Verify actual code matches documentation
+- Test workflows end-to-end
 
-```json
-{
-  "name": "Character Name",
-  "dnd_class": "fighter",
-  "level": 5,
-  "background_story": "User's custom background...",
-  "personality_summary": "User's personality description...",
-  "motivations": ["list", "of", "motivations"],
-  "fears_weaknesses": ["character", "vulnerabilities"],
-  "relationships": {
-    "Character2": "relationship description"
-  },
-  "equipment": {
-    "weapons": ["Longsword", "Shield"],
-    "armor": "Plate Armor",
-    "magic_items": ["Ring of Protection"]
-  },
-  "known_spells": ["Shield", "Misty Step", "Fireball"]
-}
-```
+## Project Quick Reference
 
-## Story File Format
+**Key Directories:**
+- `game_data/characters/` - Character profiles (JSON)
+- `game_data/campaigns/` - User story campaigns
+- `src/` - All source code
+- `src/stories/` - Story management (personality-aware analysis here)
+- `src/cli/dnd_consultant.py` - Main interactive tool
+- `tests/` - Test suite (git-ignored)
 
-**Primary Story Files (`001_*.md`):**
-```markdown
-# Chapter Title
-
-*Note: Keep lines to max 80 characters for improved readability*
-
-## Scene Title
-
-Write pure narrative story content here. Focus on:
-- Character actions and dialogue
-- Environmental descriptions  
-- Plot developments
-- NPC interactions
-
-Example narrative format:
-Kael strode confidently to the bar where a portly human was cleaning 
-mugs. "Good evening, friend. My companions and I seek rooms for the 
-night, and perhaps a warm meal."
-
-The innkeeper glanced around nervously before leaning closer. "Rooms 
-I've got, but there's been strange happenings lately..."
-```
-
-**Character Development Analysis (separate file `character_development_*.md`):**
-```markdown
-# Character Development: Story Name
-
-## Character Actions & Reasoning
-
-### CHARACTER: [Character Name]
-**ACTION:** [What they attempted]
-**REASONING:** [Why they did it - for consistency]
-**Consistency Check:** [Analysis results]
-**Development Notes:** [Suggestions]
-```
-
-**DC Suggestions (separate file `story_dc_suggestions.md`):**
-- Character-specific DC calculations
-- Action difficulty assessments
-- Alternative approach suggestions
-- Skill check requirements
-
-**Session Results (separate file `session_results_*.md`):**
-- Roll results (dice, DCs, outcomes)
-- Mechanical game data
-- Recruiting pool information
-
-**Story Hooks (separate file `story_hooks_*.md`):**
-- Unresolved plot threads
-- NPC profile suggestions (auto-detected)
-- Future session ideas
-
-## Main Commands
-
-- `python -m src.cli.setup` - One-time workspace initialization (creates VSCode config, verifies folders)
-- `python -m src.cli.dnd_consultant` - **Main interactive tool** for all user workflows:
-  - Create and manage campaigns
-  - Create and edit story files
-  - Manage party configuration
-  - Get character consultations and DC suggestions
-  - Convert combat logs to narratives
-- VS Code tasks for quick access via Ctrl+Shift+P
-
-## JSON Validation System
-
-The system includes comprehensive JSON validation for all game data:
-
-**Validators:**
-- `character_validator.py` - Validates character profiles (12 files validated)
-- `npc_validator.py` - Validates NPC profiles
-- `items_validator.py` - Validates custom items registry
-- `party_validator.py` - Validates party configuration (with character cross-reference)
-- `validate_all.py` - Unified validator for all game data at once
-
-**Usage:**
+**Core Commands:**
 ```bash
-# Validate specific data type
-python -m src.validation.character_validator
-python -m src.validation.npc_validator
-python -m src.validation.items_validator
-python -m src.validation.party_validator
-
-# Validate all game data
-python -m src.validation.validate_all
-
-# Validate specific types with verbose output
-python -m src.validation.validate_all --characters --verbose
-python -m src.validation.validate_all --npcs
-python -m src.validation.validate_all --items
-python -m src.validation.validate_all --party
-
-# Run validation tests
-python tests/test_character_validator.py
-python tests/test_npc_validator.py
-python tests/test_items_validator.py
-python tests/test_party_validator.py
-python tests/test_all_validators.py  # Comprehensive test including consistency checks
+python dnd_consultant.py                    # Main interactive CLI
+python tests/run_all_tests.py               # Run all tests
+python tests/run_all_tests.py validation    # Run 1 test suite
+python tests/run_all_tests.py ai characters # Run multiple test suites
 ```
-
-**Features:**
-- Early error detection before runtime issues
-- Clear, specific error messages with field names
-- Type checking for all required fields
-- Cross-reference validation (party members vs character files)
-- Data consistency checking across all game files
-- Comprehensive test suites with edge case coverage
-
-**Integration:**
-- **Automatic validation on save** - All JSON file creation/saving includes validation
-  - `CharacterProfile.save_to_file()` - character validation
-  - `EnhancedStoryManager.save_npc_profile()` - NPC validation
-  - `StoryAnalyzer.save_npc_template()` - NPC validation
-  - `save_current_party()` - party validation
-  - `ItemRegistry.save_registry()` - items validation
-- **Automatic validation on load** - Character loading validates in story managers
-- **Standalone validators** - Can be run manually or in CI/CD
-- **Fail-soft approach** - Warnings displayed but saves continue (prevents data loss)
-- See `docs/JSON_Validation.md` and `docs/Validator_Integration.md` for details
-
-## Technical Notes
-
-- **No external dependencies** - uses only Python standard library
-- **Type hints throughout** for better code clarity
-- **JSON-based storage** for easy character customization
-- **JSON validation** ensures data integrity across all game files
-- **Markdown integration** with VSCode workflow
-- **Modular design** for easy extension
-
-## User Customization Areas
-
-Users should customize:
-1. **Character backgrounds** in JSON files
-2. **Personality traits** and motivations
-3. **Character relationships** with each other
-4. **Story hooks** and character arcs
-
-## Spell Highlighting System
-
-The spell highlighter automatically detects and formats spell names in story text:
-
-**Detection Patterns:**
-- Context words: casts, channels, invokes, summons, conjures, unleashes, weaves, etc.
-- Spell names: 1-3 capitalized words following context words
-- Smart boundaries: Stops at prepositions, punctuation, articles
-- Known spells: Extracted from character profiles' `known_spells` field
-
-**Usage:**
-```python
-from spell_highlighter import highlight_spells_in_text, extract_known_spells_from_characters
-
-# Extract known spells from all characters
-characters = load_character_data()
-known_spells = extract_known_spells_from_characters(characters)
-
-# Highlight spells in text
-text = "Gandalf casts Fireball at the approaching orcs."
-highlighted = highlight_spells_in_text(text, known_spells)
-# Result: "Gandalf casts **Fireball** at the approaching orcs."
-```
-
-**Integration:**
-- `enhanced_story_manager.py` automatically applies spell highlighting to story narratives
-- Uses `apply_spell_highlighting()` method for public API access
-- Known spells updated when characters are loaded
 
 ## Testing Practices
 
-**Test Directory:**
-- All development tests are stored in `tests/` folder
-- Tests are **git-ignored** and should not be committed
-- Tests will remain local until test framework is formalized (see TODO.md)
+- **Standard:** 10.00/10 pylint score, public APIs only
+- **Helpers:** Reusable patterns in `tests/test_helpers.py`
+- **Examples:** Use real characters (Aragorn, Frodo, Gandalf) not placeholders
+- **Running tests:**  When running tests always use the test suite read tests\README.md
+                      on how to run this.
+- **New tests:** Add the test to the test_all_<suitename>.py before checking if ther test works
 
-**Code Quality Standards:**
-- **Maintain 10.00/10 pylint score** for all test files
-- **No pylint disable comments** - fix issues properly instead:
-  - Duplicate code: Extract to helper functions
-  - Protected access: Test public APIs only
-  - Too many arguments: Use config dicts or dataclasses
-  - Import organization: Place at module top-level
-- **No code duplication** in tests - use `tests/test_helpers.py` for:
-  - `run_test_suite(test_suite_name, test_functions)` - Execute test suites with consistent output
-  - `assert_system_prompt_contains(mock_ai, *keywords)` - Verify AI system prompts
-  - `FakeAIClient` - Mock AI client for isolated testing
-  - Custom assertions and fixtures
+## Documentation
 
-**Creating Tests:**
-- Name tests descriptively: `test_<feature>_<scenario>.py`
-- Test PUBLIC APIs only (not protected/private methods)
-- Extract common patterns to `test_helpers.py` to avoid duplication
-- Include verification of actual behavior, not just programmatic tests
-- Clean up test data (campaigns, files) after test runs
-- Document test purpose and expected outcomes
+- `docs/docs_personal/COPILOT_CONTEXT.md` - Detailed architecture & implementation
+- `docs/docs_personal/future_rework.md` - Technical improvements needed
 
-**Test Types:**
-- Unit tests: Single component functionality
-- Integration tests: Multiple components working together
-- Workflow tests: End-to-end user workflows (story creation, AI continuation)
-- Manual tests: Quick validation scripts for development
+## Commit Guidelines
 
-## Commit Message Standards
+**Format:** Brief summary (50 chars max), optional detail below
 
-Follow these guidelines for all commits:
-
-**Format:**
-```
-Brief summary of changes (50 chars or less)
-
-Optional detailed explanation if needed:
-- Bullet points for multiple changes
-- Keep focused on what and why, not how
-```
+**Examples:**
+- "Refactor character_action_analyzer with decision tables for 10.00/10 pylint"
+- "Add personality-aware reasoning to character development analysis"
+- "Fix gitignore pattern for campaign files"
 
 **Rules:**
-- Keep summary line concise (50 characters max)
-- Use imperative mood: "Add feature" not "Added feature"
+- Use imperative mood: "Add" not "Added"
 - No emojis or decorative characters
 - Professional tone
-- Group related changes in single commit
-- Reference issue numbers if applicable
+- Group related changes
 
-**CRITICAL: Do NOT commit code automatically.**
+## Common Patterns
 
-## Pylint Command Usage Instruction
+### Fixing Too-Many-Return-Statements
+Use decision tables instead of nested ifs:
+```python
+patterns = [
+    (trigger_words, trait_key, with_trait_msg, fallback_msg),
+]
+for words, key, with_msg, fallback in patterns:
+    if any(word in text for word in words):
+        if traits.get(key):
+            return f"{with_msg}: {traits[key]}"
+        return fallback
+return default_msg
+```
 
-**CRITICAL: Never use pipes or output-shortening commands with pylint checks.**
+### Personality-Aware Analysis
+Extract traits from character JSON profiles:
+```python
+traits = profiles.get(character_name, {})
+# traits contains: personality_summary, background_story, motivations, 
+# fears_weaknesses, goals, relationships, secrets
+```
 
-- When checking pylint, always use the full command:
-  `python -m pylint <file-or-folder>`
-- Do NOT use pipes (`|`), Select-String, grep, head, tail, or any output-shortening or filtering commands.
-- Do NOT attempt to shorten, filter, or post-process pylint output in any way.
-- Always show the full pylint output as produced by the command above.
-- Rationale: Ensures full visibility of all warnings, errors, and code quality issues for review.
+### Character Profile Structure
+```json
+{
+  "name": "Aragorn",
+  "dnd_class": "ranger",
+  "level": 5,
+  "personality_summary": "Determined ranger seeking to reclaim his throne",
+  "motivations": ["Reclaim his throne", "Protect the realm"],
+  "fears_weaknesses": ["Failure to save those he cares for"],
+  "goals": ["Unite the kingdom", "Defeat the darkness"],
+  "relationships": {"Frodo Baggins": "Loyal protector"},
+  "background_story": "Ranger of the North..."
+}
+```
 
-**Examples:**
-- Good: `python -m pylint src/`  
-- Bad: `python -m pylint src/ | grep "Your code"`  
-- Bad: `python -m pylint src/ | Select-String "Your code"`  
-- Bad: `python -m pylint src/ | head -10`
-
-**This rule applies to all Copilot, agent, and automated workflows.**
-
-**Examples:**
--  Good: "Reorganize user data into game_data folder and add spell highlighting"
--  Bad: " Added spell highlighting  and reorganized stuff "
--  Good: "Fix gitignore pattern for campaign files"
--  Bad: "Fixed the .gitignore because campaign files were showing up in git status which was annoying"
-
-## Common Tasks
-
-When assisting with this project:
-- Help customize character profiles with rich backgrounds
-- Assist with story analysis and consistency checking
-- Support VSCode task configuration
-- Guide DC balancing for character abilities
-
-This system enhances user creativity rather than replacing it - the user maintains full control while getting expert character consultation.
+**This file is intentionally lean. For detailed information, see `docs/docs_personal/COPILOT_CONTEXT.md`**
