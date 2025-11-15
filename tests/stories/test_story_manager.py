@@ -134,6 +134,47 @@ def test_analyze_nonexistent_and_existing_file():
     print("[PASS] Analyze Story File")
 
 
+def test_get_story_files_in_series_uses_correct_path():
+    """Regression test: get_story_files_in_series must use stories_path attribute."""
+    print("\n[TEST] get_story_files_in_series Path Resolution")
+
+    workspace_path = os.path.join(
+        os.path.dirname(__file__),
+        "..",
+        ".."
+    )
+
+    manager = StoryManager(workspace_path)
+
+    # Verify stories_path attribute exists and is set correctly
+    assert hasattr(manager, 'stories_path'), "StoryManager must have stories_path attribute"
+    assert manager.stories_path == workspace_path, \
+        f"stories_path should be {workspace_path}, got {manager.stories_path}"
+
+    series_name = "TestSeriesPath_Quest"
+    series_path = os.path.join(workspace_path, "game_data", "campaigns", series_name)
+
+    # Clean up if exists
+    if os.path.exists(series_path):
+        shutil.rmtree(series_path)
+
+    try:
+        # Create series
+        manager.create_new_story_series(series_name, "PathTest", "Test path resolution")
+
+        # Get files - should work correctly with stories_path
+        files = manager.get_story_files_in_series(series_name)
+        assert isinstance(files, list), "get_story_files_in_series should return list"
+        assert len(files) > 0, f"Series should have files, got {files}"
+        assert any(f.endswith('.md') for f in files), f"Files should be markdown, got {files}"
+
+    finally:
+        if os.path.exists(series_path):
+            shutil.rmtree(series_path)
+
+    print("[PASS] get_story_files_in_series Path Resolution")
+
+
 def run_all_tests():
     """Run all StoryManager tests."""
     test_story_manager_initialization()
@@ -141,6 +182,7 @@ def run_all_tests():
     test_create_new_story_series_and_add_story()
     test_create_story_in_nonexistent_series_raises()
     test_analyze_nonexistent_and_existing_file()
+    test_get_story_files_in_series_uses_correct_path()
 
 
 if __name__ == "__main__":

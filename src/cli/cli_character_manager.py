@@ -1,27 +1,32 @@
-"""
-Character Management CLI Module
+"""Character Management CLI Module
 
 Handles all character-related menu interactions and operations.
 """
 
 from src.characters.consultants.character_profile import CharacterProfile
 from src.cli.dnd_cli_helpers import edit_character_profile_interactive
+from src.cli.cli_consultations import ConsultationsCLI
 from src.utils.cli_utils import select_character_from_list
 
 
 class CharacterCLIManager:
     """Manages character-related CLI operations."""
 
-    def __init__(self, story_manager, combat_narrator):
+    def __init__(self, story_manager, combat_narrator, dm_consultant=None):
         """
         Initialize character CLI manager.
 
         Args:
             story_manager: StoryManager instance
             combat_narrator: CombatNarrator instance
+            dm_consultant: DMConsultant instance for consultations
         """
         self.story_manager = story_manager
         self.combat_narrator = combat_narrator
+        self.dm_consultant = dm_consultant
+        self.consultations = None
+        if story_manager:
+            self.consultations = ConsultationsCLI(story_manager, dm_consultant)
 
     def manage_characters(self):
         """Character management submenu."""
@@ -31,6 +36,7 @@ class CharacterCLIManager:
             print("1. List Characters")
             print("2. Edit Character Profile")
             print("3. View Character Details")
+            print("4. Get Character Consultation")
             print("0. Back to Main Menu")
 
             choice = input("Enter your choice: ").strip()
@@ -41,6 +47,8 @@ class CharacterCLIManager:
                 self.edit_character()
             elif choice == "3":
                 self.view_character_details()
+            elif choice == "4":
+                self._get_character_consultation()
             elif choice == "0":
                 break
             else:
@@ -145,3 +153,10 @@ class CharacterCLIManager:
             print(f"\nDecision Making Style: {profile.behavior.decision_making_style}")
 
         input("\nPress Enter to continue...")
+
+    def _get_character_consultation(self):
+        """Get character consultation from the consultations CLI."""
+        if not self.consultations:
+            print("[ERROR] Consultations not available.")
+            return
+        self.consultations.get_character_consultation()

@@ -29,7 +29,7 @@ class ConsultationsCLI:
             print("\n[ERROR] No characters found.")
             return
 
-        print("\n🤔 CHARACTER CONSULTATION")
+        print("\n CHARACTER CONSULTATION")
         print("-" * 30)
         print("Select a character:")
 
@@ -203,7 +203,7 @@ class ConsultationsCLI:
 
         # NPC insights
         if suggestions["npc_insights"]:
-            print("\n🗣️ NPC INSIGHTS:")
+            print("\n NPC INSIGHTS:")
             for npc_name, insight in suggestions["npc_insights"].items():
                 print(f"\n  {npc_name}:")
                 print(f"    Personality: {insight['personality']}")

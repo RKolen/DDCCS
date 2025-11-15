@@ -44,22 +44,27 @@ from src.cli.dnd_cli_helpers import (
     get_continuation_prompt,
     get_combat_narrative_style,
 )
+from src.cli.cli_story_analysis import StoryAnalysisCLI
+from src.cli.cli_consultations import ConsultationsCLI
 
 
 class StoryCLIManager:
     """Manages story-related CLI operations."""
 
-    def __init__(self, story_manager, workspace_path):
+    def __init__(self, story_manager, workspace_path, dm_consultant=None):
         """
         Initialize story CLI manager.
 
         Args:
             story_manager: StoryManager instance
             workspace_path: Root workspace path
+            dm_consultant: Optional DMConsultant instance for analysis/consultations
         """
         self.story_manager = story_manager
         self.workspace_path = workspace_path
         self.story_updater = StoryUpdater()
+        self.analysis_cli = StoryAnalysisCLI(story_manager, workspace_path)
+        self.consultations_cli = ConsultationsCLI(story_manager, dm_consultant)
 
     def get_series_count(self) -> int:
         """Public helper: return number of story series available.
@@ -222,22 +227,74 @@ class StoryCLIManager:
             print("2. View Story Details")
             print("3. Generate Session Results")
             print("4. Generate Character Development")
+            print("5. Analyze Story File")
+            print("6. Convert Combat to Narrative")
+            print("7. Get DC Suggestions")
+            print("8. Get DM Narrative Suggestions")
             print("0. Back")
 
             choice = input("Enter your choice: ").strip()
-
-            if choice == "1":
-                self._create_story_in_series(series_name)
-            elif choice == "2" and series_stories:
-                self._view_story_details_in_series(series_name, series_stories)
-            elif choice == "3" and series_stories:
-                self._generate_session_results_for_story(series_name, series_stories)
-            elif choice == "4" and series_stories:
-                self._generate_character_development_for_story(series_name, series_stories)
-            elif choice == "0":
+            if choice == "0":
                 break
-            else:
-                print("Invalid choice.")
+            self._dispatch_series_choice(choice, series_name, series_stories)
+
+    def _dispatch_series_choice(self, choice: str, series_name: str, series_stories: List[str]):
+        """Dispatch series management menu choice to appropriate handler.
+
+        Uses decision table to avoid branch complexity.
+
+        Args:
+            choice: User menu choice
+            series_name: Selected series name
+            series_stories: List of story files in series
+        """
+        # Decision table: (choice, requires_stories, method_name)
+        story_operations = [
+            ("1", False, "_create_story_in_series"),
+            ("2", True, "_view_story_details_in_series"),
+            ("3", True, "_generate_session_results_for_story"),
+            ("4", True, "_generate_character_development_for_story"),
+            ("5", False, "_analyze_story_cli"),
+            ("6", False, "_convert_combat_cli"),
+            ("7", False, "_get_dc_suggestions_cli"),
+            ("8", False, "_get_dm_narrative_cli"),
+        ]
+
+        for op_choice, requires_stories, method_name in story_operations:
+            if choice == op_choice:
+                if requires_stories and not series_stories:
+                    print("No stories in this series to perform this action.")
+                    return
+                self._execute_series_operation(method_name, series_name, series_stories)
+                return
+
+        print("Invalid choice.")
+
+    def _execute_series_operation(self, method_name: str, series_name: str,
+                                   series_stories: List[str]):
+        """Execute specified series operation.
+
+        Args:
+            method_name: Name of the operation method
+            series_name: Selected series name
+            series_stories: List of story files in series
+        """
+        if method_name == "_create_story_in_series":
+            self._create_story_in_series(series_name)
+        elif method_name == "_view_story_details_in_series":
+            self._view_story_details_in_series(series_name, series_stories)
+        elif method_name == "_generate_session_results_for_story":
+            self._generate_session_results_for_story(series_name, series_stories)
+        elif method_name == "_generate_character_development_for_story":
+            self._generate_character_development_for_story(series_name, series_stories)
+        elif method_name == "_analyze_story_cli":
+            self.analysis_cli.analyze_story(series_name)
+        elif method_name == "_convert_combat_cli":
+            self.analysis_cli.convert_combat()
+        elif method_name == "_get_dc_suggestions_cli":
+            self.consultations_cli.get_dc_suggestions()
+        elif method_name == "_get_dm_narrative_cli":
+            self.consultations_cli.get_dm_narrative_suggestions()
 
     def _orchestrate_story_creation(
         self, story_path: str, series_path: str, party_names: List[str]

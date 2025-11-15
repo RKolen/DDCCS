@@ -6,6 +6,7 @@ Handles story analysis and combat conversion operations.
 
 import os
 from typing import Dict, Any
+from datetime import datetime
 
 # Optional AI client import
 try:
@@ -22,6 +23,8 @@ from src.cli.dnd_cli_helpers import (
     select_target_story_for_combat,
     save_combat_narrative,
 )
+from src.utils.path_utils import get_campaign_path
+from src.utils.file_io import write_text_file
 
 
 class StoryAnalysisCLI:
@@ -40,9 +43,18 @@ class StoryAnalysisCLI:
         self.ai_client = None
         self.combat_narrator = CombatNarrator(story_manager.consultants)
 
-    def analyze_story(self):
-        """Analyze a story file."""
-        story_files = self.story_manager.get_story_files()
+    def analyze_story(self, series_name: str = None):
+        """Analyze a story file.
+
+        Args:
+            series_name: Optional series name to analyze stories within that series
+        """
+        if series_name:
+            story_files = self.story_manager.get_story_files_in_series(series_name)
+            base_path = get_campaign_path(series_name, self.workspace_path)
+        else:
+            story_files = self.story_manager.get_story_files()
+            base_path = self.story_manager.stories_path
 
         if not story_files:
             print("\n[ERROR] No story files found.")
@@ -57,7 +69,7 @@ class StoryAnalysisCLI:
             choice = int(input("Enter file number: ")) - 1
             if 0 <= choice < len(story_files):
                 filename = story_files[choice]
-                filepath = os.path.join(self.story_manager.stories_path, filename)
+                filepath = os.path.join(base_path, filename)
 
                 print(f"\n Analyzing {filename}...")
                 analysis = self.story_manager.analyze_story_file(filepath)
@@ -68,16 +80,107 @@ class StoryAnalysisCLI:
 
                 self._display_story_analysis(analysis)
 
-                # Ask if they want to update the file
-                update = (
-                    input("\nUpdate story file with analysis? (y/n): ").strip().lower()
-                )
-                if update == "y":
-                    self.story_manager.update_story_with_analysis(filepath, analysis)
+                # Save to session results file instead of updating story
+                save = input("\nSave analysis to session results file? (y/n): ").strip().lower()
+                if save == "y":
+                    self.save_analysis_to_session_results(analysis, base_path, filename)
             else:
                 print("Invalid file number.")
         except ValueError:
             print("Invalid input.")
+
+    def save_analysis_to_session_results(self, analysis: Dict[str, Any],
+                                          series_path: str, story_filename: str) -> None:
+        """Save analysis results to a session results file.
+
+        Creates or appends to session_results_YYYY-MM-DD_storyname.md file.
+
+        Args:
+            analysis: Analysis results dictionary
+            series_path: Path to the series directory
+            story_filename: Name of the analyzed story file
+        """
+        # Extract story name from filename (remove extension and numbering)
+        story_slug = os.path.splitext(story_filename)[0]
+        if '_' in story_slug:
+            story_slug = story_slug.split('_', 1)[1]
+        story_slug = story_slug.replace(' ', '_').lower()
+
+        today = datetime.now().strftime('%Y-%m-%d')
+        session_filename = f"session_results_{today}_{story_slug}.md"
+        session_filepath = os.path.join(series_path, session_filename)
+
+        # Build analysis content
+        analysis_content = self.format_analysis_for_session(analysis, story_filename)
+
+        # Check if file exists
+        if os.path.exists(session_filepath):
+            # Append to existing file
+            with open(session_filepath, "r", encoding="utf-8") as f:
+                existing = f.read()
+            content = existing + "\n" + analysis_content
+            print(f"[SUCCESS] Appended analysis to: {session_filename}")
+        else:
+            # Create new file
+            header = f"# Session Results: {story_slug}\n**Date:** {today}\n\n"
+            content = header + analysis_content
+            print(f"[SUCCESS] Created session results file: {session_filename}")
+
+        write_text_file(session_filepath, content)
+
+    def format_analysis_for_session(self, analysis: Dict[str, Any],
+                                     story_filename: str) -> str:
+        """Format analysis results as markdown for session results file.
+
+        Args:
+            analysis: Analysis results dictionary
+            story_filename: Name of the analyzed story
+
+        Returns:
+            Formatted markdown content
+        """
+        lines = []
+        lines.append(f"## Analysis: {story_filename}")
+        lines.append(f"**Time:** {datetime.now().strftime('%H:%M:%S')}")
+        lines.append("")
+
+        # Overall consistency
+        overall = analysis.get("overall_consistency", {})
+        lines.append("### Overall Consistency")
+        lines.append(f"- **Rating:** {overall.get('rating', 'Unknown')}")
+        lines.append(f"- **Score:** {overall.get('score', 0)}/1.0")
+        lines.append(f"- **Summary:** {overall.get('summary', 'No analysis')}")
+        lines.append("")
+
+        # Character analyses
+        if analysis.get("consultant_analyses"):
+            lines.append("### Character Analyses")
+            for character, char_analysis in analysis["consultant_analyses"].items():
+                lines.append(f"\n**{character}**")
+                lines.append(f"- **Rating:** {char_analysis.get('overall_rating', 'Unknown')}")
+                lines.append(f"- **Score:** {char_analysis.get('consistency_score', 0)}/1.0")
+
+                if char_analysis.get("positive_notes"):
+                    lines.append(f"- **Positives:** {len(char_analysis['positive_notes'])} noted")
+
+                if char_analysis.get("issues"):
+                    lines.append(f"- **Issues:** {len(char_analysis['issues'])} noted")
+                    for issue in char_analysis["issues"][:2]:
+                        lines.append(f"  - {issue}")
+            lines.append("")
+
+        # DC suggestions
+        if analysis.get("dc_suggestions"):
+            lines.append("### DC Suggestions")
+            for request, suggestions in analysis["dc_suggestions"].items():
+                lines.append(f"\n**{request}**")
+                for character, suggestion in suggestions.items():
+                    dc_value = suggestion.get('suggested_dc', 'Unknown')
+                    reasoning = suggestion.get('reasoning', 'No reasoning provided')
+                    lines.append(f"  - {character}: DC {dc_value} ({reasoning})")
+            lines.append("")
+
+        return "\n".join(lines)
 
     def _display_story_analysis(self, analysis: Dict[str, Any]):
         """Display story analysis results."""

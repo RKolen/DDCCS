@@ -39,6 +39,36 @@ class _FakeManagerWithConsultants:
         """Return an empty list of series for callers that expect it."""
         return []
 
+    def get_story_files_in_series(self, series_name):
+        """Return story files for a specific series."""
+        _ = series_name
+        return []
+
+
+class _FakeManagerWithSeriesStories:
+    """StoryManager fake that returns stories within a series."""
+
+    def __init__(self):
+        self.consultants = {}
+        self.stories_path = "/root"
+        self.series_stories = {"Example_Campaign": ["001_start.md", "002_continue.md"]}
+
+    def get_story_files(self):
+        """Return root-level story files."""
+        return []
+
+    def get_story_files_in_series(self, series_name):
+        """Return stories in specified series."""
+        return self.series_stories.get(series_name, [])
+
+    def analyze_story_file(self, filepath):
+        """Return a fake analysis for any story file."""
+        return {
+            "story_file": filepath,
+            "overall_consistency": {"rating": "GOOD", "score": 0.85, "summary": "Test"},
+            "consultant_analyses": {},
+        }
+
 
 def test_analyze_story_no_files():
     """When no story files exist, analyze_story should return early without error."""
@@ -47,6 +77,145 @@ def test_analyze_story_no_files():
 
     # Should run without raising and return None
     assert cli.analyze_story() is None
+
+
+def test_analyze_story_with_series_context(monkeypatch, tmp_path):
+    """analyze_story with series_name should use get_story_files_in_series."""
+    fake_manager = _FakeManagerWithSeriesStories()
+    cli = StoryAnalysisCLI(fake_manager, str(tmp_path))
+
+    # Track calls to ensure series-specific method is used
+    calls = {"get_story_files_in_series": 0}
+
+    original_method = fake_manager.get_story_files_in_series
+
+    def tracked_get_story_files_in_series(series_name):
+        calls["get_story_files_in_series"] += 1
+        return original_method(series_name)
+
+    monkeypatch.setattr(
+        fake_manager, "get_story_files_in_series", tracked_get_story_files_in_series
+    )
+
+    # Mock input to exit early without selecting a file
+    monkeypatch.setattr("builtins.input", lambda prompt: "invalid")
+
+    cli.analyze_story(series_name="Example_Campaign")
+
+    # Verify series-specific method was called
+    assert calls["get_story_files_in_series"] == 1
+
+
+def test_analyze_story_without_series_context(monkeypatch):
+    """analyze_story without series_name should use get_story_files."""
+    fake_manager = _FakeManagerWithConsultants()
+    cli = StoryAnalysisCLI(fake_manager, workspace_path=None)
+
+    # Track calls
+    calls = {"get_story_files": 0}
+
+    original_method = fake_manager.get_story_files
+
+    def tracked_get_story_files():
+        calls["get_story_files"] += 1
+        return original_method()
+
+    monkeypatch.setattr(fake_manager, "get_story_files", tracked_get_story_files)
+
+    cli.analyze_story()
+
+    # Verify root-level method was called
+    assert calls["get_story_files"] == 1
+
+
+def test_analyze_story_series_context_uses_campaign_path(monkeypatch, tmp_path):
+    """analyze_story with series should construct path using get_campaign_path."""
+    fake_manager = _FakeManagerWithSeriesStories()
+    cli = StoryAnalysisCLI(fake_manager, str(tmp_path))
+
+    # Mock to track the filepath passed to analyze_story_file
+    analyzed_paths = []
+
+    def fake_analyze(filepath):
+        analyzed_paths.append(filepath)
+        return {
+            "story_file": filepath,
+            "overall_consistency": {"rating": "OK", "score": 0.5, "summary": "Test"},
+            "consultant_analyses": {},
+        }
+
+    monkeypatch.setattr(fake_manager, "analyze_story_file", fake_analyze)
+    monkeypatch.setattr("builtins.input", lambda prompt: "1")
+    monkeypatch.setattr("builtins.print", lambda *args, **kwargs: None)
+
+    cli.analyze_story(series_name="Example_Campaign")
+
+    # Verify path includes game_data/campaigns structure (from get_campaign_path)
+    assert len(analyzed_paths) == 1
+    assert "game_data" in analyzed_paths[0] or "campaigns" in analyzed_paths[0]
+
+
+def test_save_analysis_to_session_results_creates_file(tmp_path):
+    """save_analysis_to_session_results should create session results file."""
+    fake_manager = _FakeManagerWithSeriesStories()
+    cli = StoryAnalysisCLI(fake_manager, str(tmp_path))
+
+    # Create a test series directory
+    series_path = tmp_path / "game_data" / "campaigns" / "TestSeries"
+    series_path.mkdir(parents=True, exist_ok=True)
+
+    analysis = {
+        "story_file": "test.md",
+        "overall_consistency": {"rating": "GOOD", "score": 0.8, "summary": "Test analysis"},
+        "consultant_analyses": {"Aragorn": {"overall_rating": "GOOD", "consistency_score": 0.8}},
+        "dc_suggestions": {},
+    }
+
+    cli.save_analysis_to_session_results(analysis, str(series_path), "001_test.md")
+
+    # Verify session results file was created
+    session_files = list(series_path.glob("session_results_*.md"))
+    assert len(session_files) > 0, "Session results file should be created"
+    assert any("test" in f.name.lower() for f in session_files), \
+        "Session file should include story name"
+
+
+def test_save_analysis_appends_to_existing_session_file(tmp_path):
+    """save_analysis_to_session_results should append to existing file on same day."""
+    fake_manager = _FakeManagerWithSeriesStories()
+    cli = StoryAnalysisCLI(fake_manager, str(tmp_path))
+
+    series_path = tmp_path / "game_data" / "campaigns" / "TestSeries"
+    series_path.mkdir(parents=True, exist_ok=True)
+
+    analysis1 = {
+        "story_file": "test.md",
+        "overall_consistency": {"rating": "GOOD", "score": 0.8, "summary": "First"},
+        "consultant_analyses": {},
+        "dc_suggestions": {},
+    }
+
+    analysis2 = {
+        "story_file": "test.md",
+        "overall_consistency": {"rating": "OK", "score": 0.6, "summary": "Second"},
+        "consultant_analyses": {},
+        "dc_suggestions": {},
+    }
+
+    # Save first analysis
+    cli.save_analysis_to_session_results(analysis1, str(series_path), "001_test.md")
+
+    # Save second analysis to same file
+    cli.save_analysis_to_session_results(analysis2, str(series_path), "001_test.md")
+
+    # Verify only one file exists
+    session_files = list(series_path.glob("session_results_*.md"))
+    assert len(session_files) == 1, "Should have single session results file"
+
+    # Verify both analyses are in the file
+    content = session_files[0].read_text(encoding="utf-8")
+    assert "First" in content, "First analysis should be present"
+    assert "Second" in content, "Second analysis should be present"
 
 
 def test_convert_combat_uses_combat_narrator(monkeypatch, tmp_path):

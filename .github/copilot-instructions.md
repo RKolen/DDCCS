@@ -15,12 +15,19 @@
 - Fix code properly: refactor functions, extract helpers, use decision tables
 - This includes tests
 - Document architectural solutions in `docs/docs_personal/future_rework.md`
-- Upon big code changes also pyltin the folder src and the tests folder and fix every issue
+- Upon big code changes also pyltin the folder src/ and the tests/ folder and fix every issue,
+  so the commands to use are pylint src/ and pylint tests/ the entire sturcture must be correct
+  this way duplicate code can be filtered out and fixed
+
 
 ### Full Pylint Output (No Pipes)
-Always use: `python pylint <file-or-folder>`
+Always use: `python -m pylint <file-or-folder>`
 - Never use pipes, grep, Select-String, or any output filtering
 - Full visibility ensures all issues are addressed
+- **FOR BIG CODE CHANGES:** Pylint BOTH `src/` AND `tests/` folders completely
+  - Correct: `python -m pylint src/` then `python -m pylint tests/`
+  - Incorrect: `python -m pylint src/cli/` (too narrow, misses duplicate code)
+  - Always check the ENTIRE structure, not just changed module
 
 ## Key Instructions
 

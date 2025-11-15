@@ -10,8 +10,6 @@ from src.stories.story_manager import StoryManager
 from src.dm.dungeon_master import DMConsultant
 from src.cli.cli_character_manager import CharacterCLIManager
 from src.cli.cli_story_manager import StoryCLIManager
-from src.cli.cli_consultations import ConsultationsCLI
-from src.cli.cli_story_analysis import StoryAnalysisCLI
 from src.ai.availability import AI_AVAILABLE
 from src.ai.ai_client import AIClient
 
@@ -45,12 +43,10 @@ class DDConsultantCLI:
 
         # Initialize manager modules
         self.character_manager = CharacterCLIManager(
-            self.story_manager, None  # combat_narrator passed separately
+            self.story_manager, None, self.dm_consultant
         )
-        self.story_cli = StoryCLIManager(self.story_manager, self.workspace_path)
-        self.consultations = ConsultationsCLI(self.story_manager, self.dm_consultant)
-        self.story_analysis = StoryAnalysisCLI(
-            self.story_manager, self.workspace_path
+        self.story_cli = StoryCLIManager(
+            self.story_manager, self.workspace_path, self.dm_consultant
         )
 
     def run_interactive(self):
@@ -69,16 +65,6 @@ class DDConsultantCLI:
                 self.character_manager.manage_characters()
             elif choice == "2":
                 self.story_cli.manage_stories()
-            elif choice == "3":
-                self.consultations.get_character_consultation()
-            elif choice == "4":
-                self.story_analysis.analyze_story()
-            elif choice == "5":
-                self.story_analysis.convert_combat()
-            elif choice == "6":
-                self.consultations.get_dc_suggestions()
-            elif choice == "7":
-                self.consultations.get_dm_narrative_suggestions()
             elif choice == "0":
                 print("Goodbye! May your adventures be epic!")
                 break
@@ -96,7 +82,7 @@ class DDConsultantCLI:
         if command == "analyze":
             if story_file:
                 print(f"Analyzing story file: {story_file}")
-            self.story_analysis.analyze_story()
+            self.story_cli.analysis_cli.analyze_story()
         else:
             print(f"Unknown command: {command}")
 
@@ -106,11 +92,6 @@ class DDConsultantCLI:
         print("-" * 30)
         print("1. Manage Characters")
         print("2. Manage Stories")
-        print("3. Get Character Consultation")
-        print("4. Analyze Story File")
-        print("5. Convert Combat Summary")
-        print("6. Get DC Suggestions")
-        print("7. Get DM Narrative Suggestions")
         print("0. Exit")
         print()
 

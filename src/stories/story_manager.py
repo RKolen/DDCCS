@@ -33,6 +33,7 @@ class StoryManager:
         """
         self.workspace_path = workspace_path
         self.ai_client = ai_client
+        self.stories_path = workspace_path
 
         # Initialize context for story file operations
         self.story_context = StoryFileContext(
@@ -141,7 +142,7 @@ class StoryManager:
         Returns:
             Sorted list of story filenames in the series
         """
-        return get_story_files_in_series(self.workspace_path, series_name)
+        return get_story_files_in_series(self.stories_path, series_name)
 
     def get_story_files(self) -> List[str]:
         """
