@@ -20,6 +20,8 @@
 - [ ] **Multi-class support** - Enhance character profiles to support multiclassing
 - [ ] **Current Party Alterations** - Consider current party to be part of campaign files instead
 - [ ] **Profile Verification** - Check if JSON templates need to be updated for profile updates and consistency usage
+- [ ] **Character Names** - Split names into first and last names for characters and npcs
+- [ ] **Pronouns** - Add pronouns to character files
 - [ ] **Update Readmes** - Update Readmes with new structure and use the example characters in examples.
 
 ### Feature Enhancements
@@ -31,6 +33,8 @@
 ### Story Tools
 - [ ] **Story timeline tracking** - Track chronological order of events across campaigns
 - [ ] **Combat narrative templates** - Pre-built templates for different combat scenarios
+- [ ] **Spellhighlighter improvements** - The highlighter triggers on specific words not actual abilities and spells
+- [ ] **Language fixes** - filter language to only include the prompts language
 
 ### Technical Improvements
 - [ ] **Configuration system** - Centralized config file for system settings
@@ -332,5 +336,5 @@
 
 ---
 
-**Last Updated:** November 8, 2025
+**Last Updated:** November 23, 2025
 **Priority Legend:**  High |  Medium |  Low |  Bugs |  Docs

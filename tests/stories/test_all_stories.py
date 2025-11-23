@@ -32,6 +32,7 @@ def run_all_story_tests():
         ("test_character_consistency_integration", "Character Consistency Analysis Tests"),
         ("test_story_ai_generator", "Story AI Generator Tests"),
         ("test_story_workflow_orchestrator", "Story Workflow Orchestrator Tests"),
+        ("test_story_consistency_analyzer", "Story Consistency Analyzer Tests"),
     ]
 
     results = {}

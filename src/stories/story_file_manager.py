@@ -183,7 +183,7 @@ def create_new_story_series(
 
     # Create series folder
     clean_series_name = re.sub(r"[^a-zA-Z0-9_-]", "_", validated_name)
-    series_path = get_campaign_path(clean_series_name, ctx.stories_path)
+    series_path = get_campaign_path(clean_series_name, ctx.workspace_path)
     os.makedirs(series_path, exist_ok=True)
 
     # Create first story in series
@@ -229,7 +229,7 @@ def create_story_in_series(
     if options is None:
         options = StoryCreationOptions()
 
-    series_path = get_campaign_path(series_name, ctx.stories_path)
+    series_path = get_campaign_path(series_name, ctx.workspace_path)
     if not directory_exists(series_path):
         raise ValueError(f"Story series '{series_name}' does not exist")
 

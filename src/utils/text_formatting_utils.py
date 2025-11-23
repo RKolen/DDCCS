@@ -5,10 +5,60 @@ Handles text wrapping and formatting for story narratives.
 """
 
 import textwrap
+import re
 from src.utils.spell_highlighter import (
     highlight_spells_in_text,
     extract_spells_from_prompt
 )
+
+def _wrap_preserving_markdown(text: str, width: int = 80) -> str:
+    """Wrap text while preserving markdown formatting (bold, italics, etc).
+
+    Prevents line breaks inside markdown-wrapped text like **spell names**.
+
+    Args:
+        text: Text to wrap
+        width: Maximum line width
+
+    Returns:
+        Wrapped text with markdown preserved
+    """
+    # Split by paragraphs first
+    paragraphs = text.split("\n\n")
+    wrapped_paragraphs = []
+    markdown_pattern = re.compile(r'\*\*([^*]+)\*\*')
+
+    for para in paragraphs:
+        if para.strip().startswith("#") or para.strip().startswith("**"):
+            wrapped_paragraphs.append(para)
+            continue
+
+        # Replace markdown-wrapped content with placeholders
+        wrapped_paragraphs.append(_wrap_single_paragraph(
+            para, markdown_pattern, width
+        ))
+
+    return "\n\n".join(wrapped_paragraphs)
+
+
+def _wrap_single_paragraph(para: str, pattern, width: int) -> str:
+    """Wrap single paragraph while preserving markdown."""
+    placeholders = {}
+    counter = [0]
+
+    def replace_with_placeholder(match):
+        placeholder = f"__MARKDOWN_{counter[0]}__"
+        placeholders[placeholder] = match.group(0)
+        counter[0] += 1
+        return placeholder
+
+    para_with_placeholders = pattern.sub(replace_with_placeholder, para)
+    wrapped = textwrap.fill(para_with_placeholders.strip(), width=width)
+
+    for placeholder, original in placeholders.items():
+        wrapped = wrapped.replace(placeholder, original)
+
+    return wrapped
 
 def wrap_narrative_text(
     text: str,
@@ -39,17 +89,5 @@ def wrap_narrative_text(
     if apply_spell_highlighting:
         text = highlight_spells_in_text(text, known_spells)
 
-    # Split into paragraphs
-    paragraphs = text.split("\n\n")
-    wrapped_paragraphs = []
-
-    for para in paragraphs:
-        # Skip if it's a heading or special line
-        if para.strip().startswith("#") or para.strip().startswith("**"):
-            wrapped_paragraphs.append(para)
-        else:
-            # Wrap the paragraph
-            wrapped = textwrap.fill(para.strip(), width=width)
-            wrapped_paragraphs.append(wrapped)
-
-    return "\n\n".join(wrapped_paragraphs)
+    # Wrap while preserving markdown formatting
+    return _wrap_preserving_markdown(text, width=width)

@@ -195,8 +195,10 @@ class NPCProfileAnalyzer:
 
     def update_character_file(self, character_name: str, updates: Dict) -> bool:
         """Apply suggested updates to a character file."""
+        # Use first name (first word) as filename convention
+        first_name = character_name.split()[0].lower()
         character_file = (
-            self.characters_dir / f"{character_name.lower().replace(' ', '_')}.json"
+            self.characters_dir / f"{first_name}.json"
         )
 
         if not character_file.exists():

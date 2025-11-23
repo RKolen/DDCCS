@@ -31,11 +31,15 @@ SPELL_CONTEXTS = [
 
 # Pattern to match capitalized spell-like names after spell contexts
 # Matches: "casts Fireball", "channels Divine Smite", "uses Eldritch Blast"
-# Matches 1-3 capitalized words after spell context
+# Also matches lowercase: "prepares fireball", "cast detect magic"
+# Also matches articles: "prepares a fireball", "casts an Eldritch Blast"
+# Lookahead prevents matching following action words (e.g., "fireball and" -> "fireball")
+# Matches 1-2 words after spell context (capitalized or lowercase)
 SPELL_PATTERN = re.compile(
     r"(?P<context>"
     + "|".join(SPELL_CONTEXTS)
-    + r")\s+(?P<spell>[A-Z][a-z]+(?:\s+[A-Z][a-z]+){0,2})",
+    + r")\s+(?:a\s+|an\s+|the\s+)?(?P<spell>\b[A-Za-z][a-z]+(?:\s+[A-Za-z][a-z]+)?\b)"
+    + r"(?=\s*(?:[,.\"]|and\b|to\b|the\b|in\b|on\b|$))",
     re.IGNORECASE,
 )
 
@@ -68,6 +72,7 @@ def extract_spells_from_prompt(prompt: str) -> Set[str]:
 
     Searches for spells/abilities in spell contexts (casts, channels, uses, etc.)
     and returns the set of identified spells for use in highlighting.
+    Capitalizes spell names properly (Fireball, Detect Magic, etc.).
 
     Args:
         prompt: User prompt text (e.g., "aragorn shoots an arrow, gandalf casts
@@ -97,7 +102,9 @@ def extract_spells_from_prompt(prompt: str) -> Set[str]:
             words[0],
         ]:
             if spell_candidate and spell_candidate not in FALSE_POSITIVES:
-                spells.add(spell_candidate)
+                # Capitalize spell name properly (Title Case)
+                spell_title = spell_candidate.title()
+                spells.add(spell_title)
                 break
 
     return spells
@@ -138,8 +145,9 @@ def highlight_spells_in_text(text: str, known_spells: Set[str] = None) -> str:
 
             # Create case-insensitive pattern to find the spell in text
             # Use word boundaries to avoid partial matches
+            # But avoid matching if already wrapped in ** (already highlighted)
             pattern = re.compile(
-                r"\b" + re.escape(spell) + r"\b",
+                r"(?<!\*)\b" + re.escape(spell) + r"\b(?!\*)",
                 re.IGNORECASE
             )
 

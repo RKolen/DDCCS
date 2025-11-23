@@ -7,6 +7,7 @@ ensure complete story workflows with NPC detection, hooks, sessions, and charact
 development tracking.
 """
 
+import re
 from dataclasses import dataclass, field
 from typing import List, Dict, Any
 from src.npcs.npc_auto_detection import (
@@ -287,11 +288,12 @@ def _extract_character_actions(
     """
     Extract character actions from story narrative.
 
-    Looks for mentions of character names followed by action descriptions.
+    Looks for mentions of character names (including variations) followed by
+    action descriptions. Matches full names, first names, and last names.
 
     Args:
         story_content: The story narrative text
-        character_names: List of character names to track
+        character_names: List of character names to track (e.g., "Frodo Baggins")
 
     Returns:
         List of character action dictionaries
@@ -299,10 +301,32 @@ def _extract_character_actions(
     actions = []
 
     for char_name in character_names:
-        # Simple extraction: find paragraphs mentioning the character
+        # Build comprehensive patterns for character name variations
+        patterns = []
+
+        # Exact match for full name
+        patterns.append(re.compile(r'\b' + re.escape(char_name) + r'\b',
+                                   re.IGNORECASE))
+
+        # Match first name only
+        first_name = char_name.split()[0]
+        if first_name:
+            patterns.append(re.compile(r'\b' + re.escape(first_name) + r'\b',
+                                       re.IGNORECASE))
+
+        # Match last name if multi-word name
+        if ' ' in char_name:
+            last_name = char_name.split()[-1]
+            patterns.append(re.compile(r'\b' + re.escape(last_name) + r'\b',
+                                       re.IGNORECASE))
+
+        # Search for character mention in lines
         lines = story_content.split("\n")
         for i, line in enumerate(lines):
-            if char_name in line:
+            # Check if any pattern matches this line
+            matches = any(pattern.search(line) for pattern in patterns)
+
+            if matches:
                 # Extract context around character mention
                 context_start = max(0, i - 1)
                 context_end = min(len(lines), i + 2)

@@ -4,15 +4,165 @@ Analyzes character actions extracted from stories with personality trait awarene
 Provides insights on reasoning, consistency, and development opportunities by
 considering each character's background story, personality, motivations, fears,
 relationships, goals, and secrets.
+
+Uses AI for personality-aware analysis when available, falls back to rule-based
+analysis when AI is not configured.
 """
 
+import re
 from typing import Dict, List, Optional, Any
+
+# Optional AI import - AIClient may not be available in all environments
+try:
+    from src.ai.ai_client import AIClient
+    AI_AVAILABLE = True
+except (ImportError, ModuleNotFoundError):
+    AI_AVAILABLE = False
+
+
+def _build_character_context_string(character_name: str,
+                                    traits: Optional[Dict[str, Any]]) -> str:
+    """Build character context string from traits dictionary."""
+    lines = [f"Character: {character_name}"]
+
+    if traits is None:
+        return "\n".join(lines) + "\n"
+
+    trait_mappings = [
+        ("personality_summary", "Personality"),
+        ("motivations", "Motivations"),
+        ("goals", "Goals"),
+        ("fears_weaknesses", "Fears/Weaknesses"),
+    ]
+
+    for trait_key, label in trait_mappings:
+        if traits.get(trait_key):
+            value = traits[trait_key]
+            # Handle lists vs strings
+            if isinstance(value, list):
+                value = ", ".join(value)
+            lines.append(f"{label}: {value}")
+
+    if traits.get("background_story"):
+        lines.append(f"Background: {traits['background_story'][:200]}")
+
+    return "\n".join(lines) + "\n"
+
+
+def _get_prompt_for_analysis(analysis_type: str, char_context: str,
+                            action_text: str) -> Optional[str]:
+    """Build prompt for AI analysis based on type."""
+    base = f"{char_context}Story Action: {action_text}\n\n"
+    lang_note = (
+        "RESPOND IN ENGLISH ONLY. "
+        "Do not use any other languages. "
+        "Do not include any Chinese, unicode, or special characters."
+    )
+
+    prompts = {
+        "reasoning": (
+            base + "Analyze this character's reasoning for this action. "
+            "Consider their personality, motivations, and goals. "
+            "Be specific and concise (1-2 sentences). " + lang_note
+        ),
+        "consistency": (
+            base + "Assess if this action is consistent with the character's "
+            "established traits and personality. Be specific (1-2 sentences). "
+            + lang_note
+        ),
+        "development": (
+            base + "Identify character development opportunities or growth themes "
+            "from this action. How does this advance their story? "
+            "Be specific (1-2 sentences). " + lang_note
+        ),
+    }
+
+    return prompts.get(analysis_type)
+
+
+def _get_ai_analysis(
+    analysis_type: str,
+    action_text: str,
+    character_name: str,
+    character_traits: Optional[Dict[str, Any]] = None
+) -> Optional[str]:
+    """Get AI-based analysis for character action with personality awareness.
+
+    Args:
+        analysis_type: Type of analysis ("reasoning", "consistency", "development")
+        action_text: Description of the character's action
+        character_name: Name of the character
+        character_traits: Optional dict with personality, goals, background, etc.
+
+    Returns:
+        AI-generated analysis string, or None if AI is not available
+    """
+    if not AI_AVAILABLE:
+        return None
+
+    # Check if AI is enabled
+    ai_config = character_traits.get("ai_config") if character_traits else None
+    if isinstance(ai_config, dict) and not ai_config.get("enabled", True):
+        return None
+
+    try:
+        ai_client = AIClient()
+        char_context = _build_character_context_string(character_name,
+                                                       character_traits)
+        prompt = _get_prompt_for_analysis(analysis_type, char_context,
+                                         action_text)
+
+        if not prompt:
+            return None
+
+        response = ai_client.chat_completion(
+            messages=[
+                {
+                    "role": "system",
+                    "content": (
+                        "SYSTEM INSTRUCTIONS - CRITICAL:\n"
+                        "You are a D&D character analysis assistant.\n"
+                        "YOU MUST respond ONLY in English.\n"
+                        "DO NOT generate ANY Chinese characters.\n"
+                        "DO NOT generate ANY non-ASCII characters.\n"
+                        "DO NOT generate ANY special Unicode sequences.\n"
+                        "ONLY ASCII English text is acceptable.\n"
+                        "If you cannot respond in English, respond with: "
+                        "'Unable to generate response.'"
+                    )
+                },
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.7,
+            max_tokens=150
+        )
+        response_text = response.strip() if response else None
+
+        # Validate response contains no Chinese/Unicode characters
+        if response_text:
+            # Check for common Chinese character ranges
+            for char in response_text:
+                code = ord(char)
+                # Chinese characters are typically in ranges: 0x4E00-0x9FFF, 0x3400-0x4DBF
+                if (0x4E00 <= code <= 0x9FFF or
+                    0x3400 <= code <= 0x4DBF or
+                    code > 127):  # Reject any non-ASCII except common punctuation
+                    # If Chinese detected, return None to trigger fallback
+                    return None
+
+        return response_text
+
+    except (AttributeError, ValueError, ConnectionError, TimeoutError):
+        # AI failed, will use rule-based fallback
+        return None
+
 
 
 def extract_reasoning(action_text: str, character_traits: Optional[Dict[str, Any]] = None) -> str:
     """Extract reasoning about character's motivation from action text.
 
     Considers character personality, motivations, goals, and backstory when available.
+    Uses AI for personality-aware analysis when available, falls back to rule-based.
 
     Args:
         action_text: Description of the character's action
@@ -21,6 +171,18 @@ def extract_reasoning(action_text: str, character_traits: Optional[Dict[str, Any
     Returns:
         String describing likely reasoning
     """
+    if character_traits:
+        # Try AI-based analysis first
+        ai_reasoning = _get_ai_analysis(
+            "reasoning",
+            action_text,
+            character_traits.get("name", "Character"),
+            character_traits
+        )
+        if ai_reasoning:
+            return ai_reasoning
+
+    # Fall back to rule-based analysis
     action_lower = action_text.lower()
     traits = character_traits or {}
 
@@ -60,6 +222,7 @@ def assess_consistency(action_text: str, character_traits: Optional[Dict[str, An
     """Assess if action is consistent with character's established traits.
 
     Checks action against personality summary, background, and behavior patterns.
+    Uses AI for personality-aware analysis when available, falls back to rule-based.
 
     Args:
         action_text: Description of the character's action
@@ -68,6 +231,18 @@ def assess_consistency(action_text: str, character_traits: Optional[Dict[str, An
     Returns:
         String assessing consistency
     """
+    if character_traits:
+        # Try AI-based analysis first
+        ai_consistency = _get_ai_analysis(
+            "consistency",
+            action_text,
+            character_traits.get("name", "Character"),
+            character_traits
+        )
+        if ai_consistency:
+            return ai_consistency
+
+    # Fall back to rule-based analysis
     action_lower = action_text.lower()
     traits = character_traits or {}
 
@@ -101,6 +276,7 @@ def generate_development_notes(
 
     Suggests growth opportunities based on character's background, motivations,
     goals, relationships, and established character arc.
+    Uses AI for personality-aware analysis when available, falls back to rule-based.
 
     Args:
         action_text: Description of the character's action
@@ -109,6 +285,18 @@ def generate_development_notes(
     Returns:
         String with development suggestion
     """
+    if character_traits:
+        # Try AI-based analysis first
+        ai_notes = _get_ai_analysis(
+            "development",
+            action_text,
+            character_traits.get("name", "Character"),
+            character_traits
+        )
+        if ai_notes:
+            return ai_notes
+
+    # Fall back to rule-based analysis
     action_lower = action_text.lower()
     traits = character_traits or {}
 
@@ -170,6 +358,77 @@ def _build_character_action_entry(
     }
 
 
+def _build_character_name_patterns(character_name: str) -> List:
+    """Build regex patterns for character name variations.
+
+    Args:
+        character_name: Full character name (e.g., "Frodo Baggins")
+
+    Returns:
+        List of compiled regex patterns for matching variations
+    """
+    patterns = []
+
+    # Exact match for full name
+    patterns.append(re.compile(r'\b' + re.escape(character_name) + r'\b',
+                               re.IGNORECASE))
+
+    # Match first name only
+    first_name = character_name.split()[0]
+    if first_name:
+        patterns.append(re.compile(r'\b' + re.escape(first_name) + r'\b',
+                                   re.IGNORECASE))
+
+    # Match last name if multi-word name
+    if ' ' in character_name:
+        last_name = character_name.split()[-1]
+        patterns.append(re.compile(r'\b' + re.escape(last_name) + r'\b',
+                                   re.IGNORECASE))
+
+    return patterns
+
+
+def _search_character_in_lines(
+    patterns: List,
+    lines: List[str],
+    party_member: str,
+    traits: Dict[str, Any],
+    truncate_func
+) -> Optional[Dict[str, str]]:
+    """Search for character in story lines and build action entry.
+
+    Args:
+        patterns: List of compiled regex patterns for name matching
+        lines: List of story lines
+        party_member: Character name
+        traits: Character trait dictionary
+        truncate_func: Function to truncate text
+
+    Returns:
+        Character action dictionary or None if not found
+    """
+    for i, line in enumerate(lines):
+        # Check if any pattern matches this line
+        matches = any(pattern.search(line) for pattern in patterns)
+
+        if not matches:
+            continue
+
+        ctx = " ".join(
+            lines[max(0, i - 1):min(len(lines), i + 3)]
+        )
+        if not ctx.strip():
+            continue
+
+        text = ctx.strip()
+        if len(text) > 500:
+            text = truncate_func(text, 500)
+
+        return _build_character_action_entry(party_member, text, traits)
+
+    return None
+
+
 def extract_character_actions(
     story_content: str,
     party_names: List[str],
@@ -178,14 +437,17 @@ def extract_character_actions(
 ) -> List[Dict[str, str]]:
     """Extract character actions from story narrative with personality awareness.
 
-    Searches for character mentions and extracts surrounding context.
-    Considers character personality, motivations, goals, and background when available.
+    Searches for character mentions (including name variations) and extracts
+    surrounding context. Handles full names, first names, and last names.
+    Considers character personality, motivations, goals, and background when
+    available.
 
     Args:
         story_content: Full story text
-        party_names: List of party member names
+        party_names: List of party member names (e.g., "Frodo Baggins")
         truncate_func: Function to truncate text at sentence boundary
-        character_profiles: Optional dict mapping character names to their trait dicts
+        character_profiles: Optional dict mapping character names to their trait
+                          dicts
 
     Returns:
         List of character action dictionaries
@@ -196,29 +458,18 @@ def extract_character_actions(
 
     for party_member in party_names:
         traits = profiles.get(party_member, {})
-        found = False
 
-        for i, line in enumerate(lines):
-            if party_member not in line:
-                continue
+        # Build patterns for character name variations
+        patterns = _build_character_name_patterns(party_member)
 
-            ctx = " ".join(
-                lines[max(0, i - 1):min(len(lines), i + 3)]
-            )
-            if not ctx.strip():
-                continue
+        # Search for character in lines
+        action = _search_character_in_lines(
+            patterns, lines, party_member, traits, truncate_func
+        )
 
-            text = ctx.strip()
-            if len(text) > 500:
-                text = truncate_func(text, 500)
-
-            actions.append(
-                _build_character_action_entry(party_member, text, traits)
-            )
-            found = True
-            break
-
-        if not found:
+        if action:
+            actions.append(action)
+        else:
             actions.append({
                 "character": party_member,
                 "action": "Not mentioned in this story segment",

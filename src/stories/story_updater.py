@@ -896,14 +896,16 @@ class StoryUpdater:
 
         for character_name in party_names:
             try:
-                # Convert character name to filename
-                filename = f"{character_name.lower().replace(' ', '_')}.json"
+                # Use first name (first word) as filename convention
+                first_name = character_name.split()[0].lower()
+                filename = f"{first_name}.json"
                 filepath = os.path.join(characters_dir, filename)
 
                 if os.path.exists(filepath):
                     with open(filepath, "r", encoding="utf-8") as f:
                         char_data = json.load(f)
                         profiles[character_name] = {
+                            "name": character_name,
                             "personality_summary": char_data.get(
                                 "personality_summary", ""
                             ),

@@ -5,7 +5,7 @@ Handles story analysis and combat conversion operations.
 """
 
 import os
-from typing import Dict, Any
+from typing import Dict, Any, List
 from datetime import datetime
 
 # Optional AI client import
@@ -23,8 +23,11 @@ from src.cli.dnd_cli_helpers import (
     select_target_story_for_combat,
     save_combat_narrative,
 )
+from src.cli.party_config_manager import load_current_party
+from src.stories.story_consistency_analyzer import StoryConsistencyAnalyzer
 from src.utils.path_utils import get_campaign_path
 from src.utils.file_io import write_text_file
+from src.cli.cli_story_config_helper import extract_context_from_stories
 
 
 class StoryAnalysisCLI:
@@ -291,3 +294,77 @@ class StoryAnalysisCLI:
                 print("[WARNING]  AI client not available")
                 print("   Using fallback mode...")
                 self.ai_client = None
+
+    def extract_context_from_previous_stories(
+        self, campaign_dir: str, story_files: list,
+        party_names: list = None, npc_names: list = None
+    ) -> str:
+        """Extract location and setting context from previous stories.
+
+        Delegates to helper module to avoid code duplication.
+        """
+        return extract_context_from_stories(
+            self.workspace_path, campaign_dir, story_files,
+            party_names=party_names, npc_names=npc_names
+        )
+
+    def analyze_series_consistency(self, series_name: str, series_stories: List[str]):
+        """Analyze entire story series for character consistency.
+
+        Args:
+            series_name: Name of the story series
+            series_stories: List of story files in the series
+        """
+        print("\n STORY SERIES CONSISTENCY ANALYSIS")
+        print("-" * 50)
+        print("This will analyze all stories for character behavioral")
+        print("consistency and tactical appropriateness.")
+        print("This may take several minutes with AI analysis...\n")
+
+        # Load party members for this series
+        try:
+            party_members = load_current_party(
+                workspace_path=self.workspace_path, campaign_name=series_name
+            )
+        except (ImportError, OSError, ValueError):
+            print("[ERROR] Could not load party configuration for this series.")
+            return
+
+        if not party_members:
+            print("[ERROR] No party members found in current_party.json")
+            return
+
+        print(f"Party Members: {', '.join(party_members)}")
+        print(f"Stories to Analyze: {len(series_stories)}\n")
+
+        confirm = input("Proceed with analysis? (y/n): ").strip().lower()
+        if confirm != 'y':
+            print("Analysis cancelled.")
+            return
+
+        # Create analyzer and run analysis
+        analyzer = StoryConsistencyAnalyzer(
+            workspace_path=self.workspace_path,
+            ai_client=self.story_manager.ai_client
+        )
+
+        try:
+            print("\n[INFO] Analyzing stories...")
+            results = analyzer.analyze_series(
+                series_name=series_name,
+                story_files=series_stories,
+                party_members=party_members
+            )
+
+            # Display results
+            print("\n" + "=" * 50)
+            print("ANALYSIS COMPLETE")
+            print("=" * 50)
+            print(f"Stories Analyzed: {results['stories_analyzed']}")
+            print(f"Total Issues Found: {results['total_issues']}")
+            print("\nDetailed report saved to:")
+            print(f"  {results['report_path']}")
+            print("\nOpen the report file to see detailed analysis.")
+
+        except (OSError, ValueError, KeyError, AttributeError) as e:
+            print(f"\n[ERROR] Analysis failed: {e}")

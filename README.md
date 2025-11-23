@@ -137,6 +137,7 @@ D&D New Beginnings/
 - **[RAG Integration Guide](docs/RAG_INTEGRATION.md)** - Deep dive into RAG system and wiki integration
 - **[RAG Quick Start](docs/RAG_QUICKSTART.md)** - Fast track to using RAG features
 - **[Party Configuration Guide](docs/PARTY_CONFIG_DOCUMENTATION.md)** - Managing your party setup
+- **[Example Campaign Walkthrough](docs/EXAMPLE_CAMPAIGN_WALKTHROUGH.md)** - Step-by-step guide to generating the Example Campaign
 - **[Usage Examples](docs/Test_Example.md)** - See the system in action
 - **[JSON Validation](docs/JSON_Validation.md)** - Data validation schemas and usage
 - **[Test Suite](tests/README.md)** - Comprehensive test suite
@@ -401,15 +402,15 @@ Party encountered unexpected pursuit and made contact with merchant information 
 
 ### How It Works
 ```markdown
-Story: "The innkeeper, Marcus Ironforge, greets the party..."
+Story: "The innkeeper, Barliman Butterbur, greets the party..."
 
 Story Hooks File Auto-Generated:
 ## NPC Profile Suggestions
-### Marcus Ironforge (Innkeeper)
+### Barliman Butterbur (Innkeeper)
 **To create profile:**
 ```python
 npc_profile = story_manager.generate_npc_from_story(
-    npc_name="Marcus Ironforge",
+    npc_name="Barliman Butterbur",
     context=story_text,
     role="Innkeeper"
 )

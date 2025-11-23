@@ -65,21 +65,6 @@ Run the entire stories test suite with the repository test runner:
 python tests/run_all_tests.py stories
 ```
 
-Run individual test files directly (from repository root):
-
-```powershell
-python -m tests.stories.test_story_file_manager
-python -m tests.stories.test_story_manager
-python -m tests.stories.test_story_analyzer
-python -m tests.stories.test_character_consistency_integration
-python -m tests.stories.test_hooks_and_analysis
-python -m tests.stories.test_story_updater
-python -m tests.stories.test_session_results_manager
-python -m tests.stories.test_story_character_loader
-python -m tests.stories.test_enhanced_story_manager
-python -m tests.stories.test_all_stories
-```
-
 > Note: tests use `test_helpers.setup_test_environment()` to ensure `src` imports
 > resolve correctly. Run from the project root to avoid import errors.
 

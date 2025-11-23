@@ -66,7 +66,7 @@ class AIEnhancedNarrator:
             narrative = self._remove_mechanics_terms(narrative)
 
             # Wrap narrative to 80 characters per line and highlight spells
-            narrative = wrap_narrative_text(narrative)
+            narrative = wrap_narrative_text(narrative, prompt=combat_prompt)
 
             return narrative
 
@@ -141,6 +141,8 @@ CRITICAL RULES:
 8. For spells with verbal components, create fitting dialogue/incantations \
 based on the spell's actual effect
 9. Use the D&D rules context to make spell effects accurate and flavorful
+10. ALWAYS USE THE SPELL NAMES MENTIONED IN THE PROMPT (e.g., if "fireball" is mentioned, \
+use "Fireball" explicitly in the narrative)
 
 Style Guidelines:
 - Cinematic: Movie-like action, dramatic descriptions, epic moments
@@ -174,6 +176,8 @@ Write the combat narrative in {style} style. Remember:
 - NO dice rolls or game mechanics
 - Include EVERY action mentioned
 - Make critical hits dramatically impressive
+- ALWAYS use the spell names mentioned above (e.g., if the prompt says "casts fireball", \
+use "Fireball" explicitly in the narrative)
 - Create dialogue for spell incantations that fits the spell's actual effect
 - Use the D&D rules context to enhance accuracy
 - Make it flow like a story, not a combat log"""

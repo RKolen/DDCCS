@@ -68,6 +68,40 @@ def _format_npc_descriptions(known_npcs: list) -> str:
     return "\n".join(npc_descriptions)
 
 
+def _extract_spell_names(story_prompt: str) -> str:
+    """Extract D&D spell and ability names from story prompt.
+
+    Identifies spells/abilities mentioned and creates instructions
+    to use exact spell names in the narrative.
+
+    Args:
+        story_prompt: User's story prompt
+
+    Returns:
+        Instruction string with spell names to use, or empty string
+    """
+    # Common D&D spells and abilities
+    spell_patterns = [
+        "detect magic", "fireball", "heal", "cure wounds", "scorching ray",
+        "magic missile", "shield", "armor of agathys", "misty step",
+        "dimension door", "invisibility", "stoneskin", "cone of cold",
+        "lightning bolt", "polymorph", "counterspell", "dispel magic",
+        "identify", "disguise self", "mage hand", "minor illusion",
+        "prestidigitation", "light", "guidance", "mending", "resistance",
+    ]
+
+    prompt_lower = story_prompt.lower()
+    found_spells = [spell for spell in spell_patterns if spell in prompt_lower]
+
+    if found_spells:
+        spell_list = ", ".join(found_spells)
+        return (
+            f"\nIMPORTANT SPELLS/ABILITIES MENTIONED: {spell_list}. "
+            f"Use these EXACT spell names in your narrative, do not paraphrase them."
+        )
+    return ""
+
+
 def generate_story_from_prompt(
     ai_client,
     story_prompt: str,
@@ -125,6 +159,9 @@ def generate_story_from_prompt(
     # Look up D&D spells/abilities for accurate descriptions
     ability_context = lookup_spells_and_abilities(story_prompt)
 
+    # Extract spell names from prompt for explicit inclusion
+    spell_instructions = _extract_spell_names(story_prompt)
+
     # Build system and user prompts
     system_prompt = _build_story_system_prompt(
         story_config.get("is_exploration", False)
@@ -133,7 +170,8 @@ def generate_story_from_prompt(
     user_prompt = (
         f"Write a D&D story scene based on this prompt:\n{story_prompt}"
         f"{context}"
-        f"{ability_context}\n\n"
+        f"{ability_context}"
+        f"{spell_instructions}\n\n"
         "Generate an engaging narrative that incorporates the party members "
         "and respects their personalities and backgrounds. Format as pure "
         "narrative prose suitable for a story file."
@@ -176,7 +214,10 @@ def _build_story_system_prompt(is_exploration: bool = False) -> str:
         "reactions, and plot development. Keep descriptions vivid but concise "
         "(max 80 chars per line). Respect D&D 5e conventions and the party's "
         "character personalities. Do not include dice rolls, mechanics, or "
-        "meta-game information in the narrative."
+        "meta-game information in the narrative.\n\n"
+        "IMPORTANT: When spells or abilities are mentioned, USE THE EXACT SPELL "
+        "NAMES in the narrative. For example, if 'detect magic' is mentioned, "
+        "write 'Gandalf cast detect magic' not 'Gandalf cast a detection spell'."
     )
 
     if is_exploration:
@@ -501,27 +542,57 @@ def generate_story_hooks_from_content(
 
     # Build character context from profiles
     character_context = _build_character_context_for_hooks(party_characters)
-    party_list_str = ", ".join(party_names) if party_names else "Unknown party"
 
     system_prompt = (
-        "You are a D&D campaign planner analyzing story sessions. Extract "
-        "unresolved plot threads, generate character-specific hooks based on "
-        "character backgrounds and motivations, and suggest future campaign "
-        "directions. Be creative and tie hooks to character arcs."
+        "You are a D&D campaign planner. Generate story hooks from D&D sessions. "
+        "CRITICAL: Include ALL party members in CHARACTER HOOKS section. "
+        "CRITICAL: Use ONLY these section headers: UNRESOLVED THREADS, "
+        "CHARACTER HOOKS, NEXT SESSIONS, NPC FOLLOW-UPS. "
+        "CRITICAL: Under CHARACTER HOOKS use ONLY format: #### [Name]. "
+        "Include all party members without exception. "
+        "Respond only in English."
     )
 
+    # Build explicit party member list with numbers
+    party_list_numbered = "\n".join(
+        [f"{i+1}. {name}" for i, name in enumerate(party_names)]
+    ) if party_names else ""
+
     user_prompt = (
-        f"Analyze this D&D story and generate comprehensive story hooks:\n\n"
+        f"Analyze this D&D story and generate story hooks:\n\n"
         f"{story_content}\n\n"
         f"Party Members:\n{character_context}\n\n"
-        f"Provide:\n"
-        f"1. 3-5 unresolved plot threads from this session\n"
-        f"2. Character-specific hooks for {party_list_str} based on their "
-        f"backgrounds and motivations\n"
-        f"3. 2-3 potential next session ideas\n"
-        f"4. NPC follow-ups and relationship developments\n"
-        f"Format sections clearly with headers: "
-        f"UNRESOLVED THREADS, CHARACTER HOOKS, NEXT SESSIONS, NPC FOLLOW-UPS"
+        f"REQUIRED OUTPUT FORMAT:\n\n"
+        f"UNRESOLVED THREADS\n"
+        f"- [thread 1]\n"
+        f"- [thread 2]\n\n"
+        f"CHARACTER HOOKS\n"
+        f"#### Aragorn\n"
+        f"- [hook 1]\n"
+        f"- [hook 2]\n"
+        f"#### Frodo Baggins\n"
+        f"- [hook 1]\n"
+        f"- [hook 2]\n"
+        f"#### Gandalf the Grey\n"
+        f"- [hook 1]\n"
+        f"- [hook 2]\n\n"
+        f"NEXT SESSIONS\n"
+        f"- [idea 1]\n"
+        f"- [idea 2]\n\n"
+        f"NPC FOLLOW-UPS\n"
+        f"- [follow-up 1]\n"
+        f"- [follow-up 2]\n\n"
+        f"YOUR TASK:\n"
+        f"1. Generate 3-5 unresolved plot threads\n"
+        f"2. Generate hooks for ALL these party members (MUST INCLUDE ALL {len(party_names)}):\n"
+        f"{party_list_numbered}\n"
+        f"3. Generate 2-3 next session ideas\n"
+        f"4. Generate NPC follow-ups\n\n"
+        f"CRITICAL REQUIREMENTS:\n"
+        f"- Include EVERY party member listed above\n"
+        f"- Use ONLY the format shown above\n"
+        f"- Do NOT include code, examples, or explanations\n"
+        f"- Only English, no other languages"
     )
 
     try:
