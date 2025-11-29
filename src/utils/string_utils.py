@@ -138,6 +138,25 @@ def truncate_text(text: str, max_length: int, suffix: str = "...") -> str:
     return text[:max_length - len(suffix)] + suffix
 
 
+def truncate_at_sentence(text: str, max_length: int) -> str:
+    """Truncate text at sentence boundary.
+
+    Args:
+        text: The text to truncate
+        max_length: Maximum length
+
+    Returns:
+        Truncated text
+    """
+    if len(text) <= max_length:
+        return text
+    truncated = text[:max_length]
+    last_period = truncated.rfind(".")
+    if last_period > max_length * 0.7:
+        return truncated[:last_period + 1]
+    return truncated + "..."
+
+
 def is_empty_or_whitespace(text: Optional[str]) -> bool:
     """Check if text is None, empty, or only whitespace.
 

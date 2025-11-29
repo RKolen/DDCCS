@@ -414,14 +414,15 @@ def make_profile(name: str = "TestChar", dnd_class=None, level: int = 1, **kwarg
     )
     possessions = _build_possessions(classes["possessions"], kwargs)
 
-    return classes["profile"](
-        identity=identity,
-        personality=personality,
-        behavior=behavior,
-        story=story,
-        mechanics=mechanics,
-        possessions=possessions,
-    )
+    profile_args = {
+        "identity": identity,
+        "personality": personality,
+        "behavior": behavior,
+        "story": story,
+        "mechanics": mechanics,
+        "possessions": possessions,
+    }
+    return classes["profile"](**profile_args)
 
 
 # Pre-import commonly used DM modules to keep tests DRY and avoid

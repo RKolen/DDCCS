@@ -5,6 +5,7 @@ Handles story analysis and combat conversion operations.
 """
 
 import os
+import json
 from typing import Dict, Any, List
 from datetime import datetime
 
@@ -24,9 +25,11 @@ from src.cli.dnd_cli_helpers import (
     save_combat_narrative,
 )
 from src.cli.party_config_manager import load_current_party
+from src.stories.character_action_analyzer import extract_character_actions
 from src.stories.story_consistency_analyzer import StoryConsistencyAnalyzer
 from src.utils.path_utils import get_campaign_path
-from src.utils.file_io import write_text_file
+from src.utils.file_io import write_text_file, read_text_file
+from src.utils.string_utils import truncate_at_sentence
 from src.cli.cli_story_config_helper import extract_context_from_stories
 
 
@@ -368,3 +371,160 @@ class StoryAnalysisCLI:
 
         except (OSError, ValueError, KeyError, AttributeError) as e:
             print(f"\n[ERROR] Analysis failed: {e}")
+
+    def analyze_character_development_series(self, series_name: str, series_stories: List[str]):
+        """Analyze character development across the entire series.
+
+        Args:
+            series_name: Name of the story series
+            series_stories: List of story files in the series
+        """
+        print("\n CHARACTER DEVELOPMENT ANALYSIS (SERIES)")
+        print("-" * 50)
+        print("This will analyze all stories to track character development,")
+        print("consistency, and arc progression against their profiles.")
+        print("This process involves heavy AI usage and may take some time.\n")
+
+        # Load party members for this series
+        try:
+            party_members = load_current_party(
+                workspace_path=self.workspace_path, campaign_name=series_name
+            )
+        except (ImportError, OSError, ValueError):
+            print("[ERROR] Could not load party configuration for this series.")
+            return
+
+        if not party_members:
+            print("[ERROR] No party members found in current_party.json")
+            return
+
+        print(f"Party Members: {', '.join(party_members)}")
+        print(f"Stories to Analyze: {len(series_stories)}\n")
+
+        confirm = input("Proceed with analysis? (y/n): ").strip().lower()
+        if confirm != 'y':
+            print("Analysis cancelled.")
+            return
+
+        print("\n[INFO] Loading character profiles...")
+        profiles = self._load_character_profiles(party_members)
+
+        print("[INFO] Analyzing stories...")
+        series_path = get_campaign_path(series_name, self.workspace_path)
+        all_actions = {}
+
+        for story_file in series_stories:
+            print(f"  - Processing {story_file}...")
+            story_path = os.path.join(series_path, story_file)
+            story_content = read_text_file(story_path)
+
+            if not story_content:
+                continue
+
+            actions = extract_character_actions(
+                story_content,
+                party_members,
+                truncate_at_sentence,
+                character_profiles=profiles
+            )
+
+            for action in actions:
+                char_name = action['character']
+                if char_name not in all_actions:
+                    all_actions[char_name] = []
+
+                # Add story context
+                action['story_file'] = story_file
+                all_actions[char_name].append(action)
+
+        print("\n[INFO] Generating development report...")
+        self._generate_development_report(series_name, series_path, all_actions, profiles)
+
+    def _load_character_profiles(self, party_names: List[str]) -> Dict[str, Any]:
+        """Load character profiles for analysis."""
+        profiles = {}
+        chars_dir = os.path.join(self.workspace_path, "game_data", "characters")
+
+        for name in party_names:
+            # Try exact match first
+            normalized = name.lower().replace(' ', '_')
+            path = os.path.join(chars_dir, f"{normalized}.json")
+
+            if not os.path.exists(path):
+                # Try first name
+                first_name = name.split()[0].lower()
+                path = os.path.join(chars_dir, f"{first_name}.json")
+
+            if os.path.exists(path):
+                try:
+                    with open(path, 'r', encoding='utf-8') as f:
+                        profiles[name] = json.load(f)
+                except (OSError, ValueError):
+                    pass
+
+        return profiles
+
+    def _generate_development_report(
+        self,
+        series_name: str,
+        series_path: str,
+        all_actions: Dict[str, List[Dict[str, str]]],
+        profiles: Dict[str, Any]
+    ):
+        """Generate markdown report for series character development."""
+        timestamp = datetime.now().strftime("%Y-%m-%d")
+        report_filename = f"character_development_analysis_{timestamp}.md"
+        report_path = os.path.join(series_path, report_filename)
+
+        lines = [
+            f"# Character Development Analysis: {series_name}",
+            f"**Date:** {timestamp}",
+            f"**Characters Analyzed:** {', '.join(all_actions.keys())}",
+            "",
+            "## Overview",
+            "This report tracks character behavior, consistency, and development arcs",
+            "across the entire story series, comparing actions against established traits.",
+            ""
+        ]
+
+        for char_name in sorted(all_actions.keys()):
+            lines.extend(self._format_character_development_section(
+                char_name, all_actions[char_name], profiles.get(char_name, {})
+            ))
+
+        write_text_file(report_path, "\n".join(lines))
+        print(f"\n[SUCCESS] Report generated: {report_filename}")
+        print(f"Location: {report_path}")
+
+    def _format_character_development_section(
+        self, char_name: str, actions: List[Dict[str, str]], profile: Dict[str, Any]
+    ) -> List[str]:
+        """Format development section for a single character."""
+        lines = [f"## {char_name}"]
+
+        if profile:
+            char_class = profile.get('dnd_class', 'Unknown')
+            level = profile.get('level', '?')
+            background = profile.get('background_story') or profile.get('backstory', 'Unknown')
+
+            lines.append(f"**Class:** {char_class} (Level {level})")
+            lines.append(f"**Background:** {background[:100]}...")
+
+        lines.append("")
+        lines.append(f"### Action Log ({len(actions)} actions recorded)")
+
+        for action in actions:
+            # Skip "Not mentioned" entries if they are just placeholders
+            if action['action'] == "Not mentioned in this story segment":
+                continue
+
+            lines.append(f"**Story:** {action['story_file']}")
+            lines.append(f"- **Action:** {action['action']}")
+            lines.append(f"- **Reasoning:** {action['reasoning']}")
+            lines.append(f"- **Consistency:** {action['consistency']}")
+            lines.append(f"- **Development Notes:** {action['notes']}")
+            lines.append("")
+
+        lines.append("---")
+        lines.append("")
+        return lines

@@ -13,7 +13,7 @@
 
 ### 10.00/10 Pylint Score Required
 **NEVER use `# pylint: disable=...`, `# noqa`, or `# pragma` comments**
-- Fix code properly: refactor functions, extract helpers, use decision tables
+- Fix code properly: refactor functions, extract helpers, use decision tables (duplicate-code must be fixed)
 - This includes tests
 - Document architectural solutions in `docs/docs_personal/future_rework.md`
 - Upon big code changes also pyltin the folder src/ and the tests/ folder and fix every issue,
@@ -44,43 +44,11 @@ Always use: `python -m pylint <file-or-folder>`
 - Base it on the entire source folder
 - Test examples on real party members: Aragorn, Frodo Baggins, Gandalf the Grey
 
-### Code Quality Standards
-- **Pylint 10.00/10** - Fix issues by refactoring, not disabling
-- **Decision tables** for multiple conditions (eliminates nested ifs)
-- **Data-driven design** for pattern matching (motivation/goal extraction)
-- **Helper functions** to reduce local variables and complexity
-- **Type hints** throughout all code
-
-### When Verifying the Project
-If asked to "verify everything" or "check all files":
-- Read EVERY file mentioned in the project structure
-- NO shortcuts, NO assumptions
-- Verify actual code matches documentation
-- Test workflows end-to-end
-
-## Project Quick Reference
-
-**Key Directories:**
-- `game_data/characters/` - Character profiles (JSON)
-- `game_data/campaigns/` - User story campaigns
-- `src/` - All source code
-- `src/stories/` - Story management (personality-aware analysis here)
-- `src/cli/dnd_consultant.py` - Main interactive tool
-- `tests/` - Test suite (git-ignored)
-
-**Core Commands:**
-```bash
-python dnd_consultant.py                    # Main interactive CLI
-python tests/run_all_tests.py               # Run all tests
-python tests/run_all_tests.py validation    # Run 1 test suite
-python tests/run_all_tests.py ai characters # Run multiple test suites
-```
-
-## Testing Practices
-
-- **Standard:** 10.00/10 pylint score, public APIs only
+### Testing Practices
+- **Standard:** 10.00/10 pylint score, public APIs only,
 - **Helpers:** Reusable patterns in `tests/test_helpers.py`
-- **Examples:** Use real characters (Aragorn, Frodo, Gandalf) not placeholders
+- **Examples:** Use real characters (Aragorn, Frodo, Gandalf) and campaigns (Example_Campaign)
+- **Data:** NEVER create mock data in tests. Use existing profiles in `game_data/characters` and `game_data/campaigns`.
 - **Running tests:**  When running tests always use the test suite read tests\README.md
                       on how to run this.
 - **New tests:** Add the test to the test_all_<suitename>.py before checking if ther test works

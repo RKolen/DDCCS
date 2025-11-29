@@ -38,6 +38,7 @@ from src.stories.session_results_manager import (
 from src.stories.character_action_analyzer import extract_character_actions
 from src.characters.character_consistency import create_character_development_file
 from src.utils.file_io import read_text_file
+from src.utils.string_utils import truncate_at_sentence
 from src.stories.story_ai_generator import generate_session_results_from_story
 from src.cli.dnd_cli_helpers import (
     get_continuation_scene_type,
@@ -222,6 +223,7 @@ class StoryCLIManager:
             print("7. Get DC Suggestions")
             print("8. Get DM Narrative Suggestions")
             print("9. Story Analysis (Slow)")
+            print("10. Character Analysis (Slow)")
             print("0. Back")
 
             choice = input("Enter your choice: ").strip()
@@ -250,6 +252,7 @@ class StoryCLIManager:
             ("7", False, "_get_dc_suggestions_cli"),
             ("8", False, "_get_dm_narrative_cli"),
             ("9", True, "_analyze_series_consistency"),
+            ("10", True, "_analyze_character_development_series"),
         ]
 
         for op_choice, requires_stories, method_name in story_operations:
@@ -289,6 +292,8 @@ class StoryCLIManager:
             self.consultations_cli.get_dm_narrative_suggestions()
         elif method_name == "_analyze_series_consistency":
             self.analysis_cli.analyze_series_consistency(series_name, series_stories)
+        elif method_name == "_analyze_character_development_series":
+            self.analysis_cli.analyze_character_development_series(series_name, series_stories)
 
     def _orchestrate_story_creation(
         self, story_path: str, series_path: str, party_names: List[str]
@@ -827,7 +832,7 @@ class StoryCLIManager:
             character_actions = extract_character_actions(
                 story_content,
                 party_members,
-                self._truncate_at_sentence,
+                truncate_at_sentence,
                 character_profiles=self._load_character_profiles_for_analysis(
                     party_members, campaign_path
                 )
@@ -850,17 +855,6 @@ class StoryCLIManager:
             print("Invalid input.")
         except (OSError, AttributeError) as e:
             print(f"[ERROR] Failed to generate character development: {e}")
-
-    def _truncate_at_sentence(self, text: str, max_length: int) -> str:
-        """Truncate text at sentence boundary."""
-        if len(text) <= max_length:
-            return text
-
-        truncated = text[:max_length]
-        last_period = truncated.rfind(".")
-        if last_period > max_length * 0.7:
-            return truncated[:last_period + 1]
-        return truncated + "..."
 
     def _load_character_profiles_for_analysis(
         self, party_names: List[str], _campaign_path: str

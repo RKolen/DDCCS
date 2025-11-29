@@ -4,9 +4,10 @@ These tests use small fakes and monkeypatching to avoid interactive I/O and
 heavy dependencies (AI, real CombatNarrator).
 """
 
+import shutil
 from tests.test_helpers import setup_test_environment, import_module
 
-setup_test_environment()
+project_root = setup_test_environment()
 
 cli_mod = import_module("src.cli.cli_story_analysis")
 StoryAnalysisCLI = cli_mod.StoryAnalysisCLI
@@ -265,3 +266,74 @@ def test_convert_combat_uses_combat_narrator(monkeypatch, tmp_path):
     assert isinstance(cli.combat_narrator, FakeCombatNarrator)
     assert cli.combat_narrator.title_generated is True
     assert cli.combat_narrator.narrated is True
+
+
+def test_analyze_character_development_series(monkeypatch, tmp_path):
+    """analyze_character_development_series should generate a report using real data."""
+    fake_manager = _FakeManagerWithSeriesStories()
+    cli = StoryAnalysisCLI(fake_manager, str(tmp_path))
+
+    # Copy real character data to tmp_path
+    real_chars_dir = project_root / "game_data" / "characters"
+    tmp_chars_dir = tmp_path / "game_data" / "characters"
+    shutil.copytree(real_chars_dir, tmp_chars_dir)
+
+    # Copy real campaign data to tmp_path
+    real_campaign_dir = project_root / "game_data" / "campaigns" / "Example_Campaign"
+    tmp_campaign_dir = tmp_path / "game_data" / "campaigns" / "Example_Campaign"
+    shutil.copytree(real_campaign_dir, tmp_campaign_dir)
+
+    # Mock dependencies
+    # Use real party members from Example_Campaign
+    monkeypatch.setattr(cli_mod, "load_current_party",
+                        lambda **kwargs: ["Aragorn", "Frodo Baggins", "Gandalf the Grey"])
+    monkeypatch.setattr(cli_mod, "get_campaign_path", lambda name, ws: str(tmp_campaign_dir))
+
+    # Use real story content
+    def real_read_text_file(path):
+        with open(path, 'r', encoding='utf-8') as f:
+            return f.read()
+    monkeypatch.setattr(cli_mod, "read_text_file", real_read_text_file)
+
+    # Mock extract_character_actions to return some data (still mocking this as it's complex logic)
+    # But we verify it receives the real profiles
+    def fake_extract(_content, _party, _truncate, character_profiles=None):
+        assert character_profiles is not None
+        assert "Aragorn" in character_profiles
+        assert "Frodo Baggins" in character_profiles
+        # Verify real profile data is loaded
+        assert character_profiles["Aragorn"]["dnd_class"] == "Ranger"
+
+        return [{
+            "character": "Aragorn",
+            "action": "Aragorn led the way.",
+            "reasoning": "Leadership.",
+            "consistency": "Consistent",
+            "notes": "Good."
+        }]
+    monkeypatch.setattr(cli_mod, "extract_character_actions", fake_extract)
+
+    # Mock write_text_file to verify output
+    written_files = {}
+
+    def fake_write(path, content):
+        written_files[path] = content
+    monkeypatch.setattr(cli_mod, "write_text_file", fake_write)
+
+    # Mock input to confirm analysis
+    monkeypatch.setattr("builtins.input", lambda prompt: "y")
+    monkeypatch.setattr("builtins.print", lambda *args, **kwargs: None)
+
+    # Run analysis on real stories
+    stories = ["001_start.md", "002_continue.md", "003_end.md"]
+    cli.analyze_character_development_series("Example_Campaign", stories)
+
+    # Verify report was generated
+    assert len(written_files) == 1
+    report_path = list(written_files.keys())[0]
+    content = written_files[report_path]
+
+    assert "Character Development Analysis" in content
+    assert "Aragorn" in content
+    # Verify real background data is used in the report
+    assert "Heir of Isildur" in content or "Ranger of the North" in content
