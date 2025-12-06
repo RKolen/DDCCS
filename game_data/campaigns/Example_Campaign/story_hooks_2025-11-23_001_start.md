@@ -1,4 +1,4 @@
-# Story Hooks & Future Sessions: 001_start
+﻿# Story Hooks & Future Sessions: 001_start
 **Date:** 2025-11-23
 
 ## Unresolved Plot Threads
@@ -25,5 +25,3 @@
 #### Gandalf the Grey
 - Gandalf receives another cryptic message on their journey to Weathertop, suggesting immediate action is needed to prevent a catastrophic event.
 - An elder wizard from the White Council approaches Gandalf with dire prophecies and requests his assistance in stopping an impending darkness.
-
-

@@ -1,4 +1,4 @@
-# D&D Character Consultant System - Source Code Structure
+﻿# D&D Character Consultant System - Source Code Structure
 
 This directory contains all source code organized into logical packages.
 

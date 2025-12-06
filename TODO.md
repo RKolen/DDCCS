@@ -1,6 +1,9 @@
-# TODO List - D&D Character Consultant System
+﻿# TODO List - D&D Character Consultant System
 
 ##  High Priority
+
+### Performance & Startup
+- [ ] **Lazy character loading** - Move character loading from startup to on-demand (when story/campaign is selected or character management is used). Currently loads and validates ALL 15 character JSONs on startup causing slow boot times. Should only load characters when actually needed (story creation/continuation or character management). Option 3 (Read Stories) needs NO character loading. This will make startup instant and scale to hundreds of characters.
 
 ### User Experience
 - [ ] **Error handling** - Improve error messages throughout the system for better user guidance
@@ -22,7 +25,6 @@
 - [ ] **Profile Verification** - Check if JSON templates need to be updated for profile updates and consistency usage
 - [ ] **Character Names** - Split names into first and last names for characters and npcs
 - [ ] **Pronouns** - Add pronouns to character files
-- [ ] **Update Readmes** - Update Readmes with new structure and use the example characters in examples.
 
 ### Feature Enhancements
 - [ ] **Campaign templates** - Create templates for common campaign types (mystery, dungeon crawl, etc.)
@@ -48,13 +50,14 @@
 
 ### Advanced Features
 - [ ] **In-world calendar tracking** - Track campaign timeline, seasons, and story chronology within the game world
+- [ ] **ASCII Character Art** - Create images for characters
 
 ### Story Tools
 - [ ] **Character arc analysis** - Tools to analyze character development over multiple stories
 - [ ] **Custom spell highlighting** - Extend spell highlighting system to support homebrew/custom spells (currently only official D&D 5e spells via wikidot are highlighted)
 
 ### Technical Improvements
-- [ ] **Plugin architecture** - Allow custom modules/plugins for specific campaign needs  
+- [ ] **Plugin architecture** - Allow custom modules/plugins for specific campaign needs
 - [ ] **Export functionality** - Export stories to different formats (PDF, HTML, etc.)
 - [ ] **Backup system** - Automated backup of character profiles and party configurations
 
@@ -65,11 +68,7 @@
 ##  Known Issues to Fix
 
 ### Bug Fixes
-- [ ] **W0611: Unused AIClient imported from ai_client (unused-import)** In dungeon_master.py
-- [ ] **R0904: Too many public methods (24/20) (too-many-public-methods)** In enhanced_story_manager.py
-- [ ] **Unicode handling** - Fix emoji/Unicode issues in Windows console output (partially resolved)
 - [ ] **File path handling** - Ensure cross-platform compatibility for file paths
-- [ ] **Memory usage** - Optimize character loading for large numbers of characters
 - [ ] **Git integration** - Test git functionality with different repository structures
 
 ### Quality of Life
@@ -78,11 +77,10 @@
 - [ ] **Command history** - Save and recall previous commands in interactive mode
 - [ ] **Batch operations** - Support for bulk character or story operations
 
-##  Documentation TODOs
+## Documentation TODOs
 
 ### README Updates
-- [ ] **Remove outdated references** to Story_Series_Folders structure
-- [ ] **Update workflow examples** with real use cases
+
 - [ ] **Add troubleshooting section** for common issues
 
 ### New Documentation
@@ -92,6 +90,12 @@
 - [ ] **Integration guide** - How to integrate with external tools
 
 ## [x] Recently Completed
+
+### Readability December 6, 2025
+- [x] **Story Readability** - Make story readable from terminal
+- [x] **Update Readmes** - Update Readmes with new structure and use the example characters in examples.
+- [x] **Remove outdated references** to Story_Series_Folders structure
+- [x] **Update workflow examples** with real use cases
 
 ### Manual Testing November 8, 2025
 - [x] - The code recently undergone many code refactors and while tests are added for everything we need to check if the donsultant still does what we want.
@@ -201,7 +205,7 @@
   - [x] test_story_file_helpers.py
   - [x] test_all_utils.py
   - [x] tests/utils/README.md
-  
+
 **Testing Standards:**
 - [COMPLETE] Every test must achieve 10.00/10 pylint (NO disable comments no pragma no noqa)
 - [COMPLETE] Every test must work with `run_all_tests.py`
@@ -336,5 +340,5 @@
 
 ---
 
-**Last Updated:** November 23, 2025
+**Last Updated:** December 6, 2025
 **Priority Legend:**  High |  Medium |  Low |  Bugs |  Docs

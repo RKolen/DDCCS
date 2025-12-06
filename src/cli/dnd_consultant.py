@@ -5,11 +5,13 @@ VSCode-integrated system for story management and character consultation.
 
 import argparse
 import os
+from typing import Optional
 from src.stories.enhanced_story_manager import EnhancedStoryManager
 from src.stories.story_manager import StoryManager
 from src.dm.dungeon_master import DMConsultant
 from src.cli.cli_character_manager import CharacterCLIManager
 from src.cli.cli_story_manager import StoryCLIManager
+from src.cli.cli_story_reader import StoryReaderCLI
 from src.ai.availability import AI_AVAILABLE
 from src.ai.ai_client import AIClient
 
@@ -17,7 +19,7 @@ from src.ai.ai_client import AIClient
 class DDConsultantCLI:
     """Command-line interface for the D&D Character Consultant system."""
 
-    def __init__(self, workspace_path: str = None, campaign_name: str = None):
+    def __init__(self, workspace_path: str = "", campaign_name: str = ""):
         self.workspace_path = workspace_path or os.getcwd()
 
         # Initialize AI client if available
@@ -48,6 +50,7 @@ class DDConsultantCLI:
         self.story_cli = StoryCLIManager(
             self.story_manager, self.workspace_path, self.dm_consultant
         )
+        self.story_reader = StoryReaderCLI(self.workspace_path)
 
     def run_interactive(self):
         """Run the interactive command-line interface."""
@@ -65,13 +68,15 @@ class DDConsultantCLI:
                 self.character_manager.manage_characters()
             elif choice == "2":
                 self.story_cli.manage_stories()
+            elif choice == "3":
+                self.story_reader.display_menu()
             elif choice == "0":
                 print("Goodbye! May your adventures be epic!")
                 break
             else:
                 print("Invalid choice. Please try again.")
 
-    def run_command(self, command: str, story_file: str = None):
+    def run_command(self, command: str, story_file: Optional[str] = None):
         """
         Run a specific command non-interactively.
 
@@ -92,6 +97,7 @@ class DDConsultantCLI:
         print("-" * 30)
         print("1. Manage Characters")
         print("2. Manage Stories")
+        print("3. Read Stories")
         print("0. Exit")
         print()
 

@@ -1,4 +1,4 @@
-# Story Hooks & Future Sessions: 003_end
+﻿# Story Hooks & Future Sessions: 003_end
 **Date:** 2025-11-23
 
 ## Unresolved Plot Threads
@@ -24,5 +24,3 @@
 #### Gandalf the Grey
 - Gandalf receives a vision during meditation about an ancient artifact hidden within Weathertop’s tower that could exacerbate or mitigate current dark threats.
 - Gandalf senses a faint link between the necromantic energy discovered on Weathertop and recent disturbances in other parts of Middle-earth.
-
-

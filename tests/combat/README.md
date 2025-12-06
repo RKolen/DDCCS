@@ -1,4 +1,4 @@
-# Combat Subsystem Tests
+﻿# Combat Subsystem Tests
 
 This folder contains unit and integration tests for the combat-to-narrative
 pipeline: AI-enhanced narration, action description formatting, and

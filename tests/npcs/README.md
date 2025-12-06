@@ -1,4 +1,4 @@
-# NPC System Tests
+﻿# NPC System Tests
 
 This directory contains comprehensive tests for the NPC management
 system, including NPC agents and automatic NPC detection.

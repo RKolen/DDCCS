@@ -1,4 +1,4 @@
-## Prancing Pony Warning
+﻿## Prancing Pony Warning
 
 The bustling Prancing Pony Inn hummed with the lively chatter of travelers and
 adventurers. Aragorn, his keen eyes scanning the room, caught sight of Frodo

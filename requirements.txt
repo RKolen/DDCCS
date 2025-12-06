@@ -4,4 +4,5 @@
 openai>=1.0.0  # OpenAI SDK (works with Ollama, OpenRouter, and other compatible providers)
 python-dotenv>=1.0.0  # Environment variable management
 
-# No other external dependencies required - system uses Python standard library
+# Terminal UI & Formatting
+rich>=13.0.0  # Rich text and beautiful formatting for terminal output

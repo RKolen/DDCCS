@@ -1,4 +1,4 @@
-# D&D Character Consultant System - Copilot Instructions
+﻿# D&D Character Consultant System - Copilot Instructions
 
 - Before every action read this entire document
 **For detailed project context, see `docs/docs_personal/COPILOT_CONTEXT.md`**

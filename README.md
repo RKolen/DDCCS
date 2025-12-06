@@ -1,4 +1,4 @@
-# D&D Character Consultant System
+﻿# D&D Character Consultant System
 
 A Python-based system for managing D&D##  Documentation
 
@@ -482,4 +482,4 @@ This system **enhances your creativity** while maintaining your control:
 
 ---
 
-**Ready to enhance your D&D storytelling? Run `python -m src.cli.setup` to begin!** 
+**Ready to enhance your D&D storytelling? Run `python -m src.cli.setup` to begin!**

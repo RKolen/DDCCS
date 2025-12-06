@@ -1,0 +1,60 @@
+# EditorConfig is awesome: https://EditorConfig.org
+
+# top-most EditorConfig file
+root = true
+
+# Unix-style newlines with a newline ending every file
+[*]
+end_of_line = lf
+insert_final_newline = true
+charset = utf-8
+
+# Python files
+[*.py]
+indent_style = space
+indent_size = 4
+max_line_length = 100
+
+# YAML files
+[*.{yml,yaml}]
+indent_style = space
+indent_size = 2
+
+# JSON files
+[*.json]
+indent_style = space
+indent_size = 2
+
+# Markdown files - optimized for terminal readability
+[*.md]
+indent_style = space
+indent_size = 2
+trim_trailing_whitespace = true
+# Markdown-specific: preserve blank lines for readability
+# Line length at 80 chars (Black's default) for balanced readability in terminal
+max_line_length = 80
+
+# Shell scripts
+[*.sh]
+indent_style = space
+indent_size = 2
+end_of_line = lf
+
+# Batch/PowerShell scripts
+[*.{bat,ps1}]
+end_of_line = crlf
+
+# Test files
+[tests/**]
+indent_style = space
+indent_size = 4
+max_line_length = 100
+
+# Configuration files
+[.env*]
+charset = utf-8
+
+[setup.py]
+indent_style = space
+indent_size = 4
+max_line_length = 100

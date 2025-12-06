@@ -1,4 +1,4 @@
-# Story Continuation Guide
+﻿# Story Continuation Guide
 
 This guide explains the AI-powered story continuation feature that allows users to generate and append AI-enhanced narrative content to existing story files.
 

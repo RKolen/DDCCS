@@ -1,4 +1,4 @@
-# Story Hooks & Future Sessions: 002_continue
+﻿# Story Hooks & Future Sessions: 002_continue
 **Date:** 2025-11-23
 
 ## Unresolved Plot Threads
@@ -23,5 +23,3 @@
 
 #### Aragorn
 - At Weathertop, they encounter and must outwit or defeat a group of sinister sorcerers trying to capture Frodo and take him to Sauron.
-
-

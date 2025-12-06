@@ -1,4 +1,4 @@
-# Session Results: 001_start
+﻿# Session Results: 001_start
 **Date:** 2025-11-23
 
 ## Roll Results

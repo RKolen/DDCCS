@@ -1,4 +1,4 @@
-# Character Development: 003_end
+﻿# Character Development: 003_end
 **Date:** 2025-11-23
 
 ## Character Actions & Reasoning
@@ -29,4 +29,3 @@
 **Development Notes:** Gandalf's presence at Weathertop amid the oppressive atmosphere presents an opportunity for character development by highlighting his wisdom and resilience in the face of dark magic. This scene also advances his story by showcasing his protective instincts towards Frodo and setting up potential conflicts with the encroaching forces of Sauron.
 
 ---
-

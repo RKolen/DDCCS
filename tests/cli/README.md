@@ -1,4 +1,4 @@
-# CLI Subsystem Tests
+﻿# CLI Subsystem Tests
 
 This folder contains unit tests for the command-line interface (CLI) layer of
 the D&D Character Consultant System. The CLI layer wires together story

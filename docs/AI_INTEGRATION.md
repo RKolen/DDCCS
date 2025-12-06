@@ -1,4 +1,4 @@
-# AI Integration Guide
+﻿# AI Integration Guide
 ## D&D Character Consultant System
 
 This guide explains how to integrate AI/LLM capabilities into the D&D Character Consultant System.

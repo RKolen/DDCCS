@@ -1,0 +1,22 @@
+{
+  "typeCheckingMode": "basic",
+  "pythonVersion": "3.13",
+  "include": ["src", "tests"],
+  "exclude": [".venv", "__pycache__"],
+  "reportMissingImports": false,
+  "reportUndefinedVariable": true,
+  "reportGeneralTypeIssues": true,
+  "reportOptionalOperand": false,
+  "reportOptionalMemberAccess": false,
+  "reportOptionalSubscript": false,
+  "reportOptionalCall": false,
+  "reportOptionalIterable": false,
+  "reportOptionalContextManager": false,
+  "reportOptionalArgumentType": false,
+  "reportOptionalParameterType": false,
+  "reportOptionalReturnType": false,
+  "reportOptionalAssignment": false,
+  "reportPrivateImportUsage": false,
+  "reportIncompatibleMethodOverride": false,
+  "reportIncompatibleVariableOverride": false
+}

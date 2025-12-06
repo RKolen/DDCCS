@@ -1,4 +1,4 @@
-# DM Subsystem Tests
+﻿# DM Subsystem Tests
 
 This folder contains unit tests for the Dungeon Master (DM) subsystem.
 The DM subsystem provides narrative generation, consistency checking, and

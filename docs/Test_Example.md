@@ -1,4 +1,4 @@
-# D&D Character Consultant - Simple Testing Guide
+﻿# D&D Character Consultant - Simple Testing Guide
 
 This guide shows you exactly what to press and what to expect when testing the system.
 
@@ -226,4 +226,4 @@ You've successfully tested the system if:
 3. **Use during sessions:** Run the consultant while playing D&D
 4. **Add NPCs:** Create JSON files in `npcs/` folder
 
-**That's it! Simple testing to verify everything works.** 
+**That's it! Simple testing to verify everything works.**

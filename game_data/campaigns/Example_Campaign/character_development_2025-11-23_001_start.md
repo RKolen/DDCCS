@@ -1,4 +1,4 @@
-# Character Development: 001_start
+﻿# Character Development: 001_start
 **Date:** 2025-11-23
 
 ## Character Actions & Reasoning
@@ -29,4 +29,3 @@
 **Development Notes:** This scene offers an opportunity for Gandalf to reveal deeper insights into his motivations and the broader context of the quest to Frodo and others like Barliman Butterbur, thus advancing his role as a mentor and guide who provides crucial information and support to the fellowship.
 
 ---
-

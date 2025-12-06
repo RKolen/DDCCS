@@ -1,4 +1,4 @@
-# Character System Tests
+﻿# Character System Tests
 
 This directory contains comprehensive tests for the D&D character
 consultant system.

@@ -1,4 +1,4 @@
-## tests/utils — Utility module tests
+﻿## tests/utils — Utility module tests
 
 This folder contains unit tests covering the small, commonly used helper
 modules under `src/utils/`.

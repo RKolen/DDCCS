@@ -6,7 +6,7 @@ Handles all story-related menu interactions and operations.
 
 import os
 import json
-from typing import List
+from typing import List, Optional
 from datetime import datetime
 
 from src.cli.party_config_manager import (
@@ -51,6 +51,7 @@ from src.cli.cli_story_config_helper import (
     build_story_config,
     display_story_prompt_guidance,
 )
+from src.utils.terminal_display import display_story_file
 
 
 class StoryCLIManager:
@@ -348,9 +349,9 @@ class StoryCLIManager:
     def _collect_story_creation_options(
         self,
         story_type: str = "initial",
-        series_name: str = None,
-        campaign_dir: str = None,
-        previous_stories: List[str] = None,
+        series_name: str = "",
+        campaign_dir: Optional[str] = None,
+        previous_stories: Optional[List[str]] = None,
     ) -> StoryCreationOptions:
         """Collect template and AI generation options from user."""
         use_template = False
@@ -583,25 +584,34 @@ class StoryCLIManager:
             with open(story_path, "r", encoding="utf-8") as f:
                 content = f.read()
 
-            print(f"\n STORY: {display_name}")
-            print("-" * (len(display_name) + 10))
+            # Ask if user wants rich formatted display
+            use_rich = input(
+                "\nView with rich formatting? (y/n): "
+            ).strip().lower()
 
-            lines = content.split("\n")
-            if lines:
-                title_line = lines[0].strip()
-                if title_line.startswith("#"):
-                    print(f"Title: {title_line}")
-                else:
-                    print(f"Title: {title_line}")
+            if use_rich == 'y':
+                display_story_file(story_path, story_name=display_name)
+            else:
+                # Plain text display
+                print(f"\n STORY: {display_name}")
+                print("-" * (len(display_name) + 10))
 
-            print(f"File size: {len(content)} characters")
-            print(f"Lines: {len(lines)}")
+                lines = content.split("\n")
+                if lines:
+                    title_line = lines[0].strip()
+                    if title_line.startswith("#"):
+                        print(f"Title: {title_line}")
+                    else:
+                        print(f"Title: {title_line}")
 
-            # Show first few lines as preview
-            print("\nPreview (first 3 lines):")
-            for line in lines[:3]:
-                if line.strip():
-                    print(f"  {line[:100]}...")
+                print(f"File size: {len(content)} characters")
+                print(f"Lines: {len(lines)}")
+
+                # Show first few lines as preview
+                print("\nPreview (first 3 lines):")
+                for line in lines[:3]:
+                    if line.strip():
+                        print(f"  {line[:100]}...")
 
             # Offer AI continuation if AI is available
             if self.story_manager.ai_client:

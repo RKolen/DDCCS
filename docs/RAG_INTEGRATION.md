@@ -1,4 +1,4 @@
-# RAG (Retrieval-Augmented Generation) Integration Guide
+﻿# RAG (Retrieval-Augmented Generation) Integration Guide
 
 ## Overview
 

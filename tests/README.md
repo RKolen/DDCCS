@@ -1,4 +1,4 @@
-# D&D Character Consultant System - Test Suite
+﻿# D&D Character Consultant System - Test Suite
 
 This directory contains tests for the D&D Character Consultant
 System. Tests mirror the modular src/ directory structure.

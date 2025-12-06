@@ -1,4 +1,4 @@
-## Mysteries of Trollshaws Forest
+﻿## Mysteries of Trollshaws Forest
 
 The afternoon sun cast long shadows across the winding path leading into
 Trollshaws Forest, its dense canopy looming in the distance like a dark curtain

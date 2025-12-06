@@ -1,4 +1,4 @@
-# Game Data JSON Validation
+﻿# Game Data JSON Validation
 
 This document describes the comprehensive JSON validation system for all game data files in the D&D Campaign System, including character profiles, NPC profiles, custom items registry, and party configuration.
 

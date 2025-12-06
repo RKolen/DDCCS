@@ -1,4 +1,4 @@
-# Validation Tests
+﻿# Validation Tests
 
 ## What This Tests
 JSON validation for all game data files (characters, NPCs, items, party configuration). Ensures data integrity and catches schema errors before they cause runtime issues.

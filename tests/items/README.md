@@ -1,4 +1,4 @@
-````markdown
+﻿````markdown
 # Items Subsystem Tests
 
 This folder contains unit tests for the items registry and item-related APIs.

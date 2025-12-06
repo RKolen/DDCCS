@@ -1,4 +1,4 @@
-# Character Development: 002_continue
+﻿# Character Development: 002_continue
 **Date:** 2025-11-23
 
 ## Character Actions & Reasoning
@@ -29,4 +29,3 @@
 **Development Notes:** Review action against character's established personality
 
 ---
-
