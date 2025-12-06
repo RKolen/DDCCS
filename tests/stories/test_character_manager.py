@@ -7,12 +7,7 @@ Tests for character loading, profiles, consultants, and spell highlighting.
 import os
 import tempfile
 import json
-from tests import test_helpers
-
-# Import CharacterManager via centralized safe import helper
-CharacterManager = test_helpers.safe_from_import(
-    "src.stories.character_manager", "CharacterManager"
-)
+from src.stories.character_manager import CharacterManager
 
 
 def create_test_character_file(directory, name, dnd_class="fighter", spells=None):
@@ -28,20 +23,16 @@ def create_test_character_file(directory, name, dnd_class="fighter", spells=None
         "motivations": ["test motivation"],
         "fears_weaknesses": ["test fear"],
         "relationships": {},
-        "equipment": {
-            "weapons": ["sword"],
-            "armor": ["plate"],
-            "items": ["potion"]
-        },
+        "equipment": {"weapons": ["sword"], "armor": ["plate"], "items": ["potion"]},
         "ability_scores": {
             "strength": 16,
             "dexterity": 12,
             "constitution": 14,
             "intelligence": 10,
             "wisdom": 10,
-            "charisma": 8
+            "charisma": 8,
         },
-        "known_spells": spells or []
+        "known_spells": spells or [],
     }
 
     filepath = os.path.join(directory, f"{name.lower()}.json")
@@ -143,9 +134,7 @@ def test_apply_spell_highlighting():
     print("\n[TEST] Apply Spell Highlighting")
 
     with tempfile.TemporaryDirectory() as temp_dir:
-        create_test_character_file(
-            temp_dir, "Wizard", "wizard", ["Fireball", "Shield"]
-        )
+        create_test_character_file(temp_dir, "Wizard", "wizard", ["Fireball", "Shield"])
 
         manager = CharacterManager(temp_dir)
         manager.load_characters()

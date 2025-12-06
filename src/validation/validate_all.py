@@ -29,7 +29,7 @@ from ..utils.path_utils import (
     get_characters_dir,
     get_npcs_dir,
     get_items_registry_path,
-    get_party_config_path
+    get_party_config_path,
 )
 
 # Import all validators
@@ -80,11 +80,11 @@ def validate_characters(verbose: bool = False) -> Tuple[bool, int, int]:
     invalid_count = 0
 
     for filepath in sorted(get_json_files_in_directory(characters_dir)):
-        if filepath.endswith(".example.json"):
+        if filepath.name.endswith(".example.json"):
             continue
 
-        is_valid, errors = validate_character_file(filepath)
-        filename = filepath.split("\\")[-1]  # Get just the filename for display
+        is_valid, errors = validate_character_file(str(filepath))
+        filename = filepath.name  # Get just the filename for display
 
         if is_valid:
             valid_count += 1
@@ -124,11 +124,11 @@ def validate_npcs(verbose: bool = False) -> Tuple[bool, int, int]:
     invalid_count = 0
 
     for filepath in sorted(get_json_files_in_directory(npcs_dir)):
-        if filepath.endswith(".example.json"):
+        if filepath.name.endswith(".example.json"):
             continue
 
-        is_valid, errors = validate_npc_file(filepath)
-        filename = filepath.split("\\")[-1]  # Get just the filename for display
+        is_valid, errors = validate_npc_file(str(filepath))
+        filename = filepath.name  # Get just the filename for display
 
         if is_valid:
             valid_count += 1

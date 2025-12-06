@@ -9,18 +9,10 @@ import os
 import sys
 
 from tests import test_helpers
-
-StoryConsistencyAnalyzer = test_helpers.safe_from_import(
-    "src.stories.story_consistency_analyzer", "StoryConsistencyAnalyzer"
-)
-CharacterNameMatcher = test_helpers.safe_from_import(
-    "src.stories.story_consistency_analyzer", "CharacterNameMatcher"
-)
-ActionContext = test_helpers.safe_from_import(
-    "src.stories.story_consistency_analyzer", "ActionContext"
-)
-ConsistencyIssue = test_helpers.safe_from_import(
-    "src.stories.story_consistency_analyzer", "ConsistencyIssue"
+from src.stories.story_consistency_analyzer import (
+    StoryConsistencyAnalyzer,
+    CharacterNameMatcher,
+    ActionContext,
 )
 
 
@@ -43,7 +35,9 @@ def test_name_pattern_matching():
     text = "Frodo walked slowly.\nBaggins was tired.\nFrodo Baggins rested."
     mentions = matcher.find_character_mentions(text, "Frodo Baggins")
     # Should find at least 1 line with a mention (each line is counted once)
-    assert len(mentions) >= 1, f"Should find at least 1 line mention, found {len(mentions)}"
+    assert (
+        len(mentions) >= 1
+    ), f"Should find at least 1 line mention, found {len(mentions)}"
 
     print("[PASS] Name Pattern Matching")
 
@@ -63,11 +57,11 @@ def test_character_profile_loading():
     assert os.path.exists(frodo_file), "Should find Frodo character file"
 
     # Test loading profile
-    with open(aragorn_file, 'r', encoding='utf-8') as char_f:
+    with open(aragorn_file, "r", encoding="utf-8") as char_f:
         profile = json.load(char_f)
     assert profile is not None, "Should load Aragorn profile"
-    assert profile.get('name') == "Aragorn", "Profile should have correct name"
-    assert profile.get('dnd_class') == "Ranger", "Should have class"
+    assert profile.get("name") == "Aragorn", "Profile should have correct name"
+    assert profile.get("dnd_class") == "Ranger", "Should have class"
 
     print("[PASS] Character Profile Loading")
 
@@ -83,7 +77,7 @@ def test_tactical_consistency_check():
     aragorn_path = os.path.join(workspace, "game_data", "characters", "aragorn.json")
     assert os.path.exists(aragorn_path), "Aragorn character file should exist"
 
-    with open(aragorn_path, 'r', encoding='utf-8') as char_file:
+    with open(aragorn_path, "r", encoding="utf-8") as char_file:
         ranger_profile = json.load(char_file)
 
     # Test bow usage - Rangers can use bows effectively, so may not flag as issue
@@ -95,7 +89,7 @@ def test_tactical_consistency_check():
     # The analyzer should process without error (issue may or may not be generated)
     # This is valid since rangers are proficient with bows
     if issue:
-        assert issue.issue_type == 'tactical', "Should be tactical issue if detected"
+        assert issue.issue_type == "tactical", "Should be tactical issue if detected"
         assert issue.score <= 10, "Score should be valid"
 
     print("[PASS] Tactical Consistency Check")
@@ -112,7 +106,7 @@ def test_personality_consistency_check():
     frodo_path = os.path.join(workspace, "game_data", "characters", "frodo.json")
     assert os.path.exists(frodo_path), "Frodo character file should exist"
 
-    with open(frodo_path, 'r', encoding='utf-8') as char_file:
+    with open(frodo_path, "r", encoding="utf-8") as char_file:
         fearful_profile = json.load(char_file)
 
     # Test reckless action with fearful character
@@ -122,8 +116,8 @@ def test_personality_consistency_check():
 
     # May or may not detect based on pattern matching
     if issue:
-        assert issue.issue_type == 'personality', "Should be personality issue"
-        assert 'flaws' in issue.suggestion.lower(), "Should mention character flaws"
+        assert issue.issue_type == "personality", "Should be personality issue"
+        assert "flaws" in issue.suggestion.lower(), "Should mention character flaws"
 
     print("[PASS] Personality Consistency Check")
 
@@ -137,8 +131,8 @@ def test_story_file_analysis_with_real_data():
 
     # Run full series analysis with one file to test story file processing
     campaign_name = "Example_Campaign"
-    story_files = ['001_start.md']
-    party_members = ['Aragorn', 'Frodo Baggins', 'Gandalf the Grey']
+    story_files = ["001_start.md"]
+    party_members = ["Aragorn", "Frodo Baggins", "Gandalf the Grey"]
 
     # Verify story file exists
     story_path = os.path.join(
@@ -150,19 +144,17 @@ def test_story_file_analysis_with_real_data():
 
     # Run analysis via public API
     results = analyzer.analyze_series(
-        series_name=campaign_name,
-        story_files=story_files,
-        party_members=party_members
+        series_name=campaign_name, story_files=story_files, party_members=party_members
     )
 
     # Verify results
-    assert results['stories_analyzed'] == 1, "Should analyze one story"
-    assert isinstance(results['issues'], list), "Should return list of issues"
+    assert results["stories_analyzed"] == 1, "Should analyze one story"
+    assert isinstance(results["issues"], list), "Should return list of issues"
     print(f"  Found {len(results['issues'])} potential issues in 001_start.md")
 
     # Clean up generated report
-    if os.path.exists(results['report_path']):
-        os.remove(results['report_path'])
+    if os.path.exists(results["report_path"]):
+        os.remove(results["report_path"])
 
     print("[PASS] Story File Analysis with Real Data")
 
@@ -175,8 +167,8 @@ def test_report_generation():
     analyzer = StoryConsistencyAnalyzer(workspace)
 
     campaign_name = "Example_Campaign"
-    story_files = ['001_start.md']
-    party_members = ['Aragorn', 'Frodo Baggins', 'Gandalf the Grey']
+    story_files = ["001_start.md"]
+    party_members = ["Aragorn", "Frodo Baggins", "Gandalf the Grey"]
 
     # Verify campaign exists
     campaign_path = os.path.join(workspace, "game_data", "campaigns", campaign_name)
@@ -188,16 +180,14 @@ def test_report_generation():
 
     # Run full analysis to generate report
     results = analyzer.analyze_series(
-        series_name=campaign_name,
-        story_files=story_files,
-        party_members=party_members
+        series_name=campaign_name, story_files=story_files, party_members=party_members
     )
 
-    report_path = results['report_path']
+    report_path = results["report_path"]
     assert os.path.exists(report_path), "Report file should be created"
 
     # Verify report content
-    with open(report_path, 'r', encoding='utf-8') as report_file:
+    with open(report_path, "r", encoding="utf-8") as report_file:
         report_content = report_file.read()
 
     assert "Story Consistency Analysis" in report_content, "Should have title"
@@ -218,14 +208,14 @@ def test_series_analysis_integration():
     analyzer = StoryConsistencyAnalyzer(workspace)
 
     campaign_name = "Example_Campaign"
-    story_files = ['001_start.md', '002_continue.md', '003_end.md']
-    party_members = ['Aragorn', 'Frodo Baggins', 'Gandalf the Grey']
+    story_files = ["001_start.md", "002_continue.md", "003_end.md"]
+    party_members = ["Aragorn", "Frodo Baggins", "Gandalf the Grey"]
 
     # Verify story files exist
     campaign_path = os.path.join(workspace, "game_data", "campaigns", campaign_name)
-    existing_files = [f for f in story_files if os.path.exists(
-        os.path.join(campaign_path, f)
-    )]
+    existing_files = [
+        f for f in story_files if os.path.exists(os.path.join(campaign_path, f))
+    ]
 
     if len(existing_files) == 0:
         print(f"  SKIP - No story files found in {campaign_name}")
@@ -235,21 +225,22 @@ def test_series_analysis_integration():
     results = analyzer.analyze_series(
         series_name=campaign_name,
         story_files=existing_files,
-        party_members=party_members
+        party_members=party_members,
     )
 
-    assert results['series_name'] == campaign_name, "Should have series name"
-    assert results['stories_analyzed'] == len(existing_files), \
-        f"Should analyze {len(existing_files)} stories"
-    assert 'report_path' in results, "Should have report path"
-    assert os.path.exists(results['report_path']), "Report should exist"
+    assert results["series_name"] == campaign_name, "Should have series name"
+    assert results["stories_analyzed"] == len(
+        existing_files
+    ), f"Should analyze {len(existing_files)} stories"
+    assert "report_path" in results, "Should have report path"
+    assert os.path.exists(results["report_path"]), "Report should exist"
 
     print(f"  Analyzed {results['stories_analyzed']} stories")
     print(f"  Found {results['total_issues']} issues")
 
     # Clean up generated report
-    if os.path.exists(results['report_path']):
-        os.remove(results['report_path'])
+    if os.path.exists(results["report_path"]):
+        os.remove(results["report_path"])
 
     print("[PASS] Series Analysis Integration")
 
@@ -268,8 +259,7 @@ def test_name_matching_edge_cases():
 
     # Test multi-word with title
     mentions = matcher.find_character_mentions(
-        "Gandalf walked forward. The Grey wizard spoke.",
-        "Gandalf the Grey"
+        "Gandalf walked forward. The Grey wizard spoke.", "Gandalf the Grey"
     )
     assert len(mentions) >= 1, "Should find name parts"
 

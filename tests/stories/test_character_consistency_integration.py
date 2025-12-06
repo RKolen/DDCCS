@@ -9,12 +9,11 @@ consultant) detects in-character vs out-of-character actions.
 import os
 import tempfile
 from tests import test_helpers
+from src.stories.story_manager import StoryManager
 
 # Prepare test environment
 project_root = test_helpers.setup_test_environment()
-StoryManager = test_helpers.safe_from_import(
-    "src.stories.story_manager", "StoryManager"
-)
+
 
 def _get_consultant_analysis_for(manager, story_path, character_name):
     result = manager.analyze_story_file(story_path)
@@ -61,5 +60,7 @@ def test_character_consistency_detects_contradiction():
         analysis = _get_consultant_analysis_for(manager, path, "Frodo Baggins")
         assert analysis is not None, "No analysis for Frodo"
         # Expect low score and at least one issue flagged
-        assert analysis["consistency_score"] <= 0.5, f"Score unexpectedly high: {analysis}"
+        assert (
+            analysis["consistency_score"] <= 0.5
+        ), f"Score unexpectedly high: {analysis}"
         assert len(analysis["issues"]) >= 1, f"Expected issues but got: {analysis}"

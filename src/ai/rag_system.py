@@ -68,7 +68,10 @@ class WikiCache:
         """Load cache index from disk."""
         if self.index_file.exists():
             try:
-                return load_json_file(str(self.index_file))
+                data = load_json_file(str(self.index_file))
+                if data is None:
+                    return {}
+                return data
             except (OSError, ValueError):
                 return {}
         return {}
@@ -289,7 +292,9 @@ class WikiClient:
             Dict with page content or None if fetch failed
         """
         if not SCRAPING_AVAILABLE:
-            print("[WARNING]  Cannot fetch wiki pages: requests/beautifulsoup4 not installed")
+            print(
+                "[WARNING]  Cannot fetch wiki pages: requests/beautifulsoup4 not installed"
+            )
             return None
         if self.item_registry and self.item_registry.is_custom(page_title):
             print(f"[BLOCKED] Custom item lookup: {page_title} (in custom registry)")

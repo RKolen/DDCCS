@@ -15,6 +15,7 @@ from src.ai.availability import AI_AVAILABLE, CharacterAIConfig
 
 try:
     from src.validation.character_validator import validate_character_json
+
     VALIDATOR_AVAILABLE = True
 except ImportError:
     VALIDATOR_AVAILABLE = False
@@ -156,7 +157,10 @@ class CharacterProfile:
         downstream code (consultants, tests) get a sensible `CharacterBehavior`.
         """
         # If generator unavailable or behavior already populated, do nothing.
-        if not BEHAVIOUR_GENERATOR_AVAILABLE or generate_behavior_from_personality is None:
+        if (
+            not BEHAVIOUR_GENERATOR_AVAILABLE
+            or generate_behavior_from_personality is None
+        ):
             return
 
         beh = self.behavior
@@ -171,8 +175,11 @@ class CharacterProfile:
         # Reconstruct personality-like fields expected by the generator.
         personality_traits: List[str] = []
         if self.personality.personality_summary:
-            personality_traits = [p.strip() for p in
-            self.personality.personality_summary.split(";") if p.strip()]
+            personality_traits = [
+                p.strip()
+                for p in self.personality.personality_summary.split(";")
+                if p.strip()
+            ]
 
         ideals = list(self.personality.goals)
         bonds = list(self.personality.motivations)
@@ -188,10 +195,14 @@ class CharacterProfile:
             # dataclass here for runtime use.
             if isinstance(generated, dict):
                 self.behavior = CharacterBehavior(
-                    preferred_strategies=list(generated.get("preferred_strategies", [])),
+                    preferred_strategies=list(
+                        generated.get("preferred_strategies", [])
+                    ),
                     typical_reactions=dict(generated.get("typical_reactions", {})),
                     speech_patterns=list(generated.get("speech_patterns", [])),
-                    decision_making_style=str(generated.get("decision_making_style", "")),
+                    decision_making_style=str(
+                        generated.get("decision_making_style", "")
+                    ),
                 )
             elif generated is not None:
                 # If generator already returned a CharacterBehavior (future-proof), accept it.
@@ -319,6 +330,8 @@ class CharacterProfile:
             data = {}
 
         # Update all managed fields in data dict
+        if data is None:
+            data = {}
         self._update_all_fields(data)
 
         # Validate before saving
@@ -356,20 +369,23 @@ class CharacterProfile:
             data["secrets"] = self.personality.secrets
 
         # Behavior fields - only write if they exist in original data
-        self._update_if_exists(data, "preferred_strategies",
-                               self.behavior.preferred_strategies)
-        self._update_if_exists(data, "typical_reactions",
-                               self.behavior.typical_reactions)
-        self._update_if_exists(data, "speech_patterns",
-                               self.behavior.speech_patterns)
-        self._update_if_exists(data, "decision_making_style",
-                               self.behavior.decision_making_style)
+        self._update_if_exists(
+            data, "preferred_strategies", self.behavior.preferred_strategies
+        )
+        self._update_if_exists(
+            data, "typical_reactions", self.behavior.typical_reactions
+        )
+        self._update_if_exists(data, "speech_patterns", self.behavior.speech_patterns)
+        self._update_if_exists(
+            data, "decision_making_style", self.behavior.decision_making_style
+        )
 
         # Story fields - only write if they exist in original data
         self._update_if_exists(data, "story_hooks", self.story.story_hooks)
         self._update_if_exists(data, "character_arcs", self.story.character_arcs)
-        self._update_if_exists(data, "major_plot_actions",
-                               self.story.major_plot_actions)
+        self._update_if_exists(
+            data, "major_plot_actions", self.story.major_plot_actions
+        )
 
         # Stats fields
         data["ability_scores"] = self.mechanics.stats.ability_scores
@@ -412,7 +428,7 @@ class CharacterProfile:
         data = load_json_file(filepath)
 
         # Ensure nickname is present (can be None)
-        if "nickname" not in data:
+        if isinstance(data, dict) and "nickname" not in data:
             data["nickname"] = None
 
         # Handle both 'character_class' and 'dnd_class' field names
@@ -492,9 +508,14 @@ class CharacterProfile:
 
         # Load AI configuration if present
         ai_config = None
-        if "ai_config" in data:
+        if isinstance(data, dict) and "ai_config" in data:
             if AI_AVAILABLE:
-                ai_config = CharacterAIConfig.from_dict(data["ai_config"])
+                ai_config_obj = CharacterAIConfig.from_dict(data["ai_config"])
+                ai_config = (
+                    ai_config_obj.to_dict()
+                    if hasattr(ai_config_obj, "to_dict")
+                    else dict(data["ai_config"])
+                )
             else:
                 ai_config = data["ai_config"]
 

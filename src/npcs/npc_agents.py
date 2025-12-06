@@ -8,10 +8,8 @@ from src.utils.file_io import load_json_file
 
 # Import AI client if available
 try:
-    from src.ai.ai_client import CharacterAIConfig
     AI_AVAILABLE = True
 except ImportError:
-    CharacterAIConfig = None
     AI_AVAILABLE = False
 
 
@@ -79,10 +77,8 @@ def load_npc_from_json(json_path: Path) -> NPCProfile:
     )
 
     # Load AI configuration if present
-    if "ai_config" in data and AI_AVAILABLE:
-        profile.ai_config = CharacterAIConfig.from_dict(data["ai_config"])
-    elif "ai_config" in data:
-        # Store as dict if AI not available
+    if data is not None and "ai_config" in data:
+        # Always store as dict to match NPCProfile type
         profile.ai_config = data["ai_config"]
 
     return profile

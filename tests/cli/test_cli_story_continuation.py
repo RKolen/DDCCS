@@ -12,158 +12,105 @@ from unittest.mock import Mock, patch
 from tests import test_helpers
 from tests.test_helpers import FakeAIClient
 
+# Import directly to avoid tuple unpacking issues with safe_from_import
+from src.cli.dnd_cli_helpers import (
+    get_continuation_scene_type,
+    get_continuation_prompt,
+    get_combat_narrative_style,
+)
+from src.cli.cli_story_manager import StoryCLIManager
+from src.stories.story_ai_generator import generate_story_from_prompt
+from src.combat.combat_narrator import CombatNarrator
+
 
 def test_get_continuation_scene_type_combat():
     """Test that get_continuation_scene_type returns True for combat selection."""
-    helpers = test_helpers.safe_from_import(
-        "src.cli.dnd_cli_helpers", "get_continuation_scene_type"
-    )
-
-    if helpers is None:
-        return
-
     with patch("builtins.input", return_value="1"):
-        result = helpers()
+        result = get_continuation_scene_type()
         assert result is True, "Should return True for combat scene (choice 1)"
 
 
 def test_get_continuation_scene_type_exploration():
     """Test that get_continuation_scene_type returns False for exploration."""
-    helpers = test_helpers.safe_from_import(
-        "src.cli.dnd_cli_helpers", "get_continuation_scene_type"
-    )
-
-    if helpers is None:
-        return
-
     with patch("builtins.input", return_value="2"):
-        result = helpers()
+        result = get_continuation_scene_type()
         assert result is False, "Should return False for exploration (choice 2)"
 
 
 def test_get_continuation_scene_type_invalid():
     """Test that get_continuation_scene_type returns None for invalid input."""
-    helpers = test_helpers.safe_from_import(
-        "src.cli.dnd_cli_helpers", "get_continuation_scene_type"
-    )
-
-    if helpers is None:
-        return
-
     with patch("builtins.input", return_value="invalid"):
-        result = helpers()
+        result = get_continuation_scene_type()
         assert result is None, "Should return None for invalid input"
 
 
 def test_get_continuation_prompt_combat():
     """Test continuation prompt for combat scenes."""
-    helpers = test_helpers.safe_from_import(
-        "src.cli.dnd_cli_helpers", "get_continuation_prompt"
-    )
-
-    if helpers is None:
-        return
-
     with patch("builtins.input", return_value="Goblins attack from the trees"):
-        result = helpers(is_combat=True)
+        result = get_continuation_prompt(is_combat=True)
         assert result == "Goblins attack from the trees", "Should return combat prompt"
 
 
 def test_get_continuation_prompt_exploration():
     """Test continuation prompt for exploration scenes."""
-    helpers = test_helpers.safe_from_import(
-        "src.cli.dnd_cli_helpers", "get_continuation_prompt"
-    )
-
-    if helpers is None:
-        return
-
     with patch("builtins.input", return_value="Party meets a merchant"):
-        result = helpers(is_combat=False)
+        result = get_continuation_prompt(is_combat=False)
         assert result == "Party meets a merchant", "Should return exploration prompt"
 
 
 def test_get_combat_narrative_style():
     """Test combat narrative style selection."""
-    helpers = test_helpers.safe_from_import(
-        "src.cli.dnd_cli_helpers", "get_combat_narrative_style"
-    )
-
-    if helpers is None:
-        return
-
     with patch("builtins.input", return_value="1"):
-        result = helpers()
+        result = get_combat_narrative_style()
         assert result == "cinematic", "Should return 'cinematic' for choice 1"
 
     with patch("builtins.input", return_value="2"):
-        result = helpers()
+        result = get_combat_narrative_style()
         assert result == "gritty", "Should return 'gritty' for choice 2"
 
     with patch("builtins.input", return_value=""):
-        result = helpers()
+        result = get_combat_narrative_style()
         assert result == "cinematic", "Should default to 'cinematic' for empty input"
 
 
 def test_cli_story_manager_combat_continuation():
     """Test that CLI properly routes to combat continuation handler."""
-    story_cli_manager = test_helpers.safe_from_import(
-        "src.cli.cli_story_manager", "StoryCLIManager"
-    )
-
-    if story_cli_manager is None:
-        return
-
     mock_story_manager = Mock()
     mock_story_manager.consultants = {}
     mock_story_manager.ai_client = Mock()
     mock_story_manager.get_story_series.return_value = []
 
-    cli = story_cli_manager(mock_story_manager, "/tmp/workspace")
+    cli = StoryCLIManager(mock_story_manager, "/tmp/workspace")
 
     # Test that _handle_combat_continuation exists and is callable
-    assert hasattr(cli, "_handle_combat_continuation"), (
-        "StoryCLIManager should have _handle_combat_continuation method"
-    )
-    assert callable(getattr(cli, "_handle_combat_continuation")), (
-        "_handle_combat_continuation should be callable"
-    )
+    assert hasattr(
+        cli, "_handle_combat_continuation"
+    ), "StoryCLIManager should have _handle_combat_continuation method"
+    assert callable(
+        getattr(cli, "_handle_combat_continuation")
+    ), "_handle_combat_continuation should be callable"
 
 
 def test_cli_story_manager_exploration_continuation():
     """Test that CLI properly routes to exploration continuation handler."""
-    story_cli_manager = test_helpers.safe_from_import(
-        "src.cli.cli_story_manager", "StoryCLIManager"
-    )
-
-    if story_cli_manager is None:
-        return
-
     mock_story_manager = Mock()
     mock_story_manager.consultants = {}
     mock_story_manager.ai_client = Mock()
     mock_story_manager.get_story_series.return_value = []
 
-    cli = story_cli_manager(mock_story_manager, "/tmp/workspace")
+    cli = StoryCLIManager(mock_story_manager, "/tmp/workspace")
 
     # Test that _handle_exploration_continuation exists and is callable
-    assert hasattr(cli, "_handle_exploration_continuation"), (
-        "StoryCLIManager should have _handle_exploration_continuation method"
-    )
-    assert callable(getattr(cli, "_handle_exploration_continuation")), (
-        "_handle_exploration_continuation should be callable"
-    )
+    assert hasattr(
+        cli, "_handle_exploration_continuation"
+    ), "StoryCLIManager should have _handle_exploration_continuation method"
+    assert callable(
+        getattr(cli, "_handle_exploration_continuation")
+    ), "_handle_exploration_continuation should be callable"
 
 
 def test_story_generator_uses_is_exploration_flag():
     """Test that exploration narratives pass is_exploration=True flag."""
-    generate_story = test_helpers.safe_from_import(
-        "src.stories.story_ai_generator", "generate_story_from_prompt"
-    )
-
-    if generate_story is None:
-        return
-
     mock_ai = Mock()
     mock_response = Mock()
     mock_response.choices = [Mock()]
@@ -171,10 +118,9 @@ def test_story_generator_uses_is_exploration_flag():
     mock_ai.client.chat.completions.create.return_value = mock_response
     mock_ai.model = "gpt-4"
 
-    result = generate_story(
+    result = generate_story_from_prompt(
         ai_client=mock_ai,
         story_prompt="The party meets a stranger",
-        is_exploration=True,
     )
 
     assert isinstance(result, str), "Should return string"
@@ -185,21 +131,12 @@ def test_story_generator_uses_is_exploration_flag():
 
 def test_combat_narrator_includes_rag_context():
     """Test that combat narrator includes RAG spell/ability context."""
-    combat_narrator = test_helpers.safe_from_import(
-        "src.combat.combat_narrator", "CombatNarrator"
-    )
-
-    if combat_narrator is None:
-        return
-
-    narrator = combat_narrator({}, ai_client=FakeAIClient())
+    narrator = CombatNarrator({}, ai_client=FakeAIClient())
 
     # Test that narration works with spell mentions (RAG integration via public API)
     prompt = "Wizard casts fireball at the goblin"
     narrative = narrator.narrate_combat_from_prompt(
-        combat_prompt=prompt,
-        story_context="",
-        style="cinematic"
+        combat_prompt=prompt, story_context="", style="cinematic"
     )
 
     # Verify public API returns valid narrative

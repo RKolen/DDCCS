@@ -18,21 +18,15 @@ Why we test this:
 import tempfile
 import os
 from tests import test_helpers
-
-# Import required symbols via canonical helper (sets up environment if needed)
-create_character_development_file = test_helpers.safe_from_import(
-    "src.characters.character_consistency", "create_character_development_file"
+from src.characters.character_consistency import (
+    create_character_development_file,
+    get_available_recruits,
 )
-get_available_recruits = test_helpers.safe_from_import(
-    "src.characters.character_consistency", "get_available_recruits"
+from src.characters.consultants.character_profile import (
+    CharacterProfile,
+    CharacterIdentity,
 )
-CharacterProfile = test_helpers.safe_from_import(
-    "src.characters.consultants.character_profile", "CharacterProfile"
-)
-CharacterIdentity = test_helpers.safe_from_import(
-    "src.characters.consultants.character_profile", "CharacterIdentity"
-)
-DnDClass = test_helpers.safe_from_import("src.characters.character_sheet", "DnDClass")
+from src.characters.character_sheet import DnDClass
 
 
 def test_create_development_file_basic():
@@ -46,7 +40,7 @@ def test_create_development_file_basic():
                 "action": "Charged into battle",
                 "reasoning": "Protect the innocent",
                 "consistency": "Matches brave personality",
-                "notes": "Good character development"
+                "notes": "Good character development",
             }
         ]
 
@@ -54,13 +48,13 @@ def test_create_development_file_basic():
             series_path=temp_dir,
             story_name="Test Story",
             character_actions=character_actions,
-            session_date="2024-01-15"
+            session_date="2024-01-15",
         )
 
         assert os.path.exists(filepath), "File not created"
         print("  [OK] File created successfully")
 
-        with open(filepath, 'r', encoding='utf-8') as f:
+        with open(filepath, "r", encoding="utf-8") as f:
             content = f.read()
 
         assert "Test Story" in content, "Story name not in file"
@@ -83,32 +77,32 @@ def test_create_development_file_multiple_actions():
                 "action": "Defended allies",
                 "reasoning": "Duty and honor",
                 "consistency": "Consistent",
-                "notes": "Strong choice"
+                "notes": "Strong choice",
             },
             {
                 "character": "Wizard",
                 "action": "Analyzed enemy weakness",
                 "reasoning": "Knowledge is power",
                 "consistency": "Very consistent",
-                "notes": "Classic wizard behavior"
+                "notes": "Classic wizard behavior",
             },
             {
                 "character": "Rogue",
                 "action": "Scouted ahead",
                 "reasoning": "Safety first",
                 "consistency": "Consistent",
-                "notes": "Good use of skills"
-            }
+                "notes": "Good use of skills",
+            },
         ]
 
         filepath = create_character_development_file(
             series_path=temp_dir,
             story_name="Multi Action Test",
             character_actions=character_actions,
-            session_date="2024-02-20"
+            session_date="2024-02-20",
         )
 
-        with open(filepath, 'r', encoding='utf-8') as f:
+        with open(filepath, "r", encoding="utf-8") as f:
             content = f.read()
 
         assert content.count("CHARACTER:") == 3, "Should have 3 character sections"
@@ -127,17 +121,13 @@ def test_create_development_file_default_date():
 
     with tempfile.TemporaryDirectory() as temp_dir:
         character_actions = [
-            {
-                "character": "Test",
-                "action": "Action",
-                "reasoning": "Reason"
-            }
+            {"character": "Test", "action": "Action", "reasoning": "Reason"}
         ]
 
         filepath = create_character_development_file(
             series_path=temp_dir,
             story_name="Date Test",
-            character_actions=character_actions
+            character_actions=character_actions,
             # session_date not provided - should use today
         )
 
@@ -157,7 +147,7 @@ def test_create_development_file_missing_fields():
         character_actions = [
             {
                 "character": "Incomplete",
-                "action": "Did something"
+                "action": "Did something",
                 # Missing reasoning, consistency, notes
             }
         ]
@@ -166,10 +156,10 @@ def test_create_development_file_missing_fields():
             series_path=temp_dir,
             story_name="Missing Fields",
             character_actions=character_actions,
-            session_date="2024-03-10"
+            session_date="2024-03-10",
         )
 
-        with open(filepath, 'r', encoding='utf-8') as f:
+        with open(filepath, "r", encoding="utf-8") as f:
             content = f.read()
 
         assert "Incomplete" in content, "Character not in file"
@@ -189,19 +179,23 @@ def test_get_available_recruits_basic():
     # Create mock consultants using simple objects
     def create_mock_consultant(name, char_class, level):
         """Create a mock consultant for testing."""
-        profile = type('MockProfile', (), {
-            'name': name,
-            'character_class': char_class,
-            'level': level,
-            'personality_summary': f"{name} is brave and loyal",
-            'background_story': f"{name}'s backstory"
-        })()
-        return type('MockConsultant', (), {'profile': profile})()
+        profile = type(
+            "MockProfile",
+            (),
+            {
+                "name": name,
+                "character_class": char_class,
+                "level": level,
+                "personality_summary": f"{name} is brave and loyal",
+                "background_story": f"{name}'s backstory",
+            },
+        )()
+        return type("MockConsultant", (), {"profile": profile})()
 
     consultants = {
         "Fighter": create_mock_consultant("Fighter", DnDClass.FIGHTER, 5),
         "Wizard": create_mock_consultant("Wizard", DnDClass.WIZARD, 7),
-        "Rogue": create_mock_consultant("Rogue", DnDClass.ROGUE, 3)
+        "Rogue": create_mock_consultant("Rogue", DnDClass.ROGUE, 3),
     }
 
     recruits = get_available_recruits(consultants)
@@ -230,24 +224,27 @@ def test_get_available_recruits_with_exclusions():
     # Create mock consultants using factory function
     def create_mock_consultant(name, char_class, level):
         """Create a mock consultant for testing using test_helpers.make_profile."""
-        profile = test_helpers.make_profile(name=name, dnd_class=char_class, level=level)
-        return type('MockConsultant', (), {'profile': profile})()
+        profile = test_helpers.make_profile(
+            name=name, dnd_class=char_class, level=level
+        )
+        return type("MockConsultant", (), {"profile": profile})()
 
     consultants = {
         "Fighter": create_mock_consultant("Fighter", DnDClass.FIGHTER, 5),
         "Wizard": create_mock_consultant("Wizard", DnDClass.WIZARD, 7),
         "Rogue": create_mock_consultant("Rogue", DnDClass.ROGUE, 3),
-        "Cleric": create_mock_consultant("Cleric", DnDClass.CLERIC, 4)
+        "Cleric": create_mock_consultant("Cleric", DnDClass.CLERIC, 4),
     }
 
     # Exclude Fighter and Cleric (current party)
     recruits = get_available_recruits(
-        consultants,
-        exclude_characters=["Fighter", "Cleric"]
+        consultants, exclude_characters=["Fighter", "Cleric"]
     )
 
     assert len(recruits) == 2, "Should return 2 recruits (4 - 2 excluded)"
-    assert not any(r["name"] == "Fighter" for r in recruits), "Fighter should be excluded"
+    assert not any(
+        r["name"] == "Fighter" for r in recruits
+    ), "Fighter should be excluded"
     assert not any(r["name"] == "Cleric" for r in recruits), "Cleric should be excluded"
     assert any(r["name"] == "Wizard" for r in recruits), "Wizard should be available"
     assert any(r["name"] == "Rogue" for r in recruits), "Rogue should be available"
@@ -277,24 +274,19 @@ def test_get_available_recruits_all_excluded():
     # Create mock consultants using factory function
     def create_mock_consultant(name, char_class, level):
         """Create a mock consultant for testing."""
-        identity = CharacterIdentity(
-            name=name,
-            character_class=char_class,
-            level=level
-        )
-        return type('MockConsultant', (), {
-            'profile': CharacterProfile(identity=identity)
-        })()
+        identity = CharacterIdentity(name=name, character_class=char_class, level=level)
+        return type(
+            "MockConsultant", (), {"profile": CharacterProfile(identity=identity)}
+        )()
 
     consultants = {
         "Fighter": create_mock_consultant("Fighter", DnDClass.FIGHTER, 5),
-        "Wizard": create_mock_consultant("Wizard", DnDClass.WIZARD, 7)
+        "Wizard": create_mock_consultant("Wizard", DnDClass.WIZARD, 7),
     }
 
     # Exclude all characters
     recruits = get_available_recruits(
-        consultants,
-        exclude_characters=["Fighter", "Wizard"]
+        consultants, exclude_characters=["Fighter", "Wizard"]
     )
 
     assert len(recruits) == 0, "Should return empty list when all excluded"

@@ -9,18 +9,13 @@ import os
 import tempfile
 import json
 
-from tests.test_helpers import setup_test_environment, import_module, safe_from_import
+from tests.test_helpers import setup_test_environment
 
+# Import directly to avoid tuple unpacking issues with safe_from_import
+from src.stories.story_file_manager import create_new_story_series, StoryFileContext
+from src.cli.cli_story_manager import StoryCLIManager
 
 setup_test_environment()
-
-create_new_story_series = safe_from_import(
-    "src.stories.story_file_manager",
-    "create_new_story_series",
-)
-
-cli_mod = import_module("src.cli.cli_story_manager")
-StoryCLIManager = cli_mod.StoryCLIManager
 
 
 class _FakeStoryManager:
@@ -37,12 +32,15 @@ class _FakeStoryManager:
 
     def create_new_story_series(self, series_name, first_story_name, description):
         """Delegate to the real create_new_story_series file-op helper."""
+        ctx = StoryFileContext(
+            stories_path=self._campaigns_dir,
+            workspace_path=self._workspace,
+        )
         return create_new_story_series(
-            self._campaigns_dir,
-            self._workspace,
+            ctx,
             series_name,
             first_story_name,
-            description,
+            description=description,
         )
 
     def get_story_series(self):
@@ -81,12 +79,14 @@ def test_cli_create_series_writes_current_party_json(monkeypatch):
         cli = _TestableStoryCLIManager(fake_manager, tmp)
 
         # Simulate user inputs: series name, first story name, description, blank party input
-        inputs = iter([
-            "MyTest_Campaign",
-            "Intro",
-            "A short description",
-            "",
-        ])
+        inputs = iter(
+            [
+                "MyTest_Campaign",
+                "Intro",
+                "A short description",
+                "",
+            ]
+        )
 
         monkeypatch.setattr("builtins.input", lambda _prompt="": next(inputs))
 

@@ -9,11 +9,7 @@ import json
 import tempfile
 from pathlib import Path
 
-from tests import test_helpers
-
-CharacterProfile = test_helpers.safe_from_import(
-    "src.characters.consultants.character_profile", "CharacterProfile"
-)
+from src.characters.consultants.character_profile import CharacterProfile
 
 
 def test_character_profile_roundtrip_current_format():
@@ -46,8 +42,14 @@ def test_character_profile_roundtrip_current_format():
         "character_arcs": [],
         "major_plot_actions": ["Defended village", "Mentored newcomer"],
         # Stats
-        "ability_scores": {"strength": 18, "dexterity": 16, "constitution": 16,
-                          "intelligence": 14, "wisdom": 15, "charisma": 16},
+        "ability_scores": {
+            "strength": 18,
+            "dexterity": 16,
+            "constitution": 16,
+            "intelligence": 14,
+            "wisdom": 15,
+            "charisma": 16,
+        },
         "skills": {"Survival": 9, "Perception": 8},
         "max_hit_points": 85,
         "armor_class": 17,
@@ -63,7 +65,7 @@ def test_character_profile_roundtrip_current_format():
         "equipment": {
             "weapons": ["Longsword", "Dagger"],
             "armor": ["Leather Armor"],
-            "items": []
+            "items": [],
         },
         "magic_items": ["Ring of Protection"],
     }
@@ -72,7 +74,7 @@ def test_character_profile_roundtrip_current_format():
         filepath = Path(tmpdir) / "test_character.json"
 
         # Write aragorn format data
-        with open(filepath, 'w', encoding='utf-8') as f:
+        with open(filepath, "w", encoding="utf-8") as f:
             json.dump(aragorn_format_data, f)
 
         # Load character
@@ -84,7 +86,10 @@ def test_character_profile_roundtrip_current_format():
         assert profile.personality.background_story == "A ranger who protects the realm"
         assert "Stoic" in profile.personality.personality_summary
         assert profile.personality.motivations == ["Defend companions", "Seek truth"]
-        assert profile.personality.fears_weaknesses == ["Overly cautious", "Trust issues"]
+        assert profile.personality.fears_weaknesses == [
+            "Overly cautious",
+            "Trust issues",
+        ]
 
         # Edit a field
         profile.personality.personality_summary = "Updated: Brave and cautious"
@@ -99,7 +104,7 @@ def test_character_profile_roundtrip_current_format():
         assert profile2.personality.personality_summary == "Updated: Brave and cautious"
 
         # Verify ALL aragorn.json format fields are still present
-        with open(filepath, 'r', encoding='utf-8') as f:
+        with open(filepath, "r", encoding="utf-8") as f:
             saved_data = json.load(f)
 
         # Check identity fields
@@ -116,7 +121,10 @@ def test_character_profile_roundtrip_current_format():
         assert saved_data["ideals"] == ["Protect the realm", "Find peace"]
 
         # Check story fields
-        assert saved_data["major_plot_actions"] == ["Defended village", "Mentored newcomer"]
+        assert saved_data["major_plot_actions"] == [
+            "Defended village",
+            "Mentored newcomer",
+        ]
 
         # Check abilities
         assert saved_data["feats"] == ["Alert", "Skilled"]
@@ -153,8 +161,14 @@ def test_edit_cli_personality_preserves_all_fields():
         "story_hooks": [],
         "character_arcs": [],
         "major_plot_actions": ["Led Fellowship", "Claimed throne"],
-        "ability_scores": {"strength": 18, "dexterity": 16, "constitution": 16,
-                          "intelligence": 14, "wisdom": 15, "charisma": 16},
+        "ability_scores": {
+            "strength": 18,
+            "dexterity": 16,
+            "constitution": 16,
+            "intelligence": 14,
+            "wisdom": 15,
+            "charisma": 16,
+        },
         "skills": {"Survival": 9},
         "max_hit_points": 85,
         "armor_class": 17,
@@ -172,7 +186,7 @@ def test_edit_cli_personality_preserves_all_fields():
     with tempfile.TemporaryDirectory() as tmpdir:
         filepath = Path(tmpdir) / "aragorn.json"
 
-        with open(filepath, 'w', encoding='utf-8') as f:
+        with open(filepath, "w", encoding="utf-8") as f:
             json.dump(aragorn_format_data, f)
 
         # Load
@@ -191,7 +205,7 @@ def test_edit_cli_personality_preserves_all_fields():
         assert "Silly" in profile2.personality.personality_summary
 
         # Verify original fields still present (aragorn.json format)
-        with open(filepath, 'r', encoding='utf-8') as f:
+        with open(filepath, "r", encoding="utf-8") as f:
             saved_data = json.load(f)
 
         assert saved_data["bonds"] == ["Defend companions", "Unite kingdoms"]

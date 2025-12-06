@@ -7,7 +7,7 @@ Handles NPC detection in story content and AI-powered NPC profile generation.
 import os
 import re
 import json
-from typing import Dict, List, Any, Tuple
+from typing import Dict, List, Any, Tuple, Optional
 from src.validation.npc_validator import validate_npc_json
 from src.utils.file_io import save_json_file
 from src.utils.path_utils import get_npcs_dir, get_npc_file_path
@@ -45,21 +45,43 @@ NPC_PATTERNS: List[Tuple[str, str]] = [
         "Blacksmith",
     ),
     (
-        r"([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?),?\s+(?:the\s+)?"
-        r"(?:blacksmith|smith)",
+        r"([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?),?\s+(?:the\s+)?(?:blacksmith|smith)",
         "Blacksmith",
     ),
 ]
 
 # False positive filters
 FALSE_POSITIVES = [
-    "the", "a", "an", "The", "A", "An", "And", "But", "Or", "So",
-    "Then", "When", "Where", "What", "Who", "Why", "How", "This",
-    "That", "These", "Those", "Now", "Here", "There",
+    "the",
+    "a",
+    "an",
+    "The",
+    "A",
+    "An",
+    "And",
+    "But",
+    "Or",
+    "So",
+    "Then",
+    "When",
+    "Where",
+    "What",
+    "Who",
+    "Why",
+    "How",
+    "This",
+    "That",
+    "These",
+    "Those",
+    "Now",
+    "Here",
+    "There",
 ]
 
 
-def _create_fallback_profile(npc_name: str, role: str, error_msg: str) -> Dict[str, Any]:
+def _create_fallback_profile(
+    npc_name: str, role: str, error_msg: str
+) -> Dict[str, Any]:
     """Create a fallback NPC profile when AI generation fails."""
     return {
         "name": npc_name,
@@ -112,7 +134,9 @@ def detect_npc_suggestions(
             ):
 
                 # Check if NPC profile already exists
-                npc_filename = os.path.basename(get_npc_file_path(npc_name, workspace_path))
+                npc_filename = os.path.basename(
+                    get_npc_file_path(npc_name, workspace_path)
+                )
                 npc_path = get_npc_file_path(npc_name, workspace_path)
 
                 if not os.path.exists(npc_path):
@@ -137,7 +161,7 @@ def detect_npc_suggestions(
 def generate_npc_from_story(
     npc_name: str,
     context: str,
-    role: str = None,
+    role: Optional[str] = None,
     ai_client=None,
 ) -> Dict[str, Any]:
     """
@@ -253,12 +277,10 @@ Return ONLY valid JSON in this format:
     except (KeyError, ValueError, TypeError, AttributeError) as e:
         print(f"[WARNING]  AI NPC generation failed: {e}")
         # Return fallback profile when AI generation fails
-        return _create_fallback_profile(npc_name, role, str(e))
+        return _create_fallback_profile(npc_name, role or "NPC", str(e))
 
 
-def save_npc_profile(
-    npc_profile: Dict[str, Any], workspace_path: str
-) -> str:
+def save_npc_profile(npc_profile: Dict[str, Any], workspace_path: str) -> str:
     """
     Save an NPC profile to the game_data/npcs/ directory.
 

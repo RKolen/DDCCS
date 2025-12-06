@@ -76,23 +76,14 @@ def lookup_spells_and_abilities(prompt: str) -> str:
     ability_descriptions = []
     for ability in set(found_abilities):
         try:
-            # Format for wikidot URL
-            page_name = ability.lower().replace(" ", "-")
+            # Use the correct RAGSystem method for searching rules content
+            # get_context_for_query takes a query string and list of pages
+            context = dnd_rag.get_context_for_query(ability, [ability], max_results=1)
 
-            # Try different page formats
-            possible_pages = [
-                f"spell:{page_name}",
-                f"feat:{page_name}",
-                f"class:{page_name}",
-            ]
-
-            for page in possible_pages:
-                result = dnd_rag.search_rules_wiki(page, max_results=1)
-                if result:
-                    ability_descriptions.append(
-                        f"\n**{ability.title()}**: {result[0]['content'][:300]}..."
-                    )
-                    break
+            if context and context.strip():
+                ability_descriptions.append(
+                    f"\n**{ability.title()}**: {context[:300]}..."
+                )
         except (AttributeError, KeyError, IndexError, TypeError):
             # Silently skip failed lookups
             pass

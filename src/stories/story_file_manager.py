@@ -12,9 +12,14 @@ This module is responsible for:
 import os
 import re
 from dataclasses import dataclass
-from typing import List
+from typing import List, Optional
 from datetime import datetime
-from src.utils.file_io import read_text_file, write_text_file, file_exists, directory_exists
+from src.utils.file_io import (
+    read_text_file,
+    write_text_file,
+    file_exists,
+    directory_exists,
+)
 from src.utils.path_utils import get_campaign_path, get_campaigns_dir
 from src.utils.story_file_helpers import (
     list_story_files,
@@ -52,7 +57,7 @@ def _is_valid_series_folder(folder_name: str) -> bool:
 
 def get_story_series(stories_path: str) -> List[str]:
     """Get available story series (folders with numbered stories).
-    
+
     Checks both legacy location (workspace root) and new location (game_data/campaigns/).
     """
     series_folders = set()
@@ -106,7 +111,7 @@ def _create_story_template(
     story_name: str,
     description: str,
     workspace_path: str = "",
-    options: StoryCreationOptions = None,
+    options: Optional[StoryCreationOptions] = None,
 ) -> str:
     """Create markdown template for story (helper function).
 
@@ -127,7 +132,7 @@ def _create_story_template(
     if options is None:
         options = StoryCreationOptions()
 
-    timestamp = datetime.now().strftime('%Y-%m-%d %H:%M')
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M")
     header = (
         f"# {story_name}\n\n"
         f"**Created:** {timestamp}\n"
@@ -147,6 +152,8 @@ def _create_story_template(
             lines = template_content.split("\n")
             if lines and lines[0].startswith("#"):
                 template_content = "\n".join(lines[1:]).lstrip()
+            if template_content is None:
+                template_content = ""
             return header + "---\n\n" + template_content
 
     # Priority 3: Default - pure narrative template
@@ -159,7 +166,7 @@ def create_new_story_series(
     first_story_name: str,
     *,
     description: str = "",
-    options: StoryCreationOptions = None,
+    options: Optional[StoryCreationOptions] = None,
 ) -> str:
     """Create a new story series in its own folder.
 
@@ -212,7 +219,7 @@ def create_story_in_series(
     story_name: str,
     *,
     description: str = "",
-    options: StoryCreationOptions = None,
+    options: Optional[StoryCreationOptions] = None,
 ) -> str:
     """Create a new story in an existing series.
 
@@ -255,7 +262,7 @@ def create_new_story(
     story_name: str,
     *,
     description: str = "",
-    options: StoryCreationOptions = None,
+    options: Optional[StoryCreationOptions] = None,
 ) -> str:
     """Create new story file with next sequence number (legacy stories in root).
 
@@ -288,9 +295,9 @@ def create_new_story(
     return filepath
 
 
-def create_pure_narrative_story(ctx: StoryFileContext, series_name: str,
-                               story_name: str,
-                               description: str = "") -> str:
+def create_pure_narrative_story(
+    ctx: StoryFileContext, series_name: str, story_name: str, description: str = ""
+) -> str:
     """Create a story file with pure narrative template (no guidance sections).
 
     Args:
@@ -327,8 +334,9 @@ def create_pure_narrative_story(ctx: StoryFileContext, series_name: str,
     return filepath
 
 
-def create_pure_story_file(series_path: str, story_name: str,
-                          narrative_content: str) -> str:
+def create_pure_story_file(
+    series_path: str, story_name: str, narrative_content: str
+) -> str:
     """Create a story file with pure narrative content only."""
     # Compute next filename via helper
     filename, filepath = next_filename_for_dir(series_path, story_name)

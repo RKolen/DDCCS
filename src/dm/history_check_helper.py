@@ -5,7 +5,7 @@ Provides campaign lore information when characters make successful History check
 Integrates with wiki RAG system to fetch accurate campaign setting information.
 """
 
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 
 try:
     from src.ai.rag_system import get_rag_system
@@ -14,8 +14,9 @@ try:
 except ImportError:
     RAG_AVAILABLE = False
 
+
 def handle_history_check(
-    topic: str, check_result: int, character_name: str = None
+    topic: str, check_result: int, character_name: Optional[str] = None
 ) -> Dict[str, Any]:
     """
     Handle a character's History check with RAG-enhanced lore retrieval.
@@ -136,13 +137,15 @@ def _generate_fallback_information(topic: str, check_result: int) -> str:
         return f"You recall quite a bit about {topic}. [DM provides 3-4 significant details]"
     # comprehensive
     return (
-            f"Your knowledge of {topic} is extensive. "
-            "[DM provides comprehensive information including"
-            " history, significance, and connections]"
-        )
+        f"Your knowledge of {topic} is extensive. "
+        "[DM provides comprehensive information including"
+        " history, significance, and connections]"
+    )
 
 
-def search_lore(query: str, pages_to_search: list = None) -> Optional[str]:
+def search_lore(
+    query: str, pages_to_search: Optional[List[str]] = None
+) -> Optional[str]:
     """
     Direct lore search function for DMs to look up campaign information.
 
@@ -160,7 +163,7 @@ def search_lore(query: str, pages_to_search: list = None) -> Optional[str]:
     if not rag_system or not rag_system.enabled:
         return "[WARNING] RAG system not enabled. Set RAG_ENABLED=true in .env"
 
-    if not pages_to_search:
+    if pages_to_search is None:
         # Try to search the query term directly as a page
         return rag_system.get_context_for_location(query)
 

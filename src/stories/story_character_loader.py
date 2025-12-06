@@ -11,34 +11,45 @@ from src.characters.consultants.character_profile import CharacterProfile
 from src.characters.consultants.consultant_core import CharacterConsultant
 from src.utils.path_utils import get_characters_dir, get_character_file_path
 from src.stories.character_loader import load_all_character_consultants
+from src.stories.character_loading_base import CharacterLoadingMixin
 
 USE_CHARACTER_VALIDATION = True
 
-class CharacterLoader:
+
+class CharacterLoader(CharacterLoadingMixin):
     """Loads character profiles and creates consultants for story management."""
 
-    def __init__(self, workspace_path: str, ai_client=None):
+    def __init__(self, workspace_path: str, ai_client=None, lazy_load: bool = False):
         """
         Initialize character loader.
 
         Args:
             workspace_path: Root workspace directory path
             ai_client: Optional AI client for character consultants
+            lazy_load: If True, defer character loading until explicitly requested
         """
         self.workspace_path = workspace_path
         self.characters_path = get_characters_dir(workspace_path)
         self.ai_client = ai_client
         self.consultants: Dict[str, CharacterConsultant] = {}
+        self._characters_loaded = False
 
         # Ensure characters directory exists on initialization for callers
         # that expect it to be present (tests rely on this behavior).
         os.makedirs(self.characters_path, exist_ok=True)
 
+        # Load characters eagerly by default for backward compatibility
+        if not lazy_load:
+            self.load_characters()
+
     def load_characters(self):
         """Load all character profiles and create consultants."""
         self.consultants = load_all_character_consultants(
-            self.characters_path, ai_client=self.ai_client, verbose=USE_CHARACTER_VALIDATION
+            self.characters_path,
+            ai_client=self.ai_client,
+            verbose=USE_CHARACTER_VALIDATION,
         )
+        self._characters_loaded = True
 
     def save_character_profile(self, profile: CharacterProfile):
         """

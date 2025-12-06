@@ -6,10 +6,12 @@ Handles text wrapping and formatting for story narratives.
 
 import textwrap
 import re
+from typing import Optional
 from src.utils.spell_highlighter import (
     highlight_spells_in_text,
-    extract_spells_from_prompt
+    extract_spells_from_prompt,
 )
+
 
 def _wrap_preserving_markdown(text: str, width: int = 80) -> str:
     """Wrap text while preserving markdown formatting (bold, italics, etc).
@@ -26,7 +28,7 @@ def _wrap_preserving_markdown(text: str, width: int = 80) -> str:
     # Split by paragraphs first
     paragraphs = text.split("\n\n")
     wrapped_paragraphs = []
-    markdown_pattern = re.compile(r'\*\*([^*]+)\*\*')
+    markdown_pattern = re.compile(r"\*\*([^*]+)\*\*")
 
     for para in paragraphs:
         if para.strip().startswith("#") or para.strip().startswith("**"):
@@ -34,9 +36,7 @@ def _wrap_preserving_markdown(text: str, width: int = 80) -> str:
             continue
 
         # Replace markdown-wrapped content with placeholders
-        wrapped_paragraphs.append(_wrap_single_paragraph(
-            para, markdown_pattern, width
-        ))
+        wrapped_paragraphs.append(_wrap_single_paragraph(para, markdown_pattern, width))
 
     return "\n\n".join(wrapped_paragraphs)
 
@@ -60,12 +60,13 @@ def _wrap_single_paragraph(para: str, pattern, width: int) -> str:
 
     return wrapped
 
+
 def wrap_narrative_text(
     text: str,
     width: int = 80,
     apply_spell_highlighting: bool = True,
-    known_spells: set = None,
-    prompt: str = None,
+    known_spells: "Optional[set]" = None,
+    prompt: Optional[str] = None,
 ) -> str:
     """
     Wrap narrative text to specified width while preserving paragraphs.

@@ -9,17 +9,10 @@ development, session results) in a unified workflow.
 import tempfile
 from unittest.mock import Mock
 
-from tests import test_helpers
-
-# Import functions and dataclasses using safe import helper
-coordinate_story_workflow = test_helpers.safe_from_import(
-    "src.stories.story_workflow_orchestrator", "coordinate_story_workflow"
-)
-StoryWorkflowContext = test_helpers.safe_from_import(
-    "src.stories.story_workflow_orchestrator", "StoryWorkflowContext"
-)
-WorkflowOptions = test_helpers.safe_from_import(
-    "src.stories.story_workflow_orchestrator", "WorkflowOptions"
+from src.stories.story_workflow_orchestrator import (
+    coordinate_story_workflow,
+    StoryWorkflowContext,
+    WorkflowOptions,
 )
 
 
@@ -237,7 +230,9 @@ def test_workflow_results_structure():
         assert results["character_dev_file"] is None or isinstance(
             results["character_dev_file"], str
         )
-        assert results["session_file"] is None or isinstance(results["session_file"], str)
+        assert results["session_file"] is None or isinstance(
+            results["session_file"], str
+        )
         assert isinstance(results["errors"], list)
 
     print("[PASS] Workflow Results Structure")
@@ -309,4 +304,5 @@ def run_all_workflow_orchestrator_tests():
 
 if __name__ == "__main__":
     import sys
+
     sys.exit(run_all_workflow_orchestrator_tests())

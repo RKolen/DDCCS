@@ -7,10 +7,7 @@ Tests for story file updating with analysis and combat narratives.
 import os
 import tempfile
 
-from tests import test_helpers
-
-# Import StoryUpdater via centralized safe import helper
-StoryUpdater = test_helpers.safe_from_import("src.stories.story_updater", "StoryUpdater")
+from src.stories.story_updater import StoryUpdater
 
 
 def test_story_updater_initialization():
@@ -46,9 +43,7 @@ def test_update_story_with_analysis():
                     }
                 }
             },
-            "consultant_analyses": {
-                "Theron": {"suggestions": ["Use Shield spell"]}
-            },
+            "consultant_analyses": {"Theron": {"suggestions": ["Use Shield spell"]}},
         }
 
         updater.update_story_with_analysis(temp_path, analysis)
@@ -138,7 +133,8 @@ def test_update_existing_sections():
     with tempfile.NamedTemporaryFile(
         mode="w", suffix=".md", delete=False, encoding="utf-8"
     ) as f:
-        f.write("""# Test Story
+        f.write(
+            """# Test Story
 
 Story content here.
 
@@ -149,7 +145,8 @@ Old notes here.
 ## Consistency Analysis
 
 Old consistency data.
-""")
+"""
+        )
         temp_path = f.name
 
     try:

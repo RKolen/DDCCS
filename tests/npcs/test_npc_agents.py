@@ -8,12 +8,9 @@ import os
 import tempfile
 from pathlib import Path
 
-# Use test_helpers to set up environment and import required names
-from tests import test_helpers
-NPCAgent, load_npc_from_json, create_npc_agents = test_helpers.safe_from_import(
-    "src.npcs.npc_agents", "NPCAgent", "load_npc_from_json", "create_npc_agents"
-)
-NPCProfile = test_helpers.safe_from_import("src.characters.character_sheet", "NPCProfile")
+# Direct imports for NPCAgent and related functions
+from src.npcs.npc_agents import NPCAgent, load_npc_from_json, create_npc_agents
+from src.characters.character_sheet import NPCProfile
 
 
 def test_npc_agent_initialization():
@@ -104,12 +101,14 @@ def test_load_npc_from_json_basic():
     with tempfile.NamedTemporaryFile(
         mode="w", suffix=".json", delete=False, encoding="utf-8"
     ) as f:
-        f.write("""{
+        f.write(
+            """{
             "name": "Thomas",
             "role": "Guard Captain",
             "species": "Human",
             "personality": "Dutiful and stern"
-        }""")
+        }"""
+        )
         temp_path = f.name
 
     try:
@@ -133,7 +132,8 @@ def test_load_npc_from_json_full():
     with tempfile.NamedTemporaryFile(
         mode="w", suffix=".json", delete=False, encoding="utf-8"
     ) as f:
-        f.write("""{
+        f.write(
+            """{
             "name": "Elena",
             "nickname": "The Wise",
             "role": "Sage",
@@ -148,7 +148,8 @@ def test_load_npc_from_json_full():
             "abilities": ["Arcana", "History", "Divination"],
             "recurring": true,
             "notes": "Knows prophecy about the party"
-        }""")
+        }"""
+        )
         temp_path = f.name
 
     try:
@@ -177,9 +178,11 @@ def test_load_npc_from_json_defaults():
     with tempfile.NamedTemporaryFile(
         mode="w", suffix=".json", delete=False, encoding="utf-8"
     ) as f:
-        f.write("""{
+        f.write(
+            """{
             "name": "Bob"
-        }""")
+        }"""
+        )
         temp_path = f.name
 
     try:
@@ -210,23 +213,32 @@ def test_create_npc_agents():
     with tempfile.TemporaryDirectory() as temp_dir:
         # Create test NPC files
         npc1_path = Path(temp_dir) / "npc_garrett.json"
-        npc1_path.write_text("""{
+        npc1_path.write_text(
+            """{
             "name": "Garrett",
             "role": "Innkeeper"
-        }""", encoding="utf-8")
+        }""",
+            encoding="utf-8",
+        )
 
         npc2_path = Path(temp_dir) / "npc_marcus.json"
-        npc2_path.write_text("""{
+        npc2_path.write_text(
+            """{
             "name": "Marcus",
             "role": "Blacksmith"
-        }""", encoding="utf-8")
+        }""",
+            encoding="utf-8",
+        )
 
         # Create example file (should be skipped)
         example_path = Path(temp_dir) / "npc.example.json"
-        example_path.write_text("""{
+        example_path.write_text(
+            """{
             "name": "Example",
             "role": "Example"
-        }""", encoding="utf-8")
+        }""",
+            encoding="utf-8",
+        )
 
         agents = create_npc_agents(Path(temp_dir))
 

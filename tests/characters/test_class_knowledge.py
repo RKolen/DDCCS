@@ -18,9 +18,16 @@ Why we test this:
 from tests import test_helpers
 
 # Import CLASS_KNOWLEDGE using centralized helper
-CLASS_KNOWLEDGE = test_helpers.safe_from_import(
+CLASS_KNOWLEDGE_RESULT = test_helpers.safe_from_import(
     "src.characters.consultants.class_knowledge", "CLASS_KNOWLEDGE"
 )
+if isinstance(CLASS_KNOWLEDGE_RESULT, tuple):
+    # safe_from_import returns (value, error) on failure, so unpack if needed
+    CLASS_KNOWLEDGE, import_error = CLASS_KNOWLEDGE_RESULT
+    if import_error is not None:
+        raise ImportError(f"Failed to import CLASS_KNOWLEDGE: {import_error}")
+else:
+    CLASS_KNOWLEDGE = CLASS_KNOWLEDGE_RESULT
 
 
 def test_all_classes_present():
@@ -28,16 +35,27 @@ def test_all_classes_present():
     print("\n[TEST] All D&D Classes Present")
 
     expected_classes = [
-        "Barbarian", "Bard", "Cleric", "Druid",
-        "Fighter", "Monk", "Paladin", "Ranger",
-        "Rogue", "Sorcerer", "Warlock", "Wizard"
+        "Barbarian",
+        "Bard",
+        "Cleric",
+        "Druid",
+        "Fighter",
+        "Monk",
+        "Paladin",
+        "Ranger",
+        "Rogue",
+        "Sorcerer",
+        "Warlock",
+        "Wizard",
     ]
 
     for class_name in expected_classes:
         assert class_name in CLASS_KNOWLEDGE, f"Missing class: {class_name}"
         print(f"  [OK] {class_name} present")
 
-    assert len(CLASS_KNOWLEDGE) == 12, f"Expected 12 classes, found {len(CLASS_KNOWLEDGE)}"
+    assert (
+        len(CLASS_KNOWLEDGE) == 12
+    ), f"Expected 12 classes, found {len(CLASS_KNOWLEDGE)}"
     print("  [OK] All 12 classes present")
 
     print("[PASS] All D&D Classes Present")
@@ -53,7 +71,7 @@ def test_class_data_structure():
         "decision_style",
         "common_reactions",
         "key_features",
-        "roleplay_notes"
+        "roleplay_notes",
     ]
 
     for class_name, class_data in CLASS_KNOWLEDGE.items():
@@ -73,8 +91,9 @@ def test_common_reactions_structure():
     for class_name, class_data in CLASS_KNOWLEDGE.items():
         reactions = class_data.get("common_reactions", {})
         for reaction_type in expected_reactions:
-            assert reaction_type in reactions, \
-                f"{class_name} missing reaction: {reaction_type}"
+            assert (
+                reaction_type in reactions
+            ), f"{class_name} missing reaction: {reaction_type}"
         print(f"  [OK] {class_name} has all reaction types")
 
     print("[PASS] Common Reactions Structure")
@@ -86,10 +105,10 @@ def test_key_features_present():
 
     for class_name, class_data in CLASS_KNOWLEDGE.items():
         key_features = class_data.get("key_features", [])
-        assert isinstance(key_features, list), \
-            f"{class_name} key_features must be a list"
-        assert len(key_features) > 0, \
-            f"{class_name} must have at least one key feature"
+        assert isinstance(
+            key_features, list
+        ), f"{class_name} key_features must be a list"
+        assert len(key_features) > 0, f"{class_name} must have at least one key feature"
         print(f"  [OK] {class_name} has {len(key_features)} key features")
 
     print("[PASS] Key Features Present")
@@ -100,8 +119,12 @@ def test_primary_abilities_valid():
     print("\n[TEST] Primary Abilities Valid")
 
     valid_abilities = {
-        "Strength", "Dexterity", "Constitution",
-        "Intelligence", "Wisdom", "Charisma"
+        "Strength",
+        "Dexterity",
+        "Constitution",
+        "Intelligence",
+        "Wisdom",
+        "Charisma",
     }
 
     for class_name, class_data in CLASS_KNOWLEDGE.items():
@@ -112,8 +135,9 @@ def test_primary_abilities_valid():
         abilities_mentioned = abilities_text.split(" or ")
         for ability in abilities_mentioned:
             ability = ability.strip()
-            assert ability in valid_abilities, \
-                f"{class_name} has invalid primary ability: {ability}"
+            assert (
+                ability in valid_abilities
+            ), f"{class_name} has invalid primary ability: {ability}"
         print(f"  [OK] {class_name} primary ability: {primary}")
 
     print("[PASS] Primary Abilities Valid")
@@ -125,10 +149,8 @@ def test_roleplay_notes_non_empty():
 
     for class_name, class_data in CLASS_KNOWLEDGE.items():
         notes = class_data.get("roleplay_notes", "")
-        assert isinstance(notes, str), \
-            f"{class_name} roleplay_notes must be string"
-        assert len(notes) > 0, \
-            f"{class_name} must have roleplay notes"
+        assert isinstance(notes, str), f"{class_name} roleplay_notes must be string"
+        assert len(notes) > 0, f"{class_name} must have roleplay notes"
         print(f"  [OK] {class_name} has roleplay notes")
 
     print("[PASS] Roleplay Notes Non-Empty")
@@ -140,26 +162,32 @@ def test_specific_class_samples():
 
     # Test Barbarian
     barbarian = CLASS_KNOWLEDGE.get("Barbarian", {})
-    assert barbarian.get("primary_ability") == "Strength", \
-        "Barbarian should have Strength primary"
-    assert "Rage" in barbarian.get("key_features", []), \
-        "Barbarian should have Rage feature"
+    assert (
+        barbarian.get("primary_ability") == "Strength"
+    ), "Barbarian should have Strength primary"
+    assert "Rage" in barbarian.get(
+        "key_features", []
+    ), "Barbarian should have Rage feature"
     print("  [OK] Barbarian data correct")
 
     # Test Wizard
     wizard = CLASS_KNOWLEDGE.get("Wizard", {})
-    assert wizard.get("primary_ability") == "Intelligence", \
-        "Wizard should have Intelligence primary"
-    assert "Spellcasting" in wizard.get("key_features", []), \
-        "Wizard should have Spellcasting feature"
+    assert (
+        wizard.get("primary_ability") == "Intelligence"
+    ), "Wizard should have Intelligence primary"
+    assert "Spellcasting" in wizard.get(
+        "key_features", []
+    ), "Wizard should have Spellcasting feature"
     print("  [OK] Wizard data correct")
 
     # Test Cleric
     cleric = CLASS_KNOWLEDGE.get("Cleric", {})
-    assert cleric.get("primary_ability") == "Wisdom", \
-        "Cleric should have Wisdom primary"
-    assert cleric.get("typical_role") == "Healer/Support", \
-        "Cleric should be Healer/Support role"
+    assert (
+        cleric.get("primary_ability") == "Wisdom"
+    ), "Cleric should have Wisdom primary"
+    assert (
+        cleric.get("typical_role") == "Healer/Support"
+    ), "Cleric should be Healer/Support role"
     print("  [OK] Cleric data correct")
 
     print("[PASS] Specific Class Samples")

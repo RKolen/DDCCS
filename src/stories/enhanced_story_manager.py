@@ -7,10 +7,17 @@ Refactored to use composition pattern with specialized manager classes.
 import os
 from typing import Dict, List, Any, Optional
 from src.characters.consultants.character_profile import CharacterProfile
-from src.utils.path_utils import get_campaigns_dir, get_characters_dir, get_party_config_path
+from src.utils.path_utils import (
+    get_campaigns_dir,
+    get_characters_dir,
+    get_party_config_path,
+)
 from src.stories.party_manager import PartyManager
 from src.stories.character_manager import CharacterManager
-from src.stories.session_results_manager import StorySession, create_session_results_file
+from src.stories.session_results_manager import (
+    StorySession,
+    create_session_results_file,
+)
 from src.npcs.npc_auto_detection import (
     detect_npc_suggestions,
     generate_npc_from_story,
@@ -41,26 +48,46 @@ class EnhancedStoryManager:
     Each manager handles a specific aspect of the story management system.
     """
 
-    def __init__(
-        self,
-        workspace_path: str,
-        party_config_path: str = None,
-        campaign_name: str = None,
-        ai_client=None,
-    ):
+    def __init__(self, workspace_path: str, **kwargs):
         """Initialize enhanced story manager with specialized managers.
 
         Args:
             workspace_path: Root workspace path
-            party_config_path: Optional party config path
-            ai_client: Optional AI client for enhanced features
+            **kwargs: Optional keyword arguments:
+                party_config_path: Optional party config path
+                campaign_name: Optional campaign name for party lookup
+                ai_client: Optional AI client for enhanced features
+                lazy_load: If True, defer character loading until explicitly requested
         """
+        party_config_path = kwargs.get("party_config_path")
+        campaign_name = kwargs.get("campaign_name")
+        ai_client = kwargs.get("ai_client")
+        lazy_load = kwargs.get("lazy_load", False)
+
+        self._init_paths(workspace_path)
+        self._init_managers(
+            workspace_path,
+            party_config_path=party_config_path,
+            campaign_name=campaign_name,
+            ai_client=ai_client,
+            lazy_load=lazy_load,
+        )
+
+    def _init_paths(self, workspace_path: str) -> None:
+        """Initialize workspace paths."""
         self.workspace_path = workspace_path
         self.stories_path = get_campaigns_dir(workspace_path)
         self.characters_path = get_characters_dir(workspace_path)
+
+    def _init_managers(self, workspace_path: str, **kwargs) -> None:
+        """Initialize specialized managers."""
+        party_config_path = kwargs.get("party_config_path")
+        campaign_name = kwargs.get("campaign_name")
+        ai_client = kwargs.get("ai_client")
+        lazy_load = kwargs.get("lazy_load", False)
+
         self.ai_client = ai_client
 
-        # Initialize specialized managers
         # Determine party configuration path. If a campaign_name is provided,
         # prefer the campaign-local current_party.json; otherwise use provided
         # party_config_path or the default global path.
@@ -68,14 +95,13 @@ class EnhancedStoryManager:
             workspace_path, campaign_name
         )
         self.party_manager = PartyManager(party_config)
-        self.character_manager = CharacterManager(self.characters_path, ai_client)
+        self.character_manager = CharacterManager(
+            self.characters_path, ai_client, lazy_load=lazy_load
+        )
 
         # Ensure stories directory exists (characters directory is created
         # lazily by the centralized loader when characters are loaded).
         os.makedirs(self.stories_path, exist_ok=True)
-
-        # Load characters on initialization
-        self.character_manager.load_characters()
 
     # ===== Party Management (delegates to PartyManager) =====
 
@@ -97,9 +123,28 @@ class EnhancedStoryManager:
 
     # ===== Character Management (delegates to CharacterManager) =====
 
-    def load_characters(self):
+    def _load_characters(self):
         """Load all character profiles and create consultants."""
-        self.character_manager.load_characters()
+        self.character_manager.ensure_characters_loaded()
+
+    def ensure_characters_loaded(self):
+        """Ensure all characters are loaded (lazy loading compatible)."""
+        self.character_manager.ensure_characters_loaded()
+
+    def is_characters_loaded(self) -> bool:
+        """Check if characters have been loaded."""
+        return self.character_manager.is_characters_loaded()
+
+    def load_party_characters(self, party_members: List[str]):
+        """Load only specific party member characters.
+
+        Args:
+            party_members: List of character names to load
+
+        Returns:
+            Dict mapping character name to consultant for loaded characters
+        """
+        return self.character_manager.load_party_characters(party_members)
 
     def get_character_list(self) -> List[str]:
         """Get list of all character names."""
@@ -109,7 +154,12 @@ class EnhancedStoryManager:
         """Get a specific character's profile."""
         return self.character_manager.get_character_profile(character_name)
 
-    def clear_character_cache(self, character_name: str):
+    @property
+    def consultants(self):
+        """Access to character consultants."""
+        return self.character_manager.consultants
+
+    def _clear_character_cache(self, character_name: str):
         """Clear a character from the in-memory cache.
 
         Removes the character from cache so the next call to get_character_profile
@@ -121,7 +171,7 @@ class EnhancedStoryManager:
         """
         self.character_manager.clear_character_cache(character_name)
 
-    def reload_character_from_disk(self, character_name: str) -> bool:
+    def _reload_character_from_disk(self, character_name: str) -> bool:
         """Reload a character from disk, refreshing the cache.
 
         Clears the character from cache and reloads from disk. Useful after
@@ -136,7 +186,7 @@ class EnhancedStoryManager:
         return self.character_manager.reload_character_from_disk(character_name)
 
     def get_available_recruits(
-        self, exclude_characters: List[str] = None
+        self, exclude_characters: Optional[List[str]] = None
     ) -> List[Dict[str, Any]]:
         """Get available character agents for recruitment, excluding current party."""
         if exclude_characters is None:
@@ -207,9 +257,7 @@ class EnhancedStoryManager:
             stories_path=self.stories_path,
             workspace_path=self.workspace_path,
         )
-        return create_pure_narrative_story(
-            ctx, series_name, story_name, description
-        )
+        return create_pure_narrative_story(ctx, series_name, story_name, description)
 
     def _create_pure_story_file(
         self, series_path: str, story_name: str, narrative_content: str
@@ -244,7 +292,7 @@ class EnhancedStoryManager:
         series_path: str,
         story_name: str,
         character_actions: List[Dict[str, str]],
-        session_date: str = None,
+        session_date: Optional[str] = None,
     ) -> str:
         """Create file for character development suggestions (internal use)."""
         return create_character_development_file(
@@ -268,15 +316,8 @@ class EnhancedStoryManager:
         """Save an NPC profile to game_data/npcs/ directory (internal use)."""
         return save_npc_profile(npc_profile, self.workspace_path)
 
-    # ===== Utility Methods =====
 
-    @property
-    def consultants(self):
-        """Access to character consultants (for backward compatibility)."""
-        return self.character_manager.consultants
-
-
-def create_improved_recruitment_system(active_party: List[str] = None):
+def create_improved_recruitment_system(active_party: Optional[List[str]] = None):
     """Demonstration of improved recruitment using existing character agents."""
     print("\\n=== IMPROVED RECRUITMENT SYSTEM ===")
 
@@ -300,9 +341,7 @@ def create_improved_recruitment_system(active_party: List[str] = None):
             print(f"  Background: {recruit['background'][:100]}...")
             print()
     else:
-        print(
-            "\\n[WARNING] No available recruits - all characters are in the party!"
-        )
+        print("\\n[WARNING] No available recruits - all characters are in the party!")
 
     return available_recruits
 

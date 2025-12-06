@@ -6,22 +6,17 @@ consultation features with graceful fallback to rule-based methods.
 """
 
 from tests import test_helpers
-
-# Import production symbols via centralized helper
-AIConsultant, AI_AVAILABLE = test_helpers.safe_from_import(
-    "src.characters.consultants.consultant_ai", "AIConsultant", "AI_AVAILABLE"
-)
-CharacterProfile, CharacterIdentity = test_helpers.safe_from_import(
-    "src.characters.consultants.character_profile", "CharacterProfile", "CharacterIdentity"
-)
-DnDClass = test_helpers.safe_from_import("src.characters.character_sheet", "DnDClass")
+from src.characters.consultants.consultant_ai import AIConsultant, AI_AVAILABLE
+from src.characters.character_sheet import DnDClass
 
 
 def test_ai_consultant_initialization():
     """Test AI consultant initialization."""
     print("\n[TEST] AI Consultant - Initialization")
 
-    profile = test_helpers.make_profile(name="TestChar", dnd_class=DnDClass.FIGHTER, level=5)
+    profile = test_helpers.make_profile(
+        name="TestChar", dnd_class=DnDClass.FIGHTER, level=5
+    )
     class_knowledge = {"key_features": ["Action Surge"]}
 
     consultant = AIConsultant(profile, class_knowledge)
@@ -38,10 +33,12 @@ def test_ai_consultant_initialization_with_client():
     """Test AI consultant initialization with AI client."""
     print("\n[TEST] AI Consultant - Initialization with Client")
 
-    profile = test_helpers.make_profile(name="TestChar", dnd_class=DnDClass.WIZARD, level=5)
+    profile = test_helpers.make_profile(
+        name="TestChar", dnd_class=DnDClass.WIZARD, level=5
+    )
 
     # Create mock AI client
-    mock_client = type('MockAIClient', (), {})()
+    mock_client = type("MockAIClient", (), {})()
 
     consultant = AIConsultant(profile, {}, ai_client=mock_client)
 
@@ -55,7 +52,9 @@ def test_get_ai_client_no_ai():
     """Test get_ai_client when AI is not available."""
     print("\n[TEST] AI Consultant - Get AI Client (No AI)")
 
-    profile = test_helpers.make_profile(name="TestChar", dnd_class=DnDClass.FIGHTER, level=5)
+    profile = test_helpers.make_profile(
+        name="TestChar", dnd_class=DnDClass.FIGHTER, level=5
+    )
     consultant = AIConsultant(profile, {})
 
     # If AI is not available, should return None
@@ -73,18 +72,20 @@ def test_get_ai_client_with_global():
     """Test get_ai_client with global AI client."""
     print("\n[TEST] AI Consultant - Get AI Client (Global)")
 
-    profile = test_helpers.make_profile(name="TestChar", dnd_class=DnDClass.WIZARD, level=5)
+    profile = test_helpers.make_profile(
+        name="TestChar", dnd_class=DnDClass.WIZARD, level=5
+    )
 
-    mock_global_client = type('MockGlobalClient', (), {})()
+    mock_global_client = type("MockGlobalClient", (), {})()
     consultant = AIConsultant(profile, {}, ai_client=mock_global_client)
 
     client = consultant.get_ai_client()
 
     # Should return global client when no character-specific config
     if AI_AVAILABLE:
-        assert client == mock_global_client, (
-            "Should return global client when available"
-        )
+        assert (
+            client == mock_global_client
+        ), "Should return global client when available"
         print("  [OK] Returns global client when available")
     else:
         assert client is None, "Should return None when AI not available"
@@ -97,7 +98,9 @@ def test_build_character_system_prompt_basic():
     """Test building basic character system prompt."""
     print("\n[TEST] AI Consultant - Build System Prompt Basic")
 
-    profile = test_helpers.make_profile(name="BraveKnight", dnd_class=DnDClass.FIGHTER, level=5)
+    profile = test_helpers.make_profile(
+        name="BraveKnight", dnd_class=DnDClass.FIGHTER, level=5
+    )
     consultant = AIConsultant(profile, {})
 
     prompt = consultant.build_character_system_prompt()
@@ -116,7 +119,9 @@ def test_build_character_system_prompt_with_background():
     """Test system prompt with character background."""
     print("\n[TEST] AI Consultant - Build System Prompt with Background")
 
-    profile = test_helpers.make_profile(name="MysteriousRogue", dnd_class=DnDClass.ROGUE, level=7)
+    profile = test_helpers.make_profile(
+        name="MysteriousRogue", dnd_class=DnDClass.ROGUE, level=7
+    )
     profile.personality.background_story = (
         "Former thief turned adventurer seeking redemption"
     )
@@ -127,12 +132,8 @@ def test_build_character_system_prompt_with_background():
 
     assert "MysteriousRogue" in prompt, "Should include name"
     assert "Rogue" in prompt, "Should include class"
-    assert "thief" in prompt or "adventurer" in prompt, (
-        "Should include background"
-    )
-    assert "Cautious" in prompt or "loyal" in prompt, (
-        "Should include personality"
-    )
+    assert "thief" in prompt or "adventurer" in prompt, "Should include background"
+    assert "Cautious" in prompt or "loyal" in prompt, "Should include personality"
     print("  [OK] System prompt includes background and personality")
 
     print("[PASS] AI Consultant - Build System Prompt with Background")
@@ -142,7 +143,9 @@ def test_build_character_system_prompt_with_motivations():
     """Test system prompt with motivations and goals."""
     print("\n[TEST] AI Consultant - Build System Prompt with Motivations")
 
-    profile = test_helpers.make_profile(name="NobleCleric", dnd_class=DnDClass.CLERIC, level=8)
+    profile = test_helpers.make_profile(
+        name="NobleCleric", dnd_class=DnDClass.CLERIC, level=8
+    )
     profile.personality.motivations = ["Protect the innocent", "Serve my deity"]
     profile.personality.goals = ["Establish a temple", "Become a saint"]
     profile.personality.fears_weaknesses = ["Fear of failure"]
@@ -152,9 +155,7 @@ def test_build_character_system_prompt_with_motivations():
 
     assert "Protect the innocent" in prompt, "Should include motivations"
     assert "Establish a temple" in prompt, "Should include goals"
-    assert "Fear of failure" in prompt or "failure" in prompt, (
-        "Should include fears"
-    )
+    assert "Fear of failure" in prompt or "failure" in prompt, "Should include fears"
     print("  [OK] System prompt includes motivations, goals, and fears")
 
     print("[PASS] AI Consultant - Build System Prompt with Motivations")
@@ -164,19 +165,19 @@ def test_build_character_system_prompt_with_class_knowledge():
     """Test system prompt with class knowledge."""
     print("\n[TEST] AI Consultant - Build System Prompt with Class Knowledge")
 
-    profile = test_helpers.make_profile(name="WiseMage", dnd_class=DnDClass.WIZARD, level=10)
+    profile = test_helpers.make_profile(
+        name="WiseMage", dnd_class=DnDClass.WIZARD, level=10
+    )
 
     class_knowledge = {
         "decision_style": "analyze carefully before acting",
-        "key_features": ["Spellcasting", "Arcane Recovery"]
+        "key_features": ["Spellcasting", "Arcane Recovery"],
     }
 
     consultant = AIConsultant(profile, class_knowledge)
     prompt = consultant.build_character_system_prompt()
 
-    assert "analyze carefully" in prompt.lower(), (
-        "Should include decision style"
-    )
+    assert "analyze carefully" in prompt.lower(), "Should include decision style"
     assert "Wizard" in prompt, "Should mention class"
     print("  [OK] System prompt includes class knowledge")
 
@@ -187,7 +188,9 @@ def test_suggest_reaction_ai_requires_base():
     """Test that AI reaction suggestion requires base suggestion."""
     print("\n[TEST] AI Consultant - Reaction Requires Base Suggestion")
 
-    profile = test_helpers.make_profile(name="TestChar", dnd_class=DnDClass.FIGHTER, level=5)
+    profile = test_helpers.make_profile(
+        name="TestChar", dnd_class=DnDClass.FIGHTER, level=5
+    )
     consultant = AIConsultant(profile, {})
 
     # Should raise ValueError when base_suggestion is None
@@ -195,9 +198,9 @@ def test_suggest_reaction_ai_requires_base():
         consultant.suggest_reaction_ai("danger approaches", base_suggestion=None)
         assert False, "Should have raised ValueError"
     except ValueError as e:
-        assert "base_suggestion is required" in str(e), (
-            "Error message should mention base_suggestion"
-        )
+        assert "base_suggestion is required" in str(
+            e
+        ), "Error message should mention base_suggestion"
         print("  [OK] Correctly requires base suggestion")
 
     print("[PASS] AI Consultant - Reaction Requires Base Suggestion")
@@ -207,17 +210,15 @@ def test_suggest_reaction_ai_without_ai():
     """Test AI reaction fallback when AI not available."""
     print("\n[TEST] AI Consultant - Reaction Fallback (No AI)")
 
-    profile = test_helpers.make_profile(name="BraveFighter", dnd_class=DnDClass.FIGHTER, level=5)
+    profile = test_helpers.make_profile(
+        name="BraveFighter", dnd_class=DnDClass.FIGHTER, level=5
+    )
     consultant = AIConsultant(profile, {})
 
-    base_suggestion = {
-        "reaction": "Charge forward",
-        "reasoning": "Fighters are brave"
-    }
+    base_suggestion = {"reaction": "Charge forward", "reasoning": "Fighters are brave"}
 
     result = consultant.suggest_reaction_ai(
-        "Enemy approaches",
-        base_suggestion=base_suggestion
+        "Enemy approaches", base_suggestion=base_suggestion
     )
 
     # Should return base suggestion with ai_enhanced=False when no AI
@@ -233,20 +234,19 @@ def test_suggest_dc_for_action_ai_requires_base():
     """Test that AI DC suggestion requires base suggestion."""
     print("\n[TEST] AI Consultant - DC Requires Base Suggestion")
 
-    profile = test_helpers.make_profile(name="TestChar", dnd_class=DnDClass.ROGUE, level=5)
+    profile = test_helpers.make_profile(
+        name="TestChar", dnd_class=DnDClass.ROGUE, level=5
+    )
     consultant = AIConsultant(profile, {})
 
     # Should raise ValueError when base_suggestion is None
     try:
-        consultant.suggest_dc_for_action_ai(
-            "pick a lock",
-            base_suggestion=None
-        )
+        consultant.suggest_dc_for_action_ai("pick a lock", base_suggestion=None)
         assert False, "Should have raised ValueError"
     except ValueError as e:
-        assert "base_suggestion is required" in str(e), (
-            "Error message should mention base_suggestion"
-        )
+        assert "base_suggestion is required" in str(
+            e
+        ), "Error message should mention base_suggestion"
         print("  [OK] Correctly requires base suggestion")
 
     print("[PASS] AI Consultant - DC Requires Base Suggestion")
@@ -256,17 +256,15 @@ def test_suggest_dc_for_action_ai_without_ai():
     """Test AI DC fallback when AI not available."""
     print("\n[TEST] AI Consultant - DC Fallback (No AI)")
 
-    profile = test_helpers.make_profile(name="SneakyRogue", dnd_class=DnDClass.ROGUE, level=5)
+    profile = test_helpers.make_profile(
+        name="SneakyRogue", dnd_class=DnDClass.ROGUE, level=5
+    )
     consultant = AIConsultant(profile, {})
 
-    base_suggestion = {
-        "suggested_dc": 15,
-        "reasoning": "Medium difficulty for rogue"
-    }
+    base_suggestion = {"suggested_dc": 15, "reasoning": "Medium difficulty for rogue"}
 
     result = consultant.suggest_dc_for_action_ai(
-        "sneak past guards",
-        base_suggestion=base_suggestion
+        "sneak past guards", base_suggestion=base_suggestion
     )
 
     # Should return base suggestion with ai_enhanced=False when no AI
@@ -282,39 +280,42 @@ def test_ai_consultant_error_handling():
     """Test AI consultant handles errors gracefully."""
     print("\n[TEST] AI Consultant - Error Handling")
 
-    profile = test_helpers.make_profile(name="TestChar", dnd_class=DnDClass.WIZARD, level=5)
+    profile = test_helpers.make_profile(
+        name="TestChar", dnd_class=DnDClass.WIZARD, level=5
+    )
 
     # Create a mock client that will fail
-    mock_client = type('FailingClient', (), {
-        'chat_completion': lambda self, messages: (_ for _ in ()).throw(
-            ConnectionError("Mock connection error")
-        ),
-        'create_system_message': lambda self, content: {
-            "role": "system", "content": content
+    mock_client = type(
+        "FailingClient",
+        (),
+        {
+            "chat_completion": lambda self, messages: (_ for _ in ()).throw(
+                ConnectionError("Mock connection error")
+            ),
+            "create_system_message": lambda self, content: {
+                "role": "system",
+                "content": content,
+            },
+            "create_user_message": lambda self, content: {
+                "role": "user",
+                "content": content,
+            },
         },
-        'create_user_message': lambda self, content: {
-            "role": "user", "content": content
-        }
-    })()
+    )()
 
     consultant = AIConsultant(profile, {}, ai_client=mock_client)
 
     base_suggestion = {"reaction": "Test"}
 
     result = consultant.suggest_reaction_ai(
-        "test situation",
-        base_suggestion=base_suggestion
+        "test situation", base_suggestion=base_suggestion
     )
 
     # Should handle error gracefully
     assert "ai_enhanced" in result, "Should have ai_enhanced field"
-    assert result["ai_enhanced"] is False, (
-        "Should mark as not AI enhanced after error"
-    )
+    assert result["ai_enhanced"] is False, "Should mark as not AI enhanced after error"
     if "ai_error" in result:
-        assert isinstance(result["ai_error"], str), (
-            "AI error should be a string"
-        )
+        assert isinstance(result["ai_error"], str), "AI error should be a string"
         print("  [OK] Error captured in ai_error field")
     else:
         print("  [OK] Error handled gracefully")

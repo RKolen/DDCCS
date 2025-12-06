@@ -5,7 +5,7 @@ Handles character consultations, DC suggestions, and DM narrative suggestions.
 """
 
 import os
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 from src.utils.cli_utils import select_character_from_list, get_non_empty_input
 from src.utils.path_utils import get_campaign_path
 from src.cli.party_config_manager import load_current_party
@@ -137,7 +137,7 @@ class ConsultationsCLI:
 
         input("\nPress Enter to continue...")
 
-    def get_dm_narrative_suggestions(self, series_name: str = None):
+    def get_dm_narrative_suggestions(self, series_name: Optional[str] = None):
         """Get DM narrative suggestions based on user prompt."""
         print("\n DM NARRATIVE SUGGESTIONS")
         print("-" * 40)
@@ -162,7 +162,7 @@ class ConsultationsCLI:
         )
         self._display_dm_suggestions(suggestions)
 
-    def _get_party_for_series(self, series_name: str = None):
+    def _get_party_for_series(self, series_name: Optional[str] = None):
         """Get party members for a series (or overall party if not specified)."""
         characters = []
         if series_name:

@@ -5,7 +5,7 @@ Enhanced with RAG (Retrieval-Augmented Generation) for campaign wiki integration
 """
 
 import re
-from typing import Dict, List, Any
+from typing import Dict, List, Any, Optional
 from pathlib import Path
 from src.characters.consultants.consultant_core import CharacterConsultant
 from src.npcs.npc_agents import NPCAgent, create_npc_agents
@@ -14,15 +14,17 @@ from src.stories.character_loader import load_all_character_consultants
 # Import RAG system if available
 try:
     from src.ai.rag_system import get_rag_system
+
     RAG_AVAILABLE = True
 except ImportError:
     get_rag_system = None
     RAG_AVAILABLE = False
 
+
 class DMConsultant:
     """AI consultant that provides DM narrative suggestions based on user prompts."""
 
-    def __init__(self, workspace_path: str = None, ai_client=None):
+    def __init__(self, workspace_path: "Optional[str]" = None, ai_client=None):
         self.workspace_path = Path(workspace_path) if workspace_path else Path.cwd()
         self.ai_client = ai_client
         self.character_consultants = self._load_character_consultants()
@@ -52,8 +54,8 @@ class DMConsultant:
     def suggest_narrative(
         self,
         user_prompt: str,
-        characters_present: List[str] = None,
-        npcs_present: List[str] = None,
+        characters_present: Optional[List[str]] = None,
+        npcs_present: Optional[List[str]] = None,
     ) -> Dict[str, Any]:
         """Generate narrative suggestions based on user prompt and present characters/NPCs."""
         characters_present = characters_present or []
@@ -168,7 +170,9 @@ class DMConsultant:
             return (
                 "Bustling streets filled with merchants, guards, and curious onlookers"
             )
-        return "The party finds themselves in a situation requiring careful consideration"
+        return (
+            "The party finds themselves in a situation requiring careful consideration"
+        )
 
     def _check_consistency(
         self, characters: List[str], npcs: List[str], _situation: str
@@ -252,8 +256,8 @@ class DMConsultant:
     def generate_narrative_content(
         self,
         story_prompt: str,
-        characters_present: List[str] = None,
-        npcs_present: List[str] = None,
+        characters_present: Optional[List[str]] = None,
+        npcs_present: Optional[List[str]] = None,
         style: str = "immersive",
     ) -> str:
         """
@@ -287,9 +291,7 @@ class DMConsultant:
             # Extract location names from prompt (simple keyword extraction)
             potential_locations = self._extract_locations_from_prompt(story_prompt)
             if potential_locations:
-                print(
-                    f" RAG: Searching wiki for: {', '.join(potential_locations)}"
-                )
+                print(f" RAG: Searching wiki for: {', '.join(potential_locations)}")
                 rag_context = self.rag_system.get_context_for_query(
                     story_prompt, potential_locations, max_results=2
                 )

@@ -4,10 +4,12 @@ Character Management for Story System
 Handles character loading, profiles, consultants, and spell highlighting.
 """
 
-from typing import Optional
+from typing import Dict, Optional
 from src.characters.consultants.character_profile import CharacterProfile
+from src.characters.consultants.consultant_core import CharacterConsultant
 from src.utils.spell_highlighter import highlight_spells_in_text
 from src.stories.character_loader import load_all_character_consultants
+from src.stories.character_loading_base import CharacterLoadingMixin
 from src.utils.cache_utils import (
     clear_character_from_cache,
     reload_character_from_disk,
@@ -15,22 +17,26 @@ from src.utils.cache_utils import (
 )
 
 
-class CharacterManager:
-    """Manages character loading, profiles, and consultants."""
+class CharacterManager(CharacterLoadingMixin):
+    """Manages character loading, profiles, consultants, and spell highlighting."""
 
-    def __init__(self, characters_path: str, ai_client=None):
+    def __init__(self, characters_path: str, ai_client=None, lazy_load: bool = False):
         """Initialize character manager.
 
         Args:
             characters_path: Path to characters directory
             ai_client: Optional AI client for enhanced features
+            lazy_load: If True, defer character loading until explicitly requested
         """
         self.characters_path = characters_path
         self.ai_client = ai_client
-        self.consultants = {}
-        self.known_spells = set()
+        self.consultants: Dict[str, CharacterConsultant] = {}
+        self.known_spells: set = set()
+        self._characters_loaded = False
 
-    # Directory existence is ensured by the centralized loader when needed.
+        # Load characters eagerly by default for backward compatibility
+        if not lazy_load:
+            self.load_characters()
 
     def load_characters(self):
         """Load all character profiles and create consultants."""
@@ -39,9 +45,25 @@ class CharacterManager:
         self.consultants = load_all_character_consultants(
             self.characters_path, ai_client=self.ai_client, verbose=False
         )
+        self._characters_loaded = True
 
         # Extract known spells from all loaded characters
         self._update_known_spells()
+
+    def load_party_characters(self, party_members: list) -> Dict:
+        """Load only specific party member characters and update known spells.
+
+        Args:
+            party_members: List of character names to load
+
+        Returns:
+            Dict mapping character name to consultant for loaded characters
+        """
+        # Call parent implementation
+        loaded = super().load_party_characters(party_members)
+        # Update known spells from newly loaded characters
+        self._update_known_spells()
+        return loaded
 
     def _update_known_spells(self):
         """Extract and cache known spells from all loaded characters."""

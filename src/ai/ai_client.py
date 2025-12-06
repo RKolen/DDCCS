@@ -7,9 +7,10 @@ import os
 import json
 import re
 import ast
-from typing import Dict, List, Any, Optional
+from typing import Dict, Any, Optional, Sequence
 from dataclasses import dataclass, field
 from openai import OpenAI
+from openai.types.chat import ChatCompletionMessageParam
 
 # Load environment variables from .env file
 try:
@@ -18,6 +19,7 @@ try:
     load_dotenv()
 except ImportError:
     pass  # dotenv not available, will use system environment variables only
+
 
 class AIClient:
     """
@@ -52,7 +54,7 @@ class AIClient:
         api_key: Optional[str] = None,
         base_url: Optional[str] = None,
         model: Optional[str] = None,
-        **config
+        **config,
     ):
         """
         Initialize AI client with configuration.
@@ -66,21 +68,29 @@ class AIClient:
                 - default_max_tokens (int): Default max tokens (default: 1000)
         """
         self.api_key = api_key or os.getenv("OPENAI_API_KEY", "")
-        self.base_url = base_url or os.getenv("OPENAI_BASE_URL")
+        self.base_url = base_url or os.getenv("OPENAI_BASE_URL", None)
         self.model = model or os.getenv("OPENAI_MODEL", "gpt-3.5-turbo")
         self.default_temperature = config.get("default_temperature", 0.7)
         self.default_max_tokens = config.get("default_max_tokens", 1000)
 
         # Initialize OpenAI client
-        client_kwargs = {"api_key": self.api_key}
-        if self.base_url:
+        client_kwargs = {}
+        if self.api_key and isinstance(self.api_key, str) and self.api_key.strip():
+            client_kwargs["api_key"] = self.api_key
+        if self.base_url and isinstance(self.base_url, str) and self.base_url.strip():
             client_kwargs["base_url"] = self.base_url
 
-        self.client = OpenAI(**client_kwargs)
+        # Only pass allowed kwargs to OpenAI constructor and ensure no empty strings
+        allowed_keys = {"api_key", "base_url"}
+        filtered_kwargs = {
+            k: v for k, v in client_kwargs.items() if k in allowed_keys and v
+        }
+
+        self.client = OpenAI(**filtered_kwargs)
 
     def chat_completion(
         self,
-        messages: List[Dict[str, str]],
+        messages: Sequence[ChatCompletionMessageParam],
         model: Optional[str] = None,
         temperature: Optional[float] = None,
         max_tokens: Optional[int] = None,
@@ -121,15 +131,15 @@ class AIClient:
                 )
             raise RuntimeError(error_msg) from e
 
-    def create_system_message(self, system_prompt: str) -> Dict[str, str]:
+    def create_system_message(self, system_prompt: str) -> ChatCompletionMessageParam:
         """Create a system message dict."""
         return {"role": "system", "content": system_prompt}
 
-    def create_user_message(self, content: str) -> Dict[str, str]:
+    def create_user_message(self, content: str) -> ChatCompletionMessageParam:
         """Create a user message dict."""
         return {"role": "user", "content": content}
 
-    def create_assistant_message(self, content: str) -> Dict[str, str]:
+    def create_assistant_message(self, content: str) -> ChatCompletionMessageParam:
         """Create an assistant message dict."""
         return {"role": "assistant", "content": content}
 
@@ -137,6 +147,7 @@ class AIClient:
 @dataclass
 class AIRequestParams:
     """Parameters for AI requests."""
+
     temperature: float = 0.7
     max_tokens: int = 1000
     custom_parameters: Dict[str, Any] = field(default_factory=dict)
@@ -148,6 +159,7 @@ class CharacterAIConfig:
     AI configuration specific to a character.
     Allows each character to have unique AI behavior, model selection, etc.
     """
+
     enabled: bool = False
     model: Optional[str] = None
     base_url: Optional[str] = None
@@ -174,7 +186,7 @@ class CharacterAIConfig:
         request_params = AIRequestParams(
             temperature=data.get("temperature", 0.7),
             max_tokens=data.get("max_tokens", 1000),
-            custom_parameters=data.get("custom_parameters", {})
+            custom_parameters=data.get("custom_parameters", {}),
         )
         return cls(
             enabled=data.get("enabled", False),
@@ -182,7 +194,7 @@ class CharacterAIConfig:
             base_url=data.get("base_url"),
             api_key=data.get("api_key"),
             system_prompt=data.get("system_prompt"),
-            request_params=request_params
+            request_params=request_params,
         )
 
     def create_client(self, default_client: Optional[AIClient] = None) -> AIClient:
@@ -223,7 +235,7 @@ class CharacterAIConfig:
         )
 
 
-def load_ai_config_from_env() -> Dict[str, str]:
+def load_ai_config_from_env() -> Dict[str, Any]:
     """
     Load AI configuration from environment variables.
 
@@ -238,8 +250,10 @@ def load_ai_config_from_env() -> Dict[str, str]:
         "max_tokens": int(os.getenv("AI_MAX_TOKENS", "1000")),
     }
 
+
 # Create a default AI client using .env or environment variables
 _default_ai_client = AIClient()
+
 
 def call_ai_for_behavior_block(prompt: str) -> dict:
     """
@@ -248,15 +262,16 @@ def call_ai_for_behavior_block(prompt: str) -> dict:
     "speech_patterns, decision_making_style.
     """
     # Compose messages for chat completion
-    messages = [
+    messages: Sequence[ChatCompletionMessageParam] = [
         _default_ai_client.create_system_message(
             "You are a D&D character consultant AI."
-            "Respond ONLY with a JSON object for the CharacterBehavior dataclass."),
-        _default_ai_client.create_user_message(prompt)
+            "Respond ONLY with a JSON object for the CharacterBehavior dataclass."
+        ),
+        _default_ai_client.create_user_message(prompt),
     ]
     response = _default_ai_client.chat_completion(messages)
     # Try to extract JSON from the response (handles code block formatting)
-    match = re.search(r'```json\n(.*?)```', response, re.DOTALL)
+    match = re.search(r"```json\n(.*?)```", response, re.DOTALL)
     if match:
         json_str = match.group(1)
     else:

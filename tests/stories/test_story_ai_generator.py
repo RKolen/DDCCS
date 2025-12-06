@@ -1,6 +1,3 @@
-
-
-
 """
 Story AI Generator Tests
 
@@ -51,7 +48,9 @@ def test_generate_story_from_prompt_with_mock_ai():
     mock_ai = Mock()
     mock_response = Mock()
     mock_response.choices = [Mock()]
-    mock_response.choices[0].message.content = "A wizard named Gandalf entered the tavern..."
+    mock_response.choices[0].message.content = (
+        "A wizard named Gandalf entered the tavern..."
+    )
     mock_ai.client.chat.completions.create.return_value = mock_response
     mock_ai.model = "gpt-4"
 
@@ -64,7 +63,9 @@ def test_generate_story_from_prompt_with_mock_ai():
     # With mock AI, should return the mocked narrative
     assert isinstance(result, str), "Should return string when AI available"
     assert len(result) > 0, "Generated narrative should not be empty"
-    assert mock_ai.client.chat.completions.create.called, "AI client should have been called"
+    assert (
+        mock_ai.client.chat.completions.create.called
+    ), "AI client should have been called"
 
     print("[PASS] Generate Story From Prompt (With Mock AI)")
 
@@ -104,7 +105,9 @@ def test_generate_story_description_with_mock_ai():
     # With mock AI, should return the mocked description
     assert isinstance(result, str), "Should return string when AI available"
     assert len(result) > 0, "Generated description should not be empty"
-    assert mock_ai.client.chat.completions.create.called, "AI client should have been called"
+    assert (
+        mock_ai.client.chat.completions.create.called
+    ), "AI client should have been called"
 
     print("[PASS] Generate Story Description (With Mock AI)")
 
@@ -149,7 +152,9 @@ def test_enhance_story_narrative_expand_mode():
 
     assert isinstance(result, str), "Should return string when AI available"
     assert len(result) > len(narrative), "Expanded narrative should be longer"
-    assert mock_ai.client.chat.completions.create.called, "AI client should have been called"
+    assert (
+        mock_ai.client.chat.completions.create.called
+    ), "AI client should have been called"
 
     print("[PASS] Enhance Story Narrative (Expand Mode)")
 
@@ -163,7 +168,7 @@ def test_enhance_story_narrative_dialogue_mode():
     mock_response = Mock()
     mock_response.choices = [Mock()]
     mock_response.choices[0].message.content = (
-        'The party meets a grizzled merchant. '
+        "The party meets a grizzled merchant. "
         '"Welcome, travelers," he says with a knowing smile.'
     )
     mock_ai.client.chat.completions.create.return_value = mock_response
@@ -176,7 +181,9 @@ def test_enhance_story_narrative_dialogue_mode():
     )
 
     assert isinstance(result, str), "Should return string when AI available"
-    assert mock_ai.client.chat.completions.create.called, "AI client should have been called"
+    assert (
+        mock_ai.client.chat.completions.create.called
+    ), "AI client should have been called"
 
     print("[PASS] Enhance Story Narrative (Dialogue Mode)")
 
@@ -203,7 +210,9 @@ def test_enhance_story_narrative_atmosphere_mode():
     )
 
     assert isinstance(result, str), "Should return string when AI available"
-    assert mock_ai.client.chat.completions.create.called, "AI client should have been called"
+    assert (
+        mock_ai.client.chat.completions.create.called
+    ), "AI client should have been called"
 
     print("[PASS] Enhance Story Narrative (Atmosphere Mode)")
 
@@ -214,9 +223,7 @@ def test_generate_functions_handle_errors():
 
     # Mock AI that raises AttributeError (which is caught)
     mock_ai = Mock()
-    mock_ai.client.chat.completions.create.side_effect = AttributeError(
-        "Mock AI error"
-    )
+    mock_ai.client.chat.completions.create.side_effect = AttributeError("Mock AI error")
 
     # All functions should handle errors gracefully
     result1 = generate_story_from_prompt(
@@ -304,9 +311,9 @@ def test_generate_story_from_prompt_with_rag_context():
 
     assert user_msg is not None, "User message should exist"
     # The user prompt should contain reference to spells if RAG is available
-    assert "fireball" in user_msg["content"].lower(), (
-        "User prompt should reference mentioned spells"
-    )
+    assert (
+        "fireball" in user_msg["content"].lower()
+    ), "User prompt should reference mentioned spells"
 
     print("[PASS] Story Generation with RAG Context")
 
@@ -331,12 +338,10 @@ def test_generate_story_rag_graceful_fallback():
         story_config={"party_characters": {"Alice": {"dnd_class": "rogue"}}},
     )
 
-    assert isinstance(result, str), (
-        "Should return string even without RAG results"
-    )
-    assert mock_ai.client.chat.completions.create.called, (
-        "AI should be called regardless of RAG availability"
-    )
+    assert isinstance(result, str), "Should return string even without RAG results"
+    assert (
+        mock_ai.client.chat.completions.create.called
+    ), "AI should be called regardless of RAG availability"
 
     print("[PASS] Story Generation RAG Fallback")
 
@@ -352,15 +357,13 @@ def test_generate_story_hooks_with_ai():
     )
     character_context = {
         "Kael": {"dnd_class": "rogue", "level": 3},
-        "Lira": {"dnd_class": "wizard", "level": 4}
+        "Lira": {"dnd_class": "wizard", "level": 4},
     }
     mock_ai = test_helpers.FakeAIClient()
-    hooks = generate_story_hooks_from_content(
-        mock_ai,
-        story_content,
-        character_context
-    )
-    assert isinstance(hooks, (list, dict, type(None))), "Should return list, dict, or None"
+    hooks = generate_story_hooks_from_content(mock_ai, story_content, character_context)
+    assert isinstance(
+        hooks, (list, dict, type(None))
+    ), "Should return list, dict, or None"
 
     print("[PASS] Generate Story Hooks (With AI)")
 
@@ -376,14 +379,12 @@ def test_generate_story_hooks_fallback():
     )
     character_context = {
         "Kael": {"dnd_class": "rogue", "level": 3},
-        "Lira": {"dnd_class": "wizard", "level": 4}
+        "Lira": {"dnd_class": "wizard", "level": 4},
     }
-    hooks = generate_story_hooks_from_content(
-        None,
-        story_content,
-        character_context
-    )
-    assert isinstance(hooks, (list, dict, type(None))), "Should return list, dict, or None"
+    hooks = generate_story_hooks_from_content(None, story_content, character_context)
+    assert isinstance(
+        hooks, (list, dict, type(None))
+    ), "Should return list, dict, or None"
 
     print("[PASS] Generate Story Hooks (Fallback)")
 
@@ -408,9 +409,11 @@ def test_phase1_append_ai_continuation_filters_template():
         with open(story_file, "w", encoding="utf-8") as f:
             f.write(initial_content)
 
-        config = ContinuationConfig().set_paths(
-            story_file, campaign_dir, workspace
-        ).set_content("New story content here.")
+        config = (
+            ContinuationConfig()
+            .set_paths(story_file, campaign_dir, workspace)
+            .set_content("New story content here.")
+        )
 
         updater = StoryUpdater()
         result = updater.append_ai_continuation(config)
@@ -422,9 +425,9 @@ def test_phase1_append_ai_continuation_filters_template():
         with open(story_file, "r", encoding="utf-8") as f:
             updated_content = f.read()
 
-        assert "New story content here" in updated_content, (
-            "Continuation should be appended"
-        )
+        assert (
+            "New story content here" in updated_content
+        ), "Continuation should be appended"
 
     print("[PASS] Phase 1 - AI Continuation (Template Filtering)")
 
@@ -448,9 +451,11 @@ def test_phase1_preserves_narrative_content():
         with open(story_file, "w", encoding="utf-8") as f:
             f.write(initial_content)
 
-        config = ContinuationConfig().set_paths(
-            story_file, campaign_dir, workspace
-        ).set_content("The guard examines their papers carefully.")
+        config = (
+            ContinuationConfig()
+            .set_paths(story_file, campaign_dir, workspace)
+            .set_content("The guard examines their papers carefully.")
+        )
 
         updater = StoryUpdater()
         result = updater.append_ai_continuation(config)
@@ -460,12 +465,8 @@ def test_phase1_preserves_narrative_content():
             updated_content = f.read()
 
         # Narrative should be preserved
-        assert "party" in updated_content.lower(), (
-            "Party reference should be preserved"
-        )
-        assert "guard" in updated_content.lower(), (
-            "Guard reference should be preserved"
-        )
+        assert "party" in updated_content.lower(), "Party reference should be preserved"
+        assert "guard" in updated_content.lower(), "Guard reference should be preserved"
 
     print("[PASS] Phase 1 - AI Continuation (Preserve Narrative)")
 
@@ -484,9 +485,7 @@ def test_npc_lookup_by_location():
     npcs = load_relevant_npcs_for_prompt(prompt, workspace)
 
     # Should find tavern-related NPCs or return empty list
-    assert isinstance(npcs, list), (
-        "Should return list of NPCs"
-    )
+    assert isinstance(npcs, list), "Should return list of NPCs"
 
     print("[PASS] Phase 2 - NPC Lookup (By Location)")
 
@@ -504,9 +503,7 @@ def test_npc_lookup_by_role():
     npcs = load_relevant_npcs_for_prompt(prompt, workspace)
 
     # Should recognize merchant role
-    assert isinstance(npcs, list), (
-        "Should return list of NPCs"
-    )
+    assert isinstance(npcs, list), "Should return list of NPCs"
 
     print("[PASS] Phase 2 - NPC Lookup (By Role)")
 
@@ -521,9 +518,7 @@ def test_npc_lookup_empty_context():
     npcs = load_relevant_npcs_for_prompt(prompt, workspace)
 
     # Should return empty list gracefully
-    assert isinstance(npcs, list), (
-        "Should return empty list gracefully"
-    )
+    assert isinstance(npcs, list), "Should return empty list gracefully"
 
     print("[PASS] Phase 2 - NPC Lookup (Empty Context)")
 
@@ -541,15 +536,11 @@ def test_generate_session_results_with_ai():
 
     mock_ai = test_helpers.FakeAIClient()
 
-    results = generate_session_results_from_story(
-        mock_ai,
-        story,
-        {"Kael": {"dnd_class": "rogue"}, "Lira": {"dnd_class": "wizard"}}
-    )
+    results = generate_session_results_from_story(mock_ai, story, ["Kael", "Lira"])
 
-    assert isinstance(results, (str, type(None))), (
-        "Should return string of session results or None"
-    )
+    assert isinstance(
+        results, (str, type(None))
+    ), "Should return string of session results or None"
 
     print("[PASS] Phase 3 - Session Results (With AI)")
 
@@ -563,16 +554,10 @@ def test_generate_session_results_fallback():
         "Combat ensued with multiple enemies."
     )
 
-    results = generate_session_results_from_story(
-        None,
-        story,
-        {"Kael": {"dnd_class": "rogue"}}
-    )
+    results = generate_session_results_from_story(None, story, ["Kael"])
 
     # Should handle gracefully without AI
-    assert isinstance(results, (str, type(None))), (
-        "Should handle missing AI gracefully"
-    )
+    assert isinstance(results, (str, type(None))), "Should handle missing AI gracefully"
 
     print("[PASS] Phase 3 - Session Results (Fallback)")
 
@@ -590,18 +575,10 @@ def test_generate_session_results_identifies_actions():
     mock_ai = test_helpers.FakeAIClient()
 
     results = generate_session_results_from_story(
-        mock_ai,
-        story,
-        {
-            "Kael": {"dnd_class": "rogue"},
-            "Lira": {"dnd_class": "wizard"},
-            "Aragorn": {"dnd_class": "fighter"}
-        }
+        mock_ai, story, ["Kael", "Lira", "Aragorn"]
     )
 
-    assert isinstance(results, (str, type(None))), (
-        "Should identify character actions"
-    )
+    assert isinstance(results, (str, type(None))), "Should identify character actions"
 
     print("[PASS] Phase 3 - Session Results (Action Identification)")
 

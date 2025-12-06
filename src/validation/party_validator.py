@@ -13,18 +13,16 @@ Usage:
     is_valid, errors = validate_party_file("game_data/current_party/current_party.json")
 """
 
-from typing import Dict, Any, List, Tuple
+from typing import Dict, Any, List, Tuple, Optional
 from datetime import datetime
-from ..utils.file_io import (
-    load_json_file,
-    file_exists,
-    get_json_files_in_directory
-)
+from ..utils.file_io import load_json_file, file_exists, get_json_files_in_directory
 from ..utils.path_utils import get_characters_dir, get_party_config_path
 from ..utils.validation_helpers import print_validation_report
 
+
 class PartyValidationError(Exception):
     """Custom exception for party validation errors."""
+
 
 def _validate_required_fields(data: Dict[str, Any]) -> List[str]:
     errors = []
@@ -62,7 +60,7 @@ def _validate_party_members(data: Dict[str, Any]) -> List[str]:
 
 
 def _validate_party_cross_reference(
-    data: Dict[str, Any], characters_dir: str
+    data: Dict[str, Any], characters_dir: Optional[str]
 ) -> List[str]:
     errors = []
     members = data.get("party_members", [])
@@ -75,11 +73,11 @@ def _validate_party_cross_reference(
     available_characters = set()
 
     for char_file in get_json_files_in_directory(characters_dir):
-        if char_file.endswith(".example.json"):
+        if char_file.name.endswith(".example.json"):
             continue
         try:
-            char_data = load_json_file(char_file)
-            if "name" in char_data:
+            char_data = load_json_file(str(char_file))
+            if char_data is not None and "name" in char_data:
                 available_characters.add(char_data["name"])
         except (ValueError, OSError):
             continue
@@ -106,7 +104,7 @@ def _validate_last_updated(data: Dict[str, Any]) -> List[str]:
 
 
 def validate_party_json(
-    data: Dict[str, Any], characters_dir: str = None
+    data: Dict[str, Any], characters_dir: Optional[str] = None
 ) -> Tuple[bool, List[str]]:
     """
     Validate party JSON data structure and cross-reference with character files.
@@ -129,7 +127,7 @@ def validate_party_json(
 
 
 def validate_party_file(
-    party_file_path: str, characters_dir: str = None
+    party_file_path: str, characters_dir: Optional[str] = None
 ) -> Tuple[bool, List[str]]:
     """Validate a party configuration JSON file.
     Loads the JSON file, checks for required fields, validates party members,
@@ -148,11 +146,14 @@ def validate_party_file(
         data = load_json_file(party_file_path)
     except (ValueError, OSError) as err:
         return (False, [f"Error loading file: {err}"])
+    if data is None:
+        return (False, [f"File '{party_file_path}' could not be loaded or is empty"])
     return validate_party_json(data, characters_dir)
 
 
 if __name__ == "__main__":
     import sys
+
     # CLI usage:
     #   python party_validator.py [filepath]
     #   python party_validator.py --campaign "Example_Campaign"
@@ -187,8 +188,6 @@ if __name__ == "__main__":
         if not file_exists(MAIN_CHARACTERS_DIR):
             MAIN_CHARACTERS_DIR = None
 
-        main_valid, main_errors = validate_party_file(
-            PARTY_FILE, MAIN_CHARACTERS_DIR
-        )
+        main_valid, main_errors = validate_party_file(PARTY_FILE, MAIN_CHARACTERS_DIR)
         print_validation_report(PARTY_FILE, main_valid, main_errors)
         sys.exit(0 if main_valid else 1)

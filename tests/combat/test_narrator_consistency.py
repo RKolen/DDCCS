@@ -1,21 +1,21 @@
 """Unit tests for `src.combat.narrator_consistency.ConsistencyChecker`."""
 
 import unittest
-from tests import test_helpers
+
+# Import directly to avoid tuple unpacking issues with safe_from_import
+from src.combat.narrator_consistency import ConsistencyChecker
 from tests.test_helpers import FakeConsultant
 
-# Use the canonical test helper to configure the test environment and
-# import the module-under-test to avoid repeated sys.path manipulation
-ConsistencyChecker = test_helpers.safe_from_import(
-    "src.combat.narrator_consistency", "ConsistencyChecker"
-)
+
 class TestConsistencyChecker(unittest.TestCase):
     """Unit tests for the ConsistencyChecker component."""
 
     def test_no_consultant_returns_empty(self):
         """When no consultant is available, consistency check returns empty string."""
         checker = ConsistencyChecker({})
-        self.assertEqual(checker.check_action_consistency("Frodo", "attack with sword"), "")
+        self.assertEqual(
+            checker.check_action_consistency("Frodo", "attack with sword"), ""
+        )
 
     def test_combat_action_with_class_reaction_returns_note(self):
         """Combat actions produce a consistency note when consultant suggests a reaction."""
@@ -32,7 +32,9 @@ class TestConsistencyChecker(unittest.TestCase):
         checker = ConsistencyChecker({"Frodo": fake})
 
         # 'steal' is not recognized as a combat verb in the checker
-        self.assertEqual(checker.check_action_consistency("Frodo", "sneak and steal"), "")
+        self.assertEqual(
+            checker.check_action_consistency("Frodo", "sneak and steal"), ""
+        )
 
     def test_enhance_with_character_consistency_appends_notes(self):
         """Enhancing a narrative appends character consistency notes when present."""

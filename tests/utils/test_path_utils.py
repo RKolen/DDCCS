@@ -2,14 +2,7 @@
 
 import os
 import tempfile
-from tests import test_helpers
-
-# Configure test environment so 'src' package can be imported
-test_helpers.setup_test_environment()
-
-get_party_config_path = test_helpers.safe_from_import(
-    "src.utils.path_utils", "get_party_config_path"
-)
+from src.utils.path_utils import get_party_config_path
 
 
 def test_get_party_config_path_global():
@@ -41,6 +34,8 @@ def test_get_party_config_path_campaign():
     """
     with tempfile.TemporaryDirectory() as tmp:
         campaign = "My Campaign"
-        expected = os.path.join(tmp, "game_data", "campaigns", campaign, "current_party.json")
+        expected = os.path.join(
+            tmp, "game_data", "campaigns", campaign, "current_party.json"
+        )
         result = get_party_config_path(tmp, campaign_name=campaign)
         assert result == expected

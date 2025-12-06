@@ -29,10 +29,14 @@ def run_all_story_tests():
         ("test_story_manager", "Story Manager Tests"),
         ("test_story_file_manager", "Story File Manager Tests"),
         ("test_story_analyzer", "Story Analyzer Tests"),
-        ("test_character_consistency_integration", "Character Consistency Analysis Tests"),
+        (
+            "test_character_consistency_integration",
+            "Character Consistency Analysis Tests",
+        ),
         ("test_story_ai_generator", "Story AI Generator Tests"),
         ("test_story_workflow_orchestrator", "Story Workflow Orchestrator Tests"),
         ("test_story_consistency_analyzer", "Story Consistency Analyzer Tests"),
+        ("test_lazy_character_loading", "Lazy Character Loading Tests"),
     ]
 
     results = {}

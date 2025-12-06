@@ -5,14 +5,30 @@ Handles validation of combat actions against character profiles to ensure
 consistency with established personalities and behaviors.
 """
 
-from typing import Dict, List
-from src.characters.consultants.consultant_core import CharacterConsultant
+from typing import Dict, List, Protocol, Any
+
+
+class ConsultantProtocol(Protocol):
+    """Protocol for objects that can provide character reactions (ConsultantLike)."""
+
+    def suggest_reaction(
+        self, situation: str, context: Dict[str, Any] = None
+    ) -> Dict[str, Any]:
+        """Return a reaction dict to a given situation."""
+
+    def get_character_name(self) -> str:
+        """Return the character name for this consultant."""
+
 
 class ConsistencyChecker:
     """Checks combat narrative consistency with character profiles."""
 
-    def __init__(self, character_consultants: Dict[str, CharacterConsultant]):
+    def __init__(self, character_consultants: Dict[str, ConsultantProtocol]):
         self.consultants = character_consultants
+
+    def get_consultants(self) -> Dict[str, ConsultantProtocol]:
+        """Get the character consultants dictionary."""
+        return self.consultants
 
     def check_action_consistency(self, character: str, action: str) -> str:
         """
@@ -42,6 +58,10 @@ class ConsistencyChecker:
                 return f"**{character}:** {reaction['class_reaction']}"
 
         return ""
+
+    def check_consistency(self, character: str, action: str) -> bool:
+        """Check if an action is consistent and return boolean result."""
+        return bool(self.check_action_consistency(character, action))
 
     def enhance_with_character_consistency(
         self, narrative: str, character_actions: Dict[str, List[str]]

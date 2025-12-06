@@ -20,16 +20,18 @@ from src.stories.story_file_manager import (
 from src.stories.story_analysis import StoryAnalyzer
 from src.stories.story_updater import StoryUpdater
 
+
 class StoryManager:
     """Manages the story sequence system using specialized components."""
 
-    def __init__(self, workspace_path: str, ai_client=None):
+    def __init__(self, workspace_path: str, ai_client=None, lazy_load: bool = False):
         """
         Initialize story manager with specialized components.
 
         Args:
             workspace_path: Root workspace directory path
             ai_client: Optional AI client for character consultants
+            lazy_load: If True, defer character loading until explicitly requested
         """
         self.workspace_path = workspace_path
         self.ai_client = ai_client
@@ -37,16 +39,16 @@ class StoryManager:
 
         # Initialize context for story file operations
         self.story_context = StoryFileContext(
-            stories_path=workspace_path,
-            workspace_path=workspace_path
+            stories_path=workspace_path, workspace_path=workspace_path
         )
 
         # Initialize components using composition
-        self.character_loader = CharacterLoader(workspace_path, ai_client)
+        self.character_loader = CharacterLoader(
+            workspace_path, ai_client, lazy_load=lazy_load
+        )
         self.updater = StoryUpdater()
 
-        # Load characters (creates analyzer after consultants are loaded)
-        self.character_loader.load_characters()
+        # Create analyzer with loaded or empty consultants
         self.analyzer = StoryAnalyzer(self.character_loader.consultants)
 
     @property
@@ -57,9 +59,33 @@ class StoryManager:
     # Character Management Methods
     def load_characters(self):
         """Load all character profiles and create consultants."""
-        self.character_loader.load_characters()
-        # Update analyzer with new consultants
+        self.character_loader.ensure_characters_loaded()
+        # Update analyzer with loaded consultants
         self.analyzer = StoryAnalyzer(self.character_loader.consultants)
+
+    def ensure_characters_loaded(self):
+        """Ensure all characters are loaded (lazy loading compatible)."""
+        self.character_loader.ensure_characters_loaded()
+        # Update analyzer
+        self.analyzer = StoryAnalyzer(self.character_loader.consultants)
+
+    def is_characters_loaded(self) -> bool:
+        """Check if characters have been loaded."""
+        return self.character_loader.is_characters_loaded()
+
+    def load_party_characters(self, party_members: list) -> Dict:
+        """Load only specific party member characters.
+
+        Args:
+            party_members: List of character names to load
+
+        Returns:
+            Dict mapping character name to consultant for loaded characters
+        """
+        loaded = self.character_loader.load_party_characters(party_members)
+        # Update analyzer with current consultants
+        self.analyzer = StoryAnalyzer(self.character_loader.consultants)
+        return loaded
 
     def save_character_profile(self, profile: CharacterProfile):
         """
@@ -94,7 +120,10 @@ class StoryManager:
         return self.character_loader.get_character_profile(character_name)
 
     def suggest_character_reaction(
-        self, character_name: str, situation: str, context: Dict[str, Any] = None
+        self,
+        character_name: str,
+        situation: str,
+        context: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
         """
         Get character reaction suggestion.
@@ -111,7 +140,7 @@ class StoryManager:
         if not consultant:
             return {"error": f"Character {character_name} not found"}
 
-        return consultant.suggest_reaction(situation, context)
+        return consultant.suggest_reaction(situation, context or {})
 
     # Story File Operations Methods
     def get_existing_stories(self) -> List[str]:
@@ -206,9 +235,7 @@ class StoryManager:
         Returns:
             Path to the created story file
         """
-        return create_new_story(
-            self.story_context, story_name, description=description
-        )
+        return create_new_story(self.story_context, story_name, description=description)
 
     # Story Analysis Methods
     def analyze_story_file(self, filepath: str) -> Dict[str, Any]:

@@ -5,14 +5,15 @@ Handles session results, roll tracking, and result file generation for D&D sessi
 """
 
 import os
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from datetime import datetime
 from src.utils.file_io import write_text_file
+
 
 class StorySession:
     """Represents a single story session with results separate from narrative."""
 
-    def __init__(self, story_name: str, session_date: str = None):
+    def __init__(self, story_name: str, session_date: Optional[str] = None):
         """
         Initialize a story session.
 
@@ -27,11 +28,7 @@ class StorySession:
         self.narrative_events = []
         self.recruiting_pool = []
 
-    def add_roll_result(
-        self,
-        roll_data: Dict[str, Any] = None,
-        **kwargs
-    ):
+    def add_roll_result(self, roll_data: Optional[Dict[str, Any]] = None, **kwargs):
         """
         Add a roll result to this session.
 
@@ -44,18 +41,18 @@ class StorySession:
             character, action, roll_type, roll_value, dc, outcome
         """
         data = roll_data if roll_data else kwargs
-        roll_value = data['roll_value']
-        dc = data['dc']
+        roll_value = data["roll_value"]
+        dc = data["dc"]
 
         self.roll_results.append(
             {
-                "character": data['character'],
-                "action": data['action'],
-                "roll_type": data['roll_type'],
+                "character": data["character"],
+                "action": data["action"],
+                "roll_type": data["roll_type"],
                 "roll_value": roll_value,
                 "dc": dc,
                 "success": roll_value >= dc,
-                "outcome": data['outcome'],
+                "outcome": data["outcome"],
             }
         )
 
@@ -86,9 +83,7 @@ class StorySession:
         return available_agents
 
 
-def create_session_results_file(
-    series_path: str, session: StorySession
-) -> str:
+def create_session_results_file(series_path: str, session: StorySession) -> str:
     """
     Create or append to session results file.
 
@@ -102,7 +97,7 @@ def create_session_results_file(
     Returns:
         Path to the created or updated file
     """
-    story_slug = session.story_name.lower().replace(' ', '_')
+    story_slug = session.story_name.lower().replace(" ", "_")
     filename = f"session_results_{session.session_date}_{story_slug}.md"
     filepath = os.path.join(series_path, filename)
 
@@ -122,7 +117,7 @@ def create_session_results_file(
         if session.roll_results:
             append_content += "### New Roll Results\n"
             for roll in session.roll_results:
-                success_text = "SUCCESS" if roll['success'] else "FAILURE"
+                success_text = "SUCCESS" if roll["success"] else "FAILURE"
                 append_content += f"""- **{roll['character']}** - {roll['action']}
   - Roll: {roll['roll_value']} vs DC {roll['dc']} - {success_text}
   - Outcome: {roll['outcome']}
@@ -144,7 +139,7 @@ def create_session_results_file(
 ## Roll Results
 """
         for roll in session.roll_results:
-            success_text = "SUCCESS" if roll['success'] else "FAILURE"
+            success_text = "SUCCESS" if roll["success"] else "FAILURE"
             content += f"""
 ### {roll['character']} - {roll['action']}
 - **Roll Type:** {roll['roll_type']}
@@ -171,8 +166,9 @@ def create_session_results_file(
     return filepath
 
 
-def populate_session_from_ai_results(session: "StorySession",
-                                     ai_results: Dict[str, Any]) -> None:
+def populate_session_from_ai_results(
+    session: "StorySession", ai_results: Dict[str, Any]
+) -> None:
     """
     Populate session with AI-generated character actions and narrative events.
 

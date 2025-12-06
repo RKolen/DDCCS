@@ -2,6 +2,7 @@
 
 Extracted helpers to reduce duplicate code across story modules.
 """
+
 import os
 import re
 from typing import List, Tuple
@@ -22,7 +23,9 @@ def list_story_files(dir_path: str) -> List[str]:
 def has_numbered_story_files(dir_path: str) -> bool:
     """Return True if the directory contains any numbered story markdown files."""
     try:
-        return any(STORY_PATTERN.match(f) for f in os.listdir(dir_path) if f.endswith(".md"))
+        return any(
+            STORY_PATTERN.match(f) for f in os.listdir(dir_path) if f.endswith(".md")
+        )
     except (FileNotFoundError, NotADirectoryError):
         return False
 
@@ -57,7 +60,7 @@ def list_character_json_candidates(characters_dir: str) -> List[str]:
                 or filename.startswith("template")
             ):
                 continue
-            result.append(fp)
+            result.append(str(fp))
     except (FileNotFoundError, NotADirectoryError):
         # If the directory isn't present, return empty
         return []

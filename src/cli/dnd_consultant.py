@@ -35,12 +35,18 @@ class DDConsultantCLI:
         # behavior. Only use the EnhancedStoryManager when a campaign name is
         # explicitly provided so the CLI's --campaign flag enables the richer
         # per-campaign behavior without changing the default runtime.
+        # Enable lazy loading to improve startup time.
         if campaign_name:
             self.story_manager = EnhancedStoryManager(
-                self.workspace_path, campaign_name=campaign_name, ai_client=ai_client
+                self.workspace_path,
+                campaign_name=campaign_name,
+                ai_client=ai_client,
+                lazy_load=True,
             )
         else:
-            self.story_manager = StoryManager(self.workspace_path, ai_client=ai_client)
+            self.story_manager = StoryManager(
+                self.workspace_path, ai_client=ai_client, lazy_load=True
+            )
         self.dm_consultant = DMConsultant(self.workspace_path)
 
         # Initialize manager modules
@@ -57,7 +63,10 @@ class DDConsultantCLI:
         print("[D&D] D&D Character Consultant System")
         print("=" * 50)
         print(f"Workspace: {self.workspace_path}")
-        print(f"Characters loaded: {len(self.story_manager.consultants)}")
+        if self.story_manager.is_characters_loaded():
+            print(f"Characters loaded: {len(self.story_manager.consultants)}")
+        else:
+            print("Characters: Not yet loaded (lazy loading enabled)")
         print()
 
         while True:
@@ -124,9 +133,8 @@ def main():
     campaign = args.campaign
 
     try:
-        # Inform the user that game data is being prepared; this can take a
-        # short while on first run while characters and caches are loaded.
-        print("[INFO] Setting up game data and loading resources — this may take a while...")
+        # Inform the user that the system is starting up (characters are lazy-loaded)
+        print("[INFO] Initializing D&D Character Consultant System...")
         cli = DDConsultantCLI(workspace, campaign)
 
         if args.command == "analyze":

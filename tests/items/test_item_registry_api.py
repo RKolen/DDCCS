@@ -8,10 +8,9 @@ non-registered items return False/None as expected.
 import json
 import os
 import tempfile
-from tests import test_helpers
 
-# Import ItemRegistry using the centralized safe importer
-ItemRegistry = test_helpers.safe_from_import("src.items.item_registry", "ItemRegistry")
+# Import directly to avoid tuple unpacking issues with safe_from_import
+from src.items.item_registry import ItemRegistry
 
 
 def test_get_item_and_is_custom_api():

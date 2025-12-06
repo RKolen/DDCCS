@@ -8,13 +8,12 @@ narrative patterns across multiple files.
 import os
 import sys
 import traceback
-from typing import Dict, List, Any, Callable, NamedTuple
+from typing import Dict, List, Any, Callable, NamedTuple, Optional
 from datetime import datetime
 
 from src.utils.file_io import write_text_file, file_exists, read_text_file
 from src.utils.text_formatting_utils import wrap_narrative_text
 from src.stories.character_action_analyzer import extract_character_actions
-
 
 
 class CharacterAnalysisContext(NamedTuple):
@@ -51,7 +50,7 @@ class SeriesAnalyzer:
     def analyze_character_development_for_series(
         self,
         analysis_context: CharacterAnalysisContext,
-        output_filepath: str = None,
+        output_filepath: Optional[str] = None,
     ) -> tuple:
         """Analyze character development across entire series.
 
@@ -80,22 +79,16 @@ class SeriesAnalyzer:
             print("[DEBUG] File header created")
             sys.stdout.flush()
 
-        for processed_count, story_file in enumerate(
-            analysis_context.stories, start=1
-        ):
-            story_path = os.path.join(
-                analysis_context.campaign_path, story_file
-            )
+        for processed_count, story_file in enumerate(analysis_context.stories, start=1):
+            story_path = os.path.join(analysis_context.campaign_path, story_file)
             if not file_exists(story_path):
                 continue
 
             story_analysis = self.story_manager.analyze_story_file(story_path)
-            story_actions_for_series = (
-                self._extract_party_actions_from_story(
-                    story_analysis,
-                    story_file,
-                    party_members,
-                )
+            story_actions_for_series = self._extract_party_actions_from_story(
+                story_analysis,
+                story_file,
+                party_members,
             )
 
             all_character_actions.extend(story_actions_for_series)
@@ -110,13 +103,9 @@ class SeriesAnalyzer:
 
                     if story_file not in all_consultant_analyses:
                         all_consultant_analyses[story_file] = {}
-                    all_consultant_analyses[story_file][char_name] = (
-                        consultant_data
-                    )
+                    all_consultant_analyses[story_file][char_name] = consultant_data
 
-            print(
-                f"  [{processed_count}/{len(analysis_context.stories)}] {story_file}"
-            )
+            print(f"  [{processed_count}/{len(analysis_context.stories)}] {story_file}")
 
             # Update file incrementally after each story if filepath provided
             if output_filepath and story_actions_for_series:
@@ -184,9 +173,7 @@ class SeriesAnalyzer:
             lines = []
             lines.append("# Series Character Development\n")
             lines.append(f"**Generated:** {today}\n")
-            lines.append(
-                f"**Total Stories to Analyze:** {story_count}\n"
-            )
+            lines.append(f"**Total Stories to Analyze:** {story_count}\n")
             lines.append("")
 
             content = "\n".join(lines)
@@ -222,9 +209,7 @@ class SeriesAnalyzer:
         lines.append(f"## {story_file}\n")
 
         for action in story_actions:
-            formatted_entry = SeriesAnalyzer._format_character_action_entry(
-                action
-            )
+            formatted_entry = SeriesAnalyzer._format_character_action_entry(action)
             lines.append(formatted_entry)
 
         # Append to existing file
@@ -235,7 +220,7 @@ class SeriesAnalyzer:
         self,
         series_name: str,
         analysis_context: SeriesAnalysisContext,
-        output_filepath: str = None,
+        output_filepath: Optional[str] = None,
     ) -> Dict[str, Any]:
         """Analyze narrative patterns across entire series.
 
@@ -341,8 +326,8 @@ class SeriesAnalyzer:
         filepath: str,
         story_file: str,
         character_actions: List[Dict[str, Any]],
-        character_profiles: Dict[str, Any] = None,
-        truncate_func: Callable = None,
+        character_profiles: Optional[Dict[str, Any]] = None,
+        truncate_func: Optional[Callable] = None,
     ) -> None:
         """Append a story analysis section to series analysis file.
 
@@ -376,9 +361,7 @@ class SeriesAnalyzer:
             if reasoning:
                 text = f"**{char_name}:** {reasoning}"
             else:
-                personality = profiles.get(char_name, {}).get(
-                    "personality_summary", ""
-                )
+                personality = profiles.get(char_name, {}).get("personality_summary", "")
                 personality_desc = (
                     personality.lower() if personality else "their character"
                 )
@@ -393,7 +376,7 @@ class SeriesAnalyzer:
             lines.append(f"- {wrap_narrative_text(text, width=80)}\n")
 
         try:
-            with open(filepath, 'a', encoding='utf-8') as f:
+            with open(filepath, "a", encoding="utf-8") as f:
                 f.write("\n".join(lines))
         except (OSError, IOError) as e:
             print(f"[ERROR] Failed to append analysis section: {e}")
@@ -425,9 +408,7 @@ class SeriesAnalyzer:
 
         # Wrap consistency
         consistency_text = action.get("consistency", "N/A")
-        wrapped_consistency = wrap_narrative_text(
-            consistency_text, width=80
-        )
+        wrapped_consistency = wrap_narrative_text(consistency_text, width=80)
         lines.append(f"**Consistency:** {wrapped_consistency}\n")
 
         # Wrap notes
@@ -471,9 +452,7 @@ class SeriesAnalyzer:
         lines = []
         lines.append("# Series Character Development\n")
         lines.append(f"**Generated:** {today}\n")
-        lines.append(
-            f"**Total Stories Analyzed:** {len(actions_by_story)}\n"
-        )
+        lines.append(f"**Total Stories Analyzed:** {len(actions_by_story)}\n")
         lines.append("")
 
         # Process each story in order
@@ -482,9 +461,7 @@ class SeriesAnalyzer:
             lines.append(f"## {story_file}\n")
 
             for action in story_actions:
-                formatted_entry = self._format_character_action_entry(
-                    action
-                )
+                formatted_entry = self._format_character_action_entry(action)
                 lines.append(formatted_entry)
 
         content = "".join(lines)
@@ -515,6 +492,7 @@ class SeriesAnalyzer:
 
         write_text_file(session_filepath, analysis_content)
         return session_filepath
+
     @staticmethod
     def _format_series_analysis(series_analysis: Dict[str, Any]) -> str:
         """Format series analysis results as markdown.

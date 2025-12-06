@@ -10,10 +10,8 @@ import json
 import os
 import tempfile
 
-from tests import test_helpers
-
-# Import ItemRegistry using centralized safe import
-ItemRegistry = test_helpers.safe_from_import("src.items.item_registry", "ItemRegistry")
+# Import directly to avoid tuple unpacking issues with safe_from_import
+from src.items.item_registry import ItemRegistry
 
 
 def test_load_precedence_registry_over_fallback():

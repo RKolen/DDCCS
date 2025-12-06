@@ -8,18 +8,16 @@ consistency sections, combat narratives, and AI-generated continuations.
 import os
 import json
 from datetime import datetime
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 from src.utils.file_io import read_text_file, write_text_file, file_exists
 from src.utils.markdown_utils import update_markdown_section
 from src.utils.story_formatting_utils import (
     generate_consultant_notes,
-    generate_consistency_section
+    generate_consistency_section,
 )
 from src.utils.text_formatting_utils import wrap_narrative_text
 from src.npcs.npc_auto_detection import detect_npc_suggestions
-from src.stories.hooks_and_analysis import (
-    create_story_hooks_file
-)
+from src.stories.hooks_and_analysis import create_story_hooks_file
 from src.stories.session_results_manager import (
     StorySession,
     create_session_results_file,
@@ -27,7 +25,7 @@ from src.stories.session_results_manager import (
 )
 from src.stories.story_ai_generator import (
     generate_session_results_from_story,
-    generate_story_hooks_from_content
+    generate_story_hooks_from_content,
 )
 from src.cli.party_config_manager import load_party_with_profiles
 from src.characters.character_consistency import create_character_development_file
@@ -48,7 +46,7 @@ class ContinuationConfig:
 
     def set_paths(
         self, filepath: str, campaign_dir: str, workspace_path: str
-    ) -> 'ContinuationConfig':
+    ) -> "ContinuationConfig":
         """Set file and directory paths.
 
         Args:
@@ -64,7 +62,7 @@ class ContinuationConfig:
         self.workspace_path = workspace_path
         return self
 
-    def set_content(self, continuation: str) -> 'ContinuationConfig':
+    def set_content(self, continuation: str) -> "ContinuationConfig":
         """Set continuation content.
 
         Args:
@@ -76,7 +74,7 @@ class ContinuationConfig:
         self.continuation = continuation
         return self
 
-    def set_ai_client(self, ai_client) -> 'ContinuationConfig':
+    def set_ai_client(self, ai_client) -> "ContinuationConfig":
         """Set optional AI client.
 
         Args:
@@ -88,7 +86,7 @@ class ContinuationConfig:
         self.ai_client = ai_client
         return self
 
-    def set_prompt(self, prompt: str) -> 'ContinuationConfig':
+    def set_prompt(self, prompt: str) -> "ContinuationConfig":
         """Set user prompt for spell extraction.
 
         Args:
@@ -106,12 +104,14 @@ class ContinuationConfig:
         Returns:
             True if valid, False otherwise
         """
-        return all([
-            self.filepath,
-            self.continuation,
-            self.campaign_dir,
-            self.workspace_path,
-        ])
+        return all(
+            [
+                self.filepath,
+                self.continuation,
+                self.campaign_dir,
+                self.workspace_path,
+            ]
+        )
 
 
 class StoryUpdater:
@@ -129,6 +129,8 @@ class StoryUpdater:
             return
 
         content = read_text_file(filepath)
+        if content is None:
+            content = ""
 
         # Generate sections using formatting utilities
         consultant_notes = generate_consultant_notes(analysis)
@@ -150,7 +152,7 @@ class StoryUpdater:
             f"{os.path.basename(filepath)}"
         )
 
-    def _process_narrative(self, narrative: str, prompt: str = None) -> str:
+    def _process_narrative(self, narrative: str, prompt: Optional[str] = None) -> str:
         """Process narrative by wrapping to 80 chars and highlighting spells.
 
         Args:
@@ -161,12 +163,16 @@ class StoryUpdater:
             Processed narrative with wrapping and spell highlighting
         """
         # Wrap to 80 characters and highlight spells from prompt
-        narrative = wrap_narrative_text(narrative, prompt=prompt)
+        narrative = wrap_narrative_text(narrative, prompt=prompt or "")
 
         return narrative
 
     def append_combat_narrative(
-        self, filepath: str, narrative: str, title: str = None, prompt: str = None
+        self,
+        filepath: str,
+        narrative: str,
+        title: Optional[str] = None,
+        prompt: Optional[str] = None,
     ):
         """
         Append combat narrative to story file.
@@ -181,6 +187,8 @@ class StoryUpdater:
             return
 
         content = read_text_file(filepath)
+        if content is None:
+            content = ""
 
         # Use provided title or default to "Combat Scene"
         section_title = title if title else "Combat Scene"
@@ -227,25 +235,36 @@ class StoryUpdater:
         Returns:
             True if successful, False if an error occurred
         """
-        if not file_exists(config.filepath):
+        if not config.filepath or not file_exists(config.filepath):
             return False
 
         try:
             current_content = read_text_file(config.filepath)
-            cleaned_content = self._clean_story_content(current_content)
-            continuation_title = self._extract_narrative_title(
-                config.continuation, ai_client=config.ai_client
+            if current_content is None:
+                current_content = ""
+            cleaned_content = self.clean_story_content(current_content)
+            continuation_title = self.extract_narrative_title(
+                config.continuation or "", ai_client=config.ai_client
             )
 
             new_content = self._build_story_content_with_continuation(
-                cleaned_content, continuation_title, config.continuation, config.prompt
+                cleaned_content,
+                continuation_title,
+                config.continuation or "",
+                config.prompt or "",
             )
 
             write_text_file(config.filepath, new_content)
 
+            if config.campaign_dir is None or config.workspace_path is None:
+                print("[ERROR] campaign_dir and workspace_path must not be None")
+                return False
+
             self._generate_supporting_files(
-                config.filepath, config.campaign_dir,
-                config.workspace_path, ai_client=config.ai_client
+                config.filepath,
+                config.campaign_dir,
+                config.workspace_path,
+                ai_client=config.ai_client,
             )
 
             print(
@@ -258,7 +277,7 @@ class StoryUpdater:
             print(f"[ERROR] Failed to update story: {e}")
             return False
 
-    def _clean_story_content(self, content: str) -> str:
+    def clean_story_content(self, content: str) -> str:
         """Remove duplicate headers and metadata from story content.
 
         Args:
@@ -279,8 +298,7 @@ class StoryUpdater:
                 seen_header = True
                 cleaned_lines.append(line)
             # Skip duplicate metadata
-            elif line.startswith("**Created:**") or \
-                 line.startswith("**Description:**"):
+            elif line.startswith("**Created:**") or line.startswith("**Description:**"):
                 if cleaned_lines and any(
                     "**Created:**" in l or "**Description:**" in l
                     for l in cleaned_lines[-5:]
@@ -384,7 +402,7 @@ class StoryUpdater:
 
         return result
 
-    def _extract_narrative_title(self, text: str, ai_client=None) -> str:
+    def extract_narrative_title(self, text: str, ai_client=None) -> str:
         """Extract an inventive narrative title from story content.
 
         Attempts to identify key entities (locations, actions, NPCs) and uses
@@ -502,16 +520,44 @@ class StoryUpdater:
 
         # Generic locations list
         generic_locs = [
-            "tavern", "inn", "castle", "village", "town", "city", "forest",
-            "dungeon", "cave", "tower", "temple", "shrine", "market",
-            "garden", "hall", "chamber", "room", "passage", "woods",
+            "tavern",
+            "inn",
+            "castle",
+            "village",
+            "town",
+            "city",
+            "forest",
+            "dungeon",
+            "cave",
+            "tower",
+            "temple",
+            "shrine",
+            "market",
+            "garden",
+            "hall",
+            "chamber",
+            "room",
+            "passage",
+            "woods",
         ]
 
         # Generic action keywords
         generic_actions = [
-            "quest", "ambush", "battle", "meeting", "investigation",
-            "discovery", "escape", "ritual", "ceremony", "negotiation",
-            "confrontation", "retreat", "advance", "attack", "defend",
+            "quest",
+            "ambush",
+            "battle",
+            "meeting",
+            "investigation",
+            "discovery",
+            "escape",
+            "ritual",
+            "ceremony",
+            "negotiation",
+            "confrontation",
+            "retreat",
+            "advance",
+            "attack",
+            "defend",
         ]
 
         # Find first matching generic location
@@ -525,14 +571,15 @@ class StoryUpdater:
         # Last resort: capitalized words from first line
         first_line = text.split("\n")[0].strip()
         capitalized = [
-            w.strip(".,!?;:") for w in first_line.split()
+            w.strip(".,!?;:")
+            for w in first_line.split()
             if w and w[0].isupper() and w.lower() not in ["a", "an", "the"]
         ]
 
         return " ".join(capitalized[:3]) if capitalized else "Story Continuation"
 
     def _build_story_content_with_continuation(
-        self, cleaned_content: str, title: str, continuation: str, prompt: str = None
+        self, cleaned_content: str, title: str, continuation: str, prompt: str = ""
     ) -> str:
         """Build story content with template removal and new continuation.
 
@@ -574,19 +621,15 @@ class StoryUpdater:
                 )
             else:
                 new_content = (
-                    f"{header_section}\n\n## {title}\n\n"
-                    f"{processed_continuation}\n"
+                    f"{header_section}\n\n## {title}\n\n" f"{processed_continuation}\n"
                 )
         else:
             if kept_content.strip():
                 new_content = (
-                    f"{kept_content}\n\n"
-                    f"## {title}\n\n{processed_continuation}\n"
+                    f"{kept_content}\n\n" f"## {title}\n\n{processed_continuation}\n"
                 )
             else:
-                new_content = (
-                    f"## {title}\n\n{processed_continuation}\n"
-                )
+                new_content = f"## {title}\n\n{processed_continuation}\n"
 
         return new_content
 
@@ -608,10 +651,31 @@ class StoryUpdater:
 
         hooks = []
         locations = [
-            "tavern", "inn", "castle", "village", "town", "city", "forest",
-            "dungeon", "cave", "tower", "temple", "shrine", "market",
-            "garden", "hall", "chamber", "room", "passage", "throne",
-            "cemetery", "mansion", "ship", "boat", "river", "mountain"
+            "tavern",
+            "inn",
+            "castle",
+            "village",
+            "town",
+            "city",
+            "forest",
+            "dungeon",
+            "cave",
+            "tower",
+            "temple",
+            "shrine",
+            "market",
+            "garden",
+            "hall",
+            "chamber",
+            "room",
+            "passage",
+            "throne",
+            "cemetery",
+            "mansion",
+            "ship",
+            "boat",
+            "river",
+            "mountain",
         ]
 
         # Extract location from first line
@@ -644,9 +708,7 @@ class StoryUpdater:
 
         # Character development hook
         if party_names:
-            hooks.append(
-                f"Develop {party_names[0]}'s character through the events"
-            )
+            hooks.append(f"Develop {party_names[0]}'s character through the events")
 
         # Ensure minimum hooks
         while len(hooks) < 3:
@@ -687,12 +749,12 @@ class StoryUpdater:
             party_characters = load_party_with_profiles(
                 hooks_config["campaign_dir"], hooks_config["workspace_path"]
             )
-            print(
-                f"story content: {len(hooks_config['story_content'])} chars"
-            )
+            print(f"story content: {len(hooks_config['story_content'])} chars")
             ai_hooks = generate_story_hooks_from_content(
-                hooks_config["ai_client"], hooks_config["story_content"],
-                party_characters, hooks_config["party_names"]
+                hooks_config["ai_client"],
+                hooks_config["story_content"],
+                party_characters,
+                hooks_config["party_names"],
             )
             if ai_hooks:
                 # Pass structured dict directly to preserve all sections
@@ -701,8 +763,7 @@ class StoryUpdater:
         # Fallback 1: If AI didn't generate hooks, try story-aware extraction
         if hooks is None:
             extracted_hooks = self._extract_story_based_hooks(
-                hooks_config["story_content"],
-                hooks_config["party_names"]
+                hooks_config["story_content"], hooks_config["party_names"]
             )
             if extracted_hooks and len(extracted_hooks) > 0:
                 print("[INFO] Using story-aware extraction for hooks (AI unavailable)")
@@ -714,12 +775,14 @@ class StoryUpdater:
             hooks = [
                 "[Primary plot thread to pursue]",
                 "[Secondary subplot to explore]",
-                "[Character development opportunity]"
+                "[Character development opportunity]",
             ]
 
         create_story_hooks_file(
-            hooks_config["campaign_dir"], hooks_config["story_name"], hooks,
-            npc_suggestions=hooks_config["npc_suggestions"]
+            hooks_config["campaign_dir"],
+            hooks_config["story_name"],
+            hooks,
+            npc_suggestions=hooks_config["npc_suggestions"],
         )
 
     def _generate_session_results_file(self, results_config: Dict[str, Any]) -> None:
@@ -745,21 +808,18 @@ class StoryUpdater:
 
         if results_config.get("ai_client"):
             ai_results = generate_session_results_from_story(
-                results_config["ai_client"], results_config["story_content"],
-                results_config["party_names"]
+                results_config["ai_client"],
+                results_config["story_content"],
+                results_config["party_names"],
             )
             if ai_results:
                 populate_session_from_ai_results(session, ai_results)
             else:
                 for member in results_config["party_names"]:
-                    session.character_actions.append(
-                        f"{member}: [Action/outcome]"
-                    )
+                    session.character_actions.append(f"{member}: [Action/outcome]")
         else:
             for member in results_config["party_names"]:
-                session.character_actions.append(
-                    f"{member}: [Action/outcome]"
-                )
+                session.character_actions.append(f"{member}: [Action/outcome]")
 
         create_session_results_file(results_config["campaign_dir"], session)
 
@@ -789,7 +849,9 @@ class StoryUpdater:
 
             # Detect NPCs and generate files
             npc_suggestions = detect_npc_suggestions(
-                story_content, party_names, workspace_path
+                story_content if story_content is not None else "",
+                party_names,
+                workspace_path,
             )
 
             # Generate story_hooks file
@@ -820,10 +882,10 @@ class StoryUpdater:
                     party_names, workspace_path
                 )
                 character_actions = extract_character_actions(
-                    story_content,
+                    story_content if story_content is not None else "",
                     party_names,
                     self._truncate_at_sentence,
-                    character_profiles
+                    character_profiles,
                 )
                 if character_actions:
                     create_character_development_file(
@@ -851,7 +913,7 @@ class StoryUpdater:
         for ending in sentence_endings:
             last_ending = truncated.rfind(ending)
             if last_ending > max_length // 2:
-                return truncated[:last_ending + 1]
+                return truncated[: last_ending + 1]
 
         return truncated
 
@@ -867,9 +929,7 @@ class StoryUpdater:
 
         party_names = []
         try:
-            party_config_path = os.path.join(
-                campaign_dir, "current_party.json"
-            )
+            party_config_path = os.path.join(campaign_dir, "current_party.json")
             if os.path.exists(party_config_path):
                 with open(party_config_path, "r", encoding="utf-8") as f:
                     party_data = json.load(f)
@@ -909,13 +969,9 @@ class StoryUpdater:
                             "personality_summary": char_data.get(
                                 "personality_summary", ""
                             ),
-                            "background_story": char_data.get(
-                                "background_story", ""
-                            ),
+                            "background_story": char_data.get("background_story", ""),
                             "motivations": char_data.get("motivations", []),
-                            "fears_weaknesses": char_data.get(
-                                "fears_weaknesses", []
-                            ),
+                            "fears_weaknesses": char_data.get("fears_weaknesses", []),
                             "goals": char_data.get("goals", []),
                             "relationships": char_data.get("relationships", {}),
                             "secrets": char_data.get("secrets", []),

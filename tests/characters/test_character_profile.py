@@ -24,36 +24,18 @@ import os
 import json
 
 from tests import test_helpers
-
-# Import required character profile symbols via canonical test helper
-CharacterProfile = test_helpers.safe_from_import(
-    "src.characters.consultants.character_profile", "CharacterProfile"
+from src.characters.consultants.character_profile import (
+    CharacterProfile,
+    CharacterIdentity,
+    CharacterPersonality,
+    CharacterBehavior,
+    CharacterStory,
+    CharacterStats,
+    CharacterAbilities,
+    CharacterMechanics,
+    CharacterPossessions,
 )
-CharacterIdentity = test_helpers.safe_from_import(
-    "src.characters.consultants.character_profile", "CharacterIdentity"
-)
-CharacterPersonality = test_helpers.safe_from_import(
-    "src.characters.consultants.character_profile", "CharacterPersonality"
-)
-CharacterBehavior = test_helpers.safe_from_import(
-    "src.characters.consultants.character_profile", "CharacterBehavior"
-)
-CharacterStory = test_helpers.safe_from_import(
-    "src.characters.consultants.character_profile", "CharacterStory"
-)
-CharacterStats = test_helpers.safe_from_import(
-    "src.characters.consultants.character_profile", "CharacterStats"
-)
-CharacterAbilities = test_helpers.safe_from_import(
-    "src.characters.consultants.character_profile", "CharacterAbilities"
-)
-CharacterMechanics = test_helpers.safe_from_import(
-    "src.characters.consultants.character_profile", "CharacterMechanics"
-)
-CharacterPossessions = test_helpers.safe_from_import(
-    "src.characters.consultants.character_profile", "CharacterPossessions"
-)
-DnDClass = test_helpers.safe_from_import("src.characters.character_sheet", "DnDClass")
+from src.characters.character_sheet import DnDClass
 
 
 def test_character_profile_initialization():
@@ -62,7 +44,10 @@ def test_character_profile_initialization():
 
     # Load Aragorn profile from canonical JSON
     aragorn_path = (
-        Path(__file__).parent.parent.parent / "game_data" / "characters" / "aragorn.json"
+        Path(__file__).parent.parent.parent
+        / "game_data"
+        / "characters"
+        / "aragorn.json"
     )
     assert aragorn_path.exists(), f"Aragorn profile not found at {aragorn_path}"
     profile = CharacterProfile.load_from_file(str(aragorn_path))
@@ -151,9 +136,15 @@ def test_character_profile_full_initialization():
 
     # Behavior should be generated in-memory for profiles that don't provide one
     assert isinstance(profile.behavior, CharacterBehavior), "Behavior not generated"
-    assert isinstance(profile.behavior.preferred_strategies, list), "preferred_strategies not list"
-    assert isinstance(profile.behavior.typical_reactions, dict), "typical_reactions not dict"
-    assert isinstance(profile.behavior.speech_patterns, list), "speech_patterns not list"
+    assert isinstance(
+        profile.behavior.preferred_strategies, list
+    ), "preferred_strategies not list"
+    assert isinstance(
+        profile.behavior.typical_reactions, dict
+    ), "typical_reactions not dict"
+    assert isinstance(
+        profile.behavior.speech_patterns, list
+    ), "speech_patterns not list"
 
     # Verify all fields via properties
     assert profile.name == "Thorin Ironforge", "Name incorrect"
@@ -227,7 +218,9 @@ def test_character_profile_save_and_load():
         assert loaded.name == original.name, "Name mismatch"
         assert loaded.level == original.level, "Level mismatch"
         assert loaded.character_class == original.character_class, "Class mismatch"
-        assert isinstance(loaded.behavior, CharacterBehavior), "Behavior missing on loaded profile"
+        assert isinstance(
+            loaded.behavior, CharacterBehavior
+        ), "Behavior missing on loaded profile"
         print("  [OK] Properties work on loaded profile")
 
     finally:

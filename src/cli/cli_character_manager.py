@@ -56,6 +56,10 @@ class CharacterCLIManager:
 
     def list_characters(self):
         """List all characters."""
+        # Ensure characters are loaded before listing (lazy loading)
+        if not self.story_manager.is_characters_loaded():
+            print("\n[INFO] Loading characters... This may take a while.")
+        self.story_manager.ensure_characters_loaded()
         characters = self.story_manager.get_character_list()
         if not characters:
             print("\n[ERROR] No characters found. Create the default party first.")
@@ -76,6 +80,8 @@ class CharacterCLIManager:
 
     def edit_character(self):
         """Edit a character profile."""
+        # Ensure characters are loaded before editing (lazy loading)
+        self.story_manager.ensure_characters_loaded()
         characters = self.story_manager.get_character_list()
         if not characters:
             print("\n[ERROR] No characters found. Create the default party first.")
@@ -104,6 +110,8 @@ class CharacterCLIManager:
 
     def view_character_details(self):
         """View detailed character information."""
+        # Ensure characters are loaded before viewing (lazy loading)
+        self.story_manager.ensure_characters_loaded()
         characters = self.story_manager.get_character_list()
         if not characters:
             print("\n[ERROR] No characters found.")
@@ -149,13 +157,18 @@ class CharacterCLIManager:
             for pattern in profile.behavior.speech_patterns:
                 print(f"  • {pattern}")
 
-        if getattr(profile, "behavior", None) and profile.behavior.decision_making_style:
+        if (
+            getattr(profile, "behavior", None)
+            and profile.behavior.decision_making_style
+        ):
             print(f"\nDecision Making Style: {profile.behavior.decision_making_style}")
 
         input("\nPress Enter to continue...")
 
     def _get_character_consultation(self):
         """Get character consultation from the consultations CLI."""
+        # Ensure characters are loaded before consultation (lazy loading)
+        self.story_manager.ensure_characters_loaded()
         if not self.consultations:
             print("[ERROR] Consultations not available.")
             return

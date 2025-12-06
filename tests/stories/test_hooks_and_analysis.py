@@ -6,13 +6,7 @@ Tests for story hooks file generation and NPC suggestions.
 
 import os
 import tempfile
-
-from tests import test_helpers
-
-# Configure test environment and import target symbol via centralized helper
-create_story_hooks_file = test_helpers.safe_from_import(
-    "src.stories.hooks_and_analysis", "create_story_hooks_file"
-)
+from src.stories.hooks_and_analysis import create_story_hooks_file
 
 
 def test_create_story_hooks_basic():

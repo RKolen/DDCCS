@@ -22,8 +22,10 @@ Usage in test files:
     from src.validation.character_validator import validate_character_json
 
 """
+
 import json
 import sys
+import types
 from pathlib import Path
 import importlib
 
@@ -31,6 +33,7 @@ import importlib
 # Configuration for behaviour generation module handling
 class _BehaviourConfig:
     """Configuration state for behaviour generation handling."""
+
     should_disable = True
 
     @classmethod
@@ -46,19 +49,20 @@ class _BehaviourConfig:
 
 def disable_behaviour_generation():
     """Disable behaviour generation to prevent AI hangs during tests."""
-    sys.modules["src.utils.behaviour_generation"] = None
+
+    dummy_mod = types.ModuleType("src.utils.behaviour_generation")
+    sys.modules["src.utils.behaviour_generation"] = dummy_mod
 
 
 def enable_behaviour_generation():
     """Re-enable behaviour generation for tests that specifically test it.
 
-    Clears the None placeholder from sys.modules to allow fresh import.
+    Clears the dummy module placeholder from sys.modules to allow fresh import.
     Must be called BEFORE trying to import behaviour_generation module.
     """
-    # Remove the None placeholder to allow actual import
+    # Remove the dummy module placeholder to allow actual import
     if "src.utils.behaviour_generation" in sys.modules:
-        if sys.modules["src.utils.behaviour_generation"] is None:
-            del sys.modules["src.utils.behaviour_generation"]
+        del sys.modules["src.utils.behaviour_generation"]
 
     # Signal to setup_test_environment to NOT re-disable it
     _BehaviourConfig.enable()
@@ -132,7 +136,7 @@ def _build_story(story_cls, kw):
     return story_cls(
         story_hooks=kw.get("story_hooks") or [],
         character_arcs=kw.get("character_arcs") or [],
-        major_plot_actions=kw.get("major_plot_actions") or []
+        major_plot_actions=kw.get("major_plot_actions") or [],
     )
 
 
@@ -145,14 +149,14 @@ def _build_mechanics(mechanics_cls, stats_cls, abilities_cls, kw):
         armor_class=kw.get("armor_class") or 10,
         movement_speed=kw.get("movement_speed") or 30,
         proficiency_bonus=kw.get("proficiency_bonus") or 2,
-        background=kw.get("background") or ""
+        background=kw.get("background") or "",
     )
     abilities = abilities_cls(
         feats=kw.get("feats") or [],
         class_abilities=kw.get("class_abilities") or [],
         specialized_abilities=kw.get("specialized_abilities") or [],
         spell_slots=kw.get("spell_slots") or {},
-        known_spells=kw.get("known_spells") or []
+        known_spells=kw.get("known_spells") or [],
     )
     return mechanics_cls(stats=stats, abilities=abilities)
 
@@ -219,7 +223,9 @@ def sample_character_data(
     return base
 
 
-def write_character_file(workspace_path: str, character_name: str, data: dict | None = None):
+def write_character_file(
+    workspace_path: str, character_name: str, data: dict | None = None
+):
     """Write a character JSON file under the provided workspace path and return the filepath.
 
     Creates the `game_data/characters` directory if required. If `data` is None,
@@ -239,8 +245,12 @@ def write_character_file(workspace_path: str, character_name: str, data: dict | 
     return str(filepath)
 
 
-def sample_npc_data(name: str = "Test NPC", role: str = "Merchant",
-                    species: str = "Human", overrides: dict | None = None):
+def sample_npc_data(
+    name: str = "Test NPC",
+    role: str = "Merchant",
+    species: str = "Human",
+    overrides: dict | None = None,
+):
     """Return a canonical NPC dict for tests.
 
     Use this instead of inlining NPC dictionaries in multiple tests.
@@ -257,8 +267,12 @@ def sample_npc_data(name: str = "Test NPC", role: str = "Merchant",
         "abilities": ["Appraisal"],
         "recurring": False,
         "notes": "Test NPC",
-        "ai_config": {"enabled": False, "temperature": 0.7,
-                      "max_tokens": 1000, "system_prompt": ""},
+        "ai_config": {
+            "enabled": False,
+            "temperature": 0.7,
+            "max_tokens": 1000,
+            "system_prompt": "",
+        },
     }
 
     if overrides:
@@ -455,9 +469,9 @@ def assert_system_prompt_contains(mock_ai, *keywords):
 
     assert system_msg is not None, "System message should exist"
     for keyword in keywords:
-        assert keyword in system_msg["content"].lower(), (
-            f"System prompt should contain '{keyword}'"
-        )
+        assert (
+            keyword in system_msg["content"].lower()
+        ), f"System prompt should contain '{keyword}'"
 
 
 def run_test_suite(test_suite_name, test_functions):
@@ -564,7 +578,7 @@ class FakeAIClient:
 class FakeConsultant:
     """Reusable fake character consultant for tests.
 
-    Provides a minimal `suggest_reaction(prompt=None)` and `ping()` API
+    Provides a minimal `suggest_reaction(situation, context=None)` API
     compatible with production `CharacterConsultant` used by consistency
     checks. Initialize with a preset reaction dict that will be returned by
     `suggest_reaction`.
@@ -574,9 +588,10 @@ class FakeConsultant:
         """Create the fake with a preset reaction dict."""
         self._reaction = reaction
 
-    def suggest_reaction(self, prompt=None):
-        """Return the preset reaction dict; accepts an optional prompt."""
-        _ = prompt
+    def suggest_reaction(self, situation: str, context=None):
+        """Return the preset reaction dict; accepts situation and optional context."""
+        _ = situation  # Acknowledge parameter
+        _ = context
         return self._reaction
 
     def ping(self) -> bool:

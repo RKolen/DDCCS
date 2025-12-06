@@ -7,11 +7,7 @@ Tests for party configuration management.
 import os
 import tempfile
 import json
-from tests import test_helpers
-
-PartyManager = test_helpers.safe_from_import(
-    "src.stories.party_manager", "PartyManager"
-)
+from src.stories.party_manager import PartyManager
 
 
 def test_party_manager_initialization():

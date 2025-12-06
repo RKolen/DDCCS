@@ -9,18 +9,11 @@ import os
 import json
 import tempfile
 
+from src.stories.story_character_loader import CharacterLoader
+from src.characters.consultants.character_profile import CharacterProfile
+from src.characters.character_sheet import DnDClass
 from tests import test_helpers
 
-# Use canonical test helper to configure environment and import modules under test.
-CharacterLoader = test_helpers.safe_from_import(
-    "src.stories.story_character_loader", "CharacterLoader"
-)
-CharacterProfile = test_helpers.safe_from_import(
-    "src.characters.consultants.character_profile", "CharacterProfile"
-)
-DnDClass = test_helpers.safe_from_import(
-    "src.characters.character_sheet", "DnDClass"
-)
 
 def create_test_character_file(workspace_path: str, character_name: str):
     """Create a valid test character JSON file."""
@@ -84,12 +77,12 @@ def test_skip_example_files():
         example_files = [
             "class.example.json",
             "fighter.example.json",
-            "template_character.json"
+            "template_character.json",
         ]
 
         for filename in example_files:
             filepath = os.path.join(characters_dir, filename)
-            with open(filepath, 'w', encoding='utf-8') as file:
+            with open(filepath, "w", encoding="utf-8") as file:
                 json.dump({"name": "Example"}, file)
 
         # Create real character
@@ -118,12 +111,12 @@ def test_validation_integration():
         # Create invalid character file (missing required fields)
         invalid_data = {
             "name": "InvalidChar",
-            "dnd_class": "fighter"
+            "dnd_class": "fighter",
             # Missing many required fields
         }
 
         filepath = os.path.join(characters_dir, "invalid.json")
-        with open(filepath, 'w', encoding='utf-8') as file:
+        with open(filepath, "w", encoding="utf-8") as file:
             json.dump(invalid_data, file)
 
         # Create valid character
@@ -173,7 +166,7 @@ def test_save_character_profile():
                 "constitution": 16,
                 "intelligence": 10,
                 "wisdom": 11,
-                "charisma": 14
+                "charisma": 14,
             },
             "background_story": "Captain of Gondor",
             "personality_summary": "Brave but conflicted",
@@ -184,13 +177,13 @@ def test_save_character_profile():
                 "weapons": ["Sword", "Horn of Gondor"],
                 "armor": ["Plate"],
                 "items": [],
-                "magic_items": []
+                "magic_items": [],
             },
-            "known_spells": []
+            "known_spells": [],
         }
 
         filepath = os.path.join(characters_dir, "boromir.json")
-        with open(filepath, 'w', encoding='utf-8') as file:
+        with open(filepath, "w", encoding="utf-8") as file:
             json.dump(updated_data, file, indent=2)
 
         # Reload to update consultant
@@ -333,7 +326,7 @@ def test_update_existing_character():
                 "constitution": 16,
                 "intelligence": 12,
                 "wisdom": 14,
-                "charisma": 16
+                "charisma": 16,
             },
             "background_story": "King of Gondor",
             "personality_summary": "Noble and wise",
@@ -344,13 +337,13 @@ def test_update_existing_character():
                 "weapons": ["Anduril"],
                 "armor": ["Royal Armor"],
                 "items": [],
-                "magic_items": ["Ring of Barahir"]
+                "magic_items": ["Ring of Barahir"],
             },
-            "known_spells": []
+            "known_spells": [],
         }
 
         filepath = os.path.join(characters_dir, "aragorn.json")
-        with open(filepath, 'w', encoding='utf-8') as file:
+        with open(filepath, "w", encoding="utf-8") as file:
             json.dump(updated_data, file, indent=2)
 
         # Load and save updated profile

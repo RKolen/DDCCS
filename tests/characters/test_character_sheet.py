@@ -16,22 +16,18 @@ Why we test this:
 - NPC profiles are used by story manager and auto-detection
 """
 
-from tests import test_helpers
-
-# Import required symbols via canonical helper (sets up environment as needed)
-DnDClass = test_helpers.safe_from_import("src.characters.character_sheet", "DnDClass")
-Species = test_helpers.safe_from_import("src.characters.character_sheet", "Species")
-ELF_LINEAGES = test_helpers.safe_from_import("src.characters.character_sheet", "ELF_LINEAGES")
-GNOME_LINEAGES = test_helpers.safe_from_import("src.characters.character_sheet", "GNOME_LINEAGES")
-TIEFLING_LINEAGES = test_helpers.safe_from_import("src.characters.character_sheet",
-                                                  "TIEFLING_LINEAGES")
-DRAGONBORN_LINEAGES = test_helpers.safe_from_import("src.characters.character_sheet",
-                                                    "DRAGONBORN_LINEAGES")
-NPCBasicInfo = test_helpers.safe_from_import("src.characters.character_sheet", "NPCBasicInfo")
-NPCPhysicalInfo = test_helpers.safe_from_import("src.characters.character_sheet", "NPCPhysicalInfo")
-NPCCharacterInfo = test_helpers.safe_from_import("src.characters.character_sheet",
-                                                 "NPCCharacterInfo")
-NPCProfile = test_helpers.safe_from_import("src.characters.character_sheet", "NPCProfile")
+from src.characters.character_sheet import (
+    DnDClass,
+    Species,
+    ELF_LINEAGES,
+    GNOME_LINEAGES,
+    TIEFLING_LINEAGES,
+    DRAGONBORN_LINEAGES,
+    NPCBasicInfo,
+    NPCPhysicalInfo,
+    NPCCharacterInfo,
+    NPCProfile,
+)
 
 
 def test_dnd_class_enum():
@@ -55,8 +51,9 @@ def test_dnd_class_enum():
 
     for enum_name, enum_value in expected_classes:
         assert hasattr(DnDClass, enum_name), f"Missing class: {enum_name}"
-        assert getattr(DnDClass, enum_name).value == enum_value, \
-            f"{enum_name} has wrong value"
+        assert (
+            getattr(DnDClass, enum_name).value == enum_value
+        ), f"{enum_name} has wrong value"
         print(f"  [OK] {enum_name} = {enum_value}")
 
     assert len(DnDClass) == 12, f"Expected 12 classes, found {len(DnDClass)}"
@@ -70,16 +67,25 @@ def test_species_enum():
     print("\n[TEST] Species Enum")
 
     expected_species = [
-        "AASIMAR", "HUMAN", "ELF", "DWARF", "HALFLING",
-        "DRAGONBORN", "GNOME", "GOLIATH", "ORC", "TIEFLING"
+        "AASIMAR",
+        "HUMAN",
+        "ELF",
+        "DWARF",
+        "HALFLING",
+        "DRAGONBORN",
+        "GNOME",
+        "GOLIATH",
+        "ORC",
+        "TIEFLING",
     ]
 
     for species_name in expected_species:
         assert hasattr(Species, species_name), f"Missing species: {species_name}"
         print(f"  [OK] {species_name} present")
 
-    assert len(Species) >= len(expected_species), \
-        f"Expected at least {len(expected_species)} species"
+    assert len(Species) >= len(
+        expected_species
+    ), f"Expected at least {len(expected_species)} species"
     print(f"  [OK] All expected species present ({len(Species)} total)")
 
     print("[PASS] Species Enum")
@@ -123,10 +129,7 @@ def test_npc_basic_info():
 
     # Create full NPC basic info
     full_basic = NPCBasicInfo(
-        name="Full NPC",
-        nickname="Nicky",
-        role="Quest Giver",
-        recurring=True
+        name="Full NPC", nickname="Nicky", role="Quest Giver", recurring=True
     )
 
     assert full_basic.name == "Full NPC", "Name not set"
@@ -164,7 +167,9 @@ def test_npc_character_info():
     # Test defaults
     character = NPCCharacterInfo()
     assert character.personality == "", "Personality should default to empty"
-    assert len(character.relationships) == 0, "Relationships should default to empty dict"
+    assert (
+        len(character.relationships) == 0
+    ), "Relationships should default to empty dict"
     assert len(character.key_traits) == 0, "Traits should default to empty list"
     assert len(character.abilities) == 0, "Abilities should default to empty list"
     assert character.notes == "", "Notes should default to empty"
@@ -176,7 +181,7 @@ def test_npc_character_info():
         relationships={"Hero": "Friend"},
         key_traits=["Honest", "Brave"],
         abilities=["Persuasion"],
-        notes="Met in tavern"
+        notes="Met in tavern",
     )
 
     assert character_full.personality == "Friendly and curious", "Personality not set"
@@ -199,14 +204,10 @@ def test_npc_profile():
     character = NPCCharacterInfo(
         personality="Gruff but fair",
         key_traits=["Honest", "Stubborn"],
-        notes="Runs the smithy"
+        notes="Runs the smithy",
     )
 
-    profile = NPCProfile(
-        basic=basic,
-        physical=physical,
-        character=character
-    )
+    profile = NPCProfile(basic=basic, physical=physical, character=character)
 
     assert profile.basic.name == "Test Merchant", "Basic info not set"
     assert profile.physical.species == "Dwarf", "Physical not set"
@@ -232,7 +233,7 @@ def test_npc_profile_create():
         species="Human",
         personality="Jovial and welcoming",
         key_traits=["Friendly", "Gossip"],
-        recurring=True
+        recurring=True,
     )
 
     assert npc.name == "Tavern Owner", "Name not set"
@@ -273,8 +274,7 @@ def test_enum_value_access():
 
     # Test enum construction from value
     wizard_from_value = DnDClass("Wizard")
-    assert wizard_from_value == DnDClass.WIZARD, \
-        "Enum construction from value failed"
+    assert wizard_from_value == DnDClass.WIZARD, "Enum construction from value failed"
     print("  [OK] Enum construction from value works")
 
     print("[PASS] Enum Value Access")

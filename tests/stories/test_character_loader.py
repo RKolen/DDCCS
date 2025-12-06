@@ -14,12 +14,7 @@ standalone test (via `python -m stories.test_character_loader`).
 import os
 import tempfile
 
-from tests import test_helpers
-
-# Import target helper via centralized safe import
-load_all_character_consultants = test_helpers.safe_from_import(
-    "src.stories.character_loader", "load_all_character_consultants"
-)
+from src.stories.character_loader import load_all_character_consultants
 
 
 def copy_sample_characters(workspace_path: str):
@@ -32,12 +27,30 @@ def copy_sample_characters(workspace_path: str):
     os.makedirs(characters_dir, exist_ok=True)
 
     repo_samples = [
-        os.path.join(os.path.dirname(__file__), "..", "..", "game_data",
-                     "characters", "aragorn.json"),
-        os.path.join(os.path.dirname(__file__), "..", "..", "game_data",
-                     "characters", "frodo.json"),
-        os.path.join(os.path.dirname(__file__), "..", "..", "game_data",
-                     "characters", "gandalf.json"),
+        os.path.join(
+            os.path.dirname(__file__),
+            "..",
+            "..",
+            "game_data",
+            "characters",
+            "aragorn.json",
+        ),
+        os.path.join(
+            os.path.dirname(__file__),
+            "..",
+            "..",
+            "game_data",
+            "characters",
+            "frodo.json",
+        ),
+        os.path.join(
+            os.path.dirname(__file__),
+            "..",
+            "..",
+            "game_data",
+            "characters",
+            "gandalf.json",
+        ),
     ]
 
     # Normalize and copy if present
@@ -66,7 +79,9 @@ def test_load_all_character_consultants_basic():
         # sample files in some environments, so accept any loaded sample.
         expected_names = ("Aragorn", "Frodo", "Gandalf")
         found = [name for name in expected_names if name in consultants]
-        assert found, f"No sample characters loaded; consultants keys: {list(consultants.keys())}"
+        assert (
+            found
+        ), f"No sample characters loaded; consultants keys: {list(consultants.keys())}"
         for name in found:
             assert getattr(consultants[name], "profile", None) is not None
             assert consultants[name].profile.name == name

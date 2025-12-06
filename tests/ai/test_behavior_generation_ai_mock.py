@@ -9,15 +9,16 @@ The test is written so it can be run with pytest or executed directly.
 """
 
 from tests import test_helpers
+from src.characters.consultants.character_profile import CharacterBehavior
 
 # Enable behaviour_generation BEFORE importing it
 test_helpers.enable_behaviour_generation()
 
-# Import module and types via test_helpers helpers
+# Import module via test_helpers
 bg = test_helpers.import_module("src.utils.behaviour_generation")
-CharacterBehavior = test_helpers.safe_from_import(
-    "src.characters.consultants.character_profile", "CharacterBehavior"
-)
+
+# Import CharacterBehavior directly
+
 
 def test_ai_malformed_output_coercion():
     """When AI returns malformed types, generator coerces them correctly."""
@@ -27,7 +28,7 @@ def test_ai_malformed_output_coercion():
 
     try:
         # Enable AI path and provide malformed output
-        bg.AI_AVAILABLE = True
+        setattr(bg, "AI_AVAILABLE", True)
 
         def fake_ai(*_args, **_kwargs):
             # Malformed: preferred as string, reactions as list, speech as string,
@@ -39,7 +40,7 @@ def test_ai_malformed_output_coercion():
                 "decision_making_style": None,
             }
 
-        bg.call_ai_for_behavior_block = fake_ai
+        setattr(bg, "call_ai_for_behavior_block", fake_ai)
 
         behavior = bg.generate_behavior_from_personality(
             personality_traits=["brave"],
@@ -51,11 +52,16 @@ def test_ai_malformed_output_coercion():
 
         # Backwards-compatible: generator may return a dict (refactor)
         if isinstance(behavior, dict):
+            behavior_dict = behavior
             behavior = CharacterBehavior(
-                preferred_strategies=list(behavior.get("preferred_strategies", [])),
-                typical_reactions=dict(behavior.get("typical_reactions", {})),
-                speech_patterns=list(behavior.get("speech_patterns", [])),
-                decision_making_style=str(behavior.get("decision_making_style", "")),
+                preferred_strategies=list(
+                    behavior_dict.get("preferred_strategies", [])
+                ),
+                typical_reactions=dict(behavior_dict.get("typical_reactions", {})),
+                speech_patterns=list(behavior_dict.get("speech_patterns", [])),
+                decision_making_style=str(
+                    behavior_dict.get("decision_making_style", "")
+                ),
             )
 
         # Type assertions
@@ -73,8 +79,12 @@ def test_ai_malformed_output_coercion():
 
     finally:
         # Restore
-        bg.AI_AVAILABLE = orig_ai_flag
-        bg.call_ai_for_behavior_block = orig_call
+        setattr(bg, "AI_AVAILABLE", orig_ai_flag)
+        if orig_call is not None:
+            setattr(bg, "call_ai_for_behavior_block", orig_call)
+        elif hasattr(bg, "call_ai_for_behavior_block"):
+            # If original was None/missing, delete the attribute
+            delattr(bg, "call_ai_for_behavior_block")
 
 
 def run():
@@ -88,7 +98,7 @@ def run():
 
     Side effects:
     - Writes progress and result messages to standard output.
-    - Depends on the presence of test_ai_malformed_output_coercion() in the same module or scope; 
+    - Depends on the presence of test_ai_malformed_output_coercion() in the same module or scope;
       any exception raised by that function will propagate.
 
     Returns:

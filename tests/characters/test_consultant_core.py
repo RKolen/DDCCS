@@ -21,16 +21,14 @@ Why we test this:
 
 from tests import test_helpers
 
+# Import directly to avoid tuple unpacking issues with safe_from_import
+from src.characters.consultants.consultant_core import CharacterConsultant
+from src.characters.consultants.character_profile import CharacterProfile
+from src.characters.character_sheet import DnDClass
+
 # Configure project root and import production symbols via test_helpers
 project_root = test_helpers.setup_test_environment()
 
-CharacterConsultant = test_helpers.safe_from_import(
-    "src.characters.consultants.consultant_core", "CharacterConsultant"
-)
-CharacterProfile = test_helpers.safe_from_import(
-    "src.characters.consultants.character_profile", "CharacterProfile"
-)
-DnDClass = test_helpers.safe_from_import("src.characters.character_sheet", "DnDClass")
 
 def test_character_profile_initialization():
     """Test loading Aragorn profile and consultant initialization."""
@@ -63,8 +61,9 @@ def test_consultant_initialization():
     assert consultant.ai_consultant is not None, "AI consultant not initialized"
     print("  [OK] All components initialized")
     # Verify class knowledge is correct
-    assert consultant.class_knowledge["primary_ability"] == "Dexterity and Wisdom", \
-        "Ranger should use Dexterity and Wisdom"
+    assert (
+        consultant.class_knowledge["primary_ability"] == "Dexterity and Wisdom"
+    ), "Ranger should use Dexterity and Wisdom"
     print("  [OK] Class knowledge loaded correctly")
     print("[PASS] CharacterConsultant Initialization")
 
@@ -87,7 +86,6 @@ def test_suggest_reaction_threat():
     print("[PASS] Suggest Reaction - Threat")
 
 
-
 def test_suggest_reaction_puzzle():
     """Test reaction suggestions for puzzle situations."""
     print("\n[TEST] Suggest Reaction - Puzzle")
@@ -99,7 +97,6 @@ def test_suggest_reaction_puzzle():
     assert "suggested_approach" in result, "Missing suggested approach"
     print("  [OK] Puzzle reaction structure correct")
     print("[PASS] Suggest Reaction - Puzzle")
-
 
 
 def test_suggest_reaction_social():
@@ -115,7 +112,6 @@ def test_suggest_reaction_social():
     print("[PASS] Suggest Reaction - Social")
 
 
-
 def test_suggest_reaction_magic():
     """Test reaction suggestions for magic situations."""
     print("\n[TEST] Suggest Reaction - Magic")
@@ -129,7 +125,6 @@ def test_suggest_reaction_magic():
     print("[PASS] Suggest Reaction - Magic")
 
 
-
 def test_get_personality_modifier():
     """Test personality modifier generation."""
     print("\n[TEST] Get Personality Modifier")
@@ -141,7 +136,6 @@ def test_get_personality_modifier():
     assert len(modifier) > 0, "Modifier should not be empty"
     print("  [OK] Personality modifier generated")
     print("[PASS] Get Personality Modifier")
-
 
 
 def test_check_consistency_factors():
@@ -209,7 +203,6 @@ def test_get_relationships():
     print("[PASS] Get Relationships")
 
 
-
 def test_get_status():
     """Test character status reporting."""
     print("\n[TEST] Get Status")
@@ -230,7 +223,6 @@ def test_get_status():
     print("[PASS] Get Status")
 
 
-
 def test_delegation_to_dc_calculator():
     """Test that DC calculations are delegated correctly."""
     print("\n[TEST] Delegation to DC Calculator")
@@ -244,7 +236,6 @@ def test_delegation_to_dc_calculator():
     assert result["suggested_dc"] > 0, "DC should be positive"
     print("  [OK] DC calculation delegated correctly")
     print("[PASS] Delegation to DC Calculator")
-
 
 
 def test_delegation_to_story_analyzer():
@@ -270,12 +261,15 @@ def test_different_class_behaviors():
     print("\n[TEST] Different Class Behaviors")
 
     # Load canonical profiles for different classes
-    aragorn_profile = CharacterProfile.load_from_file(str(project_root /
-        "game_data" / "characters" / "aragorn.json"))
-    frodo_profile = CharacterProfile.load_from_file(str(project_root /
-        "game_data" / "characters" / "frodo.json"))
-    gandalf_profile = CharacterProfile.load_from_file(str(project_root /
-        "game_data" / "characters" / "gandalf.json"))
+    aragorn_profile = CharacterProfile.load_from_file(
+        str(project_root / "game_data" / "characters" / "aragorn.json")
+    )
+    frodo_profile = CharacterProfile.load_from_file(
+        str(project_root / "game_data" / "characters" / "frodo.json")
+    )
+    gandalf_profile = CharacterProfile.load_from_file(
+        str(project_root / "game_data" / "characters" / "gandalf.json")
+    )
 
     aragorn_consultant = CharacterConsultant(aragorn_profile)
     frodo_consultant = CharacterConsultant(frodo_profile)
@@ -288,10 +282,12 @@ def test_different_class_behaviors():
     gandalf_reaction = gandalf_consultant.suggest_reaction(situation)
 
     # Reactions should differ based on class
-    assert aragorn_reaction["class_reaction"] != frodo_reaction["class_reaction"], \
-        "Ranger and Rogue should have different reactions"
-    assert gandalf_reaction["class_reaction"] != aragorn_reaction["class_reaction"], \
-        "Wizard and Ranger should have different reactions"
+    assert (
+        aragorn_reaction["class_reaction"] != frodo_reaction["class_reaction"]
+    ), "Ranger and Rogue should have different reactions"
+    assert (
+        gandalf_reaction["class_reaction"] != aragorn_reaction["class_reaction"]
+    ), "Wizard and Ranger should have different reactions"
     print("  [OK] Class-specific reactions differ")
     print("[PASS] Different Class Behaviors")
 
@@ -306,7 +302,6 @@ def test_load_from_file():
     assert "Hunter's Mark" in consultant.profile.known_spells, "Spells not loaded"
     print("  [OK] Consultant loaded from file correctly")
     print("[PASS] Load Consultant from File")
-
 
 
 def run_all_tests():

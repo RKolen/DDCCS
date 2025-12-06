@@ -6,12 +6,13 @@ Handles story analysis and combat conversion operations.
 
 import os
 import json
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 from datetime import datetime
 
 # Optional AI client import
 try:
     from src.ai.ai_client import AIClient
+
     AI_CLIENT_AVAILABLE = True
 except ImportError:
     AIClient = None
@@ -49,7 +50,7 @@ class StoryAnalysisCLI:
         self.ai_client = None
         self.combat_narrator = CombatNarrator(story_manager.consultants)
 
-    def analyze_story(self, series_name: str = None):
+    def analyze_story(self, series_name: "Optional[str]" = None):
         """Analyze a story file.
 
         Args:
@@ -87,7 +88,11 @@ class StoryAnalysisCLI:
                 self._display_story_analysis(analysis)
 
                 # Save to session results file instead of updating story
-                save = input("\nSave analysis to session results file? (y/n): ").strip().lower()
+                save = (
+                    input("\nSave analysis to session results file? (y/n): ")
+                    .strip()
+                    .lower()
+                )
                 if save == "y":
                     self.save_analysis_to_session_results(analysis, base_path, filename)
             else:
@@ -95,8 +100,9 @@ class StoryAnalysisCLI:
         except ValueError:
             print("Invalid input.")
 
-    def save_analysis_to_session_results(self, analysis: Dict[str, Any],
-                                          series_path: str, story_filename: str) -> None:
+    def save_analysis_to_session_results(
+        self, analysis: Dict[str, Any], series_path: str, story_filename: str
+    ) -> None:
         """Save analysis results to a session results file.
 
         Creates or appends to session_results_YYYY-MM-DD_storyname.md file.
@@ -108,11 +114,11 @@ class StoryAnalysisCLI:
         """
         # Extract story name from filename (remove extension and numbering)
         story_slug = os.path.splitext(story_filename)[0]
-        if '_' in story_slug:
-            story_slug = story_slug.split('_', 1)[1]
-        story_slug = story_slug.replace(' ', '_').lower()
+        if "_" in story_slug:
+            story_slug = story_slug.split("_", 1)[1]
+        story_slug = story_slug.replace(" ", "_").lower()
 
-        today = datetime.now().strftime('%Y-%m-%d')
+        today = datetime.now().strftime("%Y-%m-%d")
         session_filename = f"session_results_{today}_{story_slug}.md"
         session_filepath = os.path.join(series_path, session_filename)
 
@@ -134,8 +140,9 @@ class StoryAnalysisCLI:
 
         write_text_file(session_filepath, content)
 
-    def format_analysis_for_session(self, analysis: Dict[str, Any],
-                                     story_filename: str) -> str:
+    def format_analysis_for_session(
+        self, analysis: Dict[str, Any], story_filename: str
+    ) -> str:
         """Format analysis results as markdown for session results file.
 
         Args:
@@ -163,11 +170,17 @@ class StoryAnalysisCLI:
             lines.append("### Character Analyses")
             for character, char_analysis in analysis["consultant_analyses"].items():
                 lines.append(f"\n**{character}**")
-                lines.append(f"- **Rating:** {char_analysis.get('overall_rating', 'Unknown')}")
-                lines.append(f"- **Score:** {char_analysis.get('consistency_score', 0)}/1.0")
+                lines.append(
+                    f"- **Rating:** {char_analysis.get('overall_rating', 'Unknown')}"
+                )
+                lines.append(
+                    f"- **Score:** {char_analysis.get('consistency_score', 0)}/1.0"
+                )
 
                 if char_analysis.get("positive_notes"):
-                    lines.append(f"- **Positives:** {len(char_analysis['positive_notes'])} noted")
+                    lines.append(
+                        f"- **Positives:** {len(char_analysis['positive_notes'])} noted"
+                    )
 
                 if char_analysis.get("issues"):
                     lines.append(f"- **Issues:** {len(char_analysis['issues'])} noted")
@@ -181,8 +194,8 @@ class StoryAnalysisCLI:
             for request, suggestions in analysis["dc_suggestions"].items():
                 lines.append(f"\n**{request}**")
                 for character, suggestion in suggestions.items():
-                    dc_value = suggestion.get('suggested_dc', 'Unknown')
-                    reasoning = suggestion.get('reasoning', 'No reasoning provided')
+                    dc_value = suggestion.get("suggested_dc", "Unknown")
+                    reasoning = suggestion.get("reasoning", "No reasoning provided")
                     lines.append(f"  - {character}: DC {dc_value} ({reasoning})")
             lines.append("")
 
@@ -207,7 +220,9 @@ class StoryAnalysisCLI:
                 print(f"  Score: {char_analysis['consistency_score']}/1.0")
 
                 if char_analysis.get("positive_notes"):
-                    print(f"  [SUCCESS] Positives: {len(char_analysis['positive_notes'])}")
+                    print(
+                        f"  [SUCCESS] Positives: {len(char_analysis['positive_notes'])}"
+                    )
 
                 if char_analysis.get("issues"):
                     print(f"  [WARNING] Issues: {len(char_analysis['issues'])}")
@@ -299,16 +314,22 @@ class StoryAnalysisCLI:
                 self.ai_client = None
 
     def extract_context_from_previous_stories(
-        self, campaign_dir: str, story_files: list,
-        party_names: list = None, npc_names: list = None
+        self,
+        campaign_dir: str,
+        story_files: list,
+        party_names: Optional[List] = None,
+        npc_names: Optional[List] = None,
     ) -> str:
         """Extract location and setting context from previous stories.
 
         Delegates to helper module to avoid code duplication.
         """
         return extract_context_from_stories(
-            self.workspace_path, campaign_dir, story_files,
-            party_names=party_names, npc_names=npc_names
+            self.workspace_path,
+            campaign_dir,
+            story_files,
+            party_names=party_names,
+            npc_names=npc_names,
         )
 
     def analyze_series_consistency(self, series_name: str, series_stories: List[str]):
@@ -341,14 +362,13 @@ class StoryAnalysisCLI:
         print(f"Stories to Analyze: {len(series_stories)}\n")
 
         confirm = input("Proceed with analysis? (y/n): ").strip().lower()
-        if confirm != 'y':
+        if confirm != "y":
             print("Analysis cancelled.")
             return
 
         # Create analyzer and run analysis
         analyzer = StoryConsistencyAnalyzer(
-            workspace_path=self.workspace_path,
-            ai_client=self.story_manager.ai_client
+            workspace_path=self.workspace_path, ai_client=self.story_manager.ai_client
         )
 
         try:
@@ -356,7 +376,7 @@ class StoryAnalysisCLI:
             results = analyzer.analyze_series(
                 series_name=series_name,
                 story_files=series_stories,
-                party_members=party_members
+                party_members=party_members,
             )
 
             # Display results
@@ -372,7 +392,9 @@ class StoryAnalysisCLI:
         except (OSError, ValueError, KeyError, AttributeError) as e:
             print(f"\n[ERROR] Analysis failed: {e}")
 
-    def analyze_character_development_series(self, series_name: str, series_stories: List[str]):
+    def analyze_character_development_series(
+        self, series_name: str, series_stories: List[str]
+    ):
         """Analyze character development across the entire series.
 
         Args:
@@ -402,7 +424,7 @@ class StoryAnalysisCLI:
         print(f"Stories to Analyze: {len(series_stories)}\n")
 
         confirm = input("Proceed with analysis? (y/n): ").strip().lower()
-        if confirm != 'y':
+        if confirm != "y":
             print("Analysis cancelled.")
             return
 
@@ -425,20 +447,22 @@ class StoryAnalysisCLI:
                 story_content,
                 party_members,
                 truncate_at_sentence,
-                character_profiles=profiles
+                character_profiles=profiles,
             )
 
             for action in actions:
-                char_name = action['character']
+                char_name = action["character"]
                 if char_name not in all_actions:
                     all_actions[char_name] = []
 
                 # Add story context
-                action['story_file'] = story_file
+                action["story_file"] = story_file
                 all_actions[char_name].append(action)
 
         print("\n[INFO] Generating development report...")
-        self._generate_development_report(series_name, series_path, all_actions, profiles)
+        self._generate_development_report(
+            series_name, series_path, all_actions, profiles
+        )
 
     def _load_character_profiles(self, party_names: List[str]) -> Dict[str, Any]:
         """Load character profiles for analysis."""
@@ -447,7 +471,7 @@ class StoryAnalysisCLI:
 
         for name in party_names:
             # Try exact match first
-            normalized = name.lower().replace(' ', '_')
+            normalized = name.lower().replace(" ", "_")
             path = os.path.join(chars_dir, f"{normalized}.json")
 
             if not os.path.exists(path):
@@ -457,7 +481,7 @@ class StoryAnalysisCLI:
 
             if os.path.exists(path):
                 try:
-                    with open(path, 'r', encoding='utf-8') as f:
+                    with open(path, "r", encoding="utf-8") as f:
                         profiles[name] = json.load(f)
                 except (OSError, ValueError):
                     pass
@@ -469,7 +493,7 @@ class StoryAnalysisCLI:
         series_name: str,
         series_path: str,
         all_actions: Dict[str, List[Dict[str, str]]],
-        profiles: Dict[str, Any]
+        profiles: Dict[str, Any],
     ):
         """Generate markdown report for series character development."""
         timestamp = datetime.now().strftime("%Y-%m-%d")
@@ -484,13 +508,15 @@ class StoryAnalysisCLI:
             "## Overview",
             "This report tracks character behavior, consistency, and development arcs",
             "across the entire story series, comparing actions against established traits.",
-            ""
+            "",
         ]
 
         for char_name in sorted(all_actions.keys()):
-            lines.extend(self._format_character_development_section(
-                char_name, all_actions[char_name], profiles.get(char_name, {})
-            ))
+            lines.extend(
+                self._format_character_development_section(
+                    char_name, all_actions[char_name], profiles.get(char_name, {})
+                )
+            )
 
         write_text_file(report_path, "\n".join(lines))
         print(f"\n[SUCCESS] Report generated: {report_filename}")
@@ -503,9 +529,11 @@ class StoryAnalysisCLI:
         lines = [f"## {char_name}"]
 
         if profile:
-            char_class = profile.get('dnd_class', 'Unknown')
-            level = profile.get('level', '?')
-            background = profile.get('background_story') or profile.get('backstory', 'Unknown')
+            char_class = profile.get("dnd_class", "Unknown")
+            level = profile.get("level", "?")
+            background = profile.get("background_story") or profile.get(
+                "backstory", "Unknown"
+            )
 
             lines.append(f"**Class:** {char_class} (Level {level})")
             lines.append(f"**Background:** {background[:100]}...")
@@ -515,7 +543,7 @@ class StoryAnalysisCLI:
 
         for action in actions:
             # Skip "Not mentioned" entries if they are just placeholders
-            if action['action'] == "Not mentioned in this story segment":
+            if action["action"] == "Not mentioned in this story segment":
                 continue
 
             lines.append(f"**Story:** {action['story_file']}")

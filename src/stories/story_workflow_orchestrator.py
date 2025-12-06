@@ -7,9 +7,11 @@ ensure complete story workflows with NPC detection, hooks, sessions, and charact
 development tracking.
 """
 
-import re
+import json
 from dataclasses import dataclass, field
-from typing import List, Dict, Any
+from datetime import datetime
+from pathlib import Path
+from typing import List, Dict, Any, Optional
 from src.npcs.npc_auto_detection import (
     detect_npc_suggestions,
     generate_npc_from_story,
@@ -17,15 +19,20 @@ from src.npcs.npc_auto_detection import (
 )
 from src.stories.hooks_and_analysis import (
     create_story_hooks_file,
-    convert_ai_hooks_to_list
 )
 from src.stories.session_results_manager import (
     StorySession,
     create_session_results_file,
+    populate_session_from_ai_results,
 )
-from src.stories.story_ai_generator import generate_story_hooks_from_content
+from src.stories.story_ai_generator import (
+    generate_story_hooks_from_content,
+    generate_session_results_from_story,
+)
 from src.cli.party_config_manager import load_party_with_profiles
 from src.characters.character_consistency import create_character_development_file
+from src.stories.character_action_analyzer import extract_character_actions
+from src.utils.string_utils import truncate_at_sentence
 
 
 @dataclass
@@ -49,14 +56,16 @@ class StoryWorkflowContext:
     workspace_path: str
     party_names: List[str]
     ai_client: Any = None
-    results: Dict[str, Any] = field(default_factory=lambda: {
-        "npcs_created": [],
-        "npcs_suggested": [],
-        "hooks_file": None,
-        "character_dev_file": None,
-        "session_file": None,
-        "errors": [],
-    })
+    results: Dict[str, Any] = field(
+        default_factory=lambda: {
+            "npcs_created": [],
+            "npcs_suggested": [],
+            "hooks_file": None,
+            "character_dev_file": None,
+            "session_file": None,
+            "errors": [],
+        }
+    )
 
     def add_error(self, message: str) -> None:
         """Add an error to the results."""
@@ -66,7 +75,7 @@ class StoryWorkflowContext:
 def coordinate_story_workflow(
     ctx: StoryWorkflowContext,
     *,
-    options: WorkflowOptions = None,
+    options: Optional[WorkflowOptions] = None,
 ) -> Dict[str, Any]:
     """
     Orchestrate complete story workflow with all auxiliary file creation.
@@ -150,11 +159,10 @@ def _process_hooks_workflow(ctx: StoryWorkflowContext, opt: WorkflowOptions) -> 
                 ctx.series_path, ctx.workspace_path
             )
             ai_hooks = generate_story_hooks_from_content(
-                opt.ai_client, ctx.story_content,
-                party_characters, ctx.party_names
+                opt.ai_client, ctx.story_content, party_characters, ctx.party_names
             )
             if ai_hooks:
-                hooks = convert_ai_hooks_to_list(ai_hooks)
+                hooks = ai_hooks  # Pass structured dict directly, don't convert
 
         # Fall back to keyword extraction if AI not available
         if hooks is None:
@@ -182,16 +190,32 @@ def _process_character_dev_workflow(
         print("[DEBUG] Character dev workflow skipped - option disabled")
         return
 
-    print(f"[DEBUG] Character dev workflow starting - party: {ctx.party_names}")
+    print(f"Character development workflow starting - party: {ctx.party_names}")
     try:
-        character_actions = _extract_character_actions(
-            ctx.story_content, ctx.party_names
+        # Load character profiles by searching all JSON files and matching by name field
+        character_profiles = {}
+        chars_dir = Path("game_data") / "characters"
+        if chars_dir.exists():
+            for json_file in chars_dir.glob("*.json"):
+                try:
+                    with open(json_file, "r", encoding="utf-8") as f:
+                        profile = json.load(f)
+                        profile_name = profile.get("name", "")
+                        # Match against party names
+                        if profile_name in ctx.party_names:
+                            character_profiles[profile_name] = profile
+                except (OSError, json.JSONDecodeError) as e:
+                    print(f"[DEBUG] Could not load {json_file.name}: {e}")
+
+        character_actions = extract_character_actions(
+            ctx.story_content, ctx.party_names, truncate_at_sentence, character_profiles
         )
-        print(f"[DEBUG] Extracted {len(character_actions)} character actions")
 
         # If no actions extracted but we have party names, create placeholder entries
         if not character_actions and ctx.party_names:
-            print(f"[DEBUG] Creating placeholders for {len(ctx.party_names)} party members")
+            print(
+                f"[DEBUG] Creating placeholders for {len(ctx.party_names)} party members"
+            )
             character_actions = [
                 {
                     "character": name,
@@ -205,14 +229,15 @@ def _process_character_dev_workflow(
 
         # Only create file if we have party members
         if character_actions:
-            print(f"[DEBUG] Creating character dev file with {len(character_actions)} entries")
+            print(
+                f"[DEBUG] Creating character dev file with {len(character_actions)} entries"
+            )
             char_dev_path = create_character_development_file(
                 ctx.series_path,
                 ctx.story_name,
                 character_actions,
             )
             ctx.results["character_dev_file"] = char_dev_path
-            print(f"[DEBUG] Character dev file created: {char_dev_path}")
         else:
             print("[DEBUG] No character actions to save - skipping file creation")
     except (ValueError, OSError, KeyError, AttributeError) as e:
@@ -221,15 +246,29 @@ def _process_character_dev_workflow(
         ctx.results["errors"].append(error_msg)
 
 
-def _process_session_workflow(
-    ctx: StoryWorkflowContext, opt: WorkflowOptions
-) -> None:
+def _process_session_workflow(ctx: StoryWorkflowContext, opt: WorkflowOptions) -> None:
     """Process session results file creation workflow step."""
     if not opt.create_session_file:
         return
 
     try:
-        session = StorySession(ctx.story_name)
+        session = StorySession(ctx.story_name, datetime.now().strftime("%Y-%m-%d"))
+
+        # Use AI to analyze story and populate session if AI client available
+        if opt.ai_client:
+            party_characters = load_party_with_profiles(
+                ctx.series_path, ctx.workspace_path
+            )
+            try:
+                party_names = list(party_characters.keys())
+                ai_results = generate_session_results_from_story(
+                    opt.ai_client, ctx.story_content, party_names
+                )
+                if ai_results:
+                    populate_session_from_ai_results(session, ai_results)
+            except (AttributeError, ValueError, KeyError, TypeError) as e:
+                print(f"[DEBUG] AI session analysis failed: {e}")
+
         session_path = create_session_results_file(ctx.series_path, session)
         ctx.results["session_file"] = session_path
     except (ValueError, OSError, KeyError, AttributeError) as e:
@@ -282,71 +321,6 @@ def _extract_story_hooks(story_content: str) -> List[str]:
     return unique_hooks if unique_hooks else ["Future adventure awaits..."]
 
 
-def _extract_character_actions(
-    story_content: str, character_names: List[str]
-) -> List[Dict[str, str]]:
-    """
-    Extract character actions from story narrative.
-
-    Looks for mentions of character names (including variations) followed by
-    action descriptions. Matches full names, first names, and last names.
-
-    Args:
-        story_content: The story narrative text
-        character_names: List of character names to track (e.g., "Frodo Baggins")
-
-    Returns:
-        List of character action dictionaries
-    """
-    actions = []
-
-    for char_name in character_names:
-        # Build comprehensive patterns for character name variations
-        patterns = []
-
-        # Exact match for full name
-        patterns.append(re.compile(r'\b' + re.escape(char_name) + r'\b',
-                                   re.IGNORECASE))
-
-        # Match first name only
-        first_name = char_name.split()[0]
-        if first_name:
-            patterns.append(re.compile(r'\b' + re.escape(first_name) + r'\b',
-                                       re.IGNORECASE))
-
-        # Match last name if multi-word name
-        if ' ' in char_name:
-            last_name = char_name.split()[-1]
-            patterns.append(re.compile(r'\b' + re.escape(last_name) + r'\b',
-                                       re.IGNORECASE))
-
-        # Search for character mention in lines
-        lines = story_content.split("\n")
-        for i, line in enumerate(lines):
-            # Check if any pattern matches this line
-            matches = any(pattern.search(line) for pattern in patterns)
-
-            if matches:
-                # Extract context around character mention
-                context_start = max(0, i - 1)
-                context_end = min(len(lines), i + 2)
-                context = " ".join(lines[context_start:context_end])
-
-                if context.strip():
-                    actions.append(
-                        {
-                            "character": char_name,
-                            "action": context.strip()[:200],
-                            "reasoning": "To be analyzed",
-                            "consistency": "Pending review",
-                            "notes": "Extract from narrative",
-                        }
-                    )
-                    break  # One action per character for initial extraction
-
-    return actions
-
-
 def should_offer_ai_generation(ai_client, has_context: bool = True) -> bool:
     """
     Determine if AI story generation should be offered to user.
@@ -375,14 +349,10 @@ def report_workflow_results(results: Dict[str, Any]) -> str:
     report_lines.append("=" * 50)
 
     if results["npcs_created"]:
-        report_lines.append(
-            f"NPCs Created: {', '.join(results['npcs_created'])}"
-        )
+        report_lines.append(f"NPCs Created: {', '.join(results['npcs_created'])}")
 
     if results["npcs_suggested"]:
-        report_lines.append(
-            f"NPCs Detected: {', '.join(results['npcs_suggested'])}"
-        )
+        report_lines.append(f"NPCs Detected: {', '.join(results['npcs_suggested'])}")
 
     if results["hooks_file"]:
         report_lines.append(f"Story Hooks: {results['hooks_file']}")

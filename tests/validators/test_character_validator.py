@@ -61,11 +61,14 @@ def test_invalid_level_range():
 
 def test_wrong_field_type():
     """Test that incorrect field types are detected."""
+    # Construct with valid types, then mutate to introduce the invalid type
     invalid_character = test_helpers.sample_character_data(
         name="Test Character",
         dnd_class="rogue",
-        level="5",  # Should be int, not str
+        level=5,
     )
+    # Now introduce the invalid type for runtime validation
+    invalid_character["level"] = "5"
 
     is_valid, errors = validate_character_json(invalid_character)
     assert not is_valid, "Wrong field type passed validation"
@@ -114,4 +117,6 @@ if __name__ == "__main__":
         test_wrong_field_type,
         test_validate_actual_character_files,
     ]
-    test_helpers.run_tests_safely(test_list, success_message="[OK] All validator tests passed!")
+    test_helpers.run_tests_safely(
+        test_list, success_message="[OK] All validator tests passed!"
+    )

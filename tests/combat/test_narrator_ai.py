@@ -8,14 +8,9 @@ frodo, gandalf) to exercise character-context building and AI integration.
 from tests.test_helpers import FakeAIClient
 from tests import test_helpers
 
-# Configure test environment and import required symbols
-AIEnhancedNarrator = test_helpers.safe_from_import("src.combat.narrator_ai", "AIEnhancedNarrator")
-CharacterProfile = test_helpers.safe_from_import(
-    "src.characters.consultants.character_profile", "CharacterProfile"
-)
-CharacterConsultant = test_helpers.safe_from_import(
-    "src.characters.consultants.consultant_core", "CharacterConsultant"
-)
+# Import directly to avoid tuple unpacking issues with safe_from_import
+from src.combat.narrator_ai import AIEnhancedNarrator
+
 
 def test_ai_narration_uses_ai_client():
     """AIEnhancedNarrator should use the AI client's output when provided."""
@@ -65,9 +60,7 @@ def test_rag_lookup_processes_spell_mentions():
 
     # RAG integration tested via public API (narrate_combat_from_prompt)
     narrative = narrator.narrate_combat_from_prompt(
-        combat_prompt=prompt,
-        story_context="",
-        style="cinematic"
+        combat_prompt=prompt, story_context="", style="cinematic"
     )
 
     # Should return a string (empty or with narrative, RAG context integrated)

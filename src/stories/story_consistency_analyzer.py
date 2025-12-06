@@ -67,12 +67,12 @@ class CharacterNameMatcher:
 
         # Add first name only pattern
         first_name = full_name.split()[0]
-        patterns.append(r'\b' + re.escape(first_name) + r'\b')
+        patterns.append(r"\b" + re.escape(first_name) + r"\b")
 
         # Add last name only if multi-word name
-        if ' ' in full_name:
+        if " " in full_name:
             last_name = full_name.split()[-1]
-            patterns.append(r'\b' + re.escape(last_name) + r'\b')
+            patterns.append(r"\b" + re.escape(last_name) + r"\b")
 
         return patterns
 
@@ -92,7 +92,7 @@ class CharacterNameMatcher:
         patterns = CharacterNameMatcher.build_name_patterns(character_name)
         mentions = []
 
-        lines = text.split('\n')
+        lines = text.split("\n")
         for line_num, line in enumerate(lines, start=1):
             for pattern in patterns:
                 if re.search(pattern, line, re.IGNORECASE):
@@ -127,11 +127,13 @@ class TacticalAnalyzer:
         Returns:
             True if melee would be better
         """
-        weapons = profile.get('equipment', {}).get('weapons', [])
-        has_melee = any('sword' in w.lower() or 'blade' in w.lower() for w in weapons)
+        weapons = profile.get("equipment", {}).get("weapons", [])
+        has_melee = any("sword" in w.lower() or "blade" in w.lower() for w in weapons)
 
-        close_range = any(word in action_text.lower() for word in
-                         ['close', 'nearby', 'beside', 'next to', 'defending'])
+        close_range = any(
+            word in action_text.lower()
+            for word in ["close", "nearby", "beside", "next to", "defending"]
+        )
 
         return has_melee and close_range
 
@@ -145,7 +147,7 @@ class TacticalAnalyzer:
         Returns:
             True if spells would be better
         """
-        spells = profile.get('known_spells', [])
+        spells = profile.get("known_spells", [])
         return len(spells) > 0
 
     @staticmethod
@@ -158,8 +160,8 @@ class TacticalAnalyzer:
         Returns:
             True if stealth would be better
         """
-        skills = profile.get('skills', {})
-        return 'Stealth' in skills and skills['Stealth'] > 5
+        skills = profile.get("skills", {})
+        return "Stealth" in skills and skills["Stealth"] > 5
 
     @staticmethod
     def analyze_tactical_action(ctx: ActionContext) -> Optional[ConsistencyIssue]:
@@ -172,40 +174,57 @@ class TacticalAnalyzer:
             ConsistencyIssue if problem found, None otherwise
         """
         action_lower = ctx.action_text.lower()
-        char_class = ctx.profile.get('dnd_class', '').lower()
+        char_class = ctx.profile.get("dnd_class", "").lower()
 
         # Decision table for tactical patterns
         tactical_checks = [
-            ('ranger', ['drawing his bow', 'draws his bow', 'bow swiftly'],
-             TacticalAnalyzer.check_melee_preference,
-             'Consider melee combat with sword at close range', 7),
-            ('wizard', ['charges', 'melee attack', 'sword swing'],
-             TacticalAnalyzer.check_spell_preference,
-             'Wizards typically use spells rather than melee combat', 6),
-            ('rogue', ['charging forward', 'frontal assault'],
-             TacticalAnalyzer.check_stealth_preference,
-             'Rogues typically use stealth and cunning rather than direct assault', 7),
+            (
+                "ranger",
+                ["drawing his bow", "draws his bow", "bow swiftly"],
+                TacticalAnalyzer.check_melee_preference,
+                "Consider melee combat with sword at close range",
+                7,
+            ),
+            (
+                "wizard",
+                ["charges", "melee attack", "sword swing"],
+                TacticalAnalyzer.check_spell_preference,
+                "Wizards typically use spells rather than melee combat",
+                6,
+            ),
+            (
+                "rogue",
+                ["charging forward", "frontal assault"],
+                TacticalAnalyzer.check_stealth_preference,
+                "Rogues typically use stealth and cunning rather than direct assault",
+                7,
+            ),
         ]
 
         for check_class, action_words, check_func, suggestion, score in tactical_checks:
             class_matches = char_class == check_class
             has_action_word = any(word in action_lower for word in action_words)
             if class_matches and has_action_word:
-                is_melee_check = check_func.__name__ == 'check_melee_preference'
-                should_flag = (check_func(ctx.profile, ctx.action_text) if is_melee_check
-                              else check_func(ctx.profile))
+                is_melee_check = check_func.__name__ == "check_melee_preference"
+                should_flag = (
+                    check_func(ctx.profile, ctx.action_text)
+                    if is_melee_check
+                    else check_func(ctx.profile)
+                )
                 if should_flag:
-                    desc = (f"{ctx.character_name} ({char_class}) action may not be "
-                            "tactically optimal")
+                    desc = (
+                        f"{ctx.character_name} ({char_class}) action may not be "
+                        "tactically optimal"
+                    )
                     return ConsistencyIssue(
                         character_name=ctx.character_name,
                         story_file=ctx.story_file,
                         line_number=ctx.line_num,
                         action_text=ctx.action_text,
-                        issue_type='tactical',
+                        issue_type="tactical",
                         description=desc,
                         suggestion=suggestion,
-                        score=score
+                        score=score,
                     )
 
         return None
@@ -235,15 +254,21 @@ class PersonalityAnalyzer:
         Returns:
             ConsistencyIssue if problem found, None otherwise
         """
-        flaws = ctx.profile.get('flaws', [])
+        flaws = ctx.profile.get("flaws", [])
         action_lower = ctx.action_text.lower()
 
         # Check for actions conflicting with flaws
         flaw_conflicts = [
-            (['fear', 'afraid', 'scared'], 'recklessly charges',
-             'Action seems reckless for character with fears'),
-            (['burden', 'weight'], 'carelessly',
-             'Action seems careless for burdened character'),
+            (
+                ["fear", "afraid", "scared"],
+                "recklessly charges",
+                "Action seems reckless for character with fears",
+            ),
+            (
+                ["burden", "weight"],
+                "carelessly",
+                "Action seems careless for burdened character",
+            ),
         ]
 
         for flaw_words, action_word, description in flaw_conflicts:
@@ -255,10 +280,10 @@ class PersonalityAnalyzer:
                         story_file=ctx.story_file,
                         line_number=ctx.line_num,
                         action_text=ctx.action_text,
-                        issue_type='personality',
+                        issue_type="personality",
                         description=description,
                         suggestion=suggestion,
-                        score=8
+                        score=8,
                     )
 
         return None
@@ -302,9 +327,7 @@ class AIAnalyzer:
 
         try:
             response = self.ai_client.generate_text(
-                prompt=prompt,
-                temperature=0.3,
-                max_tokens=500
+                prompt=prompt, temperature=0.3, max_tokens=500
             )
 
             return self._parse_response(response, ctx)
@@ -312,10 +335,7 @@ class AIAnalyzer:
             return []
 
     def _build_prompt(
-        self,
-        character_name: str,
-        profile: Dict[str, Any],
-        action_text: str
+        self, character_name: str, profile: Dict[str, Any], action_text: str
     ) -> str:
         """Build AI prompt for action analysis.
 
@@ -335,34 +355,38 @@ class AIAnalyzer:
         ]
 
         profile_fields = [
-            ('backstory', 'Backstory', 200),
-            ('personality_traits', 'Personality', None),
-            ('ideals', 'Ideals', None),
-            ('bonds', 'Bonds', None),
-            ('flaws', 'Flaws', None),
+            ("backstory", "Backstory", 200),
+            ("personality_traits", "Personality", None),
+            ("ideals", "Ideals", None),
+            ("bonds", "Bonds", None),
+            ("flaws", "Flaws", None),
         ]
 
         for field_name, label, max_len in profile_fields:
             if profile.get(field_name):
                 value = profile[field_name]
                 if isinstance(value, list):
-                    value = ', '.join(value)
+                    value = ", ".join(value)
                 elif max_len:
                     value = value[:max_len]
                 prompt_parts.append(f"{label}: {value}")
 
-        prompt_parts.extend([
-            f"\nAction in Story:\n{action_text}",
-            "\nProvide brief analysis:",
-            "1. Is this tactically appropriate for their class?",
-            "2. Does it match their personality and ideals?",
-            "3. What would be more in-character?",
-            "\nKeep response under 200 words."
-        ])
+        prompt_parts.extend(
+            [
+                f"\nAction in Story:\n{action_text}",
+                "\nProvide brief analysis:",
+                "1. Is this tactically appropriate for their class?",
+                "2. Does it match their personality and ideals?",
+                "3. What would be more in-character?",
+                "\nKeep response under 200 words.",
+            ]
+        )
 
-        return '\n'.join(prompt_parts)
+        return "\n".join(prompt_parts)
 
-    def _parse_response(self, response: str, ctx: ActionContext) -> List[ConsistencyIssue]:
+    def _parse_response(
+        self, response: str, ctx: ActionContext
+    ) -> List[ConsistencyIssue]:
         """Parse AI response into consistency issues.
 
         Args:
@@ -372,20 +396,28 @@ class AIAnalyzer:
         Returns:
             List of parsed issues
         """
-        suggestion_words = ['should', 'could', 'better', 'instead',
-                           'consider', 'more appropriate']
+        suggestion_words = [
+            "should",
+            "could",
+            "better",
+            "instead",
+            "consider",
+            "more appropriate",
+        ]
 
         if any(word in response.lower() for word in suggestion_words):
-            return [ConsistencyIssue(
-                character_name=ctx.character_name,
-                story_file=ctx.story_file,
-                line_number=ctx.line_num,
-                action_text=ctx.action_text,
-                issue_type='ai_suggestion',
-                description='AI identified potential improvement',
-                suggestion=response[:300],
-                score=8
-            )]
+            return [
+                ConsistencyIssue(
+                    character_name=ctx.character_name,
+                    story_file=ctx.story_file,
+                    line_number=ctx.line_num,
+                    action_text=ctx.action_text,
+                    issue_type="ai_suggestion",
+                    description="AI identified potential improvement",
+                    suggestion=response[:300],
+                    score=8,
+                )
+            ]
 
         return []
 
@@ -416,10 +448,7 @@ class StoryConsistencyAnalyzer:
         return self.workspace_path
 
     def analyze_series(
-        self,
-        series_name: str,
-        story_files: List[str],
-        party_members: List[str]
+        self, series_name: str, story_files: List[str], party_members: List[str]
     ) -> Dict[str, Any]:
         """Analyze entire story series for consistency.
 
@@ -445,26 +474,23 @@ class StoryConsistencyAnalyzer:
                 continue
 
             story_text = read_text_file(story_path)
-            story_issues = self._analyze_story_file(
-                story_file, story_text, profiles
-            )
+            if story_text is None:
+                continue
+            story_issues = self._analyze_story_file(story_file, story_text, profiles)
 
             all_issues.extend(story_issues)
-            story_analyses.append({
-                'filename': story_file,
-                'issues': story_issues
-            })
+            story_analyses.append({"filename": story_file, "issues": story_issues})
 
         report_path = self._generate_report(
             series_name, series_path, story_analyses, profiles
         )
 
         return {
-            'series_name': series_name,
-            'stories_analyzed': len(story_files),
-            'total_issues': len(all_issues),
-            'report_path': report_path,
-            'issues': all_issues
+            "series_name": series_name,
+            "stories_analyzed": len(story_files),
+            "total_issues": len(all_issues),
+            "report_path": report_path,
+            "issues": all_issues,
         }
 
     def _load_character_profiles(
@@ -503,7 +529,7 @@ class StoryConsistencyAnalyzer:
             return None
 
         # Try exact filename match first
-        normalized_name = character_name.lower().replace(' ', '_')
+        normalized_name = character_name.lower().replace(" ", "_")
         candidate = os.path.join(chars_dir, f"{normalized_name}.json")
         if file_exists(candidate):
             return candidate
@@ -526,16 +552,13 @@ class StoryConsistencyAnalyzer:
             Character data dictionary, or None on error
         """
         try:
-            with open(filepath, 'r', encoding='utf-8') as file_handle:
+            with open(filepath, "r", encoding="utf-8") as file_handle:
                 return json.load(file_handle)
         except (OSError, ValueError):
             return None
 
     def _analyze_story_file(
-        self,
-        story_file: str,
-        story_text: str,
-        profiles: Dict[str, Dict[str, Any]]
+        self, story_file: str, story_text: str, profiles: Dict[str, Dict[str, Any]]
     ) -> List[ConsistencyIssue]:
         """Analyze single story file for consistency issues.
 
@@ -562,7 +585,7 @@ class StoryConsistencyAnalyzer:
         character_name: str,
         profile: Dict[str, Any],
         story_file: str,
-        story_text: str
+        story_text: str,
     ) -> List[ConsistencyIssue]:
         """Analyze character's actions in a story file.
 
@@ -580,7 +603,9 @@ class StoryConsistencyAnalyzer:
         mentions = self.name_matcher.find_character_mentions(story_text, character_name)
 
         for line_num, line_text in mentions:
-            ctx = ActionContext(character_name, profile, story_file, line_num, line_text)
+            ctx = ActionContext(
+                character_name, profile, story_file, line_num, line_text
+            )
             char_issues = self._check_action_consistency(ctx)
             issues.extend(char_issues)
 
@@ -616,7 +641,7 @@ class StoryConsistencyAnalyzer:
         series_name: str,
         series_path: str,
         story_analyses: List[Dict[str, Any]],
-        profiles: Dict[str, Dict[str, Any]]
+        profiles: Dict[str, Dict[str, Any]],
     ) -> str:
         """Generate analysis report markdown file.
 
@@ -640,10 +665,10 @@ class StoryConsistencyAnalyzer:
             f"Party Members: {', '.join(profiles.keys())}",
             "",
             "## Overall Summary",
-            ""
+            "",
         ]
 
-        total_issues = sum(len(sa['issues']) for sa in story_analyses)
+        total_issues = sum(len(sa["issues"]) for sa in story_analyses)
         lines.append(f"- Total issues found: {total_issues}")
         lines.append(f"- Characters analyzed: {len(profiles)}")
         lines.append("")
@@ -651,15 +676,13 @@ class StoryConsistencyAnalyzer:
         for story_analysis in story_analyses:
             lines.extend(self._format_story_section(story_analysis, profiles))
 
-        report_content = '\n'.join(lines)
+        report_content = "\n".join(lines)
         write_text_file(report_path, report_content)
 
         return report_path
 
     def _format_story_section(
-        self,
-        story_analysis: Dict[str, Any],
-        profiles: Dict[str, Dict[str, Any]]
+        self, story_analysis: Dict[str, Any], profiles: Dict[str, Dict[str, Any]]
     ) -> List[str]:
         """Format a single story's analysis section.
 
@@ -672,7 +695,7 @@ class StoryConsistencyAnalyzer:
         """
         lines = [f"## Story: {story_analysis['filename']}", ""]
 
-        issues = story_analysis['issues']
+        issues = story_analysis["issues"]
         if not issues:
             lines.append("No consistency issues detected.")
             lines.append("")
@@ -686,7 +709,9 @@ class StoryConsistencyAnalyzer:
 
         for char_name in sorted(issues_by_char.keys()):
             char_issues = issues_by_char[char_name]
-            lines.extend(self._format_character_issues(char_name, char_issues, profiles))
+            lines.extend(
+                self._format_character_issues(char_name, char_issues, profiles)
+            )
 
         lines.append("")
         return lines
@@ -695,7 +720,7 @@ class StoryConsistencyAnalyzer:
         self,
         character_name: str,
         issues: List[ConsistencyIssue],
-        profiles: Dict[str, Dict[str, Any]]
+        profiles: Dict[str, Dict[str, Any]],
     ) -> List[str]:
         """Format issues for a single character.
 
@@ -711,22 +736,24 @@ class StoryConsistencyAnalyzer:
 
         profile = profiles.get(character_name, {})
         if profile:
-            char_class = profile.get('dnd_class', 'Unknown')
-            level = profile.get('level', '?')
+            char_class = profile.get("dnd_class", "Unknown")
+            level = profile.get("level", "?")
             lines.append(f"**Class:** {char_class} (Level {level})")
             lines.append("")
 
         for issue in issues:
-            lines.extend([
-                f"**Line {issue.line_number}:** {issue.action_text[:100]}...",
-                "",
-                f"**Issue Type:** {issue.issue_type.title()}",
-                f"**Analysis:** {issue.description}",
-                f"**Suggestion:** {issue.suggestion}",
-                f"**Consistency Score:** {issue.score}/10",
-                "",
-                "---",
-                ""
-            ])
+            lines.extend(
+                [
+                    f"**Line {issue.line_number}:** {issue.action_text[:100]}...",
+                    "",
+                    f"**Issue Type:** {issue.issue_type.title()}",
+                    f"**Analysis:** {issue.description}",
+                    f"**Suggestion:** {issue.suggestion}",
+                    f"**Consistency Score:** {issue.score}/10",
+                    "",
+                    "---",
+                    "",
+                ]
+            )
 
         return lines

@@ -100,7 +100,7 @@ class NPCCharacterInfo:
 @dataclass
 class NPCProfile:
     """NPC character profile for D&D campaigns.
-    
+
     This is a lightweight wrapper that groups related NPC information
     into logical categories (basic, physical, character).
     """
@@ -108,11 +108,14 @@ class NPCProfile:
     basic: NPCBasicInfo
     physical: NPCPhysicalInfo = field(default_factory=NPCPhysicalInfo)
     character: NPCCharacterInfo = field(default_factory=NPCCharacterInfo)
+    ai_config: Optional[Dict] = (
+        None  # Optional AI configuration (can be dict or CharacterAIConfig)
+    )
 
     @classmethod
     def create(cls, name: str, **kwargs) -> "NPCProfile":
         """Create an NPCProfile from individual fields (backward compatibility).
-        
+
         Args:
             name: NPC name (required)
             **kwargs: Optional fields:
@@ -126,27 +129,27 @@ class NPCProfile:
                 - abilities: List of abilities (default: [])
                 - recurring: Whether NPC is recurring (default: False)
                 - notes: Additional notes (default: "")
-        
+
         Returns:
             NPCProfile instance
         """
         return cls(
             basic=NPCBasicInfo(
                 name=name,
-                nickname=kwargs.get('nickname'),
-                role=kwargs.get('role', 'NPC'),
-                recurring=kwargs.get('recurring', False),
+                nickname=kwargs.get("nickname"),
+                role=kwargs.get("role", "NPC"),
+                recurring=kwargs.get("recurring", False),
             ),
             physical=NPCPhysicalInfo(
-                species=kwargs.get('species', 'Human'),
-                lineage=kwargs.get('lineage', ''),
+                species=kwargs.get("species", "Human"),
+                lineage=kwargs.get("lineage", ""),
             ),
             character=NPCCharacterInfo(
-                personality=kwargs.get('personality', ''),
-                relationships=kwargs.get('relationships', {}),
-                key_traits=kwargs.get('key_traits', []),
-                abilities=kwargs.get('abilities', []),
-                notes=kwargs.get('notes', ''),
+                personality=kwargs.get("personality", ""),
+                relationships=kwargs.get("relationships", {}),
+                key_traits=kwargs.get("key_traits", []),
+                abilities=kwargs.get("abilities", []),
+                notes=kwargs.get("notes", ""),
             ),
         )
 

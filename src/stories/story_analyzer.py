@@ -57,7 +57,7 @@ class NPCProfileAnalyzer:
                 continue
             try:
                 npc_data = load_json_file(str(npc_file))
-                if "name" in npc_data:
+                if npc_data is not None and "name" in npc_data:
                     self.existing_npcs.add(npc_data["name"])
             except (OSError, ValueError) as e:
                 print(f"Error loading NPC from {npc_file}: {e}")
@@ -75,7 +75,7 @@ class NPCProfileAnalyzer:
             print(f"Story file '{story_file_path}' not found.")
             return {}
 
-        story_content = read_text_file(story_file_path)
+        story_content = read_text_file(story_file_path) or ""
 
         chapter_name = Path(story_file_path).stem
         all_suggestions = {}
@@ -197,9 +197,7 @@ class NPCProfileAnalyzer:
         """Apply suggested updates to a character file."""
         # Use first name (first word) as filename convention
         first_name = character_name.split()[0].lower()
-        character_file = (
-            self.characters_dir / f"{first_name}.json"
-        )
+        character_file = self.characters_dir / f"{first_name}.json"
 
         if not character_file.exists():
             print(f"Character file not found: {character_file}")
@@ -207,6 +205,8 @@ class NPCProfileAnalyzer:
 
         try:
             character_data = load_json_file(str(character_file))
+            if not isinstance(character_data, dict) or character_data is None:
+                character_data = {}
 
             # Apply updates based on update type
             if "relationships" in updates:
@@ -215,6 +215,8 @@ class NPCProfileAnalyzer:
                 character_data["relationships"].update(updates["relationships"])
 
             if "major_plot_actions" in updates:
+                if not isinstance(character_data, dict) or character_data is None:
+                    character_data = {}
                 if "major_plot_actions" not in character_data:
                     character_data["major_plot_actions"] = []
                 character_data["major_plot_actions"].extend(
@@ -222,6 +224,8 @@ class NPCProfileAnalyzer:
                 )
 
             if "personality_traits" in updates:
+                if not isinstance(character_data, dict) or character_data is None:
+                    character_data = {}
                 if "personality" not in character_data:
                     character_data["personality"] = {}
                 if "traits" not in character_data["personality"]:

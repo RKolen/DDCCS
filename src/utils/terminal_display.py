@@ -14,13 +14,14 @@ try:
     from rich.markdown import Markdown
     from rich.panel import Panel
     from rich.syntax import Syntax
+
     RICH_AVAILABLE = True
 except ImportError:
     RICH_AVAILABLE = False
-    Console = None  # type: ignore
-    Markdown = None  # type: ignore
-    Panel = None  # type: ignore
-    Syntax = None  # type: ignore
+    Console = None
+    Markdown = None
+    Panel = None
+    Syntax = None
 
 # Initialize console for terminal output
 console = Console() if RICH_AVAILABLE else None
@@ -41,7 +42,7 @@ def display_markdown_file(filepath: str, title: Optional[str] = None) -> None:
         return
 
     try:
-        with open(filepath, 'r', encoding='utf-8') as f:
+        with open(filepath, "r", encoding="utf-8") as f:
             content = f.read()
 
         if not RICH_AVAILABLE:
@@ -90,7 +91,7 @@ def display_story_file(filepath: str, story_name: Optional[str] = None) -> None:
         return
 
     try:
-        with open(filepath, 'r', encoding='utf-8') as f:
+        with open(filepath, "r", encoding="utf-8") as f:
             content = f.read()
 
         if not RICH_AVAILABLE:
@@ -105,12 +106,10 @@ def display_story_file(filepath: str, story_name: Optional[str] = None) -> None:
 
         # Display with optional title
         if story_name:
-            console.rule(f"[bold green]{story_name}[/bold green]",
-                        style="green")
+            console.rule(f"[bold green]{story_name}[/bold green]", style="green")
         else:
             filename = os.path.basename(filepath)
-            console.rule(f"[bold green]{filename}[/bold green]",
-                        style="green")
+            console.rule(f"[bold green]{filename}[/bold green]", style="green")
 
         # Display as markdown (story files are typically markdown)
         markdown = Markdown(content)
@@ -138,7 +137,7 @@ def display_json_file(filepath: str, title: Optional[str] = None) -> None:
         return
 
     try:
-        with open(filepath, 'r', encoding='utf-8') as f:
+        with open(filepath, "r", encoding="utf-8") as f:
             content = f.read()
 
         if not RICH_AVAILABLE:
@@ -168,8 +167,9 @@ def display_json_file(filepath: str, title: Optional[str] = None) -> None:
             print(f"Error reading file: {e}")
 
 
-def display_text_file(filepath: str, title: Optional[str] = None,
-                      syntax_highlight: Optional[str] = None) -> None:
+def display_text_file(
+    filepath: str, title: Optional[str] = None, syntax_highlight: Optional[str] = None
+) -> None:
     """Display a text file with optional syntax highlighting.
 
     Args:
@@ -186,7 +186,7 @@ def display_text_file(filepath: str, title: Optional[str] = None,
         return
 
     try:
-        with open(filepath, 'r', encoding='utf-8') as f:
+        with open(filepath, "r", encoding="utf-8") as f:
             content = f.read()
 
         if not RICH_AVAILABLE:
@@ -201,16 +201,15 @@ def display_text_file(filepath: str, title: Optional[str] = None,
 
         # Display with optional title
         if title:
-            console.rule(f"[bold yellow]{title}[/bold yellow]",
-                        style="yellow")
+            console.rule(f"[bold yellow]{title}[/bold yellow]", style="yellow")
         else:
             filename = os.path.basename(filepath)
-            console.rule(f"[bold yellow]{filename}[/bold yellow]",
-                        style="yellow")
+            console.rule(f"[bold yellow]{filename}[/bold yellow]", style="yellow")
 
         if syntax_highlight:
-            syntax = Syntax(content, syntax_highlight, theme="dracula",
-                          line_numbers=True)
+            syntax = Syntax(
+                content, syntax_highlight, theme="dracula", line_numbers=True
+            )
             console.print(syntax)
         else:
             console.print(content)
@@ -222,8 +221,7 @@ def display_text_file(filepath: str, title: Optional[str] = None,
             print(f"Error reading file: {e}")
 
 
-def display_panel(content: str, title: str,
-                  style: str = "cyan") -> None:
+def display_panel(content: str, title: str, style: str = "cyan") -> None:
     """Display content in a styled panel.
 
     Useful for displaying important information or status messages.
@@ -246,8 +244,7 @@ def display_panel(content: str, title: str,
     console.print(panel)
 
 
-def display_table_from_file(filepath: str,
-                            title: Optional[str] = None) -> None:
+def display_table_from_file(filepath: str, title: Optional[str] = None) -> None:
     """Display a markdown table from file with rich formatting.
 
     Args:
@@ -262,7 +259,7 @@ def display_table_from_file(filepath: str,
         return
 
     try:
-        with open(filepath, 'r', encoding='utf-8') as f:
+        with open(filepath, "r", encoding="utf-8") as f:
             content = f.read()
 
         if not RICH_AVAILABLE:
@@ -275,8 +272,7 @@ def display_table_from_file(filepath: str,
             return
 
         if title:
-            console.rule(f"[bold magenta]{title}[/bold magenta]",
-                        style="magenta")
+            console.rule(f"[bold magenta]{title}[/bold magenta]", style="magenta")
 
         markdown = Markdown(content)
         console.print(markdown)
@@ -307,11 +303,11 @@ def display_any_file(filepath: str) -> None:
         return
 
     # Determine file type and display accordingly
-    if filepath.endswith('.json'):
+    if filepath.endswith(".json"):
         display_json_file(filepath)
-    elif filepath.endswith('.md'):
+    elif filepath.endswith(".md"):
         # Auto-detect story vs markdown based on path
-        if 'campaign' in filepath.lower() or 'story' in filepath.lower():
+        if "campaign" in filepath.lower() or "story" in filepath.lower():
             display_story_file(filepath)
         else:
             display_markdown_file(filepath)

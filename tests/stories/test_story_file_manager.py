@@ -9,29 +9,18 @@ import os
 import re
 import tempfile
 
-from tests import test_helpers
-
-# Configure test environment so `src` imports work during test execution.
-project_root = test_helpers.setup_test_environment()
-get_campaigns_dir = test_helpers.safe_from_import("src.utils.path_utils", "get_campaigns_dir")
-(StoryFileContext,
- StoryCreationOptions,
- create_new_story_series,
- create_story_in_series,
- get_story_series,
- get_story_files_in_series,
- create_new_story,
- create_pure_story_file) = test_helpers.safe_from_import(
-    "src.stories.story_file_manager",
-    "StoryFileContext",
-    "StoryCreationOptions",
-    "create_new_story_series",
-    "create_story_in_series",
-    "get_story_series",
-    "get_story_files_in_series",
-    "create_new_story",
-    "create_pure_story_file",
+from src.utils.path_utils import get_campaigns_dir
+from src.stories.story_file_manager import (
+    StoryFileContext,
+    StoryCreationOptions,
+    create_new_story_series,
+    create_story_in_series,
+    get_story_series,
+    get_story_files_in_series,
+    create_new_story,
+    create_pure_story_file,
 )
+
 
 def _find_numbered_file(files, number: int):
     pattern = re.compile(rf"^{number:03d}_.*\.md$")
@@ -47,9 +36,7 @@ def test_create_new_story_series_and_first_file():
         campaigns_dir = get_campaigns_dir(tmp)
         # Create series with first story
         ctx = StoryFileContext(stories_path=campaigns_dir, workspace_path=tmp)
-        filepath = create_new_story_series(
-            ctx, "MySeries", "Intro", description="desc"
-        )
+        filepath = create_new_story_series(ctx, "MySeries", "Intro", description="desc")
 
         # Series folder exists
         series_path = os.path.join(campaigns_dir, "MySeries")
@@ -68,14 +55,10 @@ def test_create_story_in_series_increments_number():
         campaigns_dir = get_campaigns_dir(tmp)
         # Create series and first story
         ctx = StoryFileContext(stories_path=campaigns_dir, workspace_path=tmp)
-        _first_path = create_new_story_series(
-            ctx, "S", "Start", description=""
-        )
+        _first_path = create_new_story_series(ctx, "S", "Start", description="")
 
         # Add another story in same series
-        new_path = create_story_in_series(
-            ctx, "S", "Followup", description=""
-        )
+        new_path = create_story_in_series(ctx, "S", "Followup", description="")
 
         series_path = os.path.join(campaigns_dir, "S")
         files = sorted(os.listdir(series_path))
@@ -96,10 +79,14 @@ def test_get_story_series_and_files_discovery():
         os.makedirs(os.path.join(campaigns_dir, "Beta"), exist_ok=True)
 
         for fn in ("001_one.md", "002_two.md"):
-            with open(os.path.join(campaigns_dir, "Alpha", fn), "w", encoding="utf-8") as fh:
+            with open(
+                os.path.join(campaigns_dir, "Alpha", fn), "w", encoding="utf-8"
+            ) as fh:
                 fh.write("# alpha\n")
 
-        with open(os.path.join(campaigns_dir, "Beta", "001_b.md"), "w", encoding="utf-8") as fh:
+        with open(
+            os.path.join(campaigns_dir, "Beta", "001_b.md"), "w", encoding="utf-8"
+        ) as fh:
             fh.write("# beta\n")
 
         series = get_story_series(campaigns_dir)
@@ -145,8 +132,7 @@ def test_create_story_with_ai_generated_content():
         )
 
         filepath = create_new_story_series(
-            ctx, "MyQuest", "Opening", description="AI-generated start",
-            options=options
+            ctx, "MyQuest", "Opening", description="AI-generated start", options=options
         )
 
         # Verify file exists and contains AI content
@@ -171,8 +157,7 @@ def test_create_story_with_template_option():
         )
 
         filepath = create_new_story_series(
-            ctx, "Campaign", "Ch1", description="Template story",
-            options=options
+            ctx, "Campaign", "Ch1", description="Template story", options=options
         )
 
         assert os.path.exists(filepath)

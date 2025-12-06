@@ -7,29 +7,19 @@ This module tests the DCCalculator component that provides DC
 
 from tests import test_helpers
 
-# Use canonical test helper to import required symbols and configure env
-DCCalculator = test_helpers.safe_from_import(
-    "src.characters.consultants.consultant_dc", "DCCalculator"
-)
-CharacterProfile = test_helpers.safe_from_import(
-    "src.characters.consultants.character_profile", "CharacterProfile"
-)
-CharacterIdentity = test_helpers.safe_from_import(
-    "src.characters.consultants.character_profile", "CharacterIdentity"
-)
-DnDClass = test_helpers.safe_from_import(
-    "src.characters.character_sheet", "DnDClass"
-)
-DC_MEDIUM = test_helpers.safe_from_import(
-    "src.utils.dnd_rules", "DC_MEDIUM"
-)
+# Import directly to avoid tuple unpacking issues with safe_from_import
+from src.characters.consultants.consultant_dc import DCCalculator
+from src.characters.character_sheet import DnDClass
+from src.utils.dnd_rules import DC_MEDIUM
 
 
 def test_dc_calculator_initialization():
     """Test DC calculator initialization."""
     print("\n[TEST] DC Calculator - Initialization")
 
-    profile = test_helpers.make_profile(name="TestChar", dnd_class=DnDClass.FIGHTER, level=5)
+    profile = test_helpers.make_profile(
+        name="TestChar", dnd_class=DnDClass.FIGHTER, level=5
+    )
     class_knowledge = {"Fighter": {"abilities": ["Action Surge"]}}
 
     calculator = DCCalculator(profile, class_knowledge)
@@ -45,7 +35,9 @@ def test_suggest_dc_basic_action():
     """Test basic DC suggestion for common actions."""
     print("\n[TEST] DC Calculator - Basic Action")
 
-    profile = test_helpers.make_profile(name="TestChar", dnd_class=DnDClass.FIGHTER, level=5)
+    profile = test_helpers.make_profile(
+        name="TestChar", dnd_class=DnDClass.FIGHTER, level=5
+    )
     calculator = DCCalculator(profile, {})
 
     result = calculator.suggest_dc_for_action("persuade the guard")
@@ -67,7 +59,9 @@ def test_suggest_dc_with_difficulty_modifiers():
     print("\n[TEST] DC Calculator - Difficulty Modifiers")
 
     # Use Fighter to avoid class bonuses interfering with tests
-    profile = test_helpers.make_profile(name="TestChar", dnd_class=DnDClass.FIGHTER, level=5)
+    profile = test_helpers.make_profile(
+        name="TestChar", dnd_class=DnDClass.FIGHTER, level=5
+    )
     calculator = DCCalculator(profile, {})
 
     # Easy action (no class bonus for Fighter on Investigation)
@@ -82,9 +76,9 @@ def test_suggest_dc_with_difficulty_modifiers():
 
     # Impossible action (no class bonus for Fighter on Investigation)
     impossible_result = calculator.suggest_dc_for_action("impossible investigation")
-    assert impossible_result["suggested_dc"] == DC_MEDIUM + 10, (
-        "Impossible DC not adjusted"
-    )
+    assert (
+        impossible_result["suggested_dc"] == DC_MEDIUM + 10
+    ), "Impossible DC not adjusted"
     print("  [OK] Impossible modifier applied correctly")
 
     print("[PASS] DC Calculator - Difficulty Modifiers")
@@ -95,7 +89,9 @@ def test_suggest_dc_with_class_bonuses():
     print("\n[TEST] DC Calculator - Class Bonuses")
 
     # Rogue with stealth (should get -2 DC bonus)
-    rogue_profile = test_helpers.make_profile(name="SneakyRogue", dnd_class=DnDClass.ROGUE, level=5)
+    rogue_profile = test_helpers.make_profile(
+        name="SneakyRogue", dnd_class=DnDClass.ROGUE, level=5
+    )
     rogue_calc = DCCalculator(rogue_profile, {})
 
     rogue_result = rogue_calc.suggest_dc_for_action("sneak past guards")
@@ -116,9 +112,9 @@ def test_suggest_dc_with_class_bonuses():
 
     bard_result = bard_calc.suggest_dc_for_action("persuade the merchant")
     expected_dc = DC_MEDIUM - 2
-    assert bard_result["suggested_dc"] == expected_dc, (
-        "Bard persuasion bonus not applied"
-    )
+    assert (
+        bard_result["suggested_dc"] == expected_dc
+    ), "Bard persuasion bonus not applied"
     print("  [OK] Bard persuasion bonus applied")
 
     # Barbarian with intimidation (should get -2 DC bonus)
@@ -131,9 +127,9 @@ def test_suggest_dc_with_class_bonuses():
 
     barb_result = barb_calc.suggest_dc_for_action("intimidate the bandit")
     expected_dc = DC_MEDIUM - 2
-    assert barb_result["suggested_dc"] == expected_dc, (
-        "Barbarian intimidation bonus not applied"
-    )
+    assert (
+        barb_result["suggested_dc"] == expected_dc
+    ), "Barbarian intimidation bonus not applied"
     print("  [OK] Barbarian intimidation bonus applied")
 
     print("[PASS] DC Calculator - Class Bonuses")
@@ -143,7 +139,9 @@ def test_suggest_dc_action_type_detection():
     """Test detection of different action types."""
     print("\n[TEST] DC Calculator - Action Type Detection")
 
-    profile = test_helpers.make_profile(name="TestChar", dnd_class=DnDClass.FIGHTER, level=5)
+    profile = test_helpers.make_profile(
+        name="TestChar", dnd_class=DnDClass.FIGHTER, level=5
+    )
     calculator = DCCalculator(profile, {})
 
     # Test various action types
@@ -174,7 +172,9 @@ def test_suggest_dc_minimum_dc():
     print("\n[TEST] DC Calculator - Minimum DC")
 
     # Create a Rogue (strong stealth) doing easy stealth
-    profile = test_helpers.make_profile(name="SneakyRogue", dnd_class=DnDClass.ROGUE, level=5)
+    profile = test_helpers.make_profile(
+        name="SneakyRogue", dnd_class=DnDClass.ROGUE, level=5
+    )
     calculator = DCCalculator(profile, {})
 
     # Easy stealth for Rogue: base 15 - 5 (easy) - 2 (class) = 8
@@ -190,19 +190,23 @@ def test_suggest_alternative_approaches():
     print("\n[TEST] DC Calculator - Alternative Approaches")
 
     # Test Rogue alternatives
-    rogue_profile = test_helpers.make_profile(name="SneakyRogue", dnd_class=DnDClass.ROGUE, level=5)
+    rogue_profile = test_helpers.make_profile(
+        name="SneakyRogue", dnd_class=DnDClass.ROGUE, level=5
+    )
     rogue_calc = DCCalculator(rogue_profile, {})
 
     rogue_alternatives = rogue_calc.suggest_alternative_approaches("any action")
     assert isinstance(rogue_alternatives, list), "Alternatives not a list"
     assert len(rogue_alternatives) > 0, "No alternatives provided"
-    assert any("sneak" in alt.lower() for alt in rogue_alternatives), (
-        "Rogue alternatives don't mention sneaking"
-    )
+    assert any(
+        "sneak" in alt.lower() for alt in rogue_alternatives
+    ), "Rogue alternatives don't mention sneaking"
     print("  [OK] Rogue alternatives appropriate")
 
     # Test Bard alternatives
-    bard_profile = test_helpers.make_profile(name="CharmingBard", dnd_class=DnDClass.BARD, level=5)
+    bard_profile = test_helpers.make_profile(
+        name="CharmingBard", dnd_class=DnDClass.BARD, level=5
+    )
     bard_calc = DCCalculator(bard_profile, {})
 
     bard_alternatives = bard_calc.suggest_alternative_approaches("any action")
@@ -213,8 +217,9 @@ def test_suggest_alternative_approaches():
     print("  [OK] Bard alternatives appropriate")
 
     # Test Fighter alternatives
-    fighter_profile = test_helpers.make_profile(name="BraveFighter",
-                                                dnd_class=DnDClass.FIGHTER, level=5)
+    fighter_profile = test_helpers.make_profile(
+        name="BraveFighter", dnd_class=DnDClass.FIGHTER, level=5
+    )
     fighter_calc = DCCalculator(fighter_profile, {})
 
     fighter_alternatives = fighter_calc.suggest_alternative_approaches("any action")
@@ -240,9 +245,9 @@ def test_check_character_advantages():
     rogue_advantages = rogue_calc.check_character_advantages("Stealth")
     assert isinstance(rogue_advantages, list), "Advantages not a list"
     assert len(rogue_advantages) > 0, "Rogue should have stealth advantage"
-    assert any("expertise" in adv.lower() for adv in rogue_advantages), (
-        "Rogue expertise not mentioned"
-    )
+    assert any(
+        "expertise" in adv.lower() for adv in rogue_advantages
+    ), "Rogue expertise not mentioned"
     print("  [OK] Rogue stealth advantages detected")
 
     # Bard with persuasion action
@@ -284,9 +289,9 @@ def test_check_character_advantages_with_background():
 
     noble_calc = DCCalculator(noble_profile, {})
     noble_advantages = noble_calc.check_character_advantages("Persuasion")
-    assert any("noble" in adv.lower() for adv in noble_advantages), (
-        "Noble background advantage not detected"
-    )
+    assert any(
+        "noble" in adv.lower() for adv in noble_advantages
+    ), "Noble background advantage not detected"
     print("  [OK] Noble background advantage detected")
 
     # Criminal background with stealth
@@ -299,9 +304,9 @@ def test_check_character_advantages_with_background():
 
     criminal_calc = DCCalculator(criminal_profile, {})
     criminal_advantages = criminal_calc.check_character_advantages("Stealth")
-    assert any("criminal" in adv.lower() for adv in criminal_advantages), (
-        "Criminal background advantage not detected"
-    )
+    assert any(
+        "criminal" in adv.lower() for adv in criminal_advantages
+    ), "Criminal background advantage not detected"
     print("  [OK] Criminal background advantage detected")
 
     print("[PASS] DC Calculator - Background Advantages")

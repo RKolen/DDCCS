@@ -6,7 +6,7 @@ DC request parsing, and consistency checking.
 """
 
 import os
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 from src.characters.consultants.consultant_core import CharacterConsultant
 from src.utils.file_io import read_text_file, file_exists
 from src.utils.story_parsing_utils import extract_character_actions, extract_dc_requests
@@ -38,6 +38,8 @@ class StoryAnalyzer:
             return {"error": "Story file not found"}
 
         content = read_text_file(filepath)
+        if content is None:
+            return {"error": "Failed to read story file"}
 
         # Extract character actions using utility
         character_names = list(self.consultants.keys())
@@ -59,7 +61,9 @@ class StoryAnalyzer:
             dc_suggestions[request] = suggestions
 
         return {
-            "story_file": filepath.split(os.sep)[-1] if os.sep in filepath else filepath,
+            "story_file": (
+                filepath.split(os.sep)[-1] if os.sep in filepath else filepath
+            ),
             "character_actions": character_actions,
             "consultant_analyses": consultant_analyses,
             "dc_requests": dc_requests,
@@ -69,7 +73,9 @@ class StoryAnalyzer:
             ),
         }
 
-    def get_dc_suggestions(self, action_request: str, character_name: str = None) -> Dict[str, Any]:
+    def get_dc_suggestions(
+        self, action_request: str, character_name: Optional[str] = None
+    ) -> Dict[str, Any]:
         """
         Get DC suggestions for a specific action request.
 

@@ -4,7 +4,7 @@ AI Integration Component for Character Consultant
 Provides AI-powered consultation features with graceful fallback to rule-based methods.
 """
 
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 
 from src.ai.availability import AI_AVAILABLE, CharacterAIConfig
 
@@ -108,8 +108,8 @@ class AIConsultant:
     def suggest_reaction_ai(
         self,
         situation: str,
-        context: Dict[str, Any] = None,
-        base_suggestion: Dict[str, Any] = None,
+        context: Optional[Dict[str, Any]] = None,
+        base_suggestion: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
         """
         AI-enhanced character reaction suggestion.
@@ -191,8 +191,8 @@ Provide a natural, in-character response."""
     def suggest_dc_for_action_ai(
         self,
         action: str,
-        _context: Dict[str, Any] = None,
-        base_suggestion: Dict[str, Any] = None,
+        _context: Optional[Dict[str, Any]] = None,
+        base_suggestion: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
         """
         AI-enhanced DC suggestion.

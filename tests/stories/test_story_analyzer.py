@@ -7,11 +7,10 @@ analyze temporary story files created in a tempdir.
 
 import os
 import tempfile
-from tests import test_helpers
+from pathlib import Path
+from src.stories.story_manager import StoryManager
 
-# Prepare test environment and get project root
-project_root = test_helpers.setup_test_environment()
-StoryManager = test_helpers.safe_from_import("src.stories.story_manager", "StoryManager")
+project_root = Path(__file__).parent.parent.parent.resolve()
 
 
 def test_analyze_missing_file_returns_error():

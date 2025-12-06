@@ -11,7 +11,7 @@ Detection Strategy:
 """
 
 import re
-from typing import List, Set
+from typing import List, Set, Optional
 
 # Common spell-related context words
 SPELL_CONTEXTS = [
@@ -110,7 +110,7 @@ def extract_spells_from_prompt(prompt: str) -> Set[str]:
     return spells
 
 
-def highlight_spells_in_text(text: str, known_spells: Set[str] = None) -> str:
+def highlight_spells_in_text(text: str, known_spells: Optional[Set[str]] = None) -> str:
     """
     Highlight spell names in story text by wrapping them in bold markdown.
 
@@ -147,8 +147,7 @@ def highlight_spells_in_text(text: str, known_spells: Set[str] = None) -> str:
             # Use word boundaries to avoid partial matches
             # But avoid matching if already wrapped in ** (already highlighted)
             pattern = re.compile(
-                r"(?<!\*)\b" + re.escape(spell) + r"\b(?!\*)",
-                re.IGNORECASE
+                r"(?<!\*)\b" + re.escape(spell) + r"\b(?!\*)", re.IGNORECASE
             )
 
             def replace_known_spell(match):
@@ -282,7 +281,7 @@ def extract_known_spells_from_characters(characters: List[dict]) -> Set[str]:
 
 
 def highlight_spells_in_story_sections(
-    story_data: dict, known_spells: Set[str] = None
+    story_data: dict, known_spells: Optional[Set[str]] = None
 ) -> dict:
     """
     Apply spell highlighting to all narrative sections of a story.
