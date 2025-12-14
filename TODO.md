@@ -341,4 +341,3 @@
 ---
 
 **Last Updated:** December 14, 2025
-**Priority Legend:**  High |  Medium |  Low |  Bugs |  Docs
