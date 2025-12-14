@@ -4,7 +4,6 @@
 
 ### User Experience
 - [ ] **Error handling** - Improve error messages throughout the system for better user guidance
-- [ ] **VSCode tasks update** - Ensure all VSCode tasks work with the new enhanced system
 
 ### Combat & Story Editing
 - [ ] **Story amender functionality** - Add system to suggest character reassignments (e.g., "Character A did X but Character B is a better fit for this action")
@@ -42,6 +41,7 @@
   - Session history and analytics
   - Campaign statistics and insights
   - Keep JSON as default for simplicity
+- [ ] **VSCode tasks update** - Ensure all VSCode tasks work with the new enhanced system
 
 ##  Low Priority / Nice to Have
 
@@ -340,5 +340,5 @@
 
 ---
 
-**Last Updated:** December 6, 2025
+**Last Updated:** December 14, 2025
 **Priority Legend:**  High |  Medium |  Low |  Bugs |  Docs

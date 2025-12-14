@@ -1,14 +1,11 @@
 ﻿# D&D Character Consultant System
 
-A Python-based system for managing D&D##  Documentation
+A Python-based system for managing D&D Documentation
 
 - **[AI Integration Guide](docs/AI_INTEGRATION.md)** - Complete AI setup (Ollama, OpenAI, Anthropic)
 - **[RAG Integration Guide](docs/RAG_INTEGRATION.md)** - Deep dive into RAG system and wiki integration
 - **[RAG Quick Start](docs/RAG_QUICKSTART.md)** - Fast track to using RAG features
 - **[Usage Examples](docs/Test_Example.md)** - See the system in action
-
-> **Note:** Personal documentation and development notes are kept in `docs_personal/` (git-ignored) character consultants with 
-VSCode integration for story management and character consistency analysis.
 
 ##  What This System Does
 
@@ -28,7 +25,7 @@ VSCode integration for story management and character consistency analysis.
 - **Custom Items Registry** - Track homebrew items separately, blocks wiki lookups for custom content
 
 > ** [AI Integration Guide](docs/AI_INTEGRATION.md)** - Complete guide for adding AI capabilities to your characters
-> 
+>
 > ** [RAG Integration Guide](docs/RAG_INTEGRATION.md)** - Wiki integration for accurate campaign lore in stories
 
 ##  What This System Does NOT Do
@@ -40,7 +37,7 @@ VSCode integration for story management and character consistency analysis.
 ##  Current Project Structure
 
 ```
-D&D New Beginnings/
+D&D CCS/
 ├── game_data/              #  ALL YOUR CAMPAIGN DATA (git-ignored except examples)
 │   ├── characters/         # Character profile JSON files (unlimited)
 │   │   └── class.example.json   # Template for new characters
@@ -148,7 +145,7 @@ D&D New Beginnings/
    ```powershell
    # Full module path
    python -m src.cli.setup
-   
+
    # Or use the shortcut launcher
    python setup.py
    ```
@@ -157,7 +154,7 @@ D&D New Beginnings/
    ```powershell
    # Copy environment template
    copy .env.example .env
-   
+
    # Download Ollama model (free local AI)
    ollama pull llama3.1:8b
    ```
@@ -167,7 +164,7 @@ D&D New Beginnings/
    ```powershell
    # Full module path
    python -m src.cli.dnd_consultant
-   
+
    # Or use the shortcut launcher
    python dnd_consultant.py
    ```
@@ -366,7 +363,7 @@ Party encountered unexpected pursuit and made contact with merchant information 
 └── story_dc_suggestions.md                     # Updated per story
 ```
 
-### Character Consultation  
+### Character Consultation
 1. **Load character data** from any number of JSON files
 2. **Get class expertise** for abilities, spells, tactics
 3. **Check consistency** against established personality/motivations
@@ -476,7 +473,7 @@ copy .env.example .env
 This system **enhances your creativity** while maintaining your control:
 
 - **You create** the stories, personalities, and campaign direction
-- **System provides** class expertise, consistency checking, and DC suggestions  
+- **System provides** class expertise, consistency checking, and DC suggestions
 - **Characters act** as knowledgeable consultants, not autonomous agents
 - **Perfect for** complex campaigns with rich character development
 
