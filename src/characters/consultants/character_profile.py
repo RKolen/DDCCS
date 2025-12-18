@@ -241,6 +241,15 @@ class CharacterProfile:
         """Character subclass."""
         return self.identity.subclass
 
+    def get_all_abilities(self) -> List[str]:
+        """Get a combined list of all character abilities, spells, and feats."""
+        abilities = []
+        abilities.extend(self.mechanics.abilities.class_abilities)
+        abilities.extend(self.mechanics.abilities.specialized_abilities)
+        abilities.extend(self.mechanics.abilities.known_spells)
+        abilities.extend(self.mechanics.abilities.feats)
+        return [str(a) for a in abilities]
+
     @property
     def background_story(self) -> str:
         """Character background story."""
@@ -295,11 +304,6 @@ class CharacterProfile:
     def magic_items(self) -> List[str]:
         """Character magic items."""
         return self.possessions.magic_items
-
-    @property
-    def known_spells(self) -> List[str]:
-        """Character known spells."""
-        return self.mechanics.abilities.known_spells
 
     @property
     def ability_scores(self) -> Dict[str, int]:

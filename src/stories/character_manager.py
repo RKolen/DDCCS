@@ -31,7 +31,7 @@ class CharacterManager(CharacterLoadingMixin):
         self.characters_path = characters_path
         self.ai_client = ai_client
         self.consultants: Dict[str, CharacterConsultant] = {}
-        self.known_spells: set = set()
+        self.known_abilities: set = set()
         self._characters_loaded = False
 
         # Load characters eagerly by default for backward compatibility
@@ -47,8 +47,8 @@ class CharacterManager(CharacterLoadingMixin):
         )
         self._characters_loaded = True
 
-        # Extract known spells from all loaded characters
-        self._update_known_spells()
+        # Extract known abilities from all loaded characters
+        self._update_known_abilities()
 
     def load_party_characters(self, party_members: list) -> Dict:
         """Load only specific party member characters and update known spells.
@@ -61,32 +61,32 @@ class CharacterManager(CharacterLoadingMixin):
         """
         # Call parent implementation
         loaded = super().load_party_characters(party_members)
-        # Update known spells from newly loaded characters
-        self._update_known_spells()
+        # Update known abilities from newly loaded characters
+        self._update_known_abilities()
         return loaded
 
-    def _update_known_spells(self):
-        """Extract and cache known spells from all loaded characters."""
-        self.known_spells = set()
+    def _update_known_abilities(self):
+        """Extract and cache known spells and abilities from all loaded characters."""
+        self.known_abilities = set()
         for consultant in self.consultants.values():
-            # Add known spells from profile
-            if consultant.profile.known_spells:
-                for spell in consultant.profile.known_spells:
-                    self.known_spells.add(spell)
+            # Add all abilities from profile
+            abilities = consultant.profile.get_all_abilities()
+            for ability in abilities:
+                self.known_abilities.add(ability)
 
     def apply_spell_highlighting(self, text: str) -> str:
-        """Apply spell name highlighting to narrative text.
+        """Apply spell and ability name highlighting to narrative text.
 
         Args:
             text: Narrative text to process
 
         Returns:
-            Text with spell names highlighted using **bold markdown**
+            Text with names highlighted using **bold markdown**
         """
-        if not self.known_spells:
+        if not self.known_abilities:
             return text
 
-        return highlight_spells_in_text(text, self.known_spells)
+        return highlight_spells_in_text(text, self.known_abilities)
 
     def get_character_list(self):
         """Get list of all character names."""

@@ -32,6 +32,7 @@ from src.stories.session_results_manager import (
     create_session_results_file,
 )
 from src.stories.character_action_analyzer import extract_character_actions
+from src.cli.story_amender_cli_handler import StoryAmenderCLIHandler
 from src.characters.character_consistency import create_character_development_file
 from src.utils.file_io import read_text_file
 from src.utils.string_utils import truncate_at_sentence
@@ -172,6 +173,7 @@ class StoryCLIManager:
             print("8. Get DM Narrative Suggestions")
             print("9. Story Analysis (Slow)")
             print("10. Character Analysis (Slow)")
+            print("11. Amend Story Character Actions")
             print("0. Back")
 
             choice = input("Enter your choice: ").strip()
@@ -202,6 +204,7 @@ class StoryCLIManager:
             ("8", False, "_get_dm_narrative_cli"),
             ("9", True, "_analyze_series_consistency"),
             ("10", True, "_analyze_character_development_series"),
+            ("11", True, "_amend_story_actions"),
         ]
 
         for op_choice, requires_stories, method_name in story_operations:
@@ -246,6 +249,8 @@ class StoryCLIManager:
             self.analysis_cli.analyze_character_development_series(
                 series_name, series_stories
             )
+        elif method_name == "_amend_story_actions":
+            self._amend_story_actions(series_name, series_stories)
 
     def _orchestrate_story_creation(
         self, story_path: str, series_path: str, party_names: List[str]
@@ -853,14 +858,26 @@ class StoryCLIManager:
                 filepath = create_character_development_file(
                     campaign_path, story_name, character_actions
                 )
-                print(f"\n[SUCCESS] Character development saved: {filepath}")
-            except OSError as error:
-                print(f"[ERROR] Error saving character development: {error}")
+                print(f"[SUCCESS] Character development saved to: {filepath}")
+            except (OSError, AttributeError) as e:
+                print(f"[ERROR] Failed to save character development: {e}")
 
         except ValueError:
             print("Invalid input.")
         except (OSError, AttributeError) as e:
             print(f"[ERROR] Failed to generate character development: {e}")
+
+    def _amend_story_actions(self, series_name: str, stories: List[str]):
+        """Interactive story character action amendment.
+
+        Args:
+            series_name: Name of the story series (campaign)
+            stories: List of story files in the series
+        """
+        handler = StoryAmenderCLIHandler(
+            self.workspace_path, self._load_character_profiles_for_analysis
+        )
+        handler.handle_amendment(series_name, stories, self._select_story_from_list)
 
     def _load_character_profiles_for_analysis(
         self, party_names: List[str], _campaign_path: str

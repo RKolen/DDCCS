@@ -5,12 +5,8 @@
 ### User Experience
 - [ ] **Error handling** - Improve error messages throughout the system for better user guidance
 
-### Combat & Story Editing
-- [ ] **Story amender functionality** - Add system to suggest character reassignments (e.g., "Character A did X but Character B is a better fit for this action")
-
 ### AI Integration
 - [ ] **AI-powered story suggestions** - Use AI to suggest story developments and narrative improvements (future enhancement)
-- [ ] **Intelligent character matching** - AI-assisted character selection for actions (future enhancement)
 
 ##  Medium Priority
 
@@ -29,9 +25,6 @@
 - [ ] **DC difficulty scaling** - Add optional level-based DC scaling recommendations
 
 ### Story Tools
-- [ ] **Story timeline tracking** - Track chronological order of events across campaigns
-- [ ] **Combat narrative templates** - Pre-built templates for different combat scenarios
-- [ ] **Spellhighlighter improvements** - The highlighter triggers on specific words not actual abilities and spells
 - [ ] **Language fixes** - filter language to only include the prompts language
 
 ### Technical Improvements
@@ -50,6 +43,8 @@
 - [ ] **ASCII Character Art** - Create images for characters
 
 ### Story Tools
+- [ ] **Story timeline tracking** - Track chronological order of events across campaigns
+- [ ] **Combat narrative templates** - Pre-built templates for different combat scenarios
 - [ ] **Character arc analysis** - Tools to analyze character development over multiple stories
 - [ ] **Custom spell highlighting** - Extend spell highlighting system to support homebrew/custom spells (currently only official D&D 5e spells via wikidot are highlighted)
 
@@ -88,7 +83,16 @@
 
 ## [x] Recently Completed
 
-### Performance Optimization - December 6,2025
+### Story Amender Enhancement - December 18, 2025
+- [x] **Story amender functionality** - Complete dynamic character reassignment system
+  - [x] Refactored `character_fit_analyzer.py` to use dynamic ability extraction (class_abilities, specialized_abilities, known_spells, feats)
+  - [x] Created `story_amender.py` orchestrator for amendment workflow (identify actions, analyze fits, generate amendments, apply to files)
+  - [x] Extended `character_profile.py` with `get_all_abilities()` method for comprehensive ability listing
+  - [x] Updated `character_manager.py` to extract and track all abilities (not just spells)
+  - [x] Integrated CLI amendment workflow in `cli_story_manager.py` with `StoryAmenderCLIHandler`
+  - [x] Added comprehensive unit tests for character fit analysis and story amendment
+
+### Performance Optimization - December 6, 2025
 - [x] **Lazy character loading** - Deferred character loading from startup to on-demand access. Implemented CharacterLoadingMixin base class for code reuse. Startup now instant (<0.1s vs 2-5s before). Characters load only when: (1) user selects story/campaign option, (2) user accesses character management, or (3) explicit ensure_characters_loaded() call. Party-based loading available for selective character access.
 
 ### Readability December 6, 2025

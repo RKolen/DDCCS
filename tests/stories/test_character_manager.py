@@ -51,7 +51,7 @@ def test_character_manager_initialization():
         assert manager.characters_path == temp_dir
         assert manager.ai_client is None
         assert not manager.consultants
-        assert manager.known_spells == set()
+        assert manager.known_abilities == set()
         print("  [OK] CharacterManager initialized correctly")
 
     print("[PASS] CharacterManager Initialization")
@@ -92,11 +92,11 @@ def test_load_characters_with_spells():
         manager = CharacterManager(temp_dir)
         manager.load_characters()
 
-        assert len(manager.known_spells) >= 3
-        assert "Fireball" in manager.known_spells
-        assert "Magic Missile" in manager.known_spells
-        assert "Shield" in manager.known_spells
-        print("  [OK] Spells extracted from characters")
+        assert len(manager.known_abilities) >= 3
+        assert "Fireball" in manager.known_abilities
+        assert "Magic Missile" in manager.known_abilities
+        assert "Shield" in manager.known_abilities
+        print("  [OK] Abilities extracted from characters")
 
     print("[PASS] Load Characters - With Spells")
 
@@ -233,7 +233,7 @@ def test_empty_directory():
         manager.load_characters()
 
         assert len(manager.consultants) == 0
-        assert len(manager.known_spells) == 0
+        assert len(manager.known_abilities) == 0
         print("  [OK] Empty directory handled correctly")
 
     print("[PASS] Empty Directory")

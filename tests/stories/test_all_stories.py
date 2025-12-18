@@ -37,6 +37,8 @@ def run_all_story_tests():
         ("test_story_workflow_orchestrator", "Story Workflow Orchestrator Tests"),
         ("test_story_consistency_analyzer", "Story Consistency Analyzer Tests"),
         ("test_lazy_character_loading", "Lazy Character Loading Tests"),
+        ("test_character_fit_analyzer", "Character Fit Analyzer Tests"),
+        ("test_story_amender", "Story Amender Tests"),
     ]
 
     results = {}

@@ -966,6 +966,7 @@ class StoryUpdater:
                         char_data = json.load(f)
                         profiles[character_name] = {
                             "name": character_name,
+                            "dnd_class": char_data.get("dnd_class", ""),
                             "personality_summary": char_data.get(
                                 "personality_summary", ""
                             ),
@@ -975,6 +976,12 @@ class StoryUpdater:
                             "goals": char_data.get("goals", []),
                             "relationships": char_data.get("relationships", {}),
                             "secrets": char_data.get("secrets", []),
+                            "class_abilities": char_data.get("class_abilities", []),
+                            "specialized_abilities": char_data.get(
+                                "specialized_abilities", []
+                            ),
+                            "known_spells": char_data.get("known_spells", []),
+                            "feats": char_data.get("feats", []),
                         }
             except (OSError, json.JSONDecodeError, KeyError):
                 pass
