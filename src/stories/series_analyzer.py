@@ -256,6 +256,9 @@ class SeriesAnalyzer:
             sys.stdout.flush()
 
         processed_count = 0
+        previous_actions_map: Dict[str, List[str]] = {
+            party_member: [] for party_member in analysis_context.party_members
+        }
 
         for story_file in analysis_context.stories:
             story_path = os.path.join(analysis_context.campaign_path, story_file)
@@ -268,11 +271,13 @@ class SeriesAnalyzer:
                 continue
 
             # Extract character actions for party members only
+            # Pass previous actions from earlier stories for consistency checking
             character_actions = extract_character_actions(
                 story_content,
                 analysis_context.party_members,
                 analysis_context.truncate_func,
                 character_profiles=analysis_context.character_profiles,
+                previous_actions_map=previous_actions_map,
             )
 
             story_analysis = {
@@ -280,6 +285,23 @@ class SeriesAnalyzer:
                 "character_actions": character_actions,
             }
             series_analysis["stories_analyzed"].append(story_analysis)
+
+            # Update previous_actions_map for next story iteration
+            for action_entry in character_actions:
+                char_name = action_entry.get("character")
+                action_text = action_entry.get("action")
+                if (
+                    char_name
+                    and action_text
+                    and action_text != "Not mentioned in this story segment"
+                ):
+                    if char_name in previous_actions_map:
+                        # Keep only last 5 actions for context
+                        previous_actions_map[char_name].append(action_text)
+                        if len(previous_actions_map[char_name]) > 5:
+                            previous_actions_map[char_name] = previous_actions_map[
+                                char_name
+                            ][-5:]
 
             # Append story analysis incrementally if filepath provided
             if output_filepath:

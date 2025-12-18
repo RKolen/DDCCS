@@ -15,13 +15,15 @@ from typing import Dict, List, Optional, Any
 # Optional AI import - AIClient may not be available in all environments
 try:
     from src.ai.ai_client import AIClient
+
     AI_AVAILABLE = True
 except (ImportError, ModuleNotFoundError):
     AI_AVAILABLE = False
 
 
-def _build_character_context_string(character_name: str,
-                                    traits: Optional[Dict[str, Any]]) -> str:
+def _build_character_context_string(
+    character_name: str, traits: Optional[Dict[str, Any]]
+) -> str:
     """Build character context string from traits dictionary."""
     lines = [f"Character: {character_name}"]
 
@@ -49,10 +51,34 @@ def _build_character_context_string(character_name: str,
     return "\n".join(lines) + "\n"
 
 
-def _get_prompt_for_analysis(analysis_type: str, char_context: str,
-                            action_text: str) -> Optional[str]:
-    """Build prompt for AI analysis based on type."""
+def _get_prompt_for_analysis(
+    analysis_type: str,
+    char_context: str,
+    action_text: str,
+    previous_actions: Optional[List[str]] = None,
+) -> Optional[str]:
+    """Build prompt for AI analysis based on type.
+
+    Args:
+        analysis_type: Type of analysis ("reasoning", "consistency", "development")
+        char_context: Character profile context string
+        action_text: The current action being analyzed
+        previous_actions: Optional list of character's prior actions in this campaign
+
+    Returns:
+        Prompt string for AI, or None if analysis_type not recognized
+    """
     base = f"{char_context}Story Action: {action_text}\n\n"
+
+    # Build prior actions context if provided
+    prior_actions_context = ""
+    if previous_actions and len(previous_actions) > 0:
+        prior_actions_context = (
+            "\nPrior actions by this character in this campaign:\n"
+            + "\n".join(f"- {action}" for action in previous_actions[:5])
+            + "\n\n"
+        )
+
     lang_note = (
         "RESPOND IN ENGLISH ONLY. "
         "Do not use any other languages. "
@@ -66,13 +92,23 @@ def _get_prompt_for_analysis(analysis_type: str, char_context: str,
             "Be specific and concise (1-2 sentences). " + lang_note
         ),
         "consistency": (
-            base + "Assess if this action is consistent with the character's "
-            "established traits and personality. Be specific (1-2 sentences). "
-            + lang_note
+            base
+            + prior_actions_context
+            + "Assess if this action is consistent with the character's "
+            "personality traits, motivations, and goals shown above. "
+            "If prior actions are shown, also check consistency with their "
+            "established behavior patterns. "
+            "CRITICAL: This is a custom D&D campaign, NOT official lore. "
+            "IGNORE any external canon (Lord of the Rings, novels, games, etc.). "
+            "ONLY evaluate consistency against the character profile and their campaign history. "
+            "Be specific (1-2 sentences). " + lang_note
         ),
         "development": (
-            base + "Identify character development opportunities or growth themes "
+            base
+            + prior_actions_context
+            + "Identify character development opportunities or growth themes "
             "from this action. How does this advance their story? "
+            "Consider evolution based on prior actions in this campaign. "
             "Be specific (1-2 sentences). " + lang_note
         ),
     }
@@ -84,7 +120,8 @@ def _get_ai_analysis(
     analysis_type: str,
     action_text: str,
     character_name: str,
-    character_traits: Optional[Dict[str, Any]] = None
+    character_traits: Optional[Dict[str, Any]] = None,
+    previous_actions: Optional[List[str]] = None,
 ) -> Optional[str]:
     """Get AI-based analysis for character action with personality awareness.
 
@@ -93,6 +130,7 @@ def _get_ai_analysis(
         action_text: Description of the character's action
         character_name: Name of the character
         character_traits: Optional dict with personality, goals, background, etc.
+        previous_actions: Optional list of character's prior actions in this campaign
 
     Returns:
         AI-generated analysis string, or None if AI is not available
@@ -107,10 +145,10 @@ def _get_ai_analysis(
 
     try:
         ai_client = AIClient()
-        char_context = _build_character_context_string(character_name,
-                                                       character_traits)
-        prompt = _get_prompt_for_analysis(analysis_type, char_context,
-                                         action_text)
+        char_context = _build_character_context_string(character_name, character_traits)
+        prompt = _get_prompt_for_analysis(
+            analysis_type, char_context, action_text, previous_actions
+        )
 
         if not prompt:
             return None
@@ -129,12 +167,12 @@ def _get_ai_analysis(
                         "ONLY ASCII English text is acceptable.\n"
                         "If you cannot respond in English, respond with: "
                         "'Unable to generate response.'"
-                    )
+                    ),
                 },
-                {"role": "user", "content": prompt}
+                {"role": "user", "content": prompt},
             ],
             temperature=0.7,
-            max_tokens=150
+            max_tokens=150,
         )
         response_text = response.strip() if response else None
 
@@ -144,9 +182,9 @@ def _get_ai_analysis(
             for char in response_text:
                 code = ord(char)
                 # Chinese characters are typically in ranges: 0x4E00-0x9FFF, 0x3400-0x4DBF
-                if (0x4E00 <= code <= 0x9FFF or
-                    0x3400 <= code <= 0x4DBF or
-                    code > 127):  # Reject any non-ASCII except common punctuation
+                if (
+                    0x4E00 <= code <= 0x9FFF or 0x3400 <= code <= 0x4DBF or code > 127
+                ):  # Reject any non-ASCII except common punctuation
                     # If Chinese detected, return None to trigger fallback
                     return None
 
@@ -157,8 +195,9 @@ def _get_ai_analysis(
         return None
 
 
-
-def extract_reasoning(action_text: str, character_traits: Optional[Dict[str, Any]] = None) -> str:
+def extract_reasoning(
+    action_text: str, character_traits: Optional[Dict[str, Any]] = None
+) -> str:
     """Extract reasoning about character's motivation from action text.
 
     Considers character personality, motivations, goals, and backstory when available.
@@ -177,7 +216,7 @@ def extract_reasoning(action_text: str, character_traits: Optional[Dict[str, Any
             "reasoning",
             action_text,
             character_traits.get("name", "Character"),
-            character_traits
+            character_traits,
         )
         if ai_reasoning:
             return ai_reasoning
@@ -187,21 +226,31 @@ def extract_reasoning(action_text: str, character_traits: Optional[Dict[str, Any
     traits = character_traits or {}
 
     word_patterns = [
-        (["hesitant", "reluctant", "uncertain", "hesitated"],
-         "uncertainty about course of action",
-         "fears_weaknesses"),
-        (["decided", "chose", "determined", "resolved"],
-         "deliberate choice aligned with goals",
-         "goals"),
-        (["searching", "investigating", "examined", "looked"],
-         "information gathering and problem-solving",
-         "motivations"),
-        (["spoke", "said", "asked", "replied", "told"],
-         "communicating and engaging with others",
-         "relationships"),
-        (["moved", "walked", "ran", "traveled", "ventured"],
-         "taking initiative and exploring situation",
-         "personality_summary"),
+        (
+            ["hesitant", "reluctant", "uncertain", "hesitated"],
+            "uncertainty about course of action",
+            "fears_weaknesses",
+        ),
+        (
+            ["decided", "chose", "determined", "resolved"],
+            "deliberate choice aligned with goals",
+            "goals",
+        ),
+        (
+            ["searching", "investigating", "examined", "looked"],
+            "information gathering and problem-solving",
+            "motivations",
+        ),
+        (
+            ["spoke", "said", "asked", "replied", "told"],
+            "communicating and engaging with others",
+            "relationships",
+        ),
+        (
+            ["moved", "walked", "ran", "traveled", "ventured"],
+            "taking initiative and exploring situation",
+            "personality_summary",
+        ),
     ]
 
     for words, base_msg, trait_key in word_patterns:
@@ -218,15 +267,21 @@ def extract_reasoning(action_text: str, character_traits: Optional[Dict[str, Any
     return "Character taking action based on current situation"
 
 
-def assess_consistency(action_text: str, character_traits: Optional[Dict[str, Any]] = None) -> str:
+def assess_consistency(
+    action_text: str,
+    character_traits: Optional[Dict[str, Any]] = None,
+    previous_actions: Optional[List[str]] = None,
+) -> str:
     """Assess if action is consistent with character's established traits.
 
     Checks action against personality summary, background, and behavior patterns.
+    Also considers prior actions in this campaign to check for consistent behavior.
     Uses AI for personality-aware analysis when available, falls back to rule-based.
 
     Args:
         action_text: Description of the character's action
         character_traits: Optional dict with personality, background, etc.
+        previous_actions: Optional list of character's prior actions in this campaign
 
     Returns:
         String assessing consistency
@@ -237,7 +292,8 @@ def assess_consistency(action_text: str, character_traits: Optional[Dict[str, An
             "consistency",
             action_text,
             character_traits.get("name", "Character"),
-            character_traits
+            character_traits,
+            previous_actions,
         )
         if ai_consistency:
             return ai_consistency
@@ -247,14 +303,19 @@ def assess_consistency(action_text: str, character_traits: Optional[Dict[str, An
     traits = character_traits or {}
 
     consistency_patterns = [
-        (["carefully", "cautiously", "strategically"],
-         "Action consistent with tactical thinking"),
-        (["boldly", "charged", "attacked", "aggressive"],
-         "Action shows boldness"),
-        (["wisely", "thoughtfully", "sage", "wisdom"],
-         "Action consistent with experienced judgment"),
-        (["secretly", "quietly", "stealthily"],
-         "Action consistent with cunning/subtle approach"),
+        (
+            ["carefully", "cautiously", "strategically"],
+            "Action consistent with tactical thinking",
+        ),
+        (["boldly", "charged", "attacked", "aggressive"], "Action shows boldness"),
+        (
+            ["wisely", "thoughtfully", "sage", "wisdom"],
+            "Action consistent with experienced judgment",
+        ),
+        (
+            ["secretly", "quietly", "stealthily"],
+            "Action consistent with cunning/subtle approach",
+        ),
     ]
 
     for words, msg in consistency_patterns:
@@ -270,17 +331,20 @@ def assess_consistency(action_text: str, character_traits: Optional[Dict[str, An
 
 def generate_development_notes(
     action_text: str,
-    character_traits: Optional[Dict[str, Any]] = None
+    character_traits: Optional[Dict[str, Any]] = None,
+    previous_actions: Optional[List[str]] = None,
 ) -> str:
     """Generate development notes considering character's personality and goals.
 
     Suggests growth opportunities based on character's background, motivations,
-    goals, relationships, and established character arc.
+    goals, relationships, and established character arc. Also considers how this
+    action develops them relative to their prior actions in this campaign.
     Uses AI for personality-aware analysis when available, falls back to rule-based.
 
     Args:
         action_text: Description of the character's action
         character_traits: Optional dict with personality, goals, relationships, etc.
+        previous_actions: Optional list of character's prior actions in this campaign
 
     Returns:
         String with development suggestion
@@ -291,7 +355,8 @@ def generate_development_notes(
             "development",
             action_text,
             character_traits.get("name", "Character"),
-            character_traits
+            character_traits,
+            previous_actions,
         )
         if ai_notes:
             return ai_notes
@@ -301,22 +366,30 @@ def generate_development_notes(
     traits = character_traits or {}
 
     development_patterns = [
-        (["hesitant", "uncertain", "doubted"],
-         "fears",
-         "Opportunity to face fears and advance goal",
-         "Opportunity to explore character's fears"),
-        (["discovered", "learned", "revealed"],
-         "secrets",
-         "Knowledge gained may connect to secrets",
-         "Character gaining knowledge - track impact"),
-        (["conflict", "disagreed", "argued"],
-         "relationships",
-         "Relationship development opportunity",
-         "Character interaction offers development"),
-        (["sacrifice", "risked", "endangered"],
-         "motivations",
-         "Character showing values aligned with",
-         "Character showing important values"),
+        (
+            ["hesitant", "uncertain", "doubted"],
+            "fears",
+            "Opportunity to face fears and advance goal",
+            "Opportunity to explore character's fears",
+        ),
+        (
+            ["discovered", "learned", "revealed"],
+            "secrets",
+            "Knowledge gained may connect to secrets",
+            "Character gaining knowledge - track impact",
+        ),
+        (
+            ["conflict", "disagreed", "argued"],
+            "relationships",
+            "Relationship development opportunity",
+            "Character interaction offers development",
+        ),
+        (
+            ["sacrifice", "risked", "endangered"],
+            "motivations",
+            "Character showing values aligned with",
+            "Character showing important values",
+        ),
     ]
 
     for words, trait_key, with_trait_msg, fallback_msg in development_patterns:
@@ -337,7 +410,8 @@ def generate_development_notes(
 def _build_character_action_entry(
     party_member: str,
     action_text: str,
-    char_traits: Dict[str, Any]
+    char_traits: Dict[str, Any],
+    previous_actions: Optional[List[str]] = None,
 ) -> Dict[str, str]:
     """Build a single character action dictionary.
 
@@ -345,6 +419,7 @@ def _build_character_action_entry(
         party_member: Character name
         action_text: Description of action
         char_traits: Character personality traits
+        previous_actions: Optional list of character's prior actions in this campaign
 
     Returns:
         Dictionary with character action details
@@ -353,8 +428,8 @@ def _build_character_action_entry(
         "character": party_member,
         "action": action_text,
         "reasoning": extract_reasoning(action_text, char_traits),
-        "consistency": assess_consistency(action_text, char_traits),
-        "notes": generate_development_notes(action_text, char_traits)
+        "consistency": assess_consistency(action_text, char_traits, previous_actions),
+        "notes": generate_development_notes(action_text, char_traits, previous_actions),
     }
 
 
@@ -370,43 +445,49 @@ def _build_character_name_patterns(character_name: str) -> List:
     patterns = []
 
     # Exact match for full name
-    patterns.append(re.compile(r'\b' + re.escape(character_name) + r'\b',
-                               re.IGNORECASE))
+    patterns.append(
+        re.compile(r"\b" + re.escape(character_name) + r"\b", re.IGNORECASE)
+    )
 
     # Match first name only
     first_name = character_name.split()[0]
     if first_name:
-        patterns.append(re.compile(r'\b' + re.escape(first_name) + r'\b',
-                                   re.IGNORECASE))
+        patterns.append(
+            re.compile(r"\b" + re.escape(first_name) + r"\b", re.IGNORECASE)
+        )
 
     # Match last name if multi-word name
-    if ' ' in character_name:
+    if " " in character_name:
         last_name = character_name.split()[-1]
-        patterns.append(re.compile(r'\b' + re.escape(last_name) + r'\b',
-                                   re.IGNORECASE))
+        patterns.append(re.compile(r"\b" + re.escape(last_name) + r"\b", re.IGNORECASE))
 
     return patterns
 
 
 def _search_character_in_lines(
     patterns: List,
-    lines: List[str],
-    party_member: str,
-    traits: Dict[str, Any],
-    truncate_func
+    search_context: Dict[str, Any],
 ) -> Optional[Dict[str, str]]:
     """Search for character in story lines and build action entry.
 
     Args:
         patterns: List of compiled regex patterns for name matching
-        lines: List of story lines
-        party_member: Character name
-        traits: Character trait dictionary
-        truncate_func: Function to truncate text
+        search_context: Dict containing:
+            - lines: List of story lines
+            - party_member: Character name
+            - traits: Character trait dictionary
+            - truncate_func: Function to truncate text
+            - previous_actions: Optional list of character's prior actions
 
     Returns:
         Character action dictionary or None if not found
     """
+    lines = search_context["lines"]
+    party_member = search_context["party_member"]
+    traits = search_context["traits"]
+    truncate_func = search_context["truncate_func"]
+    previous_actions = search_context.get("previous_actions")
+
     for i, line in enumerate(lines):
         # Check if any pattern matches this line
         matches = any(pattern.search(line) for pattern in patterns)
@@ -414,9 +495,7 @@ def _search_character_in_lines(
         if not matches:
             continue
 
-        ctx = " ".join(
-            lines[max(0, i - 1):min(len(lines), i + 3)]
-        )
+        ctx = " ".join(lines[max(0, i - 1) : min(len(lines), i + 3)])
         if not ctx.strip():
             continue
 
@@ -424,7 +503,9 @@ def _search_character_in_lines(
         if len(text) > 500:
             text = truncate_func(text, 500)
 
-        return _build_character_action_entry(party_member, text, traits)
+        return _build_character_action_entry(
+            party_member, text, traits, previous_actions
+        )
 
     return None
 
@@ -433,14 +514,15 @@ def extract_character_actions(
     story_content: str,
     party_names: List[str],
     truncate_func,
-    character_profiles: Optional[Dict[str, Dict[str, Any]]] = None
+    character_profiles: Optional[Dict[str, Dict[str, Any]]] = None,
+    previous_actions_map: Optional[Dict[str, List[str]]] = None,
 ) -> List[Dict[str, str]]:
     """Extract character actions from story narrative with personality awareness.
 
     Searches for character mentions (including name variations) and extracts
     surrounding context. Handles full names, first names, and last names.
     Considers character personality, motivations, goals, and background when
-    available.
+    available. Also evaluates consistency against prior actions in this campaign.
 
     Args:
         story_content: Full story text
@@ -448,34 +530,47 @@ def extract_character_actions(
         truncate_func: Function to truncate text at sentence boundary
         character_profiles: Optional dict mapping character names to their trait
                           dicts
+        previous_actions_map: Optional dict mapping character names to lists of
+                            their prior actions from earlier stories
 
     Returns:
         List of character action dictionaries
     """
     profiles = character_profiles or {}
+    previous_actions_map = previous_actions_map or {}
     actions = []
     lines = story_content.split("\n")
 
     for party_member in party_names:
         traits = profiles.get(party_member, {})
+        previous_actions = previous_actions_map.get(party_member, None)
 
         # Build patterns for character name variations
         patterns = _build_character_name_patterns(party_member)
 
+        # Build search context for character name search
+        search_context = {
+            "lines": lines,
+            "party_member": party_member,
+            "traits": traits,
+            "truncate_func": truncate_func,
+            "previous_actions": previous_actions,
+        }
+
         # Search for character in lines
-        action = _search_character_in_lines(
-            patterns, lines, party_member, traits, truncate_func
-        )
+        action = _search_character_in_lines(patterns, search_context)
 
         if action:
             actions.append(action)
         else:
-            actions.append({
-                "character": party_member,
-                "action": "Not mentioned in this story segment",
-                "reasoning": "Character was absent from this scene",
-                "consistency": "N/A - no actions to evaluate",
-                "notes": "No interaction recorded - consider opportunities"
-            })
+            actions.append(
+                {
+                    "character": party_member,
+                    "action": "Not mentioned in this story segment",
+                    "reasoning": "Character was absent from this scene",
+                    "consistency": "N/A - no actions to evaluate",
+                    "notes": "No interaction recorded - consider opportunities",
+                }
+            )
 
     return actions

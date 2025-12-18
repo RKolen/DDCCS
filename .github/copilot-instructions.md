@@ -19,6 +19,7 @@
 - Upon big code changes also pyltin the folder src/ and the tests/ folder and fix every issue,
   so the commands to use are pylint src/ and pylint tests/ the entire sturcture must be correct
   this way duplicate code can be filtered out and fixed
+- Any warnings given that dont count toward score need to be solved
 
 
 ### Full Pylint Output (No Pipes)
@@ -93,7 +94,7 @@ return default_msg
 Extract traits from character JSON profiles:
 ```python
 traits = profiles.get(character_name, {})
-# traits contains: personality_summary, background_story, motivations, 
+# traits contains: personality_summary, background_story, motivations,
 # fears_weaknesses, goals, relationships, secrets
 ```
 
