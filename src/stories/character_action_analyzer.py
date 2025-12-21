@@ -30,23 +30,31 @@ def _build_character_context_string(
     if traits is None:
         return "\n".join(lines) + "\n"
 
+    # Support both new CharacterProfile field names and legacy JSON field names
     trait_mappings = [
-        ("personality_summary", "Personality"),
-        ("motivations", "Motivations"),
-        ("goals", "Goals"),
-        ("fears_weaknesses", "Fears/Weaknesses"),
+        (("personality_summary", "personality_traits"), "Personality"),
+        (("motivations", "bonds"), "Motivations"),
+        (("goals", "ideals"), "Goals"),
+        (("fears_weaknesses", "flaws"), "Fears/Weaknesses"),
     ]
 
-    for trait_key, label in trait_mappings:
-        if traits.get(trait_key):
-            value = traits[trait_key]
+    for trait_keys, label in trait_mappings:
+        # Try new field name first, then legacy name
+        if isinstance(trait_keys, tuple):
+            value = traits.get(trait_keys[0]) or traits.get(trait_keys[1])
+        else:
+            value = traits.get(trait_keys)
+
+        if value:
             # Handle lists vs strings
             if isinstance(value, list):
-                value = ", ".join(value)
+                value = ", ".join(str(v) for v in value)
             lines.append(f"{label}: {value}")
 
-    if traits.get("background_story"):
-        lines.append(f"Background: {traits['background_story'][:200]}")
+    # Support both background_story and backstory
+    background = traits.get("background_story") or traits.get("backstory")
+    if background:
+        lines.append(f"Background: {background[:200]}")
 
     return "\n".join(lines) + "\n"
 
