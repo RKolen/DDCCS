@@ -24,15 +24,48 @@ except ImportError:
 class DMConsultant:
     """AI consultant that provides DM narrative suggestions based on user prompts."""
 
-    def __init__(self, workspace_path: "Optional[str]" = None, ai_client=None):
+    def __init__(
+        self,
+        workspace_path: Optional[str] = None,
+        ai_client: Any = None,
+        lazy_load: bool = True,
+    ):
         self.workspace_path = Path(workspace_path) if workspace_path else Path.cwd()
         self.ai_client = ai_client
-        self.character_consultants = self._load_character_consultants()
-        self.npc_agents = self._load_npc_agents()
+        self.lazy_load = lazy_load
+        self._character_consultants = None
+        self._npc_agents = None
         self.narrative_style = "immersive"  # immersive, cinematic, descriptive
 
         # Initialize RAG system for wiki integration
         self.rag_system = get_rag_system() if RAG_AVAILABLE else None
+
+        # Load immediately if lazy_load is False
+        if not lazy_load:
+            self._ensure_characters_loaded()
+            self._ensure_npcs_loaded()
+
+    @property
+    def character_consultants(self) -> Dict[str, CharacterConsultant]:
+        """Lazy-load character consultants on first access."""
+        self._ensure_characters_loaded()
+        return self._character_consultants or {}
+
+    @property
+    def npc_agents(self) -> Dict[str, NPCAgent]:
+        """Lazy-load NPC agents on first access."""
+        self._ensure_npcs_loaded()
+        return self._npc_agents or {}
+
+    def _ensure_characters_loaded(self):
+        """Load character consultants if not already loaded."""
+        if self._character_consultants is None:
+            self._character_consultants = self._load_character_consultants()
+
+    def _ensure_npcs_loaded(self):
+        """Load NPC agents if not already loaded."""
+        if self._npc_agents is None:
+            self._npc_agents = self._load_npc_agents()
 
     def _load_character_consultants(self) -> Dict[str, CharacterConsultant]:
         """Load all character consultants from the game_data/characters folder."""

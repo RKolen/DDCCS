@@ -13,7 +13,7 @@ from src.utils.path_utils import get_characters_dir, get_character_file_path
 from src.stories.character_loader import load_all_character_consultants
 from src.stories.character_loading_base import CharacterLoadingMixin
 
-USE_CHARACTER_VALIDATION = True
+USE_CHARACTER_VALIDATION = False
 
 
 class CharacterLoader(CharacterLoadingMixin):

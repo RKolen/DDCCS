@@ -251,8 +251,23 @@ def load_ai_config_from_env() -> Dict[str, Any]:
     }
 
 
-# Create a default AI client using .env or environment variables
-_default_ai_client = AIClient()
+# Lazy-initialized default AI client holder
+class _DefaultClientHolder:
+    """Holder for lazy-loaded default AI client."""
+
+    client = None
+
+    @classmethod
+    def get_client(cls) -> AIClient:
+        """Get or create the default AI client (lazy initialization)."""
+        if cls.client is None:
+            cls.client = AIClient()
+        return cls.client
+
+    @classmethod
+    def reset(cls) -> None:
+        """Reset the default client (for testing)."""
+        cls.client = None
 
 
 def call_ai_for_behavior_block(prompt: str) -> dict:
@@ -261,15 +276,16 @@ def call_ai_for_behavior_block(prompt: str) -> dict:
     Returns a dict with keys: preferred_strategies, typical_reactions, "
     "speech_patterns, decision_making_style.
     """
+    client = _DefaultClientHolder.get_client()
     # Compose messages for chat completion
     messages: Sequence[ChatCompletionMessageParam] = [
-        _default_ai_client.create_system_message(
+        client.create_system_message(
             "You are a D&D character consultant AI."
             "Respond ONLY with a JSON object for the CharacterBehavior dataclass."
         ),
-        _default_ai_client.create_user_message(prompt),
+        client.create_user_message(prompt),
     ]
-    response = _default_ai_client.chat_completion(messages)
+    response = client.chat_completion(messages)
     # Try to extract JSON from the response (handles code block formatting)
     match = re.search(r"```json\n(.*?)```", response, re.DOTALL)
     if match:

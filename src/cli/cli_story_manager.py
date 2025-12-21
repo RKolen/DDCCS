@@ -530,8 +530,29 @@ class StoryCLIManager:
 
     def _create_story_in_series(self, series_name: str):
         """Create a new story in an existing series with optional AI generation."""
-        # Ensure characters are loaded for profile lookup
-        if not self.story_manager.is_characters_loaded():
+        # Load party members for this series (lazy loading - only loads what's needed)
+        party_members = []
+        try:
+            party_members = load_current_party(
+                workspace_path=self.workspace_path, campaign_name=series_name
+            )
+            print(f"[DEBUG] Loaded party config: {party_members}")
+        except (ImportError, OSError, ValueError) as e:
+            print(f"[DEBUG] Could not load party config: {e}")
+
+        print(f"[DEBUG] party_members: {party_members}")
+        print(
+            f"[DEBUG] is_characters_loaded: {self.story_manager.is_characters_loaded()}"
+        )
+
+        # Load only the party members for this campaign (faster than loading all)
+        if party_members and not self.story_manager.is_characters_loaded():
+            print(
+                f"[INFO] Loading {len(party_members)} party members for story generation..."
+            )
+            self.story_manager.load_party_characters(party_members)
+        elif not self.story_manager.is_characters_loaded():
+            # Fallback: no party config, load all characters
             print("[INFO] Loading characters for story generation...")
             self.story_manager.ensure_characters_loaded()
 

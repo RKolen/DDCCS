@@ -11,8 +11,10 @@ import logging
 
 from src.characters.character_sheet import DnDClass
 from src.utils.file_io import load_json_file, save_json_file
-from src.ai.availability import AI_AVAILABLE, CharacterAIConfig
+from src.ai.lazy_imports import AIImportManager
 
+
+# Constants for behavior generation - disabled to avoid 18s delay during loading
 try:
     from src.validation.character_validator import validate_character_json
 
@@ -20,25 +22,10 @@ try:
 except ImportError:
     VALIDATOR_AVAILABLE = False
     validate_character_json = None
-# Optional behaviour generator (in-memory only). Import at top-level but
-# keep it optional; the generator now returns plain dicts so we don't
-# introduce a cyclic import at runtime.
-try:
-    from src.utils.behaviour_generation import generate_behavior_from_personality
 
-    BEHAVIOUR_GENERATOR_AVAILABLE = True
-except ImportError:
-    generate_behavior_from_personality = None
-    BEHAVIOUR_GENERATOR_AVAILABLE = False
-# Optional behaviour generator (in-memory only). We keep this optional so tests
-# and environments without the utils module still import cleanly.
-try:
-    from src.utils.behaviour_generation import generate_behavior_from_personality
-
-    BEHAVIOUR_GENERATOR_AVAILABLE = True
-except ImportError:
-    generate_behavior_from_personality = None
-    BEHAVIOUR_GENERATOR_AVAILABLE = False
+# Disable behavior generator to avoid 18+ second AI calls during character loading
+# Behavior generation is only for in-memory use and not needed during loading
+BEHAVIOUR_GENERATOR_AVAILABLE = False
 
 LOGGER = logging.getLogger(__name__)
 
@@ -156,59 +143,10 @@ class CharacterProfile:
         It never writes back to disk; it only mutates the in-memory instance so
         downstream code (consultants, tests) get a sensible `CharacterBehavior`.
         """
-        # If generator unavailable or behavior already populated, do nothing.
-        if (
-            not BEHAVIOUR_GENERATOR_AVAILABLE
-            or generate_behavior_from_personality is None
-        ):
-            return
-
-        beh = self.behavior
-        if (
-            beh.preferred_strategies
-            or beh.speech_patterns
-            or beh.typical_reactions
-            or beh.decision_making_style
-        ):
-            return
-
-        # Reconstruct personality-like fields expected by the generator.
-        personality_traits: List[str] = []
-        if self.personality.personality_summary:
-            personality_traits = [
-                p.strip()
-                for p in self.personality.personality_summary.split(";")
-                if p.strip()
-            ]
-
-        ideals = list(self.personality.goals)
-        bonds = list(self.personality.motivations)
-        flaws = list(self.personality.fears_weaknesses)
-        backstory = self.personality.background_story or ""
-
-        try:
-            generated = generate_behavior_from_personality(
-                personality_traits, ideals, bonds, flaws, backstory
-            )
-            # Assign only if we got a result back. The generator returns a
-            # dict (not a dataclass) to avoid import cycles; convert to the
-            # dataclass here for runtime use.
-            if isinstance(generated, dict):
-                self.behavior = CharacterBehavior(
-                    preferred_strategies=list(
-                        generated.get("preferred_strategies", [])
-                    ),
-                    typical_reactions=dict(generated.get("typical_reactions", {})),
-                    speech_patterns=list(generated.get("speech_patterns", [])),
-                    decision_making_style=str(
-                        generated.get("decision_making_style", "")
-                    ),
-                )
-            elif generated is not None:
-                # If generator already returned a CharacterBehavior (future-proof), accept it.
-                self.behavior = generated
-        except (ValueError, TypeError, RuntimeError) as exc:
-            LOGGER.warning("Behavior generation failed during profile init: %s", exc)
+        # Behavior generation disabled to avoid 18+ second AI calls during loading.
+        # BEHAVIOUR_GENERATOR_AVAILABLE is set to False at module level.
+        # This method is kept for API compatibility but performs no operation.
+        return
 
     # Backward compatibility properties for accessing nested dataclass fields
     @property
@@ -349,9 +287,8 @@ class CharacterProfile:
 
         save_json_file(filepath, data)
 
-    def _update_all_fields(self, data: Dict[str, Any]) -> None:
-        """Update all fields in data dict from character profile."""
-        # Identity fields
+    def _update_identity_fields(self, data: Dict[str, Any]) -> None:
+        """Update identity fields in data dict."""
         data["name"] = self.identity.name
         data["nickname"] = self.identity.nickname
         data["dnd_class"] = self.identity.character_class.value
@@ -360,7 +297,8 @@ class CharacterProfile:
         data["lineage"] = self.identity.lineage
         data["subclass"] = self.identity.subclass
 
-        # Personality fields - map BACK to aragorn.json field names
+    def _update_personality_fields(self, data: Dict[str, Any]) -> None:
+        """Update personality fields in data dict."""
         data["backstory"] = self.personality.background_story
         summary = self.personality.personality_summary
         data["personality_traits"] = summary.split("; ") if summary else []
@@ -368,9 +306,29 @@ class CharacterProfile:
         data["flaws"] = self.personality.fears_weaknesses
         data["ideals"] = self.personality.goals
         data["relationships"] = self.personality.relationships
-        # Only write secrets if it exists in original data
         if "secrets" in data:
             data["secrets"] = self.personality.secrets
+
+    def _update_mechanics_fields(self, data: Dict[str, Any]) -> None:
+        """Update mechanics fields in data dict."""
+        data["ability_scores"] = self.mechanics.stats.ability_scores
+        data["skills"] = self.mechanics.stats.skills
+        data["max_hit_points"] = self.mechanics.stats.max_hit_points
+        data["armor_class"] = self.mechanics.stats.armor_class
+        data["movement_speed"] = self.mechanics.stats.movement_speed
+        data["proficiency_bonus"] = self.mechanics.stats.proficiency_bonus
+        if "background" in data and self.mechanics.stats.background:
+            data["background"] = self.mechanics.stats.background
+        data["feats"] = self.mechanics.abilities.feats
+        data["class_abilities"] = self.mechanics.abilities.class_abilities
+        data["specialized_abilities"] = self.mechanics.abilities.specialized_abilities
+        data["spell_slots"] = self.mechanics.abilities.spell_slots
+        data["known_spells"] = self.mechanics.abilities.known_spells
+
+    def _update_all_fields(self, data: Dict[str, Any]) -> None:
+        """Update all fields in data dict from character profile."""
+        self._update_identity_fields(data)
+        self._update_personality_fields(data)
 
         # Behavior fields - only write if they exist in original data
         self._update_if_exists(
@@ -391,54 +349,87 @@ class CharacterProfile:
             data, "major_plot_actions", self.story.major_plot_actions
         )
 
-        # Stats fields
-        data["ability_scores"] = self.mechanics.stats.ability_scores
-        data["skills"] = self.mechanics.stats.skills
-        data["max_hit_points"] = self.mechanics.stats.max_hit_points
-        data["armor_class"] = self.mechanics.stats.armor_class
-        data["movement_speed"] = self.mechanics.stats.movement_speed
-        data["proficiency_bonus"] = self.mechanics.stats.proficiency_bonus
-        # Only write background if it exists in original data AND has a value
-        if "background" in data and self.mechanics.stats.background:
-            data["background"] = self.mechanics.stats.background
-
-        # Abilities fields
-        data["feats"] = self.mechanics.abilities.feats
-        data["class_abilities"] = self.mechanics.abilities.class_abilities
-        data["specialized_abilities"] = self.mechanics.abilities.specialized_abilities
-        data["spell_slots"] = self.mechanics.abilities.spell_slots
-        data["known_spells"] = self.mechanics.abilities.known_spells
+        self._update_mechanics_fields(data)
 
         # Possessions fields
         data["equipment"] = self.possessions.equipment
         data["magic_items"] = self.possessions.magic_items
 
         # AI config - only update if it exists in original data
-        if "ai_config" in data and AI_AVAILABLE and self.ai_config:
-            # Preserve original structure, only update changed values
-            original_ai_config = data["ai_config"]
-            if isinstance(self.ai_config, CharacterAIConfig):
-                updated = self.ai_config.to_dict()
-                # Only update fields that existed in the original
-                for key in original_ai_config:
-                    if key in updated:
-                        original_ai_config[key] = updated[key]
-            else:
+        if "ai_config" in data and self.ai_config:
+            AIImportManager.ensure_loaded()
+            config_class = AIImportManager.get_character_ai_config()
+            if AIImportManager.get_ai_available() and config_class is not None:
+                # Preserve original structure, only update changed values
+                original_ai_config = data["ai_config"]
+                # Cast to Any to allow dynamic attribute access
+                ai_config_obj: Any = self.ai_config
+                if hasattr(ai_config_obj, "to_dict"):
+                    updated = ai_config_obj.to_dict()
+                    # Only update fields that existed in the original
+                    for key in original_ai_config:
+                        if key in updated:
+                            original_ai_config[key] = updated[key]
+                else:
+                    data["ai_config"] = self.ai_config
+            elif self.ai_config:
                 data["ai_config"] = self.ai_config
+
+    @classmethod
+    def _load_mechanics_from_data(cls, data: Dict[str, Any]) -> CharacterMechanics:
+        """Helper to load mechanics section from data dict."""
+        stats = CharacterStats(
+            ability_scores=data.get("ability_scores", {}),
+            skills=data.get("skills", {}),
+            max_hit_points=data.get("max_hit_points", 0),
+            armor_class=data.get("armor_class", 10),
+            movement_speed=data.get("movement_speed", 30),
+            proficiency_bonus=data.get("proficiency_bonus", 2),
+            background=data.get("background", ""),
+        )
+        abilities = CharacterAbilities(
+            feats=data.get("feats", []),
+            class_abilities=data.get("class_abilities", []),
+            specialized_abilities=data.get("specialized_abilities", []),
+            spell_slots=data.get("spell_slots", {}),
+            known_spells=data.get("known_spells", []),
+        )
+        return CharacterMechanics(stats=stats, abilities=abilities)
+
+    @classmethod
+    def _load_ai_config_from_data(cls, data: Dict[str, Any]) -> Optional[Any]:
+        """Helper to load AI config from data dict with lazy imports."""
+        if not isinstance(data, dict) or "ai_config" not in data:
+            return None
+
+        AIImportManager.ensure_loaded()
+        if AIImportManager.get_ai_available():
+            config_class = AIImportManager.get_character_ai_config()
+            if config_class is not None:
+                ai_config_obj: Any = config_class.from_dict(data["ai_config"])
+                if hasattr(ai_config_obj, "to_dict"):
+                    return ai_config_obj.to_dict()
+                return dict(data["ai_config"])
+        return data.get("ai_config")
 
     @classmethod
     def load_from_file(cls, filepath: str):
         """Load character profile from JSON file."""
         data = load_json_file(filepath)
 
+        # Ensure data is a dict
+        if not isinstance(data, dict):
+            data = {}
+
         # Ensure nickname is present (can be None)
-        if isinstance(data, dict) and "nickname" not in data:
+        if "nickname" not in data:
             data["nickname"] = None
 
         # Handle both 'character_class' and 'dnd_class' field names
         character_class_name = (
             data.get("dnd_class") or data.get("character_class") or "fighter"
         )
+
         try:
             character_class = DnDClass(character_class_name)
         except ValueError:
@@ -481,47 +472,15 @@ class CharacterProfile:
             major_plot_actions=data.get("major_plot_actions", []),
         )
 
-        # Create stats
-        stats = CharacterStats(
-            ability_scores=data.get("ability_scores", {}),
-            skills=data.get("skills", {}),
-            max_hit_points=data.get("max_hit_points", 0),
-            armor_class=data.get("armor_class", 10),
-            movement_speed=data.get("movement_speed", 30),
-            proficiency_bonus=data.get("proficiency_bonus", 2),
-            background=data.get("background", ""),
-        )
-
-        # Create abilities
-        abilities = CharacterAbilities(
-            feats=data.get("feats", []),
-            class_abilities=data.get("class_abilities", []),
-            specialized_abilities=data.get("specialized_abilities", []),
-            spell_slots=data.get("spell_slots", {}),
-            known_spells=data.get("known_spells", []),
-        )
-
-        # Create mechanics
-        mechanics = CharacterMechanics(stats=stats, abilities=abilities)
-
-        # Create possessions
+        # Load mechanics and possessions
+        mechanics = cls._load_mechanics_from_data(data)
         possessions = CharacterPossessions(
             equipment=data.get("equipment", {}),
             magic_items=data.get("magic_items", []),
         )
 
         # Load AI configuration if present
-        ai_config = None
-        if isinstance(data, dict) and "ai_config" in data:
-            if AI_AVAILABLE:
-                ai_config_obj = CharacterAIConfig.from_dict(data["ai_config"])
-                ai_config = (
-                    ai_config_obj.to_dict()
-                    if hasattr(ai_config_obj, "to_dict")
-                    else dict(data["ai_config"])
-                )
-            else:
-                ai_config = data["ai_config"]
+        ai_config = cls._load_ai_config_from_data(data)
 
         return cls(
             identity=identity,
