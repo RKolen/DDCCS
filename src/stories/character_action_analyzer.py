@@ -124,6 +124,52 @@ def _get_prompt_for_analysis(
     return prompts.get(analysis_type)
 
 
+def _check_equipment_availability(
+    action_text: str, character_traits: Optional[Dict[str, Any]]
+) -> Optional[str]:
+    """Check if character has equipment mentioned in action.
+
+    Args:
+        action_text: Description of the character's action
+        character_traits: Optional dict with equipment info
+
+    Returns:
+        Warning message if equipment missing, None otherwise
+    """
+    if not character_traits:
+        return None
+
+    action_lower = action_text.lower()
+    weapons = character_traits.get("equipment", {}).get("weapons", [])
+    weapons_lower = [w.lower() for w in weapons]
+
+    # Check for weapon usage patterns
+    weapon_patterns = [
+        (["bow", "arrow", "shoots an arrow", "fires an arrow"], "bow"),
+        (["sword", "blade", "slashes with sword"], "sword"),
+        (["dagger", "knife"], "dagger"),
+        (["axe", "hatchet"], "axe"),
+        (["hammer", "warhammer"], "hammer"),
+        (["staff of", "quarterstaff"], "staff"),
+        (["mace", "club"], "mace"),
+        (["spear", "lance"], "spear"),
+    ]
+
+    for keywords, weapon_type in weapon_patterns:
+        # Check if action mentions this weapon
+        if any(keyword in action_lower for keyword in keywords):
+            # Check if character has this weapon type in equipment
+            has_weapon = any(weapon_type in w_lower for w_lower in weapons_lower)
+            if not has_weapon:
+                available = ", ".join(weapons) if weapons else "none"
+                return (
+                    f"INCONSISTENT: Character uses {weapon_type} but doesn't have "
+                    f"one in equipment (Available weapons: {available})"
+                )
+
+    return None
+
+
 def _get_ai_analysis(
     analysis_type: str,
     action_text: str,
@@ -294,6 +340,11 @@ def assess_consistency(
     Returns:
         String assessing consistency
     """
+    # Check equipment availability FIRST (highest priority)
+    equipment_warning = _check_equipment_availability(action_text, character_traits)
+    if equipment_warning:
+        return equipment_warning
+
     if character_traits:
         # Try AI-based analysis first
         ai_consistency = _get_ai_analysis(

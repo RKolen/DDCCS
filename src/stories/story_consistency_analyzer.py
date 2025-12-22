@@ -164,14 +164,14 @@ class TacticalAnalyzer:
         return "Stealth" in skills and skills["Stealth"] > 5
 
     @staticmethod
-    def analyze_tactical_action(ctx: ActionContext) -> Optional[ConsistencyIssue]:
-        """Check tactical appropriateness of action.
+    def _check_tactical_patterns(ctx: ActionContext) -> Optional[ConsistencyIssue]:
+        """Check tactical patterns for character class.
 
         Args:
-            ctx: Action context containing character and action details
+            ctx: Action context
 
         Returns:
-            ConsistencyIssue if problem found, None otherwise
+            ConsistencyIssue if tactical problem found, None otherwise
         """
         action_lower = ctx.action_text.lower()
         char_class = ctx.profile.get("dnd_class", "").lower()
@@ -226,8 +226,81 @@ class TacticalAnalyzer:
                         suggestion=suggestion,
                         score=score,
                     )
+        return None
+
+    @staticmethod
+    def check_equipment_availability(
+        profile: Dict[str, Any], action_text: str
+    ) -> Optional[tuple]:
+        """Check if character has equipment mentioned in action.
+
+        Args:
+            profile: Character profile
+            action_text: Action text
+
+        Returns:
+            Tuple of (equipment_name, issue_description) if missing, None otherwise
+        """
+        action_lower = action_text.lower()
+        weapons = profile.get("equipment", {}).get("weapons", [])
+        weapons_lower = [w.lower() for w in weapons]
+
+        # Check for weapon usage patterns
+        weapon_patterns = [
+            (["bow", "arrow", "shoots an arrow", "fires an arrow"], "bow"),
+            (["sword", "blade", "slashes with sword"], "sword"),
+            (["dagger", "knife"], "dagger"),
+            (["axe", "hatchet"], "axe"),
+            (["hammer", "warhammer"], "hammer"),
+            (["staff of", "quarterstaff"], "staff"),
+            (["mace", "club"], "mace"),
+            (["spear", "lance"], "spear"),
+        ]
+
+        for keywords, weapon_type in weapon_patterns:
+            # Check if action mentions this weapon
+            if any(keyword in action_lower for keyword in keywords):
+                # Check if character has this weapon type in equipment
+                has_weapon = any(weapon_type in w_lower for w_lower in weapons_lower)
+                if not has_weapon:
+                    return (
+                        weapon_type,
+                        f"Character uses {weapon_type} but doesn't have one in equipment",
+                    )
 
         return None
+
+    @staticmethod
+    def analyze_tactical_action(ctx: ActionContext) -> Optional[ConsistencyIssue]:
+        """Check tactical appropriateness of action.
+
+        Args:
+            ctx: Action context containing character and action details
+
+        Returns:
+            ConsistencyIssue if problem found, None otherwise
+        """
+        # First, check equipment availability - highest priority
+        equipment_check = TacticalAnalyzer.check_equipment_availability(
+            ctx.profile, ctx.action_text
+        )
+        if equipment_check:
+            _, issue_desc = equipment_check
+            available_weapons = ctx.profile.get("equipment", {}).get("weapons", [])
+            return ConsistencyIssue(
+                character_name=ctx.character_name,
+                story_file=ctx.story_file,
+                line_number=ctx.line_num,
+                action_text=ctx.action_text,
+                issue_type="equipment",
+                description=f"{ctx.character_name} - {issue_desc}",
+                suggestion=f"Character should use available equipment: "
+                f"{', '.join(available_weapons)}",
+                score=9,
+            )
+
+        # Then check tactical patterns
+        return TacticalAnalyzer._check_tactical_patterns(ctx)
 
 
 class PersonalityAnalyzer:
