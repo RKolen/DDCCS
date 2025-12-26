@@ -34,6 +34,7 @@ from src.stories.session_results_manager import (
 from src.stories.character_action_analyzer import extract_character_actions
 from src.cli.story_amender_cli_handler import StoryAmenderCLIHandler
 from src.characters.character_consistency import create_character_development_file
+from src.ai.ai_client import AIClient
 from src.utils.file_io import read_text_file
 from src.utils.string_utils import truncate_at_sentence
 from src.cli.dnd_cli_helpers import (
