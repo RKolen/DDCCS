@@ -696,20 +696,25 @@ class StoryCLIManager:
                     if line.strip():
                         print(f"  {line[:100]}...")
 
-            # Offer AI continuation if AI is available
-            if self.story_manager.ai_client:
-                print("\n" + "=" * 60)
-                add_content = (
-                    input("\nGenerate AI continuation for this story? (y/n): ")
-                    .strip()
-                    .lower()
-                )
-                if add_content == "y":
-                    self._add_ai_continuation_to_story(story_path, display_name)
-            else:
-                print(
-                    "\n[INFO] AI features not available - cannot generate continuation."
-                )
+            # Initialize AI client on-demand if needed
+            if not self.story_manager.ai_client:
+                print("\n[INFO] Initializing AI client...")
+                try:
+                    self.story_manager.ai_client = AIClient()
+                    print("[SUCCESS] AI client ready")
+                except (ImportError, ValueError) as e:
+                    print(f"[ERROR] Failed to initialize AI client: {e}")
+                    return
+
+            # Offer AI continuation
+            print("\n" + "=" * 60)
+            add_content = (
+                input("\nGenerate AI continuation for this story? (y/n): ")
+                .strip()
+                .lower()
+            )
+            if add_content == "y":
+                self._add_ai_continuation_to_story(story_path, display_name)
 
         except OSError as e:
             print(f"[ERROR] Error reading story: {e}")
