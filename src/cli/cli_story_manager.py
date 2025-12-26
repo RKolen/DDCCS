@@ -26,7 +26,6 @@ from src.stories.story_file_manager import (
     create_new_story_series,
     create_story_in_series,
 )
-from src.ai.ai_client import AIClient
 from src.stories.story_updater import StoryUpdater
 from src.stories.session_results_manager import (
     StorySession,
@@ -164,7 +163,7 @@ class StoryCLIManager:
                 print("No stories in this series yet.")
 
             print("\nOptions:")
-            print("1. Create New Story (with optional AI generation)")
+            print("1. Add New Story to Series")
             print("2. View Story Details")
             print("3. Generate Session Results")
             print("4. Generate Character Development")
@@ -386,42 +385,30 @@ class StoryCLIManager:
         if template_choice == "y":
             use_template = True
 
-        # Always ask for story prompt/description
-        print("\nEnter a story prompt or description:")
-        print("(This helps guide the story content and can be used for AI generation)")
-        story_prompt = input("Story prompt: ").strip()
-
         ai_generated_content = ""
-        if not story_prompt:
-            # No prompt given, skip AI generation
+        if not self.story_manager.ai_client:
             return StoryCreationOptions(
                 use_template=use_template,
                 ai_generated_content=ai_generated_content,
             )
 
-        # Offer AI generation if prompt was provided
-        ai_choice = input("\nGenerate initial story with AI? (y/n): ").strip().lower()
+        ai_choice = input("Generate initial story with AI? (y/n): ").strip().lower()
         if ai_choice != "y":
             return StoryCreationOptions(
                 use_template=use_template,
                 ai_generated_content=ai_generated_content,
             )
 
-        # Initialize AI client on-demand if needed
-        if not self.story_manager.ai_client:
-            print("[INFO] Initializing AI client...")
-            try:
-                self.story_manager.ai_client = AIClient()
-                print("[SUCCESS] AI client ready")
-            except (ImportError, ValueError) as e:
-                print(f"[ERROR] Failed to initialize AI client: {e}")
-                return StoryCreationOptions(
-                    use_template=use_template,
-                    ai_generated_content=ai_generated_content,
-                )
-
-        # Generate with AI
+        # Prompt for story
         display_story_prompt_guidance("initial")
+        story_prompt = input("Story prompt: ").strip()
+        if not story_prompt:
+            return StoryCreationOptions(
+                use_template=use_template,
+                ai_generated_content=ai_generated_content,
+            )
+
+        # Generate with context
         try:
             story_config = build_story_config(
                 self.workspace_path,
@@ -696,25 +683,20 @@ class StoryCLIManager:
                     if line.strip():
                         print(f"  {line[:100]}...")
 
-            # Initialize AI client on-demand if needed
-            if not self.story_manager.ai_client:
-                print("\n[INFO] Initializing AI client...")
-                try:
-                    self.story_manager.ai_client = AIClient()
-                    print("[SUCCESS] AI client ready")
-                except (ImportError, ValueError) as e:
-                    print(f"[ERROR] Failed to initialize AI client: {e}")
-                    return
-
-            # Offer AI continuation
-            print("\n" + "=" * 60)
-            add_content = (
-                input("\nGenerate AI continuation for this story? (y/n): ")
-                .strip()
-                .lower()
-            )
-            if add_content == "y":
-                self._add_ai_continuation_to_story(story_path, display_name)
+            # Offer AI continuation if AI is available
+            if self.story_manager.ai_client:
+                print("\n" + "=" * 60)
+                add_content = (
+                    input("\nGenerate AI continuation for this story? (y/n): ")
+                    .strip()
+                    .lower()
+                )
+                if add_content == "y":
+                    self._add_ai_continuation_to_story(story_path, display_name)
+            else:
+                print(
+                    "\n[INFO] AI features not available - cannot generate continuation."
+                )
 
         except OSError as e:
             print(f"[ERROR] Error reading story: {e}")
