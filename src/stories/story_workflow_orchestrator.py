@@ -44,6 +44,8 @@ class WorkflowOptions:
     create_character_dev_file: bool = True
     create_session_file: bool = True
     ai_client: Any = None
+    skip_ai_character_analysis: bool = False  # Skip AI calls for character analysis
+    max_characters_for_ai: int = 12  # Max characters to analyze with AI (performance)
 
 
 @dataclass
@@ -192,6 +194,17 @@ def _process_character_dev_workflow(
 
     print(f"Character development workflow starting - party: {ctx.party_names}")
     try:
+        # Performance optimization for large parties
+        party_size = len(ctx.party_names)
+        if party_size > opt.max_characters_for_ai:
+            print(
+                f"[PERFORMANCE] Large party detected ({party_size} members). "
+                f"AI analysis limited to first {opt.max_characters_for_ai} "
+                "characters."
+            )
+            remaining = party_size - opt.max_characters_for_ai
+            print(f"  Remaining {remaining} will use rule-based analysis.")
+
         # Load character profiles by searching all JSON files and matching by name field
         character_profiles = {}
         chars_dir = Path("game_data") / "characters"
@@ -203,6 +216,15 @@ def _process_character_dev_workflow(
                         profile_name = profile.get("name", "")
                         # Match against party names
                         if profile_name in ctx.party_names:
+                            # Disable AI for characters beyond max limit
+                            char_index = ctx.party_names.index(profile_name)
+                            if (
+                                char_index >= opt.max_characters_for_ai
+                                or opt.skip_ai_character_analysis
+                            ):
+                                if "ai_config" not in profile:
+                                    profile["ai_config"] = {}
+                                profile["ai_config"]["enabled"] = False
                             character_profiles[profile_name] = profile
                 except (OSError, json.JSONDecodeError) as e:
                     print(f"[DEBUG] Could not load {json_file.name}: {e}")

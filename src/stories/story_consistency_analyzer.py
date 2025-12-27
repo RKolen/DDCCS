@@ -13,6 +13,10 @@ import re
 from datetime import datetime
 from typing import Dict, List, Any, Optional, Tuple, NamedTuple
 from src.utils.file_io import read_text_file, write_text_file, file_exists
+from src.stories.equipment_checker import (
+    check_weapon_usage_consistency,
+    format_equipment_issue,
+)
 
 
 class ConsistencyIssue(NamedTuple):
@@ -241,32 +245,11 @@ class TacticalAnalyzer:
         Returns:
             Tuple of (equipment_name, issue_description) if missing, None otherwise
         """
-        action_lower = action_text.lower()
         weapons = profile.get("equipment", {}).get("weapons", [])
-        weapons_lower = [w.lower() for w in weapons]
+        weapon_type = check_weapon_usage_consistency(action_text, weapons)
 
-        # Check for weapon usage patterns
-        weapon_patterns = [
-            (["bow", "arrow", "shoots an arrow", "fires an arrow"], "bow"),
-            (["sword", "blade", "slashes with sword"], "sword"),
-            (["dagger", "knife"], "dagger"),
-            (["axe", "hatchet"], "axe"),
-            (["hammer", "warhammer"], "hammer"),
-            (["staff of", "quarterstaff"], "staff"),
-            (["mace", "club"], "mace"),
-            (["spear", "lance"], "spear"),
-        ]
-
-        for keywords, weapon_type in weapon_patterns:
-            # Check if action mentions this weapon
-            if any(keyword in action_lower for keyword in keywords):
-                # Check if character has this weapon type in equipment
-                has_weapon = any(weapon_type in w_lower for w_lower in weapons_lower)
-                if not has_weapon:
-                    return (
-                        weapon_type,
-                        f"Character uses {weapon_type} but doesn't have one in equipment",
-                    )
+        if weapon_type:
+            return format_equipment_issue(weapon_type)
 
         return None
 

@@ -20,6 +20,11 @@ try:
 except (ImportError, ModuleNotFoundError):
     AI_AVAILABLE = False
 
+from src.stories.equipment_checker import (
+    check_weapon_usage_consistency,
+    format_equipment_warning,
+)
+
 
 def _build_character_context_string(
     character_name: str, traits: Optional[Dict[str, Any]]
@@ -139,33 +144,11 @@ def _check_equipment_availability(
     if not character_traits:
         return None
 
-    action_lower = action_text.lower()
     weapons = character_traits.get("equipment", {}).get("weapons", [])
-    weapons_lower = [w.lower() for w in weapons]
+    weapon_type = check_weapon_usage_consistency(action_text, weapons)
 
-    # Check for weapon usage patterns
-    weapon_patterns = [
-        (["bow", "arrow", "shoots an arrow", "fires an arrow"], "bow"),
-        (["sword", "blade", "slashes with sword"], "sword"),
-        (["dagger", "knife"], "dagger"),
-        (["axe", "hatchet"], "axe"),
-        (["hammer", "warhammer"], "hammer"),
-        (["staff of", "quarterstaff"], "staff"),
-        (["mace", "club"], "mace"),
-        (["spear", "lance"], "spear"),
-    ]
-
-    for keywords, weapon_type in weapon_patterns:
-        # Check if action mentions this weapon
-        if any(keyword in action_lower for keyword in keywords):
-            # Check if character has this weapon type in equipment
-            has_weapon = any(weapon_type in w_lower for w_lower in weapons_lower)
-            if not has_weapon:
-                available = ", ".join(weapons) if weapons else "none"
-                return (
-                    f"INCONSISTENT: Character uses {weapon_type} but doesn't have "
-                    f"one in equipment (Available weapons: {available})"
-                )
+    if weapon_type:
+        return format_equipment_warning(weapon_type, weapons)
 
     return None
 
@@ -466,6 +449,147 @@ def generate_development_notes(
     return "Review action against character's established personality"
 
 
+def _parse_batched_response(response: str) -> Optional[Dict[str, str]]:
+    """Parse AI response into three analysis sections.
+
+    Args:
+        response: AI response text
+
+    Returns:
+        Dict with 'reasoning', 'consistency', 'development' keys, or None if parsing fails
+    """
+    result = {}
+    lines = response.strip().split("\n")
+    current_section = None
+    current_text = []
+
+    # Section header mappings
+    section_map = {
+        "REASONING:": "reasoning",
+        "CONSISTENCY:": "consistency",
+        "DEVELOPMENT:": "development",
+    }
+
+    for line in lines:
+        line_upper = line.strip().upper()
+
+        # Check if line starts with a section header
+        section_found = None
+        for header, section_key in section_map.items():
+            if line_upper.startswith(header):
+                section_found = (section_key, line[len(header) :].strip())
+                break
+
+        if section_found:
+            # Save previous section if exists
+            if current_section and current_text:
+                result[current_section] = " ".join(current_text).strip()
+            current_section, initial_text = section_found
+            current_text = [initial_text]
+    for value in result.values():
+        for char in value:
+            code = ord(char)
+            if 0x4E00 <= code <= 0x9FFF or 0x3400 <= code <= 0x4DBF or code > 127:
+                return None
+
+    return result
+
+
+def _get_batched_ai_analysis(
+    action_text: str,
+    character_name: str,
+    character_traits: Optional[Dict[str, Any]] = None,
+    previous_actions: Optional[List[str]] = None,
+) -> Optional[Dict[str, str]]:
+    """Get all three analyses (reasoning, consistency, development) in a single AI call.
+
+    This is 3x faster than calling AI separately for each analysis type.
+
+    Args:
+        action_text: Description of the character's action
+        character_name: Name of the character
+        character_traits: Optional dict with personality, goals, background, etc.
+        previous_actions: Optional list of character's prior actions in this campaign
+
+    Returns:
+        Dict with 'reasoning', 'consistency', 'development' keys, or None if AI unavailable
+    """
+    if not AI_AVAILABLE or not character_traits:
+        return None
+
+    # Check if AI is enabled
+    ai_config = character_traits.get("ai_config")
+    if isinstance(ai_config, dict) and not ai_config.get("enabled", True):
+        return None
+
+    try:
+        ai_client = AIClient()
+        char_context = _build_character_context_string(character_name, character_traits)
+
+        # Build prior actions context if provided
+        prior_actions_context = ""
+        if previous_actions and len(previous_actions) > 0:
+            prior_actions_context = (
+                "\nPrior actions by this character in this campaign:\n"
+                + "\n".join(f"- {action}" for action in previous_actions[:5])
+                + "\n\n"
+            )
+
+        prompt = f"""{char_context}Story Action: {action_text}
+{prior_actions_context}
+Provide a comprehensive analysis with these three sections:
+
+1. REASONING: Analyze this character's motivation for this action. Consider their personality, motivations, and goals. Be specific and concise (1-2 sentences).
+
+2. CONSISTENCY: Assess if this action is consistent with the character's personality traits, motivations, and goals. If prior actions are shown, also check consistency with their established behavior patterns. CRITICAL: This is a custom D&D campaign, NOT official lore. IGNORE any external canon (Lord of the Rings, novels, games, etc.). ONLY evaluate consistency against the character profile and their campaign history. Be specific (1-2 sentences).
+
+3. DEVELOPMENT: Suggest character development opportunities based on this action. Consider how this moment could lead to growth, relationship changes, or skill development. Be specific (1-2 sentences).
+
+CRITICAL FORMATTING:
+- Start each section with EXACTLY "REASONING:", "CONSISTENCY:", or "DEVELOPMENT:" on its own line
+- Write each response on the line immediately after its label
+- Use ONLY English ASCII characters
+- Keep each section to 1-2 sentences
+
+Example format:
+REASONING:
+The character acts from their sense of duty.
+
+CONSISTENCY:
+This aligns with their protective nature.
+
+DEVELOPMENT:
+This could strengthen their leadership skills."""
+
+        response = ai_client.chat_completion(
+            messages=[
+                {
+                    "role": "system",
+                    "content": (
+                        "SYSTEM INSTRUCTIONS - CRITICAL:\n"
+                        "You are a D&D character analysis assistant.\n"
+                        "YOU MUST respond ONLY in English.\n"
+                        "DO NOT generate ANY Chinese characters.\n"
+                        "DO NOT generate ANY non-ASCII characters.\n"
+                        "ONLY ASCII English text is acceptable."
+                    ),
+                },
+                {"role": "user", "content": prompt},
+            ],
+            temperature=0.7,
+            max_tokens=300,
+        )
+
+        if not response:
+            return None
+
+        # Parse response using helper
+        return _parse_batched_response(response)
+
+    except (AttributeError, ValueError, ConnectionError, TimeoutError):
+        return None
+
+
 def _build_character_action_entry(
     party_member: str,
     action_text: str,
@@ -483,6 +607,21 @@ def _build_character_action_entry(
     Returns:
         Dictionary with character action details
     """
+    # Try batched AI analysis first (single call for all three analyses)
+    batched_result = _get_batched_ai_analysis(
+        action_text, party_member, char_traits, previous_actions
+    )
+
+    if batched_result:
+        return {
+            "character": party_member,
+            "action": action_text,
+            "reasoning": batched_result.get("reasoning", "Unknown reasoning"),
+            "consistency": batched_result.get("consistency", "To be analyzed"),
+            "notes": batched_result.get("development", "No notes"),
+        }
+
+    # Fallback to individual analyses if batched fails
     return {
         "character": party_member,
         "action": action_text,

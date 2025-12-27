@@ -160,6 +160,10 @@ def _build_config_from_context(
         # If party_members is provided directly (for new series creation),
         # use story_manager to load their profiles
         if ctx.party_members and ctx.story_manager:
+            # Ensure characters are loaded before accessing profiles
+            if not ctx.story_manager.is_characters_loaded():
+                ctx.story_manager.load_party_characters(ctx.party_members)
+
             party_chars = {}
             for name in ctx.party_members:
                 profile = ctx.story_manager.get_character_profile(name)

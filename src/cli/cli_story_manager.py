@@ -253,24 +253,29 @@ class StoryCLIManager:
         elif method_name == "_amend_story_actions":
             self._amend_story_actions(series_name, series_stories)
 
-    def _orchestrate_story_creation(
-        self, story_path: str, series_path: str, party_names: List[str]
-    ) -> None:
-        """Execute workflow orchestration after story file creation."""
+    def _prepare_story_content(self, story_path: str) -> tuple:
+        """Prepare story content for workflow orchestration.
+
+        Args:
+            story_path: Path to story file
+
+        Returns:
+            Tuple of (story_name, story_content) or (None, None) on error
+        """
         try:
             story_content = read_text_file(story_path)
             if not story_content:
                 print(f"[WARNING] Could not read story file: {story_path}")
-                return
+                return (None, None)
         except OSError as e:
             print(f"[WARNING] Could not read story file: {e}")
-            return
+            return (None, None)
 
         # Extract story name
         story_filename = os.path.basename(story_path)
         story_name = os.path.splitext(story_filename)[0]
 
-        # Clean metadata (Created, Description) and generate title
+        # Clean metadata and generate title
         story_content = self.story_updater.clean_story_content(story_content)
         with open(story_path, "w", encoding="utf-8") as f:
             f.write(story_content)
@@ -285,6 +290,16 @@ class StoryCLIManager:
         except OSError:
             story_content = ""
 
+        return (story_name, story_content)
+
+    def _orchestrate_story_creation(
+        self, story_path: str, series_path: str, party_names: List[str]
+    ) -> None:
+        """Execute workflow orchestration after story file creation."""
+        story_name, story_content = self._prepare_story_content(story_path)
+        if not story_name:
+            return
+
         # Build context and run orchestrator
         ctx = StoryWorkflowContext(
             story_name=story_name,
@@ -296,7 +311,23 @@ class StoryCLIManager:
         )
 
         try:
-            options = WorkflowOptions(ai_client=self.story_manager.ai_client)
+            # Configure options for large parties (performance optimization)
+            options = WorkflowOptions(
+                ai_client=self.story_manager.ai_client,
+                max_characters_for_ai=12,  # Limit AI calls for performance
+            )
+
+            # Warn user about large parties
+            if len(party_names) > 12:
+                print(
+                    f"\n[PERFORMANCE] Large party ({len(party_names)} members) detected."
+                )
+                print("  AI analysis enabled for first 12 characters.")
+                remaining_count = len(party_names) - 12
+                print(
+                    f"  Remaining {remaining_count} will use faster rule-based analysis."
+                )
+
             results = coordinate_story_workflow(ctx, options=options)
 
             # Display results to user
