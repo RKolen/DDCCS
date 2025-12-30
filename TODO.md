@@ -40,7 +40,6 @@
 
 ### Advanced Features
 - [ ] **In-world calendar tracking** - Track campaign timeline, seasons, and story chronology within the game world
-- [ ] **ASCII Character Art** - Create images for characters
 
 ### Story Tools
 - [ ] **Story timeline tracking** - Track chronological order of events across campaigns
@@ -82,6 +81,10 @@
 - [ ] **Integration guide** - How to integrate with external tools
 
 ## [x] Recently Completed
+
+### Narration and ASCII Art - Demeber 30, 2025
+- [x] **ASCII Character Art** - Create ASCII images for characters
+- [x] **Voice Narration** - Make it possible to narrate the story files
 
 ### Story Amender Enhancement - December 18, 2025
 - [x] **Story amender functionality** - Complete dynamic character reassignment system
@@ -344,4 +347,4 @@
 
 ---
 
-**Last Updated:** December 14, 2025
+**Last Updated:** December 30, 2025

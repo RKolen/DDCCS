@@ -14,6 +14,7 @@ try:
     from rich.markdown import Markdown
     from rich.panel import Panel
     from rich.syntax import Syntax
+    from src.utils.tts_narrator import narrate_file, is_tts_available
 
     RICH_AVAILABLE = True
 except ImportError:
@@ -22,6 +23,8 @@ except ImportError:
     Markdown = None
     Panel = None
     Syntax = None
+    narrate_file = None
+    is_tts_available = None
 
 # Initialize console for terminal output
 console = Console() if RICH_AVAILABLE else None
@@ -73,7 +76,53 @@ def display_markdown_file(filepath: str, title: Optional[str] = None) -> None:
             print(f"Error reading file: {e}")
 
 
-def display_story_file(filepath: str, story_name: Optional[str] = None) -> None:
+def _display_story_content(
+    filepath: str, content: str, story_name: Optional[str]
+) -> None:
+    """Display story content with appropriate formatting.
+
+    Args:
+        filepath: Path to the story file
+        content: Story content to display
+        story_name: Optional custom name for the story
+    """
+    if not RICH_AVAILABLE:
+        # Fallback: plain text display
+        filename = os.path.basename(filepath)
+        display_title = story_name or filename
+        print(f"\n{'='*60}")
+        print(f"{display_title}")
+        print(f"{'='*60}\n")
+        print(content)
+    else:
+        # Display with optional title
+        if story_name:
+            console.rule(f"[bold green]{story_name}[/bold green]", style="green")
+        else:
+            filename = os.path.basename(filepath)
+            console.rule(f"[bold green]{filename}[/bold green]", style="green")
+
+        # Display as markdown (story files are typically markdown)
+        markdown = Markdown(content)
+        console.print(markdown)
+
+
+def _handle_narration(filepath: str) -> None:
+    """Handle TTS narration of a file.
+
+    Args:
+        filepath: Path to file to narrate
+    """
+    if narrate_file and is_tts_available and is_tts_available():
+        print("\n[INFO] Starting narration...")
+        narrate_file(filepath)
+    else:
+        print_warning("TTS not available. Install pyttsx3 for narration support.")
+
+
+def display_story_file(
+    filepath: str, story_name: Optional[str] = None, narrate: bool = False
+) -> None:
     """Display a story file with rich formatting.
 
     Stories are displayed with syntax highlighting for better
@@ -82,6 +131,7 @@ def display_story_file(filepath: str, story_name: Optional[str] = None) -> None:
     Args:
         filepath: Path to the story file to display
         story_name: Optional custom name for the story
+        narrate: If True, narrate the story using TTS after displaying
     """
     if not os.path.exists(filepath):
         if RICH_AVAILABLE:
@@ -94,26 +144,11 @@ def display_story_file(filepath: str, story_name: Optional[str] = None) -> None:
         with open(filepath, "r", encoding="utf-8") as f:
             content = f.read()
 
-        if not RICH_AVAILABLE:
-            # Fallback: plain text display
-            filename = os.path.basename(filepath)
-            display_title = story_name or filename
-            print(f"\n{'='*60}")
-            print(f"{display_title}")
-            print(f"{'='*60}\n")
-            print(content)
-            return
+        _display_story_content(filepath, content, story_name)
 
-        # Display with optional title
-        if story_name:
-            console.rule(f"[bold green]{story_name}[/bold green]", style="green")
-        else:
-            filename = os.path.basename(filepath)
-            console.rule(f"[bold green]{filename}[/bold green]", style="green")
-
-        # Display as markdown (story files are typically markdown)
-        markdown = Markdown(content)
-        console.print(markdown)
+        # Narrate if requested
+        if narrate:
+            _handle_narration(filepath)
 
     except (OSError, UnicodeDecodeError) as e:
         if RICH_AVAILABLE:

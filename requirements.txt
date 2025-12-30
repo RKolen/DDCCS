@@ -7,6 +7,9 @@ python-dotenv>=1.0.0  # Environment variable management
 # Terminal UI & Formatting
 rich>=13.0.0  # Rich text and beautiful formatting for terminal output
 
+# Text-to-Speech (Offline)
+pyttsx3>=2.90  # Cross-platform offline TTS (uses native Windows SAPI5)
+
 # Web Scraping & HTML Parsing
 beautifulsoup4>=4.9.0  # HTML/XML parsing library
 

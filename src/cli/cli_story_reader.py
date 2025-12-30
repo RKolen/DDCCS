@@ -9,7 +9,7 @@ import json
 import os
 from typing import List
 
-from src.utils.terminal_display import display_any_file, print_error
+from src.utils.terminal_display import display_any_file, display_story_file, print_error
 from src.cli.party_config_manager import load_current_party
 
 
@@ -40,7 +40,8 @@ class StoryReaderCLI:
             return
 
         campaigns = [
-            d for d in os.listdir(campaigns_dir)
+            d
+            for d in os.listdir(campaigns_dir)
             if os.path.isdir(os.path.join(campaigns_dir, d))
         ]
 
@@ -117,9 +118,10 @@ class StoryReaderCLI:
             campaign_name: Name of campaign
         """
         stories = [
-            f for f in os.listdir(campaign_path)
-            if f.endswith('.md') and not f.startswith(('character_', 'session_',
-                                                        'story_'))
+            f
+            for f in os.listdir(campaign_path)
+            if f.endswith(".md")
+            and not f.startswith(("character_", "session_", "story_"))
         ]
 
         if not stories:
@@ -137,7 +139,20 @@ class StoryReaderCLI:
             if 1 <= choice <= len(stories):
                 story_file = sorted(stories)[choice - 1]
                 filepath = os.path.join(campaign_path, story_file)
-                display_any_file(filepath)
+
+                # Ask if user wants narration
+                narrate_choice = (
+                    input("\nNarrate this story with TTS? (y/n, default n): ")
+                    .strip()
+                    .lower()
+                )
+                should_narrate = narrate_choice == "y"
+
+                # Display with optional narration
+                if should_narrate:
+                    display_story_file(filepath, narrate=True)
+                else:
+                    display_any_file(filepath)
             else:
                 print_error("Invalid choice.")
         except ValueError:
@@ -159,13 +174,13 @@ class StoryReaderCLI:
         available_chars = []
         try:
             for char_file in os.listdir(chars_dir):
-                if not char_file.endswith('.json'):
+                if not char_file.endswith(".json"):
                     continue
 
                 filepath = os.path.join(chars_dir, char_file)
-                with open(filepath, 'r', encoding='utf-8') as f:
+                with open(filepath, "r", encoding="utf-8") as f:
                     char_data = json.load(f)
-                    char_name = char_data.get('name', '')
+                    char_name = char_data.get("name", "")
 
                     # Check if this character is in the party
                     if char_name in party_members:
@@ -200,8 +215,9 @@ class StoryReaderCLI:
             campaign_path: Path to campaign directory
         """
         results = [
-            f for f in os.listdir(campaign_path)
-            if f.startswith('session_results_') and f.endswith('.md')
+            f
+            for f in os.listdir(campaign_path)
+            if f.startswith("session_results_") and f.endswith(".md")
         ]
 
         if not results:
@@ -232,8 +248,9 @@ class StoryReaderCLI:
             campaign_path: Path to campaign directory
         """
         dev_files = [
-            f for f in os.listdir(campaign_path)
-            if f.startswith('character_development_') and f.endswith('.md')
+            f
+            for f in os.listdir(campaign_path)
+            if f.startswith("character_development_") and f.endswith(".md")
         ]
 
         if not dev_files:
