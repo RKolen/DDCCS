@@ -13,18 +13,7 @@ This module provides standardized path construction for:
 import os
 from typing import Optional
 
-def _sanitize_name_for_path(name: str) -> str:
-    """Sanitize a name for use in file paths.
-
-    Converts to lowercase and replaces spaces with underscores.
-
-    Args:
-        name: Name to sanitize
-
-    Returns:
-        Sanitized name safe for file paths
-    """
-    return name.lower().replace(' ', '_')
+from src.utils.string_utils import sanitize_filename
 
 
 def get_game_data_path(workspace_path: Optional[str] = None) -> str:
@@ -100,9 +89,7 @@ def get_items_registry_path(workspace_path: Optional[str] = None) -> str:
         Path to game_data/items/custom_items_registry.json
     """
     return os.path.join(
-        get_game_data_path(workspace_path),
-        "items",
-        "custom_items_registry.json"
+        get_game_data_path(workspace_path), "items", "custom_items_registry.json"
     )
 
 
@@ -134,7 +121,9 @@ def get_party_config_path(
     )
 
 
-def get_character_file_path(character_name: str, workspace_path: Optional[str] = None) -> str:
+def get_character_file_path(
+    character_name: str, workspace_path: Optional[str] = None
+) -> str:
     """Get the path to a character JSON file.
 
     Args:
@@ -144,8 +133,10 @@ def get_character_file_path(character_name: str, workspace_path: Optional[str] =
     Returns:
         Path to game_data/characters/<character_name>.json
     """
-    filename = _sanitize_name_for_path(character_name)
+    filename = sanitize_filename(character_name)
     return os.path.join(get_characters_dir(workspace_path), f"{filename}.json")
+
+
 def get_npc_file_path(npc_name: str, workspace_path: Optional[str] = None) -> str:
     """Get the path to an NPC JSON file.
 
@@ -156,10 +147,13 @@ def get_npc_file_path(npc_name: str, workspace_path: Optional[str] = None) -> st
     Returns:
         Path to game_data/npcs/<npc_name>.json
     """
-    filename = _sanitize_name_for_path(npc_name)
+    filename = sanitize_filename(npc_name)
     return os.path.join(get_npcs_dir(workspace_path), f"{filename}.json")
-def get_story_file_path(campaign_name: str, story_name: str,
-                       workspace_path: Optional[str] = None) -> str:
+
+
+def get_story_file_path(
+    campaign_name: str, story_name: str, workspace_path: Optional[str] = None
+) -> str:
     """Get the path to a story markdown file.
 
     Args:

@@ -8,11 +8,19 @@ Handles name variations (e.g., "Frodo Baggins" in JSON vs "Frodo" in story text)
 """
 
 import os
-import json
 import re
-from datetime import datetime
 from typing import Dict, List, Any, Optional, Tuple, NamedTuple
-from src.utils.file_io import read_text_file, write_text_file, file_exists
+from src.utils.file_io import (
+    read_text_file,
+    write_text_file,
+    file_exists,
+    load_json_file,
+)
+from src.utils.string_utils import (
+    get_session_date,
+    get_full_timestamp,
+)
+from src.utils.character_profile_utils import find_character_file
 from src.stories.equipment_checker import (
     check_weapon_usage_consistency,
     format_equipment_issue,
@@ -563,55 +571,13 @@ class StoryConsistencyAnalyzer:
         profiles = {}
 
         for member_name in party_members:
-            char_file = self._find_character_file(member_name)
+            char_file = find_character_file(member_name, self.workspace_path)
             if char_file:
-                profile = self._load_character_file(char_file)
+                profile = load_json_file(char_file)
                 if profile:
                     profiles[member_name] = profile
 
         return profiles
-
-    def _find_character_file(self, character_name: str) -> Optional[str]:
-        """Find character JSON file for given character name.
-
-        Args:
-            character_name: Character name to search for
-
-        Returns:
-            Full path to character file, or None if not found
-        """
-        chars_dir = os.path.join(self.workspace_path, "game_data", "characters")
-        if not os.path.isdir(chars_dir):
-            return None
-
-        # Try exact filename match first
-        normalized_name = character_name.lower().replace(" ", "_")
-        candidate = os.path.join(chars_dir, f"{normalized_name}.json")
-        if file_exists(candidate):
-            return candidate
-
-        # Try first name only
-        first_name = character_name.split()[0].lower()
-        candidate = os.path.join(chars_dir, f"{first_name}.json")
-        if file_exists(candidate):
-            return candidate
-
-        return None
-
-    def _load_character_file(self, filepath: str) -> Optional[Dict[str, Any]]:
-        """Load character JSON file.
-
-        Args:
-            filepath: Path to character JSON file
-
-        Returns:
-            Character data dictionary, or None on error
-        """
-        try:
-            with open(filepath, "r", encoding="utf-8") as file_handle:
-                return json.load(file_handle)
-        except (OSError, ValueError):
-            return None
 
     def _analyze_story_file(
         self, story_file: str, story_text: str, profiles: Dict[str, Dict[str, Any]]
@@ -710,13 +676,13 @@ class StoryConsistencyAnalyzer:
         Returns:
             Path to generated report file
         """
-        timestamp = datetime.now().strftime("%Y-%m-%d")
+        timestamp = get_session_date()
         report_filename = f"series_analysis_{timestamp}.md"
         report_path = os.path.join(series_path, report_filename)
 
         lines = [
             f"# Story Consistency Analysis: {series_name}",
-            f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
+            f"Generated: {get_full_timestamp()}",
             f"Stories Analyzed: {len(story_analyses)}",
             f"Party Members: {', '.join(profiles.keys())}",
             "",

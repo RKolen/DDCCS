@@ -38,6 +38,7 @@ def run_all_utils_tests() -> int:
         ("test_terminal_display", "Terminal Display Tests"),
         ("test_ascii_art", "ASCII Art Tests"),
         ("test_tts_narrator", "TTS Narrator Tests"),
+        ("test_character_profile_utils", "Character Profile Utils Tests"),
     )
 
     results: Dict[str, bool] = {}

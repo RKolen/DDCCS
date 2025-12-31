@@ -5,9 +5,7 @@ Handles story analysis and combat conversion operations.
 """
 
 import os
-import json
 from typing import Dict, Any, List, Optional
-from datetime import datetime
 
 # Optional AI client import
 try:
@@ -30,7 +28,9 @@ from src.stories.character_action_analyzer import extract_character_actions
 from src.stories.story_consistency_analyzer import StoryConsistencyAnalyzer
 from src.utils.path_utils import get_campaign_path
 from src.utils.file_io import write_text_file, read_text_file
-from src.utils.string_utils import truncate_at_sentence
+from src.utils.string_utils import truncate_at_sentence, get_session_date, get_time_only
+from src.utils.character_profile_utils import load_character_profiles
+from src.utils.cli_utils import display_selection_menu
 from src.cli.cli_story_config_helper import extract_context_from_stories
 
 
@@ -67,38 +67,31 @@ class StoryAnalysisCLI:
             print("\n[ERROR] No story files found.")
             return
 
-        print("\n ANALYZE STORY FILE")
-        print("-" * 30)
-        for i, filename in enumerate(story_files, 1):
-            print(f"{i}. {filename}")
+        choice_idx = display_selection_menu(
+            story_files, title="ANALYZE STORY FILE", prompt="Enter file number"
+        )
 
-        try:
-            choice = int(input("Enter file number: ")) - 1
-            if 0 <= choice < len(story_files):
-                filename = story_files[choice]
-                filepath = os.path.join(base_path, filename)
+        if choice_idx is not None:
+            filename = story_files[choice_idx]
+            filepath = os.path.join(base_path, filename)
 
-                print(f"\n Analyzing {filename}...")
-                analysis = self.story_manager.analyze_story_file(filepath)
+            print(f"\n Analyzing {filename}...")
+            analysis = self.story_manager.analyze_story_file(filepath)
 
-                if "error" in analysis:
-                    print(f"[ERROR] {analysis['error']}")
-                    return
+            if "error" in analysis:
+                print(f"[ERROR] {analysis['error']}")
+                return
 
-                self._display_story_analysis(analysis)
+            self._display_story_analysis(analysis)
 
-                # Save to session results file instead of updating story
-                save = (
-                    input("\nSave analysis to session results file? (y/n): ")
-                    .strip()
-                    .lower()
-                )
-                if save == "y":
-                    self.save_analysis_to_session_results(analysis, base_path, filename)
-            else:
-                print("Invalid file number.")
-        except ValueError:
-            print("Invalid input.")
+            # Save to session results file instead of updating story
+            save = (
+                input("\nSave analysis to session results file? (y/n): ")
+                .strip()
+                .lower()
+            )
+            if save == "y":
+                self.save_analysis_to_session_results(analysis, base_path, filename)
 
     def save_analysis_to_session_results(
         self, analysis: Dict[str, Any], series_path: str, story_filename: str
@@ -118,7 +111,7 @@ class StoryAnalysisCLI:
             story_slug = story_slug.split("_", 1)[1]
         story_slug = story_slug.replace(" ", "_").lower()
 
-        today = datetime.now().strftime("%Y-%m-%d")
+        today = get_session_date()
         session_filename = f"session_results_{today}_{story_slug}.md"
         session_filepath = os.path.join(series_path, session_filename)
 
@@ -126,10 +119,9 @@ class StoryAnalysisCLI:
         analysis_content = self.format_analysis_for_session(analysis, story_filename)
 
         # Check if file exists
-        if os.path.exists(session_filepath):
+        existing = read_text_file(session_filepath)
+        if existing:
             # Append to existing file
-            with open(session_filepath, "r", encoding="utf-8") as f:
-                existing = f.read()
             content = existing + "\n" + analysis_content
             print(f"[SUCCESS] Appended analysis to: {session_filename}")
         else:
@@ -154,7 +146,7 @@ class StoryAnalysisCLI:
         """
         lines = []
         lines.append(f"## Analysis: {story_filename}")
-        lines.append(f"**Time:** {datetime.now().strftime('%H:%M:%S')}")
+        lines.append(f"**Time:** {get_time_only()}")
         lines.append("")
 
         # Overall consistency
@@ -429,7 +421,7 @@ class StoryAnalysisCLI:
             return
 
         print("\n[INFO] Loading character profiles...")
-        profiles = self._load_character_profiles(party_members)
+        profiles = load_character_profiles(party_members, self.workspace_path)
 
         print("[INFO] Analyzing stories...")
         series_path = get_campaign_path(series_name, self.workspace_path)
@@ -464,30 +456,6 @@ class StoryAnalysisCLI:
             series_name, series_path, all_actions, profiles
         )
 
-    def _load_character_profiles(self, party_names: List[str]) -> Dict[str, Any]:
-        """Load character profiles for analysis."""
-        profiles = {}
-        chars_dir = os.path.join(self.workspace_path, "game_data", "characters")
-
-        for name in party_names:
-            # Try exact match first
-            normalized = name.lower().replace(" ", "_")
-            path = os.path.join(chars_dir, f"{normalized}.json")
-
-            if not os.path.exists(path):
-                # Try first name
-                first_name = name.split()[0].lower()
-                path = os.path.join(chars_dir, f"{first_name}.json")
-
-            if os.path.exists(path):
-                try:
-                    with open(path, "r", encoding="utf-8") as f:
-                        profiles[name] = json.load(f)
-                except (OSError, ValueError):
-                    pass
-
-        return profiles
-
     def _generate_development_report(
         self,
         series_name: str,
@@ -496,7 +464,7 @@ class StoryAnalysisCLI:
         profiles: Dict[str, Any],
     ):
         """Generate markdown report for series character development."""
-        timestamp = datetime.now().strftime("%Y-%m-%d")
+        timestamp = get_session_date()
         report_filename = f"character_development_analysis_{timestamp}.md"
         report_path = os.path.join(series_path, report_filename)
 

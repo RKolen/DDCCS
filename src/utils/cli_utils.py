@@ -6,6 +6,7 @@ Reusable functions for command-line interface operations.
 
 from typing import List, Optional, Tuple
 
+
 def print_section_header(title: str, width: int = 50):
     """
     Print a formatted section header.
@@ -42,7 +43,9 @@ def print_list_with_numbers(items: List[str], prefix: str = ""):
         print(f"{prefix}{i}. {item}")
 
 
-def select_from_list(items: List[str], prompt: str = "Enter selection") -> Optional[int]:
+def select_from_list(
+    items: List[str], prompt: str = "Enter selection"
+) -> Optional[int]:
     """
     Let user select an item from a list by number.
 
@@ -125,3 +128,89 @@ def get_non_empty_input(prompt: str) -> Optional[str]:
         print("Input cannot be empty.")
         return None
     return user_input
+
+
+def get_multiline_input() -> List[str]:
+    """
+    Get multi-line input from user until empty line.
+
+    Collects lines until user enters an empty line.
+
+    Returns:
+        List of non-empty lines entered
+    """
+    lines = []
+    while True:
+        line = input()
+        if not line:
+            break
+        lines.append(line)
+    return lines
+
+
+def get_multiline_text(prompt: Optional[str] = None) -> Optional[str]:
+    """
+    Get multi-line text input from user.
+
+    Args:
+        prompt: Optional prompt to display before input
+
+    Returns:
+        Joined text from all lines, or None if no input
+    """
+    if prompt:
+        print(prompt)
+    lines = get_multiline_input()
+    if lines:
+        return "\n".join(lines)
+    return None
+
+
+def display_selection_menu(
+    items: List[str],
+    title: str = "",
+    prompt: str = "Select option",
+    allow_zero_back: bool = False,
+    prefix: str = "  ",
+) -> Optional[int]:
+    """
+    Display a numbered menu and get user selection.
+
+    Combines print_list_with_numbers and select_from_list patterns
+    used throughout CLI modules.
+
+    Args:
+        items: List of items to display
+        title: Optional title shown above the list
+        prompt: Selection prompt
+        allow_zero_back: If True, 0 returns None (for "back" option)
+        prefix: Prefix for each numbered item
+
+    Returns:
+        Selected index (0-based), or None if cancelled/invalid
+    """
+    if not items:
+        print("No items available.")
+        return None
+
+    if title:
+        print(f"\n{title}")
+
+    for i, item in enumerate(items, 1):
+        print(f"{prefix}{i}. {item}")
+
+    try:
+        range_hint = f"0-{len(items)}" if allow_zero_back else f"1-{len(items)}"
+        choice = int(input(f"\n{prompt} ({range_hint}): "))
+
+        if allow_zero_back and choice == 0:
+            return None
+
+        if 1 <= choice <= len(items):
+            return choice - 1
+
+        print("Invalid selection.")
+        return None
+    except ValueError:
+        print("Invalid input. Please enter a number.")
+        return None

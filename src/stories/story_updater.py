@@ -6,16 +6,24 @@ consistency sections, combat narratives, and AI-generated continuations.
 """
 
 import os
-import json
-from datetime import datetime
-from typing import Dict, Any, List, Optional
-from src.utils.file_io import read_text_file, write_text_file, file_exists
+from typing import Dict, Any, Optional
+from src.utils.file_io import (
+    read_text_file,
+    write_text_file,
+    file_exists,
+)
 from src.utils.markdown_utils import update_markdown_section
 from src.utils.story_formatting_utils import (
     generate_consultant_notes,
     generate_consistency_section,
 )
 from src.utils.text_formatting_utils import wrap_narrative_text
+from src.utils.string_utils import (
+    sanitize_filename,
+    get_session_date,
+    truncate_at_sentence,
+)
+from src.utils.character_profile_utils import load_character_traits
 from src.npcs.npc_auto_detection import detect_npc_suggestions
 from src.stories.hooks_and_analysis import create_story_hooks_file
 from src.stories.session_results_manager import (
@@ -27,7 +35,7 @@ from src.stories.story_ai_generator import (
     generate_session_results_from_story,
     generate_story_hooks_from_content,
 )
-from src.cli.party_config_manager import load_party_with_profiles
+from src.cli.party_config_manager import load_party_with_profiles, load_current_party
 from src.characters.character_consistency import create_character_development_file
 from src.stories.character_action_analyzer import extract_character_actions
 
@@ -733,11 +741,9 @@ class StoryUpdater:
         """
         # Build the actual filename that will be created
         # This must match the logic in create_story_hooks_file()
-        session_date = datetime.now().strftime("%Y-%m-%d")
+        session_date = get_session_date()
         story_name = hooks_config["story_name"]
-        filename = (
-            f"story_hooks_{session_date}_{story_name.lower().replace(' ', '_')}.md"
-        )
+        filename = f"story_hooks_{session_date}_{sanitize_filename(story_name)}.md"
         hooks_path = os.path.join(hooks_config["campaign_dir"], filename)
 
         # If file already exists, log info and continue to regenerate/update
@@ -845,7 +851,8 @@ class StoryUpdater:
         try:
             story_content = read_text_file(filepath)
             story_name = os.path.basename(filepath)[:-3]  # Remove .md
-            party_names = self._load_party_members(campaign_dir)
+            party_config_path = os.path.join(campaign_dir, "current_party.json")
+            party_names = load_current_party(config_path=party_config_path)
 
             # Detect NPCs and generate files
             npc_suggestions = detect_npc_suggestions(
@@ -878,13 +885,11 @@ class StoryUpdater:
 
             # Generate character_development file
             if party_names:
-                character_profiles = self._load_character_profiles(
-                    party_names, workspace_path
-                )
+                character_profiles = load_character_traits(party_names, workspace_path)
                 character_actions = extract_character_actions(
                     story_content if story_content is not None else "",
                     party_names,
-                    self._truncate_at_sentence,
+                    truncate_at_sentence,
                     character_profiles,
                 )
                 if character_actions:
@@ -894,96 +899,3 @@ class StoryUpdater:
 
         except OSError as e:
             print(f"[WARNING] Could not generate supporting files: {e}")
-
-    def _truncate_at_sentence(self, text: str, max_length: int) -> str:
-        """Truncate text at sentence boundary to avoid cutting off words.
-
-        Args:
-            text: Text to truncate
-            max_length: Maximum length before truncation
-
-        Returns:
-            Truncated text ending at sentence boundary
-        """
-        if len(text) <= max_length:
-            return text
-
-        truncated = text[:max_length]
-        sentence_endings = [".", "!", "?"]
-        for ending in sentence_endings:
-            last_ending = truncated.rfind(ending)
-            if last_ending > max_length // 2:
-                return truncated[: last_ending + 1]
-
-        return truncated
-
-    def _load_party_members(self, campaign_dir: str) -> List[str]:
-        """Load party member names from campaign configuration.
-
-        Args:
-            campaign_dir: Path to the campaign directory
-
-        Returns:
-            List of party member names
-        """
-
-        party_names = []
-        try:
-            party_config_path = os.path.join(campaign_dir, "current_party.json")
-            if os.path.exists(party_config_path):
-                with open(party_config_path, "r", encoding="utf-8") as f:
-                    party_data = json.load(f)
-                    party_names = party_data.get("party_members", [])
-        except (OSError, json.JSONDecodeError):
-            pass
-
-        return party_names
-
-    def _load_character_profiles(
-        self, party_names: List[str], workspace_path: str
-    ) -> Dict[str, Dict[str, Any]]:
-        """Load character profiles to access personality traits and background.
-
-        Args:
-            party_names: List of character names to load
-            workspace_path: Path to the workspace root
-
-        Returns:
-            Dict mapping character names to their trait dictionaries
-        """
-        profiles = {}
-        characters_dir = os.path.join(workspace_path, "game_data", "characters")
-
-        for character_name in party_names:
-            try:
-                # Use first name (first word) as filename convention
-                first_name = character_name.split()[0].lower()
-                filename = f"{first_name}.json"
-                filepath = os.path.join(characters_dir, filename)
-
-                if os.path.exists(filepath):
-                    with open(filepath, "r", encoding="utf-8") as f:
-                        char_data = json.load(f)
-                        profiles[character_name] = {
-                            "name": character_name,
-                            "dnd_class": char_data.get("dnd_class", ""),
-                            "personality_summary": char_data.get(
-                                "personality_summary", ""
-                            ),
-                            "background_story": char_data.get("background_story", ""),
-                            "motivations": char_data.get("motivations", []),
-                            "fears_weaknesses": char_data.get("fears_weaknesses", []),
-                            "goals": char_data.get("goals", []),
-                            "relationships": char_data.get("relationships", {}),
-                            "secrets": char_data.get("secrets", []),
-                            "class_abilities": char_data.get("class_abilities", []),
-                            "specialized_abilities": char_data.get(
-                                "specialized_abilities", []
-                            ),
-                            "known_spells": char_data.get("known_spells", []),
-                            "feats": char_data.get("feats", []),
-                        }
-            except (OSError, json.JSONDecodeError, KeyError):
-                pass
-
-        return profiles

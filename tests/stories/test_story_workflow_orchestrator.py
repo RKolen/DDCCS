@@ -9,6 +9,7 @@ development, session results) in a unified workflow.
 import tempfile
 from unittest.mock import Mock
 
+from tests.test_helpers import run_test_suite
 from src.stories.story_workflow_orchestrator import (
     coordinate_story_workflow,
     StoryWorkflowContext,
@@ -266,10 +267,6 @@ def test_coordinate_story_workflow_keyword_only_options():
 
 def run_all_workflow_orchestrator_tests():
     """Run all workflow orchestrator tests."""
-    print("\n" + "=" * 70)
-    print("STORY WORKFLOW ORCHESTRATOR TESTS")
-    print("=" * 70)
-
     tests = [
         test_story_workflow_context_creation,
         test_workflow_options_creation,
@@ -280,26 +277,7 @@ def run_all_workflow_orchestrator_tests():
         test_workflow_results_structure,
         test_coordinate_story_workflow_keyword_only_options,
     ]
-
-    passed = 0
-    failed = 0
-
-    for test_func in tests:
-        try:
-            test_func()
-            passed += 1
-        except AssertionError as e:
-            failed += 1
-            print(f"[FAIL] {test_func.__name__}: {e}")
-        except (ValueError, OSError, KeyError, AttributeError, TypeError) as e:
-            failed += 1
-            print(f"[ERROR] {test_func.__name__}: {type(e).__name__}: {e}")
-
-    print("\n" + "=" * 70)
-    print(f"Story Workflow Orchestrator: {passed} passed, {failed} failed")
-    print("=" * 70)
-
-    return 0 if failed == 0 else 1
+    return run_test_suite("Story Workflow Orchestrator", tests)
 
 
 if __name__ == "__main__":

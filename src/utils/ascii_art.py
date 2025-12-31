@@ -8,21 +8,17 @@ Can optionally generate AI-based ASCII art from character backstory.
 
 from typing import Optional, Dict, Any
 
-try:
-    from rich.console import Console
-    from rich.panel import Panel
-    from rich.align import Align
-    from rich.text import Text
-    from rich.columns import Columns
+from src.utils.optional_imports import (
+    RICH_AVAILABLE,
+    get_rich_console,
+    get_rich_component,
+)
 
-    RICH_AVAILABLE = True
-except ImportError:
-    RICH_AVAILABLE = False
-    Console = None
-    Panel = None
-    Align = None
-    Text = None
-    Columns = None
+# Get rich components
+Panel = get_rich_component("Panel")
+Align = get_rich_component("Align")
+Text = get_rich_component("Text")
+Columns = get_rich_component("Columns")
 
 # Lazy import for AI to avoid circular dependencies
 try:
@@ -32,7 +28,7 @@ except ImportError:
     AI_AVAILABLE = False
     AIClient = None
 
-console = Console() if RICH_AVAILABLE else None
+console = get_rich_console()
 
 
 def get_class_icon(dnd_class: str) -> str:

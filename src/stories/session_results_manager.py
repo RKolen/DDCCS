@@ -6,8 +6,8 @@ Handles session results, roll tracking, and result file generation for D&D sessi
 
 import os
 from typing import List, Dict, Any, Optional
-from datetime import datetime
 from src.utils.file_io import write_text_file
+from src.utils.string_utils import sanitize_filename, get_session_date, get_time_only
 
 
 class StorySession:
@@ -22,7 +22,7 @@ class StorySession:
             session_date: Date of the session (defaults to today)
         """
         self.story_name = story_name
-        self.session_date = session_date or datetime.now().strftime("%Y-%m-%d")
+        self.session_date = session_date or get_session_date()
         self.roll_results = []
         self.character_actions = []
         self.narrative_events = []
@@ -97,7 +97,7 @@ def create_session_results_file(series_path: str, session: StorySession) -> str:
     Returns:
         Path to the created or updated file
     """
-    story_slug = session.story_name.lower().replace(" ", "_")
+    story_slug = sanitize_filename(session.story_name)
     filename = f"session_results_{session.session_date}_{story_slug}.md"
     filepath = os.path.join(series_path, filename)
 
@@ -111,7 +111,7 @@ def create_session_results_file(series_path: str, session: StorySession) -> str:
 
         # Build new session section to append
         append_content = "\n## Session Update\n"
-        append_content += f"**Updated:** {datetime.now().strftime('%H:%M:%S')}\n\n"
+        append_content += f"**Updated:** {get_time_only()}\n\n"
 
         # Add roll results
         if session.roll_results:

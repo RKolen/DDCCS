@@ -27,25 +27,78 @@
   "movement_speed": 35,
   "proficiency_bonus": 4,
   "equipment": {
-    "weapons": ["Andúril", "Dagger"],
-    "armor": ["Leather Armor", "Cloak of Elvenkind"],
-    "items": ["Pipe", "Healing Herbs", "Elven Brooch"],
-    "magic_items": ["Ring of Barahir"],
+    "weapons": [
+      "Andúril",
+      "Longbow",
+      "Dagger"
+    ],
+    "armor": [
+      "Leather Armor",
+      "Cloak of Elvenkind"
+    ],
+    "items": [
+      "Pipe",
+      "Healing Herbs",
+      "Elven Brooch"
+    ],
+    "magic_items": [
+      "Ring of Barahir"
+    ],
     "gold": 0
   },
-  "spell_slots": {"1": 4, "2": 3, "3": 2},
-  "known_spells": ["Hunter's Mark", "Goodberry", "Pass without Trace"],
+  "spell_slots": {
+    "1": 4,
+    "2": 3,
+    "3": 2
+  },
+  "known_spells": [
+    "Hunter's Mark",
+    "Goodberry",
+    "Pass without Trace"
+  ],
   "background": "Noble",
-  "personality_traits": ["Stoic", "Wise", "Compassionate", "Wary of power"],
-  "ideals": ["Protect the Free Peoples of Middle-earth", "Fulfill his destiny as king"],
-  "bonds": ["Defend his friends", "Unite Gondor and Arnor"],
-  "flaws": ["Fear of failing his ancestors", "Temptation of the Ring", "Isolation"],
+  "personality_traits": [
+    "Stoic",
+    "Wise",
+    "Compassionate",
+    "Wary of power"
+  ],
+  "ideals": [
+    "Protect the Free Peoples of Middle-earth",
+    "Fulfill his destiny as king"
+  ],
+  "bonds": [
+    "Defend his friends",
+    "Unite Gondor and Arnor"
+  ],
+  "flaws": [
+    "Fear of failing his ancestors",
+    "Temptation of the Ring",
+    "Isolation"
+  ],
   "backstory": "Heir of Isildur, raised in Rivendell, hidden from Sauron's gaze. Ranger of the North, destined to reclaim the throne of Gondor. Aragorn is the last of the line of kings, a skilled tracker and swordsman, haunted by the burden of his ancestry.",
-  "feats": ["Alert", "Skilled", "Resilient"],
-  "magic_items": ["Ring of Barahir"],
-  "class_abilities": ["Favored Enemy: Orcs", "Natural Explorer", "Primeval Awareness"],
-  "specialized_abilities": ["Leadership", "Tracking"],
-  "major_plot_actions": ["Led the Fellowship", "Healed Faramir", "Claimed the throne"],
+  "feats": [
+    "Alert",
+    "Skilled",
+    "Resilient"
+  ],
+  "magic_items": [
+    "Ring of Barahir"
+  ],
+  "class_abilities": [
+    "Favored Enemy: Orcs",
+    "Natural Explorer",
+    "Primeval Awareness"
+  ],
+  "specialized_abilities": [
+    "Leadership",
+    "Tracking"
+  ],
+  "major_plot_actions": [
+    "Led the Fellowship",
+    "Healed Faramir",
+    "Claimed the throne"
+  ],
   "relationships": {
     "Arwen": "Beloved",
     "Gandalf": "Mentor and friend",

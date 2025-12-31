@@ -5,9 +5,7 @@ Handles all story-related menu interactions and operations.
 """
 
 import os
-import json
 from typing import List, Optional
-from datetime import datetime
 
 from src.cli.party_config_manager import (
     save_current_party,
@@ -36,7 +34,9 @@ from src.cli.story_amender_cli_handler import StoryAmenderCLIHandler
 from src.characters.character_consistency import create_character_development_file
 from src.ai.ai_client import AIClient
 from src.utils.file_io import read_text_file
-from src.utils.string_utils import truncate_at_sentence
+from src.utils.string_utils import truncate_at_sentence, get_session_date
+from src.utils.character_profile_utils import load_character_profiles
+from src.utils.cli_utils import display_selection_menu
 from src.cli.dnd_cli_helpers import (
     get_continuation_scene_type,
     get_continuation_prompt,
@@ -648,39 +648,25 @@ class StoryCLIManager:
 
     def _view_story_details(self, stories: List[str]):
         """View details of a story from a list."""
-        try:
-            choice = int(input(f"\nSelect story to view (1-{len(stories)}): "))
-            if 1 <= choice <= len(stories):
-                story_file = stories[choice - 1]
-                stories_base = os.path.join(
-                    self.workspace_path, "game_data", "campaigns"
-                )
-                story_path = os.path.join(stories_base, story_file)
-                self._display_story_info(story_path, story_file)
-            else:
-                print("Invalid choice.")
-        except ValueError:
-            print("Invalid input.")
+        choice_idx = display_selection_menu(stories, prompt="Select story to view")
+
+        if choice_idx is not None:
+            story_file = stories[choice_idx]
+            stories_base = os.path.join(self.workspace_path, "game_data", "campaigns")
+            story_path = os.path.join(stories_base, story_file)
+            self._display_story_info(story_path, story_file)
 
     def _view_story_details_in_series(self, series_name: str, stories: List[str]):
         """View details of a story within a series."""
-        try:
-            print("\nStories available:")
-            for i, story in enumerate(stories, 1):
-                print(f"  {i}. {story}")
+        choice_idx = display_selection_menu(
+            stories, title="Stories available:", prompt="Select story to view"
+        )
 
-            choice = int(input(f"\nSelect story to view (1-{len(stories)}): "))
-            if 1 <= choice <= len(stories):
-                story_file = stories[choice - 1]
-                stories_base = os.path.join(
-                    self.workspace_path, "game_data", "campaigns"
-                )
-                story_path = os.path.join(stories_base, series_name, story_file)
-                self._display_story_info(story_path, f"{series_name}/{story_file}")
-            else:
-                print("Invalid choice.")
-        except ValueError:
-            print("Invalid input.")
+        if choice_idx is not None:
+            story_file = stories[choice_idx]
+            stories_base = os.path.join(self.workspace_path, "game_data", "campaigns")
+            story_path = os.path.join(stories_base, series_name, story_file)
+            self._display_story_info(story_path, f"{series_name}/{story_file}")
 
     def _display_story_info(self, story_path: str, display_name: str):
         """Display information about a story file and offer AI continuation."""
@@ -837,7 +823,7 @@ class StoryCLIManager:
             # Generate session results using AI (same as automated generation)
             print("\n[INFO] Analyzing story and generating session results...")
 
-            session = StorySession(story_name, datetime.now().strftime("%Y-%m-%d"))
+            session = StorySession(story_name, get_session_date())
 
             # Use AI to analyze story if available
             if self.story_manager.ai_client:
@@ -941,21 +927,7 @@ class StoryCLIManager:
         self, party_names: List[str], _campaign_path: str
     ) -> dict:
         """Load character profiles for personality-aware analysis."""
-        profiles = {}
-        for character_name in party_names:
-            # Use first name (first word) as filename convention
-            first_name = character_name.split()[0].lower()
-            # Try to find character profile in workspace
-            char_path = os.path.join(
-                self.workspace_path, "game_data", "characters", f"{first_name}.json"
-            )
-            if os.path.exists(char_path):
-                try:
-                    with open(char_path, "r", encoding="utf-8") as f:
-                        profiles[character_name] = json.load(f)
-                except (OSError, json.JSONDecodeError):
-                    pass
-        return profiles
+        return load_character_profiles(party_names, self.workspace_path)
 
     def _select_story_from_list(self, stories: List[str], series_name: str):
         """Select a story from a list and return its details.
@@ -967,18 +939,14 @@ class StoryCLIManager:
         Returns:
             Tuple of (story_file, story_name, campaign_path) or None if invalid
         """
-        print("\nStories available:")
-        for i, story in enumerate(stories, 1):
-            print(f"  {i}. {story}")
+        choice_idx = display_selection_menu(
+            stories, title="Stories available:", prompt="Select story"
+        )
 
-        choice_input = input(f"\nSelect story (1-{len(stories)}): ").strip()
-        choice = int(choice_input)
-
-        if choice < 1 or choice > len(stories):
-            print("Invalid choice.")
+        if choice_idx is None:
             return None
 
-        story_file = stories[choice - 1]
+        story_file = stories[choice_idx]
         story_name = os.path.splitext(story_file)[0]
         campaign_path = os.path.join(
             self.workspace_path, "game_data", "campaigns", series_name

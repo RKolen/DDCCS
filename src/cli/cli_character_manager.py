@@ -9,11 +9,12 @@ from typing import Optional, Union
 from src.characters.consultants.character_profile import CharacterProfile
 from src.cli.dnd_cli_helpers import edit_character_profile_interactive
 from src.cli.cli_consultations import ConsultationsCLI
-from src.utils.cli_utils import select_character_from_list
+from src.utils.cli_utils import select_character_from_list, get_multiline_text
 from src.utils.ascii_art import (
     display_character_portrait,
     create_character_portrait,
 )
+from src.utils.string_utils import sanitize_filename
 
 
 class CharacterCLIManager:
@@ -317,16 +318,9 @@ class CharacterCLIManager:
         Returns:
             ASCII art string or False if cancelled
         """
-        print("\nEnter custom ASCII art (end with an empty line):")
-        lines = []
-        while True:
-            line = input()
-            if not line:
-                break
-            lines.append(line)
-
-        if lines:
-            return "\n".join(lines)
+        art = get_multiline_text("\nEnter custom ASCII art (end with an empty line):")
+        if art:
+            return art
         print("\n[INFO] No ASCII art entered.")
         return False
 
@@ -341,7 +335,7 @@ class CharacterCLIManager:
             Path(self.story_manager.base_path)
             / "game_data"
             / "characters"
-            / f"{character_name.lower().replace(' ', '_')}.json"
+            / f"{sanitize_filename(character_name)}.json"
         )
 
         if not char_file.exists():

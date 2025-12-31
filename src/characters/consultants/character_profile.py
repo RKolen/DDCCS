@@ -248,6 +248,11 @@ class CharacterProfile:
         """Character ability scores."""
         return self.mechanics.stats.ability_scores
 
+    @property
+    def known_spells(self) -> List[str]:
+        """Character known spells."""
+        return self.mechanics.abilities.known_spells
+
     # Note: Top-level accessors for behavior fields were intentionally removed.
     # Callers should use `profile.behavior.<field>` (e.g. profile.behavior.speech_patterns)
     # to access behavior-related properties. This keeps the data model explicit

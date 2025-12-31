@@ -8,6 +8,7 @@ and character retrieval operations.
 import os
 import json
 import tempfile
+from unittest.mock import patch
 
 from src.stories.story_character_loader import CharacterLoader
 from src.characters.consultants.character_profile import CharacterProfile
@@ -122,8 +123,10 @@ def test_validation_integration():
         # Create valid character
         create_test_character_file(temp_dir, "ValidChar")
 
-        loader = CharacterLoader(temp_dir)
-        loader.load_characters()
+        # Enable validation for this test by patching the flag
+        with patch("src.stories.story_character_loader.USE_CHARACTER_VALIDATION", True):
+            loader = CharacterLoader(temp_dir)
+            loader.load_characters()
 
         # Only valid character should be loaded
         assert len(loader.consultants) == 1

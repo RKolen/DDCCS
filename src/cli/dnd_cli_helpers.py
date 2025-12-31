@@ -11,9 +11,12 @@ from src.characters.consultants.character_profile import (
     CharacterBehavior,
 )
 from src.utils.path_utils import get_campaign_path
+from src.utils.cli_utils import get_multiline_text, display_selection_menu
 
 
-def edit_character_profile_interactive(profile: CharacterProfile) -> Tuple[CharacterProfile, bool]:
+def edit_character_profile_interactive(
+    profile: CharacterProfile,
+) -> Tuple[CharacterProfile, bool]:
     """
     Interactive editor for character profiles.
 
@@ -99,15 +102,9 @@ def _edit_background_story(profile: CharacterProfile) -> CharacterProfile:
     """Edit background story field (multi-line input)."""
     current = profile.background_story
     print(f"\nCurrent: Background story: {current}")
-    print("Enter new background story (end with empty line):")
-    lines = []
-    while True:
-        line = input()
-        if not line:
-            break
-        lines.append(line)
-    if lines:
-        profile.background_story = "\n".join(lines)
+    new_story = get_multiline_text("Enter new background story (end with empty line):")
+    if new_story:
+        profile.background_story = new_story
     return profile
 
 
@@ -273,36 +270,25 @@ def select_story_from_series(
 
 def _prompt_series_selection(story_series: List[str]) -> Optional[str]:
     """Prompt user to select a series."""
-    print("\nStory Series:")
-    for i, series in enumerate(story_series, 1):
-        print(f"{i}. {series}")
-
-    series_choice = input("\nSelect series number (or press Enter to skip): ").strip()
-
-    if series_choice.isdigit():
-        idx = int(series_choice) - 1
-        if 0 <= idx < len(story_series):
-            return story_series[idx]
+    choice_idx = display_selection_menu(
+        story_series, title="Story Series:", prompt="Select series number"
+    )
+    if choice_idx is not None:
+        return story_series[choice_idx]
     return None
 
 
-def _prompt_story_selection(
-    story_files: List[str], series_name: str
-) -> Optional[str]:
+def _prompt_story_selection(story_files: List[str], series_name: str) -> Optional[str]:
     """Prompt user to select a story file."""
     if not story_files:
         print(f"No stories found in {series_name}")
         return None
 
-    print(f"\nStories in {series_name}:")
-    for i, story_file in enumerate(story_files, 1):
-        print(f"{i}. {story_file}")
-
-    story_choice = input("\nSelect story number: ").strip()
-    if story_choice.isdigit():
-        story_idx = int(story_choice) - 1
-        if 0 <= story_idx < len(story_files):
-            return story_files[story_idx]
+    choice_idx = display_selection_menu(
+        story_files, title=f"Stories in {series_name}:", prompt="Select story number"
+    )
+    if choice_idx is not None:
+        return story_files[choice_idx]
     return None
 
 
@@ -397,34 +383,21 @@ def select_target_story_for_combat(
 
 def _select_story_series(story_series: List[str]) -> Optional[str]:
     """Select a story series from list."""
-    print("\nStory Series:")
-    for i, series in enumerate(story_series, 1):
-        print(f"{i}. {series}")
-
-    series_choice = input("\nSelect series number (or press Enter to skip): ").strip()
-
-    if not series_choice.isdigit():
-        return None
-
-    series_idx = int(series_choice) - 1
-    if 0 <= series_idx < len(story_series):
-        return story_series[series_idx]
+    choice_idx = display_selection_menu(
+        story_series, title="Story Series:", prompt="Select series number"
+    )
+    if choice_idx is not None:
+        return story_series[choice_idx]
     return None
 
 
 def _select_story_file(story_files: List[str], series_name: str) -> Optional[str]:
     """Select a story file from list."""
-    print(f"\nStories in {series_name}:")
-    for i, story_file in enumerate(story_files, 1):
-        print(f"{i}. {story_file}")
-
-    story_choice = input("\nSelect story number: ").strip()
-    if not story_choice.isdigit():
-        return None
-
-    story_idx = int(story_choice) - 1
-    if 0 <= story_idx < len(story_files):
-        return story_files[story_idx]
+    choice_idx = display_selection_menu(
+        story_files, title=f"Stories in {series_name}:", prompt="Select story number"
+    )
+    if choice_idx is not None:
+        return story_files[choice_idx]
     return None
 
 
@@ -485,19 +458,14 @@ def _prompt_for_series_selection(
     Returns:
         Selected series name or None
     """
-    print("\nAvailable story series:")
-    for i, series in enumerate(series_list, 1):
-        print(f"{i}. {series}")
-
-    try:
-        series_choice = int(input("Select series (0 to cancel): "))
-        if series_choice == 0:
-            return None
-        if 1 <= series_choice <= len(series_list):
-            return series_list[series_choice - 1]
-        print("Invalid choice.")
-    except ValueError:
-        print("Invalid input.")
+    choice_idx = display_selection_menu(
+        series_list,
+        title="Available story series:",
+        prompt="Select series",
+        allow_zero_back=True,
+    )
+    if choice_idx is not None:
+        return series_list[choice_idx]
     return None
 
 
@@ -513,25 +481,18 @@ def _prompt_for_story_selection(
     Returns:
         Selected story filename or None
     """
-    print(f"\nStories in {series_name}:")
-    for i, story in enumerate(story_files, 1):
-        print(f"{i}. {story}")
-
-    try:
-        story_choice = int(input("Select story (0 to cancel): "))
-        if story_choice == 0:
-            return None
-        if 1 <= story_choice <= len(story_files):
-            return story_files[story_choice - 1]
-        print("Invalid choice.")
-    except ValueError:
-        print("Invalid input.")
+    choice_idx = display_selection_menu(
+        story_files,
+        title=f"Stories in {series_name}:",
+        prompt="Select story",
+        allow_zero_back=True,
+    )
+    if choice_idx is not None:
+        return story_files[choice_idx]
     return None
 
 
-def get_series_and_story_from_manager(
-    story_manager
-) -> Optional[Tuple[str, str]]:
+def get_series_and_story_from_manager(story_manager) -> Optional[Tuple[str, str]]:
     """Prompt user to select a series and story from story manager.
 
     Args:
@@ -563,7 +524,7 @@ def get_series_and_story_from_manager(
 
 
 def collect_generic_input(
-    fields: List[Tuple[str, str, Optional[str]]]
+    fields: List[Tuple[str, str, Optional[str]]],
 ) -> Optional[Dict[str, Any]]:
     """Collect generic input from user for multiple fields.
 
@@ -581,7 +542,7 @@ def collect_generic_input(
         user_input = input(prompt_text).strip()
 
         # Check for cancel command
-        if user_input.lower() == 'done':
+        if user_input.lower() == "done":
             return None
 
         # Handle empty input

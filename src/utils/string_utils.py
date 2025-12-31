@@ -6,10 +6,49 @@ This module provides reusable functions for:
 - Filename sanitization
 - Text cleaning
 - Name formatting
+- Date formatting
 """
 
 import re
+from datetime import datetime
 from typing import Optional
+
+
+def get_session_date() -> str:
+    """Get current date formatted for session files (YYYY-MM-DD).
+
+    Returns:
+        Current date in YYYY-MM-DD format
+    """
+    return datetime.now().strftime("%Y-%m-%d")
+
+
+def get_timestamp() -> str:
+    """Get current timestamp formatted for file headers (YYYY-MM-DD HH:MM).
+
+    Returns:
+        Current timestamp in YYYY-MM-DD HH:MM format
+    """
+    return datetime.now().strftime("%Y-%m-%d %H:%M")
+
+
+def get_time_only() -> str:
+    """Get current time formatted for updates (HH:MM:SS).
+
+    Returns:
+        Current time in HH:MM:SS format
+    """
+    return datetime.now().strftime("%H:%M:%S")
+
+
+def get_full_timestamp() -> str:
+    """Get current full timestamp (YYYY-MM-DD HH:MM:SS).
+
+    Returns:
+        Current timestamp in YYYY-MM-DD HH:MM:SS format
+    """
+    return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
 
 def sanitize_filename(name: str) -> str:
     """Convert a name to a safe filename format.
@@ -26,7 +65,7 @@ def sanitize_filename(name: str) -> str:
         >>> sanitize_filename("Kael Ironheart")
         'kael_ironheart'
     """
-    return name.lower().replace(' ', '_')
+    return name.lower().replace(" ", "_")
 
 
 def normalize_name(name: str) -> str:
@@ -66,13 +105,13 @@ def slugify(text: str) -> str:
     # Convert to lowercase
     text = text.lower()
     # Replace spaces with hyphens
-    text = text.replace(' ', '-')
+    text = text.replace(" ", "-")
     # Remove special characters (keep alphanumeric and hyphens)
-    text = re.sub(r'[^a-z0-9-]', '', text)
+    text = re.sub(r"[^a-z0-9-]", "", text)
     # Remove multiple consecutive hyphens
-    text = re.sub(r'-+', '-', text)
+    text = re.sub(r"-+", "-", text)
     # Strip leading/trailing hyphens
-    text = text.strip('-')
+    text = text.strip("-")
     return text
 
 
@@ -88,7 +127,7 @@ def clean_whitespace(text: str) -> str:
         Text with normalized whitespace
     """
     # Replace multiple spaces with single space
-    text = re.sub(r'\s+', ' ', text)
+    text = re.sub(r"\s+", " ", text)
     # Strip leading/trailing whitespace
     return text.strip()
 
@@ -104,10 +143,12 @@ def title_case_category(category: str) -> str:
     Returns:
         Title-cased category (e.g., "Unresolved Plot Threads")
     """
-    return category.replace('_', ' ').title()
+    return category.replace("_", " ").title()
 
 
-def extract_bracketed_text(text: str, opening: str = '[', closing: str = ']') -> list[str]:
+def extract_bracketed_text(
+    text: str, opening: str = "[", closing: str = "]"
+) -> list[str]:
     """Extract text within brackets.
 
     Args:
@@ -118,7 +159,7 @@ def extract_bracketed_text(text: str, opening: str = '[', closing: str = ']') ->
     Returns:
         List of strings found within brackets
     """
-    pattern = re.escape(opening) + r'([^\]]+)' + re.escape(closing)
+    pattern = re.escape(opening) + r"([^\]]+)" + re.escape(closing)
     return re.findall(pattern, text)
 
 
@@ -135,7 +176,7 @@ def truncate_text(text: str, max_length: int, suffix: str = "...") -> str:
     """
     if len(text) <= max_length:
         return text
-    return text[:max_length - len(suffix)] + suffix
+    return text[: max_length - len(suffix)] + suffix
 
 
 def truncate_at_sentence(text: str, max_length: int) -> str:
@@ -153,7 +194,7 @@ def truncate_at_sentence(text: str, max_length: int) -> str:
     truncated = text[:max_length]
     last_period = truncated.rfind(".")
     if last_period > max_length * 0.7:
-        return truncated[:last_period + 1]
+        return truncated[: last_period + 1]
     return truncated + "..."
 
 
@@ -196,4 +237,4 @@ def remove_multiple_blank_lines(text: str) -> str:
     Returns:
         Text with normalized blank lines
     """
-    return re.sub(r'\n\n+', '\n\n', text)
+    return re.sub(r"\n\n+", "\n\n", text)

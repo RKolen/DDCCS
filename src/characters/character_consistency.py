@@ -11,7 +11,8 @@ This module is responsible for:
 
 import os
 from typing import List, Dict, Any, Optional
-from datetime import datetime
+from src.utils.string_utils import sanitize_filename, get_session_date
+
 
 def create_character_development_file(
     series_path: str,
@@ -29,11 +30,10 @@ def create_character_development_file(
         session_date: Date of session (defaults to today)
     """
     if session_date is None:
-        session_date = datetime.now().strftime("%Y-%m-%d")
+        session_date = get_session_date()
 
     filename = (
-        f"character_development_{session_date}_"
-        f"{story_name.lower().replace(' ', '_')}.md"
+        f"character_development_{session_date}_" f"{sanitize_filename(story_name)}.md"
     )
     filepath = os.path.join(series_path, filename)
 

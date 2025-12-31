@@ -9,25 +9,26 @@ colors, formatting, and structured layout.
 import os
 from typing import Optional
 
-try:
-    from rich.console import Console
-    from rich.markdown import Markdown
-    from rich.panel import Panel
-    from rich.syntax import Syntax
-    from src.utils.tts_narrator import narrate_file, is_tts_available
+from src.utils.optional_imports import (
+    RICH_AVAILABLE,
+    get_rich_console,
+    get_rich_component,
+)
 
-    RICH_AVAILABLE = True
+# Get rich components
+Markdown = get_rich_component("Markdown")
+Panel = get_rich_component("Panel")
+Syntax = get_rich_component("Syntax")
+
+# Import TTS separately (not a Rich component)
+try:
+    from src.utils.tts_narrator import narrate_file, is_tts_available
 except ImportError:
-    RICH_AVAILABLE = False
-    Console = None
-    Markdown = None
-    Panel = None
-    Syntax = None
     narrate_file = None
     is_tts_available = None
 
 # Initialize console for terminal output
-console = Console() if RICH_AVAILABLE else None
+console = get_rich_console()
 
 
 def display_markdown_file(filepath: str, title: Optional[str] = None) -> None:

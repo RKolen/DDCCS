@@ -10,8 +10,8 @@ This module is responsible for:
 
 import os
 from typing import List, Dict, Any, Optional
-from datetime import datetime
-from src.utils.file_io import write_text_file
+from src.utils.file_io import write_text_file, read_text_file
+from src.utils.string_utils import sanitize_filename, get_session_date, get_time_only
 
 
 def convert_ai_hooks_to_list(ai_hooks: Dict[str, Any]) -> List[str]:
@@ -73,9 +73,7 @@ def _build_hooks_content_from_dict(hooks_dict: Dict[str, Any]) -> str:
     return content
 
 
-def _build_unresolved_threads_section(
-    hooks: Any, is_structured: bool
-) -> str:
+def _build_unresolved_threads_section(hooks: Any, is_structured: bool) -> str:
     """Build unresolved threads section from hooks.
 
     Args:
@@ -96,9 +94,7 @@ def _build_unresolved_threads_section(
     return content
 
 
-def _build_npc_suggestions_section(
-    npc_suggestions: List[Dict[str, Any]]
-) -> str:
+def _build_npc_suggestions_section(npc_suggestions: List[Dict[str, Any]]) -> str:
     """Build NPC profile suggestions section.
 
     Args:
@@ -153,11 +149,9 @@ def create_story_hooks_file(
         npc_suggestions: Pre-detected NPC suggestions (if already scanned)
     """
     if session_date is None:
-        session_date = datetime.now().strftime("%Y-%m-%d")
+        session_date = get_session_date()
 
-    filename = (
-        f"story_hooks_{session_date}_{story_name.lower().replace(' ', '_')}.md"
-    )
+    filename = f"story_hooks_{session_date}_{sanitize_filename(story_name)}.md"
     filepath = os.path.join(series_path, filename)
 
     # Handle both structured dict (from AI) and simple list (from fallback)
@@ -188,9 +182,7 @@ def create_story_hooks_file(
     return filepath
 
 
-def _append_to_hooks_file(
-    filepath: str, hooks: Any, is_structured: bool
-) -> None:
+def _append_to_hooks_file(filepath: str, hooks: Any, is_structured: bool) -> None:
     """Append new hooks section to existing hooks file.
 
     Args:
@@ -198,17 +190,14 @@ def _append_to_hooks_file(
         hooks: Either structured dict or list of hooks
         is_structured: Whether hooks is a dict
     """
-    with open(filepath, "r", encoding="utf-8") as f:
-        existing_content = f.read()
+    existing_content = read_text_file(filepath) or ""
 
     # Build new hooks section to append
     append_content = "\n## Updated Session Hooks\n"
-    append_content += f"**Updated:** {datetime.now().strftime('%H:%M:%S')}\n\n"
+    append_content += f"**Updated:** {get_time_only()}\n\n"
 
     # Add unresolved threads update
-    unresolved_section = _build_unresolved_threads_section(
-        hooks, is_structured
-    )
+    unresolved_section = _build_unresolved_threads_section(hooks, is_structured)
     if unresolved_section:
         append_content += "### New Plot Threads\n"
         append_content += unresolved_section
