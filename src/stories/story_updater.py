@@ -251,15 +251,11 @@ class StoryUpdater:
             if current_content is None:
                 current_content = ""
 
-            print(f"[DEBUG] Current file length: {len(current_content)} chars")
-
             cleaned_content = self.clean_story_content(current_content)
-            print(f"[DEBUG] After cleaning: {len(cleaned_content)} chars")
 
             continuation_title = self.extract_narrative_title(
                 config.continuation or "", ai_client=config.ai_client
             )
-            print(f"[DEBUG] Generated title: {continuation_title}")
 
             new_content = self._build_story_content_with_continuation(
                 cleaned_content,
@@ -267,9 +263,6 @@ class StoryUpdater:
                 config.continuation or "",
                 config.prompt or "",
             )
-
-            print(f"[DEBUG] Final content length: {len(new_content)} chars")
-            print(f"[DEBUG] Number of ## sections: {new_content.count('## ')}")
 
             write_text_file(config.filepath, new_content)
 
@@ -350,6 +343,9 @@ class StoryUpdater:
         kept_lines = []
         skip_until_next_section = False
 
+        sections_found = []
+        sections_kept = []
+
         template_sections = [
             "Scene Title",
             "Story Content",
@@ -386,12 +382,14 @@ class StoryUpdater:
         for line in lines:
             # Detect start of template section
             if line.startswith("## "):
+                sections_found.append(line)
                 is_template = any(x in line for x in template_sections)
                 if is_template:
                     skip_until_next_section = True
                     continue
 
                 skip_until_next_section = False
+                sections_kept.append(line)
                 kept_lines.append(line)
             # Skip template content while in template section
             elif skip_until_next_section:
@@ -620,13 +618,13 @@ class StoryUpdater:
         if len(parts) >= 2:
             # File has header section with metadata
             header_section = parts[0] + "---"
-            rest = "---".join(parts[1:]) if len(parts) > 2 else ""
+            # If 2 parts: header + content, if 3+: header + content with embedded ---
+            rest = parts[1] if len(parts) == 2 else "---".join(parts[1:])
             print(f"[DEBUG] Found header section, rest length: {len(rest)} chars")
         else:
             # No header section - content is all story/template
             header_section = ""
             rest = cleaned_content
-            print(f"[DEBUG] No header section, rest length: {len(rest)} chars")
 
         # Remove template text from story content
         kept_content = self._filter_template_text(rest)

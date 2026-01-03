@@ -70,13 +70,11 @@ class SeriesAnalyzer:
 
         party_members = set(analysis_context.party_members)
         if output_filepath:
-            print(f"[DEBUG] Creating file header at: {output_filepath}")
             sys.stdout.flush()
             self._create_character_development_file_header(
                 output_filepath,
                 len(analysis_context.stories),
             )
-            print("[DEBUG] File header created")
             sys.stdout.flush()
 
         for processed_count, story_file in enumerate(analysis_context.stories, start=1):
@@ -247,12 +245,10 @@ class SeriesAnalyzer:
 
         # Create file at start if filepath provided
         if output_filepath:
-            print(f"[DEBUG] Creating file header at: {output_filepath}")
             sys.stdout.flush()
             self._create_series_analysis_file_header(
                 output_filepath, len(analysis_context.stories)
             )
-            print("[DEBUG] File header created")
             sys.stdout.flush()
 
         processed_count = 0

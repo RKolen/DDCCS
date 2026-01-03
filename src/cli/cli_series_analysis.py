@@ -77,7 +77,6 @@ class SeriesAnalysisCLI:
 
             character_profiles = load_profiles_func(party_members, campaign_path)
             output_filepath = self._get_character_dev_output_path(campaign_path)
-            print(f"[DEBUG] Output file path: {output_filepath}")
 
             analyzer = SeriesAnalyzer(self.story_manager)
             analysis_context = CharacterAnalysisContext(
@@ -108,7 +107,11 @@ class SeriesAnalysisCLI:
             print(f"[ERROR] Failed to generate series character development: {e}")
 
     def analyze_entire_series(
-        self, series_name: str, stories: List[str], truncate_func=None, load_profiles_func=None
+        self,
+        series_name: str,
+        stories: List[str],
+        truncate_func=None,
+        load_profiles_func=None,
     ) -> None:
         """Analyze entire story series for narrative patterns.
 
@@ -139,7 +142,6 @@ class SeriesAnalysisCLI:
 
             # Construct output filepath
             output_filepath = self._get_series_analysis_output_path(campaign_path)
-            print(f"[DEBUG] Output file path: {output_filepath}")
 
             # Load character profiles if function provided
             character_profiles = {}
@@ -174,7 +176,6 @@ class SeriesAnalysisCLI:
 
         except (OSError, AttributeError, ValueError) as e:
             print(f"[ERROR] Failed to analyze series: {e}")
-
 
     @staticmethod
     def _get_series_analysis_output_path(campaign_path: str) -> str:

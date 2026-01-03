@@ -30,9 +30,7 @@ def _build_story_context(
     if known_npcs:
         npc_descriptions = _format_npc_descriptions(known_npcs)
         if npc_descriptions:
-            context_parts.append(
-                "\nKnown NPCs at this location:\n" + npc_descriptions
-            )
+            context_parts.append("\nKnown NPCs at this location:\n" + npc_descriptions)
 
     # Add campaign context
     if campaign_context:
@@ -62,9 +60,7 @@ def _format_npc_descriptions(known_npcs: list) -> str:
         role = npc.get("role", "NPC")
         personality = npc.get("personality", "")
         location = npc.get("location", "")
-        npc_descriptions.append(
-            f"- {name} ({role} at {location}): {personality}"
-        )
+        npc_descriptions.append(f"- {name} ({role} at {location}): {personality}")
     return "\n".join(npc_descriptions)
 
 
@@ -82,12 +78,32 @@ def _extract_spell_names(story_prompt: str) -> str:
     """
     # Common D&D spells and abilities
     spell_patterns = [
-        "detect magic", "fireball", "heal", "cure wounds", "scorching ray",
-        "magic missile", "shield", "armor of agathys", "misty step",
-        "dimension door", "invisibility", "stoneskin", "cone of cold",
-        "lightning bolt", "polymorph", "counterspell", "dispel magic",
-        "identify", "disguise self", "mage hand", "minor illusion",
-        "prestidigitation", "light", "guidance", "mending", "resistance",
+        "detect magic",
+        "fireball",
+        "heal",
+        "cure wounds",
+        "scorching ray",
+        "magic missile",
+        "shield",
+        "armor of agathys",
+        "misty step",
+        "dimension door",
+        "invisibility",
+        "stoneskin",
+        "cone of cold",
+        "lightning bolt",
+        "polymorph",
+        "counterspell",
+        "dispel magic",
+        "identify",
+        "disguise self",
+        "mage hand",
+        "minor illusion",
+        "prestidigitation",
+        "light",
+        "guidance",
+        "mending",
+        "resistance",
     ]
 
     prompt_lower = story_prompt.lower()
@@ -446,10 +462,7 @@ def generate_session_results_from_story(
         return None
 
 
-def _parse_session_analysis(
-    analysis: str,
-    party_names: list
-) -> Dict[str, Any]:
+def _parse_session_analysis(analysis: str, party_names: list) -> Dict[str, Any]:
     """
     Parse AI-generated session analysis into structured format.
 
@@ -554,9 +567,11 @@ def generate_story_hooks_from_content(
     )
 
     # Build explicit party member list with numbers
-    party_list_numbered = "\n".join(
-        [f"{i+1}. {name}" for i, name in enumerate(party_names)]
-    ) if party_names else ""
+    party_list_numbered = (
+        "\n".join([f"{i+1}. {name}" for i, name in enumerate(party_names)])
+        if party_names
+        else ""
+    )
 
     user_prompt = (
         f"Analyze this D&D story and generate story hooks:\n\n"
@@ -705,9 +720,7 @@ def _parse_hooks_analysis(
             continue
 
         # Update section or character based on line content
-        section, char = _detect_hooks_section_and_character(
-            line_stripped, party_names
-        )
+        section, char = _detect_hooks_section_and_character(line_stripped, party_names)
         if section:
             current_section = section
             current_character = char
@@ -755,9 +768,7 @@ def _detect_hooks_section_and_character(
         return ("character_hooks", None)
     if "NEXT" in line_upper and "SESSION" in line_upper:
         return ("next_session_ideas", None)
-    if "NPC" in line_upper and (
-        "FOLLOW" in line_upper or "RELATION" in line_upper
-    ):
+    if "NPC" in line_upper and ("FOLLOW" in line_upper or "RELATION" in line_upper):
         return ("npc_follow_ups", None)
 
     # Check for character name headers
@@ -800,14 +811,10 @@ def _add_hook_to_results(
         if detected_char:
             if detected_char not in results["character_specific_hooks"]:
                 results["character_specific_hooks"][detected_char] = []
-            results["character_specific_hooks"][detected_char].append(
-                hook_text
-            )
+            results["character_specific_hooks"][detected_char].append(hook_text)
         else:
             if "unassigned" not in results["character_specific_hooks"]:
                 results["character_specific_hooks"]["unassigned"] = []
-            results["character_specific_hooks"]["unassigned"].append(
-                hook_text
-            )
+            results["character_specific_hooks"]["unassigned"].append(hook_text)
     elif section:
         results[section].append(hook_text)
