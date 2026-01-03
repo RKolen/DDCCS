@@ -9,6 +9,9 @@ venv/
 ENV/
 .envrc
 
+# Ignore Ollama Modelfile (contains custom model configuration)
+Modelfile
+
 # Ignore VSCode settings and tasks
 .vscode/
 
