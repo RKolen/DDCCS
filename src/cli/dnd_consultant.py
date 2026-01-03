@@ -12,6 +12,8 @@ from src.dm.dungeon_master import DMConsultant
 from src.cli.cli_character_manager import CharacterCLIManager
 from src.cli.cli_story_manager import StoryCLIManager
 from src.cli.cli_story_reader import StoryReaderCLI
+from src.ai.ai_client import AIClient
+from src.ai.availability import AI_AVAILABLE
 
 
 class DDConsultantCLI:
@@ -20,9 +22,15 @@ class DDConsultantCLI:
     def __init__(self, workspace_path: str = "", campaign_name: str = ""):
         self.workspace_path = workspace_path or os.getcwd()
 
-        # Don't create AI client eagerly - it will be created when needed
-        # This avoids slow OpenAI initialization during startup (can take 85+ seconds!)
+        # Initialize AI client if available
+        # Uses lazy imports to avoid slow startup when AI is not configured
         ai_client = None
+        if AI_AVAILABLE:
+            try:
+                ai_client = AIClient()
+            except (ValueError, OSError) as e:
+                print(f"[WARNING] AI initialization failed: {e}")
+                print("[INFO] Story generation will use templates only.")
 
         # By default use the original StoryManager to preserve existing
         # behavior. Only use the EnhancedStoryManager when a campaign name is

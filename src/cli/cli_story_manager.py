@@ -393,6 +393,20 @@ class StoryCLIManager:
         party_members: Optional[List[str]] = None,
     ) -> StoryCreationOptions:
         """Collect template and AI generation options from user."""
+        # If AI is not available, inform user and return boilerplate
+        if not self.story_manager.ai_client:
+            print(
+                "\n[INFO] AI not available - creating story file with boilerplate template."
+            )
+            print("[INFO] Edit the file manually to add your story content.")
+            print(
+                "[INFO] See docs/AI_INTEGRATION.md to enable AI-powered story generation."
+            )
+            return StoryCreationOptions(
+                use_template=True,  # Use template as fallback
+                ai_generated_content="",
+            )
+
         # Ensure only needed characters are loaded for profile lookup
         # If party_members provided, use load_party_characters instead of loading all
         if party_members:
@@ -418,11 +432,6 @@ class StoryCLIManager:
             use_template = True
 
         ai_generated_content = ""
-        if not self.story_manager.ai_client:
-            return StoryCreationOptions(
-                use_template=use_template,
-                ai_generated_content=ai_generated_content,
-            )
 
         ai_choice = input("Generate initial story with AI? (y/n): ").strip().lower()
         if ai_choice != "y":
