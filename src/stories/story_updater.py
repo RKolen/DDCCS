@@ -250,10 +250,16 @@ class StoryUpdater:
             current_content = read_text_file(config.filepath)
             if current_content is None:
                 current_content = ""
+
+            print(f"[DEBUG] Current file length: {len(current_content)} chars")
+
             cleaned_content = self.clean_story_content(current_content)
+            print(f"[DEBUG] After cleaning: {len(cleaned_content)} chars")
+
             continuation_title = self.extract_narrative_title(
                 config.continuation or "", ai_client=config.ai_client
             )
+            print(f"[DEBUG] Generated title: {continuation_title}")
 
             new_content = self._build_story_content_with_continuation(
                 cleaned_content,
@@ -261,6 +267,9 @@ class StoryUpdater:
                 config.continuation or "",
                 config.prompt or "",
             )
+
+            print(f"[DEBUG] Final content length: {len(new_content)} chars")
+            print(f"[DEBUG] Number of ## sections: {new_content.count('## ')}")
 
             write_text_file(config.filepath, new_content)
 
@@ -612,13 +621,19 @@ class StoryUpdater:
             # File has header section with metadata
             header_section = parts[0] + "---"
             rest = "---".join(parts[1:]) if len(parts) > 2 else ""
+            print(f"[DEBUG] Found header section, rest length: {len(rest)} chars")
         else:
             # No header section - content is all story/template
             header_section = ""
             rest = cleaned_content
+            print(f"[DEBUG] No header section, rest length: {len(rest)} chars")
 
         # Remove template text from story content
         kept_content = self._filter_template_text(rest)
+        print(f"[DEBUG] After filtering templates: {len(kept_content)} chars")
+        print(
+            f"[DEBUG] Kept content preview: {kept_content[:200] if kept_content else '(empty)'}..."
+        )
 
         # Combine: header (if any) + kept content + new continuation
         if header_section:

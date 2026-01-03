@@ -6,11 +6,47 @@ including party loading, NPC retrieval, and previous story analysis.
 """
 
 import os
+import json
 from dataclasses import dataclass
 from typing import List, Dict, Any, Optional
 from src.cli.party_config_manager import load_party_with_profiles
 from src.utils.npc_lookup_helper import load_relevant_npcs_for_prompt
 from src.utils.file_io import read_text_file
+
+
+def _load_party_chars_from_names(
+    party_members: List[str], workspace_path: str
+) -> Dict[str, Any]:
+    """Load character profiles by matching names in JSON files.
+
+    Args:
+        party_members: List of character names to load
+        workspace_path: Workspace root path
+
+    Returns:
+        Dict mapping character name to profile
+    """
+    party_chars = {}
+    characters_dir = os.path.join(workspace_path, "game_data", "characters")
+
+    if not os.path.exists(characters_dir):
+        return party_chars
+
+    for member_name in party_members:
+        for filename in os.listdir(characters_dir):
+            if filename.endswith(".json") and filename != "class.example.json":
+                try:
+                    char_file = os.path.join(characters_dir, filename)
+                    with open(char_file, "r", encoding="utf-8") as f:
+                        profile = json.load(f)
+                        # Match by "name" field inside JSON
+                        if profile.get("name") == member_name:
+                            party_chars[member_name] = profile
+                            break
+                except (json.JSONDecodeError, OSError):
+                    continue
+
+    return party_chars
 
 
 @dataclass
@@ -157,28 +193,19 @@ def _build_config_from_context(
     # Load party members and extract names
     party_names = []
     try:
-        # If party_members is provided directly (for new series creation),
-        # use story_manager to load their profiles
-        if ctx.party_members and ctx.story_manager:
-            # Ensure characters are loaded before accessing profiles
-            if not ctx.story_manager.is_characters_loaded():
-                ctx.story_manager.load_party_characters(ctx.party_members)
-
-            party_chars = {}
-            for name in ctx.party_members:
-                profile = ctx.story_manager.get_character_profile(name)
-                if profile:
-                    # Convert to dict format if needed
-                    if hasattr(profile, "__dict__"):
-                        party_chars[name] = profile.__dict__
-                    else:
-                        party_chars[name] = profile
-            story_config["party_characters"] = party_chars
-            party_names = ctx.party_members
-        else:
+        # Always load profiles directly from JSON files to ensure full trait data
+        # This avoids issues with CharacterProfile object serialization
+        if ctx.campaign_dir:
             party_chars = load_party_with_profiles(ctx.campaign_dir, ctx.workspace_path)
             story_config["party_characters"] = party_chars
             party_names = list(party_chars.keys())
+        elif ctx.party_members:
+            # Fallback: load from character directory directly
+            party_chars = _load_party_chars_from_names(
+                ctx.party_members, ctx.workspace_path
+            )
+            story_config["party_characters"] = party_chars
+            party_names = ctx.party_members
     except (ImportError, OSError, ValueError):
         pass
 
