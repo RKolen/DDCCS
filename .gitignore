@@ -47,6 +47,8 @@ game_data/npcs/*.json
 !game_data/npcs/npc.example.json
 !game_data/npcs/butterbur.json
 
+!game_data/npcs/npc_full_profile.example.json
+
 # Custom Items: Ignore registry, track example
 game_data/items/custom_items_registry.json
 !game_data/items/custom_items_registry.example.json

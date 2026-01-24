@@ -11,6 +11,7 @@ from typing import Dict, List, Any, Tuple, Optional
 from src.validation.npc_validator import validate_npc_json
 from src.utils.file_io import save_json_file
 from src.utils.path_utils import get_npcs_dir, get_npc_file_path
+from src.characters.npc_constants import DEFAULT_ABILITY_SCORES, DEFAULT_EQUIPMENT
 
 # NPC detection patterns - compiled at module level
 NPC_PATTERNS: List[Tuple[str, str]] = [
@@ -80,10 +81,10 @@ FALSE_POSITIVES = [
 
 
 def _create_fallback_profile(
-    npc_name: str, role: str, error_msg: str
+    npc_name: str, role: str, error_msg: str, profile_type: str = "simplified"
 ) -> Dict[str, Any]:
     """Create a fallback NPC profile when AI generation fails."""
-    return {
+    base_profile = {
         "name": npc_name,
         "nickname": None,
         "role": role or "NPC",
@@ -95,6 +96,8 @@ def _create_fallback_profile(
         "abilities": [],
         "recurring": False,
         "notes": f"AI generation failed: {error_msg}",
+        "profile_type": profile_type,
+        "faction": "neutral",
         "ai_config": {
             "enabled": False,
             "temperature": 0.7,
@@ -102,6 +105,7 @@ def _create_fallback_profile(
             "system_prompt": "",
         },
     }
+    return base_profile
 
 
 def detect_npc_suggestions(
@@ -163,6 +167,7 @@ def generate_npc_from_story(
     context: str,
     role: Optional[str] = None,
     ai_client=None,
+    profile_type: str = "simplified",
 ) -> Dict[str, Any]:
     """
     Generate an NPC profile based on story context using AI.
@@ -172,6 +177,7 @@ def generate_npc_from_story(
         context: Story context where NPC appears
         role: Optional role hint (e.g., "innkeeper", "merchant")
         ai_client: Optional AI client for enhanced generation
+        profile_type: "simplified" or "full" - determines profile complexity
 
     Returns:
         NPC profile dictionary ready to save as JSON
@@ -190,6 +196,8 @@ def generate_npc_from_story(
             "abilities": [],
             "recurring": False,
             "notes": "Generated placeholder - needs manual customization",
+            "profile_type": profile_type,
+            "faction": "neutral",
             "ai_config": {
                 "enabled": False,
                 "temperature": 0.7,
@@ -199,7 +207,38 @@ def generate_npc_from_story(
         }
 
     try:
-        prompt = f"""Based on this story context, generate a detailed D&D NPC profile
+        if profile_type == "full":
+            prompt = f"""Based on this story context, generate a complete D&D 5e
+character profile for {npc_name} that can be used as an NPC.
+
+Story Context:
+{context[:1000]}
+
+NPC Name: {npc_name}
+{f"Role: {role}" if role else ""}
+
+Generate a JSON profile with FULL D&D 5e stats including:
+1. dnd_class: D&D class (Fighter, Wizard, Rogue, etc.)
+2. subclass: Subclass specialization (optional)
+3. level: Character level (1-20)
+4. ability_scores: {{strength, dexterity, constitution, intelligence, wisdom, charisma}}
+5. max_hit_points, armor_class, movement_speed, proficiency_bonus
+6. equipment: {{weapons, armor, items, magic_items, gold}}
+7. known_spells, spell_slots (if spellcaster)
+8. personality_traits, ideals, bonds, flaws
+9. background, backstory
+10. class_abilities, feats
+11. species, lineage, personality, key_traits
+12. recurring: boolean - should this NPC appear again?
+13. relationships: Object with mentioned character names
+
+Return ONLY valid JSON in D&D 5e character format with these additional NPC fields:
+- role: occupation/title
+- profile_type: "full"
+- faction: "ally", "neutral", or "enemy"
+- notes: secrets or motivations"""
+        else:
+            prompt = f"""Based on this story context, generate a detailed D&D NPC profile
 for {npc_name}.
 
 Story Context:
@@ -217,6 +256,8 @@ Generate a JSON profile with:
 6. recurring: boolean - should this NPC appear again?
 7. notes: Any secrets, motivations, or hidden agendas
 8. relationships: Object with any mentioned character names as keys
+9. profile_type: "simplified"
+10. faction: "ally", "neutral", or "enemy"
 
 Be specific and D&D-appropriate. Make them memorable and useful for the story.
 
@@ -229,7 +270,9 @@ Return ONLY valid JSON in this format:
   "abilities": ["ability1", "ability2"],
   "recurring": true/false,
   "notes": "secrets or notes",
-  "relationships": {{}}
+  "relationships": {{}},
+  "profile_type": "simplified",
+  "faction": "neutral"
 }}"""
 
         response = ai_client.chat_completion(
@@ -246,10 +289,10 @@ Return ONLY valid JSON in this format:
 
         npc_data = json.loads(json_text)
 
-        # Build complete NPC profile
+        # Build complete NPC profile based on profile type
         npc_profile = {
             "name": npc_name,
-            "nickname": None,
+            "nickname": npc_data.get("nickname"),
             "role": role or npc_data.get("role", "NPC"),
             "species": npc_data.get("species", "Human"),
             "lineage": npc_data.get("lineage", ""),
@@ -259,6 +302,8 @@ Return ONLY valid JSON in this format:
             "abilities": npc_data.get("abilities", []),
             "recurring": npc_data.get("recurring", False),
             "notes": npc_data.get("notes", ""),
+            "profile_type": profile_type,
+            "faction": npc_data.get("faction", "neutral"),
             "ai_config": {
                 "_comment": "AI uses centralized .env settings. "
                 "Set enabled=true for AI-driven dialogue.",
@@ -272,12 +317,44 @@ Return ONLY valid JSON in this format:
             },
         }
 
+        # Add full character fields if profile_type is "full"
+        if profile_type == "full":
+            npc_profile.update(
+                {
+                    "dnd_class": npc_data.get("dnd_class", "Fighter"),
+                    "subclass": npc_data.get("subclass"),
+                    "level": npc_data.get("level", 1),
+                    "ability_scores": npc_data.get(
+                        "ability_scores", DEFAULT_ABILITY_SCORES.copy()
+                    ),
+                    "skills": npc_data.get("skills", {}),
+                    "max_hit_points": npc_data.get("max_hit_points", 10),
+                    "armor_class": npc_data.get("armor_class", 10),
+                    "movement_speed": npc_data.get("movement_speed", 30),
+                    "proficiency_bonus": npc_data.get("proficiency_bonus", 2),
+                    "equipment": npc_data.get("equipment", DEFAULT_EQUIPMENT.copy()),
+                    "spell_slots": npc_data.get("spell_slots", {}),
+                    "known_spells": npc_data.get("known_spells", []),
+                    "background": npc_data.get("background"),
+                    "personality_traits": npc_data.get("personality_traits", []),
+                    "ideals": npc_data.get("ideals", []),
+                    "bonds": npc_data.get("bonds", []),
+                    "flaws": npc_data.get("flaws", []),
+                    "backstory": npc_data.get("backstory"),
+                    "feats": npc_data.get("feats", []),
+                    "magic_items": npc_data.get("magic_items", []),
+                    "class_abilities": npc_data.get("class_abilities", []),
+                    "specialized_abilities": npc_data.get("specialized_abilities", []),
+                    "major_plot_actions": npc_data.get("major_plot_actions", []),
+                }
+            )
+
         return npc_profile
 
     except (KeyError, ValueError, TypeError, AttributeError) as e:
         print(f"[WARNING]  AI NPC generation failed: {e}")
         # Return fallback profile when AI generation fails
-        return _create_fallback_profile(npc_name, role or "NPC", str(e))
+        return _create_fallback_profile(npc_name, role or "NPC", str(e), profile_type)
 
 
 def save_npc_profile(npc_profile: Dict[str, Any], workspace_path: str) -> str:

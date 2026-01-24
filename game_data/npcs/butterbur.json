@@ -1,4 +1,6 @@
 {
+  "profile_type": "simplified",
+  "faction": "ally",
   "name": "Barliman Butterbur",
   "nickname": null,
   "role": "Innkeeper",
@@ -10,8 +12,18 @@
     "Local Patrons": "Friendly and familiar with most regulars.",
     "Gandalf": "Finds him mysterious and intimidating"
   },
-  "key_traits": ["Hospitable", "Forgetful", "Talkative", "Nervous"],
-  "abilities": ["Insight", "Persuasion", "Deception", "Perception"],
+  "key_traits": [
+    "Hospitable",
+    "Forgetful",
+    "Talkative",
+    "Nervous"
+  ],
+  "abilities": [
+    "Insight",
+    "Persuasion",
+    "Deception",
+    "Perception"
+  ],
   "recurring": true,
   "notes": "Runs The Prancing Pony in Bree. Often caught up in events beyond his understanding. Trusted by locals and travelers alike.",
   "ai_config": {

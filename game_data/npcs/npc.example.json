@@ -1,4 +1,7 @@
 {
+  "_comment": "Simplified NPC profile example - narrative-focused without combat stats",
+  "profile_type": "simplified",
+  "faction": "neutral",
   "name": "NPC Name",
   "nickname": null,
   "role": "Role or occupation (e.g., innkeeper, merchant, guard)",

@@ -1,0 +1,101 @@
+{
+    "_comment": "Full character profile NPC example - combines complete D&D 5e character stats with NPC-specific fields",
+    "profile_type": "full",
+    "faction": "ally",
+    "_npc_fields_section": "=== CORE NPC FIELDS (REQUIRED) ===",
+    "name": "NPC Name",
+    "nickname": null,
+    "role": "Role or occupation (e.g., Warrior, Merchant, Guard Captain)",
+    "species": "Human",
+    "lineage": "",
+    "_lineage_note": "Optional subspecies (e.g., 'High Elf', 'Hill Dwarf'). Leave empty if not applicable.",
+    "personality": "Brief personality description",
+    "relationships": {
+        "Character Name": "Relationship description"
+    },
+    "key_traits": [
+        "Trait 1",
+        "Trait 2"
+    ],
+    "abilities": [
+        "Ability 1",
+        "Ability 2"
+    ],
+    "recurring": false,
+    "notes": "Additional notes about this NPC.",
+    "_character_fields_section": "=== FULL CHARACTER PROFILE FIELDS (REQUIRED FOR FULL PROFILES) ===",
+    "dnd_class": "Fighter",
+    "subclass": "Champion",
+    "level": 5,
+    "ability_scores": {
+        "strength": 16,
+        "dexterity": 14,
+        "constitution": 15,
+        "intelligence": 10,
+        "wisdom": 12,
+        "charisma": 11
+    },
+    "skills": {
+        "Athletics": 6,
+        "Intimidation": 3,
+        "Perception": 4
+    },
+    "max_hit_points": 45,
+    "armor_class": 18,
+    "movement_speed": 30,
+    "proficiency_bonus": 3,
+    "equipment": {
+        "weapons": [
+            "Longsword",
+            "Shield"
+        ],
+        "armor": [
+            "Plate Armor"
+        ],
+        "items": [
+            "Rope",
+            "Torch"
+        ],
+        "magic_items": [],
+        "gold": 100
+    },
+    "spell_slots": {},
+    "known_spells": [],
+    "background": "Soldier",
+    "personality_traits": [
+        "Disciplined",
+        "Loyal"
+    ],
+    "ideals": [
+        "Duty",
+        "Honor"
+    ],
+    "bonds": [
+        "My unit is my family"
+    ],
+    "flaws": [
+        "I obey orders without question"
+    ],
+    "backstory": "A veteran soldier who served in multiple campaigns.",
+    "feats": [
+        "Great Weapon Master"
+    ],
+    "magic_items": [],
+    "class_abilities": [
+        "Action Surge",
+        "Second Wind",
+        "Improved Critical"
+    ],
+    "specialized_abilities": [
+        "Military Tactics"
+    ],
+    "major_plot_actions": [],
+    "_ai_config_section": "=== AI CONFIGURATION ===",
+    "ai_config": {
+        "_comment": "AI uses centralized .env settings. Override specific fields if this NPC needs different settings.",
+        "enabled": false,
+        "temperature": 0.7,
+        "max_tokens": 1000,
+        "system_prompt": "Custom system prompt for this NPC's personality (optional)"
+    }
+}
