@@ -1,62 +1,99 @@
-﻿# TODO List - D&D Character Consultant System
+# TODO List - D&D Character Consultant System
 
-##  High Priority
+Last Updated: February 13, 2026
+
+## Implementation Roadmap
+
+### Phase 1: Foundation
+- [ ] **Error Handling Improvements** - Improve error messages throughout the system for better user guidance **Plan:** [plans/error_handling_plan.md](plans/error_handling_plan.md)
+- [ ] **Configuration System** - Centralized config file for system settings **Plan:** [plans/configuration_system_plan.md](plans/configuration_system_plan.md)
+- [ ] **Multi-voice TTS (Phase 1-2)** - Voice selection in character/NPC JSON schema, dialogue detection parser **Plan:** [plans/multi_voice_tts_design.md](plans/multi_voice_tts_design.md)
+
+### Phase 2: Infrastructure
+- [ ] **Drupal CMS Integration** - DDEV setup, JSON to Drupal migration, Python-to-Drupal API sync **Plan:** [plans/drupal_cms_integration.md](plans/drupal_cms_integration.md)
+- [ ] **TTS Web Integration** - Pre-generated audio storage, audio sync to Drupal, React audio player components **Plan:** [plans/tts_web_integration.md](plans/tts_web_integration.md)
+- [ ] **Multi-voice TTS (Phase 3-4)** - Voice switching implementation, Piper TTS integration
+
+### Phase 3: Character System
+- [ ] **Multi-class Support** - Enhance character profiles to support multiclassing **Plan:** [plans/multiclass_support_plan.md](plans/multiclass_support_plan.md)
+- [ ] **Character Names Split** - Split names into first and last names for characters and NPCs **Plan:** [plans/character_names_plan.md](plans/character_names_plan.md)
+- [ ] **Relationship Mapping** - Visual or structured relationship tracking between characters **Plan:** [plans/relationship_mapping_plan.md](plans/relationship_mapping_plan.md)
+
+### Phase 4: Story Tools
+- [ ] **AI Story Suggestions** - Use AI to suggest story developments and narrative improvements **Plan:** [plans/ai_story_suggestions_plan.md](plans/ai_story_suggestions_plan.md)
+- [ ] **Session Notes Integration** - Better integration between session results and story narrative **Plan:** [plans/session_notes_plan.md](plans/session_notes_plan.md)
+- [ ] **Timeline Tracking** - Track chronological order of events across campaigns **Plan:** [plans/timeline_tracking_plan.md](plans/timeline_tracking_plan.md)
+
+### Phase 5: Quality of Life
+- [ ] **CLI Enhancements** - Tab completion, command history, batch operations **Plan:** [plans/cli_enhancements_plan.md](plans/cli_enhancements_plan.md)
+- [ ] **Export Functionality** - Export stories to different formats (PDF, HTML, etc.) **Plan:** [plans/export_functionality_plan.md](plans/export_functionality_plan.md)
+- [ ] **Backup System** - Automated backup of character profiles and party configurations **Plan:** [plans/backup_system_plan.md](plans/backup_system_plan.md)
+
+## Planned Features (Design Complete)
+
+All features below have detailed implementation plans in the `plans/` directory.
+
+### AI and Story Tools
+- [AI Story Suggestions](plans/ai_story_suggestions_plan.md) - AI-powered story development suggestions
+- [Session Notes Integration](plans/session_notes_plan.md) - Better session results and story narrative integration
+- [Timeline Tracking](plans/timeline_tracking_plan.md) - Chronological event tracking across campaigns
+- [Character Arc Analysis](plans/character_arc_analysis_plan.md) - Tools to analyze character development over multiple stories
+
+### Character System
+- [Multi-class Support](plans/multiclass_support_plan.md) - Character profiles with multiclassing support
+- [Character Names Split](plans/character_names_plan.md) - First and last name separation
+- [Relationship Mapping](plans/relationship_mapping_plan.md) - Character relationship tracking
+
+### Infrastructure
+- [Drupal CMS Integration](plans/drupal_cms_integration.md) - Full Drupal CMS integration
+- [TTS Web Integration](plans/tts_web_integration.md) - Web-based TTS audio integration
+- [Multi-voice TTS Design](plans/multi_voice_tts_design.md) - Multi-voice narration system
+- [SQLite Integration](plans/sqlite_integration_plan.md) - Optional database support for tracking and analytics
+
+### Quality of Life
+- [CLI Enhancements](plans/cli_enhancements_plan.md) - Tab completion, command history, batch operations
+- [Export Functionality](plans/export_functionality_plan.md) - Export to PDF, HTML, and other formats
+- [Backup System](plans/backup_system_plan.md) - Automated backup system
+- [Interactive Setup](plans/interactive_setup_plan.md) - More interactive setup for first-time users
+
+### Technical Improvements
+- [Error Handling Plan](plans/error_handling_plan.md) - Improved error messages and user guidance
+- [Configuration System](plans/configuration_system_plan.md) - Centralized configuration management
+- [DC Scaling](plans/dc_scaling_plan.md) - Optional level-based DC scaling recommendations
+- [Custom Spell Highlighting](plans/custom_spell_highlighting_plan.md) - Support for homebrew/custom spells
+
+### Campaign Management
+- [Campaign Templates](plans/campaign_templates_plan.md) - Templates for common campaign types
+- [Party Alterations](plans/party_alterations_plan.md) - Move current party to campaign files
+- [Calendar Tracking](plans/calendar_tracking_plan.md) - In-world calendar and timeline tracking
+- [Plugin Architecture](plans/plugin_architecture_plan.md) - Custom modules/plugins support
+
+## High Priority (No Plan Yet)
 
 ### User Experience
-- [ ] **Error handling** - Improve error messages throughout the system for better user guidance
+- [ ] **Pronouns** - Add pronouns to character files
 
-### AI Integration
-- [ ] **AI-powered story suggestions** - Use AI to suggest story developments and narrative improvements (future enhancement)
-
-##  Medium Priority
+## Medium Priority (No Plan Yet)
 
 ### Character System Improvements
 - [ ] **Character templates** - Create additional class-specific templates beyond the basic example
-- [ ] **Multi-class support** - Enhance character profiles to support multiclassing
-- [ ] **Current Party Alterations** - Consider current party to be part of campaign files instead
 - [ ] **Profile Verification** - Check if JSON templates need to be updated for profile updates and consistency usage
-- [ ] **Character Names** - Split names into first and last names for characters and npcs
-- [ ] **Pronouns** - Add pronouns to character files
-
-### Feature Enhancements
-- [ ] **Campaign templates** - Create templates for common campaign types (mystery, dungeon crawl, etc.)
-- [ ] **Character relationship mapping** - Visual or structured relationship tracking between characters
-- [ ] **Session notes integration** - Better integration between session results and story narrative
-- [ ] **DC difficulty scaling** - Add optional level-based DC scaling recommendations
 
 ### Story Tools
-- [ ] **Language fixes** - filter language to only include the prompts language
+- [ ] **Language fixes** - Filter language to only include the prompts language
 
 ### Technical Improvements
-- [ ] **Configuration system** - Centralized config file for system settings
-- [ ] **Optional SQLite integration** - Add optional database support for:
-  - Character knowledge tracking (History check results)
-  - Session history and analytics
-  - Campaign statistics and insights
-  - Keep JSON as default for simplicity
 - [ ] **VSCode tasks update** - Ensure all VSCode tasks work with the new enhanced system
 
-##  Low Priority / Nice to Have
-
-### Advanced Features
-- [ ] **In-world calendar tracking** - Track campaign timeline, seasons, and story chronology within the game world
+## Low Priority (No Plan Yet)
 
 ### Story Tools
-- [ ] **Story timeline tracking** - Track chronological order of events across campaigns
 - [ ] **Combat narrative templates** - Pre-built templates for different combat scenarios
-- [ ] **Character arc analysis** - Tools to analyze character development over multiple stories
-- [ ] **Custom spell highlighting** - Extend spell highlighting system to support homebrew/custom spells (currently only official D&D 5e spells via wikidot are highlighted)
-
-### Technical Improvements
-- [ ] **Plugin architecture** - Allow custom modules/plugins for specific campaign needs
-- [ ] **Export functionality** - Export stories to different formats (PDF, HTML, etc.)
-- [ ] **Backup system** - Automated backup of character profiles and party configurations
 
 ### User Experience
-- [ ] **Interactive setup** - Make setup.py more interactive for first-time users
 - [ ] **Quick start guide** - Create a step-by-step tutorial for new users
 
-##  Known Issues to Fix
+## Known Issues to Fix
 
 ### Bug Fixes
 - [ ] **File path handling** - Ensure cross-platform compatibility for file paths
@@ -64,14 +101,10 @@
 
 ### Quality of Life
 - [ ] **Startup time** - Optimize initial loading of character consultants
-- [ ] **Tab completion** - Add tab completion for character names in CLI
-- [ ] **Command history** - Save and recall previous commands in interactive mode
-- [ ] **Batch operations** - Support for bulk character or story operations
 
 ## Documentation TODOs
 
 ### README Updates
-
 - [ ] **Add troubleshooting section** for common issues
 
 ### New Documentation
@@ -80,9 +113,9 @@
 - [ ] **Campaign management best practices** - Tips for organizing complex campaigns
 - [ ] **Integration guide** - How to integrate with external tools
 
-## [x] Recently Completed
+## Recently Completed
 
-### Narration and ASCII Art - Demeber 30, 2025
+### Narration and ASCII Art - December 30, 2025
 - [x] **ASCII Character Art** - Create ASCII images for characters
 - [x] **Voice Narration** - Make it possible to narrate the story files
 
@@ -105,11 +138,11 @@
 - [x] **Update workflow examples** with real use cases
 
 ### Manual Testing November 8, 2025
-- [x] - The code recently undergone many code refactors and while tests are added for everything we need to check if the donsultant still does what we want.
+- [x] - The code recently undergone many code refactors and while tests are added for everything we need to check if the consultant still does what we want.
 
-### Comprehensive Testing  October 26, 2025
+### Comprehensive Testing October 26, 2025
 
-- [x] **Step 8: Validators Tests** - COMPLETE [COMPLETE]
+- [x] **Step 8: Validators Tests** - COMPLETE
   - [x] test_character_validator.py
   - [x] test_npc_validator.py
   - [x] test_party_validator.py
@@ -118,7 +151,7 @@
   - [x] tests/validation/README.md
 
 **Next Steps (Priority Order):**
-- [x] **Step 1: AI Integration Tests** COMPLETE [COMPLETE]
+- [x] **Step 1: AI Integration Tests** COMPLETE
   - [x] Fix test_ai_env_config.py
   - [x] Create test_ai_client.py
   - [x] Create test_rag_system.py
@@ -127,7 +160,7 @@
   - [x] Create test_availability.py
   - [x] Create tests/ai/README.md
 
-- [x] **Step 2: Character System Tests** COMPLETE [COMPLETE]
+- [x] **Step 2: Character System Tests** COMPLETE
   - [x] test_character_profile.py
   - [x] test_consultant_core.py
   - [x] test_consultant_dc.py
@@ -139,13 +172,13 @@
   - [x] test_all_characters.py
   - [x] tests/characters/README.md
 
-- [x] **Step 3: NPC System Tests** COMPLETE [COMPLETE]
+- [x] **Step 3: NPC System Tests** COMPLETE
   - [x] test_npc_agents.py
   - [x] test_npc_auto_detection.py
   - [x] test_all_npcs.py
   - [x] tests/npcs/README.md
 
-- [x] **Step 4: Story System Tests** COMPLETE [COMPLETE]
+- [x] **Step 4: Story System Tests** COMPLETE
   - [x] test_story_manager.py
   - [x] test_enhanced_story_manager.py
   - [x] test_story_analyzer.py
@@ -161,7 +194,7 @@
   - [x] test_all_stories.py
   - [x] tests/stories/README.md
 
-- [x] **Step 5: Combat System Tests** COMPLETE [COMPLETE]
+- [x] **Step 5: Combat System Tests** COMPLETE
   - [x] test_combat_narrator.py
   - [x] test_narrator_ai.py
   - [x] test_narrator_descriptions.py
@@ -169,7 +202,7 @@
   - [x] test_all_combat.py
   - [x] tests/combat/README.md
 
-- [x] **Step 6: Items System Tests** COMPLETE [COMPLETE]
+- [x] **Step 6: Items System Tests** COMPLETE
   - [x] test_item_registry.py
   - [x] test_all_items.py
   - [x] test_load_precedence_registry_over_fallback
@@ -177,7 +210,7 @@
   - [x] test_get_item_and_is_custom_api
   - [x] tests/items/README.md
 
-- [x] **Step 7: DM Tools Tests**  COMPLETE [COMPLETE]
+- [x] **Step 7: DM Tools Tests** COMPLETE
   - [x] test_dungeon_master.py
   - [x] test_history_check_helper.py
   - [x] test_suggest_narrative_with_character_insights
@@ -186,7 +219,7 @@
   - [x] test_all_dm.py
   - [x] tests/dm/README.md
 
- - [x] **Step 9: CLI Tests** COMPLETE [COMPLETE]
+- [x] **Step 9: CLI Tests** COMPLETE
   - [x] test_dnd_consultant.py
   - [x] test_setup.py
   - [x] test_cli_character_manager.py
@@ -196,7 +229,7 @@
   - [x] test_all_cli.py
   - [x] tests/cli/README.md
 
-- [x] **Step 10: Utils Tests** COMPLETE [COMPLETE]
+- [x] **Step 10: Utils Tests** COMPLETE
   - [x] test_path_utils.py
   - [x] test_behaviour_generation.py
   - [x] test_cli_utils.py
@@ -220,7 +253,7 @@
 - [COMPLETE] Every test folder has README.md (what/why/tests list)
 - [COMPLETE] Every subsystem has `test_all_<subsystem>.py` runner
 
-### Refactor & test-harness cleanup — October 26, 2025
+### Refactor & test-harness cleanup - October 26, 2025
 
 - [x] Centralized duplicated test helpers into `tests/test_helpers.py`
   - Replaced per-file fixtures and import-try scaffolds with canonical
@@ -246,11 +279,11 @@
 
 ### Code Quality & Pylint
 - [x] **Pylint cleanup complete** - All core files 10.00/10
-  - [x] dnd_consultant.py (8.81 → 9.88/10, 1028 → 956 lines)
-  - [x] enhanced_story_manager.py (8.71 → 10.00/10, 1064 → 433 lines)
+  - [x] dnd_consultant.py (8.81 -> 9.88/10, 1028 -> 956 lines)
+  - [x] enhanced_story_manager.py (8.71 -> 10.00/10, 1064 -> 433 lines)
   - [x] All 7 extracted modules (10.00/10)
-  - [x] npc_auto_detection.py (9.66 → 10.00/10)
-  - [x] dungeon_master.py (8.85 → 10.00/10)
+  - [x] npc_auto_detection.py (9.66 -> 10.00/10)
+  - [x] dungeon_master.py (8.85 -> 10.00/10)
   - [x] All validators (10.00/10 with shared helpers)
   - [x] combat_narrator.py (10.00/10)
   - [x] story_manager.py (10.00/10)
@@ -288,19 +321,19 @@
 - [x] **Integration testing** - All 10/10 tests passed (characters, NPCs, items, party, campaigns, spells)
 
 ### Repository Organization - October 5, 2025
-- [x]  **Folder restructure** - Created docs/ and templates/ folders for better organization
-- [x]  **Documentation reorganization** - Moved 6 docs to docs/, moved story_template.md to templates/
-- [x]  **Python code updates** - Updated enhanced_story_manager.py and story_manager.py template paths
-- [x]  **README navigation** - Added Documentation section with links to all docs
-- [x]  **Personal docs folder** - Created docs_personal/ (git-ignored) for internal documentation
-- [x]  **Cross-reference updates** - Fixed all links between documentation files
-- [x]  **Character name anonymization** - Replaced personal character names with generic examples throughout docs
+- [x] **Folder restructure** - Created docs/ and templates/ folders for better organization
+- [x] **Documentation reorganization** - Moved 6 docs to docs/, moved story_template.md to templates/
+- [x] **Python code updates** - Updated enhanced_story_manager.py and story_manager.py template paths
+- [x] **README navigation** - Added Documentation section with links to all docs
+- [x] **Personal docs folder** - Created docs_personal/ (git-ignored) for internal documentation
+- [x] **Cross-reference updates** - Fixed all links between documentation files
+- [x] **Character name anonymization** - Replaced personal character names with generic examples throughout docs
 
 ### Documentation Improvements - October 5, 2025
-- [x]  **Party configuration documentation** - Added comprehensive section to README explaining current_party.json
-- [x]  **Party management guide** - Documented CLI and manual configuration methods
-- [x]  **Party validation notes** - Explained character name matching and git ignore behavior
-- [x]  **Party usage examples** - Showed how party config affects NPC detection and story analysis
+- [x] **Party configuration documentation** - Added comprehensive section to README explaining current_party.json
+- [x] **Party management guide** - Documented CLI and manual configuration methods
+- [x] **Party validation notes** - Explained character name matching and git ignore behavior
+- [x] **Party usage examples** - Showed how party config affects NPC detection and story analysis
 
 ### Character System & RAG Enhancements - October 5, 2025
 - [x] **NPC species/lineage fields** - Added species and lineage fields to NPCProfile dataclass
@@ -344,7 +377,3 @@
 - [x] **DM narrative generation** - AI-generated story narratives with character context
 - [x] **Folder naming validation** - Implemented validation for _Campaign, _Quest, _Story, _Adventure suffixes
 - [x] **Simplified .gitignore patterns** - Reduced to 4 clear folder patterns
-
----
-
-**Last Updated:** December 30, 2025
