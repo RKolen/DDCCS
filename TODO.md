@@ -71,19 +71,20 @@ All features below have detailed implementation plans in the `plans/` directory.
 ## High Priority (No Plan Yet)
 
 ### User Experience
-- [ ] **Pronouns** - Add pronouns to character files
+- [ ] **Pronouns** - Add pronouns to character files - [Plan](plans/pronouns_field_plan.md)
 
 ## Medium Priority (No Plan Yet)
 
 ### Character System Improvements
-- [ ] **Character templates** - Create additional class-specific templates beyond the basic example
-- [ ] **Profile Verification** - Check if JSON templates need to be updated for profile updates and consistency usage
+- [ ] **Character templates** - Create additional class-specific templates beyond the basic example - [Plan](plans/character_templates_plan.md)
+- [ ] **Profile Verification** - Check if JSON templates need to be updated for profile updates and consistency usage - [Plan](plans/profile_verification_plan.md)
 
 ### Story Tools
-- [ ] **Language fixes** - Filter language to only include the prompts language
+- [ ] **Language fixes** - Filter language to only include the prompts language - [Plan](plans/language_fixes_plan.md)
+- [ ] **Story tools** - Additional story management tools - [Plan](plans/story_tools_plan.md)
 
-### Technical Improvements
-- [ ] **VSCode tasks update** - Ensure all VSCode tasks work with the new enhanced system
+### NPC System
+- [ ] **Major NPC template (BBEG)** - Template for major NPCs and villains - [Plan](plans/major_npc_template_plan.md)
 
 ## Low Priority (No Plan Yet)
 
@@ -91,7 +92,7 @@ All features below have detailed implementation plans in the `plans/` directory.
 - [ ] **Combat narrative templates** - Pre-built templates for different combat scenarios
 
 ### User Experience
-- [ ] **Quick start guide** - Create a step-by-step tutorial for new users
+- [ ] **Quick start guide** - Create a step-by-step tutorial for new users - [Plan](plans/quick_start_guide_plan.md)
 
 ## Known Issues to Fix
 
