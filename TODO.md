@@ -101,7 +101,7 @@ All features below have detailed implementation plans in the `plans/` directory.
 - [ ] **Git integration** - Test git functionality with different repository structures
 
 ### Quality of Life
-- [ ] **Startup time** - Optimize initial loading of character consultants
+- [ ] **Startup time optimization** - [Plan](plans/startup_optimization_plan.md)
 
 ## Documentation TODOs
 
@@ -130,7 +130,7 @@ All features below have detailed implementation plans in the `plans/` directory.
   - [x] Added comprehensive unit tests for character fit analysis and story amendment
 
 ### Performance Optimization - December 6, 2025
-- [x] **Lazy character loading** - Deferred character loading from startup to on-demand access. Implemented CharacterLoadingMixin base class for code reuse. Startup now instant (<0.1s vs 2-5s before). Characters load only when: (1) user selects story/campaign option, (2) user accesses character management, or (3) explicit ensure_characters_loaded() call. Party-based loading available for selective character access.
+- [x] **Lazy character loading** - Deferred character loading from startup to on-demand access. Implemented CharacterLoadingMixin base class for code reuse. Startup now instant (<0.1s vs 2-5s before). Characters load only when: (1) user selects story/campaign option, (2) user accesses character management, or (3) explicit ensure_characters_loaded() call. Party-based loading available for selective character access. Further optimization opportunities: [Plan](plans/startup_optimization_plan.md)
 
 ### Readability December 6, 2025
 - [x] **Story Readability** - Make story readable from terminal
