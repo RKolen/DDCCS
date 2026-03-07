@@ -1,33 +1,37 @@
-﻿# RAG (Retrieval-Augmented Generation) Integration Guide
+# RAG (Retrieval-Augmented Generation) Integration Guide
 
 ## Overview
 
 The D&D Character Consultant System now includes **RAG (Retrieval-Augmented Generation)** support, allowing AI to fetch and integrate accurate campaign setting lore from wiki sources when generating stories and handling character History checks.
 
-##  Features
+## Features
 
 ### 1. **Wiki Integration for Story Generation**
+
 - AI automatically searches campaign wikis for relevant lore
 - Enriches narratives with accurate location descriptions, history, and context
 - Maintains consistency with official campaign settings
 
 ### 2. **History Check Enhancement**
+
 - Characters who make successful History checks receive wiki-sourced information
 - Detail level scales with check result (10-14: basic, 15-19: detailed, 20+: comprehensive)
 - DMs can look up lore instantly
 
 ### 3. **Smart Caching**
+
 - Wiki pages are cached locally in `.rag_cache/` directory (git-ignored)
 - Configurable TTL (time-to-live) prevents stale data
 - Reduces API calls and improves performance
 
 ### 4. **Multiple Campaign Setting Support**
+
 - **Critical Role (Exandria)**: `https://criticalrole.fandom.com/wiki`
 - **Forgotten Realms**: `https://forgottenrealms.fandom.com/wiki`
 - **Custom wikis**: Any MediaWiki or Fandom.com wiki
 - **Homebrew**: Point to your own wiki
 
-##  Requirements
+## Requirements
 
 ### Required Python Packages
 
@@ -43,7 +47,7 @@ These packages enable web scraping and HTML parsing for wiki content.
 pip install python-dotenv  # Already included in base requirements
 ```
 
-## ⚙️ Configuration
+## Configuration
 
 ### 1. Enable RAG in `.env`
 
@@ -72,11 +76,12 @@ RAG_MIN_RELEVANCE=0.5  # Minimum relevance score (0.0-1.0)
 ### 2. Choose Your Campaign Setting
 
 The system uses **two separate wikis**:
+
 - **RAG_WIKI_BASE_URL**: Campaign lore (locations, NPCs, history)
 - **RAG_RULES_BASE_URL**: Game mechanics (items, spells, abilities, rules)
 
+#### Wiki
 
-####  Wiki
 ```properties
 # Your custom lore wiki
 RAG_WIKI_BASE_URL=https://your-wiki.com/wiki
@@ -87,7 +92,7 @@ RAG_RULES_BASE_URL=https://dnd5e.wikidot.com
 
 > **Note:** The rules wiki is typically `https://dnd5e.wikidot.com` for all campaigns, as it contains official D&D 5e game mechanics. The lore wiki varies based on your campaign setting.
 
-##  Usage
+## Usage
 
 ### In Story Generation
 
@@ -110,6 +115,7 @@ narrative = dm.generate_narrative_content(
 ```
 
 **What happens behind the scenes:**
+
 1. RAG extracts location names ("Whitestone", "de Rolo")
 2. Fetches wiki pages for these locations
 3. Includes relevant lore context in AI prompt
@@ -135,6 +141,7 @@ else:
 ```
 
 **Output Example:**
+
 ```
 [COMPLETE] Elara recalls: 
 
@@ -176,12 +183,13 @@ python dnd_consultant.py
 4. RAG automatically enriches the narrative
 
 For History checks:
+
 1. Choose **"1. Character Consultation"**
 2. Select a character
 3. When prompted, mention making a History check
 4. System will fetch relevant lore
 
-##  File Structure
+## File Structure
 
 ```
 D&D Campaign Workspace/
@@ -196,11 +204,12 @@ D&D Campaign Workspace/
 └── dnd_consultant.py             # CLI interface
 ```
 
-##  Advanced Configuration
+## Advanced Configuration
 
 ### Cache Management
 
 View cache statistics:
+
 ```python
 from rag_system import WikiCache
 
@@ -211,11 +220,13 @@ print(f"Cache size: {stats['size_mb']:.2f} MB")
 ```
 
 Clear expired cache entries:
+
 ```python
 cache.clear_expired()
 ```
 
 Force refresh a specific page:
+
 ```python
 from rag_system import WikiClient
 
@@ -243,15 +254,17 @@ score += content_matches * 0.1  # Content word weight (default: 0.1)
 ### Error Handling
 
 RAG fails gracefully:
+
 - If `requests` or `beautifulsoup4` not installed → Warning message, continues without RAG
 - If wiki unreachable → Uses cached data or continues without lore
 - If page not found → Generates narrative without specific lore context
 
-##  Troubleshooting
+## Troubleshooting
 
 ### "RAG System: requests or beautifulsoup4 not installed"
 
 **Solution:**
+
 ```bash
 pip install requests beautifulsoup4
 ```
@@ -260,6 +273,7 @@ pip install requests beautifulsoup4
 
 **Solution:**
 Add to `.env`:
+
 ```properties
 RAG_ENABLED=true
 RAG_WIKI_BASE_URL=https://criticalrole.fandom.com/wiki
@@ -268,15 +282,17 @@ RAG_WIKI_BASE_URL=https://criticalrole.fandom.com/wiki
 ### Wiki pages not being found
 
 **Common issues:**
+
 1. **Page name spelling** - Wiki page titles are case-sensitive
    - [COMPLETE] Correct: `Tal'Dorei`
-   -  Wrong: `taldorei` or `Tal Dorei`
+   - Wrong: `taldorei` or `Tal Dorei`
 
 2. **URL encoding** - Spaces become underscores
    - Search for: "Tal'Dorei Council"
    - Actual page: `Tal'Dorei_Council`
 
 3. **Network issues** - Check internet connection
+
    ```python
    import requests
    response = requests.get("https://criticalrole.fandom.com/wiki/Exandria")
@@ -286,6 +302,7 @@ RAG_WIKI_BASE_URL=https://criticalrole.fandom.com/wiki
 ### Cache not working
 
 **Check cache directory:**
+
 ```bash
 # Windows
 dir .rag_cache
@@ -295,6 +312,7 @@ ls -la .rag_cache
 ```
 
 **Verify .gitignore:**
+
 ```bash
 # .rag_cache/ should be in .gitignore
 grep rag_cache .gitignore
@@ -303,17 +321,21 @@ grep rag_cache .gitignore
 ### Slow performance
 
 **Solutions:**
+
 1. **Reduce search depth** in `.env`:
+
    ```properties
    RAG_SEARCH_DEPTH=2  # Lower is faster
    ```
 
 2. **Increase cache TTL** (cache pages longer):
+
    ```properties
    RAG_CACHE_TTL=1209600  # 14 days
    ```
 
 3. **Pre-cache important pages:**
+
    ```python
    from rag_system import WikiClient
    
@@ -325,7 +347,7 @@ grep rag_cache .gitignore
        client.fetch_page(page)
    ```
 
-##  Performance Considerations
+## Performance Considerations
 
 ### Caching Strategy
 
@@ -336,6 +358,7 @@ grep rag_cache .gitignore
 ### Rate Limiting
 
 Be respectful to wiki servers:
+
 - Don't fetch more than 5 pages per story generation
 - Use cache (default 7-day TTL)
 - Consider pre-caching frequently used pages
@@ -346,11 +369,12 @@ Be respectful to wiki servers:
 - Each cached page: ~10-50 KB
 - 100 pages ≈ 1-5 MB total
 
-##  Best Practices
+## Best Practices
 
 ### 1. Pre-Cache Campaign Locations
 
 Before your session:
+
 ```python
 from rag_system import WikiClient
 
@@ -373,12 +397,14 @@ print("[COMPLETE] Session locations cached!")
 ### 2. Use Descriptive Location Names
 
 In story prompts, use full proper names:
+
 - [COMPLETE] "The party travels to Whitestone in Tal'Dorei"
--  "The party goes to the city"
+- "The party goes to the city"
 
 ### 3. Verify Wiki Coverage
 
 Not all settings have comprehensive wikis. Check coverage before enabling:
+
 ```python
 from rag_system import WikiClient
 
@@ -394,16 +420,18 @@ else:
 ### 4. Combine with Custom Lore
 
 For homebrew campaigns:
+
 1. Create a wiki (free options: Fandom.com, MediaWiki, Notion)
 2. Document key locations, NPCs, history
 3. Point RAG to your wiki
 4. Benefit from consistent lore across all AI generations
 
-##  Privacy & Git
+## Privacy & Git
 
 ### What's Git-Ignored
 
 The `.gitignore` includes:
+
 ```
 # Ignore RAG cache directory (wiki content)
 .rag_cache/
@@ -414,6 +442,7 @@ rag_*.db
 ### What's in Version Control
 
 Only configuration (not content):
+
 - `.env.example` (template)
 - `rag_system.py` (code)
 - `history_check_helper.py` (code)
@@ -421,11 +450,12 @@ Only configuration (not content):
 ### Sharing Campaigns
 
 To share campaigns with RAG:
+
 1. Share `.env` settings (wiki URL)
 2. **Don't** share `.rag_cache/` directory
 3. Each user downloads their own wiki content
 
-##  Examples
+## Examples
 
 ### Example 1: Exandria Campaign
 
@@ -471,10 +501,12 @@ result = handle_history_check("Waterdeep", check_result=22, character_name="Elar
 
 1. Create wiki at `https://your-campaign.fandom.com`
 2. Configure:
+
    ```properties
    RAG_ENABLED=true
    RAG_WIKI_BASE_URL=https://your-campaign.fandom.com/wiki
    ```
+
 3. Document your world's locations, history, factions
 4. AI automatically uses your lore!
 
@@ -499,14 +531,16 @@ result = handle_history_check("Waterdeep", check_result=22, character_name="Elar
 ### API Compatibility
 
 RAG system is compatible with:
+
 - OpenAI GPT models (gpt-3.5-turbo, gpt-4, etc.)
 - Ollama local models (llama3.1:8b, qwen2.5:14b, etc.)
 - OpenRouter models
 - Any OpenAI-compatible API
 
-##  Future Enhancements
+## Future Enhancements
 
 Potential improvements:
+
 - [ ] Semantic search using embeddings
 - [ ] Multi-wiki search (search multiple settings at once)
 - [ ] Image extraction from wiki pages
@@ -514,7 +548,7 @@ Potential improvements:
 - [ ] Timeline extraction
 - [ ] NPC database integration
 
-##  References
+## References
 
 - [Critical Role Wiki](https://criticalrole.fandom.com/wiki/Exandria)
 - [Forgotten Realms Wiki](https://forgottenrealms.fandom.com/wiki/Main_Page)

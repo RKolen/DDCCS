@@ -1,4 +1,4 @@
-﻿# Terminal Display and File Viewing Features
+# Terminal Display and File Viewing Features
 
 This document describes the terminal display enhancements for viewing story files, markdown, and JSON files with rich formatting in the D&D Character Consultant System.
 

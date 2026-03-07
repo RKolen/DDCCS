@@ -29,6 +29,7 @@ All code must achieve a perfect 10.00/10 Pylint score. Never use:
 
 Instead, fix the underlying issue. If Pylint complains, there is usually a
 legitimate code quality issue to address.
+- never edit `pyproject.toml`
 
 ### 3. Full Pylint Output for Big Changes
 For significant changes, always run the full Pylint checks:

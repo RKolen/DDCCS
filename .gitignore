@@ -100,3 +100,75 @@ tests/**/__pycache__/
 *.swp
 *.swo
 ~$*
+
+# =============================================================================
+# DDEV (Docker-based Drupal Development Environment)
+# =============================================================================
+# DDEV database snapshots
+.ddev/db_snapshots/
+
+# DDEV snapshots
+.ddev/snapshots/
+
+# DDEV local config overrides
+.ddev/config.local.yaml
+
+# DDEV router certificates
+.ddev/*.crt
+.ddev/*.key
+
+# DDEV xhprof traces
+.ddev/xhprof/
+
+# Drupal docroot (managed by DDEV/Composer)
+drupal/
+
+# DDEV-generated docker-compose overrides
+.ddev/docker-compose.*.yaml
+!.ddev/docker-compose.*.example.yaml
+
+# =============================================================================
+# DRUPAL CMS (drupal-cms/ directory)
+# =============================================================================
+
+# Composer dependencies (managed at project level)
+drupal-cms/vendor/
+drupal-cms/composer.lock
+
+# Drupal core and contributed modules/themes
+drupal-cms/web/core/
+drupal-cms/web/libraries/
+drupal-cms/web/modules/contrib/
+drupal-cms/web/profiles/contrib/
+drupal-cms/web/themes/contrib/
+
+# Site-specific files (database settings, uploaded files, etc.)
+drupal-cms/web/sites/*/settings*.php
+drupal-cms/web/sites/*/services*.yml
+drupal-cms/web/sites/*/files/
+drupal-cms/web/sites/*/private/
+drupal-cms/web/sites/simpletest/
+
+# PHP files scaffolded in web root
+drupal-cms/web/*.php
+
+# Drupal cache files
+drupal-cms/web/sites/*/cache/
+drupal-cms/web/sites/*/phpunit/
+
+# PHP error logs
+drupal-cms/*.log
+drupal-cms/web/*.log
+
+# OS-specific files in drupal-cms
+drupal-cms/.DS_Store
+drupal-cms/Thumbs.db
+
+# DDEV configuration for drupal-cms
+drupal-cms/.ddev/db_snapshots/
+drupal-cms/.ddev/snapshots/
+drupal-cms/.ddev/config.local.yaml
+drupal-cms/.ddev/*.crt
+drupal-cms/.ddev/*.key
+drupal-cms/.ddev/xhprof/
+drupal-cms/.ddev/docker-compose.*.yaml

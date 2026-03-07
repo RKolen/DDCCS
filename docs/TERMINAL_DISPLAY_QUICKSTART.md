@@ -1,4 +1,4 @@
-﻿# Quick Start: Terminal Display Features
+# Quick Start: Terminal Display Features
 
 The D&D Consultant System now supports beautiful terminal display for viewing stories, characters, and documentation with colors and formatting.
 
@@ -112,9 +112,9 @@ display_any_file("game_data/characters/aragorn.json")
 
 The `.editorconfig` file optimizes editors for your project:
 
-- **Markdown files**: 88-character lines (optimal for terminal)
-- **Python files**: 100-character lines, 4-space indentation
-- **JSON files**: 2-space indentation
+* **Markdown files**: 88-character lines (optimal for terminal)
+* **Python files**: 100-character lines, 4-space indentation
+* **JSON files**: 2-space indentation
 
 **For VS Code:** Install [EditorConfig extension](https://marketplace.visualstudio.com/items?itemName=EditorConfig.EditorConfig)
 
@@ -142,43 +142,48 @@ display_panel("Important Information", "Be Careful!", style="red")
 ## Troubleshooting
 
 **Colors not showing?**
-- Windows PowerShell: Use Windows Terminal (recommended)
-- Or run: `chcp 65001` before starting Python
+* Windows PowerShell: Use Windows Terminal (recommended)
+* Or run: `chcp 65001` before starting Python
 
 **Rich module not found?**
+
 ```bash
 pip install rich
 ```
 
 **Need plain text display?**
-- Files display as plain text if rich is unavailable
-- No errors, just less pretty
+* Files display as plain text if rich is unavailable
+* No errors, just less pretty
 
 ## Related Documentation
 
-- **Full Features**: [docs/TERMINAL_DISPLAY.md](../TERMINAL_DISPLAY.md)
-- **Implementation Details**: [docs/docs_personal/TERMINAL_DISPLAY_IMPLEMENTATION.md](TERMINAL_DISPLAY_IMPLEMENTATION.md)
-- **API Reference**: [src/utils/terminal_display.py](../../src/utils/terminal_display.py)
+* **Full Features**: [docs/TERMINAL_DISPLAY.md](../TERMINAL_DISPLAY.md)
+* **API Reference**: [src/utils/terminal_display.py](../../src/utils/terminal_display.py)
 
 ## Pro Tips
 
 1. **Create an alias** (PowerShell):
+
    ```powershell
    function Read-Story { python display_story.py $args }
    ```
+
    Then: `Read-Story Example_Campaign 1`
 
 2. **View recent changes**:
+
    ```bash
    python display_story.py docs/TODO.md
    ```
 
 3. **Quick character lookup**:
+
    ```bash
    python display_story.py game_data/characters/aragorn.json
    ```
 
 4. **Read documentation**:
+
    ```bash
    python display_story.py README.md
    python display_story.py docs/AI_INTEGRATION.md
@@ -186,8 +191,7 @@ pip install rich
 
 ## What's Next?
 
-- Explore the [full terminal display documentation](../TERMINAL_DISPLAY.md)
-- Read the [implementation details](TERMINAL_DISPLAY_IMPLEMENTATION.md)
-- Check out [display_file.py](../../src/utils/display_file.py) for more options
+* Explore the [full terminal display documentation](../TERMINAL_DISPLAY.md)
+* Check out [display_file.py](../../src/utils/display_file.py) for more options
 
 Happy storytelling!

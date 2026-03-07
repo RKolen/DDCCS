@@ -1,4 +1,4 @@
-﻿# RAG System Quick Start
+# RAG System Quick Start
 
 ## Install Dependencies
 

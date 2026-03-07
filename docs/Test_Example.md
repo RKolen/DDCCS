@@ -1,4 +1,4 @@
-﻿# D&D Character Consultant - Simple Testing Guide
+# D&D Character Consultant - Simple Testing Guide
 
 This guide shows you exactly what to press and what to expect when testing the system.
 

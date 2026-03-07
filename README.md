@@ -1,4 +1,4 @@
-﻿# D&D Character Consultant System
+# D&D Character Consultant System
 
 A Python-based system for managing D&D Documentation
 
@@ -7,7 +7,7 @@ A Python-based system for managing D&D Documentation
 - **[RAG Quick Start](docs/RAG_QUICKSTART.md)** - Fast track to using RAG features
 - **[Usage Examples](docs/Test_Example.md)** - See the system in action
 
-##  What This System Does
+## What This System Does
 
 - **Unlimited Character Support** - Add as many character JSON files as you need
 - **Class Expertise** - Each character can be customized for any D&D class, background, or personality
@@ -24,17 +24,17 @@ A Python-based system for managing D&D Documentation
 - **RAG System** - Dual wiki integration: campaign lore + D&D 5e rules (items, spells)
 - **Custom Items Registry** - Track homebrew items separately, blocks wiki lookups for custom content
 
-> ** [AI Integration Guide](docs/AI_INTEGRATION.md)** - Complete guide for adding AI capabilities to your characters
+> **[AI Integration Guide](docs/AI_INTEGRATION.md)** - Complete guide for adding AI capabilities to your characters
 >
-> ** [RAG Integration Guide](docs/RAG_INTEGRATION.md)** - Wiki integration for accurate campaign lore in stories
+> **[RAG Integration Guide](docs/RAG_INTEGRATION.md)** - Wiki integration for accurate campaign lore in stories
 
-##  What This System Does NOT Do
+## What This System Does NOT Do
 
 - Does NOT automate gameplay, dice rolling, or run sessions
 - Does NOT generate random encounters or locations
 - Does NOT replace your creativity, but it can suggest future plot hooks, NPCs, and story ideas to inspire you
 
-##  Current Project Structure
+## Current Project Structure
 
 ```
 D&D CCS/
@@ -128,7 +128,7 @@ D&D CCS/
 └── README.md            # This file
 ```
 
-##  Documentation
+## Documentation
 
 - **[AI Integration Guide](docs/AI_INTEGRATION.md)** - Complete AI setup (Ollama, OpenAI, Anthropic)
 - **[RAG Integration Guide](docs/RAG_INTEGRATION.md)** - Deep dive into RAG system and wiki integration
@@ -139,9 +139,10 @@ D&D CCS/
 - **[JSON Validation](docs/JSON_Validation.md)** - Data validation schemas and usage
 - **[Test Suite](tests/README.md)** - Comprehensive test suite
 
-##  Quick Start
+## Quick Start
 
 1. **Setup the system:**
+
    ```powershell
    # Full module path
    python -m src.cli.setup
@@ -151,6 +152,7 @@ D&D CCS/
    ```
 
 2. **Set up AI (optional but recommended):**
+
    ```powershell
    # Copy environment template
    copy .env.example .env
@@ -158,9 +160,11 @@ D&D CCS/
    # Download Ollama model (free local AI)
    ollama pull llama3.1:8b
    ```
+
    See **[docs/AI_INTEGRATION.md](docs/AI_INTEGRATION.md)** for complete setup guide.
 
 3. **Start the interactive consultant:**
+
    ```powershell
    # Full module path
    python -m src.cli.dnd_consultant
@@ -175,6 +179,7 @@ D&D CCS/
 ## Party Configuration Management
 
 The system uses `current_party.json` to track your active adventuring party. This is crucial for:
+
 - **NPC Detection** - System excludes party members when suggesting NPC profiles
 - **Story Analysis** - Focuses on your active characters
 - **Character Development** - Tracks progression of current party members
@@ -183,6 +188,7 @@ The system uses `current_party.json` to track your active adventuring party. Thi
 ### Setting Up Your Party
 
 **Option 1: Use the Interactive CLI (Recommended)**
+
 ```powershell
 # Full module path
 python -m src.cli.dnd_consultant
@@ -194,6 +200,7 @@ python dnd_consultant.py
 ```
 
 **Option 2: Manual Configuration**
+
 ```powershell
 # Copy the example file
 copy game_data\current_party\current_party.example.json game_data\current_party\current_party.json
@@ -202,6 +209,7 @@ copy game_data\current_party\current_party.example.json game_data\current_party\
 ```
 
 **Example `current_party.json`:**
+
 ```json
 {
   "party_members": [
@@ -216,11 +224,13 @@ copy game_data\current_party\current_party.example.json game_data\current_party\
 ### Important Notes
 
  **Character Names Must Match Exactly**
+
 - Names in `current_party.json` must match character JSON filenames
 - Example: `"Aragorn"` → `game_data/characters/aragorn.json`
 - Case-insensitive matching, but exact spelling required
 
  **Git Ignored by Default**
+
 - `game_data/current_party/current_party.json` is in `.gitignore` (your personal party configuration)
 - `game_data/current_party/current_party.example.json` is tracked (template for others)
 - This allows multiple people to work on the same repo with different parties
@@ -228,16 +238,19 @@ copy game_data\current_party\current_party.example.json game_data\current_party\
 ### Managing Your Party
 
 **Adding/Removing Members:**
+
 1. **Via CLI**: Use the interactive menu to modify party
 2. **Via File**: Edit `current_party.json` directly
 3. **Validation**: System validates character names exist on load
 
 **When to Update:**
+
 - Party composition changes (members join/leave)
 - Starting a new campaign with different characters
 - Testing with a specific character subset
 
 **System Behavior:**
+
 - **Missing Party File**: Falls back to default party (first 4 characters found)
 - **Invalid Character Names**: System warns but continues with valid names
 - **Empty Party**: System prompts to create party configuration
@@ -245,6 +258,7 @@ copy game_data\current_party\current_party.example.json game_data\current_party\
 ### Party in Action
 
 **NPC Detection:**
+
 ```markdown
 Story: "The innkeeper, Barliman Butterbur, greets Aragorn, Frodo, and Gandalf..."
 
@@ -254,21 +268,24 @@ System detects:
 ```
 
 **Story Analysis:**
+
 ```python
 # System automatically focuses on your party
 story_manager.analyze_story_development()
 # Only analyzes: Aragorn, Frodo Baggins, Gandalf the Grey (from current_party.json)
 ```
 
-##  Workflow Summary
+## Workflow Summary
 
 ### NEW: Story Organization System
+
 **Campaign Story Management:**
 
 All user-generated campaigns are stored in `game_data/campaigns/` and automatically git-ignored.
 
 **Organized Story Series** (RECOMMENDED):
-- Each campaign gets its own folder (MUST end with: _Campaign, _Quest, _Story, or _Adventure)
+
+- Each campaign gets its own folder (MUST end with: _Campaign,_Quest, _Story, or_Adventure)
 - Created in `game_data/campaigns/` by default
 - Separate analysis files per campaign
 - Better organization for multiple campaigns
@@ -277,6 +294,7 @@ All user-generated campaigns are stored in `game_data/campaigns/` and automatica
 ### Complete Story Creation Workflow
 
 **1. Write Story**
+
 ```markdown
 game_data/campaigns/Your_Campaign/
 ├── 001_The_Tavern_Meeting.md      # Your narrative (pure story)
@@ -284,24 +302,28 @@ game_data/campaigns/Your_Campaign/
 
 **2. Character Development Auto-Generated**
 System automatically creates `character_development_001_The_Tavern_Meeting.md` containing:
+
 - CHARACTER/ACTION/REASONING analysis blocks
 - Character consistency checking against established traits
 - Development tracking for your party members
 
 **3. Session Results Auto-Generated**
 System automatically creates `session_results_001_The_Tavern_Meeting.md` containing:
+
 - AI-analyzed character actions and events
 - Narrative summary of party activities
 - Ready for DM notes and session outcomes
 
 **4. Story Hooks Auto-Generated**
 System automatically creates `story_hooks_001_The_Tavern_Meeting.md` containing:
+
 - NPC profile suggestions (with ready-to-run code)
 - Plot hooks and connections
 - Unresolved threads
 
 **5. DC Suggestions**
 System creates `story_dc_suggestions.md` with:
+
 - Character-appropriate difficulty calculations
 - Alternative approach suggestions for each party action
 - Skill check recommendations
@@ -309,6 +331,7 @@ System creates `story_dc_suggestions.md` with:
 ### Using Character Development Files
 
 **What Gets Tracked:**
+
 ```markdown
 ### CHARACTER: Aragorn
 **ACTION:** Attempted to persuade the merchant
@@ -329,6 +352,7 @@ System creates `story_dc_suggestions.md` with:
 ### Using Session Results Files
 
 **Auto-Populated With:**
+
 ```markdown
 # Session Results: The Tavern Meeting
 
@@ -349,11 +373,13 @@ Party encountered unexpected pursuit and made contact with merchant information 
 ### Story Creation in Practice
 
 **Menu Access:**
+
 1. Main Menu → 2 (Manage Stories)
 2. Choose 2 (Work with Stories)
 3. Select series and choose 1 (Add New Story to Series)
 
 **Automatic File Generation:**
+
 ```
 [Your_Campaign/]
 ├── 001_Story_Name.md                           # Your narrative
@@ -364,40 +390,46 @@ Party encountered unexpected pursuit and made contact with merchant information 
 ```
 
 ### Character Consultation
+
 1. **Load character data** from any number of JSON files
 2. **Get class expertise** for abilities, spells, tactics
 3. **Check consistency** against established personality/motivations
 4. **Generate DCs** based on character strengths and context in separate file
 
 ### Combat Integration
+
 1. **Paste Fantasy Grounds Unity** combat log or simple combat description
 2. **AI auto-generates** contextual combat title from story (e.g., "Goblin Ambush at Darkwood")
 3. **Convert to narrative** with character-appropriate descriptions using RAG for spell/ability details
 4. **Maintain story flow** while preserving mechanical accuracy
 
-##  AI Features (Optional)
+## AI Features (Optional)
 
 ### What AI Adds
+
 - **AI-Enhanced Character Reactions** - Characters respond with personality-driven dialogue and actions
 - **Intelligent DC Suggestions** - Context-aware difficulty calculations
 - **Per-Character Customization** - Each character can have unique AI settings
 - **Story Analysis** - Automatic suggestions for character development and relationships
 
 ### Supported AI Providers
+
 - **Ollama (Recommended)** - Free, local LLMs running on your PC (llama3.1:8b, mistral, etc.)
 - **OpenAI** - GPT-3.5-Turbo, GPT-4, etc. (requires API key)
 - **OpenRouter** - Access to many models with one API key
 - **Any OpenAI-Compatible API** - Works with custom endpoints
 
-##  Automatic NPC Detection
+## Automatic NPC Detection
 
 ### What It Does
+
 - **Automatic Scanning** - System scans story files for NPCs (innkeepers, merchants, guards, blacksmiths, etc.)
 - **Smart Filtering** - Excludes party members and NPCs that already have profiles
 - **Profile Suggestions** - Adds NPC creation suggestions to story hooks file with ready-to-run code
 - **No Manual Tracking** - Never forget to create profiles for recurring NPCs
 
 ### How It Works
+
 ```markdown
 Story: "The innkeeper, Barliman Butterbur, greets the party..."
 
@@ -413,6 +445,7 @@ npc_profile = story_manager.generate_npc_from_story(
 )
 story_manager.save_npc_profile(npc_profile)
 ```
+
 ```
 
 ** Full Documentation:** [docs/NPC_DETECTION.md](docs/NPC_DETECTION.md)
@@ -435,9 +468,10 @@ RAG_ENABLED=true
 RAG_WIKI_BASE_URL=https://your-campaign-wiki.com/wiki
 ```
 
-** Full Guide:** [RAG_INTEGRATION.md](RAG_INTEGRATION.md)
+**Full Guide:** [RAG_INTEGRATION.md](docs/RAG_INTEGRATION.md)
 
 ### Quick AI Setup
+
 ```powershell
 # 1. Install Ollama from https://ollama.ai
 # 2. Download a model
@@ -451,24 +485,25 @@ copy .env.example .env
 # Edit character JSON and set ai_config.enabled = true
 ```
 
-** Full Guide:** [docs/AI_INTEGRATION.md](docs/AI_INTEGRATION.md)
+**Full Guide:** [docs/AI_INTEGRATION.md](docs/AI_INTEGRATION.md)
 
-##  Technical Verification
+## Technical Verification
 
 [COMPLETE] **All systems operational:**
+
 - Unlimited character JSON files supported
 - Movement speeds, specialized abilities, and stats are customizable
 - Story/analysis/DC separation implemented (3 separate files)
 - Template files for git-friendly development
 - 80-character line limit for improved readability
 
-##  Prerequisites
+## Prerequisites
 
 - **Python 3.8+**
 - **Dependencies for AI features:** `pip install -r requirements.txt` (optional, for AI integration)
 - **VSCode** with Markdown extensions (recommended)
 
-##  Philosophy
+## Philosophy
 
 This system **enhances your creativity** while maintaining your control:
 
