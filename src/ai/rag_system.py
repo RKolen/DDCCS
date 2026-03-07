@@ -9,11 +9,6 @@ Features:
 - Search for relevant lore when generating stories
 - Integrate with character History checks
 - Support multiple campaign settings (Exandria, Forgotten Realms, custom)
-
-Configuration via .env:
-    RAG_ENABLED=true
-    RAG_WIKI_BASE_URL=https://criticalrole.fandom.com/wiki
-    RAG_CACHE_TTL=604800  # 7 days
 """
 
 import os
@@ -392,16 +387,27 @@ class RAGSystem:
     Use ItemRegistry to mark homebrew items/rules.
     """
 
-    def __init__(self, item_registry=None):
+    def __init__(self, item_registry=None, rag_config=None):
         """
-        Initialize RAG system from .env configuration.
+        Initialize RAG system from configuration.
 
         Args:
             item_registry: Optional ItemRegistry instance for homebrew filtering
+            rag_config: Optional RAGConfig object from src.config (takes precedence)
         """
-        self.enabled = os.getenv("RAG_ENABLED", "false").lower() == "true"
-        self.wiki_base_url = os.getenv("RAG_WIKI_BASE_URL", "")
-        self.rules_base_url = os.getenv("RAG_RULES_BASE_URL", "")
+        # Support centralized config system
+        if rag_config is not None:
+            self.enabled = rag_config.enabled
+            self.wiki_base_url = rag_config.wiki_base_url
+            self.rules_base_url = rag_config.rules_base_url
+            cache_ttl = rag_config.cache_ttl
+        else:
+            # Fall back to environment variables
+            self.enabled = os.getenv("RAG_ENABLED", "false").lower() == "true"
+            self.wiki_base_url = os.getenv("RAG_WIKI_BASE_URL", "")
+            self.rules_base_url = os.getenv("RAG_RULES_BASE_URL", "")
+            cache_ttl = int(os.getenv("RAG_CACHE_TTL", "604800"))  # 7 days default
+
         self.item_registry = item_registry
 
         # Load item registry if not provided
@@ -421,7 +427,6 @@ class RAGSystem:
             return
 
         # Initialize cache (shared between both clients)
-        cache_ttl = int(os.getenv("RAG_CACHE_TTL", "604800"))  # 7 days default
         cache = WikiCache(ttl_seconds=cache_ttl)
 
         # Initialize lore wiki client (for locations, NPCs, etc.)

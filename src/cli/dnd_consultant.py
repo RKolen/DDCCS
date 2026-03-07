@@ -10,6 +10,7 @@ from typing import Optional
 from src.ai.ai_client import AIClient
 from src.ai.availability import AI_AVAILABLE
 from src.cli.cli_character_manager import CharacterCLIManager
+from src.cli.cli_config import ConfigCLI
 from src.cli.cli_story_manager import StoryCLIManager
 from src.cli.cli_story_reader import StoryReaderCLI
 from src.dm.dungeon_master import DMConsultant
@@ -84,6 +85,9 @@ class DDConsultantCLI:
                 self.story_cli.manage_stories()
             elif choice == "3":
                 self.story_reader.display_menu()
+            elif choice == "4":
+                config_cli = ConfigCLI()
+                config_cli.run_config_menu()
             elif choice == "0":
                 print("Goodbye! May your adventures be epic!")
                 break
@@ -112,6 +116,7 @@ class DDConsultantCLI:
         print("1. Manage Characters")
         print("2. Manage Stories")
         print("3. Read Stories")
+        print("4. Configure Settings")
         print("0. Exit")
         print()
 

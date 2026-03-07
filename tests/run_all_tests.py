@@ -17,6 +17,7 @@ from pathlib import Path
 
 # Test categories matching src/ structure
 TEST_CATEGORIES = [
+    "config",
     "validators",
     "ai",
     "characters",

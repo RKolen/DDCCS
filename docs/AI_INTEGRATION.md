@@ -53,6 +53,19 @@ OPENAI_BASE_URL=https://openrouter.ai/api/v1
 OPENAI_MODEL=meta-llama/llama-3.1-8b-instruct
 ```
 
+### Alternative: Centralized Configuration
+
+Instead of using environment variables, you can use the centralized configuration system:
+
+1. Run the setup: `python setup.py`
+2. Or use the CLI: Select "Configure Settings" from the main menu
+3. This creates `game_data/config.json` with all settings in one place
+
+The system supports both methods:
+
+- Centralized config (`config.json`) takes precedence
+- Environment variables still work as fallback
+
 ### 3. Test the Integration
 
 ```powershell

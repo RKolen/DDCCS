@@ -7,10 +7,16 @@ import os
 import json
 import re
 import ast
-from typing import Dict, Any, Optional, Sequence
+from typing import Any, Dict, List, Optional, Sequence
 from dataclasses import dataclass, field
-from openai import OpenAI
-from openai.types.chat import ChatCompletionMessageParam
+
+# Optional imports - openai for AI client
+try:
+    from openai import OpenAI
+    OPENAI_AVAILABLE = True
+except ImportError:
+    OpenAI = None
+    OPENAI_AVAILABLE = False
 
 # Load environment variables from .env file
 try:
@@ -20,13 +26,20 @@ try:
 except ImportError:
     pass  # dotenv not available, will use system environment variables only
 
+# Optional config module for centralized configuration
+try:
+    from src.config.config_loader import load_config
+    CONFIG_AVAILABLE = True
+except ImportError:
+    CONFIG_AVAILABLE = False
+
 
 class AIClient:
     """
     Flexible AI client that works with any OpenAI-compatible API.
 
     Configuration can be provided via:
-    1. Environment variables (OPENAI_API_KEY, OPENAI_BASE_URL, OPENAI_MODEL)
+    1. Centralized config system (src.config)
     2. Direct parameters when initializing
     3. Per-request overrides
 
@@ -44,7 +57,7 @@ class AIClient:
         # OpenRouter
         client = AIClient(
             base_url="https://openrouter.ai/api/v1",
-            api_key=os.getenv("OPENROUTER_API_KEY"),
+            api_key="your-api-key",
             model="meta-llama/llama-3.1-8b-instruct"
         )
     """
@@ -60,37 +73,51 @@ class AIClient:
         Initialize AI client with configuration.
 
         Args:
-            api_key: API key for the provider (defaults to OPENAI_API_KEY env var)
-            base_url: Base URL for the API (defaults to OpenAI, or OPENAI_BASE_URL env var)
-            model: Model to use (defaults to OPENAI_MODEL env var or gpt-3.5-turbo)
+            api_key: API key for the provider
+            base_url: Base URL for the API
+            model: Model to use
             **config: Additional config:
                 - default_temperature (float): Default temperature (default: 0.7)
                 - default_max_tokens (int): Default max tokens (default: 1000)
+                - ai_config: Optional AIConfig object from src.config (takes precedence)
         """
-        self.api_key = api_key or os.getenv("OPENAI_API_KEY", "")
-        self.base_url = base_url or os.getenv("OPENAI_BASE_URL", None)
-        self.model = model or os.getenv("OPENAI_MODEL", "gpt-3.5-turbo")
-        self.default_temperature = config.get("default_temperature", 0.7)
-        self.default_max_tokens = config.get("default_max_tokens", 1000)
+        # Support centralized config system
+        ai_config = config.pop("ai_config", None)
+        if ai_config is not None:
+            # Use centralized config
+            self.api_key = api_key or ai_config.api_key
+            self.base_url = base_url or ai_config.base_url
+            self.model = model or ai_config.model
+            self.default_temperature = config.get("default_temperature", ai_config.temperature)
+            self.default_max_tokens = config.get("default_max_tokens", ai_config.max_tokens)
+        else:
+            # Fall back to environment variables
+            self.api_key = api_key or os.getenv("OPENAI_API_KEY", "")
+            self.base_url = base_url or os.getenv("OPENAI_BASE_URL", None)
+            self.model = model or os.getenv("OPENAI_MODEL", "gpt-3.5-turbo")
+            self.default_temperature = config.get("default_temperature", 0.7)
+            self.default_max_tokens = config.get("default_max_tokens", 1000)
 
         # Initialize OpenAI client
-        client_kwargs = {}
-        if self.api_key and isinstance(self.api_key, str) and self.api_key.strip():
-            client_kwargs["api_key"] = self.api_key
-        if self.base_url and isinstance(self.base_url, str) and self.base_url.strip():
-            client_kwargs["base_url"] = self.base_url
+        self.client = None
+        if OPENAI_AVAILABLE:
+            client_kwargs = {}
+            if self.api_key and isinstance(self.api_key, str) and self.api_key.strip():
+                client_kwargs["api_key"] = self.api_key
+            if self.base_url and isinstance(self.base_url, str) and self.base_url.strip():
+                client_kwargs["base_url"] = self.base_url
 
-        # Only pass allowed kwargs to OpenAI constructor and ensure no empty strings
-        allowed_keys = {"api_key", "base_url"}
-        filtered_kwargs = {
-            k: v for k, v in client_kwargs.items() if k in allowed_keys and v
-        }
+            # Only pass allowed kwargs to OpenAI constructor and ensure no empty strings
+            allowed_keys = {"api_key", "base_url"}
+            filtered_kwargs = {
+                k: v for k, v in client_kwargs.items() if k in allowed_keys and v
+            }
 
-        self.client = OpenAI(**filtered_kwargs)
+            self.client = OpenAI(**filtered_kwargs)
 
     def chat_completion(
         self,
-        messages: Sequence[ChatCompletionMessageParam],
+        messages: Sequence[Dict[str, str]],
         model: Optional[str] = None,
         temperature: Optional[float] = None,
         max_tokens: Optional[int] = None,
@@ -109,6 +136,10 @@ class AIClient:
         Returns:
             The assistant's response content as a string
         """
+        if self.client is None:
+            raise RuntimeError(
+                "AI client not available. Install openai package: pip install openai"
+            )
         try:
             response = self.client.chat.completions.create(
                 model=model or self.model,
@@ -131,15 +162,15 @@ class AIClient:
                 )
             raise RuntimeError(error_msg) from e
 
-    def create_system_message(self, system_prompt: str) -> ChatCompletionMessageParam:
+    def create_system_message(self, system_prompt: str) -> Dict[str, str]:
         """Create a system message dict."""
         return {"role": "system", "content": system_prompt}
 
-    def create_user_message(self, content: str) -> ChatCompletionMessageParam:
+    def create_user_message(self, content: str) -> Dict[str, str]:
         """Create a user message dict."""
         return {"role": "user", "content": content}
 
-    def create_assistant_message(self, content: str) -> ChatCompletionMessageParam:
+    def create_assistant_message(self, content: str) -> Dict[str, str]:
         """Create an assistant message dict."""
         return {"role": "assistant", "content": content}
 
@@ -237,11 +268,23 @@ class CharacterAIConfig:
 
 def load_ai_config_from_env() -> Dict[str, Any]:
     """
-    Load AI configuration from environment variables.
+    Load AI configuration from environment variables or centralized config.
+
+    This function first tries to use the centralized config system,
+    then falls back to environment variables.
 
     Returns:
         Dictionary with configuration values
     """
+    # Try to use centralized config first
+    if CONFIG_AVAILABLE:
+        try:
+            config = load_config()
+            return config.ai.get_client_config()
+        except (OSError, ImportError, AttributeError):
+            # Fall back to environment variables on config errors
+            pass
+
     return {
         "api_key": os.getenv("OPENAI_API_KEY", ""),
         "base_url": os.getenv("OPENAI_BASE_URL", ""),
@@ -278,7 +321,7 @@ def call_ai_for_behavior_block(prompt: str) -> dict:
     """
     client = _DefaultClientHolder.get_client()
     # Compose messages for chat completion
-    messages: Sequence[ChatCompletionMessageParam] = [
+    messages: List[Dict[str, str]] = [
         client.create_system_message(
             "You are a D&D character consultant AI."
             "Respond ONLY with a JSON object for the CharacterBehavior dataclass."

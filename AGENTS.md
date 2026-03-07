@@ -45,6 +45,28 @@ python -m pylint src/
 python -m pylint tests/
 ```
 
+### 4. No Hardcoded Configuration Values
+
+Never hardcode values that should be configurable. This includes:
+
+- API keys, base URLs, or model names for AI services
+- Wiki URLs for RAG system
+- Default themes or display settings
+- Any value that users should be able to configure
+
+Instead, use the centralized configuration system in `src/config/`:
+
+```python
+# Wrong - hardcoded value
+model: str = "gpt-3.5-turbo"
+
+# Correct - use empty string, configure via config file or env
+model: str = ""
+```
+
+The configuration system supports defaults through config files or environment
+variables. See `src/config/config_types.py` for the configuration schema.
+
 ## Before Writing Code - MANDATORY CHECK
 
 **STOP!** Before writing ANY new utility code, check the utils catalog below.

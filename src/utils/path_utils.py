@@ -15,6 +15,9 @@ from typing import Optional
 
 from src.utils.string_utils import sanitize_filename
 
+# Default game_data directory name (can be overridden by config)
+DEFAULT_GAME_DATA_DIR = "game_data"
+
 
 def get_game_data_path(workspace_path: Optional[str] = None) -> str:
     """Get the path to the game_data directory.
@@ -27,7 +30,7 @@ def get_game_data_path(workspace_path: Optional[str] = None) -> str:
     """
     if workspace_path is None:
         workspace_path = os.getcwd()
-    return os.path.join(workspace_path, "game_data")
+    return os.path.join(workspace_path, DEFAULT_GAME_DATA_DIR)
 
 
 def get_characters_dir(workspace_path: Optional[str] = None) -> str:

@@ -6,7 +6,6 @@ Last Updated: February 13, 2026
 
 ### Phase 1: Foundation
 
-- [ ] **Configuration System** - Centralized config file for system settings **Plan:** [plans/configuration_system_plan.md](plans/configuration_system_plan.md)
 - [ ] **Multi-voice TTS (Phase 1-2)** - Voice selection in character/NPC JSON schema, dialogue detection parser **Plan:** [plans/multi_voice_tts_design.md](plans/multi_voice_tts_design.md)
 
 ### Phase 2: Infrastructure
@@ -138,6 +137,7 @@ All features below have detailed implementation plans in the `plans/` directory.
 
 ### Error Handling Improvements - March 7, 2026
 
+- [x] **Configuration System** - Centralized config file for system settings **Plan:** [plans/configuration_system_plan.md](plans/configuration_system_plan.md)
 - [x] **Error Handling Improvements** - Improve error messages throughout the system for better user guidance **Plan:** [plans/error_handling_plan.md](plans/error_handling_plan.md)
 
 ### Narration and ASCII Art - December 30, 2025
