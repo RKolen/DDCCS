@@ -26,6 +26,8 @@ RAG_RULES_BASE_URL=https://dnd5e.wikidot.com
 
 # Cache settings (optional)
 RAG_CACHE_TTL=604800  # 7 days
+RAG_CACHE_BACKEND=sqlite  # json or sqlite
+RAG_VECTOR_DB_PATH=.rag_cache/rag_cache.sqlite3
 ```
 
 ## Test It
@@ -56,6 +58,6 @@ result = handle_history_check("Tal'Dorei", check_result=18, character_name="Elar
 print(result['information'])  # Shows wiki lore!
 ```
 
-## That's It!
+## That's It
 
 See `RAG_INTEGRATION.md` for full documentation.

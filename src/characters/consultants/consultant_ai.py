@@ -7,6 +7,7 @@ Provides AI-powered consultation features with graceful fallback to rule-based m
 from typing import Dict, Any, Optional
 
 from src.ai.availability import AI_AVAILABLE, CharacterAIConfig
+from src.utils.errors import UserInputError
 
 
 class AIConsultant:
@@ -123,7 +124,10 @@ class AIConsultant:
             Dictionary with AI-enhanced reaction suggestions
         """
         if base_suggestion is None:
-            raise ValueError("base_suggestion is required for AI enhancement")
+            raise UserInputError(
+                message="base_suggestion is required for AI enhancement",
+                user_guidance="Provide a valid base_suggestion dictionary to enhance"
+            )
 
         # Try AI enhancement
         ai_client = self.get_ai_client()

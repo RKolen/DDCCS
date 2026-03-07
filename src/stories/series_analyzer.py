@@ -14,6 +14,7 @@ from datetime import datetime
 from src.utils.file_io import write_text_file, file_exists, read_text_file
 from src.utils.text_formatting_utils import wrap_narrative_text
 from src.stories.character_action_analyzer import extract_character_actions
+from src.utils.errors import FileSystemError, wrap_exception, display_error
 
 
 class CharacterAnalysisContext(NamedTuple):
@@ -184,10 +185,13 @@ class SeriesAnalyzer:
                 file_size = os.path.getsize(filepath)
                 print(f"[DEBUG] File created successfully. Size: {file_size} bytes")
             else:
-                print("[ERROR] File was not created after write_text_file call")
+                display_error(FileSystemError(
+                    message="File was not created after write_text_file call",
+                    user_guidance="Check file system permissions and disk space"
+                ))
 
         except (OSError, IOError) as e:
-            print(f"[ERROR] Failed to create header file: {e}")
+            display_error(wrap_exception(e, context={"operation": "create header file"}))
             traceback.print_exc()
 
     @staticmethod
@@ -336,7 +340,7 @@ class SeriesAnalyzer:
             file_size = os.path.getsize(filepath)
             print(f"[DEBUG] File created successfully. Size: {file_size} bytes")
         except (OSError, IOError) as e:
-            print(f"[ERROR] Failed to create analysis file header: {e}")
+            display_error(wrap_exception(e, context={"operation": "create analysis file header"}))
             traceback.print_exc()
 
     @staticmethod
@@ -397,7 +401,7 @@ class SeriesAnalyzer:
             with open(filepath, "a", encoding="utf-8") as f:
                 f.write("\n".join(lines))
         except (OSError, IOError) as e:
-            print(f"[ERROR] Failed to append analysis section: {e}")
+            display_error(wrap_exception(e, context={"operation": "append analysis section"}))
             traceback.print_exc()
 
     @staticmethod

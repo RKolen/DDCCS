@@ -7,8 +7,9 @@ Handles the interactive character action amendment workflow.
 import os
 from typing import List, Dict, Any, Optional
 from src.utils.file_io import read_text_file
+from src.utils.errors import display_error, DnDError
+from src.utils.cli_utils import require_story_with_content, require_party
 from src.stories import story_amender
-from src.cli.party_config_manager import load_current_party
 
 
 class StoryAmenderCLIHandler:
@@ -29,16 +30,11 @@ class StoryAmenderCLIHandler:
             story_path = os.path.join(selected[2], selected[0])
             content = read_text_file(story_path)
 
-            if not content:
-                print("[ERROR] Story file is empty.")
+            if not require_story_with_content(content, selected[0]):
                 return
 
-            party = load_current_party(
-                workspace_path=self.workspace_path, campaign_name=series_name
-            )
-
+            party = require_party(self.workspace_path, series_name)
             if not party:
-                print("[ERROR] No party configured. Set up party first.")
                 return
 
             target_char = self._select_character(party)
@@ -55,13 +51,11 @@ class StoryAmenderCLIHandler:
                 return
 
             print("[INFO] Analyzing character fits and suggesting amendments...")
-            prev_actions_map = {
-                name: profile.get("major_plot_actions", [])
-                for name, profile in profiles.items()
-            }
-
             analyzed = story_amender.analyze_amendments(
-                actions, target_char, profiles, prev_actions_map
+                actions,
+                target_char,
+                profiles,
+                {name: profile.get("major_plot_actions", []) for name, profile in profiles.items()}
             )
 
             suggestions = [a for a in analyzed if "suggestion" in a]
@@ -73,7 +67,11 @@ class StoryAmenderCLIHandler:
             self._process_suggestions(suggestions, story_path)
 
         except (ValueError, OSError) as e:
-            print(f"[ERROR] Amendment process failed: {e}")
+            error = DnDError(
+                message=f"Amendment process failed: {e}",
+                user_guidance="Check the story file and try again."
+            )
+            display_error(error)
 
     def validate_setup(self) -> bool:
         """Check if the handler is properly configured."""
@@ -142,6 +140,10 @@ class StoryAmenderCLIHandler:
             if success:
                 print("[SUCCESS] Story file updated.")
             else:
-                print("[ERROR] Failed to update story file.")
+                error = DnDError(
+                    message="Failed to update story file",
+                    user_guidance="Check file permissions."
+                )
+                display_error(error)
         else:
             print("[INFO] Suggestion skipped.")

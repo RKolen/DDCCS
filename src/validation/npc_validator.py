@@ -133,10 +133,6 @@ def _validate_ability_scores(data: Dict[str, Any]) -> List[str]:
     return validation_errors
 
 
-class NPCValidationError(Exception):
-    """Custom exception for NPC validation errors."""
-
-
 def validate_npc_json(
     data: Dict[str, Any], source_path: str = ""
 ) -> Tuple[bool, List[str]]:
@@ -181,13 +177,13 @@ def validate_npc_json(
         "recurring": bool,
         "notes": str,
         "ai_config": dict,
-        "profile_type": str,
-        "faction": str,
     }
 
     # Optional fields for all profiles
     optional_fields = {
         "nickname": (str, type(None)),
+        "profile_type": (str, type(None)),
+        "faction": (str, type(None)),
     }
 
     # Full character profile fields (required only if profile_type="full")
@@ -310,13 +306,13 @@ if __name__ == "__main__":
             print(f"No NPC files found in {npcs_dir}")
             sys.exit(1)
 
-        ALL_VALID = True
+        all_valid = True
 
         for npc_filepath in sorted(json_files):
             is_valid, file_errors = validate_npc_file(str(npc_filepath))
             print_validation_report(str(npc_filepath), is_valid, file_errors)
 
             if not is_valid:
-                ALL_VALID = False
+                all_valid = False
 
-        sys.exit(0 if ALL_VALID else 1)
+        sys.exit(0 if all_valid else 1)

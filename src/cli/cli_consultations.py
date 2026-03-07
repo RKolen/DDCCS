@@ -6,9 +6,14 @@ Handles character consultations, DC suggestions, and DM narrative suggestions.
 
 import os
 from typing import Dict, Any, Optional
-from src.utils.cli_utils import select_character_from_list, get_non_empty_input
+from src.utils.cli_utils import (
+    select_character_from_list,
+    get_non_empty_input,
+    require_characters
+)
 from src.utils.path_utils import get_campaign_path
 from src.cli.party_config_manager import load_current_party
+from src.utils.errors import display_error, DnDError
 
 
 class ConsultationsCLI:
@@ -27,10 +32,10 @@ class ConsultationsCLI:
 
     def get_character_consultation(self):
         """Get character consultation for a situation."""
-        characters = self.story_manager.get_character_list()
-        if not characters:
-            print("\n[ERROR] No characters found.")
+        if not require_characters(self.story_manager):
             return
+
+        characters = self.story_manager.get_character_list()
 
         print("\n CHARACTER CONSULTATION")
         print("-" * 30)
@@ -52,7 +57,11 @@ class ConsultationsCLI:
     def _display_character_reaction(self, reaction: Dict[str, Any]):
         """Display character reaction suggestion."""
         if "error" in reaction:
-            print(f"\n[ERROR] {reaction['error']}")
+            error = DnDError(
+                message=f"Consultation error: {reaction['error']}",
+                user_guidance="Try again or check the character configuration."
+            )
+            display_error(error)
             return
 
         print(f"\n CHARACTER REACTION: {reaction['character']}")
@@ -76,10 +85,10 @@ class ConsultationsCLI:
 
     def get_dc_suggestions(self):
         """Get DC suggestions for an action."""
-        characters = self.story_manager.get_character_list()
-        if not characters:
-            print("\n[ERROR] No characters found.")
+        if not require_characters(self.story_manager):
             return
+
+        characters = self.story_manager.get_character_list()
 
         print("\n DC SUGGESTIONS")
         print("-" * 30)

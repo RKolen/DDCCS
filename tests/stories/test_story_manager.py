@@ -10,6 +10,7 @@ import os
 import shutil
 
 from src.stories.story_manager import StoryManager
+from src.utils.errors import DnDFileNotFoundError
 
 
 def test_story_manager_initialization():
@@ -88,7 +89,7 @@ def test_create_new_story_series_and_add_story():
 
 
 def test_create_story_in_nonexistent_series_raises():
-    """Creating a story inside a non-existent series should raise ValueError."""
+    """Creating a story inside a non-existent series should raise DnDFileNotFoundError."""
     print("\n[TEST] Create Story in Nonexistent Series")
 
     with tempfile.TemporaryDirectory() as tmpdir:
@@ -97,10 +98,10 @@ def test_create_story_in_nonexistent_series_raises():
         try:
             manager.create_story_in_series("NoSuchSeries_Quest", "Tale")
             raised = False
-        except ValueError:
+        except DnDFileNotFoundError:
             raised = True
 
-        assert raised, "Expected ValueError for non-existent series"
+        assert raised, "Expected DnDFileNotFoundError for non-existent series"
 
     print("[PASS] Create Story in Nonexistent Series")
 

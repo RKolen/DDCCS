@@ -8,6 +8,7 @@ Prompts for missing combat stats and character details.
 from typing import Dict, Any, Optional
 from pathlib import Path
 from src.utils.file_io import load_json_file, save_json_file
+from src.utils.errors import display_error, DnDError
 from src.validation.npc_validator import validate_npc_json
 from src.characters.npc_constants import (
     ABILITY_SCORE_NAMES,
@@ -333,8 +334,8 @@ def migrate_npc_to_full_profile(
     is_valid, errors = validate_npc_json(full_profile)
     if not is_valid:
         print("\n[WARNING] Validation errors found:")
-        for error in errors:
-            print(f"  - {error}")
+        for validation_error in errors:
+            print(f"  - {validation_error}")
         print("Saving anyway, but please fix these issues manually.")
 
     # Determine output filepath
@@ -369,5 +370,10 @@ if __name__ == "__main__":
         result = migrate_npc_to_full_profile(npc_file, output_file)
         print(f"\nMigration complete: {result}")
     except (ValueError, KeyError, OSError) as e:
-        print(f"\n[ERROR] Migration failed: {e}")
+        error = DnDError(
+            message=f"Migration failed: {e}",
+            user_guidance="Check the NPC file format and permissions.",
+            recoverable=False
+        )
+        display_error(error)
         sys.exit(1)

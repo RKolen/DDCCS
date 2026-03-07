@@ -45,6 +45,8 @@ python -m pylint src/
 python -m pylint tests/
 ```
 
+Never use flags or pipes.
+
 ### 4. No Hardcoded Configuration Values
 
 Never hardcode values that should be configurable. This includes:

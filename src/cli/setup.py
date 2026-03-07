@@ -5,6 +5,7 @@ Initializes workspace with default character JSON files and VSCode configuration
 
 from pathlib import Path
 from src.utils.file_io import save_json_file, load_json_file
+from src.utils.errors import display_error, DnDFileNotFoundError
 
 
 def create_vscode_configuration():
@@ -73,8 +74,12 @@ def setup_workspace():
     # Verify character files exist
     characters_dir = Path("game_data/characters")
     if not characters_dir.exists():
-        print("[ERROR] 'game_data/characters' directory not found!")
-        print("        The character JSON files should already exist in this workspace.")
+        error = DnDFileNotFoundError(
+            filepath=str(characters_dir),
+            file_type="characters directory"
+        )
+        display_error(error)
+        print("The character JSON files should already exist in this workspace.")
         return False
 
     # Count existing character files (exclude example/template files)

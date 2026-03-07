@@ -10,6 +10,7 @@ D&D spell/ability descriptions via dnd5e.wikidot.com.
 from typing import Optional, Dict, Any
 from src.ai.availability import AI_AVAILABLE
 from src.utils.spell_lookup_helper import lookup_spells_and_abilities
+from src.utils.errors import wrap_exception, display_error
 
 
 def _build_story_context(
@@ -219,7 +220,7 @@ def generate_story_from_prompt(
         return generated_text
 
     except (AttributeError, TypeError, KeyError) as e:
-        print(f"[ERROR] Failed to generate story: {e}")
+        display_error(wrap_exception(e, context={"operation": "generate story"}))
         return None
 
 
@@ -312,7 +313,7 @@ def generate_story_description(
         return description
 
     except (AttributeError, TypeError, KeyError) as e:
-        print(f"[ERROR] Failed to generate description: {e}")
+        display_error(wrap_exception(e, context={"operation": "generate description"}))
         return None
 
 
@@ -394,7 +395,7 @@ def enhance_story_narrative(
         return enhanced_text
 
     except (AttributeError, TypeError, KeyError) as e:
-        print(f"[ERROR] Failed to enhance narrative: {e}")
+        display_error(wrap_exception(e, context={"operation": "enhance narrative"}))
         return None
 
 
@@ -468,7 +469,7 @@ def generate_session_results_from_story(
         return _parse_session_analysis(analysis, party_names)
 
     except (AttributeError, TypeError, KeyError) as e:
-        print(f"[ERROR] Failed to generate session results: {e}")
+        display_error(wrap_exception(e, context={"operation": "generate session results"}))
         return None
 
 
@@ -639,9 +640,7 @@ def generate_story_hooks_from_content(
         return parsed_hooks
 
     except (AttributeError, TypeError, KeyError) as e:
-        print(f"[ERROR] Failed to generate story hooks: {e}")
-        print(f"[ERROR] AI client type: {type(ai_client)}")
-        print(f"[ERROR] AI_AVAILABLE: {AI_AVAILABLE}")
+        display_error(wrap_exception(e, context={"operation": "generate story hooks"}))
         return None
 
 

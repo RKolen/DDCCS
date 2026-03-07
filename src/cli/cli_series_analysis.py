@@ -10,6 +10,7 @@ from typing import List
 from datetime import datetime
 
 from src.utils.path_utils import get_campaign_path
+from src.utils.errors import display_error, DnDError
 from src.stories.party_manager import PartyManager
 from src.stories.series_analyzer import (
     SeriesAnalyzer,
@@ -62,7 +63,11 @@ class SeriesAnalysisCLI:
         """
         try:
             if not stories:
-                print("[ERROR] No stories in this series.")
+                error = DnDError(
+                    message="No stories in this series",
+                    user_guidance="Add story files to the campaign before analyzing."
+                )
+                display_error(error)
                 return
 
             campaign_path = get_campaign_path(series_name, self.workspace_path)
@@ -104,7 +109,11 @@ class SeriesAnalysisCLI:
             )
 
         except (OSError, AttributeError, ValueError) as e:
-            print(f"[ERROR] Failed to generate series character development: {e}")
+            error = DnDError(
+                message=f"Failed to generate series character development: {e}",
+                user_guidance="Check that the campaign and character files exist."
+            )
+            display_error(error)
 
     def analyze_entire_series(
         self,
@@ -127,7 +136,11 @@ class SeriesAnalysisCLI:
         """
         try:
             if not stories:
-                print("[ERROR] No stories in this series.")
+                error = DnDError(
+                    message="No stories in this series",
+                    user_guidance="Add story files to the campaign before analyzing."
+                )
+                display_error(error)
                 return
 
             campaign_path = get_campaign_path(series_name, self.workspace_path)
@@ -175,7 +188,11 @@ class SeriesAnalysisCLI:
             )
 
         except (OSError, AttributeError, ValueError) as e:
-            print(f"[ERROR] Failed to analyze series: {e}")
+            error = DnDError(
+                message=f"Failed to analyze series: {e}",
+                user_guidance="Check that the campaign and character files exist."
+            )
+            display_error(error)
 
     @staticmethod
     def _get_series_analysis_output_path(campaign_path: str) -> str:

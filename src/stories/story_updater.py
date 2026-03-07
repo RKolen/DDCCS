@@ -18,6 +18,7 @@ from src.utils.story_formatting_utils import (
     generate_consistency_section,
 )
 from src.utils.text_formatting_utils import wrap_narrative_text
+from src.utils.errors import UserInputError, wrap_exception, display_error
 from src.utils.string_utils import (
     sanitize_filename,
     get_session_date,
@@ -229,7 +230,10 @@ class StoryUpdater:
             True if successful, False if an error occurred
         """
         if not config.validate():
-            print("[ERROR] Invalid continuation config: missing required fields")
+            display_error(UserInputError(
+                message="Invalid continuation config",
+                user_guidance="Ensure all required fields are present in the config"
+            ))
             return False
 
         return self._append_continuation(config)
@@ -267,7 +271,10 @@ class StoryUpdater:
             write_text_file(config.filepath, new_content)
 
             if config.campaign_dir is None or config.workspace_path is None:
-                print("[ERROR] campaign_dir and workspace_path must not be None")
+                display_error(UserInputError(
+                    message="campaign_dir and workspace_path must not be None",
+                    user_guidance="Ensure campaign and workspace paths are properly configured"
+                ))
                 return False
 
             self._generate_supporting_files(
@@ -284,7 +291,7 @@ class StoryUpdater:
             return True
 
         except OSError as e:
-            print(f"[ERROR] Failed to update story: {e}")
+            display_error(wrap_exception(e, context={"operation": "update story"}))
             return False
 
     def clean_story_content(self, content: str) -> str:

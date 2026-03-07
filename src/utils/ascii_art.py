@@ -9,7 +9,7 @@ Can optionally generate AI-based ASCII art from character backstory.
 from typing import Optional, Dict, Any
 
 from src.utils.optional_imports import (
-    RICH_AVAILABLE,
+    rich_available,
     get_rich_console,
     get_rich_component,
 )
@@ -18,6 +18,22 @@ from src.utils.optional_imports import (
 Panel = get_rich_component("Panel")
 Align = get_rich_component("Align")
 Text = get_rich_component("Text")
+
+# D&D Class Icons mapping
+CLASS_ICONS = {
+    "barbarian": "[X]",
+    "bard": "[~]",
+    "cleric": "[+]",
+    "druid": "[*]",
+    "fighter": "[#]",
+    "monk": "[@]",
+    "paladin": "[^]",
+    "ranger": "[>]",
+    "rogue": "[/]",
+    "sorcerer": "[%]",
+    "warlock": "[&]",
+    "wizard": "[?]",
+}
 Columns = get_rich_component("Columns")
 
 # Lazy import for AI to avoid circular dependencies
@@ -40,21 +56,7 @@ def get_class_icon(dnd_class: str) -> str:
     Returns:
         ASCII representation of class icon
     """
-    icons = {
-        "barbarian": "[X]",
-        "bard": "[~]",
-        "cleric": "[+]",
-        "druid": "[*]",
-        "fighter": "[#]",
-        "monk": "[@]",
-        "paladin": "[^]",
-        "ranger": "[>]",
-        "rogue": "[/]",
-        "sorcerer": "[%]",
-        "warlock": "[&]",
-        "wizard": "[?]",
-    }
-    return icons.get(dnd_class.lower(), "[?]")
+    return CLASS_ICONS.get(dnd_class.lower(), "[?]")
 
 
 def create_character_portrait(
@@ -172,7 +174,7 @@ def display_character_portrait(
     backstory = options.get("backstory")
     generate_from_backstory = options.get("generate_from_backstory", False)
 
-    if not RICH_AVAILABLE:
+    if not rich_available:
         # Fallback: plain text display
         art = create_character_portrait(
             character_name,
@@ -210,7 +212,7 @@ def display_party_portraits(characters: list[Dict[str, Any]]) -> None:
     Args:
         characters: List of character dicts with name, dnd_class, level fields
     """
-    if not RICH_AVAILABLE or not Columns:
+    if not rich_available or not Columns:
         # Fallback: display one by one
         for char in characters:
             art = create_character_portrait(
@@ -290,7 +292,7 @@ def display_ascii_banner(text: str, style: str = "bold green") -> None:
         text: Text to display in banner
         style: Rich style for the text
     """
-    if not RICH_AVAILABLE:
+    if not rich_available:
         print("\n" + "=" * 60)
         print(f"  {text}")
         print("=" * 60 + "\n")

@@ -9,7 +9,6 @@ from typing import List, Optional
 
 from src.cli.party_config_manager import (
     save_current_party,
-    load_current_party,
     load_party_with_profiles,
 )
 from src.stories.story_workflow_orchestrator import (
@@ -33,10 +32,11 @@ from src.stories.character_action_analyzer import extract_character_actions
 from src.cli.story_amender_cli_handler import StoryAmenderCLIHandler
 from src.characters.character_consistency import create_character_development_file
 from src.ai.ai_client import AIClient
+from src.utils.errors import display_error, DnDError
+from src.utils.cli_utils import require_party, display_selection_menu, require_story_with_content
 from src.utils.file_io import read_text_file
 from src.utils.string_utils import truncate_at_sentence, get_session_date
 from src.utils.character_profile_utils import load_character_profiles
-from src.utils.cli_utils import display_selection_menu
 from src.cli.dnd_cli_helpers import (
     get_continuation_scene_type,
     get_continuation_prompt,
@@ -52,8 +52,6 @@ from src.cli.cli_story_helpers import (
     CharacterSelectionHelper,
     StoryContinuationHelper,
 )
-
-
 class StoryCLIManager:
     """Manages story-related CLI operations."""
 
@@ -537,7 +535,11 @@ class StoryCLIManager:
             print("\n[INFO] Processing story for NPCs, hooks, and analysis...")
             self._orchestrate_story_creation(filepath, campaign_folder, party_members)
         except (OSError, ValueError, KeyError) as e:
-            print(f"[ERROR] Error creating story series: {e}")
+            error = DnDError(
+                message=f"Error creating story series: {e}",
+                user_guidance="Check that campaign directory exists and you have write permissions."
+            )
+            display_error(error)
 
     def _get_validated_series_name(self) -> str:
         """Prompt user for series name and validate it has proper suffix.
@@ -571,29 +573,14 @@ class StoryCLIManager:
 
     def _create_story_in_series(self, series_name: str):
         """Create a new story in an existing series with optional AI generation."""
-        # Load party members for this series (lazy loading - only loads what's needed)
-        party_members = []
-        try:
-            party_members = load_current_party(
-                workspace_path=self.workspace_path, campaign_name=series_name
-            )
+        # Load party members for this series
+        party_members = require_party(self.workspace_path, series_name)
+        if party_members:
             print(f"[DEBUG] Loaded party config: {party_members}")
-        except (ImportError, OSError, ValueError) as e:
-            print(f"[DEBUG] Could not load party config: {e}")
-
-        print(f"[DEBUG] party_members: {party_members}")
-        print(
-            f"[DEBUG] is_characters_loaded: {self.story_manager.is_characters_loaded()}"
-        )
-
-        # Load only the party members for this campaign (faster than loading all)
-        if party_members and not self.story_manager.is_characters_loaded():
-            print(
-                f"[INFO] Loading {len(party_members)} party members for story generation..."
-            )
-            self.story_manager.load_party_characters(party_members)
+            if not self.story_manager.is_characters_loaded():
+                print(f"[INFO] Loading {len(party_members)} party members for story generation...")
+                self.story_manager.load_party_characters(party_members)
         elif not self.story_manager.is_characters_loaded():
-            # Fallback: no party config, load all characters
             print("[INFO] Loading characters for story generation...")
             self.story_manager.ensure_characters_loaded()
 
@@ -641,19 +628,16 @@ class StoryCLIManager:
 
             # Load party members for this series
             series_path = os.path.dirname(filepath)
-            party_names = []
-            try:
-                party_names = load_current_party(
-                    workspace_path=self.workspace_path, campaign_name=series_name
-                )
-            except (ImportError, OSError, ValueError):
-                pass
 
             # Run workflow orchestration to create auxiliary files
             print("\n[INFO] Processing story for NPCs, hooks, and analysis...")
-            self._orchestrate_story_creation(filepath, series_path, party_names)
+            self._orchestrate_story_creation(filepath, series_path, party_members)
         except (OSError, ValueError, KeyError) as e:
-            print(f"[ERROR] Error creating story: {e}")
+            error = DnDError(
+                message=f"Error creating story: {e}",
+                user_guidance="Check that the series exists and you have write permissions."
+            )
+            display_error(error)
 
     def _view_story_details(self, stories: List[str]):
         """View details of a story from a list."""
@@ -717,7 +701,11 @@ class StoryCLIManager:
                     self.story_manager.ai_client = AIClient()
                     print("[SUCCESS] AI client ready")
                 except (ImportError, ValueError) as e:
-                    print(f"[ERROR] Failed to initialize AI client: {e}")
+                    error = DnDError(
+                        message=f"Failed to initialize AI client: {e}",
+                        user_guidance="Check your AI configuration in the Setup menu."
+                    )
+                    display_error(error)
                     return
 
             # Offer AI continuation
@@ -731,7 +719,11 @@ class StoryCLIManager:
                 self._add_ai_continuation_to_story(story_path, display_name)
 
         except OSError as e:
-            print(f"[ERROR] Error reading story: {e}")
+            error = DnDError(
+                message=f"Error reading story: {e}",
+                user_guidance="Check that the story file exists and is readable."
+            )
+            display_error(error)
 
     def _add_ai_continuation_to_story(self, story_path: str, display_name: str):
         """Add AI-generated continuation to an existing story.
@@ -769,7 +761,11 @@ class StoryCLIManager:
                 )
 
         except (ValueError, AttributeError, OSError) as e:
-            print(f"[ERROR] Failed to generate continuation: {e}")
+            error = DnDError(
+                message=f"Failed to generate continuation: {e}",
+                user_guidance="Check your AI configuration and try again."
+            )
+            display_error(error)
 
     def _handle_combat_continuation(
         self, story_path: str, display_name: str, story_prompt: str
@@ -809,17 +805,12 @@ class StoryCLIManager:
             story_path = os.path.join(campaign_path, story_file)
             story_content = read_text_file(story_path)
 
-            if not story_content:
-                print("[ERROR] Story file is empty.")
+            if not require_story_with_content(story_content, story_file):
                 return
 
             # Load party members
-            party_members = load_current_party(
-                workspace_path=self.workspace_path, campaign_name=series_name
-            )
-
+            party_members = require_party(self.workspace_path, series_name)
             if not party_members:
-                print("[ERROR] No party configured. Set up party first.")
                 return
 
             print(f"\nParty members: {', '.join(party_members)}")
@@ -847,12 +838,20 @@ class StoryCLIManager:
                 filepath = create_session_results_file(campaign_path, session)
                 print(f"\n[SUCCESS] Session results saved: {filepath}")
             except OSError as error:
-                print(f"[ERROR] Error saving session results: {error}")
+                error = DnDError(
+                    message=f"Error saving session results: {error}",
+                    user_guidance="Check that you have write permissions to the campaign folder."
+                )
+                display_error(error)
 
         except ValueError:
             print("Invalid input.")
         except (OSError, AttributeError) as e:
-            print(f"[ERROR] Failed to generate session results: {e}")
+            error = DnDError(
+                message=f"Failed to generate session results: {e}",
+                user_guidance="Check your AI configuration and try again."
+            )
+            display_error(error)
 
     def _generate_character_development_for_story(
         self, series_name: str, stories: List[str]
@@ -874,17 +873,12 @@ class StoryCLIManager:
             story_path = os.path.join(campaign_path, story_file)
             story_content = read_text_file(story_path)
 
-            if not story_content:
-                print("[ERROR] Story file is empty.")
+            if not require_story_with_content(story_content, story_file):
                 return
 
             # Load party members
-            party_members = load_current_party(
-                workspace_path=self.workspace_path, campaign_name=series_name
-            )
-
+            party_members = require_party(self.workspace_path, series_name)
             if not party_members:
-                print("[ERROR] No party configured. Set up party first.")
                 return
 
             print(f"\nParty members: {', '.join(party_members)}")
@@ -913,12 +907,20 @@ class StoryCLIManager:
                 )
                 print(f"[SUCCESS] Character development saved to: {filepath}")
             except (OSError, AttributeError) as e:
-                print(f"[ERROR] Failed to save character development: {e}")
+                error = DnDError(
+                    message=f"Failed to save character development: {e}",
+                    user_guidance="Check that you have write permissions to the campaign folder."
+                )
+                display_error(error)
 
         except ValueError:
             print("Invalid input.")
         except (OSError, AttributeError) as e:
-            print(f"[ERROR] Failed to generate character development: {e}")
+            error = DnDError(
+                message=f"Failed to generate character development: {e}",
+                user_guidance="Check your AI configuration and try again."
+            )
+            display_error(error)
 
     def _amend_story_actions(self, series_name: str, stories: List[str]):
         """Interactive story character action amendment.

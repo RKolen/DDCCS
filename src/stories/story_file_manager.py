@@ -21,6 +21,7 @@ from src.utils.file_io import (
     directory_exists,
 )
 from src.utils.path_utils import get_campaign_path, get_campaigns_dir
+from src.utils.errors import DnDFileNotFoundError
 from src.utils.story_file_helpers import (
     list_story_files,
     has_numbered_story_files,
@@ -238,7 +239,11 @@ def create_story_in_series(
 
     series_path = get_campaign_path(series_name, ctx.workspace_path)
     if not directory_exists(series_path):
-        raise ValueError(f"Story series '{series_name}' does not exist")
+        raise DnDFileNotFoundError(
+            filepath=str(series_path),
+            file_type="story series",
+            context={"series_name": series_name}
+        )
 
     # Compute next filename via helper
     filename, filepath = next_filename_for_dir(series_path, story_name)

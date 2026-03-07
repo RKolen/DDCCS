@@ -67,6 +67,8 @@ RAG_RULES_BASE_URL=https://dnd5e.wikidot.com
 # Cache settings
 RAG_CACHE_TTL=604800  # 7 days in seconds
 RAG_MAX_CACHE_SIZE=100  # Maximum cached pages
+RAG_CACHE_BACKEND=sqlite  # json or sqlite
+RAG_VECTOR_DB_PATH=.rag_cache/rag_cache.sqlite3
 
 # Search settings
 RAG_SEARCH_DEPTH=3  # How many wiki links to follow
@@ -142,24 +144,22 @@ else:
 
 **Output Example:**
 
-```
-[COMPLETE] Elara recalls: 
+[COMPLETE] Elara recalls:
 
 === LORE CONTEXT: Tal'Dorei ===
 
 Introduction:
-Tal'Dorei is a continent on the world of Exandria. It is home to the city 
-of Emon, capital of the Tal'Dorei Republic, and is the primary setting of 
+Tal'Dorei is a continent on the world of Exandria. It is home to the city
+of Emon, capital of the Tal'Dorei Republic, and is the primary setting of
 the first campaign of Critical Role...
 
 Geography:
-The continent is bordered by the Ozmit Sea to the west and the Lucidian 
+The continent is bordered by the Ozmit Sea to the west and the Lucidian
 Ocean to the east...
 
 === END LORE CONTEXT ===
 
 Source: wiki
-```
 
 ### Direct Lore Lookup (for DMs)
 
@@ -191,7 +191,6 @@ For History checks:
 
 ## File Structure
 
-```
 D&D Campaign Workspace/
 ├── .env                          # RAG configuration
 ├── .rag_cache/                   # Wiki content cache (git-ignored)
@@ -202,7 +201,6 @@ D&D Campaign Workspace/
 ├── history_check_helper.py       # History check integration
 ├── dungeon_master.py             # Story generation with RAG
 └── dnd_consultant.py             # CLI interface
-```
 
 ## Advanced Configuration
 
@@ -432,12 +430,11 @@ For homebrew campaigns:
 
 The `.gitignore` includes:
 
-```
-# Ignore RAG cache directory (wiki content)
+## Ignore RAG cache directory (wiki content)
+
 .rag_cache/
 *.rag.json
 rag_*.db
-```
 
 ### What's in Version Control
 

@@ -10,8 +10,8 @@ import re
 import sys
 import time
 import subprocess
-from typing import Optional
 from pathlib import Path
+from typing import Optional
 
 try:
     import pyttsx3
@@ -170,7 +170,9 @@ class StoryNarrator:
             )
             return result.returncode == 0
         except (subprocess.TimeoutExpired, OSError) as e:
-            print(f"[ERROR] TTS speech failed: {e}")
+            print("[ERROR] TTS not available")
+            print(f"TTS speech failed: {e}")
+            print("Check that pyttsx3 is installed correctly.")
             return False
 
     def stop(self) -> None:
@@ -256,14 +258,18 @@ def narrate_file(
         True if narration completed successfully
     """
     if not os.path.exists(filepath):
-        print(f"[ERROR] File not found: {filepath}")
+        print("[ERROR] TTS not available")
+        print(f"File not found: {filepath}")
+        print("Check that the file path is correct.")
         return False
 
     try:
         with open(filepath, "r", encoding="utf-8") as f:
             content = f.read()
     except (OSError, UnicodeDecodeError) as e:
-        print(f"[ERROR] Failed to read file: {e}")
+        print("[ERROR] TTS not available")
+        print(f"Failed to read file: {e}")
+        print("Check file permissions and encoding.")
         return False
 
     # Clean text for narration
@@ -279,6 +285,7 @@ def narrate_file(
 
     if not narrator.available:
         print("[ERROR] TTS not available")
+        print("[ERROR] TTS not available Install pyttsx3 or use a different narration method.")
         return False
 
     return _narrate_paragraphs(narrator, clean_text, filepath, pause_between)
@@ -329,7 +336,9 @@ def _narrate_paragraphs(
         narrator.stop()
         return False
     except (RuntimeError, OSError) as e:
-        print(f"\n[ERROR] Narration failed: {e}")
+        print("[ERROR] TTS not available")
+        print(f"Narration failed: {e}")
+        print("Check that pyttsx3 is working correctly.")
         return False
 
 
@@ -354,6 +363,7 @@ def narrate_text(
 
     if not narrator.available:
         print("[ERROR] TTS not available")
+        print("[ERROR] TTS not available Install pyttsx3 or use a different narration method.")
         return False
 
     if clean:

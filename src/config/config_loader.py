@@ -20,6 +20,7 @@ from src.config.config_types import (
     PathConfig,
     RAGConfig,
 )
+from src.utils.errors import display_error, FileSystemError
 
 
 # Default config file location
@@ -117,6 +118,15 @@ def _merge_config(base: DnDConfig, override: Dict[str, Any]) -> DnDConfig:
             min_relevance=rag_data.get("min_relevance", base.rag.min_relevance),
         )
 
+        # Backward compatibility: legacy storage keys used to live under "rag".
+        legacy_cache_backend = rag_data.get("cache_backend")
+        if legacy_cache_backend:
+            base.paths.rag_cache_backend = str(legacy_cache_backend)
+
+        legacy_vector_db_path = rag_data.get("vector_db_path")
+        if legacy_vector_db_path:
+            base.paths.rag_vector_db_path = Path(legacy_vector_db_path)
+
     # Display config
     if "display" in override:
         display_data = override["display"]
@@ -135,6 +145,12 @@ def _merge_config(base: DnDConfig, override: Dict[str, Any]) -> DnDConfig:
         base.paths = PathConfig(
             game_data_dir=Path(paths_data.get("game_data_dir", base.paths.game_data_dir)),
             cache_dir=Path(paths_data.get("cache_dir", base.paths.cache_dir)),
+            rag_cache_backend=paths_data.get(
+                "rag_cache_backend", base.paths.rag_cache_backend
+            ),
+            rag_vector_db_path=Path(
+                paths_data.get("rag_vector_db_path", base.paths.rag_vector_db_path)
+            ),
         )
 
     return base
@@ -215,6 +231,18 @@ def _apply_env_overrides(config: DnDConfig, prefix: str = "") -> DnDConfig:
     config.rag.search_depth = get_env_int("RAG_SEARCH_DEPTH", config.rag.search_depth)
     config.rag.min_relevance = get_env_float("RAG_MIN_RELEVANCE", config.rag.min_relevance)
 
+    cache_backend = get_env("RAG_CACHE_BACKEND")
+    if cache_backend:
+        config.paths.rag_cache_backend = cache_backend.lower().strip()
+
+    vector_db_path = get_env("RAG_VECTOR_DB_PATH")
+    if vector_db_path:
+        config.paths.rag_vector_db_path = Path(vector_db_path)
+
+    cache_dir = get_env("RAG_CACHE_DIR")
+    if cache_dir:
+        config.paths.cache_dir = Path(cache_dir)
+
     return config
 
 
@@ -264,6 +292,8 @@ def save_config(config: DnDConfig, path: Optional[Path] = None) -> bool:
         "paths": {
             "game_data_dir": str(config.paths.game_data_dir),
             "cache_dir": str(config.paths.cache_dir),
+            "rag_cache_backend": config.paths.rag_cache_backend,
+            "rag_vector_db_path": str(config.paths.rag_vector_db_path),
         },
     }
 
@@ -275,7 +305,11 @@ def save_config(config: DnDConfig, path: Optional[Path] = None) -> bool:
         return True
 
     except OSError as error:
-        print(f"[ERROR] Failed to save config: {error}")
+        error = FileSystemError(
+            message=f"Failed to save config: {error}",
+            user_guidance="Check file permissions and disk space."
+        )
+        display_error(error)
         return False
 
 

@@ -90,6 +90,10 @@ class PathConfig:
 
     game_data_dir: Path = field(default_factory=lambda: Path("game_data"))
     cache_dir: Path = field(default_factory=lambda: Path(".rag_cache"))
+    rag_cache_backend: str = "json"
+    rag_vector_db_path: Path = field(
+        default_factory=lambda: Path(".rag_cache") / "rag_cache.sqlite3"
+    )
 
     @property
     def characters_dir(self) -> Path:
@@ -166,6 +170,12 @@ class DnDConfig:
         # Validate RAG config
         if self.rag.enabled and not self.rag.wiki_base_url:
             errors.append("RAG is enabled but wiki_base_url is not set")
+
+        rag_backend = self.paths.rag_cache_backend.lower().strip()
+        if rag_backend not in ("json", "sqlite"):
+            errors.append(
+                "RAG cache_backend must be one of: json, sqlite"
+            )
 
         # Validate paths
         errors.extend(self.paths.validate_paths())

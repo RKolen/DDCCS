@@ -9,12 +9,23 @@ from typing import Optional, Union
 from src.characters.consultants.character_profile import CharacterProfile
 from src.cli.dnd_cli_helpers import edit_character_profile_interactive
 from src.cli.cli_consultations import ConsultationsCLI
-from src.utils.cli_utils import select_character_from_list, get_multiline_text
+from src.utils.cli_utils import (
+    select_character_from_list,
+    get_multiline_text,
+    require_characters
+)
 from src.utils.ascii_art import (
     display_character_portrait,
     create_character_portrait,
 )
 from src.utils.string_utils import sanitize_filename
+from src.utils.errors import (
+    display_error,
+    DnDError,
+    UserInputError,
+    FileSystemError,
+    DnDFileNotFoundError,
+)
 
 
 class CharacterCLIManager:
@@ -73,7 +84,11 @@ class CharacterCLIManager:
         self.story_manager.ensure_characters_loaded()
         characters = self.story_manager.get_character_list()
         if not characters:
-            print("\n[ERROR] No characters found. Create the default party first.")
+            error = DnDError(
+                message="No characters found",
+                user_guidance="Create the default party first using the Setup menu."
+            )
+            display_error(error)
             return
 
         print(f"\n CHARACTERS ({len(characters)})")
@@ -95,7 +110,11 @@ class CharacterCLIManager:
         self.story_manager.ensure_characters_loaded()
         characters = self.story_manager.get_character_list()
         if not characters:
-            print("\n[ERROR] No characters found. Create the default party first.")
+            error = DnDError(
+                message="No characters found",
+                user_guidance="Create the default party first using the Setup menu."
+            )
+            display_error(error)
             return
 
         print("\n EDIT CHARACTER")
@@ -123,10 +142,10 @@ class CharacterCLIManager:
         """View detailed character information."""
         # Ensure characters are loaded before viewing (lazy loading)
         self.story_manager.ensure_characters_loaded()
-        characters = self.story_manager.get_character_list()
-        if not characters:
-            print("\n[ERROR] No characters found.")
+        if not require_characters(self.story_manager):
             return
+
+        characters = self.story_manager.get_character_list()
 
         print("\n VIEW CHARACTER DETAILS")
         print("-" * 30)
@@ -204,7 +223,11 @@ class CharacterCLIManager:
         # Ensure characters are loaded before consultation (lazy loading)
         self.story_manager.ensure_characters_loaded()
         if not self.consultations:
-            print("[ERROR] Consultations not available.")
+            error = DnDError(
+                message="Consultations not available",
+                user_guidance="Ensure the AI configuration is set up properly."
+            )
+            display_error(error)
             return
         self.consultations.get_character_consultation()
 
@@ -212,10 +235,10 @@ class CharacterCLIManager:
         """Customize ASCII art for a character."""
         # Ensure characters are loaded
         self.story_manager.ensure_characters_loaded()
-        characters = self.story_manager.get_character_list()
-        if not characters:
-            print("\n[ERROR] No characters found.")
+        if not require_characters(self.story_manager):
             return
+
+        characters = self.story_manager.get_character_list()
 
         print("\n CUSTOMIZE ASCII ART")
         print("-" * 40)
@@ -232,9 +255,17 @@ class CharacterCLIManager:
                 character_name = characters[index]
                 self._set_character_ascii_art(character_name)
             else:
-                print("[ERROR] Invalid selection.")
+                error = UserInputError(
+                    message="Invalid selection",
+                    user_guidance=f"Choose a number between 1 and {len(characters)}."
+                )
+                display_error(error)
         except ValueError:
-            print("[ERROR] Invalid input.")
+            error = UserInputError(
+                message="Invalid input",
+                user_guidance="Enter a valid number."
+            )
+            display_error(error)
 
     def _set_character_ascii_art(self, character_name: str):
         """Set custom ASCII art for a character."""
@@ -274,7 +305,11 @@ class CharacterCLIManager:
         if choice == "3":
             print("\n[INFO] Using default class-based ASCII art.")
             return None
-        print("[ERROR] Invalid choice.")
+        error = UserInputError(
+            message="Invalid choice",
+            user_guidance="Choose 1, 2, or 3."
+        )
+        display_error(error)
         return False
 
     def _generate_art_from_backstory(self, character_name: str) -> Union[str, bool]:
@@ -288,7 +323,11 @@ class CharacterCLIManager:
         """
         profile = self.story_manager.get_character_profile(character_name)
         if not profile or not hasattr(profile, "background_story"):
-            print("[ERROR] No backstory available for this character.")
+            error = DnDError(
+                message="No backstory available for this character",
+                user_guidance="Add a backstory to the character first."
+            )
+            display_error(error)
             return False
 
         print("\n[INFO] Generating ASCII art from backstory...")
@@ -339,7 +378,11 @@ class CharacterCLIManager:
         )
 
         if not char_file.exists():
-            print(f"[ERROR] Character file not found: {char_file}")
+            error = DnDFileNotFoundError(
+                filepath=str(char_file),
+                file_type="character file"
+            )
+            display_error(error)
             return
 
         try:
@@ -368,4 +411,8 @@ class CharacterCLIManager:
                     style="cyan",
                 )
         except (OSError, json.JSONDecodeError) as e:
-            print(f"[ERROR] Failed to update character file: {e}")
+            error = FileSystemError(
+                message=f"Failed to update character file: {e}",
+                user_guidance="Check file permissions and ensure the JSON is valid."
+            )
+            display_error(error)

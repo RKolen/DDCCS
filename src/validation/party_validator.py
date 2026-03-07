@@ -15,13 +15,10 @@ Usage:
 
 from typing import Dict, Any, List, Tuple, Optional
 from datetime import datetime
-from ..utils.file_io import load_json_file, file_exists, get_json_files_in_directory
-from ..utils.path_utils import get_characters_dir, get_party_config_path
-from ..utils.validation_helpers import print_validation_report
-
-
-class PartyValidationError(Exception):
-    """Custom exception for party validation errors."""
+from src.utils.file_io import load_json_file, file_exists, get_json_files_in_directory
+from src.utils.path_utils import get_characters_dir, get_party_config_path
+from src.utils.validation_helpers import print_validation_report
+from src.utils.errors import display_error, DnDFileNotFoundError
 
 
 def _validate_required_fields(data: Dict[str, Any]) -> List[str]:
@@ -180,7 +177,11 @@ if __name__ == "__main__":
         # Validate default current party file
         PARTY_FILE = get_party_config_path()
         if not file_exists(PARTY_FILE):
-            print(f"[ERROR] Party configuration file not found: {PARTY_FILE}")
+            error = DnDFileNotFoundError(
+                filepath=str(PARTY_FILE),
+                file_type="party configuration file"
+            )
+            display_error(error)
             print("Looking for current_party.json in game_data/current_party/")
             sys.exit(1)
 

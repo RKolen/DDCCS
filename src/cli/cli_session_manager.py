@@ -10,6 +10,7 @@ from typing import Dict, Any, Optional
 from src.stories.session_results_manager import StorySession, create_session_results_file
 from src.cli.base_story_interaction_manager import BaseStoryInteractionManager
 from src.cli.dnd_cli_helpers import collect_generic_input
+from src.utils.errors import display_error, FileSystemError
 
 
 class SessionCLIManager(BaseStoryInteractionManager):
@@ -45,7 +46,11 @@ class SessionCLIManager(BaseStoryInteractionManager):
             filepath = create_session_results_file(series_path, session)
             print(f"\n[SUCCESS] Session results saved: {filepath}")
         except OSError as error:
-            print(f"[ERROR] Error saving session results: {error}")
+            error = FileSystemError(
+                message=f"Error saving session results: {error}",
+                user_guidance="Check file permissions and disk space."
+            )
+            display_error(error)
 
     def validate_roll_data(self, roll_data: Dict[str, Any]) -> bool:
         """Public wrapper for roll validation (for testing).

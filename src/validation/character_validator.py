@@ -7,9 +7,8 @@ from typing import Dict, List, Any, Tuple
 from src.utils.file_io import load_json_file, get_json_files_in_directory
 from src.utils.path_utils import get_characters_dir
 from src.utils.validation_helpers import get_type_name, print_validation_report
-
-class CharacterValidationError(Exception):
-    """Raised when character JSON validation fails."""
+from src.characters.npc_constants import ABILITY_SCORE_NAMES
+from src.utils.errors import display_error, DnDFileNotFoundError
 
 
 def _validate_required_fields(
@@ -136,15 +135,7 @@ def _validate_ability_scores(data: Dict[str, Any], file_prefix: str) -> List[str
     """Validate ability_scores dictionary structure."""
     errors = []
     if "ability_scores" in data and isinstance(data["ability_scores"], dict):
-        required_abilities = [
-            "strength",
-            "dexterity",
-            "constitution",
-            "intelligence",
-            "wisdom",
-            "charisma",
-        ]
-        for ability in required_abilities:
+        for ability in ABILITY_SCORE_NAMES:
             if ability not in data["ability_scores"]:
                 errors.append(f"{file_prefix}Missing ability score: '{ability}'")
             elif not isinstance(data["ability_scores"][ability], int):
@@ -237,15 +228,19 @@ if __name__ == "__main__":
         )
 
         if not json_files:
-            print(f"[ERROR] No character files found in {characters_dir}")
+            error = DnDFileNotFoundError(
+                filepath=str(characters_dir),
+                file_type="characters directory"
+            )
+            display_error(error)
             sys.exit(1)
 
-        ALL_VALID = True
+        all_valid = True
         for file_path in json_files:
             valid, error_list = validate_character_file(str(file_path))
             print_validation_report(str(file_path), valid, error_list)
 
             if not valid:
-                ALL_VALID = False
+                all_valid = False
 
-        sys.exit(0 if ALL_VALID else 1)
+        sys.exit(0 if all_valid else 1)

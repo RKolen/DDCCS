@@ -6,6 +6,7 @@ from src.utils.ascii_art import (
     create_character_portrait,
     display_character_portrait,
     get_default_ascii_templates,
+    CLASS_ICONS,
 )
 
 
@@ -14,22 +15,7 @@ class TestASCIIArt(unittest.TestCase):
 
     def test_get_class_icon_known_classes(self):
         """Test class icon retrieval for known classes."""
-        expected_icons = {
-            "barbarian": "[X]",
-            "bard": "[~]",
-            "cleric": "[+]",
-            "druid": "[*]",
-            "fighter": "[#]",
-            "monk": "[@]",
-            "paladin": "[^]",
-            "ranger": "[>]",
-            "rogue": "[/]",
-            "sorcerer": "[%]",
-            "warlock": "[&]",
-            "wizard": "[?]",
-        }
-
-        for class_name, expected_icon in expected_icons.items():
+        for class_name, expected_icon in CLASS_ICONS.items():
             icon = get_class_icon(class_name)
             self.assertEqual(icon, expected_icon)
 

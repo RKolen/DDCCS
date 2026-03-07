@@ -13,6 +13,14 @@ from src.utils.file_io import save_json_file
 from src.utils.path_utils import get_npcs_dir, get_npc_file_path
 from src.characters.npc_constants import DEFAULT_ABILITY_SCORES, DEFAULT_EQUIPMENT
 
+# Default AI config for NPCs
+DEFAULT_NPC_AI_CONFIG = {
+    "enabled": False,
+    "temperature": 0.7,
+    "max_tokens": 1000,
+    "system_prompt": "",
+}
+
 # NPC detection patterns - compiled at module level
 NPC_PATTERNS: List[Tuple[str, str]] = [
     # "innkeeper named X" or "innkeeper called X" - must have "named" or "called"
@@ -98,12 +106,7 @@ def _create_fallback_profile(
         "notes": f"AI generation failed: {error_msg}",
         "profile_type": profile_type,
         "faction": "neutral",
-        "ai_config": {
-            "enabled": False,
-            "temperature": 0.7,
-            "max_tokens": 1000,
-            "system_prompt": "",
-        },
+        "ai_config": DEFAULT_NPC_AI_CONFIG,
     }
     return base_profile
 

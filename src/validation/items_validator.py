@@ -18,9 +18,6 @@ from src.utils.file_io import load_json_file
 from src.utils.path_utils import get_items_registry_path
 from src.utils.validation_helpers import print_validation_report
 
-class ItemsValidationError(Exception):
-    """Custom exception for items validation errors."""
-
 
 def validate_item_entry(item_key: str, item_data: Dict[str, Any]) -> List[str]:
     """

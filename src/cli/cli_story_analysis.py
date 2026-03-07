@@ -28,6 +28,7 @@ from src.stories.character_action_analyzer import extract_character_actions
 from src.stories.story_consistency_analyzer import StoryConsistencyAnalyzer
 from src.utils.path_utils import get_campaign_path
 from src.utils.file_io import write_text_file, read_text_file
+from src.utils.errors import display_error, DnDError
 from src.utils.string_utils import truncate_at_sentence, get_session_date, get_time_only
 from src.utils.character_profile_utils import load_character_profiles
 from src.utils.cli_utils import display_selection_menu
@@ -64,7 +65,11 @@ class StoryAnalysisCLI:
             base_path = self.story_manager.stories_path
 
         if not story_files:
-            print("\n[ERROR] No story files found.")
+            error = DnDError(
+                message="No story files found",
+                user_guidance="Add story files to the campaign first."
+            )
+            display_error(error)
             return
 
         choice_idx = display_selection_menu(
@@ -79,7 +84,11 @@ class StoryAnalysisCLI:
             analysis = self.story_manager.analyze_story_file(filepath)
 
             if "error" in analysis:
-                print(f"[ERROR] {analysis['error']}")
+                error = DnDError(
+                    message=f"Story analysis error: {analysis['error']}",
+                    user_guidance="Try again or check the story file."
+                )
+                display_error(error)
                 return
 
             self._display_story_analysis(analysis)
@@ -342,12 +351,20 @@ class StoryAnalysisCLI:
             party_members = load_current_party(
                 workspace_path=self.workspace_path, campaign_name=series_name
             )
-        except (ImportError, OSError, ValueError):
-            print("[ERROR] Could not load party configuration for this series.")
+        except (ImportError, OSError, ValueError) as _:
+            error = DnDError(
+                message="Could not load party configuration for this series",
+                user_guidance="Check that the campaign exists and has a valid party configuration."
+            )
+            display_error(error)
             return
 
         if not party_members:
-            print("[ERROR] No party members found in current_party.json")
+            error = DnDError(
+                message="No party members found in current_party.json",
+                user_guidance="Add characters to your party using Character Management."
+            )
+            display_error(error)
             return
 
         print(f"Party Members: {', '.join(party_members)}")
@@ -382,7 +399,11 @@ class StoryAnalysisCLI:
             print("\nOpen the report file to see detailed analysis.")
 
         except (OSError, ValueError, KeyError, AttributeError) as e:
-            print(f"\n[ERROR] Analysis failed: {e}")
+            error = DnDError(
+                message=f"Analysis failed: {e}",
+                user_guidance="Check the campaign and story files."
+            )
+            display_error(error)
 
     def analyze_character_development_series(
         self, series_name: str, series_stories: List[str]
@@ -404,12 +425,20 @@ class StoryAnalysisCLI:
             party_members = load_current_party(
                 workspace_path=self.workspace_path, campaign_name=series_name
             )
-        except (ImportError, OSError, ValueError):
-            print("[ERROR] Could not load party configuration for this series.")
+        except (ImportError, OSError, ValueError) as _:
+            error = DnDError(
+                message="Could not load party configuration for this series",
+                user_guidance="Check that the campaign exists and has a valid party configuration."
+            )
+            display_error(error)
             return
 
         if not party_members:
-            print("[ERROR] No party members found in current_party.json")
+            error = DnDError(
+                message="No party members found in current_party.json",
+                user_guidance="Add characters to your party using Character Management."
+            )
+            display_error(error)
             return
 
         print(f"Party Members: {', '.join(party_members)}")

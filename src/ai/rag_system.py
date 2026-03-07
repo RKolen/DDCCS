@@ -11,15 +11,26 @@ Features:
 - Support multiple campaign settings (Exandria, Forgotten Realms, custom)
 """
 
+import json
 import os
+import sqlite3
 import time
 import hashlib
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 from pathlib import Path
 from urllib.parse import quote
 import re
 
 from src.utils.file_io import load_json_file, save_json_file
+from src.utils.errors import display_error, DnDError
+
+try:
+    from src.config.config_loader import load_config
+
+    CONFIG_LOADER_AVAILABLE = True
+except ImportError:
+    load_config = None
+    CONFIG_LOADER_AVAILABLE = False
 
 try:
     from src.items.item_registry import ItemRegistry
@@ -167,6 +178,141 @@ class WikiCache:
             "entries": len(self.index),
             "size_mb": total_size / (1024 * 1024),
             "cache_dir": str(self.cache_dir),
+        }
+
+
+class SQLiteWikiCache:
+    """SQLite-backed cache for wiki page data."""
+
+    def __init__(
+        self,
+        db_path: str = ".rag_cache/rag_cache.sqlite3",
+        ttl_seconds: int = 604800,
+    ):
+        """Initialize SQLite cache storage.
+
+        Args:
+            db_path: SQLite database file path.
+            ttl_seconds: Time-to-live for cached content in seconds.
+        """
+        self.db_path = Path(db_path)
+        self.db_path.parent.mkdir(parents=True, exist_ok=True)
+        self.ttl_seconds = ttl_seconds
+        self._initialize_database()
+
+    def _connect(self) -> sqlite3.Connection:
+        """Create a SQLite connection."""
+        return sqlite3.connect(self.db_path)
+
+    def _initialize_database(self) -> None:
+        """Create cache table and indexes when absent."""
+        with self._connect() as connection:
+            connection.execute(
+                """
+                CREATE TABLE IF NOT EXISTS wiki_cache (
+                    cache_key TEXT PRIMARY KEY,
+                    url TEXT NOT NULL,
+                    timestamp REAL NOT NULL,
+                    title TEXT NOT NULL,
+                    content_json TEXT NOT NULL
+                )
+                """
+            )
+            connection.execute(
+                """
+                CREATE INDEX IF NOT EXISTS idx_wiki_cache_timestamp
+                ON wiki_cache (timestamp)
+                """
+            )
+            connection.commit()
+
+    def _get_cache_key(self, url: str) -> str:
+        """Generate cache key from URL."""
+        return hashlib.md5(url.encode("utf-8")).hexdigest()
+
+    def get(self, url: str) -> Optional[Dict[str, Any]]:
+        """Retrieve cached content if available and not expired."""
+        cache_key = self._get_cache_key(url)
+
+        with self._connect() as connection:
+            row = connection.execute(
+                "SELECT timestamp, content_json FROM wiki_cache WHERE cache_key = ?",
+                (cache_key,),
+            ).fetchone()
+
+        if not row:
+            return None
+
+        timestamp, content_json = row
+        if time.time() - float(timestamp) > self.ttl_seconds:
+            self.delete(url)
+            return None
+
+        try:
+            return json.loads(content_json)
+        except json.JSONDecodeError:
+            self.delete(url)
+            return None
+
+    def set(self, url: str, content: Dict[str, Any]) -> None:
+        """Cache wiki page content."""
+        cache_key = self._get_cache_key(url)
+        content_json = json.dumps(content)
+
+        with self._connect() as connection:
+            connection.execute(
+                """
+                REPLACE INTO wiki_cache (cache_key, url, timestamp, title, content_json)
+                VALUES (?, ?, ?, ?, ?)
+                """,
+                (
+                    cache_key,
+                    url,
+                    time.time(),
+                    content.get("title", "Unknown"),
+                    content_json,
+                ),
+            )
+            connection.commit()
+
+    def delete(self, url: str) -> None:
+        """Delete cached content for the given URL."""
+        cache_key = self._get_cache_key(url)
+        with self._connect() as connection:
+            connection.execute(
+                "DELETE FROM wiki_cache WHERE cache_key = ?",
+                (cache_key,),
+            )
+            connection.commit()
+
+    def clear_expired(self) -> None:
+        """Delete all expired cache entries."""
+        expiration_cutoff = time.time() - self.ttl_seconds
+
+        with self._connect() as connection:
+            cursor = connection.execute(
+                "DELETE FROM wiki_cache WHERE timestamp < ?",
+                (expiration_cutoff,),
+            )
+            deleted_count = cursor.rowcount
+            connection.commit()
+
+        if deleted_count > 0:
+            print(f"[CACHE] Cleared {deleted_count} expired cache entries")
+
+    def get_stats(self) -> Dict[str, Any]:
+        """Get cache statistics."""
+        with self._connect() as connection:
+            row = connection.execute("SELECT COUNT(*) FROM wiki_cache").fetchone()
+
+        total_size = self.db_path.stat().st_size if self.db_path.exists() else 0
+        entry_count = int(row[0]) if row else 0
+
+        return {
+            "entries": entry_count,
+            "size_mb": total_size / (1024 * 1024),
+            "cache_dir": str(self.db_path.parent),
+            "db_path": str(self.db_path),
         }
 
 
@@ -326,9 +472,17 @@ class WikiClient:
             else:
                 print(f"[WARNING]  Could not find content for {page_title}")
         except requests.RequestException as e:
-            print(f"[ERROR] Failed to fetch {page_title}: {e}")
+            error = DnDError(
+                message=f"Failed to fetch {page_title}: {e}",
+                user_guidance="Check your internet connection and the wiki URL configuration."
+            )
+            display_error(error)
         except (ValueError, AttributeError) as e:
-            print(f"[ERROR] Error parsing {page_title}: {e}")
+            error = DnDError(
+                message=f"Error parsing {page_title}: {e}",
+                user_guidance="The wiki page format may have changed."
+            )
+            display_error(error)
         return page_data
 
     def search_sections(
@@ -387,6 +541,73 @@ class RAGSystem:
     Use ItemRegistry to mark homebrew items/rules.
     """
 
+    @staticmethod
+    def _get_runtime_settings() -> Dict[str, Any]:
+        """Load RAG settings from centralized config, with env fallback."""
+        try:
+            if not CONFIG_LOADER_AVAILABLE or load_config is None:
+                raise ImportError("Configuration loader unavailable")
+            loaded_config = load_config()
+            return {
+                "enabled": loaded_config.rag.enabled,
+                "wiki_base_url": loaded_config.rag.wiki_base_url,
+                "rules_base_url": loaded_config.rag.rules_base_url,
+                "cache_ttl": loaded_config.rag.cache_ttl,
+                "cache_backend": loaded_config.paths.rag_cache_backend,
+                "vector_db_path": str(loaded_config.paths.rag_vector_db_path),
+                "cache_dir": str(loaded_config.paths.cache_dir),
+            }
+        except (ImportError, OSError, ValueError):
+            try:
+                cache_ttl = int(os.getenv("RAG_CACHE_TTL", "604800"))
+            except ValueError:
+                cache_ttl = 604800
+
+            return {
+                "enabled": os.getenv("RAG_ENABLED", "false").lower() == "true",
+                "wiki_base_url": os.getenv("RAG_WIKI_BASE_URL", ""),
+                "rules_base_url": os.getenv("RAG_RULES_BASE_URL", ""),
+                "cache_ttl": cache_ttl,
+                "cache_backend": os.getenv("RAG_CACHE_BACKEND", "json"),
+                "vector_db_path": os.getenv("RAG_VECTOR_DB_PATH", ""),
+                "cache_dir": os.getenv("RAG_CACHE_DIR", ".rag_cache"),
+            }
+
+    @staticmethod
+    def _build_cache(
+        cache_backend: str,
+        cache_ttl: int,
+        cache_dir: str,
+        vector_db_path: str,
+    ) -> Tuple[Any, str, str]:
+        """Create a cache instance based on configured backend."""
+        normalized_backend = cache_backend.lower().strip()
+
+        if normalized_backend not in ("json", "sqlite"):
+            print(
+                f"[WARNING]  Unknown RAG cache backend '{cache_backend}', using json"
+            )
+            normalized_backend = "json"
+
+        if normalized_backend == "sqlite":
+            resolved_db_path = vector_db_path.strip()
+            if not resolved_db_path:
+                resolved_db_path = str(Path(cache_dir) / "rag_cache.sqlite3")
+
+            print(f"[SUCCESS] RAG cache backend: sqlite ({resolved_db_path})")
+            return (
+                SQLiteWikiCache(db_path=resolved_db_path, ttl_seconds=cache_ttl),
+                normalized_backend,
+                resolved_db_path,
+            )
+
+        print(f"[SUCCESS] RAG cache backend: json ({cache_dir})")
+        return (
+            WikiCache(cache_dir=cache_dir, ttl_seconds=cache_ttl),
+            normalized_backend,
+            "",
+        )
+
     def __init__(self, item_registry=None, rag_config=None):
         """
         Initialize RAG system from configuration.
@@ -395,18 +616,26 @@ class RAGSystem:
             item_registry: Optional ItemRegistry instance for homebrew filtering
             rag_config: Optional RAGConfig object from src.config (takes precedence)
         """
+        self.cache_backend = "json"
+
         # Support centralized config system
         if rag_config is not None:
             self.enabled = rag_config.enabled
             self.wiki_base_url = rag_config.wiki_base_url
             self.rules_base_url = rag_config.rules_base_url
             cache_ttl = rag_config.cache_ttl
+            cache_backend = os.getenv("RAG_CACHE_BACKEND", "json")
+            vector_db_path = os.getenv("RAG_VECTOR_DB_PATH", "")
+            cache_dir = os.getenv("RAG_CACHE_DIR", ".rag_cache")
         else:
-            # Fall back to environment variables
-            self.enabled = os.getenv("RAG_ENABLED", "false").lower() == "true"
-            self.wiki_base_url = os.getenv("RAG_WIKI_BASE_URL", "")
-            self.rules_base_url = os.getenv("RAG_RULES_BASE_URL", "")
-            cache_ttl = int(os.getenv("RAG_CACHE_TTL", "604800"))  # 7 days default
+            runtime_settings = self._get_runtime_settings()
+            self.enabled = runtime_settings["enabled"]
+            self.wiki_base_url = runtime_settings["wiki_base_url"]
+            self.rules_base_url = runtime_settings["rules_base_url"]
+            cache_ttl = int(runtime_settings["cache_ttl"])
+            cache_backend = runtime_settings["cache_backend"]
+            vector_db_path = runtime_settings["vector_db_path"]
+            cache_dir = runtime_settings["cache_dir"]
 
         self.item_registry = item_registry
 
@@ -427,7 +656,12 @@ class RAGSystem:
             return
 
         # Initialize cache (shared between both clients)
-        cache = WikiCache(ttl_seconds=cache_ttl)
+        cache, self.cache_backend, _ = self._build_cache(
+            cache_backend=cache_backend,
+            cache_ttl=cache_ttl,
+            cache_dir=cache_dir,
+            vector_db_path=vector_db_path,
+        )
 
         # Initialize lore wiki client (for locations, NPCs, etc.)
         if self.wiki_base_url:

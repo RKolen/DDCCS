@@ -8,6 +8,7 @@ from typing import Dict, List, Optional, Any
 from dataclasses import dataclass, field
 from src.validation.items_validator import validate_items_json
 from src.utils.file_io import load_json_file, save_json_file
+from src.utils.errors import display_error, FileSystemError
 
 @dataclass
 class Item:
@@ -110,7 +111,11 @@ class ItemRegistry:
 
             save_json_file(self.registry_path, data)
         except (OSError, TypeError, ValueError) as e:
-            print(f"[ERROR] Error saving item registry: {e}")
+            error = FileSystemError(
+                message=f"Error saving item registry: {e}",
+                user_guidance="Check file permissions and disk space."
+            )
+            display_error(error)
 
     def register_item(self, new_item: Item):
         """Register an item in the registry"""

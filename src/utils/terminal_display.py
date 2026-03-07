@@ -10,22 +10,17 @@ import os
 from typing import Optional
 
 from src.utils.optional_imports import (
-    RICH_AVAILABLE,
+    rich_available,
     get_rich_console,
     get_rich_component,
+    get_tts_narrate_file,
+    get_tts_is_available,
 )
 
 # Get rich components
 Markdown = get_rich_component("Markdown")
 Panel = get_rich_component("Panel")
 Syntax = get_rich_component("Syntax")
-
-# Import TTS separately (not a Rich component)
-try:
-    from src.utils.tts_narrator import narrate_file, is_tts_available
-except ImportError:
-    narrate_file = None
-    is_tts_available = None
 
 # Initialize console for terminal output
 console = get_rich_console()
@@ -39,7 +34,7 @@ def display_markdown_file(filepath: str, title: Optional[str] = None) -> None:
         title: Optional title to display above the content
     """
     if not os.path.exists(filepath):
-        if RICH_AVAILABLE:
+        if rich_available:
             console.print(f"[red]Error: File not found: {filepath}[/red]")
         else:
             print(f"Error: File not found: {filepath}")
@@ -49,7 +44,7 @@ def display_markdown_file(filepath: str, title: Optional[str] = None) -> None:
         with open(filepath, "r", encoding="utf-8") as f:
             content = f.read()
 
-        if not RICH_AVAILABLE:
+        if not rich_available:
             # Fallback: plain text display
             filename = os.path.basename(filepath)
             display_title = title or filename
@@ -71,7 +66,7 @@ def display_markdown_file(filepath: str, title: Optional[str] = None) -> None:
         console.print(markdown)
 
     except (OSError, UnicodeDecodeError) as e:
-        if RICH_AVAILABLE:
+        if rich_available:
             console.print(f"[red]Error reading file: {e}[/red]")
         else:
             print(f"Error reading file: {e}")
@@ -87,7 +82,7 @@ def _display_story_content(
         content: Story content to display
         story_name: Optional custom name for the story
     """
-    if not RICH_AVAILABLE:
+    if not rich_available:
         # Fallback: plain text display
         filename = os.path.basename(filepath)
         display_title = story_name or filename
@@ -114,6 +109,9 @@ def _handle_narration(filepath: str) -> None:
     Args:
         filepath: Path to file to narrate
     """
+    narrate_file = get_tts_narrate_file()
+    is_tts_available = get_tts_is_available()
+
     if narrate_file and is_tts_available and is_tts_available():
         print("\n[INFO] Starting narration...")
         narrate_file(filepath)
@@ -135,7 +133,7 @@ def display_story_file(
         narrate: If True, narrate the story using TTS after displaying
     """
     if not os.path.exists(filepath):
-        if RICH_AVAILABLE:
+        if rich_available:
             console.print(f"[red]Error: File not found: {filepath}[/red]")
         else:
             print(f"Error: File not found: {filepath}")
@@ -152,7 +150,7 @@ def display_story_file(
             _handle_narration(filepath)
 
     except (OSError, UnicodeDecodeError) as e:
-        if RICH_AVAILABLE:
+        if rich_available:
             console.print(f"[red]Error reading file: {e}[/red]")
         else:
             print(f"Error reading file: {e}")
@@ -166,7 +164,7 @@ def display_json_file(filepath: str, title: Optional[str] = None) -> None:
         title: Optional title to display above the content
     """
     if not os.path.exists(filepath):
-        if RICH_AVAILABLE:
+        if rich_available:
             console.print(f"[red]Error: File not found: {filepath}[/red]")
         else:
             print(f"Error: File not found: {filepath}")
@@ -176,7 +174,7 @@ def display_json_file(filepath: str, title: Optional[str] = None) -> None:
         with open(filepath, "r", encoding="utf-8") as f:
             content = f.read()
 
-        if not RICH_AVAILABLE:
+        if not rich_available:
             # Fallback: plain text display
             filename = os.path.basename(filepath)
             display_title = title or filename
@@ -197,7 +195,7 @@ def display_json_file(filepath: str, title: Optional[str] = None) -> None:
         console.print(syntax)
 
     except (OSError, UnicodeDecodeError) as e:
-        if RICH_AVAILABLE:
+        if rich_available:
             console.print(f"[red]Error reading file: {e}[/red]")
         else:
             print(f"Error reading file: {e}")
@@ -215,7 +213,7 @@ def display_text_file(
                          (e.g., 'python', 'bash', 'yaml')
     """
     if not os.path.exists(filepath):
-        if RICH_AVAILABLE:
+        if rich_available:
             console.print(f"[red]Error: File not found: {filepath}[/red]")
         else:
             print(f"Error: File not found: {filepath}")
@@ -225,7 +223,7 @@ def display_text_file(
         with open(filepath, "r", encoding="utf-8") as f:
             content = f.read()
 
-        if not RICH_AVAILABLE:
+        if not rich_available:
             # Fallback: plain text display
             filename = os.path.basename(filepath)
             display_title = title or filename
@@ -251,7 +249,7 @@ def display_text_file(
             console.print(content)
 
     except (OSError, UnicodeDecodeError) as e:
-        if RICH_AVAILABLE:
+        if rich_available:
             console.print(f"[red]Error reading file: {e}[/red]")
         else:
             print(f"Error reading file: {e}")
@@ -267,7 +265,7 @@ def display_panel(content: str, title: str, style: str = "cyan") -> None:
         title: Title for the panel
         style: Color/style for the panel border (cyan, green, blue, red, etc.)
     """
-    if not RICH_AVAILABLE:
+    if not rich_available:
         # Fallback: simple text display
         print(f"\n{'*'*60}")
         print(f"{title}")
@@ -288,7 +286,7 @@ def display_table_from_file(filepath: str, title: Optional[str] = None) -> None:
         title: Optional title for the display
     """
     if not os.path.exists(filepath):
-        if RICH_AVAILABLE:
+        if rich_available:
             console.print(f"[red]Error: File not found: {filepath}[/red]")
         else:
             print(f"Error: File not found: {filepath}")
@@ -298,7 +296,7 @@ def display_table_from_file(filepath: str, title: Optional[str] = None) -> None:
         with open(filepath, "r", encoding="utf-8") as f:
             content = f.read()
 
-        if not RICH_AVAILABLE:
+        if not rich_available:
             # Fallback: plain text display
             if title:
                 print(f"\n{'='*60}")
@@ -314,7 +312,7 @@ def display_table_from_file(filepath: str, title: Optional[str] = None) -> None:
         console.print(markdown)
 
     except (OSError, UnicodeDecodeError) as e:
-        if RICH_AVAILABLE:
+        if rich_available:
             console.print(f"[red]Error reading file: {e}[/red]")
         else:
             print(f"Error reading file: {e}")
@@ -332,7 +330,7 @@ def display_any_file(filepath: str) -> None:
         filepath: Path to file to display
     """
     if not os.path.exists(filepath):
-        if RICH_AVAILABLE:
+        if rich_available:
             console.print(f"[red]Error: File not found: {filepath}[/red]")
         else:
             print(f"Error: File not found: {filepath}")
@@ -354,7 +352,7 @@ def display_any_file(filepath: str) -> None:
 
 def print_error(message: str) -> None:
     """Print an error message with red styling."""
-    if RICH_AVAILABLE:
+    if rich_available:
         console.print(f"[red]{message}[/red]")
     else:
         print(f"ERROR: {message}")
@@ -362,7 +360,7 @@ def print_error(message: str) -> None:
 
 def print_success(message: str) -> None:
     """Print a success message with green styling."""
-    if RICH_AVAILABLE:
+    if rich_available:
         console.print(f"[green]{message}[/green]")
     else:
         print(f"SUCCESS: {message}")
@@ -370,7 +368,7 @@ def print_success(message: str) -> None:
 
 def print_info(message: str) -> None:
     """Print an info message with cyan styling."""
-    if RICH_AVAILABLE:
+    if rich_available:
         console.print(f"[cyan]{message}[/cyan]")
     else:
         print(f"INFO: {message}")
@@ -378,7 +376,7 @@ def print_info(message: str) -> None:
 
 def print_warning(message: str) -> None:
     """Print a warning message with yellow styling."""
-    if RICH_AVAILABLE:
+    if rich_available:
         console.print(f"[yellow]{message}[/yellow]")
     else:
         print(f"WARNING: {message}")

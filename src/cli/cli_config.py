@@ -10,6 +10,7 @@ from typing import Optional
 
 from src.config.config_loader import load_config, save_config
 from src.config.config_types import DnDConfig
+from src.utils.errors import InvalidChoiceError, display_error, UserInputError, FileSystemError
 
 
 class ConfigCLI:
@@ -59,6 +60,8 @@ class ConfigCLI:
         print(f"  Max Cache Size: {config.rag.max_cache_size}")
         print(f"  Search Depth: {config.rag.search_depth}")
         print(f"  Min Relevance: {config.rag.min_relevance}")
+        print(f"  Cache Backend: {config.paths.rag_cache_backend}")
+        print(f"  Vector DB Path: {config.paths.rag_vector_db_path}")
 
         # Display Config
         print("\n[Display Settings]")
@@ -110,7 +113,7 @@ class ConfigCLI:
             elif choice == "7":
                 self.validate_config()
             else:
-                print("[ERROR] Invalid choice")
+                display_error(InvalidChoiceError(choice, ["1", "2", "3", "4", "5", "6", "7"]))
 
     def configure_ai(self) -> None:
         """Configure AI settings."""
@@ -140,7 +143,11 @@ class ConfigCLI:
             try:
                 config.ai.temperature = float(new_temp)
             except ValueError:
-                print("[ERROR] Invalid temperature value")
+                error = UserInputError(
+                    message="Invalid temperature value",
+                    user_guidance="Enter a number between 0 and 2."
+                )
+                display_error(error)
 
         # Max Tokens
         new_tokens = input(f"Max Tokens [{config.ai.max_tokens}]: ").strip()
@@ -148,7 +155,11 @@ class ConfigCLI:
             try:
                 config.ai.max_tokens = int(new_tokens)
             except ValueError:
-                print("[ERROR] Invalid max tokens value")
+                error = UserInputError(
+                    message="Invalid max tokens value",
+                    user_guidance="Enter a positive integer."
+                )
+                display_error(error)
 
         # Enabled
         new_enabled = input(f"Enabled (yes/no) [{config.ai.enabled}]: ").strip().lower()
@@ -185,7 +196,11 @@ class ConfigCLI:
             try:
                 config.rag.cache_ttl = int(new_ttl)
             except ValueError:
-                print("[ERROR] Invalid cache TTL value")
+                error = UserInputError(
+                    message="Invalid cache TTL value",
+                    user_guidance="Enter a positive integer (seconds)."
+                )
+                display_error(error)
 
         # Search Depth
         new_depth = input(f"Search Depth [{config.rag.search_depth}]: ").strip()
@@ -193,7 +208,32 @@ class ConfigCLI:
             try:
                 config.rag.search_depth = int(new_depth)
             except ValueError:
-                print("[ERROR] Invalid search depth value")
+                error = UserInputError(
+                    message="Invalid search depth value",
+                    user_guidance="Enter a positive integer."
+                )
+                display_error(error)
+
+        # Cache backend
+        new_backend = input(
+            f"Cache Backend (json/sqlite) [{config.paths.rag_cache_backend}]: "
+        ).strip().lower()
+        if new_backend:
+            if new_backend in ("json", "sqlite"):
+                config.paths.rag_cache_backend = new_backend
+            else:
+                error = UserInputError(
+                    message="Invalid cache backend value",
+                    user_guidance="Use 'json' or 'sqlite'."
+                )
+                display_error(error)
+
+        # SQLite vector DB path
+        new_vector_db_path = input(
+            f"Vector DB Path [{config.paths.rag_vector_db_path}]: "
+        ).strip()
+        if new_vector_db_path:
+            config.paths.rag_vector_db_path = Path(new_vector_db_path)
 
         print("[SUCCESS] RAG settings updated")
 
@@ -220,7 +260,11 @@ class ConfigCLI:
             try:
                 config.display.max_line_width = int(new_width)
             except ValueError:
-                print("[ERROR] Invalid width value")
+                error = UserInputError(
+                    message="Invalid width value",
+                    user_guidance="Enter a positive integer (e.g., 80 or 100)."
+                )
+                display_error(error)
 
         # TTS Enabled
         new_tts = input(f"TTS Enabled (yes/no) [{config.display.enable_tts}]: ").strip().lower()
@@ -261,7 +305,11 @@ class ConfigCLI:
             save_config(config, self.config_path)
             print(f"[SUCCESS] Configuration saved to {self.config_path}")
         except OSError as e:
-            print(f"[ERROR] Failed to save configuration: {e}")
+            error = FileSystemError(
+                message=f"Failed to save configuration: {e}",
+                user_guidance="Check file permissions and disk space."
+            )
+            display_error(error)
 
     def validate_config(self) -> None:
         """Validate configuration."""
@@ -270,9 +318,11 @@ class ConfigCLI:
         errors = config.validate()
 
         if errors:
-            print("\n[ERROR] Configuration validation failed:")
-            for error in errors:
-                print(f"  - {error}")
+            error = UserInputError(
+                message="Configuration validation failed",
+                user_guidance="Fix the following issues:\n  - " + "\n  - ".join(errors[:5])
+            )
+            display_error(error)
         else:
             print("\n[SUCCESS] Configuration is valid")
 

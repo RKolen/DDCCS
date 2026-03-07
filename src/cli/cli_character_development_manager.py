@@ -10,6 +10,7 @@ from typing import Optional, Dict, Any, List
 from src.characters.character_consistency import create_character_development_file
 from src.cli.base_story_interaction_manager import BaseStoryInteractionManager
 from src.cli.dnd_cli_helpers import collect_generic_input
+from src.utils.errors import display_error, FileSystemError
 
 
 class CharacterDevelopmentCLIManager(BaseStoryInteractionManager):
@@ -117,4 +118,8 @@ class CharacterDevelopmentCLIManager(BaseStoryInteractionManager):
             )
             print(f"\n[SUCCESS] Character development saved: {filepath}")
         except OSError as error:
-            print(f"[ERROR] Error saving character development: {error}")
+            error = FileSystemError(
+                message=f"Error saving character development: {error}",
+                user_guidance="Check file permissions and disk space."
+            )
+            display_error(error)

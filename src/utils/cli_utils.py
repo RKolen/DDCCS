@@ -6,6 +6,9 @@ Reusable functions for command-line interface operations.
 
 from typing import List, Optional, Tuple
 
+from src.cli.party_config_manager import load_current_party
+from src.utils.errors import DnDError, display_error
+
 
 def print_section_header(title: str, width: int = 50):
     """
@@ -214,3 +217,72 @@ def display_selection_menu(
     except ValueError:
         print("Invalid input. Please enter a number.")
         return None
+
+
+def require_characters(
+    story_manager,
+    user_guidance: str = "Add characters to your party first."
+) -> bool:
+    """
+    Check if characters exist and display error if not.
+
+    Args:
+        story_manager: Story manager instance
+        user_guidance: Custom guidance message to display
+
+    Returns:
+        True if characters exist, False otherwise
+    """
+    characters = story_manager.get_character_list()
+    if not characters:
+        error = DnDError(
+            message="No characters found",
+            user_guidance=user_guidance
+        )
+        display_error(error)
+        return False
+    return True
+
+
+def require_story_with_content(story_content: str, story_name: str) -> bool:
+    """Validate that a story has content.
+
+    Args:
+        story_content: The story content to validate
+        story_name: Name of the story for error message
+
+    Returns:
+        True if story has content, False otherwise
+    """
+    if not story_content or not story_content.strip():
+        error = DnDError(
+            message=f"Story file '{story_name}' is empty",
+            user_guidance="Select a story with content."
+        )
+        display_error(error)
+        return False
+    return True
+
+
+def require_party(workspace_path: str, campaign_name: str) -> list:
+    """
+    Check if party is configured and display error if not.
+
+    Args:
+        workspace_path: Path to workspace
+        campaign_name: Name of campaign
+
+    Returns:
+        Party members list if exists, empty list otherwise
+    """
+    party_members = load_current_party(
+        workspace_path=workspace_path, campaign_name=campaign_name
+    )
+    if not party_members:
+        error = DnDError(
+            message="No party configured",
+            user_guidance="Set up party first using Party Management."
+        )
+        display_error(error)
+        return []
+    return party_members

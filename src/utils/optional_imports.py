@@ -9,8 +9,8 @@ import importlib
 
 
 # Rich library availability and components
-RICH_AVAILABLE = False
-RICH_COMPONENTS: Dict[str, Any] = {}
+rich_available = False
+rich_components: Dict[str, Any] = {}
 
 try:
     from rich.console import Console
@@ -21,8 +21,8 @@ try:
     from rich.markdown import Markdown
     from rich.syntax import Syntax
 
-    RICH_AVAILABLE = True
-    RICH_COMPONENTS = {
+    rich_available = True
+    rich_components = {
         "Console": Console,
         "Panel": Panel,
         "Align": Align,
@@ -41,8 +41,8 @@ def get_rich_console() -> Optional[Any]:
     Returns:
         Console instance or None if rich is not available
     """
-    if RICH_AVAILABLE:
-        return RICH_COMPONENTS["Console"]()
+    if rich_available:
+        return rich_components["Console"]()
     return None
 
 
@@ -55,7 +55,7 @@ def get_rich_component(name: str) -> Optional[Any]:
     Returns:
         Component class or None if not available
     """
-    return RICH_COMPONENTS.get(name)
+    return rich_components.get(name)
 
 
 def import_ai_config() -> Tuple[bool, Optional[type]]:
@@ -81,3 +81,38 @@ def import_validator() -> Tuple[bool, Optional[object]]:
         return True, module
     except (ImportError, ModuleNotFoundError):
         return False, None
+
+
+# TTS narrator availability and components
+tts_available = False
+tts_components: Dict[str, Any] = {}
+
+try:
+    from src.utils.tts_narrator import narrate_file, is_tts_available, StoryNarrator
+
+    tts_available = True
+    tts_components = {
+        "narrate_file": narrate_file,
+        "is_tts_available": is_tts_available,
+        "StoryNarrator": StoryNarrator,
+    }
+except ImportError:
+    pass
+
+
+def get_tts_narrate_file():
+    """Get the narrate_file function if TTS is available.
+
+    Returns:
+        narrate_file function or None
+    """
+    return tts_components.get("narrate_file")
+
+
+def get_tts_is_available():
+    """Get the is_tts_available function if TTS is available.
+
+    Returns:
+        is_tts_available function or None
+    """
+    return tts_components.get("is_tts_available")

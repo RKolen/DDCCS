@@ -8,6 +8,7 @@ consultation features with graceful fallback to rule-based methods.
 from tests import test_helpers
 from src.characters.consultants.consultant_ai import AIConsultant, AI_AVAILABLE
 from src.characters.character_sheet import DnDClass
+from src.utils.errors import UserInputError
 
 
 def test_ai_consultant_initialization():
@@ -193,11 +194,11 @@ def test_suggest_reaction_ai_requires_base():
     )
     consultant = AIConsultant(profile, {})
 
-    # Should raise ValueError when base_suggestion is None
+    # Should raise UserInputError when base_suggestion is None
     try:
         consultant.suggest_reaction_ai("danger approaches", base_suggestion=None)
-        assert False, "Should have raised ValueError"
-    except ValueError as e:
+        assert False, "Should have raised UserInputError"
+    except UserInputError as e:
         assert "base_suggestion is required" in str(
             e
         ), "Error message should mention base_suggestion"

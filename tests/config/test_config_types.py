@@ -20,7 +20,7 @@ def test_ai_config_defaults() -> None:
     config = AIConfig()
     assert config.api_key == "", "api_key should default to empty string"
     assert config.base_url is None, "base_url should default to None"
-    assert config.model == "gpt-3.5-turbo", "model should default to gpt-3.5-turbo"
+    assert config.model == "", "model should default to empty string"
     assert config.temperature == 0.7, "temperature should default to 0.7"
     assert config.max_tokens == 1000, "max_tokens should default to 1000"
     assert config.enabled is True, "enabled should default to True"
@@ -42,8 +42,8 @@ def test_ai_config_get_client_config() -> None:
     assert client_config["api_key"] == "test-key"
     assert client_config["base_url"] == "https://api.example.com"
     assert client_config["model"] == "gpt-4"
-    assert client_config["default_temperature"] == 0.5
-    assert client_config["default_max_tokens"] == 2000
+    assert client_config["temperature"] == 0.5
+    assert client_config["max_tokens"] == 2000
     print("  [OK] get_client_config returns correct dict")
 
 
@@ -77,12 +77,12 @@ def test_ai_config_character_overrides() -> None:
     # Default config
     base = config.get_client_config()
     assert base["model"] == "gpt-3.5-turbo"
-    assert base["default_temperature"] == 0.7
+    assert base["temperature"] == 0.7
 
     # Character with override
     gandalf = config.get_character_config("Gandalf")
     assert gandalf["model"] == "gpt-4", "Should use overridden model"
-    assert gandalf["default_temperature"] == 0.9, "Should use overridden temperature"
+    assert gandalf["temperature"] == 0.9, "Should use overridden temperature"
 
     # Character without override
     aragorn = config.get_character_config("Aragorn")
@@ -96,7 +96,7 @@ def test_rag_config_defaults() -> None:
     config = RAGConfig()
     assert config.enabled is False, "enabled should default to False"
     assert config.wiki_base_url == "", "wiki_base_url should default to empty string"
-    assert config.rules_base_url == "https://dnd5e.wikidot.com"
+    assert config.rules_base_url == ""
     assert config.cache_ttl == 604800, "cache_ttl should default to 7 days"
     assert config.max_cache_size == 100, "max_cache_size should default to 100"
     assert config.search_depth == 3, "search_depth should default to 3"
@@ -126,7 +126,7 @@ def test_display_config_defaults() -> None:
     print("\n[TEST] Display Config - Defaults")
     config = DisplayConfig()
     assert config.use_rich is True, "use_rich should default to True"
-    assert config.theme == "dracula", "theme should default to dracula"
+    assert config.theme == "", "theme should default to empty string"
     assert config.max_line_width == 80, "max_line_width should default to 80"
     assert config.enable_tts is False, "enable_tts should default to False"
     assert config.tts_voice is None, "tts_voice should default to None"

@@ -273,11 +273,13 @@ def get_type_name(expected_type) -> str:
         for type_option in expected_type:
             if hasattr(type_option, '__name__'):
                 type_parts.append(type_option.__name__)
-            elif type_option is type(None):
+            elif type_option is None:
                 type_parts.append('None')
             else:
                 type_parts.append(str(type_option))
         return " or ".join(type_parts)
+    if isinstance(expected_type, type):
+        return expected_type.__name__
     return getattr(expected_type, '__name__', str(expected_type))
 
 

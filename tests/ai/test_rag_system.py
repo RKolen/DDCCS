@@ -26,8 +26,8 @@ import tempfile
 from tests import test_helpers
 
 # Import RAG system components using centralized helper
-WikiCache, WikiClient = test_helpers.safe_from_import(
-    "src.ai.rag_system", "WikiCache", "WikiClient"
+WikiCache, WikiClient, SQLiteWikiCache = test_helpers.safe_from_import(
+    "src.ai.rag_system", "WikiCache", "WikiClient", "SQLiteWikiCache"
 )
 
 
@@ -323,6 +323,36 @@ def test_wiki_cache_clear_expired():
     print("[PASS] WikiCache Clear Expired")
 
 
+def test_sqlite_wiki_cache_set_get_and_stats():
+    """Test SQLiteWikiCache stores and retrieves entries correctly."""
+    print("\n[TEST] SQLiteWikiCache Set/Get/Stats")
+
+    with tempfile.TemporaryDirectory() as temp_dir:
+        db_path = Path(temp_dir) / "rag_cache.sqlite3"
+        cache = SQLiteWikiCache(db_path=str(db_path), ttl_seconds=3600)
+
+        test_url = "https://example.com/wiki/SQLitePage"
+        test_content = {
+            "title": "SQLite Page",
+            "text": "SQLite cached content",
+            "sections": [{"title": "Intro", "content": "SQLite intro"}],
+        }
+
+        cache.set(test_url, test_content)
+        retrieved = cache.get(test_url)
+
+        assert retrieved is not None, "Failed to retrieve SQLite cached content"
+        assert retrieved["title"] == "SQLite Page", "SQLite content title mismatch"
+
+        stats = cache.get_stats()
+        assert stats["entries"] == 1, "SQLite cache entry count incorrect"
+        assert stats["size_mb"] >= 0, "SQLite size metric should be non-negative"
+        assert stats["db_path"].endswith("rag_cache.sqlite3"), "SQLite db path missing"
+        print("  [OK] SQLite cache stores and reports data correctly")
+
+    print("[PASS] SQLiteWikiCache Set/Get/Stats")
+
+
 def run_all_tests():
     """Run all RAG system tests."""
     print("=" * 70)
@@ -338,6 +368,7 @@ def run_all_tests():
     test_wiki_client_initialization()
     test_wiki_client_custom_item_filtering()
     test_wiki_cache_clear_expired()
+    test_sqlite_wiki_cache_set_get_and_stats()
 
     print("\n" + "=" * 70)
     print("[SUCCESS] ALL RAG SYSTEM TESTS PASSED")

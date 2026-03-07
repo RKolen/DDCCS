@@ -30,6 +30,8 @@ import logging
 from functools import wraps
 from typing import Any, Callable, Dict, List, Optional, Type
 
+from src.utils.terminal_display import print_error, print_info, print_warning
+
 LOGGER = logging.getLogger(__name__)
 
 
@@ -369,8 +371,6 @@ class ConfigurationError(DnDError):
     Use when required configuration is missing or invalid.
     """
 
-    pass
-
 
 class MissingConfigError(ConfigurationError):
     """Required configuration is missing.
@@ -443,8 +443,6 @@ class ValidationError(DnDError):
 
     Base class for all validation-related errors.
     """
-
-    pass
 
 
 class SchemaValidationError(ValidationError):
@@ -609,8 +607,6 @@ def display_error(error: DnDError) -> None:
     Args:
         error: The DnDError to display.
     """
-    from src.utils.terminal_display import print_error, print_info, print_warning
-
     print_error(error.message)
 
     if error.user_guidance:
@@ -662,6 +658,7 @@ def _wrap_value_error(exc: Exception, context: Optional[Dict]) -> DnDError:
 
 def _wrap_key_error(exc: Exception, context: Optional[Dict]) -> DnDError:
     """Wrap KeyError as MissingDataError."""
+    del context  # Not used but kept for interface consistency
     key = str(exc).strip("'\"")
     return MissingDataError(data_name=key, action="this operation")
 
@@ -674,6 +671,7 @@ def _wrap_connection_error(exc: Exception, context: Optional[Dict]) -> DnDError:
 
 def _wrap_timeout_error(exc: Exception, context: Optional[Dict]) -> DnDError:
     """Wrap TimeoutError as AITimeoutError."""
+    del exc  # Not used but kept for interface consistency
     operation = (
         context.get("operation", "unknown operation")
         if context

@@ -29,6 +29,8 @@ import types
 from pathlib import Path
 import importlib
 
+from src.npcs.npc_auto_detection import DEFAULT_NPC_AI_CONFIG
+
 
 # Configuration for behaviour generation module handling
 class _BehaviourConfig:
@@ -267,12 +269,7 @@ def sample_npc_data(
         "abilities": ["Appraisal"],
         "recurring": False,
         "notes": "Test NPC",
-        "ai_config": {
-            "enabled": False,
-            "temperature": 0.7,
-            "max_tokens": 1000,
-            "system_prompt": "",
-        },
+        "ai_config": DEFAULT_NPC_AI_CONFIG,
     }
 
     if overrides:
@@ -408,6 +405,7 @@ def _get_character_classes():
         "abilities": getattr(cp_mod, "CharacterAbilities"),
         "possessions": getattr(cp_mod, "CharacterPossessions"),
     }
+
 
 
 def make_profile(name: str = "TestChar", dnd_class=None, level: int = 1, **kwargs):
