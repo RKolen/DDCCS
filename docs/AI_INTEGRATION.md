@@ -1,18 +1,20 @@
 # AI Integration Guide
+
 ## D&D Character Consultant System
 
 This guide explains how to integrate AI/LLM capabilities into the D&D Character Consultant System.
 
-##  Features
+## Features
 
 The AI integration provides:
+
 - **AI-Enhanced Character Reactions** - Characters respond with AI-generated dialogue and actions
 - **Intelligent DC Suggestions** - AI-assisted difficulty calculations considering character abilities
 - **Per-Character Configuration** - Each character can have unique AI settings
 - **Provider Flexibility** - Works with OpenAI, Ollama (local), OpenRouter, and any OpenAI-compatible API
 - **Graceful Fallback** - System works perfectly without AI (rule-based suggestions)
 
-##  Installation
+## Installation
 
 ### 1. Install Dependencies
 
@@ -21,12 +23,14 @@ pip install -r requirements.txt
 ```
 
 This installs:
+
 - `openai` - OpenAI SDK (compatible with many providers)
 - `python-dotenv` - Environment variable management
 
 ### 2. Configure Environment
 
 Copy the example environment file:
+
 ```powershell
 copy .env.example .env
 ```
@@ -57,7 +61,7 @@ python test_ai_integration.py
 
 This will verify your configuration and test basic AI functionality.
 
-##  Provider Configuration
+## Provider Configuration
 
 ### OpenAI
 
@@ -67,11 +71,11 @@ OPENAI_API_KEY=sk-...your-key...
 OPENAI_MODEL=gpt-3.5-turbo  # or gpt-4, gpt-4-turbo
 ```
 
-Get your API key from: https://platform.openai.com/api-keys
+Get your API key from: <https://platform.openai.com/api-keys>
 
 ### Ollama (Local LLMs)
 
-1. Install Ollama: https://ollama.ai
+1. Install Ollama: <https://ollama.ai>
 2. Pull a model: `ollama pull llama3.2`
 3. Configure:
 
@@ -89,9 +93,9 @@ OPENAI_BASE_URL=https://openrouter.ai/api/v1
 OPENAI_MODEL=meta-llama/llama-3.1-8b-instruct
 ```
 
-Get your API key from: https://openrouter.ai/keys
+Get your API key from: <https://openrouter.ai/keys>
 
-Browse models: https://openrouter.ai/models
+Browse models: <https://openrouter.ai/models>
 
 ### Other OpenAI-Compatible Providers
 
@@ -103,7 +107,7 @@ OPENAI_BASE_URL=https://your-provider-url/v1
 OPENAI_MODEL=your-model-name
 ```
 
-##  Per-Character AI Configuration
+## Per-Character AI Configuration
 
 Each character can have individual AI settings in their JSON file:
 
@@ -152,7 +156,7 @@ Create unique AI personalities for each character:
 }
 ```
 
-##  Usage Examples
+## Usage Examples
 
 ### In Interactive CLI
 
@@ -214,7 +218,7 @@ profile.ai_config = config
 profile.save_to_file("characters/rogue.json")
 ```
 
-##  Advanced Configuration
+## Advanced Configuration
 
 ### Temperature Settings
 
@@ -246,7 +250,7 @@ Some providers support additional parameters:
 }
 ```
 
-##  Fallback Behavior
+## Fallback Behavior
 
 The system is designed to work without AI:
 
@@ -255,54 +259,62 @@ The system is designed to work without AI:
 3. **AI Not Configured**: Uses only rule-based suggestions
 4. **Dependencies Missing**: System works normally without AI features
 
-##  Security & Privacy
+## Security & Privacy
 
 - **Local LLMs**: Use Ollama for complete privacy
 - **API Keys**: Stored in `.env` (gitignored)
 - **Character Data**: Never sent to AI unless explicitly requested
 - **Story Content**: AI only processes what you explicitly ask
 
-##  Cost Considerations
+## Cost Considerations
 
 ### OpenAI Pricing (approximate)
+
 - **GPT-3.5-Turbo**: ~$0.002 per request
 - **GPT-4**: ~$0.03-0.06 per request
 
 ### Ollama (Local)
+
 - **Free**: No per-request costs
 - **Requires**: Decent GPU or CPU
 - **Models**: 7B-13B work on most systems
 
 ### OpenRouter
+
 - **Varies**: By model selected
 - **Llama models**: Often very cheap or free
 
-##  Troubleshooting
+## Troubleshooting
 
 ### "Import openai could not be resolved"
+
 ```powershell
 pip install -r requirements.txt
 ```
 
 ### "AI completion failed: api_key"
+
 Check your `.env` file has `OPENAI_API_KEY` set correctly
 
 ### "Connection failed"
+
 - For Ollama: Ensure Ollama is running (`ollama serve`)
 - For OpenAI/OpenRouter: Check internet connection
 - For custom providers: Verify `OPENAI_BASE_URL` is correct
 
 ### AI responses are inconsistent
+
 - Lower the temperature (0.5-0.7 for more consistency)
 - Add more detailed system prompts
 - Use character-specific configurations
 
 ### Costs too high
+
 - Switch to Ollama for local, free inference
 - Use smaller OpenRouter models
 - Use GPT-3.5-Turbo instead of GPT-4
 
-##  API Reference
+## API Reference
 
 ### AIClient
 
@@ -338,7 +350,7 @@ CharacterAIConfig(
 - **`_get_ai_client()`** - Get appropriate AI client for character
 - **`_build_character_system_prompt()`** - Build character roleplay prompt
 
-##  RAG Integration: Spell and Ability Lookup
+## RAG Integration: Spell and Ability Lookup
 
 The system includes Retrieval-Augmented Generation (RAG) integration for accurate D&D spell and ability descriptions from dnd5e.wikidot.com.
 
@@ -401,6 +413,7 @@ narrative = narrator.narrate_combat_from_prompt(
 ### Supported Spells and Abilities
 
 The lookup supports 18+ common D&D spells and abilities:
+
 - Vicious Mockery, Eldritch Blast
 - Fireball, Healing Word, Cure Wounds
 - Sacred Flame, Thunderwave, Magic Missile
@@ -412,6 +425,7 @@ The lookup supports 18+ common D&D spells and abilities:
 ### Graceful Fallback
 
 If RAG system is unavailable:
+
 - Stories and combat narratives still generate normally
 - No RAG context is added
 - System continues to function without errors
@@ -422,11 +436,12 @@ If RAG system is unavailable:
 RAG uses `dnd5e.wikidot.com` as the knowledge source via `src/ai/rag_system.py`.
 
 To disable RAG (if desired):
+
 1. The system auto-detects RAG availability
 2. If import fails, RAG is gracefully disabled
 3. Stories/combat still work perfectly without RAG
 
-##  Best Practices
+## Best Practices
 
 1. **Start Small**: Test with one character first
 2. **Use Templates**: Create reusable system prompts
@@ -436,9 +451,10 @@ To disable RAG (if desired):
 6. **Character Voice**: Use system prompts to maintain consistent character voice
 7. **Privacy**: Use local models for sensitive campaign content
 
-##  Future Enhancements
+## Future Enhancements
 
 Planned AI features:
+
 - **Story generation** - AI-assisted plot development
 - **NPC dialogue** - AI-powered NPC conversations
 - **World-building** - AI help with locations and lore

@@ -38,6 +38,7 @@ A new utility module `src/utils/terminal_display.py` provides functions for rend
 #### Available Functions
 
 ##### Display Markdown Files
+
 ```python
 from src.utils.terminal_display import display_markdown_file
 
@@ -49,11 +50,13 @@ display_markdown_file("path/to/file.md", title="My Story")
 ```
 
 Features:
+
 - Renders markdown formatting (headers, bold, italics, lists, code blocks)
 - Colored title with cyan styling
 - Automatic fallback to plain text if `rich` is unavailable
 
 ##### Display Story Files
+
 ```python
 from src.utils.terminal_display import display_story_file
 
@@ -65,10 +68,12 @@ display_story_file("path/to/story.md", story_name="The Beginning")
 ```
 
 Features:
+
 - Same as markdown display, with green styling for story titles
 - Better visual separation for narrative content
 
 ##### Display JSON Files
+
 ```python
 from src.utils.terminal_display import display_json_file
 
@@ -80,11 +85,13 @@ display_json_file("path/to/file.json", title="Character Profile")
 ```
 
 Features:
+
 - JSON syntax highlighting with "dracula" theme
 - Blue styling for titles
 - Automatic indentation and formatting
 
 ##### Display Text Files
+
 ```python
 from src.utils.terminal_display import display_text_file
 
@@ -100,11 +107,13 @@ display_text_file("path/to/file.sh", title="Setup Script",
 ```
 
 Features:
+
 - Optional syntax highlighting for code files
 - Line numbers for code display
 - Yellow styling for titles
 
 ##### Display Panels
+
 ```python
 from src.utils.terminal_display import display_panel
 
@@ -117,6 +126,7 @@ display_panel("This is important information",
 Supports colors: `cyan`, `green`, `blue`, `red`, `yellow`, `magenta`
 
 ##### Helper Functions
+
 ```python
 from src.utils.terminal_display import (
     print_error,
@@ -174,6 +184,7 @@ All functions gracefully fall back to plain text display if the `rich` library i
 ## Configuration
 
 ### Theme
+
 The syntax highlighting theme is set to "dracula" for pleasant colors and readability. To change it, modify `src/utils/terminal_display.py`:
 
 ```python
@@ -183,6 +194,7 @@ syntax = Syntax(content, "json", theme="monokai", line_numbers=False)
 Available themes: `dracula`, `monokai`, `native`, `vim`, `emacs`, etc.
 
 ### Line Length
+
 Markdown files are configured for 88-character lines in `.editorconfig`. Adjust in the `.editorconfig` file if needed:
 
 ```ini
@@ -193,17 +205,21 @@ max_line_length = 88
 ## Technical Details
 
 ### No External Dependencies Beyond Rich
+
 - The `rich` library is the only new external dependency added
 - All other functionality uses Python standard library
 - Graceful degradation if `rich` is not installed
 
 ### Pylint Compliance
+
 All new code maintains 10.00/10 Pylint score:
+
 - No disable comments or pragmas
 - Proper error handling with try/except blocks
 - Well-documented docstrings
 
 ### File Support
+
 - **Markdown** (.md) - Full support with markdown rendering
 - **JSON** (.json) - Syntax highlighted display
 - **Python** (.py) - Syntax highlighted with line numbers

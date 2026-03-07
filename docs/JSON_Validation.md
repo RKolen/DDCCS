@@ -5,6 +5,7 @@ This document describes the comprehensive JSON validation system for all game da
 ## Overview
 
 The validation system ensures data integrity for:
+
 - **Character profiles** (`game_data/characters/*.json`)
 - **NPC profiles** (`game_data/npcs/*.json`)
 - **Custom items registry** (`game_data/items/custom_items_registry.json`)
@@ -47,6 +48,7 @@ python tests/test_all_validators.py  # Comprehensive test including consistency 
 ## Character Profile Validation
 
 ### Required Fields
+
 - `name`: string
 - `species`: string
 - `dnd_class`: string
@@ -59,6 +61,7 @@ python tests/test_all_validators.py  # Comprehensive test including consistency 
 - `relationships`: dict
 
 ### Validation Rules
+
 - All required fields must be present
 - Field types must match schema
 - Ability scores must include all six abilities as integers
@@ -68,6 +71,7 @@ python tests/test_all_validators.py  # Comprehensive test including consistency 
 ## NPC Profile Validation
 
 ### Required Fields
+
 - `name`: string
 - `role`: string
 - `species`: string
@@ -81,6 +85,7 @@ python tests/test_all_validators.py  # Comprehensive test including consistency 
 - `ai_config`: dict (enabled: bool, optional fields)
 
 ### Validation Rules
+
 - All required fields must be present
 - Field types must match schema
 - ai_config must have `enabled` (bool), optional fields validated if present
@@ -90,6 +95,7 @@ python tests/test_all_validators.py  # Comprehensive test including consistency 
 ## Items Registry Validation
 
 ### Required Structure
+
 - Registry is a dict; metadata fields (starting with `_`) are ignored
 - Each item entry must be a dict with:
   - `name`: string
@@ -100,6 +106,7 @@ python tests/test_all_validators.py  # Comprehensive test including consistency 
   - `notes`: string
 
 ### Validation Rules
+
 - Registry must contain at least one item entry
 - All required fields must be present in each item
 - item_type must be valid
@@ -108,19 +115,23 @@ python tests/test_all_validators.py  # Comprehensive test including consistency 
 ## Party Configuration Validation
 
 ### Required Structure
+
 - `party_members`: array of strings (no duplicates, no empty strings)
 - `last_updated`: ISO 8601 timestamp string
 
 ### Validation Rules
+
 - Both fields must be present
 - party_members must be non-empty, all strings, no duplicates
 - last_updated must be a valid ISO timestamp
 - Optionally cross-references party_members with character files
 
 ### Example Configuration
+
 The system includes example characters: Aragorn, Frodo, and Gandalf
 
 **Valid configuration:**
+
 ```json
 {
   "party_members": [
@@ -133,11 +144,13 @@ The system includes example characters: Aragorn, Frodo, and Gandalf
 ```
 
 **Character files referenced:**
+
 - `game_data/characters/aragorn.json` → "Aragorn"
 - `game_data/characters/frodo.json` → "Frodo Baggins"
 - `game_data/characters/gandalf.json` → "Gandalf the Grey"
 
 ### Running Party Validation
+
 ```bash
 # Validate party configuration
 python -m src.validation.party_validator
@@ -152,11 +165,13 @@ python -m src.validation.party_validator
 All validators use consistent output formatting:
 
 ### Valid File
+
 ```
  game_data/characters/aragorn.json: Valid
 ```
 
 ### Invalid File
+
 ```
  game_data/npcs/invalid_npc.json: INVALID
   - Missing required field: role
@@ -165,6 +180,7 @@ All validators use consistent output formatting:
 ```
 
 ## Features
+
 - Early error detection before runtime issues
 - Clear, specific error messages with field names
 - Type checking for all required fields
@@ -173,6 +189,7 @@ All validators use consistent output formatting:
 - Comprehensive test suites with edge case coverage
 
 ## Integration
+
 - Character validation automatically integrated into `enhanced_story_manager.py` and `story_manager.py`
 - Other validators available for standalone or programmatic use
 - See this document for details
