@@ -6,7 +6,6 @@ Last Updated: February 13, 2026
 
 ### Phase 1: Foundation
 
-- [ ] **Error Handling Improvements** - Improve error messages throughout the system for better user guidance **Plan:** [plans/error_handling_plan.md](plans/error_handling_plan.md)
 - [ ] **Configuration System** - Centralized config file for system settings **Plan:** [plans/configuration_system_plan.md](plans/configuration_system_plan.md)
 - [ ] **Multi-voice TTS (Phase 1-2)** - Voice selection in character/NPC JSON schema, dialogue detection parser **Plan:** [plans/multi_voice_tts_design.md](plans/multi_voice_tts_design.md)
 
@@ -136,6 +135,10 @@ All features below have detailed implementation plans in the `plans/` directory.
 - [ ] **Integration guide** - How to integrate with external tools
 
 ## Recently Completed
+
+### Error Handling Improvements - March 7, 2026
+
+- [x] **Error Handling Improvements** - Improve error messages throughout the system for better user guidance **Plan:** [plans/error_handling_plan.md](plans/error_handling_plan.md)
 
 ### Narration and ASCII Art - December 30, 2025
 

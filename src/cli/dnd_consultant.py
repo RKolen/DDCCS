@@ -6,14 +6,16 @@ VSCode-integrated system for story management and character consultation.
 import argparse
 import os
 from typing import Optional
-from src.stories.enhanced_story_manager import EnhancedStoryManager
-from src.stories.story_manager import StoryManager
-from src.dm.dungeon_master import DMConsultant
+
+from src.ai.ai_client import AIClient
+from src.ai.availability import AI_AVAILABLE
 from src.cli.cli_character_manager import CharacterCLIManager
 from src.cli.cli_story_manager import StoryCLIManager
 from src.cli.cli_story_reader import StoryReaderCLI
-from src.ai.ai_client import AIClient
-from src.ai.availability import AI_AVAILABLE
+from src.dm.dungeon_master import DMConsultant
+from src.stories.enhanced_story_manager import EnhancedStoryManager
+from src.stories.story_manager import StoryManager
+from src.utils.errors import DnDError, handle_errors, wrap_exception, display_error
 
 
 class DDConsultantCLI:
@@ -133,12 +135,16 @@ def main():
     args = parser.parse_args()
 
     workspace = args.workspace or os.getcwd()
-    campaign = args.campaign
+    campaign = args.campaign or ""
+
+    @handle_errors(OSError, ValueError, KeyError, AttributeError, default_return=None)
+    def initialize_system(workspace: str, campaign: str):
+        """Initialize the D&D Consultant system."""
+        print("[INFO] Initializing D&D Character Consultant System...")
+        return DDConsultantCLI(workspace, campaign)
 
     try:
-        # Inform the user that the system is starting up (characters are lazy-loaded)
-        print("[INFO] Initializing D&D Character Consultant System...")
-        cli = DDConsultantCLI(workspace, campaign)
+        cli = initialize_system(workspace, campaign)
 
         if args.command == "analyze":
             # Non-interactive analyze command
@@ -149,8 +155,13 @@ def main():
 
     except KeyboardInterrupt:
         print("\n\nGoodbye!")
-    except (OSError, ValueError, KeyError, AttributeError) as e:
-        print(f"\n[ERROR] Error: {e}")
+    except DnDError:
+        # DnDError already handled by @handle_errors decorator
+        pass
+    except (RuntimeError, OSError, ValueError, KeyError, AttributeError, TypeError) as exc:
+        # Wrap unknown exceptions
+        dnd_error = wrap_exception(exc)
+        display_error(dnd_error)
         print("Please check your setup and try again.")
 
 

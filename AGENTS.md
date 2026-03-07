@@ -8,6 +8,7 @@ provides AI-powered consultation, story analysis, combat narration, and
 character development tracking.
 
 Key features:
+
 - Character profile management with class-specific knowledge
 - NPC auto-detection and management
 - Story continuation and analysis with RAG integration
@@ -18,20 +19,25 @@ Key features:
 ## Critical Rules (Non-Negotiable)
 
 ### 1. NO Emojis - NEVER
+
 Never use emojis in `.py` or `.md` files. This causes Windows cp1252 codec
 failures that break the entire system. This is a hard requirement.
 
 ### 2. Pylint Score: 10.00/10 Required
+
 All code must achieve a perfect 10.00/10 Pylint score. Never use:
+
 - `# pylint: disable=...`
 - `# noqa`
 - `# pragma` comments
 
 Instead, fix the underlying issue. If Pylint complains, there is usually a
 legitimate code quality issue to address.
+
 - never edit `pyproject.toml`
 
 ### 3. Full Pylint Output for Big Changes
+
 For significant changes, always run the full Pylint checks:
 
 ```bash
@@ -48,7 +54,7 @@ violation of project standards.
 ### Reusable Utils Catalog
 
 | Category | Module | Key Functions |
-|----------|--------|---------------|
+| -------- | ------ | ------------- |
 | File I/O | `src/utils/file_io.py` | `load_json_file`, `save_json_file`, |
 | | | `read_text_file`, `write_text_file`, |
 | | | `file_exists`, `ensure_directory` |
@@ -92,7 +98,6 @@ violation of project standards.
 
 ### Source Code Organization
 
-```
 src/
 |-- characters/      # Character management + consultants subsystem
 |-- npcs/            # NPC management and auto-detection
@@ -104,23 +109,19 @@ src/
 |-- ai/              # AI client and RAG system
 |-- utils/           # Shared utilities (CHECK FIRST)
 |-- cli/             # Command-line interface
-```
 
 ### Data Directories
 
-```
 game_data/
 |-- characters/      # Character JSON files (aragorn.json, frodo.json, etc.)
 |-- campaigns/       # Campaign folders with story files
 |-- npcs/            # NPC JSON files
 |-- items/           # Custom items registry
-```
 
 ### Test Structure
 
 Tests mirror the `src/` directory structure:
 
-```
 tests/
 |-- ai/              # Tests for src/ai/
 |-- characters/      # Tests for src/characters/
@@ -129,7 +130,26 @@ tests/
 |-- utils/           # Tests for src/utils/
 |-- validation/      # Tests for src/validation/
 |-- run_all_tests.py # Main test runner
+
+### Drupal CMS
+
+The project includes a Drupal CMS recipe system in `drupal-cms/`. This is a
+separate component that requires Docker and DDEV for local development.
+
+**Important:** Any changes to the Drupal CMS components require DDEV to be
+running. Before making changes to files in `drupal-cms/`, ensure the DDEV
+environment is started:
+
+```bash
+# Start DDEV
+ddev start
+
+# After making changes, you may need to rebuild
+ddev rebuild
 ```
+
+The Drupal CMS uses its own testing and validation - do not apply the
+standard Python/Pylint rules to the Drupal PHP code.
 
 ## Coding Standards
 
@@ -152,17 +172,20 @@ from ..utils.file_io import load_json_file
 ### Code Style (from .editorconfig)
 
 **Python files:**
+
 - 4-space indentation
 - 100 maximum line length
 - UTF-8 encoding
 - LF line endings
 
 **Markdown files:**
+
 - 2-space indentation
 - 80 maximum line length (terminal readability)
 - Trim trailing whitespace
 
 **JSON files:**
+
 - 2-space indentation
 
 ### Docstrings
@@ -200,11 +223,13 @@ def get_campaign_path(campaign_name: str) -> Path:
 ### Running Tests
 
 Run all tests:
+
 ```bash
 python tests/run_all_tests.py
 ```
 
 Run specific test category:
+
 ```bash
 python tests/run_all_tests.py validation
 python tests/run_all_tests.py characters
@@ -217,11 +242,13 @@ python tests/run_all_tests.py stories
 `game_data/campaigns`. NEVER create mock data for tests.
 
 Available test characters:
+
 - `aragorn.json` - Ranger character
 - `frodo.json` - Halfling character
 - `gandalf.json` - Wizard character
 
 Available test campaigns:
+
 - `Example_Campaign/` - Contains story files and session results
 
 ### Test File Standards
@@ -340,7 +367,7 @@ python -m src.validation.validate_all
 ### File Locations
 
 | Purpose | Location |
-|---------|----------|
+| ------- | -------- |
 | Characters | `game_data/characters/*.json` |
 | Campaigns | `game_data/campaigns/<name>/` |
 | Story files | `game_data/campaigns/<name>/*.md` |
@@ -351,7 +378,7 @@ python -m src.validation.validate_all
 ### Key Entry Points
 
 | Entry Point | File |
-|-------------|------|
+| ----------- | ---- |
 | Main CLI | `dnd_consultant.py` |
 | Test runner | `tests/run_all_tests.py` |
 | Validation | `src/validation/validate_all.py` |
