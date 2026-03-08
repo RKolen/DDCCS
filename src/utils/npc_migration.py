@@ -9,6 +9,7 @@ from typing import Dict, Any, Optional
 from pathlib import Path
 from src.utils.file_io import load_json_file, save_json_file
 from src.utils.errors import display_error, DnDError
+from src.utils.terminal_display import print_warning
 from src.validation.npc_validator import validate_npc_json
 from src.characters.npc_constants import (
     ABILITY_SCORE_NAMES,
@@ -318,7 +319,7 @@ def migrate_npc_to_full_profile(
 
     # Check if already a full profile
     if npc_data.get("profile_type") == "full":
-        print("[WARNING] This NPC already has a full profile.")
+        print_warning("This NPC already has a full profile.")
         return npc_filepath
 
     # Build full profile using appropriate helper

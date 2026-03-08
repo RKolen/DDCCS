@@ -19,6 +19,7 @@ from src.utils.story_formatting_utils import (
 )
 from src.utils.text_formatting_utils import wrap_narrative_text
 from src.utils.errors import UserInputError, wrap_exception, display_error
+from src.utils.terminal_display import print_warning
 from src.utils.string_utils import (
     sanitize_filename,
     get_session_date,
@@ -797,7 +798,7 @@ class StoryUpdater:
 
         # Fallback 2: If extraction didn't work, use generic placeholders
         if hooks is None or (isinstance(hooks, list) and len(hooks) == 0):
-            print("[WARNING] No hooks generated, using generic placeholders")
+            print_warning("No hooks generated, using generic placeholders")
             hooks = [
                 "[Primary plot thread to pursue]",
                 "[Secondary subplot to explore]",

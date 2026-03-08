@@ -11,6 +11,7 @@ This module is responsible for:
 import os
 from typing import List, Dict, Any, Optional
 from src.utils.file_io import write_text_file, read_text_file
+from src.utils.terminal_display import print_warning
 from src.utils.string_utils import sanitize_filename, get_session_date, get_time_only
 
 
@@ -157,7 +158,7 @@ def create_story_hooks_file(
     # Handle both structured dict (from AI) and simple list (from fallback)
     is_structured = isinstance(hooks, dict)
     if not is_structured and (not hooks or len(hooks) == 0):
-        print("[WARNING] Empty hooks list provided to create_story_hooks_file")
+        print_warning("Empty hooks list provided to create_story_hooks_file")
         hooks = [
             "[Analyze story content to identify plot threads]",
             "[Review character actions for development opportunities]",

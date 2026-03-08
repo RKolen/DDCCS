@@ -9,6 +9,7 @@ from dataclasses import dataclass, field
 from src.validation.items_validator import validate_items_json
 from src.utils.file_io import load_json_file, save_json_file
 from src.utils.errors import display_error, FileSystemError
+from src.utils.terminal_display import print_warning
 
 @dataclass
 class Item:
@@ -104,7 +105,7 @@ class ItemRegistry:
             # Validate before saving
             is_valid, errors = validate_items_json(data)
             if not is_valid:
-                print("[WARNING]  Items registry validation failed:")
+                print_warning("Items registry validation failed:")
                 for error in errors:
                     print(f"  - {error}")
                 print("  Saving anyway, but please fix these issues.")

@@ -29,6 +29,7 @@ from src.stories.story_consistency_analyzer import StoryConsistencyAnalyzer
 from src.utils.path_utils import get_campaign_path
 from src.utils.file_io import write_text_file, read_text_file
 from src.utils.errors import display_error, DnDError
+from src.utils.terminal_display import print_warning
 from src.utils.string_utils import truncate_at_sentence, get_session_date, get_time_only
 from src.utils.character_profile_utils import load_character_profiles
 from src.utils.cli_utils import display_selection_menu
@@ -306,11 +307,11 @@ class StoryAnalysisCLI:
                 try:
                     self.ai_client = AIClient()
                 except (AttributeError, ValueError) as e:
-                    print(f"[WARNING]  Could not initialize AI client: {e}")
+                    print_warning(f"Could not initialize AI client: {e}")
                     print("   Using fallback mode...")
                     self.ai_client = None
             else:
-                print("[WARNING]  AI client not available")
+                print_warning("AI client not available")
                 print("   Using fallback mode...")
                 self.ai_client = None
 

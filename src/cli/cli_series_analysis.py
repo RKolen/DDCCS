@@ -10,7 +10,8 @@ from typing import List
 from datetime import datetime
 
 from src.utils.path_utils import get_campaign_path
-from src.utils.errors import display_error, DnDError
+from src.utils.errors import DnDError, display_error
+from src.utils.terminal_display import print_warning
 from src.stories.party_manager import PartyManager
 from src.stories.series_analyzer import (
     SeriesAnalyzer,
@@ -74,7 +75,7 @@ class SeriesAnalysisCLI:
             party_manager = PartyManager(campaign_path)
             party_members = party_manager.get_current_party()
             if not party_members:
-                print("[WARNING] No party members configured for this series.")
+                print_warning("No party members configured for this series.")
                 return
 
             print(f"[INFO] Analyzing {len(stories)} story files for {series_name}...")
@@ -98,7 +99,7 @@ class SeriesAnalysisCLI:
             )
 
             if not all_character_actions:
-                print("[WARNING] No character actions found across series.")
+                print_warning("No character actions found across series.")
                 return
 
             # File already created and updated incrementally
@@ -147,7 +148,7 @@ class SeriesAnalysisCLI:
             party_manager = PartyManager(campaign_path)
             party_members = party_manager.get_current_party()
             if not party_members:
-                print("[WARNING] No party members configured for this series.")
+                print_warning("No party members configured for this series.")
                 return
 
             print(f"\n[INFO] Analyzing {len(stories)} story files...")
@@ -177,7 +178,7 @@ class SeriesAnalysisCLI:
             )
 
             if not series_analysis["stories_analyzed"]:
-                print("[WARNING] No analysis results generated.")
+                print_warning("No analysis results generated.")
                 return
 
             # File already created and updated incrementally

@@ -47,7 +47,7 @@ from src.cli.cli_story_config_helper import (
     build_story_config,
     display_story_prompt_guidance,
 )
-from src.utils.terminal_display import display_story_file
+from src.utils.terminal_display import display_story_file, print_warning
 from src.cli.cli_story_helpers import (
     CharacterSelectionHelper,
     StoryContinuationHelper,
@@ -831,7 +831,7 @@ class StoryCLIManager:
                     session, story_content, party_characters
                 )
             else:
-                print("[WARNING] AI not available. Using basic session structure.")
+                print_warning("AI not available. Using basic session structure.")
 
             # Save session results
             try:
@@ -897,7 +897,7 @@ class StoryCLIManager:
             )
 
             if not character_actions:
-                print("[WARNING] No character actions found in story.")
+                print_warning("No character actions found in story.")
                 return
 
             # Save character development file

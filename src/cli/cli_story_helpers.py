@@ -21,6 +21,7 @@ from src.stories.session_results_manager import (
 )
 from src.combat.combat_narrator import CombatNarrator
 from src.utils.npc_lookup_helper import load_relevant_npcs_for_prompt
+from src.utils.terminal_display import print_warning
 
 
 class CharacterSelectionHelper:
@@ -146,7 +147,7 @@ class StoryContinuationHelper:
             print(f"   Title: {combat_title}")
             print("You can now edit and refine the generated content.")
         else:
-            print("[WARNING] AI generation returned no content.")
+            print_warning("AI generation returned no content.")
 
     def handle_exploration_continuation(
         self,
@@ -180,4 +181,4 @@ class StoryContinuationHelper:
                 print(f"\n[SUCCESS] Added exploration narrative to {display_name}")
                 print("You can now edit and refine the generated content.")
         else:
-            print("[WARNING] AI generation returned no content.")
+            print_warning("AI generation returned no content.")

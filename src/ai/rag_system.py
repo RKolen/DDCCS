@@ -23,6 +23,7 @@ import re
 
 from src.utils.file_io import load_json_file, save_json_file
 from src.utils.errors import display_error, DnDError
+from src.utils.terminal_display import print_warning
 
 try:
     from src.config.config_loader import load_config
@@ -44,7 +45,7 @@ try:
     SCRAPING_AVAILABLE = True
 except ImportError:
     SCRAPING_AVAILABLE = False
-    print("[WARNING]  RAG System: requests or beautifulsoup4 not installed")
+    print_warning("RAG System: requests or beautifulsoup4 not installed")
     print("   Install with: pip install requests beautifulsoup4")
 
 
@@ -649,7 +650,7 @@ class RAGSystem:
             return
 
         if not SCRAPING_AVAILABLE:
-            print("[WARNING]  RAG enabled but dependencies not installed")
+            print_warning("RAG enabled but dependencies not installed")
             print("   Install with: pip install requests beautifulsoup4")
             self.client = None
             self.rules_client = None
@@ -669,7 +670,7 @@ class RAGSystem:
             print(f"[SUCCESS] RAG Lore Wiki initialized: {self.wiki_base_url}")
         else:
             self.client = None
-            print("[WARNING]  RAG_WIKI_BASE_URL not set - lore lookups disabled")
+            print_warning("RAG_WIKI_BASE_URL not set - lore lookups disabled")
 
         # Initialize rules wiki client (for items, spells, rules, etc.)
         if self.rules_base_url:
@@ -679,7 +680,7 @@ class RAGSystem:
             print(f"[SUCCESS] RAG Rules Wiki initialized: {self.rules_base_url}")
         else:
             self.rules_client = None
-            print("[WARNING]  RAG_RULES_BASE_URL not set - item/spell lookups disabled")
+            print_warning("RAG_RULES_BASE_URL not set - item/spell lookups disabled")
 
         if self.item_registry:
             custom_count = len(self.item_registry.get_all_custom_items())

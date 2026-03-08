@@ -11,6 +11,7 @@ from typing import Dict, List, Any, Tuple, Optional
 from src.validation.npc_validator import validate_npc_json
 from src.utils.file_io import save_json_file
 from src.utils.path_utils import get_npcs_dir, get_npc_file_path
+from src.utils.terminal_display import print_warning
 from src.characters.npc_constants import DEFAULT_ABILITY_SCORES, DEFAULT_EQUIPMENT
 
 # Default AI config for NPCs
@@ -375,7 +376,7 @@ def save_npc_profile(npc_profile: Dict[str, Any], workspace_path: str) -> str:
     try:
         is_valid, errors = validate_npc_json(npc_profile)
         if not is_valid:
-            print("[WARNING]  NPC profile validation failed:")
+            print_warning("NPC profile validation failed:")
             for error in errors:
                 print(f"  - {error}")
             print("  Saving anyway, but please fix these issues.")

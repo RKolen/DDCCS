@@ -10,6 +10,7 @@ from typing import List, Optional, Dict, Any
 from datetime import datetime
 from src.utils.file_io import load_json_file, save_json_file, file_exists
 from src.utils.path_utils import get_party_config_path
+from src.utils.terminal_display import print_warning
 
 try:
     from src.validation.party_validator import validate_party_json
@@ -75,7 +76,7 @@ def save_current_party(
     if VALIDATOR_AVAILABLE:
         is_valid, errors = validate_party_json(data)
         if not is_valid:
-            print("[WARNING]  Party configuration validation failed:")
+            print_warning("Party configuration validation failed:")
             for error in errors:
                 print(f"  - {error}")
             print("  Saving anyway, but please fix these issues.")

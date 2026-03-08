@@ -25,6 +25,7 @@ import sys
 import argparse
 from typing import Dict, Tuple
 from ..utils.file_io import get_json_files_in_directory, file_exists
+from ..utils.terminal_display import print_warning
 from ..utils.path_utils import (
     get_characters_dir,
     get_npcs_dir,
@@ -65,14 +66,14 @@ except ImportError:
 def validate_characters(verbose: bool = False) -> Tuple[bool, int, int]:
     """Validate all character files."""
     if not CHAR_AVAILABLE:
-        print("[WARNING] Character validator not available")
+        print_warning("Character validator not available")
         return (True, 0, 0)
 
     print("\n=== Validating Characters ===")
     characters_dir = get_characters_dir()
 
     if not file_exists(characters_dir):
-        print(f"[WARNING] Characters directory not found: {characters_dir}")
+        print_warning(f"Characters directory not found: {characters_dir}")
         return (True, 0, 0)
 
     all_valid = True
@@ -109,14 +110,14 @@ def validate_characters(verbose: bool = False) -> Tuple[bool, int, int]:
 def validate_npcs(verbose: bool = False) -> Tuple[bool, int, int]:
     """Validate all NPC files."""
     if not NPC_AVAILABLE:
-        print("[WARNING] NPC validator not available")
+        print_warning("NPC validator not available")
         return (True, 0, 0)
 
     print("\n=== Validating NPCs ===")
     npcs_dir = get_npcs_dir()
 
     if not file_exists(npcs_dir):
-        print(f"[WARNING] NPCs directory not found: {npcs_dir}")
+        print_warning(f"NPCs directory not found: {npcs_dir}")
         return (True, 0, 0)
 
     all_valid = True
@@ -153,14 +154,14 @@ def validate_npcs(verbose: bool = False) -> Tuple[bool, int, int]:
 def validate_items() -> Tuple[bool, int, int]:
     """Validate items registry file."""
     if not ITEMS_AVAILABLE:
-        print("[WARNING] Items validator not available")
+        print_warning("Items validator not available")
         return (True, 0, 0)
 
     print("\n=== Validating Items Registry ===")
     items_file = get_items_registry_path()
 
     if not file_exists(items_file):
-        print(f"[WARNING] Items registry not found: {items_file}")
+        print_warning(f"Items registry not found: {items_file}")
         return (True, 0, 0)
 
     is_valid, errors = validate_items_file(items_file)
@@ -177,14 +178,14 @@ def validate_items() -> Tuple[bool, int, int]:
 def validate_party() -> Tuple[bool, int, int]:
     """Validate party configuration file."""
     if not PARTY_AVAILABLE:
-        print("[WARNING] Party validator not available")
+        print_warning("Party validator not available")
         return (True, 0, 0)
 
     print("\n=== Validating Party Configuration ===")
     party_file = get_party_config_path()
 
     if not file_exists(party_file):
-        print(f"[WARNING] Party configuration not found: {party_file}")
+        print_warning(f"Party configuration not found: {party_file}")
         return (True, 0, 0)
 
     # Get characters directory for cross-reference

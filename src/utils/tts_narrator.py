@@ -22,6 +22,16 @@ except ImportError:
     TTS_AVAILABLE = False
 
 
+def _print_error(msg: str) -> None:
+    """Print error message with styling."""
+    print(f"[ERROR] {msg}")
+
+
+def _print_warning(msg: str) -> None:
+    """Print warning message with styling."""
+    print(f"[WARNING] {msg}")
+
+
 class StoryNarrator:
     """Handles text-to-speech narration for story files."""
 
@@ -135,7 +145,7 @@ class StoryNarrator:
             True if speech started successfully
         """
         if not self.available:
-            print("[ERROR] TTS not available")
+            _print_error("TTS not available")
             return False
 
         if not text.strip():
@@ -143,7 +153,7 @@ class StoryNarrator:
 
         if not block:
             # Non-blocking not supported with subprocess approach
-            print("[WARNING] Non-blocking TTS not supported")
+            _print_warning("Non-blocking TTS not supported")
             return False
 
         try:
@@ -170,7 +180,7 @@ class StoryNarrator:
             )
             return result.returncode == 0
         except (subprocess.TimeoutExpired, OSError) as e:
-            print("[ERROR] TTS not available")
+            _print_error("TTS not available")
             print(f"TTS speech failed: {e}")
             print("Check that pyttsx3 is installed correctly.")
             return False
@@ -258,7 +268,7 @@ def narrate_file(
         True if narration completed successfully
     """
     if not os.path.exists(filepath):
-        print("[ERROR] TTS not available")
+        _print_error("TTS not available")
         print(f"File not found: {filepath}")
         print("Check that the file path is correct.")
         return False
@@ -267,7 +277,7 @@ def narrate_file(
         with open(filepath, "r", encoding="utf-8") as f:
             content = f.read()
     except (OSError, UnicodeDecodeError) as e:
-        print("[ERROR] TTS not available")
+        _print_error("TTS not available")
         print(f"Failed to read file: {e}")
         print("Check file permissions and encoding.")
         return False
@@ -276,7 +286,7 @@ def narrate_file(
     clean_text = clean_text_for_narration(content)
 
     if not clean_text:
-        print("[WARNING] No text to narrate")
+        _print_warning("No text to narrate")
         return False
 
     # Create narrator if not provided
@@ -284,8 +294,8 @@ def narrate_file(
         narrator = StoryNarrator()
 
     if not narrator.available:
-        print("[ERROR] TTS not available")
-        print("[ERROR] TTS not available Install pyttsx3 or use a different narration method.")
+        _print_error("TTS not available")
+        print("Install pyttsx3 or use a different narration method.")
         return False
 
     return _narrate_paragraphs(narrator, clean_text, filepath, pause_between)
@@ -317,7 +327,7 @@ def _narrate_paragraphs(
         ]
 
         if not paragraphs:
-            print("[WARNING] No paragraphs found to narrate")
+            _print_warning("No paragraphs found to narrate")
             return False
 
         for i, paragraph in enumerate(paragraphs, 1):
@@ -336,7 +346,7 @@ def _narrate_paragraphs(
         narrator.stop()
         return False
     except (RuntimeError, OSError) as e:
-        print("[ERROR] TTS not available")
+        _print_error("TTS not available")
         print(f"Narration failed: {e}")
         print("Check that pyttsx3 is working correctly.")
         return False
@@ -362,8 +372,8 @@ def narrate_text(
         narrator = StoryNarrator()
 
     if not narrator.available:
-        print("[ERROR] TTS not available")
-        print("[ERROR] TTS not available Install pyttsx3 or use a different narration method.")
+        _print_error("TTS not available")
+        print("Install pyttsx3 or use a different narration method.")
         return False
 
     if clean:

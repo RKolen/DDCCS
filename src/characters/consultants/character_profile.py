@@ -11,6 +11,7 @@ import logging
 
 from src.characters.character_sheet import DnDClass
 from src.utils.file_io import load_json_file, save_json_file
+from src.utils.terminal_display import print_warning
 from src.ai.lazy_imports import AIImportManager
 
 
@@ -285,7 +286,7 @@ class CharacterProfile:
         if VALIDATOR_AVAILABLE and validate_character_json:
             is_valid, errors = validate_character_json(data, filepath)
             if not is_valid:
-                print("[WARNING]  Character profile validation failed:")
+                print_warning("Character profile validation failed:")
                 for error in errors:
                     print(f"  - {error}")
                 print("  Saving anyway, but please fix these issues.")

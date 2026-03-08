@@ -41,11 +41,11 @@ legitimate code quality issue to address.
 For significant changes, always run the full Pylint checks:
 
 ```bash
-python -m pylint src/
-python -m pylint tests/
+python -m pylint src/ tests/
 ```
 
 Never use flags or pipes.
+No issue is acceptable even if score is 10/10.
 
 ### 4. No Hardcoded Configuration Values
 
@@ -174,6 +174,20 @@ ddev rebuild
 
 The Drupal CMS uses its own testing and validation - do not apply the
 standard Python/Pylint rules to the Drupal PHP code.
+
+### Drupal Contrib Patch Policy
+
+If changes are needed in `drupal-cms/web/modules/contrib/`, do not leave
+direct edits as the only implementation.
+
+Required process:
+
+1. Create a patch file in `drupal-cms/patches/`.
+2. Register the patch in `drupal-cms/composer.json` under `extra.patches`.
+3. Enable and use Composer patch tooling so the fix reapplies after updates.
+
+This keeps contrib upgrades reproducible and prevents local hotfixes from
+being lost on reinstall/update.
 
 ## Coding Standards
 

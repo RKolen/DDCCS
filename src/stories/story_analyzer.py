@@ -18,6 +18,7 @@ from typing import Dict, List, Set
 from src.characters.consultants.consultant_core import CharacterConsultant
 from src.validation.npc_validator import validate_npc_json
 from src.utils.file_io import load_json_file, save_json_file, read_text_file
+from src.utils.terminal_display import print_warning
 from src.stories.character_loader import load_all_character_consultants
 
 
@@ -172,7 +173,7 @@ class NPCProfileAnalyzer:
             try:
                 is_valid, errors = validate_npc_json(npc_data)
                 if not is_valid:
-                    print("[WARNING]  NPC template validation failed:")
+                    print_warning("NPC template validation failed:")
                     for error in errors:
                         print(f"  - {error}")
                     print("  Saving anyway, but please fix these issues.")
