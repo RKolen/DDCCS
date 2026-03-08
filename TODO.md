@@ -108,6 +108,7 @@ All features below have detailed implementation plans in the `plans/` directory.
 ### User Experience
 
 - [ ] **Quick start guide** - Create a step-by-step tutorial for new users - [Plan](plans/quick_start_guide_plan.md)
+- [Coqui TTS Integration](plans/multi_voice_tts_design.md#15-alternative-tts-engine-coqui-ai-tts) - Add Coqui AI as alternative TTS engine for higher voice quality (low priority - requires powerful CPU or NVIDIA GPU)
 
 ## Known Issues to Fix
 
@@ -137,8 +138,8 @@ All features below have detailed implementation plans in the `plans/` directory.
 
 ### Error Handling Improvements - March 7, 2026
 
-- [x] **Configuration System** - Centralized config file for system settings **Plan:** [plans/configuration_system_plan.md](plans/configuration_system_plan.md)
-- [x] **Error Handling Improvements** - Improve error messages throughout the system for better user guidance **Plan:** [plans/error_handling_plan.md](plans/error_handling_plan.md)
+- [x] **Configuration System** - Centralized config file for system settings
+- [x] **Error Handling Improvements** - Improve error messages throughout the system for better user guidance
 
 ### Narration and ASCII Art - December 30, 2025
 

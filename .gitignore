@@ -67,6 +67,20 @@ game_data/campaigns/*
 game_data/**/*.bak
 game_data/**/*.tmp
 
+# Piper TTS voices - keep 2 male + 1 female, ignore rest
+game_data/piper/voices/*.onnx
+!game_data/piper/voices/en_US-joe-medium.onnx
+!game_data/piper/voices/en_US-ryan-low.onnx
+!game_data/piper/voices/en_US-amy-medium.onnx
+game_data/piper/voices/*.onnx.json
+!game_data/piper/voices/en_US-joe-medium.onnx.json
+!game_data/piper/voices/en_US-ryan-low.onnx.json
+!game_data/piper/voices/en_US-amy-medium.onnx.json
+
+# Piper test data and demos
+game_data/piper/*.wav
+!game_data/piper/DOWNLOAD_INSTRUCTIONS.md
+
 # =============================================================================
 # SYSTEM CACHES AND GENERATED CONTENT
 # =============================================================================
