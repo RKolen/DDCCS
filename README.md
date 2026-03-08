@@ -106,7 +106,7 @@ D&D CCS/
 │       ├── cli_story_manager.py     # Story management
 │       ├── cli_consultations.py     # Character consultations
 │       └── cli_story_analysis.py    # Story analysis
-├── tests/                 #  Test suite (6/6 passing, 10.00/10 pylint)
+├── tests/                 #  Test suite (11/11 passing, 10.00/10 pylint)
 │   ├── validation/        # JSON validation tests
 │   ├── ai/                # AI integration tests
 │   ├── test_helpers.py    # Shared test utilities

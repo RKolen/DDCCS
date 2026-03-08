@@ -34,6 +34,8 @@ All code must achieve a perfect 10.00/10 Pylint score. Never use:
 Instead, fix the underlying issue. If Pylint complains, there is usually a
 legitimate code quality issue to address.
 
+Any style warnings are considered violations and must be fixed.
+
 - never edit `pyproject.toml`
 
 ### 3. Full Pylint Output for Big Changes
@@ -41,11 +43,17 @@ legitimate code quality issue to address.
 For significant changes, always run the full Pylint checks:
 
 ```bash
-python -m pylint src/ tests/
+python3 -m pylint src/ tests/
 ```
 
 Never use flags or pipes.
 No issue is acceptable even if score is 10/10.
+
+#### 3.1 Pylance also needs to be happy
+
+VsCode Pylance must also be happy with the code.
+
+For 3 never use the excuse these are pre existing issues, they must be fixed.
 
 ### 4. No Hardcoded Configuration Values
 
@@ -263,15 +271,15 @@ def get_campaign_path(campaign_name: str) -> Path:
 Run all tests:
 
 ```bash
-python tests/run_all_tests.py
+python3 tests/run_all_tests.py
 ```
 
 Run specific test category:
 
 ```bash
-python tests/run_all_tests.py validation
-python tests/run_all_tests.py characters
-python tests/run_all_tests.py stories
+python3 tests/run_all_tests.py validation
+python3 tests/run_all_tests.py characters
+python3 tests/run_all_tests.py stories
 ```
 
 ### Test Data Requirements
@@ -387,19 +395,19 @@ modifier = DC_MODIFIERS.get(difficulty, 0)
 
 ```bash
 # Run main application
-python dnd_consultant.py
+python3 dnd_consultant.py
 
 # Run all tests
-python tests/run_all_tests.py
+python3 tests/run_all_tests.py
 
 # Run Pylint on source
-python -m pylint src/
+python3 -m pylint src/
 
 # Run Pylint on tests
-python -m pylint tests/
+python3 -m pylint tests/
 
 # Validate all game data
-python -m src.validation.validate_all
+python3 -m src.validation.validate_all
 ```
 
 ### File Locations

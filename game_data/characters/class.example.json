@@ -45,5 +45,13 @@
     "temperature": 0.7,
     "max_tokens": 1000,
     "system_prompt": null
+  },
+  "voice": {
+    "_comment": "Piper TTS voice configuration. Voice IDs: en_US-joe-medium (male), en_US-ryan-low (deep male), en_US-amy-medium (female)",
+    "piper_voice_id": "en_US-joe-medium",
+    "voice_settings": {
+      "speed": 1.0,
+      "pitch_shift": 0
+    }
   }
 }

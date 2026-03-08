@@ -74,14 +74,18 @@ class DisplayConfig:
     enable_tts: bool = False
     tts_voice: Optional[str] = None
     tts_speed: int = 150
+    # Piper-specific config stored as dict
+    piper_config: Dict[str, Any] = field(default_factory=dict)
 
     def get_tts_config(self) -> Dict[str, Any]:
         """Get TTS configuration dict."""
-        return {
+        config = {
             "enabled": self.enable_tts,
             "voice": self.tts_voice,
             "speed": self.tts_speed,
         }
+        config.update(self.piper_config)
+        return config
 
 
 @dataclass

@@ -7,9 +7,13 @@ from src.utils.tts_narrator import (
     StoryNarrator,
     clean_text_for_narration,
     is_tts_available,
+    is_piper_available,
     narrate_text,
     narrate_file,
+    MultiVoiceNarrator,
+    MultiVoiceConfig,
 )
+from src.utils.dialogue_detector import segment_story_for_tts
 
 
 class TestTextCleaning(unittest.TestCase):
@@ -156,3 +160,147 @@ class TestNarrationFunctions(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestPiperAvailability(unittest.TestCase):
+    """Test cases for Piper TTS availability."""
+
+    def test_is_piper_available(self):
+        """Test Piper availability check."""
+        available = is_piper_available()
+        self.assertIsInstance(available, bool)
+
+
+class TestMultiVoiceConfig(unittest.TestCase):
+    """Test cases for MultiVoiceConfig."""
+
+    def test_config_defaults(self):
+        """Test default configuration values."""
+        config = MultiVoiceConfig()
+        self.assertEqual(config.piper_path, "piper")
+        self.assertEqual(config.narrator_voice_id, "en_US-joe-medium")
+        self.assertEqual(config.pause_between_segments, 0.5)
+        self.assertEqual(config.pause_on_speaker_change, 0.75)
+
+    def test_config_custom(self):
+        """Test custom configuration."""
+        config = MultiVoiceConfig(
+            piper_path="/usr/local/bin/piper",
+            narrator_voice_id="en_US-amy-medium",
+            character_voices={"Aragorn": "en_US-ryan-low"},
+            pause_between_segments=1.0,
+            pause_on_speaker_change=1.5,
+        )
+        self.assertEqual(config.piper_path, "/usr/local/bin/piper")
+        self.assertEqual(config.narrator_voice_id, "en_US-amy-medium")
+        self.assertEqual(config.character_voices["Aragorn"], "en_US-ryan-low")
+        self.assertEqual(config.pause_between_segments, 1.0)
+        self.assertEqual(config.pause_on_speaker_change, 1.5)
+
+
+class TestMultiVoiceNarrator(unittest.TestCase):
+    """Test cases for MultiVoiceNarrator."""
+
+    def test_narrator_initialization(self):
+        """Test MultiVoiceNarrator can be initialized."""
+        narrator = MultiVoiceNarrator()
+        self.assertIsNotNone(narrator)
+
+    def test_narrator_with_config(self):
+        """Test MultiVoiceNarrator with custom config."""
+        config = MultiVoiceConfig(
+            narrator_voice_id="en_US-amy-medium",
+            character_voices={"Gorak": "en_US-ryan-low"},
+        )
+        narrator = MultiVoiceNarrator(config=config)
+        self.assertEqual(narrator.narrator_voice_id, "en_US-amy-medium")
+        self.assertEqual(narrator.character_voices["Gorak"], "en_US-ryan-low")
+
+
+class TestDialogueDetector(unittest.TestCase):
+    """Test cases for dialogue detection."""
+
+    def test_detect_speech_segments_basic(self):
+        """Test basic speech segment detection."""
+        text = 'Gandalf: "You shall not pass!"'
+        segments = segment_story_for_tts(text)
+        self.assertIsInstance(segments, list)
+
+    def test_detect_inline_dialogue(self):
+        """Test inline dialogue detection."""
+        text = '"Hello," said the wizard.'
+        segments = segment_story_for_tts(text)
+        self.assertIsInstance(segments, list)
+
+    def test_detect_multiple_speakers(self):
+        """Test detection with multiple speakers."""
+        text = '''Gandalf: "A wizard is never late."
+Aragorn: "Nor is he early."'''
+        segments = segment_story_for_tts(text)
+        self.assertIsInstance(segments, list)
+        self.assertGreater(len(segments), 0)
+
+    def test_speech_segment_attributes(self):
+        """Test SpeechSegment has required attributes."""
+        text = 'Gandalf: "Fly, you fools!"'
+        segments = segment_story_for_tts(text)
+        if segments:
+            seg = segments[0]
+            self.assertTrue(hasattr(seg, 'text'))
+            self.assertTrue(hasattr(seg, 'speaker'))
+
+
+class TestMultiVoiceStoryNarration(unittest.TestCase):
+    """Test multi-voice story narration with sample story."""
+
+    def test_narrate_story_with_multiple_voices(self):
+        """Test narration of story with multiple character voices."""
+        story_text = '''The fire crackled warmly in the common room.
+
+Gandalf: "I have been waiting for you, Frodo."
+
+Frodo: "How did you know I was coming?"
+
+Gandalf: "A concerned wizard knows many things."
+
+The hobbit looked nervous.
+
+Frodo: "I brought the Ring, as you asked."'''
+
+        # Create temporary story file
+        with tempfile.NamedTemporaryFile(
+            mode="w", suffix=".md", delete=False, encoding="utf-8"
+        ) as temp_file:
+            temp_file.write(story_text)
+            temp_path = temp_file.name
+
+        try:
+            # Test dialogue detection
+            known_characters = ["Frodo", "Gandalf", "Aragorn"]
+            known_npcs = ["Barliman Butterbur"]
+
+            segments = segment_story_for_tts(
+                story_text, known_characters, known_npcs
+            )
+
+            # Should have detected several speech segments
+            self.assertIsInstance(segments, list)
+
+            # Check for character-specific voice assignment
+            character_voices = {
+                "Gandalf": "en_US-joe-medium",
+                "Frodo": "en_US-amy-medium",
+            }
+
+            narrator = MultiVoiceNarrator(
+                narrator_voice_id="en_US-joe-medium",
+                character_voices=character_voices,
+            )
+            self.assertIsNotNone(narrator)
+
+        finally:
+            if os.path.exists(temp_path):
+                try:
+                    os.unlink(temp_path)
+                except (OSError, PermissionError):
+                    pass

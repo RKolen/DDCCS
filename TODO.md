@@ -4,10 +4,6 @@ Last Updated: February 13, 2026
 
 ## Implementation Roadmap
 
-### Phase 1: Foundation
-
-- [ ] **Multi-voice TTS (Phase 1-2)** - Voice selection in character/NPC JSON schema, dialogue detection parser **Plan:** [plans/multi_voice_tts_design.md](plans/multi_voice_tts_design.md)
-
 ### Phase 2: Infrastructure
 
 - [ ] **Drupal CMS Integration** - DDEV setup, JSON to Drupal migration, Python-to-Drupal API sync **Plan:** [plans/drupal_cms_integration.md](plans/drupal_cms_integration.md)
@@ -135,6 +131,10 @@ All features below have detailed implementation plans in the `plans/` directory.
 - [ ] **Integration guide** - How to integrate with external tools
 
 ## Recently Completed
+
+### Multi-voice TTS - March 8, 2026
+
+- [x] **Multi-voice TTS (Phase 1-2)** - Voice selection in character/NPC JSON schema, dialogue detection parser **Plan:**
 
 ### Error Handling Improvements - March 7, 2026
 

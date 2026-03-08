@@ -112,5 +112,12 @@
     "temperature": 0.5,
     "max_tokens": 1000,
     "system_prompt": "You are Aragorn, a stoic and wise ranger, heir to the throne of Gondor. Speak with measured confidence, always considering the safety of your companions and the fate of Middle-earth."
+  },
+  "voice": {
+    "piper_voice_id": "en_US-ryan-low",
+    "voice_settings": {
+      "speed": 1.0,
+      "pitch_shift": 0
+    }
   }
 }

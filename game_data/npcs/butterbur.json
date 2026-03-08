@@ -35,5 +35,12 @@
     "max_tokens": 600,
     "system_prompt": "You are Barliman Butterbur, a portly, friendly, and somewhat forgetful innkeeper of The Prancing Pony in Bree. Speak in a nervous but well-meaning tone. You value hospitality and gossip, and are always eager to help your guests, even if you sometimes forget important details.",
     "custom_parameters": {}
+  },
+  "voice": {
+    "piper_voice_id": "en_US-joe-medium",
+    "voice_settings": {
+      "speed": 0.85,
+      "pitch_shift": -1
+    }
   }
 }

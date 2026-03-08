@@ -84,20 +84,38 @@ def import_validator() -> Tuple[bool, Optional[object]]:
 
 
 # TTS narrator availability and components
+# Prefer Piper TTS for multi-voice support
 tts_available = False
 tts_components: Dict[str, Any] = {}
 
 try:
-    from src.utils.tts_narrator import narrate_file, is_tts_available, StoryNarrator
+    from src.utils.tts_narrator import (
+        narrate_file_piper,
+        is_piper_available,
+        MultiVoiceNarrator,
+        MultiVoiceConfig
+    )
 
     tts_available = True
     tts_components = {
-        "narrate_file": narrate_file,
-        "is_tts_available": is_tts_available,
-        "StoryNarrator": StoryNarrator,
+        "narrate_file": narrate_file_piper,
+        "is_tts_available": is_piper_available,
+        "MultiVoiceNarrator": MultiVoiceNarrator,
+        "MultiVoiceConfig": MultiVoiceConfig,
     }
 except ImportError:
-    pass
+    # Fallback to pyttsx3 if Piper unavailable
+    try:
+        from src.utils.tts_narrator import narrate_file, is_tts_available, StoryNarrator
+
+        tts_available = True
+        tts_components = {
+            "narrate_file": narrate_file,
+            "is_tts_available": is_tts_available,
+            "StoryNarrator": StoryNarrator,
+        }
+    except ImportError:
+        pass
 
 
 def get_tts_narrate_file():

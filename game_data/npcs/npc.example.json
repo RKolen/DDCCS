@@ -20,5 +20,15 @@
     "temperature": 0.7,
     "max_tokens": 1000,
     "system_prompt": "Custom system prompt for this NPC's personality (optional)"
+  },
+  "voice": {
+    "piper_voice_id": "en_US-joe-medium",
+    "_comment_voice_id": "Piper voice identifier from game_data/piper/voices/. Available: en_US-joe-medium (male narrator), en_US-ryan-low (deep male), en_US-amy-medium (female)",
+    "voice_settings": {
+      "_comment": "Optional voice adjustments. Speed: 0.5-2.0 (1.0 is normal). Pitch: -12 to +12 semitones. Volume: 0.0-1.0",
+      "speed": 1.0,
+      "pitch_shift": 0,
+      "volume": 1.0
+    }
   }
 }
