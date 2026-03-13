@@ -33,7 +33,7 @@ RAG_VECTOR_DB_PATH=.rag_cache/rag_cache.sqlite3
 ## Test It
 
 ```bash
-python test_rag_system.py
+python3 tests/run_all_tests.py ai
 ```
 
 ## Use It
@@ -43,7 +43,7 @@ python test_rag_system.py
 Stories automatically include wiki lore when you mention locations:
 
 ```bash
-python dnd_consultant.py
+python3 dnd_consultant.py
 # Choose: 2. DM Consultation
 # Enter prompt: "The party arrives in Whitestone"
 # → AI includes accurate Whitestone lore!
@@ -52,7 +52,7 @@ python dnd_consultant.py
 ### For History Checks
 
 ```python
-from history_check_helper import handle_history_check
+from src.dm.history_check_helper import handle_history_check
 
 result = handle_history_check("Tal'Dorei", check_result=18, character_name="Elara")
 print(result['information'])  # Shows wiki lore!

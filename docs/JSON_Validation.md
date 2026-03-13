@@ -13,36 +13,26 @@ The validation system ensures data integrity for:
 
 ## Validation Modules
 
-- `character_validator.py` - Validates character profiles
-- `npc_validator.py` - Validates NPC profiles
-- `items_validator.py` - Validates custom items registry
-- `party_validator.py` - Validates party configuration (with character cross-reference)
-- `validate_all.py` - Unified validator for all game data
+- `src/validation/character_validator.py` - Validates character profiles
+- `src/validation/npc_validator.py` - Validates NPC profiles
+- `src/validation/items_validator.py` - Validates custom items registry
+- `src/validation/party_validator.py` - Validates party configuration (with character cross-reference)
+- `src/validation/validate_all.py` - Unified validator for all game data
 
 ## Usage
 
 ```bash
-# Validate specific data type
-python character_validator.py
-python npc_validator.py
-python items_validator.py
-python party_validator.py
+# Validate all game data (recommended)
+python3 -m src.validation.validate_all
 
-# Validate all game data
-python validate_all.py
-
-# Validate specific types with verbose output
-python validate_all.py --characters --verbose
-python validate_all.py --npcs
-python validate_all.py --items
-python validate_all.py --party
+# Validate specific types
+python3 -m src.validation.character_validator
+python3 -m src.validation.npc_validator
+python3 -m src.validation.items_validator
+python3 -m src.validation.party_validator
 
 # Run validation tests
-python tests/test_character_validator.py
-python tests/test_npc_validator.py
-python tests/test_items_validator.py
-python tests/test_party_validator.py
-python tests/test_all_validators.py  # Comprehensive test including consistency checks
+python3 tests/run_all_tests.py validators
 ```
 
 ## Character Profile Validation

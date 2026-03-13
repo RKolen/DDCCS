@@ -18,24 +18,24 @@ This installs the `rich` library (v13.0+) for terminal formatting.
 
 ```bash
 # View a story file
-python display_story.py game_data/campaigns/Example_Campaign/001_opening.md
+python3 -m src.utils.display_file game_data/campaigns/Example_Campaign/001_opening.md
 
 # View a character profile
-python display_story.py game_data/characters/aragorn.json
+python3 -m src.utils.display_file game_data/characters/aragorn.json
 
 # View documentation
-python display_story.py README.md
-python display_story.py docs/AI_INTEGRATION.md
+python3 -m src.utils.display_file README.md
+python3 -m src.utils.display_file docs/AI_INTEGRATION.md
 ```
 
 ### View Story by Campaign + Number
 
 ```bash
 # View story 1 from Example_Campaign
-python display_story.py Example_Campaign 1
+python3 -m src.utils.display_file Example_Campaign 1
 
 # View story 3
-python display_story.py Your_Campaign 3
+python3 -m src.utils.display_file Your_Campaign 3
 
 # System supports:
 # - Example_Campaign/001_story.md
@@ -69,7 +69,7 @@ View with rich formatting? (y/n): y  ← Press 'y' for colors!
 ### Viewing a Story
 
 ```bash
-$ python display_story.py Example_Campaign 1
+$ python3 -m src.utils.display_file Example_Campaign 1
 
 ───────────────────────── 001_opening.md ──────────────────────────
 # The Tavern Meeting
@@ -81,7 +81,7 @@ The adventurers gather in the Prancing Pony...
 ### Viewing a Character
 
 ```bash
-$ python display_story.py game_data/characters/aragorn.json
+$ python3 -m src.utils.display_file game_data/characters/aragorn.json
 
 ────────────────────────── aragorn.json ────────────────────────────
 {
@@ -142,6 +142,7 @@ display_panel("Important Information", "Be Careful!", style="red")
 ## Troubleshooting
 
 **Colors not showing?**
+
 * Windows PowerShell: Use Windows Terminal (recommended)
 * Or run: `chcp 65001` before starting Python
 
@@ -152,6 +153,7 @@ pip install rich
 ```
 
 **Need plain text display?**
+
 * Files display as plain text if rich is unavailable
 * No errors, just less pretty
 
@@ -165,7 +167,7 @@ pip install rich
 1. **Create an alias** (PowerShell):
 
    ```powershell
-   function Read-Story { python display_story.py $args }
+   function Read-Story { python3 -m src.utils.display_file $args }
    ```
 
    Then: `Read-Story Example_Campaign 1`
@@ -173,20 +175,20 @@ pip install rich
 2. **View recent changes**:
 
    ```bash
-   python display_story.py docs/TODO.md
+   python3 -m src.utils.display_file docs/TODO.md
    ```
 
 3. **Quick character lookup**:
 
    ```bash
-   python display_story.py game_data/characters/aragorn.json
+   python3 -m src.utils.display_file game_data/characters/aragorn.json
    ```
 
 4. **Read documentation**:
 
    ```bash
-   python display_story.py README.md
-   python display_story.py docs/AI_INTEGRATION.md
+   python3 -m src.utils.display_file README.md
+   python3 -m src.utils.display_file docs/AI_INTEGRATION.md
    ```
 
 ## What's Next?

@@ -5,6 +5,7 @@ pipeline: AI-enhanced narration, action description formatting, and
 consistency checks that ensure character actions match profiles.
 
 ## Tests included
+
 - `test_narrator_descriptions.py` — unit tests for `CombatDescriptor` (damage
   buckets, attack/spell/healing/status phrasing).
 - `test_narrator_ai.py` — integration tests for `AIEnhancedNarrator` using the
@@ -17,13 +18,15 @@ consistency checks that ensure character actions match profiles.
   fallback/title extraction behavior.
 
 ## How to run
+
 From the project root run the combat aggregator which runs the group:
 
-```powershell
-python tests\run_all_tests.py combat
+```bash
+python3 tests/run_all_tests.py combat
 ```
 
 ## Conventions and patterns
+
 - Tests use `tests/test_helpers.py` for shared test doubles: `FakeAIClient`,
   `FakeConsultant`, and `setup_test_environment()`.
 - Use real character JSON fixtures in `game_data/characters/` for realistic
@@ -34,12 +37,14 @@ python tests\run_all_tests.py combat
   that exercise parsed-action -> narrative flow.
 
 ## Source modules under test
+
 - `src/combat/narrator_descriptions.py` — action-to-text logic
 - `src/combat/narrator_ai.py` — AI prompt building, RAG lookup, post-processing
 - `src/combat/narrator_consistency.py` — consistency checking and notes
 - `src/combat/combat_narrator.py` — high-level orchestration of components
 
 ## Notes
+
 - Prefer using `FakeAIClient` to exercise AI flows deterministically. The
   fake client echoes a short preview of `messages` it receives which tests
   can assert against to verify prompt contents.

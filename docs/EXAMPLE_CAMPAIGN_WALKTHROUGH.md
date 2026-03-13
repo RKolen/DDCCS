@@ -7,7 +7,7 @@ This document explains how the **Example_Campaign** is generated using the D&D C
 To generate the Example Campaign from scratch, run:
 
 ```bash
-python dnd_consultant.py
+python3 dnd_consultant.py
 ```
 
 ## Step-by-Step Walkthrough
@@ -156,14 +156,14 @@ When generating content for each story, the system intelligently:
 
 This workflow demonstrates:
 
-- ✅ **Story Series Management** - Organized story progression
-- ✅ **Automatic NPC Detection** - System identifies innkeepers, goblin leaders, etc.
-- ✅ **Character Consistency Tracking** - Analyzes character actions across stories
-- ✅ **Combat to Narrative** - Converts tactical combat descriptions to story text
-- ✅ **AI-Assisted Analysis** - Optional AI generation for richer narratives
-- ✅ **Party Management** - Persistent party configuration per campaign
-- ✅ **Automated File Generation** - Session summaries, development files, hooks
-- ✅ **Story Hooks** - Plot suggestions and NPC profiles for future stories
+- **Story Series Management** - Organized story progression
+- **Automatic NPC Detection** - System identifies innkeepers, goblin leaders, etc.
+- **Character Consistency Tracking** - Analyzes character actions across stories
+- **Combat to Narrative** - Converts tactical combat descriptions to story text
+- **AI-Assisted Analysis** - Optional AI generation for richer narratives
+- **Party Management** - Persistent party configuration per campaign
+- **Automated File Generation** - Session summaries, development files, hooks
+- **Story Hooks** - Plot suggestions and NPC profiles for future stories
 
 ## Next Steps
 

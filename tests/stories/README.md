@@ -61,8 +61,8 @@ NPCs, suggesting DCs, tracking character development). Tests validate:
 
 Run the entire stories test suite with the repository test runner:
 
-```powershell
-python tests/run_all_tests.py stories
+```bash
+python3 tests/run_all_tests.py stories
 ```
 
 > Note: tests use `test_helpers.setup_test_environment()` to ensure `src` imports
@@ -71,6 +71,7 @@ python tests/run_all_tests.py stories
 ## Test Coverage
 
 The stories suite focuses on:
+
 - File I/O and naming conventions
 - Story parsing utilities (character action extraction, DC extraction)
 - Integration with character consultants (consistency analysis)
@@ -85,6 +86,7 @@ The stories suite focuses on:
 ## Quality Standards
 
 All tests in this folder follow the project's test standards:
+
 - Use `tempfile.TemporaryDirectory()` for filesystem tests
 - No writes to the repository `game_data` folder (except reading example profiles)
 - Clear docstrings and descriptive assertions
@@ -100,6 +102,7 @@ All tests in this folder follow the project's test standards:
 ## Maintenance
 
 When adding or changing tests here:
+
 1. Add a short description to this README under "Test Files".
 2. Keep tests small and focused (happy path + 1-2 edge cases).
 3. Use existing helpers in `tests/test_helpers.py` for import wiring.

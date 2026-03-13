@@ -9,10 +9,6 @@
 > Tier 4: Drupal, TTS Web, Plugin Architecture
 > Tier 5+: QoL, Campaign content, ComfyUI (optional)
 
-### Phase 1: Foundations (Do First)
-
-- [ ] **Documentation Audit and Update** - Audit all `docs/` files and AGENTS.md against current codebase; establish documentation contract rule **Plan:** [plans/documentation_update_plan.md](plans/documentation_update_plan.md)
-
 ### Phase 2: Infrastructure
 
 - [ ] **Model Switching** - Named model profiles, task-based routing, per-character override, CLI profile selector **Plan:** [plans/model_switching_plan.md](plans/model_switching_plan.md)
@@ -139,13 +135,13 @@ All features below have detailed implementation plans in the `plans/` directory.
 
 ### Audit Backlog (Priority Order)
 
-- [ ] **AGENTS.md utils catalog** - Verify every function in `src/utils/` is listed
-- [ ] **docs/AI_INTEGRATION.md** - Update for centralized config, model switching, Milvus
-- [ ] **docs/RAG_INTEGRATION.md** - Rewrite for Milvus + fallback architecture
-- [ ] **docs/RAG_QUICKSTART.md** - Update `.env` variable names
-- [ ] **docs/JSON_Validation.md** - Check for undocumented new validators
-- [ ] **src/README.md and tests/README.md** - Verify module and test category lists
-- [ ] **docs/EXAMPLE_CAMPAIGN_WALKTHROUGH.md** - Verify CLI commands are current
+- [x] **AGENTS.md utils catalog** - Verify every function in `src/utils/` is listed
+- [x] **docs/AI_INTEGRATION.md** - Update for centralized config, model switching, Milvus
+- [x] **docs/RAG_INTEGRATION.md** - Rewrite for Milvus + fallback architecture
+- [x] **docs/RAG_QUICKSTART.md** - Update `.env` variable names
+- [x] **docs/JSON_Validation.md** - Check for undocumented new validators
+- [x] **src/README.md and tests/README.md** - Verify module and test category lists
+- [x] **docs/EXAMPLE_CAMPAIGN_WALKTHROUGH.md** - Verify CLI commands are current
 
 ### README Updates
 
@@ -168,7 +164,6 @@ a solo DM using the CLI today; (3) risk and complexity.
 
 | # | Plan | Reason |
 |---|------|--------|
-| 1 | [Documentation Update](plans/documentation_update_plan.md) | No code deps. Ensures AGENTS.md and docs are correct before new features land on top of outdated foundations. |
 | 2 | [Model Switching](plans/model_switching_plan.md) | Extends the already-completed config system. Adds routing that every subsequent AI feature benefits from. Low implementation risk. |
 | 3 | [Pronouns Field](plans/pronouns_field_plan.md) | Tiny data-model change. Easiest possible quick win; best done before other character-system changes add migration burden. |
 | 4 | [Profile Verification](plans/profile_verification_plan.md) | Audits existing JSON templates for consistency. Cheap to do now; expensive to fix later when Milvus, spotlighting, and arc analysis depend on clean data. |
@@ -230,6 +225,10 @@ a solo DM using the CLI today; (3) risk and complexity.
 ---
 
 ## Recently Completed
+
+### Documentation Audit and Update - March 13, 2026
+
+- [x] **Documentation Audit and Update** - Audited all `docs/` files and AGENTS.md against current codebase; established documentation contract rule (Rule 5) and mypy/type-safety rule (Rule 6); created scoped `drupal-cms/AGENTS.md`; fixed stale imports, python→python3, powershell→bash across all READMEs and quickstart guides
 
 ### Multi-voice TTS - March 8, 2026
 

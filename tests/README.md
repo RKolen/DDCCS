@@ -12,9 +12,26 @@ Store testing scripts created during development to:
 - Validate end-to-end workflows
 - Quick validation during development
 
-## Test Directory Structure (41 tests across 11 files)
+## Test Directory Structure
 
-All tests achieve 10.00/10 pylint score.
+```
+tests/
+|-- ai/              # Tests for src/ai/
+|-- characters/      # Tests for src/characters/ (consultants, sheets, consistency)
+|-- cli/             # Tests for src/cli/
+|-- combat/          # Tests for src/combat/
+|-- config/          # Tests for src/config/
+|-- dm/              # Tests for src/dm/
+|-- integration/     # Cross-module integration tests
+|-- items/           # Tests for src/items/
+|-- npcs/            # Tests for src/npcs/
+|-- stories/         # Tests for src/stories/
+|-- utils/           # Tests for src/utils/
+|-- validators/      # Tests for src/validation/
+|-- run_all_tests.py # Main test runner
+|-- test_helpers.py  # Shared test utilities
+`-- test_runner_common.py  # Common runner infrastructure
+```
 
 ## Test Quality Standards
 
@@ -25,44 +42,26 @@ All tests achieve 10.00/10 pylint score.
 
 ## Running Tests
 
-Tests are ran from root and can be run complete or as a suite(s):
+Tests are run from the workspace root:
 
-`Bash
-python tests/run_all_tests.py
-python tests/run_all_tests.py validation
-python tests/run_all_tests.py ai characters
-`
+```bash
+# Run all tests
+python3 tests/run_all_tests.py
+
+# Run specific category or categories
+python3 tests/run_all_tests.py validation
+python3 tests/run_all_tests.py ai characters
+python3 tests/run_all_tests.py stories
+```
+
 It is not possible to run a single test with a command due to pathing
 of the test_helpers. A workaround is to go into the test_all_[categoryname].py
-and uncomment all tests you dont want to run. Example in test_all_characters.py:
-`
-# Define all tests to run
-    tests = [
-      #  ("test_character_profile", "Character Profile Tests"),
-      #  ("test_class_knowledge", "Class Knowledge Tests"),
-      #  ("test_character_sheet", "Character Sheet Tests"),
-      #  ("test_character_consistency", "Character Consistency Tests"),
-        ("test_consultant_core", "Consultant Core Tests"),
-      #  ("test_consultant_dc", "DC Calculator Tests"),
-      #  ("test_consultant_story", "Story Analyzer Tests"),
-      #  ("test_consultant_ai", "AI Consultant Tests"),
-    ]
-`
-If you then run python tests/run_all_tests.py characters
-it will only run the test_consultant_core.py test.
-
-Especially the character and story tests are very long (they are almost 1,5 min
-each). If you run (all) the tests be patient they are not stuck it just takes
-a long time.
+and comment out all tests you do not want to run.
 
 ## Related Documentation
 
 - JSON Validation docs: ../docs/JSON_Validation.md
-- Validator Integration: ../docs/Validator_Integration.md
+- AI Integration: ../docs/AI_INTEGRATION.md
+- RAG Integration: ../docs/RAG_INTEGRATION.md
 - Copilot Instructions: ../.github/copilot-instructions.md
 - TODO: ../TODO.md
-
----
-
-**Last Updated:** October 19, 2025
-**Status:** Characters 5/9, all tests 10.00/10 pylint

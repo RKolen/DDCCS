@@ -77,6 +77,47 @@ model: str = ""
 The configuration system supports defaults through config files or environment
 variables. See `src/config/config_types.py` for the configuration schema.
 
+### 5. Documentation Must Track Code
+
+When a code change alters any of the following, the corresponding
+documentation file must be updated in the same commit:
+
+| Change Type | Documentation to Update |
+|-------------|------------------------|
+| New util function | AGENTS.md utils catalog |
+| New config key | `docs/AI_INTEGRATION.md` or `.env.example` |
+| New CLI argument | AGENTS.md quick reference + relevant `docs/` file |
+| New data field in JSON schema | `docs/JSON_Validation.md` |
+| New test category | `tests/README.md` |
+| New `src/` module | `src/README.md` |
+| Changed AI/RAG architecture | `docs/AI_INTEGRATION.md`, `docs/RAG_INTEGRATION.md` |
+
+### 6. Type Safety: mypy + Pylance
+
+The Python code is enforced by three complementary tools:
+
+- **Pylint** (existing) - style, logic, and code quality
+- **Pylance** (existing) - VS Code real-time type checking
+- **mypy** - static type checking at CI/pre-commit level
+
+All three must pass with zero errors before committing.
+
+```bash
+# Run mypy on source
+python3 -m mypy src/
+
+# Run mypy on tests
+python3 -m mypy tests/
+```
+
+mypy configuration is in `pyproject.toml` (do not modify). Key rules:
+
+- Every function parameter and return value must have a type annotation.
+- Use `Optional[X]` (or `X | None` for Python 3.10+) for nullable values.
+- Do not use `# type: ignore` comments - fix the underlying type issue.
+- For third-party libraries without stubs, add `ignore_missing_imports = true`
+  in the `[mypy-<package>.*]` section of config.
+
 ## Before Writing Code - MANDATORY CHECK
 
 **STOP!** Before writing ANY new utility code, check the utils catalog below.
@@ -125,6 +166,29 @@ violation of project standards.
 | Cache | `src/utils/cache_utils.py` | `clear_character_from_cache`, |
 | | | `reload_character_from_disk` |
 | Behavior | `src/utils/behaviour_generation.py` | `generate_behavior_from_personality` |
+| Errors | `src/utils/errors.py` | `DnDError`, `UserInputError`, |
+| | | `AIConnectionError`, `FileSystemError`, |
+| | | `handle_errors`, `display_error` |
+| Error Templates | `src/utils/error_templates.py` | `get_error_template`, |
+| | | `ERROR_TEMPLATES` |
+| ASCII Art | `src/utils/ascii_art.py` | `display_character_portrait`, |
+| | | `display_party_portraits`, |
+| | | `get_class_icon` |
+| Audio | `src/utils/audio_player.py` | `AudioPlayer`, |
+| | | `play_wav_bytes`, |
+| | | `get_audio_duration_wav` |
+| Piper TTS | `src/utils/piper_tts_client.py` | `PiperTTSClient`, `VoiceInfo` |
+| Dialogue | `src/utils/dialogue_detector.py` | `segment_story_for_tts`, |
+| | | `get_speaker_voice_map`, |
+| | | `DialogueDetector` |
+| Text Format | `src/utils/text_formatting_utils.py` | `wrap_narrative_text` |
+| Story Format | `src/utils/story_formatting_utils.py` | `generate_consultant_notes` |
+| Story Parse | `src/utils/story_parsing_utils.py` | `extract_character_actions` |
+| Spell Lookup | `src/utils/spell_lookup_helper.py` | `lookup_spells_and_abilities` |
+| NPC Migration | `src/utils/npc_migration.py` | `migrate_npc_to_full_profile` |
+| Optional Imports | `src/utils/optional_imports.py` | `rich_available`, |
+| | | `get_rich_console`, |
+| | | `get_rich_component` |
 
 ## Project Structure
 
@@ -132,15 +196,52 @@ violation of project standards.
 
 src/
 |-- characters/      # Character management + consultants subsystem
+|   |-- consultants/ # Per-character consultant classes
+|   |-- character_sheet.py
+|   |-- character_consistency.py
+|   |-- npc_constants.py
 |-- npcs/            # NPC management and auto-detection
+|   |-- npc_agents.py
+|   |-- npc_auto_detection.py
 |-- stories/         # Story management and analysis
+|   |-- story_manager.py
+|   |-- enhanced_story_manager.py
+|   |-- story_analyzer.py / story_analysis.py
+|   |-- story_file_manager.py
+|   |-- story_ai_generator.py
+|   |-- story_amender.py
+|   |-- story_updater.py
+|   |-- story_workflow_orchestrator.py
+|   |-- session_results_manager.py
+|   |-- hooks_and_analysis.py
+|   |-- party_manager.py / character_manager.py
+|   |-- character_loader.py / character_load_helper.py
 |-- combat/          # Combat narration system
+|   |-- combat_narrator.py
+|   |-- narrator_ai.py / narrator_consistency.py
 |-- items/           # Custom items registry
+|   |-- item_registry.py
 |-- dm/              # Dungeon Master tools
+|   |-- dungeon_master.py
+|   |-- history_check_helper.py
 |-- validation/      # JSON validation for all data types
+|   |-- character_validator.py / npc_validator.py
+|   |-- items_validator.py / party_validator.py
+|   |-- validate_all.py
 |-- ai/              # AI client and RAG system
+|   |-- ai_client.py
+|   |-- rag_system.py
+|   |-- availability.py
+|-- config/          # Centralized configuration
+|   |-- config_types.py  # AIConfig, RAGConfig, DisplayConfig, PathConfig
+|   |-- config_loader.py
 |-- utils/           # Shared utilities (CHECK FIRST)
 |-- cli/             # Command-line interface
+|   |-- dnd_consultant.py  # Main interactive CLI
+|   |-- dnd_cli_helpers.py
+|   |-- cli_story_manager.py / cli_character_manager.py
+|   |-- party_config_manager.py
+|   |-- setup.py
 
 ### Data Directories
 
@@ -158,44 +259,27 @@ tests/
 |-- ai/              # Tests for src/ai/
 |-- characters/      # Tests for src/characters/
 |-- cli/             # Tests for src/cli/
+|-- combat/          # Tests for src/combat/
+|-- config/          # Tests for src/config/
+|-- dm/              # Tests for src/dm/
+|-- integration/     # Cross-module integration tests
+|-- items/           # Tests for src/items/
+|-- npcs/            # Tests for src/npcs/
 |-- stories/         # Tests for src/stories/
 |-- utils/           # Tests for src/utils/
-|-- validation/      # Tests for src/validation/
+|-- validators/      # Tests for src/validation/
 |-- run_all_tests.py # Main test runner
+|-- test_helpers.py  # Shared test utilities
 
 ### Drupal CMS
 
-The project includes a Drupal CMS recipe system in `drupal-cms/`. This is a
-separate component that requires Docker and DDEV for local development.
+The project includes a Drupal CMS component in `drupal-cms/`. It is a separate,
+PHP-based component that requires DDEV. Python tooling (Pylint, mypy, Pylance)
+does not apply there.
 
-**Important:** Any changes to the Drupal CMS components require DDEV to be
-running. Before making changes to files in `drupal-cms/`, ensure the DDEV
-environment is started:
-
-```bash
-# Start DDEV
-ddev start
-
-# After making changes, you may need to rebuild
-ddev rebuild
-```
-
-The Drupal CMS uses its own testing and validation - do not apply the
-standard Python/Pylint rules to the Drupal PHP code.
-
-### Drupal Contrib Patch Policy
-
-If changes are needed in `drupal-cms/web/modules/contrib/`, do not leave
-direct edits as the only implementation.
-
-Required process:
-
-1. Create a patch file in `drupal-cms/patches/`.
-2. Register the patch in `drupal-cms/composer.json` under `extra.patches`.
-3. Enable and use Composer patch tooling so the fix reapplies after updates.
-
-This keeps contrib upgrades reproducible and prevents local hotfixes from
-being lost on reinstall/update.
+For all Drupal-specific rules, DDEV commands, PHP code quality standards
+(PHPCS + PHPStan level 6), and the contrib patch policy, see
+`drupal-cms/AGENTS.md`.
 
 ## Coding Standards
 
@@ -405,6 +489,10 @@ python3 -m pylint src/
 
 # Run Pylint on tests
 python3 -m pylint tests/
+
+# Run mypy type checking
+python3 -m mypy src/
+python3 -m mypy tests/
 
 # Validate all game data
 python3 -m src.validation.validate_all

@@ -8,8 +8,8 @@ This guide shows you exactly what to press and what to expect when testing the s
 
 ### 1. Start the Program
 
-```powershell
-python dnd_consultant.py
+```bash
+python3 dnd_consultant.py
 ```
 
 ### 2. You'll See This Menu
@@ -49,15 +49,15 @@ Choose an option (1-5):
 
 ### Step 1: Run Setup
 
-```powershell
-python setup.py
+```bash
+python3 -m src.cli.setup
 ```
 
 **What happens:** Creates default character templates and VSCode configuration
 
 ### Step 2: Create Your First Campaign
 
-1. Run: `python dnd_consultant.py`
+1. Run: `python3 dnd_consultant.py`
 2. Press `3` for Story Management
 3. Choose "Create New Story Series"
 4. **Name it:** Something ending in `_Quest`, `_Campaign`, `_Story`, or `_Adventure`
@@ -105,7 +105,7 @@ python setup.py
 
 The system includes example characters: Aragorn, Frodo, and Gandalf
 
-1. Run: `python dnd_consultant.py`
+1. Run: `python3 dnd_consultant.py`
 2. Press `1` for Character Consultation
 3. Select **Aragorn**, **Frodo**, or **Gandalf**
 4. **Ask a question:** "What would you do if guards approached?"

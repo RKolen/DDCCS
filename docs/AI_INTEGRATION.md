@@ -18,7 +18,7 @@ The AI integration provides:
 
 ### 1. Install Dependencies
 
-```powershell
+```bash
 pip install -r requirements.txt
 ```
 
@@ -31,8 +31,8 @@ This installs:
 
 Copy the example environment file:
 
-```powershell
-copy .env.example .env
+```bash
+cp .env.example .env
 ```
 
 Edit `.env` with your configuration:
@@ -68,8 +68,8 @@ The system supports both methods:
 
 ### 3. Test the Integration
 
-```powershell
-python test_ai_integration.py
+```bash
+python3 tests/run_all_tests.py ai
 ```
 
 This will verify your configuration and test basic AI functionality.
@@ -175,8 +175,8 @@ Create unique AI personalities for each character:
 
 The CLI automatically uses AI if configured:
 
-```powershell
-python dnd_consultant.py
+```bash
+python3 dnd_consultant.py
 ```
 
 Select **"3. Get Character Consultation"** - AI will be used automatically if available.
@@ -184,18 +184,18 @@ Select **"3. Get Character Consultation"** - AI will be used automatically if av
 ### In Python Code
 
 ```python
-from character_consultants import CharacterConsultant, CharacterProfile
-from ai_client import AIClient
-from character_sheet import DnDClass
+from src.ai.ai_client import AIClient
+from src.utils.character_profile_utils import load_character_profile
+from src.utils.path_utils import get_characters_dir
 
-# Create AI client
-ai_client = AIClient()  # Uses environment configuration
+# Create AI client (reads from centralized config or env vars)
+ai_client = AIClient()
 
-# Load character
-profile = CharacterProfile.load_from_file("characters/wizard.json")
-consultant = CharacterConsultant(profile, ai_client=ai_client)
+# Load character profile
+profile = load_character_profile("wizard")
 
-# Get AI-enhanced reaction
+# Get AI-enhanced reaction via the story/consultant workflow
+# See src/characters/consultants/ for consultant classes
 situation = "A dragon appears on the horizon"
 reaction = consultant.suggest_reaction_ai(situation)
 
@@ -215,20 +215,15 @@ if dc_suggestion.get('ai_analysis'):
 
 ### Character-Specific AI Client
 
+Per-character AI settings are defined in the character JSON file under the
+`ai_config` key (shown in the Per-Character AI Configuration section above).
+The centralized config system loads these via `src/config/config_types.py`.
+
 ```python
-from ai_client import CharacterAIConfig
+from src.config.config_loader import load_config
 
-# Create character-specific config
-config = CharacterAIConfig(
-    enabled=True,
-    model="gpt-4",
-    temperature=0.9,
-    system_prompt="You are a mischievous rogue with a heart of gold..."
-)
-
-# Add to character profile
-profile.ai_config = config
-profile.save_to_file("characters/rogue.json")
+config = load_config()
+char_config = config.ai.get_character_config("Rogue")
 ```
 
 ## Advanced Configuration
@@ -301,7 +296,7 @@ The system is designed to work without AI:
 
 ### "Import openai could not be resolved"
 
-```powershell
+```bash
 pip install -r requirements.txt
 ```
 

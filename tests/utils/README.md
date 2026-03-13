@@ -4,6 +4,7 @@ This folder contains unit tests covering the small, commonly used helper
 modules under `src/utils/`.
 
 Purpose
+
 - Verify deterministic behavior of pure utility functions used across the
   project (string normalization, file I/O helpers, markdown helpers, spell
   highlighting, validation helpers, and text formatting).
@@ -11,6 +12,7 @@ Purpose
   fakes and `tmp_path` where filesystem access is required.
 
 Files in this folder
+
 - `test_all_utils.py` — aggregator that runs the utils tests as a group.
 - `test_behaviour_generation.py` — heuristics for behavior generation.
 - `test_cli_utils.py` — CLI helper functions (selection, input helpers).
@@ -26,25 +28,22 @@ Files in this folder
 - `test_story_file_helpers.py` - file helper for story functionality.
 
 Running the tests
-Use the repository test runner to execute the utils tests only (PowerShell):
+Use the repository test runner to execute the utils tests only:
 
-```powershell
-python .\tests\run_all_tests.py utils
+```bash
+python3 tests/run_all_tests.py utils
 ```
 
 Linting and style
+
 - All test files must meet the project's lint standard (pylint score 10.00/10).
   The repository enforces this for test files and the CI expects no pylint
   disables in test modules.
 
 Notes
+
 - Tests use `tests/test_helpers.py` for shared setup and fakes. Import
   `test_helpers` and call `setup_test_environment()` before importing
   project modules in tests (this is already done in the test files here).
 - Keep tests small and deterministic: monkeypatch `input()` where needed and
   avoid external network calls (use fakes/mocks instead).
-
-If you want me to, I can:
-- Run the utils aggregator now and paste the runtime output, or
-- Add a short `tests/utils/README.md` section showing a quick example for
-  adding new utils tests or templates for common patterns.

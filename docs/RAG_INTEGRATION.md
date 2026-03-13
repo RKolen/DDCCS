@@ -101,8 +101,8 @@ RAG_RULES_BASE_URL=https://dnd5e.wikidot.com
 RAG works automatically when generating stories:
 
 ```python
-from dungeon_master import DMConsultant
-from ai_client import AIClient
+from src.dm.dungeon_master import DMConsultant
+from src.ai.ai_client import AIClient
 
 # Initialize DM with AI
 ai_client = AIClient()
@@ -126,7 +126,7 @@ narrative = dm.generate_narrative_content(
 ### For Character History Checks
 
 ```python
-from history_check_helper import handle_history_check
+from src.dm.history_check_helper import handle_history_check
 
 # Character makes a History check about Tal'Dorei
 result = handle_history_check(
@@ -164,7 +164,7 @@ Source: wiki
 ### Direct Lore Lookup (for DMs)
 
 ```python
-from history_check_helper import search_lore
+from src.dm.history_check_helper import search_lore
 
 # Search for information about Whitestone
 lore = search_lore("Whitestone", pages_to_search=["Whitestone", "Tal'Dorei"])
@@ -191,16 +191,21 @@ For History checks:
 
 ## File Structure
 
+```
 D&D Campaign Workspace/
-├── .env                          # RAG configuration
-├── .rag_cache/                   # Wiki content cache (git-ignored)
-│   ├── index.json               # Cache index
-│   ├── abc123def456.json        # Cached page 1
-│   └── 789ghi012jkl.json        # Cached page 2
-├── rag_system.py                 # Core RAG functionality
-├── history_check_helper.py       # History check integration
-├── dungeon_master.py             # Story generation with RAG
-└── dnd_consultant.py             # CLI interface
+|-- .env                          # RAG configuration
+|-- .rag_cache/                   # Wiki content cache (git-ignored)
+|   |-- index.json               # Cache index
+|   |-- abc123def456.json        # Cached page 1
+|   `-- 789ghi012jkl.json        # Cached page 2
+|-- src/
+|   |-- ai/
+|   |   `-- rag_system.py        # Core RAG functionality
+|   `-- dm/
+|       |-- dungeon_master.py    # Story generation with RAG
+|       `-- history_check_helper.py  # History check integration
+`-- dnd_consultant.py             # CLI entry point
+```
 
 ## Advanced Configuration
 
@@ -209,7 +214,7 @@ D&D Campaign Workspace/
 View cache statistics:
 
 ```python
-from rag_system import WikiCache
+from src.ai.rag_system import WikiCache
 
 cache = WikiCache()
 stats = cache.get_stats()
@@ -226,7 +231,7 @@ cache.clear_expired()
 Force refresh a specific page:
 
 ```python
-from rag_system import WikiClient
+from src.ai.rag_system import WikiClient
 
 client = WikiClient("https://criticalrole.fandom.com/wiki")
 page_data = client.fetch_page("Whitestone", force_refresh=True)
@@ -374,7 +379,7 @@ Be respectful to wiki servers:
 Before your session:
 
 ```python
-from rag_system import WikiClient
+from src.ai.rag_system import WikiClient
 
 client = WikiClient("https://criticalrole.fandom.com/wiki")
 
@@ -404,7 +409,7 @@ In story prompts, use full proper names:
 Not all settings have comprehensive wikis. Check coverage before enabling:
 
 ```python
-from rag_system import WikiClient
+from src.ai.rag_system import WikiClient
 
 client = WikiClient("https://your-wiki.com/wiki")
 test_page = client.fetch_page("Main_Location")
@@ -465,8 +470,8 @@ RAG_CACHE_TTL=604800
 
 ```python
 # Generate story in Whitestone
-from dungeon_master import DMConsultant
-from ai_client import AIClient
+from src.dm.dungeon_master import DMConsultant
+from src.ai.ai_client import AIClient
 
 dm = DMConsultant(".", AIClient())
 narrative = dm.generate_narrative_content(
@@ -488,7 +493,7 @@ RAG_WIKI_BASE_URL=https://forgottenrealms.fandom.com/wiki
 
 ```python
 # History check about Waterdeep
-from history_check_helper import handle_history_check
+from src.dm.history_check_helper import handle_history_check
 
 result = handle_history_check("Waterdeep", check_result=22, character_name="Elara")
 # Returns comprehensive lore about the City of Splendors
@@ -507,7 +512,7 @@ result = handle_history_check("Waterdeep", check_result=22, character_name="Elar
 3. Document your world's locations, history, factions
 4. AI automatically uses your lore!
 
-## 🎓 Technical Details
+## Technical Details
 
 ### How RAG Works
 

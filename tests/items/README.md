@@ -19,8 +19,8 @@ rest of the system.
 ## How to run
 From the project root run the items aggregator which runs the group:
 
-```powershell
-python tests\run_all_tests.py items
+```bash
+python3 tests/run_all_tests.py items
 ```
 
 ## Conventions and patterns
