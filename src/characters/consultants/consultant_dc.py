@@ -5,7 +5,7 @@ Provides DC (Difficulty Class) calculation methods for character actions,
 including class-specific bonuses and alternative approach suggestions.
 """
 
-from typing import Dict, List, Any
+from typing import Dict, List, Any, Optional
 
 from src.utils.dnd_rules import DC_MEDIUM
 
@@ -25,7 +25,7 @@ class DCCalculator:
         self.class_knowledge = class_knowledge
 
     def suggest_dc_for_action(
-        self, action_description: str, _character_abilities: Dict[str, int] = None
+        self, action_description: str, _character_abilities: Optional[Dict[str, int]] = None
     ) -> Dict[str, Any]:
         """
         Suggest appropriate DC for an action this character wants to take.

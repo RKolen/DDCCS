@@ -45,12 +45,12 @@ class SessionCLIManager(BaseStoryInteractionManager):
         try:
             filepath = create_session_results_file(series_path, session)
             print(f"\n[SUCCESS] Session results saved: {filepath}")
-        except OSError as error:
-            error = FileSystemError(
-                message=f"Error saving session results: {error}",
+        except OSError as os_err:
+            err = FileSystemError(
+                message=f"Error saving session results: {os_err}",
                 user_guidance="Check file permissions and disk space."
             )
-            display_error(error)
+            display_error(err)
 
     def validate_roll_data(self, roll_data: Dict[str, Any]) -> bool:
         """Public wrapper for roll validation (for testing).

@@ -23,10 +23,10 @@ class StorySession:
         """
         self.story_name = story_name
         self.session_date = session_date or get_session_date()
-        self.roll_results = []
-        self.character_actions = []
-        self.narrative_events = []
-        self.recruiting_pool = []
+        self.roll_results: list[dict[str, Any]] = []
+        self.character_actions: list[str] = []
+        self.narrative_events: list[str] = []
+        self.recruiting_pool: list[dict[str, Any]] = []
 
     def add_roll_result(self, roll_data: Optional[Dict[str, Any]] = None, **kwargs):
         """

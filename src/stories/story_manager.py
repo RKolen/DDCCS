@@ -6,6 +6,7 @@ story file operations, analysis, and updates.
 """
 
 from typing import Dict, List, Any, Optional
+from src.ai.ai_client import get_client_for_task
 from src.characters.consultants.character_profile import CharacterProfile
 from src.stories.story_character_loader import CharacterLoader
 from src.stories.story_file_manager import (
@@ -30,11 +31,12 @@ class StoryManager:
 
         Args:
             workspace_path: Root workspace directory path
-            ai_client: Optional AI client for character consultants
+            ai_client: Optional AI client for character consultants. When omitted
+                the task router resolves the "story_generation" profile.
             lazy_load: If True, defer character loading until explicitly requested
         """
         self.workspace_path = workspace_path
-        self.ai_client = ai_client
+        self.ai_client = ai_client or get_client_for_task("story_generation")
         self.stories_path = workspace_path
 
         # Initialize context for story file operations

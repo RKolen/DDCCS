@@ -411,8 +411,8 @@ class CharacterCLIManager:
                     style="cyan",
                 )
         except (OSError, json.JSONDecodeError) as e:
-            error = FileSystemError(
+            err = FileSystemError(
                 message=f"Failed to update character file: {e}",
                 user_guidance="Check file permissions and ensure the JSON is valid."
             )
-            display_error(error)
+            display_error(err)

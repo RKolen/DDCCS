@@ -32,8 +32,9 @@ def _validate_required_fields(
     }
 
     # Optional fields with type validation if present
-    optional_fields = {
+    optional_fields: dict[str, Any] = {
         "nickname": (str, type(None)),
+        "model_profile": (str, type(None)),
     }
 
     # Validate required fields
@@ -235,10 +236,10 @@ if __name__ == "__main__":
             display_error(error)
             sys.exit(1)
 
-        all_valid = True
-        for file_path in json_files:
-            valid, error_list = validate_character_file(str(file_path))
-            print_validation_report(str(file_path), valid, error_list)
+        all_valid: bool = True
+        for char_path in json_files:
+            valid, error_list = validate_character_file(str(char_path))
+            print_validation_report(str(char_path), valid, error_list)
 
             if not valid:
                 all_valid = False

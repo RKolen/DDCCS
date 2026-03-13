@@ -22,7 +22,7 @@ from src.utils.errors import display_error, DnDFileNotFoundError
 
 
 def _validate_required_fields(data: Dict[str, Any]) -> List[str]:
-    errors = []
+    errors: List[str] = []
     required_fields = {"party_members": list, "last_updated": str}
     for field, expected_type in required_fields.items():
         if field not in data:
@@ -36,7 +36,7 @@ def _validate_required_fields(data: Dict[str, Any]) -> List[str]:
 
 
 def _validate_party_members(data: Dict[str, Any]) -> List[str]:
-    errors = []
+    errors: List[str] = []
     members = data.get("party_members", [])
     if not isinstance(members, list):
         return errors
@@ -59,7 +59,7 @@ def _validate_party_members(data: Dict[str, Any]) -> List[str]:
 def _validate_party_cross_reference(
     data: Dict[str, Any], characters_dir: Optional[str]
 ) -> List[str]:
-    errors = []
+    errors: List[str] = []
     members = data.get("party_members", [])
     if (
         not isinstance(members, list)
@@ -166,8 +166,8 @@ if __name__ == "__main__":
             PARTY_FILE = sys.argv[1]
 
         # Auto-detect characters directory for cross-reference
-        CHARACTERS_PATH = get_characters_dir()
-        if not file_exists(CHARACTERS_PATH):
+        CHARACTERS_PATH: Optional[str] = get_characters_dir()
+        if CHARACTERS_PATH and not file_exists(CHARACTERS_PATH):
             CHARACTERS_PATH = None
 
         main_valid, main_errors = validate_party_file(PARTY_FILE, CHARACTERS_PATH)
@@ -185,8 +185,8 @@ if __name__ == "__main__":
             print("Looking for current_party.json in game_data/current_party/")
             sys.exit(1)
 
-        MAIN_CHARACTERS_DIR = get_characters_dir()
-        if not file_exists(MAIN_CHARACTERS_DIR):
+        MAIN_CHARACTERS_DIR: Optional[str] = get_characters_dir()
+        if MAIN_CHARACTERS_DIR and not file_exists(MAIN_CHARACTERS_DIR):
             MAIN_CHARACTERS_DIR = None
 
         main_valid, main_errors = validate_party_file(PARTY_FILE, MAIN_CHARACTERS_DIR)

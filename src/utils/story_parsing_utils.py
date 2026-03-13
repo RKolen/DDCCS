@@ -5,7 +5,7 @@ Utility functions for extracting information from story markdown files.
 """
 
 import re
-from typing import Dict, List
+from typing import Dict, List, Any
 
 def extract_character_actions(content: str, character_names: List[str]) -> Dict[str, List[str]]:
     """
@@ -18,7 +18,7 @@ def extract_character_actions(content: str, character_names: List[str]) -> Dict[
     Returns:
         Dictionary mapping character names to their actions
     """
-    actions = {}
+    actions: dict[str, Any] = {}
 
     # Look for Character Action Log sections
     action_pattern = (

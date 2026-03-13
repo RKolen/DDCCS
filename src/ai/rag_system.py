@@ -24,19 +24,10 @@ import re
 from src.utils.file_io import load_json_file, save_json_file
 from src.utils.errors import display_error, DnDError
 from src.utils.terminal_display import print_warning
+from src.config.config_loader import load_config
+from src.items.item_registry import ItemRegistry
 
-try:
-    from src.config.config_loader import load_config
-
-    CONFIG_LOADER_AVAILABLE = True
-except ImportError:
-    load_config = None
-    CONFIG_LOADER_AVAILABLE = False
-
-try:
-    from src.items.item_registry import ItemRegistry
-except ImportError:
-    ItemRegistry = None
+CONFIG_LOADER_AVAILABLE = True
 
 try:
     import requests
@@ -433,7 +424,7 @@ class WikiClient:
         Returns:
             Dict with page content or None if fetch failed
         """
-        if not SCRAPING_AVAILABLE:
+        if not SCRAPING_AVAILABLE or self.session is None:
             print(
                 "[WARNING]  Cannot fetch wiki pages: requests/beautifulsoup4 not installed"
             )
@@ -865,9 +856,11 @@ class RAGSystem:
         }
 
 
+_RAG_SYSTEM_INSTANCE: list = []  # Mutable container avoids global statement
+
+
 def get_rag_system() -> RAGSystem:
     """Get or create global RAG system instance."""
-    # Use closure to store singleton instance
-    if not hasattr(get_rag_system, "instance"):
-        get_rag_system.instance = RAGSystem()
-    return get_rag_system.instance
+    if not _RAG_SYSTEM_INSTANCE:
+        _RAG_SYSTEM_INSTANCE.append(RAGSystem())
+    return _RAG_SYSTEM_INSTANCE[0]

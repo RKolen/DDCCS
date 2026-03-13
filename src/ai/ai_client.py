@@ -7,7 +7,7 @@ import os
 import json
 import re
 import ast
-from typing import Any, Dict, List, Optional, Sequence
+from typing import Any, Dict, List, Optional
 from dataclasses import dataclass, field
 
 # Optional imports - openai for AI client
@@ -32,6 +32,8 @@ try:
     CONFIG_AVAILABLE = True
 except ImportError:
     CONFIG_AVAILABLE = False
+
+from src.ai.task_router import ModelRegistry
 
 
 class AIClient:
@@ -117,7 +119,7 @@ class AIClient:
 
     def chat_completion(
         self,
-        messages: Sequence[Dict[str, str]],
+        messages: List[Any],
         model: Optional[str] = None,
         temperature: Optional[float] = None,
         max_tokens: Optional[int] = None,
@@ -313,13 +315,36 @@ class _DefaultClientHolder:
         cls.client = None
 
 
+def get_client_for_task(
+    task_type: str,
+    character_override: Optional[str] = None,
+) -> AIClient:
+    """Return an AIClient configured for the given task type.
+
+    Uses the session-level ModelRegistry to resolve the appropriate model
+    profile.  Falls back to a plain AIClient() when the registry has not
+    been initialized or the resolved profile has no model/base_url set.
+
+    Args:
+        task_type: Task type key (e.g. "story_generation", "combat_narration").
+        character_override: Optional per-character model profile name.
+
+    Returns:
+        AIClient instance configured for the task.
+    """
+    kwargs = ModelRegistry.get_router().get_client_kwargs(task_type, character_override)
+    if kwargs:
+        return AIClient(**kwargs)
+    return _DefaultClientHolder.get_client()
+
+
 def call_ai_for_behavior_block(prompt: str) -> dict:
     """
     Calls the LLM to generate a CharacterBehavior block from a prompt.
     Returns a dict with keys: preferred_strategies, typical_reactions, "
     "speech_patterns, decision_making_style.
     """
-    client = _DefaultClientHolder.get_client()
+    client = get_client_for_task("npc_dialogue")
     # Compose messages for chat completion
     messages: List[Dict[str, str]] = [
         client.create_system_message(

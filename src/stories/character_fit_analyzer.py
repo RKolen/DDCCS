@@ -105,7 +105,7 @@ def _score_personality_fit(
 
     action_lower = action_text.lower()
     score = 0.0
-    total_factors = 0
+    total_factors: float = 0
 
     # Check personality alignment
     if personality:

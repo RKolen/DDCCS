@@ -12,14 +12,7 @@ from src.characters.consultants.class_knowledge import get_class_knowledge
 from src.characters.consultants.consultant_dc import DCCalculator
 from src.characters.consultants.consultant_story import StoryAnalyzer
 from src.characters.consultants.consultant_ai import AIConsultant
-
-# Optional imports
-try:
-    from src.ai.rag_system import get_rag_system
-    RAG_AVAILABLE = True
-except ImportError:
-    RAG_AVAILABLE = False
-    get_rag_system = None
+from src.ai.availability import RAG_AVAILABLE, get_rag_system
 
 
 class CharacterConsultant:
@@ -53,7 +46,7 @@ class CharacterConsultant:
     # ============================================================================
 
     def suggest_reaction(
-        self, situation: str, context: Dict[str, Any] = None
+        self, situation: str, context: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
         """
         Suggest how this character would react to a situation.
@@ -188,7 +181,7 @@ class CharacterConsultant:
             Dialogue suggestion string
         """
         # Use behavior.speech_patterns (nested dataclass). Fall back to class style.
-        speech_patterns = []
+        speech_patterns: list[str] = []
         if getattr(self.profile, "behavior", None):
             speech_patterns = getattr(self.profile.behavior, "speech_patterns", []) or []
 
@@ -275,7 +268,7 @@ class CharacterConsultant:
         Returns:
             Dict with item info (from custom registry or wikidot), or None if not found
         """
-        if not RAG_AVAILABLE or not get_rag_system:
+        if not RAG_AVAILABLE:
             return None
 
         try:
@@ -354,7 +347,7 @@ class CharacterConsultant:
     # ============================================================================
 
     def suggest_dc_for_action(
-        self, action_description: str, character_abilities: Dict[str, int] = None
+        self, action_description: str, character_abilities: Optional[Dict[str, int]] = None
     ) -> Dict[str, Any]:
         """
         Delegate DC calculation to DCCalculator component.
@@ -453,7 +446,7 @@ class CharacterConsultant:
         return self.story_analyzer.analyze_story_content(story_text, chapter_name)
 
     def suggest_reaction_ai(
-        self, situation: str, context: Dict[str, Any] = None
+        self, situation: str, context: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
         """
         Get AI-enhanced reaction suggestion from AIConsultant component.
@@ -473,7 +466,7 @@ class CharacterConsultant:
         )
 
     def suggest_dc_for_action_ai(
-        self, action: str, context: Dict[str, Any] = None
+        self, action: str, context: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
         """
         Get AI-enhanced DC suggestion from AIConsultant component.

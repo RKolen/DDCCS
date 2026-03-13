@@ -27,7 +27,7 @@ class NPCAgent:
         self.profile = profile
         self.ai_client = ai_client
         self._npc_ai_client = None
-        self.memory = []  # Optional: track NPC events/interactions
+        self.memory: list[str] = []  # Optional: track NPC events/interactions
 
     def get_status(self):
         """
@@ -89,6 +89,8 @@ def load_npc_from_json(json_path: Path) -> NPCProfile:
     Supports both simplified and full character profiles.
     """
     data = load_json_file(str(json_path))
+    if data is None:
+        data = {}
 
     # Get profile type (default to simplified for backward compatibility)
     profile_type = data.get("profile_type", "simplified")

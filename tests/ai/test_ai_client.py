@@ -19,7 +19,6 @@ Why we test this:
 - Verifies character-specific AI config can be saved/loaded
 """
 
-# flake8: noqa
 import os
 from tests import test_helpers
 

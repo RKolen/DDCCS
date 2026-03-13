@@ -119,6 +119,7 @@ class AIImportManager:
 **Location:** [`src/cli/dnd_consultant.py`](src/cli/dnd_consultant.py:9) lines 9-16
 
 **Current Code:**
+
 ```python
 from src.stories.enhanced_story_manager import EnhancedStoryManager
 from src.stories.story_manager import StoryManager
@@ -151,6 +152,7 @@ is even instantiated. Each import triggers its own dependency chain.
 **Location:** [`src/ai/ai_client.py`](src/ai/ai_client.py:12) lines 12-13
 
 **Current Code:**
+
 ```python
 from openai import OpenAI
 from openai.types.chat import ChatCompletionMessageParam
@@ -161,6 +163,7 @@ any module that imports `AIClient` or even `AI_AVAILABLE` triggers the full
 OpenAI library load.
 
 **Import Chain:**
+
 ```mermaid
 flowchart TD
     A[import AI_AVAILABLE] --> B[src/ai/availability.py]
@@ -176,6 +179,7 @@ flowchart TD
 **Location:** [`src/cli/cli_story_manager.py`](src/cli/cli_story_manager.py:10) lines 10-54
 
 **Current Code includes 20+ imports:**
+
 ```python
 from src.cli.party_config_manager import (...)
 from src.stories.story_workflow_orchestrator import (...)
@@ -306,6 +310,7 @@ class CLILazyLoader:
 ```
 
 **Updated dnd_consultant.py:**
+
 ```python
 """
 Main D&D Character Consultant Interface
@@ -390,12 +395,14 @@ class DDConsultantCLI:
 Modify [`src/ai/ai_client.py`](src/ai/ai_client.py:12) to defer OpenAI import:
 
 **Current approach:**
+
 ```python
 from openai import OpenAI
 from openai.types.chat import ChatCompletionMessageParam
 ```
 
 **Proposed approach:**
+
 ```python
 """
 AI Client Module - Flexible OpenAI-compatible client for LLM integration
@@ -486,6 +493,7 @@ Modify [`src/ai/availability.py`](src/ai/availability.py:10) to avoid triggering
 OpenAI import:
 
 **Current approach:**
+
 ```python
 try:
     from src.ai.ai_client import CharacterAIConfig
@@ -496,6 +504,7 @@ except ImportError:
 ```
 
 **Proposed approach:**
+
 ```python
 """Centralized AI availability check.
 
@@ -556,6 +565,7 @@ Modify [`src/cli/cli_story_manager.py`](src/cli/cli_story_manager.py:10) to use
 function-level imports for heavy dependencies:
 
 **Pattern for lazy imports in methods:**
+
 ```python
 class StoryCLIManager:
     """Manages story-related CLI operations."""
@@ -613,7 +623,7 @@ def measure_startup_time():
     start = time.perf_counter()
 
     # Simulate the import chain
-    import dnd_consultant  # noqa: F401
+    import dnd_consultant
 
     elapsed = time.perf_counter() - start
     return elapsed
@@ -624,7 +634,7 @@ def profile_imports():
     profiler = cProfile.Profile()
     profiler.enable()
 
-    import dnd_consultant  # noqa: F401
+    import dnd_consultant
 
     profiler.disable()
 
@@ -867,12 +877,14 @@ def test_ai_client():
 **Scope:** Create `CLILazyLoader` and update `dnd_consultant.py`
 
 **Files Changed:**
+
 - `src/cli/lazy_imports.py` (new)
 - `src/cli/dnd_consultant.py` (modified)
 
 **Dependencies:** None
 
 **Validation:**
+
 - Run existing test suite
 - Run startup benchmark
 - Manual CLI testing
@@ -882,11 +894,13 @@ def test_ai_client():
 **Scope:** Modify `ai_client.py` to defer OpenAI import
 
 **Files Changed:**
+
 - `src/ai/ai_client.py` (modified)
 
 **Dependencies:** Phase 1 (to avoid breaking availability check)
 
 **Validation:**
+
 - Run AI-related tests
 - Test with/without OpenAI installed
 - Test with/without API key configured
@@ -896,11 +910,13 @@ def test_ai_client():
 **Scope:** Modify `availability.py` to avoid triggering imports
 
 **Files Changed:**
+
 - `src/ai/availability.py` (modified)
 
 **Dependencies:** Phase 2
 
 **Validation:**
+
 - Run all tests
 - Test AI availability detection
 - Test CharacterAIConfig lazy loading
@@ -910,11 +926,13 @@ def test_ai_client():
 **Scope:** Convert `cli_story_manager.py` to use method-level imports
 
 **Files Changed:**
+
 - `src/cli/cli_story_manager.py` (modified)
 
 **Dependencies:** Phase 1
 
 **Validation:**
+
 - Run CLI tests
 - Test story management operations
 - Test story analysis operations
@@ -924,6 +942,7 @@ def test_ai_client():
 **Scope:** Run full test suite, update documentation
 
 **Files Changed:**
+
 - `README.md` (update startup time claims)
 - `AGENTS.md` (add lazy loading patterns)
 - `tests/performance/test_startup_benchmark.py` (new)
@@ -931,6 +950,7 @@ def test_ai_client():
 **Dependencies:** Phases 1-4
 
 **Validation:**
+
 - Full test suite pass
 - Pylint 10.00/10
 - Startup benchmark under 50ms

@@ -189,7 +189,7 @@ class TacticalAnalyzer:
         char_class = ctx.profile.get("dnd_class", "").lower()
 
         # Decision table for tactical patterns
-        tactical_checks = [
+        tactical_checks: List[Any] = [
             (
                 "ranger",
                 ["drawing his bow", "draws his bow", "bow swiftly"],

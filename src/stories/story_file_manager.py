@@ -150,11 +150,11 @@ def _create_story_template(
         if file_exists(template_path):
             template_content = read_text_file(template_path)
             # Skip first line if it's a title (starts with #)
+            if template_content is None:
+                template_content = ""
             lines = template_content.split("\n")
             if lines and lines[0].startswith("#"):
                 template_content = "\n".join(lines[1:]).lstrip()
-            if template_content is None:
-                template_content = ""
             return header + "---\n\n" + template_content
 
     # Priority 3: Default - pure narrative template

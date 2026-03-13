@@ -26,7 +26,7 @@ def _load_party_chars_from_names(
     Returns:
         Dict mapping character name to profile
     """
-    party_chars = {}
+    party_chars: dict[str, Any] = {}
     characters_dir = os.path.join(workspace_path, "game_data", "characters")
 
     if not os.path.exists(characters_dir):
@@ -124,6 +124,8 @@ def extract_context_from_stories(
                 continue
 
             content = read_text_file(story_path)
+            if content is None:
+                continue
             story_text = " ".join(content.split("\n")[:10]).lower()
 
             # Extract locations

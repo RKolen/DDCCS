@@ -153,7 +153,7 @@ def _process_hooks_workflow(ctx: StoryWorkflowContext, opt: WorkflowOptions) -> 
         return
 
     try:
-        hooks = None
+        hooks: Optional[Any] = None
 
         # Try AI-powered generation if available
         if opt.ai_client:

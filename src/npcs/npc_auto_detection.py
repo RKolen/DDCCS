@@ -93,7 +93,7 @@ def _create_fallback_profile(
     npc_name: str, role: str, error_msg: str, profile_type: str = "simplified"
 ) -> Dict[str, Any]:
     """Create a fallback NPC profile when AI generation fails."""
-    base_profile = {
+    base_profile: dict[str, Any] = {
         "name": npc_name,
         "nickname": None,
         "role": role or "NPC",

@@ -1,0 +1,39 @@
+{
+    "model_registry": {
+        "active_profile": "default",
+        "profiles": {
+            "default": {
+                "provider": "ollama",
+                "base_url": "http://localhost:11434/v1",
+                "model": "",
+                "temperature": 0.7,
+                "max_tokens": 1000,
+                "description": "Default model - set model name in config or OPENAI_MODEL env var"
+            },
+            "fast": {
+                "provider": "ollama",
+                "base_url": "http://localhost:11434/v1",
+                "model": "",
+                "temperature": 0.3,
+                "max_tokens": 500,
+                "description": "Fast model for analysis tasks - set model name in config"
+            },
+            "creative": {
+                "provider": "ollama",
+                "base_url": "http://localhost:11434/v1",
+                "model": "",
+                "temperature": 0.9,
+                "max_tokens": 2000,
+                "description": "High-creativity model for story generation - set model name in config"
+            },
+            "local": {
+                "provider": "ollama",
+                "base_url": "http://localhost:11434/v1",
+                "model": "",
+                "temperature": 0.7,
+                "max_tokens": 1000,
+                "description": "Local Ollama model - set model name to e.g. qwen3.5:27b"
+            }
+        }
+    }
+}

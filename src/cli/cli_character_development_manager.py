@@ -117,9 +117,9 @@ class CharacterDevelopmentCLIManager(BaseStoryInteractionManager):
                 series_path, story_name, character_actions
             )
             print(f"\n[SUCCESS] Character development saved: {filepath}")
-        except OSError as error:
-            error = FileSystemError(
-                message=f"Error saving character development: {error}",
+        except OSError as os_err:
+            err = FileSystemError(
+                message=f"Error saving character development: {os_err}",
                 user_guidance="Check file permissions and disk space."
             )
-            display_error(error)
+            display_error(err)

@@ -12,18 +12,14 @@ analysis when AI is not configured.
 import re
 from typing import Dict, List, Optional, Any
 
-# Optional AI import - AIClient may not be available in all environments
-try:
-    from src.ai.ai_client import AIClient
-
-    AI_AVAILABLE = True
-except (ImportError, ModuleNotFoundError):
-    AI_AVAILABLE = False
-
+from src.ai.ai_client import get_client_for_task
 from src.stories.equipment_checker import (
     check_weapon_usage_consistency,
     format_equipment_warning,
 )
+
+# Optional AI import - AIClient may not be available in all environments
+AI_AVAILABLE = True
 
 
 def _build_character_context_string(
@@ -172,7 +168,7 @@ def _get_ai_analysis(
     Returns:
         AI-generated analysis string, or None if AI is not available
     """
-    if not AI_AVAILABLE:
+    if not AI_AVAILABLE or get_client_for_task is None:
         return None
 
     # Check if AI is enabled
@@ -181,7 +177,7 @@ def _get_ai_analysis(
         return None
 
     try:
-        ai_client = AIClient()
+        ai_client = get_client_for_task("story_analysis")
         char_context = _build_character_context_string(character_name, character_traits)
         prompt = _get_prompt_for_analysis(
             analysis_type, char_context, action_text, previous_actions
@@ -514,7 +510,7 @@ def _get_batched_ai_analysis(
     Returns:
         Dict with 'reasoning', 'consistency', 'development' keys, or None if AI unavailable
     """
-    if not AI_AVAILABLE or not character_traits:
+    if not AI_AVAILABLE or not character_traits or get_client_for_task is None:
         return None
 
     # Check if AI is enabled
@@ -523,7 +519,7 @@ def _get_batched_ai_analysis(
         return None
 
     try:
-        ai_client = AIClient()
+        ai_client = get_client_for_task("story_analysis")
         char_context = _build_character_context_string(character_name, character_traits)
 
         # Build prior actions context if provided

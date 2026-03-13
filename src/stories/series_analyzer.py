@@ -138,7 +138,7 @@ class SeriesAnalyzer:
         Returns:
             List of character actions for party members
         """
-        actions = []
+        actions: List[Dict[str, str]] = []
         if "character_actions" not in story_analysis:
             return actions
 

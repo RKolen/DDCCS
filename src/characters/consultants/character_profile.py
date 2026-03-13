@@ -16,13 +16,9 @@ from src.ai.lazy_imports import AIImportManager
 
 
 # Constants for behavior generation - disabled to avoid 18s delay during loading
-try:
-    from src.validation.character_validator import validate_character_json
+from src.validation.character_validator import validate_character_json
 
-    VALIDATOR_AVAILABLE = True
-except ImportError:
-    VALIDATOR_AVAILABLE = False
-    validate_character_json = None
+VALIDATOR_AVAILABLE = True
 
 # Disable behavior generator to avoid 18+ second AI calls during character loading
 # Behavior generation is only for in-memory use and not needed during loading
@@ -283,7 +279,7 @@ class CharacterProfile:
         self._update_all_fields(data)
 
         # Validate before saving
-        if VALIDATOR_AVAILABLE and validate_character_json:
+        if VALIDATOR_AVAILABLE and validate_character_json is not None:
             is_valid, errors = validate_character_json(data, filepath)
             if not is_valid:
                 print_warning("Character profile validation failed:")

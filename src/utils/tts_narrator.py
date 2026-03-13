@@ -476,6 +476,8 @@ class MultiVoiceConfig:
         """Add a single character's voice to config."""
         try:
             profile = load_character_profile(name)
+            if profile is None:
+                return
             voice_id = cls._extract_voice_id(profile)
             if voice_id:
                 config.character_voices[name] = voice_id
@@ -508,6 +510,8 @@ class MultiVoiceConfig:
         """Add a single NPC's voice to config."""
         try:
             npc_data = load_json_file(str(npc_file))
+            if npc_data is None:
+                return
             voice_id = cls._extract_voice_id(npc_data)
             if voice_id:
                 name = npc_data.get("name")

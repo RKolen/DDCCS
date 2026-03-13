@@ -328,7 +328,7 @@ class StoryAnalyzer:
         Returns:
             Dictionary with categorized suggestions (relationships, plot_actions, etc.)
         """
-        suggestions = {
+        suggestions: dict[str, list[str]] = {
             "relationships": [],
             "plot_actions": [],
             "character_development": [],

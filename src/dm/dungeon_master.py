@@ -10,15 +10,7 @@ from pathlib import Path
 from src.characters.consultants.consultant_core import CharacterConsultant
 from src.npcs.npc_agents import NPCAgent, create_npc_agents
 from src.stories.character_loader import load_all_character_consultants
-
-# Import RAG system if available
-try:
-    from src.ai.rag_system import get_rag_system
-
-    RAG_AVAILABLE = True
-except ImportError:
-    get_rag_system = None
-    RAG_AVAILABLE = False
+from src.ai.availability import RAG_AVAILABLE, get_rag_system
 
 
 class DMConsultant:

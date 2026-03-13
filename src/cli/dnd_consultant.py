@@ -5,17 +5,20 @@ VSCode-integrated system for story management and character consultation.
 
 import argparse
 import os
-from typing import Optional
+from typing import Optional, Union
 
-from src.ai.ai_client import AIClient
+from src.ai.ai_client import get_client_for_task
 from src.ai.availability import AI_AVAILABLE
+from src.ai.task_router import ModelRegistry
 from src.cli.cli_character_manager import CharacterCLIManager
 from src.cli.cli_config import ConfigCLI
 from src.cli.cli_story_manager import StoryCLIManager
 from src.cli.cli_story_reader import StoryReaderCLI
+from src.config.config_loader import load_config
 from src.dm.dungeon_master import DMConsultant
 from src.stories.enhanced_story_manager import EnhancedStoryManager
 from src.stories.story_manager import StoryManager
+from src.utils.cli_utils import display_selection_menu
 from src.utils.errors import DnDError, handle_errors, wrap_exception, display_error
 
 
@@ -30,7 +33,7 @@ class DDConsultantCLI:
         ai_client = None
         if AI_AVAILABLE:
             try:
-                ai_client = AIClient()
+                ai_client = get_client_for_task("character_consultation")
             except (ValueError, OSError) as e:
                 print(f"[WARNING] AI initialization failed: {e}")
                 print("[INFO] Story generation will use templates only.")
@@ -40,6 +43,7 @@ class DDConsultantCLI:
         # explicitly provided so the CLI's --campaign flag enables the richer
         # per-campaign behavior without changing the default runtime.
         # Enable lazy loading to improve startup time.
+        self.story_manager: Union[StoryManager, EnhancedStoryManager]
         if campaign_name:
             self.story_manager = EnhancedStoryManager(
                 self.workspace_path,
@@ -51,8 +55,14 @@ class DDConsultantCLI:
             self.story_manager = StoryManager(
                 self.workspace_path, ai_client=ai_client, lazy_load=True
             )
+        dm_ai_client = None
+        if AI_AVAILABLE:
+            try:
+                dm_ai_client = get_client_for_task("dc_evaluation")
+            except (ValueError, OSError):
+                pass
         self.dm_consultant = DMConsultant(
-            self.workspace_path, ai_client=None, lazy_load=True
+            self.workspace_path, ai_client=dm_ai_client, lazy_load=True
         )
 
         # Initialize manager modules
@@ -88,6 +98,8 @@ class DDConsultantCLI:
             elif choice == "4":
                 config_cli = ConfigCLI()
                 config_cli.run_config_menu()
+            elif choice == "5":
+                self._switch_model_profile_menu()
             elif choice == "0":
                 print("Goodbye! May your adventures be epic!")
                 break
@@ -111,14 +123,49 @@ class DDConsultantCLI:
 
     def _show_main_menu(self):
         """Display the main menu."""
+        active = ModelRegistry.get_active_profile_name()
         print("\n[MENU] MAIN MENU")
         print("-" * 30)
         print("1. Manage Characters")
         print("2. Manage Stories")
         print("3. Read Stories")
         print("4. Configure Settings")
+        print(f"5. Switch Model Profile  [active: {active}]")
         print("0. Exit")
         print()
+
+    def _switch_model_profile_menu(self) -> None:
+        """Interactive menu for switching the active model profile."""
+        profiles = ModelRegistry.list_profiles()
+        if not profiles:
+            print("[INFO] Model registry not initialized. Run with a config file"
+                  " to enable profiles.")
+            return
+
+        active = ModelRegistry.get_active_profile_name()
+        items = []
+        names = []
+        for name, prof in profiles.items():
+            marker = " (active)" if name == active else ""
+            desc = prof.description or f"{prof.provider} / {prof.model or 'env default'}"
+            items.append(f"{name}{marker}  -  {desc}")
+            names.append(name)
+
+        idx = display_selection_menu(
+            items,
+            title="[SETTINGS] Switch Model Profile",
+            prompt="Select profile",
+            allow_zero_back=True,
+        )
+        if idx is None:
+            print("No change.")
+            return
+
+        chosen = names[idx]
+        if ModelRegistry.switch_profile(chosen):
+            print(f"[OK] Active model profile switched to: {chosen}")
+        else:
+            print(f"[ERROR] Profile '{chosen}' not found in registry.")
 
 
 def main():
@@ -136,11 +183,23 @@ def main():
         choices=["interactive", "analyze"],
     )
     parser.add_argument("--story", help="Story file to analyze")
+    parser.add_argument(
+        "--model",
+        metavar="PROFILE",
+        help="Activate a named model profile for this session (e.g. local, creative)",
+    )
 
     args = parser.parse_args()
 
     workspace = args.workspace or os.getcwd()
     campaign = args.campaign or ""
+
+    # Initialize model registry from config (session-only; never writes back to disk)
+    _cfg = load_config()
+    ModelRegistry.initialize(_cfg.model_registry)
+    if args.model:
+        if not ModelRegistry.switch_profile(args.model):
+            print(f"[WARNING] Unknown model profile: '{args.model}'. Using default.")
 
     @handle_errors(OSError, ValueError, KeyError, AttributeError, default_return=None)
     def initialize_system(workspace: str, campaign: str):

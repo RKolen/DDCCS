@@ -9,7 +9,7 @@ import importlib
 
 
 # Rich library availability and components
-rich_available = False
+rich_available: bool = False
 rich_components: Dict[str, Any] = {}
 
 try:
@@ -35,7 +35,7 @@ except ImportError:
     pass
 
 
-def get_rich_console() -> Optional[Any]:
+def get_rich_console() -> Any:
     """Get a Rich Console instance if available.
 
     Returns:
@@ -46,7 +46,7 @@ def get_rich_console() -> Optional[Any]:
     return None
 
 
-def get_rich_component(name: str) -> Optional[Any]:
+def get_rich_component(name: str) -> Any:
     """Get a Rich component class by name.
 
     Args:
@@ -85,7 +85,7 @@ def import_validator() -> Tuple[bool, Optional[object]]:
 
 # TTS narrator availability and components
 # Prefer Piper TTS for multi-voice support
-tts_available = False
+tts_available: bool = False
 tts_components: Dict[str, Any] = {}
 
 try:

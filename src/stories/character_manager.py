@@ -128,5 +128,5 @@ class CharacterManager(CharacterLoadingMixin):
         )
         # Update known spells after reload
         if success:
-            self._update_known_spells()
+            self._update_known_abilities()
         return success

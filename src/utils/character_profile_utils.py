@@ -209,3 +209,27 @@ def list_character_names(
             continue
 
     return names
+
+
+def get_character_model_profile(
+    character_name: str, workspace_path: Optional[str] = None
+) -> Optional[str]:
+    """Get the model_profile override for a character, if set.
+
+    Reads the optional ``model_profile`` field from a character JSON file.
+    Returns None when the field is absent or the character cannot be loaded.
+
+    Args:
+        character_name: Name of the character to check.
+        workspace_path: Optional workspace root path.
+
+    Returns:
+        Model profile name string, or None if not set.
+    """
+    profile = load_character_profile(character_name, workspace_path)
+    if profile is None:
+        return None
+    value = profile.get("model_profile")
+    if isinstance(value, str):
+        return value
+    return None

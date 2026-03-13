@@ -8,6 +8,8 @@ Can optionally generate AI-based ASCII art from character backstory.
 
 from typing import Optional, Dict, Any
 
+from src.ai.ai_client import get_client_for_task
+from src.ai.availability import AI_AVAILABLE
 from src.utils.optional_imports import (
     rich_available,
     get_rich_console,
@@ -35,15 +37,6 @@ CLASS_ICONS = {
     "wizard": "[?]",
 }
 Columns = get_rich_component("Columns")
-
-# Lazy import for AI to avoid circular dependencies
-try:
-    from src.ai.availability import AI_AVAILABLE
-    from src.ai.ai_client import AIClient
-except ImportError:
-    AI_AVAILABLE = False
-    AIClient = None
-
 console = get_rich_console()
 
 
@@ -122,11 +115,11 @@ def _generate_ascii_from_backstory(
     Returns:
         Generated ASCII art or None if generation fails
     """
-    if not AI_AVAILABLE or not AIClient:
+    if not AI_AVAILABLE or get_client_for_task is None:
         return None
 
     try:
-        client = AIClient()
+        client = get_client_for_task("character_consultation")
         prompt = f"""Generate a simple ASCII art portrait (max 10 lines, max 40 chars wide)
 representing this D&D character. Focus on a key visual element from their backstory.
 Use only basic ASCII characters. Keep it simple and recognizable.

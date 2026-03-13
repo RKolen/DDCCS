@@ -308,9 +308,9 @@ if __name__ == "__main__":
 
         all_valid = True
 
-        for npc_filepath in sorted(json_files):
-            is_valid, file_errors = validate_npc_file(str(npc_filepath))
-            print_validation_report(str(npc_filepath), is_valid, file_errors)
+        for npc_file in sorted(json_files):
+            is_valid, file_errors = validate_npc_file(str(npc_file))
+            print_validation_report(str(npc_file), is_valid, file_errors)
 
             if not is_valid:
                 all_valid = False

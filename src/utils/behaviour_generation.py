@@ -15,17 +15,14 @@ Design notes:
 from typing import Dict, List, Tuple, TYPE_CHECKING
 import logging
 
+from src.ai.ai_client import call_ai_for_behavior_block
+
 if TYPE_CHECKING:
     # Import for type checking only; avoid runtime import to prevent cyclic
     # dependency with src.characters.consultants.character_profile.
     from src.characters.consultants.character_profile import CharacterBehavior
-try:
-    from src.ai.ai_client import call_ai_for_behavior_block
 
-    AI_AVAILABLE = True
-except ImportError:
-    call_ai_for_behavior_block = None
-    AI_AVAILABLE = False
+AI_AVAILABLE = True
 
 LOGGER = logging.getLogger(__name__)
 
@@ -167,7 +164,7 @@ def generate_behavior_from_personality(
             CharacterBehavior: dataclass populated from AI output or heuristic
     """
     behavior_dict = None
-    if AI_AVAILABLE and call_ai_for_behavior_block is not None:
+    if AI_AVAILABLE:
         try:
             prompt = (
                 f"Given the following D&D character profile fields:\n"

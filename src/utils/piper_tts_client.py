@@ -53,8 +53,7 @@ class PiperTTSClient:
         """
         self.executable_path = executable_path
         self.default_speaker = default_speaker
-
-        # Set default voices directory to game_data/piper/voices if not provided
+        self.voices_directory: Optional[Path] = None
         if voices_directory is None:
             # Try to find game_data relative to current working directory
             game_data = Path.cwd() / "game_data" / "piper" / "voices"
@@ -197,6 +196,8 @@ class PiperTTSClient:
         else:
             output_path = Path(output_path)
 
+        if self.voices_directory is None:
+            return None
         model_path = self.voices_directory / f"{voice_id}.onnx"
 
         # Build command

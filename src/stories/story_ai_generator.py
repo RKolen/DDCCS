@@ -487,7 +487,7 @@ def _parse_session_analysis(analysis: str, party_names: list) -> Dict[str, Any]:
     # party_names used for potential context in future enhancements
     _ = party_names
 
-    results = {
+    results: dict[str, Any] = {
         "character_actions": [],
         "narrative_events": [],
         "suggested_rolls": [],
@@ -709,7 +709,7 @@ def _parse_hooks_analysis(
     Returns:
         Dict with organized hooks data
     """
-    results = {
+    results: dict[str, Any] = {
         "unresolved_threads": [],
         "character_specific_hooks": {},
         "next_session_ideas": [],

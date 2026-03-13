@@ -5,14 +5,14 @@ Handles validation of combat actions against character profiles to ensure
 consistency with established personalities and behaviors.
 """
 
-from typing import Dict, List, Protocol, Any
+from typing import Dict, List, Protocol, Any, Optional
 
 
 class ConsultantProtocol(Protocol):
     """Protocol for objects that can provide character reactions (ConsultantLike)."""
 
     def suggest_reaction(
-        self, situation: str, context: Dict[str, Any] = None
+        self, situation: str, context: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
         """Return a reaction dict to a given situation."""
 
@@ -23,10 +23,10 @@ class ConsultantProtocol(Protocol):
 class ConsistencyChecker:
     """Checks combat narrative consistency with character profiles."""
 
-    def __init__(self, character_consultants: Dict[str, ConsultantProtocol]):
+    def __init__(self, character_consultants: Dict[str, Any]):
         self.consultants = character_consultants
 
-    def get_consultants(self) -> Dict[str, ConsultantProtocol]:
+    def get_consultants(self) -> Dict[str, Any]:
         """Get the character consultants dictionary."""
         return self.consultants
 

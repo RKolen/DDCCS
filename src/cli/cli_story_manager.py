@@ -31,7 +31,7 @@ from src.stories.session_results_manager import (
 from src.stories.character_action_analyzer import extract_character_actions
 from src.cli.story_amender_cli_handler import StoryAmenderCLIHandler
 from src.characters.character_consistency import create_character_development_file
-from src.ai.ai_client import AIClient
+from src.ai.ai_client import get_client_for_task
 from src.utils.errors import display_error, DnDError
 from src.utils.cli_utils import require_party, display_selection_menu, require_story_with_content
 from src.utils.file_io import read_text_file
@@ -698,7 +698,7 @@ class StoryCLIManager:
             if not self.story_manager.ai_client:
                 print("\n[INFO] Initializing AI client...")
                 try:
-                    self.story_manager.ai_client = AIClient()
+                    self.story_manager.ai_client = get_client_for_task("story_generation")
                     print("[SUCCESS] AI client ready")
                 except (ImportError, ValueError) as e:
                     error = DnDError(
@@ -787,6 +787,29 @@ class StoryCLIManager:
             story_path, display_name, story_prompt, campaign_dir
         )
 
+    def _setup_session_generation(
+        self, series_name: str, stories: List[str]
+    ) -> Optional[tuple]:
+        """Select story, load content and party.
+
+        Returns:
+            Tuple of (story_name, campaign_path, story_content, party_characters) or None.
+        """
+        selected_story = self._select_story_from_list(stories, series_name)
+        if not selected_story:
+            return None
+        story_file, story_name, campaign_path = selected_story
+        story_path = os.path.join(campaign_path, story_file)
+        story_content: str = read_text_file(story_path) or ""
+        if not require_story_with_content(story_content, story_file):
+            return None
+        party_members = require_party(self.workspace_path, series_name)
+        if not party_members:
+            return None
+        print(f"\nParty members: {', '.join(party_members)}")
+        party_characters = load_party_with_profiles(campaign_path, self.workspace_path)
+        return story_name, campaign_path, story_content, party_characters
+
     def _generate_session_results_for_story(self, series_name: str, stories: List[str]):
         """Generate session results for a story in the series.
 
@@ -795,37 +818,15 @@ class StoryCLIManager:
             stories: List of story files in the series
         """
         try:
-            selected_story = self._select_story_from_list(stories, series_name)
-            if not selected_story:
+            ctx = self._setup_session_generation(series_name, stories)
+            if not ctx:
                 return
 
-            story_file, story_name, campaign_path = selected_story
+            story_name, campaign_path, story_content, party_characters = ctx
 
-            # Load story content
-            story_path = os.path.join(campaign_path, story_file)
-            story_content = read_text_file(story_path)
-
-            if not require_story_with_content(story_content, story_file):
-                return
-
-            # Load party members
-            party_members = require_party(self.workspace_path, series_name)
-            if not party_members:
-                return
-
-            print(f"\nParty members: {', '.join(party_members)}")
-
-            # Load party with profiles for AI context
-            party_characters = load_party_with_profiles(
-                campaign_path, self.workspace_path
-            )
-
-            # Generate session results using AI (same as automated generation)
             print("\n[INFO] Analyzing story and generating session results...")
-
             session = StorySession(story_name, get_session_date())
 
-            # Use AI to analyze story if available
             if self.story_manager.ai_client:
                 self._populate_session_with_ai_analysis(
                     session, story_content, party_characters
@@ -833,25 +834,24 @@ class StoryCLIManager:
             else:
                 print_warning("AI not available. Using basic session structure.")
 
-            # Save session results
             try:
                 filepath = create_session_results_file(campaign_path, session)
                 print(f"\n[SUCCESS] Session results saved: {filepath}")
-            except OSError as error:
-                error = DnDError(
-                    message=f"Error saving session results: {error}",
+            except OSError as os_err:
+                err = DnDError(
+                    message=f"Error saving session results: {os_err}",
                     user_guidance="Check that you have write permissions to the campaign folder."
                 )
-                display_error(error)
+                display_error(err)
 
         except ValueError:
             print("Invalid input.")
         except (OSError, AttributeError) as e:
-            error = DnDError(
+            err = DnDError(
                 message=f"Failed to generate session results: {e}",
                 user_guidance="Check your AI configuration and try again."
             )
-            display_error(error)
+            display_error(err)
 
     def _generate_character_development_for_story(
         self, series_name: str, stories: List[str]
@@ -871,7 +871,7 @@ class StoryCLIManager:
 
             # Load story content
             story_path = os.path.join(campaign_path, story_file)
-            story_content = read_text_file(story_path)
+            story_content: str = read_text_file(story_path) or ""
 
             if not require_story_with_content(story_content, story_file):
                 return

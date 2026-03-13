@@ -260,7 +260,7 @@ def extract_known_spells_from_characters(characters: List[dict]) -> Set[str]:
     Returns:
         Set of known spell names
     """
-    known_spells = set()
+    known_spells: set[str] = set()
 
     for char in characters:
         # From character sheet if available

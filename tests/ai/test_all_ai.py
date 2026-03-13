@@ -24,6 +24,7 @@ def run_all_ai_tests():
         ("test_rag_system", "RAG System Tests"),
         ("test_behavior_generation_ai_mock", "Behavior Generation (Mock)"),
         ("test_availability", "AI Availability Tests"),
+        ("test_task_router", "Task Router Tests"),
     ]
 
 

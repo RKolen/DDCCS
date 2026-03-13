@@ -7,15 +7,7 @@ Handles story analysis and combat conversion operations.
 import os
 from typing import Dict, Any, List, Optional
 
-# Optional AI client import
-try:
-    from src.ai.ai_client import AIClient
-
-    AI_CLIENT_AVAILABLE = True
-except ImportError:
-    AIClient = None
-    AI_CLIENT_AVAILABLE = False
-
+from src.ai.ai_client import get_client_for_task
 from src.combat.combat_narrator import CombatNarrator
 from src.cli.dnd_cli_helpers import (
     get_multi_line_combat_input,
@@ -34,6 +26,9 @@ from src.utils.string_utils import truncate_at_sentence, get_session_date, get_t
 from src.utils.character_profile_utils import load_character_profiles
 from src.utils.cli_utils import display_selection_menu
 from src.cli.cli_story_config_helper import extract_context_from_stories
+
+# Optional AI client import
+AI_CLIENT_AVAILABLE = True
 
 
 class StoryAnalysisCLI:
@@ -303,9 +298,9 @@ class StoryAnalysisCLI:
     def _ensure_ai_client_initialized(self):
         """Ensure AI client is initialized, or set to None if unavailable."""
         if not hasattr(self, "ai_client") or self.ai_client is None:
-            if AI_CLIENT_AVAILABLE:
+            if AI_CLIENT_AVAILABLE and get_client_for_task is not None:
                 try:
-                    self.ai_client = AIClient()
+                    self.ai_client = get_client_for_task("combat_narration")
                 except (AttributeError, ValueError) as e:
                     print_warning(f"Could not initialize AI client: {e}")
                     print("   Using fallback mode...")
@@ -455,7 +450,7 @@ class StoryAnalysisCLI:
 
         print("[INFO] Analyzing stories...")
         series_path = get_campaign_path(series_name, self.workspace_path)
-        all_actions = {}
+        all_actions: dict[str, Any] = {}
 
         for story_file in series_stories:
             print(f"  - Processing {story_file}...")

@@ -19,6 +19,47 @@ class StoryAmenderCLIHandler:
         self.workspace_path = workspace_path
         self.load_profiles_fn = load_profiles_fn
 
+    def _load_amendment_context(
+        self, selected: list, series_name: str
+    ) -> Optional[tuple]:
+        """Load story content and party info for amendment.
+
+        Returns:
+            Tuple of (story_path, content, party, target_char, profiles) or None.
+        """
+        story_path = os.path.join(selected[2], selected[0])
+        content = read_text_file(story_path)
+        if content is None or not require_story_with_content(content, selected[0]):
+            return None
+        party = require_party(self.workspace_path, series_name)
+        if not party:
+            return None
+        target_char = self._select_character(party)
+        if not target_char:
+            return None
+        profiles = self.load_profiles_fn(party, selected[2])
+        return story_path, content, party, target_char, profiles
+
+    def _run_amendment_analysis(self, ctx: tuple) -> Optional[list]:
+        """Run the amendment analysis returning suggestions or None if nothing found."""
+        _, content, _party, target_char, profiles = ctx
+        print(f"\n[INFO] Identifying actions for {target_char}...")
+        actions = story_amender.identify_character_actions(content, target_char)
+        if not actions:
+            print(f"[INFO] No actions found for {target_char} in this story.")
+            return None
+        print("[INFO] Analyzing character fits and suggesting amendments...")
+        plot_map = {
+            name: profile.get("major_plot_actions", [])
+            for name, profile in profiles.items()
+        }
+        analyzed = story_amender.analyze_amendments(actions, target_char, profiles, plot_map)
+        suggestions = [a for a in analyzed if "suggestion" in a]
+        if not suggestions:
+            print("\n[INFO] No character reassignment suggestions found.")
+            return None
+        return suggestions
+
     def handle_amendment(self, series_name: str, stories: List[str], select_story_fn):
         """Interactive story character action amendment."""
         try:
@@ -26,45 +67,14 @@ class StoryAmenderCLIHandler:
             if not selected:
                 return
 
-            # Load story and party data
-            story_path = os.path.join(selected[2], selected[0])
-            content = read_text_file(story_path)
-
-            if not require_story_with_content(content, selected[0]):
+            ctx = self._load_amendment_context(selected, series_name)
+            if ctx is None:
                 return
 
-            party = require_party(self.workspace_path, series_name)
-            if not party:
-                return
-
-            target_char = self._select_character(party)
-            if not target_char:
-                return
-
-            profiles = self.load_profiles_fn(party, selected[2])
-
-            print(f"\n[INFO] Identifying actions for {target_char}...")
-            actions = story_amender.identify_character_actions(content, target_char)
-
-            if not actions:
-                print(f"[INFO] No actions found for {target_char} in this story.")
-                return
-
-            print("[INFO] Analyzing character fits and suggesting amendments...")
-            analyzed = story_amender.analyze_amendments(
-                actions,
-                target_char,
-                profiles,
-                {name: profile.get("major_plot_actions", []) for name, profile in profiles.items()}
-            )
-
-            suggestions = [a for a in analyzed if "suggestion" in a]
-
-            if not suggestions:
-                print("\n[INFO] No character reassignment suggestions found.")
-                return
-
-            self._process_suggestions(suggestions, story_path)
+            story_path = ctx[0]
+            suggestions = self._run_amendment_analysis(ctx)
+            if suggestions is not None:
+                self._process_suggestions(suggestions, story_path)
 
         except (ValueError, OSError) as e:
             error = DnDError(

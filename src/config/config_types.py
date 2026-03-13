@@ -5,8 +5,56 @@ Dataclasses for type-safe configuration management.
 """
 
 from dataclasses import dataclass, field
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional, Union
 from pathlib import Path
+
+
+@dataclass
+class ModelProfile:
+    """A named AI model configuration profile."""
+
+    name: str = ""
+    provider: str = "openai"  # "openai", "ollama", "openrouter"
+    base_url: str = ""
+    model: str = ""
+    temperature: float = 0.7
+    max_tokens: int = 1000
+    description: str = ""
+
+
+@dataclass
+class ModelRegistryConfig:
+    """Registry of available model profiles."""
+
+    active_profile: str = "default"
+    profiles: Dict[str, ModelProfile] = field(default_factory=dict)
+
+    def get_profile(self, name: str) -> Optional[ModelProfile]:
+        """Return a profile by name, falling back to the active profile.
+
+        Args:
+            name: Profile name to look up.
+
+        Returns:
+            The matching ModelProfile, or None if not found.
+        """
+        return self.profiles.get(name if name else self.active_profile)
+
+    def get_active_profile(self) -> Optional[ModelProfile]:
+        """Return the currently active ModelProfile.
+
+        Returns:
+            The active ModelProfile, or None if the registry is empty.
+        """
+        return self.profiles.get(self.active_profile)
+
+    def list_profile_names(self) -> List[str]:
+        """Return a sorted list of available profile names.
+
+        Returns:
+            Sorted list of profile name strings.
+        """
+        return sorted(self.profiles.keys())
 
 
 @dataclass
@@ -140,6 +188,7 @@ class DnDConfig:
     rag: RAGConfig = field(default_factory=RAGConfig)
     display: DisplayConfig = field(default_factory=DisplayConfig)
     paths: PathConfig = field(default_factory=PathConfig)
+    model_registry: ModelRegistryConfig = field(default_factory=ModelRegistryConfig)
 
     # Metadata
     config_file_path: Optional[Path] = None
@@ -203,6 +252,7 @@ class DnDConfig:
 
         # Navigate to the correct config section
         section = parts[0]
+        obj: Optional[Union[AIConfig, RAGConfig, DisplayConfig, PathConfig]] = None
         if section == "ai":
             obj = self.ai
         elif section == "rag":
@@ -238,14 +288,15 @@ class DnDConfig:
 
         # Navigate to the correct config section
         section = parts[0]
+        obj2: Optional[Union[AIConfig, RAGConfig, DisplayConfig, PathConfig]] = None
         if section == "ai":
-            obj = self.ai
+            obj2 = self.ai
         elif section == "rag":
-            obj = self.rag
+            obj2 = self.rag
         elif section == "display":
-            obj = self.display
+            obj2 = self.display
         elif section == "paths":
-            obj = self.paths
+            obj2 = self.paths
         else:
             return
 
@@ -254,14 +305,16 @@ class DnDConfig:
             return
 
         attr = parts[1]
-        if hasattr(obj, attr):
-            setattr(obj, attr, value)
+        if hasattr(obj2, attr):
+            setattr(obj2, attr, value)
             self.mark_dirty()
 
 
 # Convenience exports
 __all__ = [
     "AIConfig",
+    "ModelProfile",
+    "ModelRegistryConfig",
     "RAGConfig",
     "DisplayConfig",
     "PathConfig",

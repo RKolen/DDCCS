@@ -23,7 +23,7 @@ Usage:
 
 import sys
 import argparse
-from typing import Dict, Tuple
+from typing import Dict, Tuple, Optional
 from ..utils.file_io import get_json_files_in_directory, file_exists
 from ..utils.terminal_display import print_warning
 from ..utils.path_utils import (
@@ -189,8 +189,8 @@ def validate_party() -> Tuple[bool, int, int]:
         return (True, 0, 0)
 
     # Get characters directory for cross-reference
-    characters_dir = get_characters_dir()
-    if not file_exists(characters_dir):
+    characters_dir: Optional[str] = get_characters_dir()
+    if characters_dir and not file_exists(characters_dir):
         characters_dir = None
 
     is_valid, errors = validate_party_file(party_file, characters_dir)

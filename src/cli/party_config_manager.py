@@ -41,6 +41,8 @@ def load_current_party(
     if file_exists(config_path):
         try:
             data = load_json_file(config_path)
+            if data is None:
+                return []
             return data.get("party_members", [])
         except (OSError, ValueError) as e:
             print(f"Warning: Could not load party configuration: {e}")
@@ -108,7 +110,7 @@ def _find_character_profile_by_name(
                 filepath = os.path.join(characters_dir, filename)
                 profile = load_json_file(filepath)
                 # Match by the "name" field in the JSON
-                if profile.get("name") == member_name:
+                if profile is not None and profile.get("name") == member_name:
                     return profile
             except (json.JSONDecodeError, OSError):
                 continue
@@ -135,6 +137,8 @@ def load_party_with_profiles(campaign_dir: str, workspace_path: str) -> Dict[str
             return party_dict
 
         party_config = load_json_file(party_config_path)
+        if party_config is None:
+            return party_dict
         party_members = party_config.get("party_members", [])
 
         # Load character profiles

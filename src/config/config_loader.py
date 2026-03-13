@@ -17,6 +17,8 @@ from src.config.config_types import (
     AIConfig,
     DisplayConfig,
     DnDConfig,
+    ModelProfile,
+    ModelRegistryConfig,
     PathConfig,
     RAGConfig,
 )
@@ -153,7 +155,78 @@ def _merge_config(base: DnDConfig, override: Dict[str, Any]) -> DnDConfig:
             ),
         )
 
+    # Model registry config
+    if "model_registry" in override:
+        base.model_registry = _parse_model_registry(override["model_registry"])
+
     return base
+
+
+def _parse_model_registry(data: Dict[str, Any]) -> ModelRegistryConfig:
+    """Parse a model_registry dict into a ModelRegistryConfig.
+
+    Args:
+        data: Raw dict from config file.
+
+    Returns:
+        Populated ModelRegistryConfig.
+    """
+    profiles: Dict[str, ModelProfile] = {}
+    for name, profile_data in data.get("profiles", {}).items():
+        profiles[name] = ModelProfile(
+            name=name,
+            provider=profile_data.get("provider", "openai"),
+            base_url=profile_data.get("base_url", ""),
+            model=profile_data.get("model", ""),
+            temperature=float(profile_data.get("temperature", 0.7)),
+            max_tokens=int(profile_data.get("max_tokens", 1000)),
+            description=profile_data.get("description", ""),
+        )
+    return ModelRegistryConfig(
+        active_profile=data.get("active_profile", "default"),
+        profiles=profiles,
+    )
+
+
+def _apply_env_model_profiles(
+    config: DnDConfig,
+    get_env,
+    get_env_float,
+    get_env_int,
+) -> None:
+    """Apply model registry profile overrides from environment variables.
+
+    Args:
+        config: DnDConfig to update in-place.
+        get_env: Callable to read a string env var.
+        get_env_float: Callable to read a float env var with default.
+        get_env_int: Callable to read an int env var with default.
+    """
+    creative_model = get_env("AI_CREATIVE_MODEL")
+    creative_base_url = get_env("AI_CREATIVE_BASE_URL")
+    if creative_model or creative_base_url:
+        config.model_registry.profiles["creative"] = ModelProfile(
+            name="creative",
+            provider="openai",
+            base_url=creative_base_url or "",
+            model=creative_model or "",
+            temperature=get_env_float("AI_CREATIVE_TEMPERATURE", 0.9),
+            max_tokens=get_env_int("AI_CREATIVE_MAX_TOKENS", 2000),
+            description="Creative model for story writing and combat narration",
+        )
+
+    fast_model = get_env("AI_FAST_MODEL")
+    fast_base_url = get_env("AI_FAST_BASE_URL")
+    if fast_model or fast_base_url:
+        config.model_registry.profiles["fast"] = ModelProfile(
+            name="fast",
+            provider="openai",
+            base_url=fast_base_url or "",
+            model=fast_model or "",
+            temperature=get_env_float("AI_FAST_TEMPERATURE", 0.3),
+            max_tokens=get_env_int("AI_FAST_MAX_TOKENS", 500),
+            description="Fast model for analysis and evaluation tasks",
+        )
 
 
 def _apply_env_overrides(config: DnDConfig, prefix: str = "") -> DnDConfig:
@@ -214,6 +287,8 @@ def _apply_env_overrides(config: DnDConfig, prefix: str = "") -> DnDConfig:
 
     config.ai.temperature = get_env_float("AI_TEMPERATURE", config.ai.temperature)
     config.ai.max_tokens = get_env_int("AI_MAX_TOKENS", config.ai.max_tokens)
+
+    _apply_env_model_profiles(config, get_env, get_env_float, get_env_int)
 
     # RAG configuration
     config.rag.enabled = get_env_bool("RAG_ENABLED", config.rag.enabled)
@@ -304,12 +379,12 @@ def save_config(config: DnDConfig, path: Optional[Path] = None) -> bool:
         config.mark_clean()
         return True
 
-    except OSError as error:
-        error = FileSystemError(
-            message=f"Failed to save config: {error}",
+    except OSError as os_error:
+        fs_error = FileSystemError(
+            message=f"Failed to save config: {os_error}",
             user_guidance="Check file permissions and disk space."
         )
-        display_error(error)
+        display_error(fs_error)
         return False
 
 

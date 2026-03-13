@@ -771,7 +771,7 @@ class StoryUpdater:
         if os.path.exists(hooks_path):
             print(f"[INFO] Story hooks file already exists, regenerating: {filename}")
 
-        hooks = None
+        hooks: Optional[Any] = None
         if hooks_config.get("ai_client"):
             party_characters = load_party_with_profiles(
                 hooks_config["campaign_dir"], hooks_config["workspace_path"]
