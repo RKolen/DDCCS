@@ -3,15 +3,10 @@
 This directory contains tests for the D&D Character Consultant
 System. Tests mirror the modular src/ directory structure.
 
-## Important Notes
-
-- **Tests are NOT committed to git** - They remain local only
-- Tests stay git-ignored until formal test framework is added
-- This prevents accidental commits of development tests
-
 ## Purpose
 
 Store testing scripts created during development to:
+
 - Verify feature functionality
 - Test integration between components
 - Validate end-to-end workflows
@@ -41,7 +36,7 @@ It is not possible to run a single test with a command due to pathing
 of the test_helpers. A workaround is to go into the test_all_[categoryname].py
 and uncomment all tests you dont want to run. Example in test_all_characters.py:
 `
-    # Define all tests to run
+# Define all tests to run
     tests = [
       #  ("test_character_profile", "Character Profile Tests"),
       #  ("test_class_knowledge", "Class Knowledge Tests"),

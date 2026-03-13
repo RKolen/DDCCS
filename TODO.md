@@ -1,11 +1,22 @@
 # TODO List - D&D Character Consultant System
 
-Last Updated: February 13, 2026
-
 ## Implementation Roadmap
+
+> **Priority guidance** (see full rationale table at the bottom):
+> Tier 1: Docs, Model Switching, Pronouns, Profile Verification, Party Alterations
+> Tier 2: Milvus, Names Split, Session Notes, Spotlighting, Multiclass, AI Suggestions
+> Tier 3: Arc Analysis, Timeline, Relationships, Story Tools, DC/Spell/Language polish
+> Tier 4: Drupal, TTS Web, Plugin Architecture
+> Tier 5+: QoL, Campaign content, ComfyUI (optional)
+
+### Phase 1: Foundations (Do First)
+
+- [ ] **Documentation Audit and Update** - Audit all `docs/` files and AGENTS.md against current codebase; establish documentation contract rule **Plan:** [plans/documentation_update_plan.md](plans/documentation_update_plan.md)
 
 ### Phase 2: Infrastructure
 
+- [ ] **Model Switching** - Named model profiles, task-based routing, per-character override, CLI profile selector **Plan:** [plans/model_switching_plan.md](plans/model_switching_plan.md)
+- [ ] **Milvus Integration** - Vector database for semantic RAG retrieval across characters, NPCs, story chunks, and wiki pages **Plan:** [plans/milvus_integration_plan.md](plans/milvus_integration_plan.md)
 - [ ] **Drupal CMS Integration** - DDEV setup, JSON to Drupal migration, Python-to-Drupal API sync **Plan:** [plans/drupal_cms_integration.md](plans/drupal_cms_integration.md)
 - [ ] **TTS Web Integration** - Pre-generated audio storage, audio sync to Drupal, React audio player components **Plan:** [plans/tts_web_integration.md](plans/tts_web_integration.md)
 - [ ] **Multi-voice TTS (Phase 3-4)** - Voice switching implementation, Piper TTS integration
@@ -18,12 +29,14 @@ Last Updated: February 13, 2026
 
 ### Phase 4: Story Tools
 
+- [ ] **Spotlighting System** - Dynamic narrative spotlight scoring for characters, NPCs, and unresolved threads; injects priority context into AI prompts **Plan:** [plans/spotlighting_system_plan.md](plans/spotlighting_system_plan.md)
 - [ ] **AI Story Suggestions** - Use AI to suggest story developments and narrative improvements **Plan:** [plans/ai_story_suggestions_plan.md](plans/ai_story_suggestions_plan.md)
 - [ ] **Session Notes Integration** - Better integration between session results and story narrative **Plan:** [plans/session_notes_plan.md](plans/session_notes_plan.md)
 - [ ] **Timeline Tracking** - Track chronological order of events across campaigns **Plan:** [plans/timeline_tracking_plan.md](plans/timeline_tracking_plan.md)
 
 ### Phase 5: Quality of Life
 
+- [ ] **ComfyUI Integration** - Local image generation for character portraits and scene illustrations; optional Drupal media display **Plan:** [plans/comfyui_integration_plan.md](plans/comfyui_integration_plan.md)
 - [ ] **CLI Enhancements** - Tab completion, command history, batch operations **Plan:** [plans/cli_enhancements_plan.md](plans/cli_enhancements_plan.md)
 - [ ] **Export Functionality** - Export stories to different formats (PDF, HTML, etc.) **Plan:** [plans/export_functionality_plan.md](plans/export_functionality_plan.md)
 - [ ] **Backup System** - Automated backup of character profiles and party configurations **Plan:** [plans/backup_system_plan.md](plans/backup_system_plan.md)
@@ -34,6 +47,7 @@ All features below have detailed implementation plans in the `plans/` directory.
 
 ### AI and Story Tools
 
+- [Spotlighting System](plans/spotlighting_system_plan.md) - Dynamic narrative spotlight scoring; AI prompt injection
 - [AI Story Suggestions](plans/ai_story_suggestions_plan.md) - AI-powered story development suggestions
 - [Session Notes Integration](plans/session_notes_plan.md) - Better session results and story narrative integration
 - [Timeline Tracking](plans/timeline_tracking_plan.md) - Chronological event tracking across campaigns
@@ -47,13 +61,15 @@ All features below have detailed implementation plans in the `plans/` directory.
 
 ### Infrastructure
 
+- [Model Switching](plans/model_switching_plan.md) - Named model profiles, task routing, per-character override, CLI selector
+- [Milvus Integration](plans/milvus_integration_plan.md) - Vector database for semantic RAG retrieval
 - [Drupal CMS Integration](plans/drupal_cms_integration.md) - Full Drupal CMS integration
 - [TTS Web Integration](plans/tts_web_integration.md) - Web-based TTS audio integration
 - [Multi-voice TTS Design](plans/multi_voice_tts_design.md) - Multi-voice narration system
-- [SQLite Integration](plans/sqlite_integration_plan.md) - Optional database support for tracking and analytics
 
 ### Quality of Life
 
+- [ComfyUI Integration](plans/comfyui_integration_plan.md) - Local image generation for portraits and scenes; optional Drupal display
 - [CLI Enhancements](plans/cli_enhancements_plan.md) - Tab completion, command history, batch operations
 - [Export Functionality](plans/export_functionality_plan.md) - Export to PDF, HTML, and other formats
 - [Backup System](plans/backup_system_plan.md) - Automated backup system
@@ -119,6 +135,18 @@ All features below have detailed implementation plans in the `plans/` directory.
 
 ## Documentation TODOs
 
+> Full audit process and rules defined in [plans/documentation_update_plan.md](plans/documentation_update_plan.md).
+
+### Audit Backlog (Priority Order)
+
+- [ ] **AGENTS.md utils catalog** - Verify every function in `src/utils/` is listed
+- [ ] **docs/AI_INTEGRATION.md** - Update for centralized config, model switching, Milvus
+- [ ] **docs/RAG_INTEGRATION.md** - Rewrite for Milvus + fallback architecture
+- [ ] **docs/RAG_QUICKSTART.md** - Update `.env` variable names
+- [ ] **docs/JSON_Validation.md** - Check for undocumented new validators
+- [ ] **src/README.md and tests/README.md** - Verify module and test category lists
+- [ ] **docs/EXAMPLE_CAMPAIGN_WALKTHROUGH.md** - Verify CLI commands are current
+
 ### README Updates
 
 - [ ] **Add troubleshooting section** for common issues
@@ -129,6 +157,77 @@ All features below have detailed implementation plans in the `plans/` directory.
 - [ ] **Character creation guide** - Detailed guide for creating rich character profiles
 - [ ] **Campaign management best practices** - Tips for organizing complex campaigns
 - [ ] **Integration guide** - How to integrate with external tools
+
+## Priority Rationale
+
+Full priority ordering across all plans. Tiers are based on: (1) dependency
+chains — things that unblock other plans come first; (2) value delivered to
+a solo DM using the CLI today; (3) risk and complexity.
+
+### Tier 1 — Do First (Foundational, low risk, unblocks everything)
+
+| # | Plan | Reason |
+|---|------|--------|
+| 1 | [Documentation Update](plans/documentation_update_plan.md) | No code deps. Ensures AGENTS.md and docs are correct before new features land on top of outdated foundations. |
+| 2 | [Model Switching](plans/model_switching_plan.md) | Extends the already-completed config system. Adds routing that every subsequent AI feature benefits from. Low implementation risk. |
+| 3 | [Pronouns Field](plans/pronouns_field_plan.md) | Tiny data-model change. Easiest possible quick win; best done before other character-system changes add migration burden. |
+| 4 | [Profile Verification](plans/profile_verification_plan.md) | Audits existing JSON templates for consistency. Cheap to do now; expensive to fix later when Milvus, spotlighting, and arc analysis depend on clean data. |
+| 5 | [Party Alterations](plans/party_alterations_plan.md) | Moves party data to campaign files — a data-model cleanup. Better done before relationship mapping, timeline, and calendar features lock in the current structure. |
+
+### Tier 2 — Core Value (High DM impact, moderate effort)
+
+| # | Plan | Reason |
+|---|------|--------|
+| 6 | [Milvus Integration](plans/milvus_integration_plan.md) | Multiplies the value of RAG, spotlighting, story suggestions, and arc analysis simultaneously. Benefits from model switching (embedding profile). |
+| 7 | [Character Names Split](plans/character_names_plan.md) | Data-model change that downstream features (relationship mapping, timeline) will depend on. Better done before those features. |
+| 8 | [Session Notes Integration](plans/session_notes_plan.md) | Feeds session events into spotlighting and timeline. Improves the core DM workflow immediately. |
+| 9 | [Spotlighting System](plans/spotlighting_system_plan.md) | High DM value. Depends on story parsing (done) and session notes. Benefits from Milvus but works without it. |
+| 10 | [Multi-class Support](plans/multiclass_support_plan.md) | Core character system feature. Affects character profiles read by arc analysis, spotlighting, and AI prompts. |
+| 11 | [AI Story Suggestions](plans/ai_story_suggestions_plan.md) | Builds directly on spotlighting scores and Milvus semantic search. Higher quality output after those two are in place. |
+| 12 | [Major NPC Template (BBEG)](plans/major_npc_template_plan.md) | Enriches NPC data fed into spotlighting and story suggestions. Relatively self-contained. |
+
+### Tier 3 — Enrichment (Meaningful, but can wait for Tier 2)
+
+| # | Plan | Reason |
+|---|------|--------|
+| 13 | [Character Arc Analysis](plans/character_arc_analysis_plan.md) | Valuable retrospective tool. Depends on session notes and story files (both done or in Tier 2). |
+| 14 | [Timeline Tracking](plans/timeline_tracking_plan.md) | Depends on session notes integration and party alterations. Natural next step after that data is structured. |
+| 15 | [Relationship Mapping](plans/relationship_mapping_plan.md) | Depends on character names split. Enriches spotlighting and arc analysis. |
+| 16 | [Story Tools](plans/story_tools_plan.md) | Utility layer for story comparison, search, and stats. No hard dependencies; adds quality to existing story flow. |
+| 17 | [Language Fixes](plans/language_fixes_plan.md) | Output quality improvement. No dependencies. |
+| 18 | [Custom Spell Highlighting](plans/custom_spell_highlighting_plan.md) | Display enhancement. No dependencies on other plans. |
+| 19 | [DC Scaling](plans/dc_scaling_plan.md) | Rules enhancement. Self-contained; no dependencies. |
+| 20 | [Character Templates](plans/character_templates_plan.md) | Content creation, not code. Can be done at any time but most useful after profile verification confirms the schema is stable. |
+
+### Tier 4 — Infrastructure (High effort, team/web-focused)
+
+| # | Plan | Reason |
+|---|------|--------|
+| 22 | [Drupal CMS Integration](plans/drupal_cms_integration.md) | Large effort, requires DDEV. Most valuable when the data model is stable (after Tiers 1-3). |
+| 23 | [TTS Web Integration](plans/tts_web_integration.md) | Depends on Drupal CMS being in place. Phase 1-2 multi-voice TTS is already done on the CLI side. |
+| 24 | [Plugin Architecture](plans/plugin_architecture_plan.md) | Extensibility framework. Most useful once the core feature set is stable and external contributors or campaign-specific needs emerge. |
+| 25 | [Interactive Setup](plans/interactive_setup_plan.md) | Onboarding improvement. More valuable once the full feature set is settled. |
+
+### Tier 5 — Quality of Life (Low urgency, high polish)
+
+| # | Plan | Reason |
+|---|------|--------|
+| 26 | [CLI Enhancements](plans/cli_enhancements_plan.md) | Tab completion and history are nice-to-have. No dependencies. |
+| 27 | [Export Functionality](plans/export_functionality_plan.md) | Useful but not blocking any DM workflow. Can leverage Drupal if that is in place. |
+| 28 | [Backup System](plans/backup_system_plan.md) | Safety net. Valuable but not urgent for a solo DM using git. |
+| 29 | [Calendar Tracking](plans/calendar_tracking_plan.md) | Nice-to-have in-world time tracking. Depends on timeline being in place. |
+| 30 | [Campaign Templates](plans/campaign_templates_plan.md) | Content creation. Most useful as onboarding material once interactive setup is done. |
+| 31 | [Quick Start Guide](plans/quick_start_guide_plan.md) | Documentation. Best written last, once all major features are stable. |
+| 32 | [Startup Optimization](plans/startup_optimization_plan.md) | Largely done (lazy loading). Revisit only if startup regresses. |
+
+### Tier 6 — Optional / Experimental
+
+| # | Plan | Reason |
+|---|------|--------|
+| 33 | [ComfyUI Integration](plans/comfyui_integration_plan.md) | Optional visual feature. Requires Drupal for web display. No impact on core DM workflow. |
+| 34 | [Coqui TTS](plans/multi_voice_tts_design.md) | Requires powerful GPU. Only relevant if Piper voice quality is insufficient. |
+
+---
 
 ## Recently Completed
 
