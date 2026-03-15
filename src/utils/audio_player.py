@@ -20,7 +20,7 @@ from typing import Optional
 class AudioPlayer:
     """Cross-platform audio playback."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize audio player."""
         self._audio_queue: queue.Queue[Optional[Path]] = queue.Queue()
         self._stop_flag = threading.Event()

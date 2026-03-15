@@ -137,17 +137,12 @@ tests/**/__pycache__/
 # Drupal docroot (managed by DDEV/Composer)
 drupal/
 
-# DDEV-generated docker-compose overrides
-.ddev/docker-compose.*.yaml
-!.ddev/docker-compose.*.example.yaml
-
 # =============================================================================
 # DRUPAL CMS (drupal-cms/ directory)
 # =============================================================================
 
-# Composer dependencies (managed at project level)
+# Composer dependencies (managed by Composer, not committed)
 drupal-cms/vendor/
-drupal-cms/composer.lock
 
 # Drupal core and contributed modules/themes
 drupal-cms/web/core/
@@ -156,9 +151,10 @@ drupal-cms/web/modules/contrib/
 drupal-cms/web/profiles/contrib/
 drupal-cms/web/themes/contrib/
 
-# Site-specific files (database settings, uploaded files, etc.)
-drupal-cms/web/sites/*/settings*.php
-drupal-cms/web/sites/*/services*.yml
+# Site-specific files (uploaded files and local-override configs only)
+# settings.php and settings.ddev.php are committed; settings.local.php is not
+drupal-cms/web/sites/*/settings.local.php
+drupal-cms/web/sites/*/services.local.yml
 drupal-cms/web/sites/*/files/
 drupal-cms/web/sites/*/private/
 drupal-cms/web/sites/simpletest/
@@ -179,10 +175,20 @@ drupal-cms/.DS_Store
 drupal-cms/Thumbs.db
 
 # DDEV configuration for drupal-cms
+# config.yaml, docker-compose.*.yaml, embedEtcd.yaml, php/, commands/, solr-core/conf/
+# and other custom sidecar files are all tracked.
+# Only DDEV-generated, runtime, and secret files are excluded.
 drupal-cms/.ddev/db_snapshots/
 drupal-cms/.ddev/snapshots/
 drupal-cms/.ddev/config.local.yaml
 drupal-cms/.ddev/*.crt
 drupal-cms/.ddev/*.key
 drupal-cms/.ddev/xhprof/
-drupal-cms/.ddev/docker-compose.*.yaml
+drupal-cms/.ddev/.ddev-docker-compose-*.yaml
+drupal-cms/.ddev/.dbimageBuild/
+drupal-cms/.ddev/.webimageBuild/
+drupal-cms/.ddev/.sshimageBuild/
+drupal-cms/.ddev/solr-core/data/
+# Platform-specific SQLite extension binaries (re-downloaded on ddev start)
+drupal-cms/.ddev/sqlite-ext/*.tar.gz
+drupal-cms/.ddev/sqlite-ext/*.so

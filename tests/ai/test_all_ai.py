@@ -25,6 +25,9 @@ def run_all_ai_tests():
         ("test_behavior_generation_ai_mock", "Behavior Generation (Mock)"),
         ("test_availability", "AI Availability Tests"),
         ("test_task_router", "Task Router Tests"),
+        ("test_milvus_client", "Milvus Client Tests"),
+        ("test_embedding_pipeline", "Embedding Pipeline Tests"),
+        ("test_semantic_retriever", "Semantic Retriever Tests"),
     ]
 
 

@@ -1,0 +1,6 @@
+services:
+  solr:
+    environment:
+      - SOLR_MODULES=extraction,langid,ltr,analysis-extras
+    volumes:
+      - ./solr-core:/var/solr/data/drupal

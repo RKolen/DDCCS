@@ -1,0 +1,18 @@
+#!/bin/bash
+## Description: Pull a model into the DDEV Ollama sidecar.
+## Usage: ollama-pull <model[:tag]>
+## Example: "ddev ollama-pull llama3.2"
+
+set -eu
+
+if [ "$#" -ne 1 ]; then
+  echo "Usage: ddev ollama-pull <model[:tag]>"
+  exit 1
+fi
+
+model_name="$1"
+
+ddev exec -s ollama ollama pull "$model_name"
+
+echo
+echo "Model '$model_name' is now available at http://ollama:11434 for Drupal AI."

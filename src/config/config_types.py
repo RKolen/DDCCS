@@ -137,6 +137,20 @@ class DisplayConfig:
 
 
 @dataclass
+class MilvusConfig:
+    """Milvus vector database configuration."""
+
+    enabled: bool = False
+    host: str = ""
+    port: int = 19530
+    collection_prefix: str = "dnd"
+    embedding_model: str = ""
+    embedding_dim: int = 1536
+    top_k: int = 5
+    similarity_threshold: float = 0.7
+
+
+@dataclass
 class PathConfig:
     """File path configuration."""
 
@@ -146,6 +160,14 @@ class PathConfig:
     rag_vector_db_path: Path = field(
         default_factory=lambda: Path(".rag_cache") / "rag_cache.sqlite3"
     )
+    milvus_data_dir: Path = field(
+        default_factory=lambda: Path("game_data") / "milvus"
+    )
+
+    @property
+    def milvus_dir(self) -> Path:
+        """Get milvus directory path."""
+        return self.milvus_data_dir
 
     @property
     def characters_dir(self) -> Path:
@@ -189,6 +211,7 @@ class DnDConfig:
     display: DisplayConfig = field(default_factory=DisplayConfig)
     paths: PathConfig = field(default_factory=PathConfig)
     model_registry: ModelRegistryConfig = field(default_factory=ModelRegistryConfig)
+    milvus: MilvusConfig = field(default_factory=MilvusConfig)
 
     # Metadata
     config_file_path: Optional[Path] = None

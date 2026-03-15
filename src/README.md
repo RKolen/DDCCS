@@ -4,7 +4,7 @@ This directory contains all source code organized into logical packages.
 
 ## Package Organization
 
-```
+```text
 src/
 |-- characters/          # Character management
 |   |-- consultants/     # Per-character consultant classes
@@ -59,10 +59,15 @@ src/
 |   `-- validate_all.py         # Unified validator
 |
 |-- ai/                 # AI integration
-|   |-- ai_client.py           # AI client interface
+|   |-- ai_client.py           # AI client interface (includes embed() for vectors)
 |   |-- rag_system.py          # RAG (Retrieval Augmented Generation)
 |   |-- availability.py        # AI availability detection
-|   `-- lazy_imports.py        # Lazy import helpers
+|   |-- lazy_imports.py        # Lazy import helpers
+|   |-- milvus_client.py       # Milvus vector DB wrapper (connect/insert/search)
+|   |-- milvus_collections.py  # Collection schema definitions (characters/npcs/stories/wiki)
+|   |-- embedding_pipeline.py  # Chunking + embedding for all D&D data types
+|   |-- semantic_retriever.py  # Semantic RAG via Milvus with keyword fallback
+|   `-- index_sync.py          # Incremental sync called after JSON file saves
 |
 |-- config/             # Centralized configuration
 |   |-- config_types.py        # AIConfig, RAGConfig, DisplayConfig, PathConfig
@@ -101,6 +106,7 @@ src/
 `-- cli/                # Command-line interface
     |-- dnd_consultant.py                  # Main interactive CLI
     |-- dnd_cli_helpers.py                 # CLI helper functions
+    |-- milvus_commands.py                 # --reindex and --milvus-status handlers
     |-- cli_story_manager.py               # Story management CLI
     |-- cli_character_manager.py           # Character management CLI
     |-- cli_character_development_manager.py  # Character development CLI

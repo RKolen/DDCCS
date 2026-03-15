@@ -1,0 +1,94 @@
+diff --git a/src/Plugin/VdbProvider/SQLiteProvider.php b/src/Plugin/VdbProvider/SQLiteProvider.php
+index 14c3e85..6f82eac 100644
+--- a/src/Plugin/VdbProvider/SQLiteProvider.php
++++ b/src/Plugin/VdbProvider/SQLiteProvider.php
+@@ -65,7 +65,7 @@ class SQLiteProvider extends AiVdbProviderClientBase implements ContainerFactory
+    * @throws \Drupal\ai_vdb_provider_sqlite\Exception\DatabaseConnectionException
+    * @throws \Drupal\ai_vdb_provider_sqlite\Exception\DatabaseNotConfiguredException
+    */
+-  public function getConnection(string $database = NULL): SQLite3|false {
++  public function getConnection(?string $database = NULL): SQLite3|false {
+     if (empty($database)) {
+       // redundent file when setup new search api server
+       // shoudn't have any data inside
+@@ -86,7 +86,7 @@ class SQLiteProvider extends AiVdbProviderClientBase implements ContainerFactory
+    * @throws \Drupal\ai_vdb_provider_sqlite\Exception\DatabaseConnectionException
+    * @throws \Drupal\ai_vdb_provider_sqlite\Exception\DatabaseNotConfiguredException
+    */
+-  public function ping(string $database = NULL): bool {
++  public function ping(?string $database = NULL): bool {
+     if ($connection = $this->getConnection(database: $database)) {
+       return $this->getClient()->ping(connection: $connection);
+     }
+@@ -110,7 +110,7 @@ class SQLiteProvider extends AiVdbProviderClientBase implements ContainerFactory
+    * @throws \Drupal\ai_vdb_provider_sqlite\Exception\DatabaseNotConfiguredException
+    * @throws \Drupal\ai_vdb_provider_sqlite\Exception\GetCollectionsException
+    */
+-  public function getCollections(string $database = NULL): array {
++  public function getCollections(?string $database = NULL): array {
+     return $this->getClient()->getCollections(
+       connection: $this->getConnection(database: $database)
+     );
+@@ -127,7 +127,7 @@ class SQLiteProvider extends AiVdbProviderClientBase implements ContainerFactory
+     string               $collection_name,
+     int                  $dimension,
+     VdbSimilarityMetrics $metric_type = VdbSimilarityMetrics::CosineSimilarity,
+-    string               $database = NULL,
++    ?string              $database = NULL,
+   ): void {
+     try {
+       $this->getClient()->createCollection(
+@@ -154,7 +154,7 @@ class SQLiteProvider extends AiVdbProviderClientBase implements ContainerFactory
+    */
+   public function dropCollection(
+     string $collection_name,
+-    string $database = NULL,
++    ?string $database = NULL,
+   ): void {
+     try {
+       $this->getClient()->dropCollection(
+@@ -183,7 +183,7 @@ class SQLiteProvider extends AiVdbProviderClientBase implements ContainerFactory
+   public function insertIntoCollection(
+     string $collection_name,
+     array  $data,
+-    string $database = NULL,
++    ?string $database = NULL,
+   ): void {
+     $nativeFieldValues = array_intersect_key($data, array_flip(self::AI_SEARCH_NATIVE_FIELDS));
+     $extraFields = array_diff_key($data, array_flip(self::AI_SEARCH_NATIVE_FIELDS));
+@@ -210,7 +210,7 @@ class SQLiteProvider extends AiVdbProviderClientBase implements ContainerFactory
+   public function deleteFromCollection(
+     string $collection_name,
+     array  $ids,
+-    string $database = NULL,
++    ?string $database = NULL,
+   ): void {
+     if (empty($ids)) {
+       return;
+@@ -264,7 +264,7 @@ class SQLiteProvider extends AiVdbProviderClientBase implements ContainerFactory
+     string $filters = '',
+     int    $limit = 10,
+     int    $offset = 0,
+-    string $database = NULL,
++    ?string $database = NULL,
+   ): array {
+     return $this->getClient()->querySearch(
+       collection_name: $collection_name,
+@@ -292,7 +292,7 @@ class SQLiteProvider extends AiVdbProviderClientBase implements ContainerFactory
+     string               $filters = '',
+     int                  $limit = 10,
+     int                  $offset = 0,
+-    string               $database = NULL,
++    ?string              $database = NULL,
+   ): array {
+     return $this->getClient()->vectorSearch(
+       collection_name: $collection_name,
+@@ -316,7 +316,7 @@ class SQLiteProvider extends AiVdbProviderClientBase implements ContainerFactory
+   public function getVdbIds(
+     string $collection_name,
+     array  $drupalIds,
+-    string $database = NULL,
++    ?string $database = NULL,
+   ): array {
+     if (empty($drupalIds)) {
+       return [];

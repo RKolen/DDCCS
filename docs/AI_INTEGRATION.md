@@ -292,9 +292,72 @@ The system is designed to work without AI:
 - **Varies**: By model selected
 - **Llama models**: Often very cheap or free
 
-## Troubleshooting
+## Milvus Semantic Search (Optional)
 
-### "Import openai could not be resolved"
+Milvus is an optional vector database that replaces keyword-based retrieval
+with semantic similarity search across characters, NPCs, story files, and
+wiki lore. See [docs/MILVUS_INTEGRATION.md](MILVUS_INTEGRATION.md) for the
+full quickstart.
+
+### Enable Milvus
+
+```env
+MILVUS_ENABLED=true
+MILVUS_HOST=localhost
+MILVUS_PORT=19530
+MILVUS_EMBEDDING_MODEL=text-embedding-3-small
+```
+
+`MILVUS_EMBEDDING_MODEL` must refer to a model your AI provider supports for
+embeddings calls (the `embed()` method on `AIClient`).
+
+### Verify the connection
+
+```bash
+python3 dnd_consultant.py --milvus-status
+```
+
+Expected output when healthy:
+
+```text
+[INFO] Milvus connected at localhost:19530
+[INFO]   dnd_characters: 42 entities
+[INFO]   dnd_npcs: 18 entities
+[INFO]   dnd_story_chunks: 310 entities
+[INFO]   dnd_wiki_pages: 0 entities
+```
+
+### Build or rebuild the index
+
+From the project root:
+
+```bash
+python3 dnd_consultant.py --reindex
+```
+
+Or via the DDEV convenience wrapper (from `drupal-cms/`):
+
+```bash
+ddev milvus-reindex
+```
+
+This reads every character JSON, NPC JSON, and story Markdown from
+`game_data/` and upserts embeddings into Milvus.
+
+### Inspect the data visually (Attu GUI)
+
+Attu is the official Milvus web UI. Run it with Docker:
+
+```bash
+docker run -p 8000:3000 -e MILVUS_URL=localhost:19530 zilliz/attu:latest
+```
+
+Then open `http://localhost:8000` in a browser. You can browse collections,
+run vector searches, and inspect individual records.
+
+---
+
+## Troubleshooting
 
 ```bash
 pip install -r requirements.txt

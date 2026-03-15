@@ -14,6 +14,7 @@ from src.cli.cli_character_manager import CharacterCLIManager
 from src.cli.cli_config import ConfigCLI
 from src.cli.cli_story_manager import StoryCLIManager
 from src.cli.cli_story_reader import StoryReaderCLI
+from src.cli.milvus_commands import run_milvus_status, run_reindex
 from src.config.config_loader import load_config
 from src.dm.dungeon_master import DMConsultant
 from src.stories.enhanced_story_manager import EnhancedStoryManager
@@ -188,6 +189,16 @@ def main():
         metavar="PROFILE",
         help="Activate a named model profile for this session (e.g. local, creative)",
     )
+    parser.add_argument(
+        "--reindex",
+        action="store_true",
+        help="Rebuild Milvus collections from all game_data files, then exit.",
+    )
+    parser.add_argument(
+        "--milvus-status",
+        action="store_true",
+        help="Check Milvus connection and print collection statistics, then exit.",
+    )
 
     args = parser.parse_args()
 
@@ -200,6 +211,14 @@ def main():
     if args.model:
         if not ModelRegistry.switch_profile(args.model):
             print(f"[WARNING] Unknown model profile: '{args.model}'. Using default.")
+
+    # Milvus utility commands exit immediately after running
+    if args.reindex:
+        run_reindex()
+        return
+    if args.milvus_status:
+        run_milvus_status()
+        return
 
     @handle_errors(OSError, ValueError, KeyError, AttributeError, default_return=None)
     def initialize_system(workspace: str, campaign: str):

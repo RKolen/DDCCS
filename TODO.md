@@ -11,8 +11,6 @@
 
 ### Phase 2: Infrastructure
 
-- [ ] **Model Switching** - Named model profiles, task-based routing, per-character override, CLI profile selector **Plan:** [plans/model_switching_plan.md](plans/model_switching_plan.md)
-- [ ] **Milvus Integration** - Vector database for semantic RAG retrieval across characters, NPCs, story chunks, and wiki pages **Plan:** [plans/milvus_integration_plan.md](plans/milvus_integration_plan.md)
 - [ ] **Drupal CMS Integration** - DDEV setup, JSON to Drupal migration, Python-to-Drupal API sync **Plan:** [plans/drupal_cms_integration.md](plans/drupal_cms_integration.md)
 - [ ] **TTS Web Integration** - Pre-generated audio storage, audio sync to Drupal, React audio player components **Plan:** [plans/tts_web_integration.md](plans/tts_web_integration.md)
 - [ ] **Multi-voice TTS (Phase 3-4)** - Voice switching implementation, Piper TTS integration
@@ -57,8 +55,6 @@ All features below have detailed implementation plans in the `plans/` directory.
 
 ### Infrastructure
 
-- [Model Switching](plans/model_switching_plan.md) - Named model profiles, task routing, per-character override, CLI selector
-- [Milvus Integration](plans/milvus_integration_plan.md) - Vector database for semantic RAG retrieval
 - [Drupal CMS Integration](plans/drupal_cms_integration.md) - Full Drupal CMS integration
 - [TTS Web Integration](plans/tts_web_integration.md) - Web-based TTS audio integration
 - [Multi-voice TTS Design](plans/multi_voice_tts_design.md) - Multi-voice narration system
@@ -73,7 +69,6 @@ All features below have detailed implementation plans in the `plans/` directory.
 
 ### Technical Improvements
 
-- [Error Handling Plan](plans/error_handling_plan.md) - Improved error messages and user guidance
 - [Configuration System](plans/configuration_system_plan.md) - Centralized configuration management
 - [DC Scaling](plans/dc_scaling_plan.md) - Optional level-based DC scaling recommendations
 - [Custom Spell Highlighting](plans/custom_spell_highlighting_plan.md) - Support for homebrew/custom spells
@@ -85,13 +80,13 @@ All features below have detailed implementation plans in the `plans/` directory.
 - [Calendar Tracking](plans/calendar_tracking_plan.md) - In-world calendar and timeline tracking
 - [Plugin Architecture](plans/plugin_architecture_plan.md) - Custom modules/plugins support
 
-## High Priority (No Plan Yet)
+## High Priority
 
 ### User Experience
 
 - [ ] **Pronouns** - Add pronouns to character files - [Plan](plans/pronouns_field_plan.md)
 
-## Medium Priority (No Plan Yet)
+## Medium Priority
 
 ### Character System Improvements
 
@@ -131,18 +126,6 @@ All features below have detailed implementation plans in the `plans/` directory.
 
 ## Documentation TODOs
 
-> Full audit process and rules defined in [plans/documentation_update_plan.md](plans/documentation_update_plan.md).
-
-### Audit Backlog (Priority Order)
-
-- [x] **AGENTS.md utils catalog** - Verify every function in `src/utils/` is listed
-- [x] **docs/AI_INTEGRATION.md** - Update for centralized config, model switching, Milvus
-- [x] **docs/RAG_INTEGRATION.md** - Rewrite for Milvus + fallback architecture
-- [x] **docs/RAG_QUICKSTART.md** - Update `.env` variable names
-- [x] **docs/JSON_Validation.md** - Check for undocumented new validators
-- [x] **src/README.md and tests/README.md** - Verify module and test category lists
-- [x] **docs/EXAMPLE_CAMPAIGN_WALKTHROUGH.md** - Verify CLI commands are current
-
 ### README Updates
 
 - [ ] **Add troubleshooting section** for common issues
@@ -164,7 +147,6 @@ a solo DM using the CLI today; (3) risk and complexity.
 
 | # | Plan | Reason |
 |---|------|--------|
-| 2 | [Model Switching](plans/model_switching_plan.md) | Extends the already-completed config system. Adds routing that every subsequent AI feature benefits from. Low implementation risk. |
 | 3 | [Pronouns Field](plans/pronouns_field_plan.md) | Tiny data-model change. Easiest possible quick win; best done before other character-system changes add migration burden. |
 | 4 | [Profile Verification](plans/profile_verification_plan.md) | Audits existing JSON templates for consistency. Cheap to do now; expensive to fix later when Milvus, spotlighting, and arc analysis depend on clean data. |
 | 5 | [Party Alterations](plans/party_alterations_plan.md) | Moves party data to campaign files — a data-model cleanup. Better done before relationship mapping, timeline, and calendar features lock in the current structure. |
@@ -172,8 +154,7 @@ a solo DM using the CLI today; (3) risk and complexity.
 ### Tier 2 — Core Value (High DM impact, moderate effort)
 
 | # | Plan | Reason |
-|---|------|--------|
-| 6 | [Milvus Integration](plans/milvus_integration_plan.md) | Multiplies the value of RAG, spotlighting, story suggestions, and arc analysis simultaneously. Benefits from model switching (embedding profile). |
+|---|------|-------
 | 7 | [Character Names Split](plans/character_names_plan.md) | Data-model change that downstream features (relationship mapping, timeline) will depend on. Better done before those features. |
 | 8 | [Session Notes Integration](plans/session_notes_plan.md) | Feeds session events into spotlighting and timeline. Improves the core DM workflow immediately. |
 | 9 | [Spotlighting System](plans/spotlighting_system_plan.md) | High DM value. Depends on story parsing (done) and session notes. Benefits from Milvus but works without it. |
@@ -225,6 +206,14 @@ a solo DM using the CLI today; (3) risk and complexity.
 ---
 
 ## Recently Completed
+
+### Milvus Integration - March 15, 2026
+
+6- [x] **Milvus Integration** - Vector database for semantic RAG retrieval across characters, NPCs, story chunks, and wiki pages
+
+### Model Switching - March 13, 2026
+
+- [x] **Model Switching** - Named model profiles, task-based routing, per-character override, CLI profile selector
 
 ### Documentation Audit and Update - March 13, 2026
 

@@ -1,0 +1,8 @@
+#!/bin/bash
+## Description: List models available in the DDEV Ollama sidecar.
+## Usage: ollama-list
+## Example: "ddev ollama-list"
+
+set -eu
+
+ddev exec -s ollama ollama list

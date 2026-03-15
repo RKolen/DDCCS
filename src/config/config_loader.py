@@ -17,6 +17,7 @@ from src.config.config_types import (
     AIConfig,
     DisplayConfig,
     DnDConfig,
+    MilvusConfig,
     ModelProfile,
     ModelRegistryConfig,
     PathConfig,
@@ -155,6 +156,26 @@ def _merge_config(base: DnDConfig, override: Dict[str, Any]) -> DnDConfig:
             ),
         )
 
+    # Milvus config
+    if "milvus" in override:
+        milvus_data = override["milvus"]
+        base.milvus = MilvusConfig(
+            enabled=milvus_data.get("enabled", base.milvus.enabled),
+            host=milvus_data.get("host", base.milvus.host),
+            port=milvus_data.get("port", base.milvus.port),
+            collection_prefix=milvus_data.get(
+                "collection_prefix", base.milvus.collection_prefix
+            ),
+            embedding_model=milvus_data.get(
+                "embedding_model", base.milvus.embedding_model
+            ),
+            embedding_dim=milvus_data.get("embedding_dim", base.milvus.embedding_dim),
+            top_k=milvus_data.get("top_k", base.milvus.top_k),
+            similarity_threshold=milvus_data.get(
+                "similarity_threshold", base.milvus.similarity_threshold
+            ),
+        )
+
     # Model registry config
     if "model_registry" in override:
         base.model_registry = _parse_model_registry(override["model_registry"])
@@ -227,6 +248,47 @@ def _apply_env_model_profiles(
             max_tokens=get_env_int("AI_FAST_MAX_TOKENS", 500),
             description="Fast model for analysis and evaluation tasks",
         )
+
+
+def _apply_env_milvus_overrides(
+    config: DnDConfig,
+    get_env: Any,
+    get_env_bool: Any,
+    get_env_int: Any,
+    get_env_float: Any,
+) -> None:
+    """Apply Milvus configuration overrides from environment variables.
+
+    Args:
+        config: DnDConfig to update in-place.
+        get_env: Callable to read a string env var.
+        get_env_bool: Callable to read a bool env var with default.
+        get_env_int: Callable to read an int env var with default.
+        get_env_float: Callable to read a float env var with default.
+    """
+    config.milvus.enabled = get_env_bool("MILVUS_ENABLED", config.milvus.enabled)
+
+    milvus_host = get_env("MILVUS_HOST")
+    if milvus_host:
+        config.milvus.host = milvus_host
+
+    config.milvus.port = get_env_int("MILVUS_PORT", config.milvus.port)
+
+    milvus_prefix = get_env("MILVUS_COLLECTION_PREFIX")
+    if milvus_prefix:
+        config.milvus.collection_prefix = milvus_prefix
+
+    milvus_model = get_env("MILVUS_EMBEDDING_MODEL")
+    if milvus_model:
+        config.milvus.embedding_model = milvus_model
+
+    config.milvus.embedding_dim = get_env_int(
+        "MILVUS_EMBEDDING_DIM", config.milvus.embedding_dim
+    )
+    config.milvus.top_k = get_env_int("MILVUS_TOP_K", config.milvus.top_k)
+    config.milvus.similarity_threshold = get_env_float(
+        "MILVUS_SIMILARITY_THRESHOLD", config.milvus.similarity_threshold
+    )
 
 
 def _apply_env_overrides(config: DnDConfig, prefix: str = "") -> DnDConfig:
@@ -318,6 +380,8 @@ def _apply_env_overrides(config: DnDConfig, prefix: str = "") -> DnDConfig:
     if cache_dir:
         config.paths.cache_dir = Path(cache_dir)
 
+    _apply_env_milvus_overrides(config, get_env, get_env_bool, get_env_int, get_env_float)
+
     return config
 
 
@@ -369,6 +433,16 @@ def save_config(config: DnDConfig, path: Optional[Path] = None) -> bool:
             "cache_dir": str(config.paths.cache_dir),
             "rag_cache_backend": config.paths.rag_cache_backend,
             "rag_vector_db_path": str(config.paths.rag_vector_db_path),
+        },
+        "milvus": {
+            "enabled": config.milvus.enabled,
+            "host": config.milvus.host,
+            "port": config.milvus.port,
+            "collection_prefix": config.milvus.collection_prefix,
+            "embedding_model": config.milvus.embedding_model,
+            "embedding_dim": config.milvus.embedding_dim,
+            "top_k": config.milvus.top_k,
+            "similarity_threshold": config.milvus.similarity_threshold,
         },
     }
 

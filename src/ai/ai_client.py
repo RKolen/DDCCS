@@ -164,6 +164,30 @@ class AIClient:
                 )
             raise RuntimeError(error_msg) from e
 
+    def embed(self, text: str, model: str = "") -> List[float]:
+        """Generate an embedding vector for text.
+
+        Uses the same base_url and api_key as chat completions.
+
+        Args:
+            text: Text to embed.
+            model: Embedding model name to use.
+
+        Returns:
+            List of floats representing the embedding, or [] on failure.
+        """
+        effective_model = model or self.model
+        if not effective_model or self.client is None:
+            return []
+        try:
+            response = self.client.embeddings.create(
+                input=text,
+                model=effective_model,
+            )
+            return list(response.data[0].embedding)
+        except Exception as exc:
+            raise RuntimeError(f"Embedding failed: {exc}") from exc
+
     def create_system_message(self, system_prompt: str) -> Dict[str, str]:
         """Create a system message dict."""
         return {"role": "system", "content": system_prompt}

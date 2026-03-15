@@ -1,0 +1,8 @@
+services:
+  solr:
+    container_name: ddev-${DDEV_SITENAME}-solr
+    image: solr:9
+    pull_policy: always
+    command: solr-precreate drupal
+    labels:
+      com.ddev.site-name: ${DDEV_SITENAME}

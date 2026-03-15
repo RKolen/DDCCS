@@ -6,6 +6,7 @@ Verifies that party validator correctly identifies valid and invalid party confi
 import os
 import sys
 from datetime import datetime
+from typing import Callable, Optional
 
 # Import validators from src.validation
 try:
@@ -20,10 +21,11 @@ except ImportError as e:
 test_helpers.setup_test_environment()
 
 # Use path helper to locate current_party (supports campaign-local files)
+_GET_PARTY_CONFIG_PATH: Optional[Callable[..., str]] = None
 try:
-    from src.utils.path_utils import get_party_config_path
+    from src.utils.path_utils import get_party_config_path as _GET_PARTY_CONFIG_PATH
 except ImportError:
-    get_party_config_path = None
+    pass
 
 def test_valid_party():
     """Test that a valid party configuration passes validation."""
@@ -124,8 +126,8 @@ def test_duplicate_party_members():
 
 def test_validate_actual_party_file():
     """Test validation of actual party file in the game_data directory."""
-    if get_party_config_path:
-        party_file = get_party_config_path()
+    if _GET_PARTY_CONFIG_PATH:
+        party_file = _GET_PARTY_CONFIG_PATH()
     else:
         party_file = os.path.join("game_data", "current_party", "current_party.json")
 

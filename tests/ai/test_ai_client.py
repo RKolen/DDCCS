@@ -124,8 +124,8 @@ def test_load_ai_config_from_env():
 
     # Check defaults
     if not os.getenv("OPENAI_MODEL"):
-        assert config["model"] == "gpt-3.5-turbo", "Default model incorrect"
-        print("  [OK] Default model value correct")
+        assert config["model"] == "", "Default model should be empty (configured via env)"
+        print("  [OK] Default model is empty when OPENAI_MODEL not set")
 
     print("[PASS] Load AI Config from Environment")
 
