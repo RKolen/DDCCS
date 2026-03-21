@@ -137,6 +137,14 @@ class DisplayConfig:
 
 
 @dataclass
+class MilvusEmbeddingConfig:
+    """Embedding model settings for Milvus semantic retrieval."""
+
+    model: str = ""
+    dim: int = 1536
+
+
+@dataclass
 class MilvusConfig:
     """Milvus vector database configuration."""
 
@@ -144,8 +152,7 @@ class MilvusConfig:
     host: str = ""
     port: int = 19530
     collection_prefix: str = "dnd"
-    embedding_model: str = ""
-    embedding_dim: int = 1536
+    embedding: MilvusEmbeddingConfig = field(default_factory=MilvusEmbeddingConfig)
     top_k: int = 5
     similarity_threshold: float = 0.7
 
@@ -203,6 +210,14 @@ class PathConfig:
 
 
 @dataclass
+class ServiceConfig:
+    """Grouped service configuration (model registry and vector database)."""
+
+    model_registry: ModelRegistryConfig = field(default_factory=ModelRegistryConfig)
+    milvus: MilvusConfig = field(default_factory=MilvusConfig)
+
+
+@dataclass
 class DnDConfig:
     """Root configuration container."""
 
@@ -210,12 +225,35 @@ class DnDConfig:
     rag: RAGConfig = field(default_factory=RAGConfig)
     display: DisplayConfig = field(default_factory=DisplayConfig)
     paths: PathConfig = field(default_factory=PathConfig)
-    model_registry: ModelRegistryConfig = field(default_factory=ModelRegistryConfig)
-    milvus: MilvusConfig = field(default_factory=MilvusConfig)
+    services: ServiceConfig = field(default_factory=ServiceConfig)
 
     # Metadata
     config_file_path: Optional[Path] = None
     _dirty: bool = field(default=False, repr=False)
+
+    # ------------------------------------------------------------------
+    # Convenience properties for frequently accessed service sub-configs
+    # ------------------------------------------------------------------
+
+    @property
+    def model_registry(self) -> ModelRegistryConfig:
+        """Return the model registry config."""
+        return self.services.model_registry
+
+    @model_registry.setter
+    def model_registry(self, value: ModelRegistryConfig) -> None:
+        """Replace the model registry config."""
+        self.services.model_registry = value
+
+    @property
+    def milvus(self) -> MilvusConfig:
+        """Return the Milvus config."""
+        return self.services.milvus
+
+    @milvus.setter
+    def milvus(self, value: MilvusConfig) -> None:
+        """Replace the Milvus config."""
+        self.services.milvus = value
 
     def is_dirty(self) -> bool:
         """Check if configuration has unsaved changes."""

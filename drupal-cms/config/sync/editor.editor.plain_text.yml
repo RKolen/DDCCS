@@ -1,0 +1,37 @@
+uuid: c6ae9c39-1871-4eee-8ec2-a70537265a30
+langcode: en
+status: true
+dependencies:
+  config:
+    - filter.format.plain_text
+  module:
+    - ckeditor5
+format: plain_text
+editor: ckeditor5
+settings:
+  toolbar:
+    items:
+      - heading
+      - bold
+      - italic
+      - underline
+      - strikethrough
+      - blockQuote
+      - subscript
+      - superscript
+      - link
+      - sourceEditing
+      - undo
+      - redo
+  plugins:
+    ckeditor5_heading:
+      enabled_headings:
+        - heading2
+        - heading3
+        - heading4
+        - heading5
+        - heading6
+    ckeditor5_sourceEditing:
+      allowed_tags: {  }
+image_upload:
+  status: false

@@ -1,0 +1,29 @@
+uuid: 724832b9-7bea-4626-b62a-412dc7b6c72e
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.paragraph.field_class
+    - paragraphs.paragraphs_type.class
+    - taxonomy.vocabulary.class
+id: paragraph.class.field_class
+field_name: field_class
+entity_type: paragraph
+bundle: class
+label: Class
+description: ''
+required: true
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:taxonomy_term'
+  handler_settings:
+    target_bundles:
+      class: class
+    sort:
+      field: name
+      direction: asc
+    auto_create: false
+    auto_create_bundle: ''
+field_type: entity_reference

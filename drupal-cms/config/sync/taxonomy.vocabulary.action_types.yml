@@ -1,0 +1,9 @@
+uuid: 06b82795-9c12-4c2e-9644-937e47c6099a
+langcode: en
+status: true
+dependencies: {  }
+name: 'Action Types'
+vid: action_types
+description: null
+weight: 0
+new_revision: false

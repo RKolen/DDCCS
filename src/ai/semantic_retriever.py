@@ -39,6 +39,10 @@ class SemanticRetriever:
         """True when Milvus is reachable."""
         return self._client.is_healthy()
 
+    def is_available(self) -> bool:
+        """Return True when Milvus is connected and reachable."""
+        return self._available
+
     # ------------------------------------------------------------------
     # Public retrieval API
     # ------------------------------------------------------------------

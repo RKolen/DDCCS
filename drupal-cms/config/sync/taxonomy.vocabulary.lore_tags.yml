@@ -1,0 +1,9 @@
+uuid: c97aa9a1-c509-49d8-9af9-19e312f957db
+langcode: en
+status: true
+dependencies: {  }
+name: 'Lore Tags'
+vid: lore_tags
+description: null
+weight: 0
+new_revision: false

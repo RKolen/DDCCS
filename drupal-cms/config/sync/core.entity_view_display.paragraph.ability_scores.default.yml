@@ -1,0 +1,75 @@
+uuid: 73ae2099-434c-4a42-a143-30fb078f1deb
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.paragraph.ability_scores.field_charisma
+    - field.field.paragraph.ability_scores.field_constitution
+    - field.field.paragraph.ability_scores.field_dexterity
+    - field.field.paragraph.ability_scores.field_intelligence
+    - field.field.paragraph.ability_scores.field_strength
+    - field.field.paragraph.ability_scores.field_wisdom
+    - paragraphs.paragraphs_type.ability_scores
+  module:
+    - entity_reference_revisions
+id: paragraph.ability_scores.default
+targetEntityType: paragraph
+bundle: ability_scores
+mode: default
+content:
+  field_charisma:
+    type: entity_reference_revisions_entity_view
+    label: above
+    settings:
+      view_mode: default
+      link: ''
+    third_party_settings: {  }
+    weight: 5
+    region: content
+  field_constitution:
+    type: entity_reference_revisions_entity_view
+    label: above
+    settings:
+      view_mode: default
+      link: ''
+    third_party_settings: {  }
+    weight: 2
+    region: content
+  field_dexterity:
+    type: entity_reference_revisions_entity_view
+    label: above
+    settings:
+      view_mode: default
+      link: ''
+    third_party_settings: {  }
+    weight: 1
+    region: content
+  field_intelligence:
+    type: entity_reference_revisions_entity_view
+    label: above
+    settings:
+      view_mode: default
+      link: ''
+    third_party_settings: {  }
+    weight: 3
+    region: content
+  field_strength:
+    type: entity_reference_revisions_entity_view
+    label: above
+    settings:
+      view_mode: default
+      link: ''
+    third_party_settings: {  }
+    weight: 0
+    region: content
+  field_wisdom:
+    type: entity_reference_revisions_entity_view
+    label: above
+    settings:
+      view_mode: default
+      link: ''
+    third_party_settings: {  }
+    weight: 4
+    region: content
+hidden:
+  search_api_excerpt: true

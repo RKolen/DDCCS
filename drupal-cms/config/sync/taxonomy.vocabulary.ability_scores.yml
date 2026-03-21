@@ -1,0 +1,9 @@
+uuid: 4c4fd9cc-e7ed-4234-bbf2-d363225d4f2a
+langcode: en
+status: true
+dependencies: {  }
+name: 'Ability Scores'
+vid: ability_scores
+description: null
+weight: 0
+new_revision: false

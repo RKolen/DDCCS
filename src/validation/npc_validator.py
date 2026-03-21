@@ -182,6 +182,7 @@ def validate_npc_json(
     # Optional fields for all profiles
     optional_fields = {
         "nickname": (str, type(None)),
+        "pronouns": (str, type(None)),
         "profile_type": (str, type(None)),
         "faction": (str, type(None)),
     }

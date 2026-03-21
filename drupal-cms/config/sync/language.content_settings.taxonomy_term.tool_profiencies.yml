@@ -1,0 +1,11 @@
+uuid: 307d1f6d-258e-4c4f-90da-e0c449c834c6
+langcode: en
+status: true
+dependencies:
+  config:
+    - taxonomy.vocabulary.tool_profiencies
+id: taxonomy_term.tool_profiencies
+target_entity_type_id: taxonomy_term
+target_bundle: tool_profiencies
+default_langcode: site_default
+language_alterable: false

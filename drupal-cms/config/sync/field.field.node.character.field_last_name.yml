@@ -1,0 +1,19 @@
+uuid: 3e74b958-bfec-4b7e-8f5e-0160c9c5c6c3
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_last_name
+    - node.type.character
+id: node.character.field_last_name
+field_name: field_last_name
+entity_type: node
+bundle: character
+label: 'Last Name'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string

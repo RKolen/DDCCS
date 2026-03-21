@@ -1,0 +1,11 @@
+uuid: 1603b2c0-30f5-4131-a104-65c78687bfc5
+langcode: en
+status: true
+dependencies:
+  config:
+    - taxonomy.vocabulary.action_types
+id: taxonomy_term.action_types
+target_entity_type_id: taxonomy_term
+target_bundle: action_types
+default_langcode: site_default
+language_alterable: false

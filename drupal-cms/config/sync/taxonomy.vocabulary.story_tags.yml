@@ -1,0 +1,9 @@
+uuid: 91928c03-9230-4482-8608-02c74999e1e5
+langcode: en
+status: true
+dependencies: {  }
+name: 'Story Tags'
+vid: story_tags
+description: null
+weight: 0
+new_revision: false

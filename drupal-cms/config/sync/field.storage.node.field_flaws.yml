@@ -1,0 +1,20 @@
+uuid: 54f5abbc-1a3d-481d-b79a-c74d14f60b18
+langcode: en
+status: true
+dependencies:
+  module:
+    - node
+    - text
+id: node.field_flaws
+field_name: field_flaws
+entity_type: node
+type: text
+settings:
+  max_length: 255
+module: text
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

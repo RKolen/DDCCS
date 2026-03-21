@@ -1,0 +1,23 @@
+uuid: ca1ee207-dfb5-4ad8-904c-924127bb184e
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_level
+    - node.type.character
+id: node.character.field_level
+field_name: field_level
+entity_type: node
+bundle: character
+label: Level
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  min: 1
+  max: null
+  prefix: ''
+  suffix: ''
+field_type: integer

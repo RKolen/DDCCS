@@ -1,0 +1,11 @@
+uuid: 51f88467-6faa-4510-945c-39ea2b4eeac8
+langcode: en
+status: true
+dependencies:
+  config:
+    - taxonomy.vocabulary.lineage
+id: taxonomy_term.lineage
+target_entity_type_id: taxonomy_term
+target_bundle: lineage
+default_langcode: site_default
+language_alterable: false

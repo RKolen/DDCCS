@@ -1,0 +1,19 @@
+uuid: e103a3a5-2d75-4d6c-8656-90118b7c5731
+langcode: en
+status: true
+dependencies:
+  module:
+    - node
+    - text
+id: node.field_personality_traits
+field_name: field_personality_traits
+entity_type: node
+type: text_long
+settings: {  }
+module: text
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

@@ -1,0 +1,9 @@
+uuid: 8ba4067d-3bb0-4984-84c6-886548af0da6
+langcode: en
+status: true
+dependencies: {  }
+name: Species
+vid: species
+description: null
+weight: 0
+new_revision: false

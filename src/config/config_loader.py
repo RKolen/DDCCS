@@ -18,6 +18,7 @@ from src.config.config_types import (
     DisplayConfig,
     DnDConfig,
     MilvusConfig,
+    MilvusEmbeddingConfig,
     ModelProfile,
     ModelRegistryConfig,
     PathConfig,
@@ -166,10 +167,12 @@ def _merge_config(base: DnDConfig, override: Dict[str, Any]) -> DnDConfig:
             collection_prefix=milvus_data.get(
                 "collection_prefix", base.milvus.collection_prefix
             ),
-            embedding_model=milvus_data.get(
-                "embedding_model", base.milvus.embedding_model
+            embedding=MilvusEmbeddingConfig(
+                model=milvus_data.get(
+                    "embedding_model", base.milvus.embedding.model
+                ),
+                dim=milvus_data.get("embedding_dim", base.milvus.embedding.dim),
             ),
-            embedding_dim=milvus_data.get("embedding_dim", base.milvus.embedding_dim),
             top_k=milvus_data.get("top_k", base.milvus.top_k),
             similarity_threshold=milvus_data.get(
                 "similarity_threshold", base.milvus.similarity_threshold
@@ -280,10 +283,10 @@ def _apply_env_milvus_overrides(
 
     milvus_model = get_env("MILVUS_EMBEDDING_MODEL")
     if milvus_model:
-        config.milvus.embedding_model = milvus_model
+        config.milvus.embedding.model = milvus_model
 
-    config.milvus.embedding_dim = get_env_int(
-        "MILVUS_EMBEDDING_DIM", config.milvus.embedding_dim
+    config.milvus.embedding.dim = get_env_int(
+        "MILVUS_EMBEDDING_DIM", config.milvus.embedding.dim
     )
     config.milvus.top_k = get_env_int("MILVUS_TOP_K", config.milvus.top_k)
     config.milvus.similarity_threshold = get_env_float(
@@ -439,8 +442,8 @@ def save_config(config: DnDConfig, path: Optional[Path] = None) -> bool:
             "host": config.milvus.host,
             "port": config.milvus.port,
             "collection_prefix": config.milvus.collection_prefix,
-            "embedding_model": config.milvus.embedding_model,
-            "embedding_dim": config.milvus.embedding_dim,
+            "embedding_model": config.milvus.embedding.model,
+            "embedding_dim": config.milvus.embedding.dim,
             "top_k": config.milvus.top_k,
             "similarity_threshold": config.milvus.similarity_threshold,
         },

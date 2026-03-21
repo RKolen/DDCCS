@@ -1,0 +1,23 @@
+uuid: b03191be-15a1-4db4-aa66-f36384eb7938
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_character_type
+    - node.type.character
+id: node.character.field_character_type
+field_name: field_character_type
+entity_type: node
+bundle: character
+label: 'Character Type'
+description: ''
+required: true
+translatable: false
+default_value:
+  -
+    value: 1
+default_value_callback: ''
+settings:
+  on_label: PC
+  off_label: NPC
+field_type: boolean

@@ -1,0 +1,20 @@
+uuid: e7899625-f3b5-41a2-ad09-f29af0e83d36
+langcode: en
+status: true
+dependencies:
+  module:
+    - node
+    - text
+id: node.field_ideals
+field_name: field_ideals
+entity_type: node
+type: text
+settings:
+  max_length: 255
+module: text
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

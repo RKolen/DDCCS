@@ -45,7 +45,7 @@ class EmbeddingPipeline:
     def __init__(self) -> None:
         cfg = load_config()
         self._client: AIClient = AIClient()
-        self._model: str = cfg.milvus.embedding_model
+        self._model: str = cfg.milvus.embedding.model
 
     # ------------------------------------------------------------------
     # Core embedding call

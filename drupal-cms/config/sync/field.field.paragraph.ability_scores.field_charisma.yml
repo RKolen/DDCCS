@@ -1,0 +1,37 @@
+uuid: c3469f34-7089-4a94-a56a-c60c33b22cb1
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.paragraph.field_charisma
+    - paragraphs.paragraphs_type.ability_score
+    - paragraphs.paragraphs_type.ability_scores
+  module:
+    - entity_reference_revisions
+id: paragraph.ability_scores.field_charisma
+field_name: field_charisma
+entity_type: paragraph
+bundle: ability_scores
+label: Charisma
+description: ''
+required: true
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:paragraph'
+  handler_settings:
+    target_bundles:
+      ability_score: ability_score
+    negate: 0
+    target_bundles_drag_drop:
+      ability_score:
+        weight: 4
+        enabled: true
+      ability_scores:
+        weight: 5
+        enabled: false
+      from_library:
+        weight: 6
+        enabled: false
+field_type: entity_reference_revisions

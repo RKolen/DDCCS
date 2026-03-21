@@ -880,6 +880,10 @@ if (getenv('IS_DDEV_PROJECT') == 'true' && file_exists(__DIR__ . '/settings.ddev
   include __DIR__ . '/settings.ddev.php';
 }
 
+// Config sync directory tracked in version control (overrides the DDEV default
+// which exports to web/sites/default/files/sync - a gitignored path).
+$settings['config_sync_directory'] = DRUPAL_ROOT . '/../config/sync';
+
 /**
  * Load local development override configuration, if available.
  *

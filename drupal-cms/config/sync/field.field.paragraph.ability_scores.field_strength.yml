@@ -1,0 +1,37 @@
+uuid: 5df52d5b-e620-4dc8-bdeb-9d5c3481da28
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.paragraph.field_strength
+    - paragraphs.paragraphs_type.ability_score
+    - paragraphs.paragraphs_type.ability_scores
+  module:
+    - entity_reference_revisions
+id: paragraph.ability_scores.field_strength
+field_name: field_strength
+entity_type: paragraph
+bundle: ability_scores
+label: Strength
+description: ''
+required: true
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:paragraph'
+  handler_settings:
+    target_bundles:
+      ability_score: ability_score
+    negate: 0
+    target_bundles_drag_drop:
+      ability_score:
+        weight: 4
+        enabled: true
+      ability_scores:
+        weight: 5
+        enabled: false
+      from_library:
+        weight: 6
+        enabled: false
+field_type: entity_reference_revisions

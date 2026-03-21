@@ -1,0 +1,11 @@
+uuid: 23cee416-5ede-4ee8-a14a-54fd22988308
+langcode: en
+status: true
+dependencies:
+  config:
+    - taxonomy.vocabulary.creature_types
+id: taxonomy_term.creature_types
+target_entity_type_id: taxonomy_term
+target_bundle: creature_types
+default_langcode: site_default
+language_alterable: false

@@ -1,0 +1,11 @@
+uuid: 4080d98c-43b0-40e2-a681-1c9b9ece364e
+langcode: en
+status: true
+dependencies:
+  config:
+    - taxonomy.vocabulary.backgrounds
+id: taxonomy_term.backgrounds
+target_entity_type_id: taxonomy_term
+target_bundle: backgrounds
+default_langcode: site_default
+language_alterable: false

@@ -1,0 +1,20 @@
+uuid: 590ef5bd-ed8d-47a3-ba55-0da5116a5c7d
+langcode: en
+status: true
+dependencies:
+  module:
+    - node
+id: node.field_movement_speed
+field_name: field_movement_speed
+entity_type: node
+type: integer
+settings:
+  unsigned: false
+  size: normal
+module: core
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

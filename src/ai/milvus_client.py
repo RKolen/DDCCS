@@ -49,7 +49,7 @@ class MilvusClient:
         self._host = cfg.host
         self._port = cfg.port
         self._prefix = cfg.collection_prefix
-        self._dim = cfg.embedding_dim
+        self._dim = cfg.embedding.dim
         self.connected: bool = False
 
     def connect(self) -> bool:

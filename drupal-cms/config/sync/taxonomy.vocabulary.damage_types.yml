@@ -1,0 +1,9 @@
+uuid: 01f43aae-c715-4ebf-9911-ab9cadbc4405
+langcode: en
+status: true
+dependencies: {  }
+name: 'Damage Types'
+vid: damage_types
+description: null
+weight: 0
+new_revision: false

@@ -1,0 +1,9 @@
+uuid: b07fde19-fc41-4e79-ad7d-8c7b1a59413e
+langcode: en
+status: true
+dependencies: {  }
+name: Factions
+vid: factions
+description: null
+weight: 0
+new_revision: false

@@ -1,0 +1,25 @@
+uuid: 6b90025b-7676-455a-a77f-7e6d274c3157
+langcode: en
+status: true
+dependencies:
+  module:
+    - ai_search
+    - ai_vdb_provider_milvus
+id: milvus_ai_search
+name: 'Milvus AI Search'
+description: 'Semantic search server backed by Milvus vector database and Ollama embeddings.'
+backend: search_api_ai_search
+backend_config:
+  chat_model: ollama__glm_4_7_flash_latest
+  database: milvus
+  database_settings:
+    database_name: default
+    collection: drupal_search
+    metric: cosine_similarity
+  embeddings_engine: ollama__nomic_embed_text_latest
+  embeddings_engine_configuration:
+    set_dimensions: false
+    dimensions: 768
+  embedding_strategy: contextual_chunks
+  embedding_strategy_configuration: {  }
+  include_raw_embedding_vector: false

@@ -96,6 +96,7 @@ def _create_fallback_profile(
     base_profile: dict[str, Any] = {
         "name": npc_name,
         "nickname": None,
+        "pronouns": None,
         "role": role or "NPC",
         "species": "Human",
         "lineage": "",
@@ -191,6 +192,7 @@ def generate_npc_from_story(
         return {
             "name": npc_name,
             "nickname": None,
+            "pronouns": None,
             "role": role or "NPC",
             "species": "Human",
             "lineage": "",
@@ -297,6 +299,7 @@ Return ONLY valid JSON in this format:
         npc_profile = {
             "name": npc_name,
             "nickname": npc_data.get("nickname"),
+            "pronouns": npc_data.get("pronouns"),
             "role": role or npc_data.get("role", "NPC"),
             "species": npc_data.get("species", "Human"),
             "lineage": npc_data.get("lineage", ""),

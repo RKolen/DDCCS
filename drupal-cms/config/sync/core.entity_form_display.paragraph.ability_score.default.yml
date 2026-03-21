@@ -1,0 +1,33 @@
+uuid: 7207c1ee-c2cb-4c85-857c-1365baa50480
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.paragraph.ability_score.field_ability
+    - field.field.paragraph.ability_score.field_score
+    - paragraphs.paragraphs_type.ability_score
+id: paragraph.ability_score.default
+targetEntityType: paragraph
+bundle: ability_score
+mode: default
+content:
+  field_ability:
+    type: entity_reference_autocomplete
+    weight: 0
+    region: content
+    settings:
+      match_operator: CONTAINS
+      match_limit: 10
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+  field_score:
+    type: number
+    weight: 1
+    region: content
+    settings:
+      placeholder: ''
+    third_party_settings: {  }
+hidden:
+  created: true
+  status: true

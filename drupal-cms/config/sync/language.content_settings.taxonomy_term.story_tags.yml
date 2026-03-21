@@ -1,0 +1,11 @@
+uuid: 2dde9be0-4a84-40e3-82b9-61155785f942
+langcode: en
+status: true
+dependencies:
+  config:
+    - taxonomy.vocabulary.story_tags
+id: taxonomy_term.story_tags
+target_entity_type_id: taxonomy_term
+target_bundle: story_tags
+default_langcode: site_default
+language_alterable: false

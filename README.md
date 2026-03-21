@@ -36,7 +36,7 @@ A Python-based system for managing D&D Documentation
 
 ## Current Project Structure
 
-```
+```text
 D&D CCS/
 ├── game_data/              #  ALL YOUR CAMPAIGN DATA (git-ignored except examples)
 │   ├── characters/         # Character profile JSON files (unlimited)
@@ -187,7 +187,7 @@ The system uses `current_party.json` to track your active adventuring party. Thi
 
 ### Setting Up Your Party
 
-**Option 1: Use the Interactive CLI (Recommended)**
+**Option 1: Use the Interactive CLI (Recommended):**
 
 ```powershell
 # Full module path
@@ -199,7 +199,7 @@ python dnd_consultant.py
 # Then choose: 1. Manage Characters → Create Default Party Configuration
 ```
 
-**Option 2: Manual Configuration**
+**Option 2: Manual Configuration:**
 
 ```powershell
 # Copy the example file
@@ -223,13 +223,13 @@ copy game_data\current_party\current_party.example.json game_data\current_party\
 
 ### Important Notes
 
- **Character Names Must Match Exactly**
+ **Character Names Must Match Exactly:**
 
 - Names in `current_party.json` must match character JSON filenames
 - Example: `"Aragorn"` → `game_data/characters/aragorn.json`
 - Case-insensitive matching, but exact spelling required
 
- **Git Ignored by Default**
+ **Git Ignored by Default:**
 
 - `game_data/current_party/current_party.json` is in `.gitignore` (your personal party configuration)
 - `game_data/current_party/current_party.example.json` is tracked (template for others)
@@ -293,7 +293,7 @@ All user-generated campaigns are stored in `game_data/campaigns/` and automatica
 
 ### Complete Story Creation Workflow
 
-**1. Write Story**
+**1. Write Story:**
 
 ```markdown
 game_data/campaigns/Your_Campaign/
@@ -380,7 +380,7 @@ Party encountered unexpected pursuit and made contact with merchant information 
 
 **Automatic File Generation:**
 
-```
+```text
 [Your_Campaign/]
 ├── 001_Story_Name.md                           # Your narrative
 ├── character_development_001_Story_Name.md     # Auto-generated
@@ -446,7 +446,7 @@ npc_profile = story_manager.generate_npc_from_story(
 story_manager.save_npc_profile(npc_profile)
 ```
 
-```
+```text
 
 ** Full Documentation:** [docs/NPC_DETECTION.md](docs/NPC_DETECTION.md)
 

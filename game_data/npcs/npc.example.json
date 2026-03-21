@@ -4,6 +4,7 @@
   "faction": "neutral",
   "name": "NPC Name",
   "nickname": null,
+  "pronouns": null,
   "role": "Role or occupation (e.g., innkeeper, merchant, guard)",
   "species": "Human",
   "lineage": "",

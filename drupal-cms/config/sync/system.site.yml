@@ -1,0 +1,15 @@
+_core:
+  default_config_hash: HlN7eAN2N4JIHsYv56V4E7sqC9bS609KwvGFjyD_mgk
+langcode: en
+uuid: 470bf327-3563-4447-93b7-6b0b0e159ca9
+name: 'New Beginnings'
+mail: admin@example.com
+slogan: ''
+page:
+  403: /user
+  404: /user
+  front: /node/1
+admin_compact_mode: false
+weight_select_max: 100
+default_langcode: en
+mail_notification: null

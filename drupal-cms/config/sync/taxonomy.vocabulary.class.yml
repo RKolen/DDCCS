@@ -1,0 +1,9 @@
+uuid: 86c4b135-9350-4eeb-97bb-3fbd597bf0d3
+langcode: en
+status: true
+dependencies: {  }
+name: Classes
+vid: class
+description: null
+weight: 0
+new_revision: false

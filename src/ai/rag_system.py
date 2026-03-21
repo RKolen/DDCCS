@@ -30,6 +30,12 @@ from src.items.item_registry import ItemRegistry
 CONFIG_LOADER_AVAILABLE = True
 
 try:
+    from src.ai.semantic_retriever import SemanticRetriever
+    SEMANTIC_RETRIEVER_AVAILABLE = True
+except ImportError:
+    SEMANTIC_RETRIEVER_AVAILABLE = False
+
+try:
     import requests
     from bs4 import BeautifulSoup
 
@@ -678,6 +684,45 @@ class RAGSystem:
             print(
                 f"   Custom item filter: {custom_count} items - will NOT lookup on wikidot"
             )
+
+    def get_relevant_context(self, prompt: str, campaign_name: str) -> str:
+        """Return semantically relevant lore context for an AI prompt.
+
+        Uses Milvus semantic retrieval when available, otherwise falls back
+        to no additional context (callers should use get_context_for_location
+        for keyword-based lore injection).
+
+        Args:
+            prompt: The current AI prompt text to find context for.
+            campaign_name: Active campaign name for story-chunk scoping.
+
+        Returns:
+            Formatted context string to inject into the AI prompt, or empty
+            string when Milvus is unavailable.
+        """
+        if not SEMANTIC_RETRIEVER_AVAILABLE:
+            return ""
+        retriever = SemanticRetriever()
+        if not retriever.is_available():
+            return ""
+
+        lore_chunks = retriever.get_relevant_lore(prompt)
+        story_chunks = retriever.get_relevant_story_context(prompt, campaign_name)
+
+        parts: List[str] = []
+        if lore_chunks:
+            parts.append("=== SEMANTIC LORE CONTEXT ===")
+            for chunk in lore_chunks:
+                parts.append(chunk.get("chunk_text", ""))
+            parts.append("=== END LORE CONTEXT ===")
+
+        if story_chunks:
+            parts.append("=== RELEVANT STORY CONTEXT ===")
+            for chunk in story_chunks:
+                parts.append(chunk.get("chunk_text", ""))
+            parts.append("=== END STORY CONTEXT ===")
+
+        return "\n\n".join(parts) if parts else ""
 
     def get_context_for_location(
         self, location_name: str, max_sections: int = 2

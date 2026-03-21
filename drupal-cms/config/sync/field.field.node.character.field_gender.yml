@@ -1,0 +1,21 @@
+uuid: b23da915-18bb-4508-b18e-b719ec01a8b5
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_gender
+    - node.type.character
+  module:
+    - options
+id: node.character.field_gender
+field_name: field_gender
+entity_type: node
+bundle: character
+label: Gender
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: list_string

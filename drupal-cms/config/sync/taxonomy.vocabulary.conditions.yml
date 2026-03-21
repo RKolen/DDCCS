@@ -1,0 +1,9 @@
+uuid: 462bcb2e-b35a-4a04-a687-10def7b1ce9d
+langcode: en
+status: true
+dependencies: {  }
+name: Conditions
+vid: conditions
+description: null
+weight: 0
+new_revision: false

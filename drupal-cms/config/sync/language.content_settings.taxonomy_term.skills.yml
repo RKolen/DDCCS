@@ -1,0 +1,11 @@
+uuid: be10057e-2f58-4777-96d1-0fd0c057ddfb
+langcode: en
+status: true
+dependencies:
+  config:
+    - taxonomy.vocabulary.skills
+id: taxonomy_term.skills
+target_entity_type_id: taxonomy_term
+target_bundle: skills
+default_langcode: site_default
+language_alterable: false

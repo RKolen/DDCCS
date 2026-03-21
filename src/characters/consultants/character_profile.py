@@ -28,6 +28,14 @@ LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
+class CharacterSubtype:
+    """Species lineage and class specialization sub-specifications."""
+
+    lineage: Optional[str] = None
+    subclass: Optional[str] = None
+
+
+@dataclass
 class CharacterIdentity:
     """Basic character identity information."""
 
@@ -36,8 +44,8 @@ class CharacterIdentity:
     nickname: Optional[str] = None
     level: int = 1
     species: str = "Human"
-    lineage: Optional[str] = None
-    subclass: Optional[str] = None
+    subtype: CharacterSubtype = field(default_factory=CharacterSubtype)
+    pronouns: Optional[str] = None
 
 
 @dataclass
@@ -169,12 +177,12 @@ class CharacterProfile:
     @property
     def lineage(self) -> Optional[str]:
         """Character lineage."""
-        return self.identity.lineage
+        return self.identity.subtype.lineage
 
     @property
     def subclass(self) -> Optional[str]:
         """Character subclass."""
-        return self.identity.subclass
+        return self.identity.subtype.subclass
 
     def get_all_abilities(self) -> List[str]:
         """Get a combined list of all character abilities, spells, and feats."""
@@ -293,11 +301,12 @@ class CharacterProfile:
         """Update identity fields in data dict."""
         data["name"] = self.identity.name
         data["nickname"] = self.identity.nickname
+        data["pronouns"] = self.identity.pronouns
         data["dnd_class"] = self.identity.character_class.value
         data["level"] = self.identity.level
         data["species"] = self.identity.species
-        data["lineage"] = self.identity.lineage
-        data["subclass"] = self.identity.subclass
+        data["lineage"] = self.identity.subtype.lineage
+        data["subclass"] = self.identity.subtype.subclass
 
     def _update_personality_fields(self, data: Dict[str, Any]) -> None:
         """Update personality fields in data dict."""
@@ -427,6 +436,10 @@ class CharacterProfile:
         if "nickname" not in data:
             data["nickname"] = None
 
+        # Ensure pronouns is present (can be None)
+        if "pronouns" not in data:
+            data["pronouns"] = None
+
         # Handle both 'character_class' and 'dnd_class' field names
         character_class_name = (
             data.get("dnd_class") or data.get("character_class") or "fighter"
@@ -444,8 +457,11 @@ class CharacterProfile:
             nickname=data.get("nickname"),
             level=data.get("level", 1),
             species=data.get("species", "Human"),
-            lineage=data.get("lineage"),
-            subclass=data.get("subclass"),
+            subtype=CharacterSubtype(
+                lineage=data.get("lineage"),
+                subclass=data.get("subclass"),
+            ),
+            pronouns=data.get("pronouns"),
         )
 
         # Create personality (map field names)

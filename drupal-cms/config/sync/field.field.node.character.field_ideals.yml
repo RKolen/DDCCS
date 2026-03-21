@@ -1,0 +1,24 @@
+uuid: 5613a058-35ba-46ae-9ad3-7883bf74b47b
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_ideals
+    - filter.format.plain_text
+    - node.type.character
+  module:
+    - text
+id: node.character.field_ideals
+field_name: field_ideals
+entity_type: node
+bundle: character
+label: Ideals
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  allowed_formats:
+    - plain_text
+field_type: text

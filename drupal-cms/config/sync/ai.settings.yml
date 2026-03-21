@@ -1,0 +1,15 @@
+_core:
+  default_config_hash: xBacXNIAeqGYsfpaWGL1l22dWVUT-YmLNlB3pdU0Czk
+prompt_logging: false
+prompt_logging_tags: ''
+default_providers:
+  chat:
+    provider_id: ollama
+    model_id: glm_4_7_flash_latest
+  embeddings:
+    provider_id: ollama
+    model_id: nomic_embed_text_latest
+default_vdb_provider: milvus
+request_timeout: 60
+allowed_hosts: {  }
+allowed_hosts_rewrite_links: false

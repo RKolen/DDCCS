@@ -1,0 +1,32 @@
+uuid: 8cc5e45a-44e9-4f76-a0d1-9e06be86f965
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.paragraph.ability_score.field_ability
+    - field.field.paragraph.ability_score.field_score
+    - paragraphs.paragraphs_type.ability_score
+id: paragraph.ability_score.default
+targetEntityType: paragraph
+bundle: ability_score
+mode: default
+content:
+  field_ability:
+    type: entity_reference_label
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 0
+    region: content
+  field_score:
+    type: number_integer
+    label: above
+    settings:
+      thousand_separator: ''
+      prefix_suffix: true
+    third_party_settings: {  }
+    weight: 1
+    region: content
+hidden:
+  search_api_excerpt: true

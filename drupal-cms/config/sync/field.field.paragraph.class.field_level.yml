@@ -1,0 +1,23 @@
+uuid: f85176d3-855b-4877-8bf3-7dfa959df435
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.paragraph.field_level
+    - paragraphs.paragraphs_type.class
+id: paragraph.class.field_level
+field_name: field_level
+entity_type: paragraph
+bundle: class
+label: Level
+description: ''
+required: true
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  min: 1
+  max: 20
+  prefix: ''
+  suffix: ''
+field_type: integer

@@ -1,0 +1,24 @@
+uuid: b6dae4e5-59b8-44aa-b2af-c189cf7273ca
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_personality_traits
+    - filter.format.plain_text
+    - node.type.character
+  module:
+    - text
+id: node.character.field_personality_traits
+field_name: field_personality_traits
+entity_type: node
+bundle: character
+label: 'Personality Traits'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  allowed_formats:
+    - plain_text
+field_type: text_long

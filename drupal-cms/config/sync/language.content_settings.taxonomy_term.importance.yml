@@ -1,0 +1,11 @@
+uuid: 8be905bb-08a0-4f8f-bca6-4906ff6c70c0
+langcode: en
+status: true
+dependencies:
+  config:
+    - taxonomy.vocabulary.importance
+id: taxonomy_term.importance
+target_entity_type_id: taxonomy_term
+target_bundle: importance
+default_langcode: site_default
+language_alterable: false

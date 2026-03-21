@@ -1,0 +1,95 @@
+uuid: f3191875-3443-4e01-b1f0-0b8f5e68cc7c
+langcode: en
+status: true
+dependencies:
+  config:
+    - search_api.server.milvus_ai_search
+  module:
+    - ai_search
+    - node
+id: milvus_ai_content
+name: 'Milvus AI Content Index'
+description: 'Indexes site content for semantic AI search via Milvus.'
+read_only: false
+field_settings:
+  body:
+    label: Body
+    datasource_id: 'entity:node'
+    property_path: 'body:value'
+    type: text
+    indexed_locked: false
+    type_locked: false
+    dependencies: {  }
+  nid:
+    label: 'Node ID'
+    datasource_id: 'entity:node'
+    property_path: nid
+    type: integer
+    indexed_locked: false
+    type_locked: false
+    dependencies: {  }
+  status:
+    label: 'Publishing status'
+    datasource_id: 'entity:node'
+    property_path: status
+    type: boolean
+    indexed_locked: false
+    type_locked: false
+    dependencies: {  }
+  title:
+    label: Title
+    datasource_id: 'entity:node'
+    property_path: title
+    type: text
+    indexed_locked: false
+    type_locked: false
+    dependencies: {  }
+datasource_settings:
+  'entity:node':
+    bundles:
+      default: true
+      selected: {  }
+    languages:
+      default: true
+      selected: {  }
+processor_settings:
+  add_url:
+    weights:
+      preprocess_index: -30
+  html_filter:
+    weights:
+      preprocess_index: -10
+      preprocess_query: -10
+    all_fields: false
+    fields:
+      - body
+    tags: {  }
+  ignorecase:
+    weights:
+      preprocess_index: -10
+      preprocess_query: -10
+    fields:
+      - body
+      - title
+  tokenizer:
+    weights:
+      preprocess_index: -6
+      preprocess_query: -6
+    fields:
+      - body
+      - title
+    spaces: ''
+    ignored: ''
+    minimum_word_size: '3'
+    overlap: 3
+  transliteration:
+    weights:
+      preprocess_index: -4
+      preprocess_query: -4
+tracker_settings:
+  default:
+    indexing_order: fifo
+options:
+  cron_limit: 50
+  index_directly: true
+server: milvus_ai_search

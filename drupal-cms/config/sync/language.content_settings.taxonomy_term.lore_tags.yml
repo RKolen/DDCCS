@@ -1,0 +1,11 @@
+uuid: 54eef95e-31d4-4204-9912-f37a66c2ce8d
+langcode: en
+status: true
+dependencies:
+  config:
+    - taxonomy.vocabulary.lore_tags
+id: taxonomy_term.lore_tags
+target_entity_type_id: taxonomy_term
+target_bundle: lore_tags
+default_langcode: site_default
+language_alterable: false

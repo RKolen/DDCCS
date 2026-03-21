@@ -1,0 +1,10 @@
+uuid: 644ba290-a23e-47da-ac54-928a1c18ecc5
+langcode: en
+status: true
+dependencies: {  }
+id: ability_scores
+label: 'Ability Scores'
+icon_uuid: null
+icon_default: null
+description: ''
+behavior_plugins: {  }

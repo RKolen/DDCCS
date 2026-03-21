@@ -1,0 +1,19 @@
+uuid: 48ad891f-6962-4683-9e17-0e1f4d54d91a
+langcode: en
+status: true
+dependencies:
+  module:
+    - node
+id: node.field_backstory
+field_name: field_backstory
+entity_type: node
+type: string_long
+settings:
+  case_sensitive: false
+module: core
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

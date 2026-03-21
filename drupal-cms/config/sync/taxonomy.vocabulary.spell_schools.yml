@@ -1,0 +1,9 @@
+uuid: 989c4e58-94f7-46a9-8512-463a5b001232
+langcode: en
+status: true
+dependencies: {  }
+name: 'Spell Schools'
+vid: spell_schools
+description: null
+weight: 0
+new_revision: false

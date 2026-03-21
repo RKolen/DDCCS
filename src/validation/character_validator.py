@@ -34,6 +34,7 @@ def _validate_required_fields(
     # Optional fields with type validation if present
     optional_fields: dict[str, Any] = {
         "nickname": (str, type(None)),
+        "pronouns": (str, type(None)),
         "model_profile": (str, type(None)),
     }
 
@@ -160,6 +161,24 @@ def _validate_relationships(data: Dict[str, Any], file_prefix: str) -> List[str]
     return errors
 
 
+def _validate_pronouns(data: Dict[str, Any], file_prefix: str) -> List[str]:
+    """Validate pronouns field format if present."""
+    errors: List[str] = []
+    if "pronouns" not in data:
+        return errors
+    pronouns = data["pronouns"]
+    if pronouns is None:
+        return errors
+    if not isinstance(pronouns, str):
+        errors.append(
+            f"{file_prefix}Field 'pronouns' must be a string or null, "
+            f"got {type(pronouns).__name__}"
+        )
+    elif not pronouns.strip():
+        errors.append(f"{file_prefix}Field 'pronouns' cannot be an empty string")
+    return errors
+
+
 def validate_character_json(
     data: Dict[str, Any], filepath: str = ""
 ) -> Tuple[bool, List[str]]:
@@ -184,6 +203,7 @@ def validate_character_json(
     errors.extend(_validate_known_spells(data, file_prefix))
     errors.extend(_validate_ability_scores(data, file_prefix))
     errors.extend(_validate_relationships(data, file_prefix))
+    errors.extend(_validate_pronouns(data, file_prefix))
 
     return len(errors) == 0, errors
 

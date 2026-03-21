@@ -1,0 +1,9 @@
+uuid: 684457d5-9300-4962-a6b3-7422fdbdaa3f
+langcode: en
+status: true
+dependencies: {  }
+name: 'Tool Profiencies'
+vid: tool_profiencies
+description: null
+weight: 0
+new_revision: false

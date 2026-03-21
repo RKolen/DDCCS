@@ -84,8 +84,6 @@ All features below have detailed implementation plans in the `plans/` directory.
 
 ### User Experience
 
-- [ ] **Pronouns** - Add pronouns to character files - [Plan](plans/pronouns_field_plan.md)
-
 ## Medium Priority
 
 ### Character System Improvements
@@ -147,14 +145,13 @@ a solo DM using the CLI today; (3) risk and complexity.
 
 | # | Plan | Reason |
 |---|------|--------|
-| 3 | [Pronouns Field](plans/pronouns_field_plan.md) | Tiny data-model change. Easiest possible quick win; best done before other character-system changes add migration burden. |
 | 4 | [Profile Verification](plans/profile_verification_plan.md) | Audits existing JSON templates for consistency. Cheap to do now; expensive to fix later when Milvus, spotlighting, and arc analysis depend on clean data. |
 | 5 | [Party Alterations](plans/party_alterations_plan.md) | Moves party data to campaign files — a data-model cleanup. Better done before relationship mapping, timeline, and calendar features lock in the current structure. |
 
 ### Tier 2 — Core Value (High DM impact, moderate effort)
 
 | # | Plan | Reason |
-|---|------|-------
+|---|------|-------|
 | 7 | [Character Names Split](plans/character_names_plan.md) | Data-model change that downstream features (relationship mapping, timeline) will depend on. Better done before those features. |
 | 8 | [Session Notes Integration](plans/session_notes_plan.md) | Feeds session events into spotlighting and timeline. Improves the core DM workflow immediately. |
 | 9 | [Spotlighting System](plans/spotlighting_system_plan.md) | High DM value. Depends on story parsing (done) and session notes. Benefits from Milvus but works without it. |
@@ -206,6 +203,11 @@ a solo DM using the CLI today; (3) risk and complexity.
 ---
 
 ## Recently Completed
+
+### Pronouns - March 21, 2026
+
+- [x] **Pronouns** - Added pronouns field to all character/NPC profiles, validators, AI prompts, and CLI display. All 18 non-example JSON files updated.
+- [x] **Milvus Integration** - Wired SemanticRetriever to RAGSystem, added `get_relevant_context()`, added integration tests, updated `.env.example`.
 
 ### Milvus Integration - March 15, 2026
 

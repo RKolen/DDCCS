@@ -5,6 +5,7 @@
     "_npc_fields_section": "=== CORE NPC FIELDS (REQUIRED) ===",
     "name": "NPC Name",
     "nickname": null,
+    "pronouns": null,
     "role": "Role or occupation (e.g., Warrior, Merchant, Guard Captain)",
     "species": "Human",
     "lineage": "",

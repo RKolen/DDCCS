@@ -66,6 +66,9 @@ class AIConsultant:
             f"You are level {self.profile.level}.",
         ]
 
+        if self.profile.identity.pronouns:
+            prompt_parts.append(f"Your pronouns are {self.profile.identity.pronouns}.")
+
         if self.profile.background_story:
             prompt_parts.append(
                 f"\nYour background: {self.profile.background_story[:500]}"

@@ -1,0 +1,37 @@
+uuid: a7401880-c6b6-454a-950c-92ed3cbecb0a
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_ability_scores
+    - node.type.character
+    - paragraphs.paragraphs_type.from_library
+  module:
+    - entity_reference_revisions
+id: node.character.field_ability_scores
+field_name: field_ability_scores
+entity_type: node
+bundle: character
+label: 'Ability Scores'
+description: ''
+required: true
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:paragraph'
+  handler_settings:
+    target_bundles:
+      from_library: from_library
+    negate: 0
+    target_bundles_drag_drop:
+      ability_score:
+        weight: 4
+        enabled: false
+      ability_scores:
+        weight: 5
+        enabled: false
+      from_library:
+        weight: 6
+        enabled: true
+field_type: entity_reference_revisions

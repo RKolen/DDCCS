@@ -1,0 +1,11 @@
+uuid: 312267b9-353b-4288-91dc-9613c906f2cd
+langcode: en
+status: true
+dependencies:
+  config:
+    - taxonomy.vocabulary.spell_schools
+id: taxonomy_term.spell_schools
+target_entity_type_id: taxonomy_term
+target_bundle: spell_schools
+default_langcode: site_default
+language_alterable: false

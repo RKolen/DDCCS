@@ -1,0 +1,11 @@
+uuid: 05eb4f2f-739b-42c5-8f43-c39695557f53
+langcode: en
+status: true
+dependencies:
+  config:
+    - taxonomy.vocabulary.factions
+id: taxonomy_term.factions
+target_entity_type_id: taxonomy_term
+target_bundle: factions
+default_langcode: site_default
+language_alterable: false

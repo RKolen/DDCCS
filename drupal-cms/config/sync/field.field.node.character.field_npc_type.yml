@@ -1,0 +1,21 @@
+uuid: f23f8312-2eec-40cd-82fb-1999ad378842
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_npc_type
+    - node.type.character
+id: node.character.field_npc_type
+field_name: field_npc_type
+entity_type: node
+bundle: character
+label: 'NPC Type'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  on_label: Recurring
+  off_label: Quick
+field_type: boolean

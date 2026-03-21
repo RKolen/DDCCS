@@ -1,0 +1,23 @@
+uuid: a847f77f-f997-4e00-b29e-5827ddfa41e3
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_movement_speed
+    - node.type.character
+id: node.character.field_movement_speed
+field_name: field_movement_speed
+entity_type: node
+bundle: character
+label: 'Movement Speed'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  min: null
+  max: null
+  prefix: ''
+  suffix: ''
+field_type: integer

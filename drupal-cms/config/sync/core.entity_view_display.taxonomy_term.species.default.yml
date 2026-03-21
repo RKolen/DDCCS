@@ -1,0 +1,23 @@
+uuid: fc2dede4-9878-4cdb-8278-a3a678046bf8
+langcode: en
+status: true
+dependencies:
+  config:
+    - taxonomy.vocabulary.species
+  module:
+    - text
+id: taxonomy_term.species.default
+targetEntityType: taxonomy_term
+bundle: species
+mode: default
+content:
+  description:
+    type: text_default
+    label: hidden
+    settings: {  }
+    third_party_settings: {  }
+    weight: 0
+    region: content
+hidden:
+  langcode: true
+  search_api_excerpt: true

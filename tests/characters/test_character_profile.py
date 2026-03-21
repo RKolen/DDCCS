@@ -27,6 +27,7 @@ from tests import test_helpers
 from src.characters.consultants.character_profile import (
     CharacterProfile,
     CharacterIdentity,
+    CharacterSubtype,
     CharacterPersonality,
     CharacterBehavior,
     CharacterStory,
@@ -94,7 +95,7 @@ def test_character_profile_full_initialization():
         species="Dwarf",
         level=10,
         nickname="The Hammer",
-        subclass="Battle Master",
+        subtype=CharacterSubtype(subclass="Battle Master"),
     )
 
     personality = CharacterPersonality(
@@ -152,7 +153,7 @@ def test_character_profile_full_initialization():
     assert profile.character_class == DnDClass.FIGHTER, "Class incorrect"
     assert profile.level == 10, "Level incorrect"
     assert profile.identity.nickname == "The Hammer", "Nickname incorrect"
-    assert profile.identity.subclass == "Battle Master", "Subclass incorrect"
+    assert profile.identity.subtype.subclass == "Battle Master", "Subclass incorrect"
     assert "veteran warrior" in profile.background_story, "Background incorrect"
     assert len(profile.personality.motivations) == 2, "Motivations count incorrect"
     assert "Elara" in profile.relationships, "Relationship missing"

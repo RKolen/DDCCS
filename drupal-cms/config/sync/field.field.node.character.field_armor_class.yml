@@ -1,0 +1,23 @@
+uuid: 8e3cf310-aeec-4bdf-a7d8-4d21f825a39e
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_armor_class
+    - node.type.character
+id: node.character.field_armor_class
+field_name: field_armor_class
+entity_type: node
+bundle: character
+label: 'Armor Class'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  min: null
+  max: null
+  prefix: ''
+  suffix: ''
+field_type: integer

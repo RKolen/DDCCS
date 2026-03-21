@@ -96,8 +96,11 @@ class CharacterCLIManager:
         for i, name in enumerate(characters, 1):
             profile = self.story_manager.get_character_profile(name)
             if profile:
+                pronouns_display = (
+                    f" [{profile.identity.pronouns}]" if profile.identity.pronouns else ""
+                )
                 print(
-                    f"{i}. {name} ({profile.character_class.value} "
+                    f"{i}. {name}{pronouns_display} ({profile.character_class.value} "
                     f"Level {profile.level})"
                 )
                 if profile.personality_summary:

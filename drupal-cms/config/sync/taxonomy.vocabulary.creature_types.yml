@@ -1,0 +1,9 @@
+uuid: cd16fbf8-1b65-4eca-89a7-e9fe3939daea
+langcode: en
+status: true
+dependencies: {  }
+name: 'Creature Types'
+vid: creature_types
+description: null
+weight: 0
+new_revision: false

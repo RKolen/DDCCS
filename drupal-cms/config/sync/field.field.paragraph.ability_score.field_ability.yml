@@ -1,0 +1,29 @@
+uuid: 25387ab1-e4a4-40cc-982a-c8d3bdd2e2b4
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.paragraph.field_ability
+    - paragraphs.paragraphs_type.ability_score
+    - taxonomy.vocabulary.ability_scores
+id: paragraph.ability_score.field_ability
+field_name: field_ability
+entity_type: paragraph
+bundle: ability_score
+label: Ability
+description: ''
+required: true
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:taxonomy_term'
+  handler_settings:
+    target_bundles:
+      ability_scores: ability_scores
+    sort:
+      field: name
+      direction: asc
+    auto_create: false
+    auto_create_bundle: ''
+field_type: entity_reference
