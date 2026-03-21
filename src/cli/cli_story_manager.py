@@ -522,14 +522,13 @@ class StoryCLIManager:
 
             # Save party configuration into campaign folder (always write a file,
             # even if the user accepted defaults or left the input blank)
-            campaign_folder = os.path.dirname(filepath)
-            party_config_path = os.path.join(campaign_folder, "current_party.json")
-            save_current_party(party_members, config_path=party_config_path)
+            save_current_party(party_members, series_name, self.workspace_path)
 
             print(f"\n[SUCCESS] Created story series: {series_name}")
             print(f"   First story: {first_story_name}")
             print(f"   Location: {filepath}")
-            print(f"   Current party saved: {party_config_path}")
+            campaign_folder = os.path.dirname(filepath)
+            print(f"   Current party saved: {os.path.join(campaign_folder, 'current_party.json')}")
 
             # Run workflow orchestration to create auxiliary files
             print("\n[INFO] Processing story for NPCs, hooks, and analysis...")

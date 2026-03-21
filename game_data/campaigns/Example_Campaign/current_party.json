@@ -1,8 +1,12 @@
 {
+  "campaign_name": "Example_Campaign",
   "party_members": [
     "Aragorn",
     "Frodo Baggins",
     "Gandalf the Grey"
   ],
-  "last_updated": "2025-10-12T08:25:04.637762"
+  "active": true,
+  "created_date": "2025-10-12T08:25:04.637762",
+  "last_updated": "2025-10-12T08:25:04.637762",
+  "notes": ""
 }

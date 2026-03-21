@@ -71,7 +71,7 @@ flowchart TD
 
 ### 1. New Directory Structure
 
-```
+```text
 game_data/
 ├── characters/           # Shared character pool
 │   ├── aragorn.json
@@ -417,7 +417,7 @@ def validate_party_json(
 
 Ensure all test campaigns have valid party files:
 
-```
+```text
 game_data/campaigns/
 ├── Example_Campaign/
 │   └── current_party.json    # Existing - verify format

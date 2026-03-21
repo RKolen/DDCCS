@@ -76,19 +76,10 @@ All features below have detailed implementation plans in the `plans/` directory.
 ### Campaign Management
 
 - [Campaign Templates](plans/campaign_templates_plan.md) - Templates for common campaign types
-- [Party Alterations](plans/party_alterations_plan.md) - Move current party to campaign files
 - [Calendar Tracking](plans/calendar_tracking_plan.md) - In-world calendar and timeline tracking
 - [Plugin Architecture](plans/plugin_architecture_plan.md) - Custom modules/plugins support
 
-## High Priority
-
-### User Experience
-
 ## Medium Priority
-
-### Character System Improvements
-
-- [ ] **Character templates** - Create additional class-specific templates beyond the basic example - [Plan](plans/character_templates_plan.md)
 
 ### Story Tools
 
@@ -100,6 +91,10 @@ All features below have detailed implementation plans in the `plans/` directory.
 - [ ] **Major NPC template (BBEG)** - Template for major NPCs and villains - [Plan](plans/major_npc_template_plan.md)
 
 ## Low Priority (No Plan Yet)
+
+### Character System Improvements
+
+- [ ] **Character templates** - Create additional class-specific templates beyond the basic example - [Plan](plans/character_templates_plan.md)
 
 ### Story Tools
 
@@ -142,9 +137,7 @@ a solo DM using the CLI today; (3) risk and complexity.
 
 ### Tier 1 — Do First (Foundational, low risk, unblocks everything)
 
-| # | Plan | Reason |
-|---|------|--------|
-| 5 | [Party Alterations](plans/party_alterations_plan.md) | Moves party data to campaign files — a data-model cleanup. Better done before relationship mapping, timeline, and calendar features lock in the current structure. |
+All Tier 1 items are complete.
 
 ### Tier 2 — Core Value (High DM impact, moderate effort)
 
@@ -201,6 +194,14 @@ a solo DM using the CLI today; (3) risk and complexity.
 ---
 
 ## Recently Completed
+
+### Party Alterations - March 21, 2026
+
+- [x] **Party Alterations** - Moved party configuration to be exclusively campaign-scoped.
+  Each campaign now owns its `current_party.json`. Removed global party path fallback.
+  Updated `path_utils`, `party_config_manager`, `PartyManager`, `EnhancedStoryManager`,
+  `story_updater`, `cli_story_manager`, `cli_consultations`, `party_validator`,
+  `validate_all`, and all three campaign party JSON files. All tests updated and passing.
 
 ### Profile Verificaion - March 21, 2026
 

@@ -2,6 +2,7 @@
 Party Configuration Manager
 
 Handles loading and saving of party configuration files.
+Party configuration is stored exclusively within campaign directories.
 """
 
 import os
@@ -21,58 +22,87 @@ except ImportError:
 
 
 def load_current_party(
-    config_path: Optional[str] = None,
+    campaign_name: str,
     workspace_path: Optional[str] = None,
-    campaign_name: Optional[str] = None,
 ) -> List[str]:
-    """
-    Load current party members from configuration file.
+    """Load current party members from campaign configuration.
 
     Args:
-        config_path (str): Path to party configuration JSON file
+        campaign_name: Name of the campaign. Required.
+        workspace_path: Optional workspace root path.
 
     Returns:
-        List[str]: List of party member names
+        List of party member names. Returns empty list if no party file exists.
+
+    Raises:
+        ValueError: If campaign_name is empty.
     """
-    # Compute default config path if not provided
-    if config_path is None:
-        config_path = get_party_config_path(workspace_path, campaign_name)
+    if not campaign_name:
+        raise ValueError(
+            "Cannot load party: no campaign selected. "
+            "Please select a campaign first."
+        )
 
-    if file_exists(config_path):
-        try:
-            data = load_json_file(config_path)
-            if data is None:
-                return []
-            return data.get("party_members", [])
-        except (OSError, ValueError) as e:
-            print(f"Warning: Could not load party configuration: {e}")
+    config_path = get_party_config_path(campaign_name, workspace_path)
 
-    # Return default party if no config found
-    return [
-        "Aragorn",
-        "Frodo",
-        "Gandalf",
-    ]
+    if not file_exists(config_path):
+        return []
+
+    try:
+        data = load_json_file(config_path)
+        if data is None:
+            return []
+        return data.get("party_members", [])
+    except (OSError, ValueError) as e:
+        print(f"Warning: Could not load party configuration: {e}")
+        return []
 
 
 def save_current_party(
     party_members: List[str],
-    config_path: Optional[str] = None,
+    campaign_name: str,
     workspace_path: Optional[str] = None,
-    campaign_name: Optional[str] = None,
-):
-    """
-    Save current party members to configuration file.
+) -> None:
+    """Save current party members to campaign configuration.
 
     Args:
-        party_members (List[str]): List of party member names
-        config_path (str): Path to party configuration JSON file
-    """
-    data = {"party_members": party_members, "last_updated": datetime.now().isoformat()}
+        party_members: List of party member names.
+        campaign_name: Name of the campaign. Required.
+        workspace_path: Optional workspace root path.
 
-    # Compute default config path if not provided
-    if config_path is None:
-        config_path = get_party_config_path(workspace_path, campaign_name)
+    Raises:
+        ValueError: If campaign_name is empty.
+    """
+    if not campaign_name:
+        raise ValueError(
+            "Cannot save party: no campaign selected. "
+            "Please select a campaign first."
+        )
+
+    config_path = get_party_config_path(campaign_name, workspace_path)
+
+    data: Dict[str, Any] = {
+        "campaign_name": campaign_name,
+        "party_members": party_members,
+        "active": True,
+        "last_updated": datetime.now().isoformat(),
+    }
+
+    # Preserve created_date and notes from existing file when available
+    if file_exists(config_path):
+        try:
+            existing = load_json_file(config_path)
+            if existing:
+                data["created_date"] = existing.get(
+                    "created_date", datetime.now().isoformat()
+                )
+                data["notes"] = existing.get("notes", "")
+            else:
+                data["created_date"] = datetime.now().isoformat()
+        except (OSError, ValueError):
+            data["created_date"] = datetime.now().isoformat()
+    else:
+        data["created_date"] = datetime.now().isoformat()
 
     # Validate before saving if validator is available
     if VALIDATOR_AVAILABLE:

@@ -18,7 +18,6 @@ try:
     from src.utils.path_utils import (
         get_campaigns_dir,
         get_characters_dir,
-        get_party_config_path,
     )
     from src.stories.enhanced_story_manager import EnhancedStoryManager
 except ImportError as e:
@@ -38,17 +37,16 @@ def test_init_creates_directories_and_paths():
         assert os.path.isdir(get_campaigns_dir(tmp))
 
 
-def test_party_config_path_default_and_campaign():
-    """Party manager path should be global by default and campaign-local when set."""
+def test_party_manager_uses_campaign_name():
+    """Party manager should store the campaign_name and workspace_path."""
     with tempfile.TemporaryDirectory() as tmp:
         esm_default = EnhancedStoryManager(tmp)
-        expected_default = get_party_config_path(tmp, campaign_name=None)
-        assert esm_default.party_manager.party_config_path == expected_default
+        assert esm_default.party_manager.campaign_name is None
 
         campaign = "MyCampaign"
         esm_campaign = EnhancedStoryManager(tmp, campaign_name=campaign)
-        expected_campaign = get_party_config_path(tmp, campaign_name=campaign)
-        assert esm_campaign.party_manager.party_config_path == expected_campaign
+        assert esm_campaign.party_manager.campaign_name == campaign
+        assert esm_campaign.party_manager.workspace_path == tmp
 
 
 def test_get_story_series_and_files():

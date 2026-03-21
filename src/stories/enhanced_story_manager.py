@@ -10,7 +10,6 @@ from src.characters.consultants.character_profile import CharacterProfile
 from src.utils.path_utils import (
     get_campaigns_dir,
     get_characters_dir,
-    get_party_config_path,
 )
 from src.stories.party_manager import PartyManager
 from src.stories.character_manager import CharacterManager
@@ -54,12 +53,10 @@ class EnhancedStoryManager:
         Args:
             workspace_path: Root workspace path
             **kwargs: Optional keyword arguments:
-                party_config_path: Optional party config path
                 campaign_name: Optional campaign name for party lookup
                 ai_client: Optional AI client for enhanced features
                 lazy_load: If True, defer character loading until explicitly requested
         """
-        party_config_path = kwargs.get("party_config_path")
         campaign_name = kwargs.get("campaign_name")
         ai_client = kwargs.get("ai_client")
         lazy_load = kwargs.get("lazy_load", False)
@@ -67,7 +64,6 @@ class EnhancedStoryManager:
         self._init_paths(workspace_path)
         self._init_managers(
             workspace_path,
-            party_config_path=party_config_path,
             campaign_name=campaign_name,
             ai_client=ai_client,
             lazy_load=lazy_load,
@@ -81,20 +77,15 @@ class EnhancedStoryManager:
 
     def _init_managers(self, workspace_path: str, **kwargs) -> None:
         """Initialize specialized managers."""
-        party_config_path = kwargs.get("party_config_path")
         campaign_name = kwargs.get("campaign_name")
         ai_client = kwargs.get("ai_client")
         lazy_load = kwargs.get("lazy_load", False)
 
         self.ai_client = ai_client
 
-        # Determine party configuration path. If a campaign_name is provided,
-        # prefer the campaign-local current_party.json; otherwise use provided
-        # party_config_path or the default global path.
-        party_config = party_config_path or get_party_config_path(
-            workspace_path, campaign_name
-        )
-        self.party_manager = PartyManager(party_config)
+        # PartyManager is scoped to the campaign. When no campaign is selected,
+        # party operations return an empty list without raising errors.
+        self.party_manager = PartyManager(campaign_name, workspace_path)
         self.character_manager = CharacterManager(
             self.characters_path, ai_client, lazy_load=lazy_load
         )

@@ -22,6 +22,7 @@ Usage:
 """
 
 import sys
+import os
 import argparse
 from typing import Dict, Tuple, Optional
 from ..utils.file_io import get_json_files_in_directory, file_exists
@@ -30,7 +31,7 @@ from ..utils.path_utils import (
     get_characters_dir,
     get_npcs_dir,
     get_items_registry_path,
-    get_party_config_path,
+    get_all_campaign_party_paths,
 )
 
 # Import all validators
@@ -176,16 +177,16 @@ def validate_items() -> Tuple[bool, int, int]:
 
 
 def validate_party() -> Tuple[bool, int, int]:
-    """Validate party configuration file."""
+    """Validate party configuration files across all campaigns."""
     if not PARTY_AVAILABLE:
         print_warning("Party validator not available")
         return (True, 0, 0)
 
     print("\n=== Validating Party Configuration ===")
-    party_file = get_party_config_path()
+    party_files = get_all_campaign_party_paths()
 
-    if not file_exists(party_file):
-        print_warning(f"Party configuration not found: {party_file}")
+    if not party_files:
+        print_warning("No campaign party files found.")
         return (True, 0, 0)
 
     # Get characters directory for cross-reference
@@ -193,15 +194,24 @@ def validate_party() -> Tuple[bool, int, int]:
     if characters_dir and not file_exists(characters_dir):
         characters_dir = None
 
-    is_valid, errors = validate_party_file(party_file, characters_dir)
+    all_valid = True
+    valid_count = 0
+    invalid_count = 0
 
-    if is_valid:
-        print("  [OK] Party configuration validated successfully")
-        return (True, 1, 0)
-    print("  [FAILED] Party configuration: INVALID")
-    for error in errors:
-        print(f"    - {error}")
-    return (False, 0, 1)
+    for party_file in party_files:
+        label = os.path.relpath(party_file)
+        is_valid, errors = validate_party_file(party_file, characters_dir)
+        if is_valid:
+            valid_count += 1
+            print(f"  [OK] {label}")
+        else:
+            invalid_count += 1
+            all_valid = False
+            print(f"  [FAILED] {label}: INVALID")
+            for error in errors:
+                print(f"    - {error}")
+
+    return (all_valid, valid_count, invalid_count)
 
 
 def print_summary(results: Dict[str, Tuple[bool, int, int]]):

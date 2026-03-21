@@ -872,8 +872,8 @@ class StoryUpdater:
         try:
             story_content = read_text_file(filepath)
             story_name = os.path.basename(filepath)[:-3]  # Remove .md
-            party_config_path = os.path.join(campaign_dir, "current_party.json")
-            party_names = load_current_party(config_path=party_config_path)
+            campaign_name = os.path.basename(campaign_dir)
+            party_names = load_current_party(campaign_name, workspace_path)
 
             # Detect NPCs and generate files
             npc_suggestions = detect_npc_suggestions(

@@ -125,11 +125,18 @@ def test_duplicate_party_members():
     print("[OK] Duplicate party members test passed")
 
 def test_validate_actual_party_file():
-    """Test validation of actual party file in the game_data directory."""
+    """Test validation of actual party file in the Example_Campaign directory."""
     if _GET_PARTY_CONFIG_PATH:
-        party_file = _GET_PARTY_CONFIG_PATH()
+        try:
+            party_file = _GET_PARTY_CONFIG_PATH("Example_Campaign")
+        except (TypeError, ValueError):
+            party_file = os.path.join(
+                "game_data", "campaigns", "Example_Campaign", "current_party.json"
+            )
     else:
-        party_file = os.path.join("game_data", "current_party", "current_party.json")
+        party_file = os.path.join(
+            "game_data", "campaigns", "Example_Campaign", "current_party.json"
+        )
 
     if not os.path.exists(party_file):
         print("[WARNING] Party configuration file not found, skipping actual file test")
@@ -149,6 +156,22 @@ def test_validate_actual_party_file():
 
     assert is_valid, "Party configuration file failed validation"
     print("[OK] Actual party configuration file validated successfully")
+
+def test_campaign_name_field_accepted():
+    """Test that party data including campaign_name field passes validation."""
+    valid_party = {
+        "campaign_name": "Example_Campaign",
+        "party_members": ["Hero One", "Hero Two"],
+        "active": True,
+        "created_date": datetime.now().isoformat(),
+        "last_updated": datetime.now().isoformat(),
+        "notes": "",
+    }
+
+    is_valid, errors = validate_party_json(valid_party)
+    assert is_valid, f"Party with campaign_name field failed validation: {errors}"
+    print("[OK] Party with campaign_name field accepted")
+
 
 def test_cross_reference_with_characters():
     """Test that party members are cross-referenced with character files."""
@@ -207,6 +230,7 @@ if __name__ == "__main__":
         test_empty_string_party_member()
         test_duplicate_party_members()
         test_valid_iso_timestamp_formats()
+        test_campaign_name_field_accepted()
         test_validate_actual_party_file()
         test_cross_reference_with_characters()
 

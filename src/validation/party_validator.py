@@ -5,20 +5,28 @@ Validates current party JSON files to ensure they contain proper structure
 and data types according to the D&D Campaign System schema.
 
 Usage:
-    # Standalone validation
+    # Standalone validation (validates all campaign party files)
+    python party_validator.py
+
+    # Validate a specific campaign's party file
+    python party_validator.py --campaign "Example_Campaign"
+
+    # Validate a specific file path
     python party_validator.py [filepath]
 
     # Programmatic validation
     from src.validation.party_validator import validate_party_json, validate_party_file
-    is_valid, errors = validate_party_file("game_data/current_party/current_party.json")
+    is_valid, errors = validate_party_file(
+        "game_data/campaigns/Example_Campaign/current_party.json"
+    )
 """
 
 from typing import Dict, Any, List, Tuple, Optional
+import os
 from datetime import datetime
 from src.utils.file_io import load_json_file, file_exists, get_json_files_in_directory
-from src.utils.path_utils import get_characters_dir, get_party_config_path
+from src.utils.path_utils import get_characters_dir, get_party_config_path, get_campaigns_dir
 from src.utils.validation_helpers import print_validation_report
-from src.utils.errors import display_error, DnDFileNotFoundError
 
 
 def _validate_required_fields(data: Dict[str, Any]) -> List[str]:
@@ -100,15 +108,41 @@ def _validate_last_updated(data: Dict[str, Any]) -> List[str]:
     return errors
 
 
+def _validate_campaign_reference(
+    data: Dict[str, Any], campaigns_dir: str
+) -> List[str]:
+    """Validate that campaign_name references an existing campaign directory.
+
+    Args:
+        data: The party data dictionary.
+        campaigns_dir: Path to the campaigns directory.
+
+    Returns:
+        List of validation error strings.
+    """
+    errors: List[str] = []
+    campaign_name = data.get("campaign_name")
+    if campaign_name and isinstance(campaign_name, str):
+        campaign_path = os.path.join(campaigns_dir, campaign_name)
+        if not os.path.isdir(campaign_path):
+            errors.append(
+                f"campaign_name '{campaign_name}' not found in {campaigns_dir}"
+            )
+    return errors
+
+
 def validate_party_json(
-    data: Dict[str, Any], characters_dir: Optional[str] = None
+    data: Dict[str, Any],
+    characters_dir: Optional[str] = None,
+    campaigns_dir: Optional[str] = None,
 ) -> Tuple[bool, List[str]]:
     """
     Validate party JSON data structure and cross-reference with character files.
 
     Args:
-        data (Dict[str, Any]): The party data dictionary to validate.
-        characters_dir (str): Optional path to characters directory for cross-reference.
+        data: The party data dictionary to validate.
+        characters_dir: Optional path to characters directory for cross-reference.
+        campaigns_dir: Optional path to campaigns directory for campaign reference check.
 
     Returns:
         Tuple[bool, List[str]]: (is_valid, list_of_errors)
@@ -118,6 +152,8 @@ def validate_party_json(
     errors.extend(_validate_party_members(data))
     errors.extend(_validate_party_cross_reference(data, characters_dir))
     errors.extend(_validate_last_updated(data))
+    if campaigns_dir:
+        errors.extend(_validate_campaign_reference(data, campaigns_dir))
     if errors:
         return (False, errors)
     return (True, [])
@@ -152,43 +188,47 @@ if __name__ == "__main__":
     import sys
 
     # CLI usage:
-    #   python party_validator.py [filepath]
     #   python party_validator.py --campaign "Example_Campaign"
-    # validate campaign-local current_party.json
+    #   python party_validator.py [filepath]
+    #   python party_validator.py  (validates all campaign party files)
+
+    CHARACTERS_PATH: Optional[str] = get_characters_dir()
+    if CHARACTERS_PATH and not file_exists(CHARACTERS_PATH):
+        CHARACTERS_PATH = None
 
     if len(sys.argv) > 1:
-        # If --campaign provided, validate the campaign's current_party.json
         if sys.argv[1] == "--campaign" and len(sys.argv) > 2:
-            campaign_name = sys.argv[2]
-            PARTY_FILE = get_party_config_path(campaign_name=campaign_name)
+            # Validate a specific campaign's party file
+            CAMPAIGN_ARG = sys.argv[2]
+            PARTY_FILE = get_party_config_path(CAMPAIGN_ARG)
+            MAIN_VALID, MAIN_ERRORS = validate_party_file(PARTY_FILE, CHARACTERS_PATH)
+            print_validation_report(PARTY_FILE, MAIN_VALID, MAIN_ERRORS)
+            sys.exit(0 if MAIN_VALID else 1)
         else:
-            # Validate specific file provided as first arg
+            # Validate a specific file path provided as the first argument
             PARTY_FILE = sys.argv[1]
-
-        # Auto-detect characters directory for cross-reference
-        CHARACTERS_PATH: Optional[str] = get_characters_dir()
-        if CHARACTERS_PATH and not file_exists(CHARACTERS_PATH):
-            CHARACTERS_PATH = None
-
-        main_valid, main_errors = validate_party_file(PARTY_FILE, CHARACTERS_PATH)
-        print_validation_report(PARTY_FILE, main_valid, main_errors)
-        sys.exit(0 if main_valid else 1)
+            MAIN_VALID, MAIN_ERRORS = validate_party_file(PARTY_FILE, CHARACTERS_PATH)
+            print_validation_report(PARTY_FILE, MAIN_VALID, MAIN_ERRORS)
+            sys.exit(0 if MAIN_VALID else 1)
     else:
-        # Validate default current party file
-        PARTY_FILE = get_party_config_path()
-        if not file_exists(PARTY_FILE):
-            error = DnDFileNotFoundError(
-                filepath=str(PARTY_FILE),
-                file_type="party configuration file"
-            )
-            display_error(error)
-            print("Looking for current_party.json in game_data/current_party/")
-            sys.exit(1)
-
-        MAIN_CHARACTERS_DIR: Optional[str] = get_characters_dir()
-        if MAIN_CHARACTERS_DIR and not file_exists(MAIN_CHARACTERS_DIR):
-            MAIN_CHARACTERS_DIR = None
-
-        main_valid, main_errors = validate_party_file(PARTY_FILE, MAIN_CHARACTERS_DIR)
-        print_validation_report(PARTY_FILE, main_valid, main_errors)
-        sys.exit(0 if main_valid else 1)
+        # Validate all campaign party files
+        CAMPAIGNS_DIR = get_campaigns_dir()
+        main_all_valid = True
+        main_found_any = False
+        entries = sorted(os.listdir(CAMPAIGNS_DIR)) if os.path.isdir(CAMPAIGNS_DIR) else []
+        for entry in entries:
+            campaign_dir = os.path.join(CAMPAIGNS_DIR, entry)
+            if not os.path.isdir(campaign_dir):
+                continue
+            party_path = os.path.join(campaign_dir, "current_party.json")
+            if not os.path.isfile(party_path):
+                continue
+            main_found_any = True
+            file_valid, file_errors = validate_party_file(party_path, CHARACTERS_PATH)
+            print_validation_report(party_path, file_valid, file_errors)
+            if not file_valid:
+                main_all_valid = False
+        if not main_found_any:
+            print("[WARNING] No campaign party files found.")
+            sys.exit(0)
+        sys.exit(0 if main_all_valid else 1)

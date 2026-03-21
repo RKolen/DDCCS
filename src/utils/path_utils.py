@@ -11,7 +11,7 @@ This module provides standardized path construction for:
 """
 
 import os
-from typing import Optional
+from typing import List, Optional
 
 from src.utils.string_utils import sanitize_filename
 
@@ -97,31 +97,56 @@ def get_items_registry_path(workspace_path: Optional[str] = None) -> str:
 
 
 def get_party_config_path(
-    workspace_path: Optional[str] = None, campaign_name: Optional[str] = None
+    campaign_name: str, workspace_path: Optional[str] = None
 ) -> str:
-    """Get the path to the current party configuration file.
+    """Get the path to the campaign-specific party configuration file.
 
-    By default this returns the global `game_data/current_party/current_party.json`.
-    If `campaign_name` is provided, returns the campaign-local
-    `game_data/campaigns/<campaign_name>/current_party.json` so each campaign can
-    have its own party configuration.
+    Party configuration is stored exclusively within campaign directories.
+    Each campaign has its own ``current_party.json``.
 
     Args:
-        workspace_path: Optional workspace root path
-        campaign_name: Optional campaign folder name to use for campaign-local party
+        campaign_name: Name of the campaign. Required.
+        workspace_path: Optional workspace root path.
 
     Returns:
-        Path to the selected current_party.json file
-    """
-    if campaign_name:
-        campaign_path = get_campaign_path(campaign_name, workspace_path)
-        return os.path.join(campaign_path, "current_party.json")
+        Path to the campaign's current_party.json
 
-    return os.path.join(
-        get_game_data_path(workspace_path),
-        "current_party",
-        "current_party.json",
-    )
+    Raises:
+        ValueError: If campaign_name is empty or not provided.
+    """
+    if not campaign_name:
+        raise ValueError(
+            "campaign_name is required. Party configuration is campaign-specific."
+            " Select a campaign first."
+        )
+
+    campaign_dir = get_campaign_path(campaign_name, workspace_path)
+    return os.path.join(campaign_dir, "current_party.json")
+
+
+def get_all_campaign_party_paths(workspace_path: Optional[str] = None) -> List[str]:
+    """Get all campaign party configuration file paths.
+
+    Args:
+        workspace_path: Optional workspace root path.
+
+    Returns:
+        List of paths to existing current_party.json files across all campaigns.
+    """
+    campaigns_dir = get_campaigns_dir(workspace_path)
+    if not os.path.isdir(campaigns_dir):
+        return []
+
+    party_files: List[str] = []
+    for entry in sorted(os.listdir(campaigns_dir)):
+        campaign_dir = os.path.join(campaigns_dir, entry)
+        if not os.path.isdir(campaign_dir):
+            continue
+        party_file = os.path.join(campaign_dir, "current_party.json")
+        if os.path.isfile(party_file):
+            party_files.append(party_file)
+
+    return party_files
 
 
 def get_character_file_path(

@@ -4,14 +4,12 @@ Consultations CLI Module
 Handles character consultations, DC suggestions, and DM narrative suggestions.
 """
 
-import os
 from typing import Dict, Any, Optional
 from src.utils.cli_utils import (
     select_character_from_list,
     get_non_empty_input,
     require_characters
 )
-from src.utils.path_utils import get_campaign_path
 from src.cli.party_config_manager import load_current_party
 from src.utils.errors import display_error, DnDError
 
@@ -176,10 +174,10 @@ class ConsultationsCLI:
         characters = []
         if series_name:
             workspace_path = self.story_manager.workspace_path
-            series_path = get_campaign_path(series_name, workspace_path)
-            party_config_path = os.path.join(series_path, "current_party.json")
-            if os.path.isfile(party_config_path):
-                characters = load_current_party(party_config_path)
+            try:
+                characters = load_current_party(series_name, workspace_path)
+            except (ValueError, OSError):
+                characters = []
 
         if not characters:
             characters = self.story_manager.get_current_party()
