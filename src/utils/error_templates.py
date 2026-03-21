@@ -191,6 +191,15 @@ ERROR_TEMPLATES: Dict[str, Tuple[str, str]] = {
         "Failed to save {data_type}",
         "Check file permissions and disk space.",
     ),
+    # Profile verification errors
+    "profile_verification_load_failed": (
+        "Could not load character file for '{name}'",
+        "Ensure the character JSON file exists and is valid.",
+    ),
+    "profile_verification_not_found": (
+        "Character '{name}' not found in characters directory",
+        "Check the name spelling. Use Character Management to list available characters.",
+    ),
 }
 
 

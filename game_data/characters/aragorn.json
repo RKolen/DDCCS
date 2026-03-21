@@ -16,11 +16,11 @@
     "charisma": 16
   },
   "skills": {
-    "Survival": 9,
-    "Perception": 8,
+    "Survival": 10,
+    "Perception": 6,
     "Stealth": 7,
     "Athletics": 8,
-    "Insight": 7,
+    "Insight": 6,
     "Medicine": 6
   },
   "max_hit_points": 85,

@@ -28,6 +28,7 @@ def run_all_validators_tests() -> int:
         ("test_npc_validator", "NPC Validator Tests"),
         ("test_items_validator", "Items Validator Tests"),
         ("test_party_validator", "Party Validator Tests"),
+        ("test_profile_verifier", "Profile Verification Tests"),
     )
 
     results: Dict[str, bool] = {}

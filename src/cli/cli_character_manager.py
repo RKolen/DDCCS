@@ -14,6 +14,11 @@ from src.utils.cli_utils import (
     get_multiline_text,
     require_characters
 )
+from src.validation.profile_verifier import (
+    ProfileVerifier,
+    _apply_auto_fix_interactive,
+    _find_character_file,
+)
 from src.utils.ascii_art import (
     display_character_portrait,
     create_character_portrait,
@@ -26,6 +31,7 @@ from src.utils.errors import (
     FileSystemError,
     DnDFileNotFoundError,
 )
+from src.utils.error_templates import get_error_template
 
 
 class CharacterCLIManager:
@@ -57,6 +63,7 @@ class CharacterCLIManager:
             print("3. View Character Details")
             print("4. Get Character Consultation")
             print("5. Customize ASCII Art")
+            print("6. Verify Character Profile")
             print("0. Back to Main Menu")
 
             choice = input("Enter your choice: ").strip()
@@ -71,6 +78,8 @@ class CharacterCLIManager:
                 self._get_character_consultation()
             elif choice == "5":
                 self._customize_ascii_art()
+            elif choice == "6":
+                self._verify_character_profile()
             elif choice == "0":
                 break
             else:
@@ -220,6 +229,47 @@ class CharacterCLIManager:
         )
         if choice == "y":
             self._set_character_ascii_art(profile.name)
+
+    def _verify_character_profile(self):
+        """Run profile verification on a selected character."""
+        self.story_manager.ensure_characters_loaded()
+        if not require_characters(self.story_manager):
+            return
+
+        characters = self.story_manager.get_character_list()
+
+        print("\n VERIFY CHARACTER PROFILE")
+        print("-" * 30)
+
+        result = select_character_from_list(characters)
+        if not result:
+            return
+        _, character_name = result
+
+        filepath = _find_character_file(character_name)
+        if filepath is None:
+            msg, guidance = get_error_template(
+                "profile_verification_not_found", name=character_name
+            )
+            display_error(DnDError(message=msg, user_guidance=guidance))
+            return
+
+        verifier = ProfileVerifier()
+        report = verifier.verify_file(filepath)
+        if report is None:
+            msg, guidance = get_error_template(
+                "profile_verification_load_failed", name=character_name
+            )
+            display_error(FileSystemError(message=msg, user_guidance=guidance))
+            return
+
+        print(report.to_terminal())
+
+        fixable = [i for i in report.issues if i.auto_fixable]
+        if fixable:
+            choice = input("\nApply auto-fixes for fixable issues? (y/N): ").strip().lower()
+            if choice == "y":
+                _apply_auto_fix_interactive(filepath, verifier)
 
     def _get_character_consultation(self):
         """Get character consultation from the consultations CLI."""

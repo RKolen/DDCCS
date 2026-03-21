@@ -89,7 +89,6 @@ All features below have detailed implementation plans in the `plans/` directory.
 ### Character System Improvements
 
 - [ ] **Character templates** - Create additional class-specific templates beyond the basic example - [Plan](plans/character_templates_plan.md)
-- [ ] **Profile Verification** - Check if JSON templates need to be updated for profile updates and consistency usage - [Plan](plans/profile_verification_plan.md)
 
 ### Story Tools
 
@@ -145,7 +144,6 @@ a solo DM using the CLI today; (3) risk and complexity.
 
 | # | Plan | Reason |
 |---|------|--------|
-| 4 | [Profile Verification](plans/profile_verification_plan.md) | Audits existing JSON templates for consistency. Cheap to do now; expensive to fix later when Milvus, spotlighting, and arc analysis depend on clean data. |
 | 5 | [Party Alterations](plans/party_alterations_plan.md) | Moves party data to campaign files — a data-model cleanup. Better done before relationship mapping, timeline, and calendar features lock in the current structure. |
 
 ### Tier 2 — Core Value (High DM impact, moderate effort)
@@ -203,6 +201,10 @@ a solo DM using the CLI today; (3) risk and complexity.
 ---
 
 ## Recently Completed
+
+### Profile Verificaion - March 21, 2026
+
+- [x] **Profile Verification** - Check if JSON templates need to be updated for profile updates and consistency usage
 
 ### Pronouns - March 21, 2026
 

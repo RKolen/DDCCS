@@ -247,6 +247,21 @@ def write_character_file(
     return str(filepath)
 
 
+def load_game_character(name: str) -> dict:
+    """Load a character dict from game_data/characters/{name}.json.
+
+    Args:
+        name: Character file stem, e.g. 'aragorn'.
+
+    Returns:
+        The parsed character dictionary.
+    """
+    base = Path(__file__).parent.parent
+    fp = base / "game_data" / "characters" / f"{name}.json"
+    with open(fp, "r", encoding="utf-8") as fh:
+        return json.load(fh)
+
+
 def sample_npc_data(
     name: str = "Test NPC",
     role: str = "Merchant",

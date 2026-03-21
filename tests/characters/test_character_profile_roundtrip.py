@@ -9,6 +9,7 @@ import json
 import tempfile
 from pathlib import Path
 
+from tests import test_helpers
 from src.characters.consultants.character_profile import CharacterProfile
 
 
@@ -42,14 +43,7 @@ def test_character_profile_roundtrip_current_format():
         "character_arcs": [],
         "major_plot_actions": ["Defended village", "Mentored newcomer"],
         # Stats
-        "ability_scores": {
-            "strength": 18,
-            "dexterity": 16,
-            "constitution": 16,
-            "intelligence": 14,
-            "wisdom": 15,
-            "charisma": 16,
-        },
+        "ability_scores": test_helpers.load_game_character("aragorn")["ability_scores"],
         "skills": {"Survival": 9, "Perception": 8},
         "max_hit_points": 85,
         "armor_class": 17,

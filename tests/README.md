@@ -14,7 +14,7 @@ Store testing scripts created during development to:
 
 ## Test Directory Structure
 
-```
+```text
 tests/
 |-- ai/              # Tests for src/ai/
 |-- characters/      # Tests for src/characters/ (consultants, sheets, consistency)
