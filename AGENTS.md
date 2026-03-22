@@ -189,6 +189,11 @@ violation of project standards.
 | Optional Imports | `src/utils/optional_imports.py` | `rich_available`, |
 | | | `get_rich_console`, |
 | | | `get_rich_component` |
+| Names | `src/utils/name_utils.py` | `CharacterName`, `build_name_fields`, |
+| | | `format_character_list`, |
+| | | `get_name_for_dialogue`, |
+| | | `get_formal_introduction`, |
+| | | `validate_name_fields` |
 
 ## Project Structure
 

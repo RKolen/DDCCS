@@ -2,6 +2,8 @@
   "profile_type": "simplified",
   "faction": "ally",
   "name": "Barliman Butterbur",
+  "first_name": "Barliman",
+  "last_name": "Butterbur",
   "nickname": null,
   "pronouns": "he/him",
   "role": "Innkeeper",

@@ -17,6 +17,7 @@ from src.ai.lazy_imports import AIImportManager
 
 # Constants for behavior generation - disabled to avoid 18s delay during loading
 from src.validation.character_validator import validate_character_json
+from src.utils.name_utils import CharacterName
 
 VALIDATOR_AVAILABLE = True
 
@@ -41,11 +42,41 @@ class CharacterIdentity:
 
     name: str
     character_class: DnDClass
-    nickname: Optional[str] = None
     level: int = 1
     species: str = "Human"
     subtype: CharacterSubtype = field(default_factory=CharacterSubtype)
     pronouns: Optional[str] = None
+    name_details: CharacterName = field(default_factory=CharacterName)
+
+    @property
+    def nickname(self) -> Optional[str]:
+        """Character nickname."""
+        return self.name_details.nickname
+
+    @property
+    def first_name(self) -> Optional[str]:
+        """Character first name."""
+        return self.name_details.first_name
+
+    @property
+    def last_name(self) -> Optional[str]:
+        """Character last name."""
+        return self.name_details.last_name
+
+    @property
+    def title(self) -> Optional[str]:
+        """Character title."""
+        return self.name_details.title
+
+    @property
+    def epithet(self) -> Optional[str]:
+        """Character epithet."""
+        return self.name_details.epithet
+
+    @property
+    def name_components(self) -> CharacterName:
+        """Structured name components for this character."""
+        return self.name_details
 
 
 @dataclass
@@ -142,15 +173,12 @@ class CharacterProfile:
     ai_config: Optional[Dict[str, Any]] = None
 
     def __post_init__(self):
-        """Populate an in-memory `behavior` from personality fields if empty.
+        """Placeholder post-init hook.
 
-        This will call `generate_behavior_from_personality` when available.
-        It never writes back to disk; it only mutates the in-memory instance so
-        downstream code (consultants, tests) get a sensible `CharacterBehavior`.
+        Behaviour generation is intentionally disabled to avoid 18+ second AI
+        calls during loading (BEHAVIOUR_GENERATOR_AVAILABLE remains False).
+        This method is kept for API compatibility but performs no operation.
         """
-        # Behavior generation disabled to avoid 18+ second AI calls during loading.
-        # BEHAVIOUR_GENERATOR_AVAILABLE is set to False at module level.
-        # This method is kept for API compatibility but performs no operation.
         return
 
     # Backward compatibility properties for accessing nested dataclass fields
@@ -307,6 +335,15 @@ class CharacterProfile:
         data["species"] = self.identity.species
         data["lineage"] = self.identity.subtype.lineage
         data["subclass"] = self.identity.subtype.subclass
+        # Structured name fields: only write when set to avoid polluting legacy files
+        if self.identity.first_name is not None:
+            data["first_name"] = self.identity.first_name
+        if self.identity.last_name is not None:
+            data["last_name"] = self.identity.last_name
+        if self.identity.title is not None:
+            data["title"] = self.identity.title
+        if self.identity.epithet is not None:
+            data["epithet"] = self.identity.epithet
 
     def _update_personality_fields(self, data: Dict[str, Any]) -> None:
         """Update personality fields in data dict."""
@@ -454,7 +491,6 @@ class CharacterProfile:
         identity = CharacterIdentity(
             name=data.get("name", "Unknown"),
             character_class=character_class,
-            nickname=data.get("nickname"),
             level=data.get("level", 1),
             species=data.get("species", "Human"),
             subtype=CharacterSubtype(
@@ -462,6 +498,7 @@ class CharacterProfile:
                 subclass=data.get("subclass"),
             ),
             pronouns=data.get("pronouns"),
+            name_details=CharacterName.from_dict(data),
         )
 
         # Create personality (map field names)

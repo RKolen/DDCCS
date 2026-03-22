@@ -37,6 +37,7 @@ from src.characters.consultants.character_profile import (
     CharacterPossessions,
 )
 from src.characters.character_sheet import DnDClass
+from src.utils.name_utils import CharacterName
 
 
 def test_character_profile_initialization():
@@ -94,8 +95,11 @@ def test_character_profile_full_initialization():
         character_class=DnDClass.FIGHTER,
         species="Dwarf",
         level=10,
-        nickname="The Hammer",
         subtype=CharacterSubtype(subclass="Battle Master"),
+        name_details=CharacterName(
+            full_name="Thorin Ironforge",
+            nickname="The Hammer",
+        ),
     )
 
     personality = CharacterPersonality(

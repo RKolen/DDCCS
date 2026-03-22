@@ -9,6 +9,7 @@ from src.utils.path_utils import get_characters_dir
 from src.utils.validation_helpers import get_type_name, print_validation_report
 from src.characters.npc_constants import ABILITY_SCORE_NAMES
 from src.utils.errors import display_error, DnDFileNotFoundError
+from src.utils.name_utils import validate_name_fields
 
 
 def _validate_required_fields(
@@ -198,6 +199,7 @@ def validate_character_json(
     errors = []
     errors.extend(_validate_required_fields(data, file_prefix))
     errors.extend(_validate_character_name(data, file_prefix))
+    errors.extend(validate_name_fields(data, file_prefix))
     errors.extend(_validate_level_range(data, file_prefix))
     errors.extend(_validate_equipment_structure(data, file_prefix))
     errors.extend(_validate_known_spells(data, file_prefix))

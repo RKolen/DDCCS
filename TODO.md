@@ -18,7 +18,6 @@
 ### Phase 3: Character System
 
 - [ ] **Multi-class Support** - Enhance character profiles to support multiclassing **Plan:** [plans/multiclass_support_plan.md](plans/multiclass_support_plan.md)
-- [ ] **Character Names Split** - Split names into first and last names for characters and NPCs **Plan:** [plans/character_names_plan.md](plans/character_names_plan.md)
 - [ ] **Relationship Mapping** - Visual or structured relationship tracking between characters **Plan:** [plans/relationship_mapping_plan.md](plans/relationship_mapping_plan.md)
 
 ### Phase 4: Story Tools
@@ -143,7 +142,6 @@ All Tier 1 items are complete.
 
 | # | Plan | Reason |
 |---|------|-------|
-| 7 | [Character Names Split](plans/character_names_plan.md) | Data-model change that downstream features (relationship mapping, timeline) will depend on. Better done before those features. |
 | 8 | [Session Notes Integration](plans/session_notes_plan.md) | Feeds session events into spotlighting and timeline. Improves the core DM workflow immediately. |
 | 9 | [Spotlighting System](plans/spotlighting_system_plan.md) | High DM value. Depends on story parsing (done) and session notes. Benefits from Milvus but works without it. |
 | 10 | [Multi-class Support](plans/multiclass_support_plan.md) | Core character system feature. Affects character profiles read by arc analysis, spotlighting, and AI prompts. |
@@ -195,15 +193,16 @@ All Tier 1 items are complete.
 
 ## Recently Completed
 
+### Character Names Split - March 22, 2026
+
+- [x] **Character Names Split** - Split names into first and last names for characters and NPCs
+
 ### Party Alterations - March 21, 2026
 
 - [x] **Party Alterations** - Moved party configuration to be exclusively campaign-scoped.
   Each campaign now owns its `current_party.json`. Removed global party path fallback.
-  Updated `path_utils`, `party_config_manager`, `PartyManager`, `EnhancedStoryManager`,
-  `story_updater`, `cli_story_manager`, `cli_consultations`, `party_validator`,
-  `validate_all`, and all three campaign party JSON files. All tests updated and passing.
 
-### Profile Verificaion - March 21, 2026
+### Profile Verification - March 21, 2026
 
 - [x] **Profile Verification** - Check if JSON templates need to be updated for profile updates and consistency usage
 

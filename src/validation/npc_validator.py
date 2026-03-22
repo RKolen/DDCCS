@@ -18,6 +18,7 @@ from src.utils.file_io import load_json_file, get_json_files_in_directory
 from src.utils.path_utils import get_npcs_dir
 from src.utils.validation_helpers import get_type_name, print_validation_report
 from src.characters.npc_constants import ABILITY_SCORE_NAMES
+from src.utils.name_utils import validate_name_fields
 
 
 def _validate_ai_config(ai_config: dict) -> List[str]:
@@ -223,6 +224,9 @@ def validate_npc_json(
 
     # Check optional fields (only validate type if field is present)
     validation_errors.extend(_validate_optional_fields(data, optional_fields))
+
+    # Validate structured name fields if present
+    validation_errors.extend(validate_name_fields(data, source_path + ": " if source_path else ""))
 
     # Validate full profile fields if profile_type is "full"
     if profile_type == "full":

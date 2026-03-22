@@ -1,5 +1,7 @@
 {
   "name": "Frodo Baggins",
+  "first_name": "Frodo",
+  "last_name": "Baggins",
   "nickname": "Ring-bearer",
   "pronouns": "he/him",
   "species": "Halfling",
