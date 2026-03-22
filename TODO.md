@@ -24,7 +24,6 @@
 
 - [ ] **Spotlighting System** - Dynamic narrative spotlight scoring for characters, NPCs, and unresolved threads; injects priority context into AI prompts **Plan:** [plans/spotlighting_system_plan.md](plans/spotlighting_system_plan.md)
 - [ ] **AI Story Suggestions** - Use AI to suggest story developments and narrative improvements **Plan:** [plans/ai_story_suggestions_plan.md](plans/ai_story_suggestions_plan.md)
-- [ ] **Session Notes Integration** - Better integration between session results and story narrative **Plan:** [plans/session_notes_plan.md](plans/session_notes_plan.md)
 - [ ] **Timeline Tracking** - Track chronological order of events across campaigns **Plan:** [plans/timeline_tracking_plan.md](plans/timeline_tracking_plan.md)
 
 ### Phase 5: Quality of Life
@@ -142,7 +141,6 @@ All Tier 1 items are complete.
 
 | # | Plan | Reason |
 |---|------|-------|
-| 8 | [Session Notes Integration](plans/session_notes_plan.md) | Feeds session events into spotlighting and timeline. Improves the core DM workflow immediately. |
 | 9 | [Spotlighting System](plans/spotlighting_system_plan.md) | High DM value. Depends on story parsing (done) and session notes. Benefits from Milvus but works without it. |
 | 10 | [Multi-class Support](plans/multiclass_support_plan.md) | Core character system feature. Affects character profiles read by arc analysis, spotlighting, and AI prompts. |
 | 11 | [AI Story Suggestions](plans/ai_story_suggestions_plan.md) | Builds directly on spotlighting scores and Milvus semantic search. Higher quality output after those two are in place. |
@@ -192,6 +190,10 @@ All Tier 1 items are complete.
 ---
 
 ## Recently Completed
+
+### Session Notes Integration - March 22, 2026
+
+- [x] **Session Notes Integration** - Structured session notes schema, manager, CLI menu, and AI story prompt injection.
 
 ### Character Names Split - March 22, 2026
 

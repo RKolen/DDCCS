@@ -23,6 +23,7 @@ TEST_CATEGORIES = [
     "characters",
     "npcs",
     "stories",
+    "sessions",
     "combat",
     "items",
     "dm",

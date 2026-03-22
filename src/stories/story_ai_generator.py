@@ -7,10 +7,11 @@ stories. Includes RAG (Retrieval-Augmented Generation) integration for accurate
 D&D spell/ability descriptions via dnd5e.wikidot.com.
 """
 
-from typing import Optional, Dict, Any
+from typing import Any, Dict, List, Optional
+
 from src.ai.availability import AI_AVAILABLE
+from src.utils.errors import display_error, wrap_exception
 from src.utils.spell_lookup_helper import lookup_spells_and_abilities
-from src.utils.errors import wrap_exception, display_error
 
 
 def _build_story_context(
@@ -254,6 +255,70 @@ def _build_story_system_prompt(is_exploration: bool = False) -> str:
         )
 
     return base_prompt
+
+
+def build_story_prompt_with_session_context(
+    base_prompt: str,
+    session_context: Dict[str, Any],
+) -> str:
+    """Enhance a story generation prompt with structured session context.
+
+    Prepends recent events, active plot threads, recently introduced NPCs, and
+    pending player decisions to the base prompt so the AI has continuity
+    context when generating new story content.
+
+    Args:
+        base_prompt: The original story generation prompt.
+        session_context: Context dict from
+            ``SessionNotesManager.get_context_for_story_generation()``.
+            Expected keys (all optional): ``recent_events``,
+            ``active_plots``, ``recent_npcs``, ``pending_decisions``.
+
+    Returns:
+        Enhanced prompt string.  Returns ``base_prompt`` unchanged when
+        ``session_context`` contains no useful data.
+    """
+    context_parts: List[str] = []
+
+    recent_events: List[Dict[str, Any]] = session_context.get("recent_events") or []
+    if recent_events:
+        context_parts.append("## Recent Events")
+        for event in recent_events:
+            context_parts.append(
+                f"- [{event['session']}] {event['title']}: {event['description']}"
+            )
+        context_parts.append("")
+
+    active_plots: List[Dict[str, Any]] = session_context.get("active_plots") or []
+    if active_plots:
+        context_parts.append("## Active Plot Threads")
+        for plot in active_plots:
+            context_parts.append(f"- **{plot['name']}**: {plot['description']}")
+        context_parts.append("")
+
+    recent_npcs: List[Dict[str, Any]] = session_context.get("recent_npcs") or []
+    if recent_npcs:
+        context_parts.append("## Recently Encountered NPCs")
+        for npc in recent_npcs:
+            context_parts.append(
+                f"- **{npc['name']}** ({npc['role']}): {npc['first_impression']}"
+            )
+        context_parts.append("")
+
+    pending_decisions: List[Dict[str, Any]] = (
+        session_context.get("pending_decisions") or []
+    )
+    if pending_decisions:
+        context_parts.append("## Pending Consequences")
+        for dec in pending_decisions:
+            context_parts.append(f"- {dec['made_by']} decided: {dec['decision']}")
+        context_parts.append("")
+
+    if not context_parts:
+        return base_prompt
+
+    context_block = "\n".join(context_parts)
+    return f"{base_prompt}\n\n---\n\n### Session Context\n\n{context_block}"
 
 
 def generate_story_description(

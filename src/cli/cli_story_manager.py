@@ -17,6 +17,7 @@ from src.stories.story_workflow_orchestrator import (
     WorkflowOptions,
 )
 from src.stories.story_ai_generator import generate_story_from_prompt
+from src.cli.cli_session_notes import session_notes_menu
 from src.stories.story_file_manager import (
     StoryFileContext,
     StoryCreationOptions,
@@ -173,6 +174,7 @@ class StoryCLIManager:
             print("9. Story Analysis (Slow)")
             print("10. Character Analysis (Slow)")
             print("11. Amend Story Character Actions")
+            print("12. Manage Session Notes")
             print("0. Back")
 
             choice = input("Enter your choice: ").strip()
@@ -204,6 +206,7 @@ class StoryCLIManager:
             ("9", True, "_analyze_series_consistency"),
             ("10", True, "_analyze_character_development_series"),
             ("11", True, "_amend_story_actions"),
+            ("12", False, "_manage_session_notes"),
         ]
 
         for op_choice, requires_stories, method_name in story_operations:
@@ -250,6 +253,8 @@ class StoryCLIManager:
             )
         elif method_name == "_amend_story_actions":
             self._amend_story_actions(series_name, series_stories)
+        elif method_name == "_manage_session_notes":
+            self._manage_session_notes(series_name)
 
     def _prepare_story_content(self, story_path: str) -> tuple:
         """Prepare story content for workflow orchestration.
@@ -920,6 +925,14 @@ class StoryCLIManager:
                 user_guidance="Check your AI configuration and try again."
             )
             display_error(error)
+
+    def _manage_session_notes(self, series_name: str) -> None:
+        """Open the session notes menu for this campaign.
+
+        Args:
+            series_name: Name of the story series / campaign.
+        """
+        session_notes_menu(series_name, self.workspace_path)
 
     def _amend_story_actions(self, series_name: str, stories: List[str]):
         """Interactive story character action amendment.
