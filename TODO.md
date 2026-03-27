@@ -22,7 +22,6 @@
 
 ### Phase 4: Story Tools
 
-- [ ] **Spotlighting System** - Dynamic narrative spotlight scoring for characters, NPCs, and unresolved threads; injects priority context into AI prompts **Plan:** [plans/spotlighting_system_plan.md](plans/spotlighting_system_plan.md)
 - [ ] **AI Story Suggestions** - Use AI to suggest story developments and narrative improvements **Plan:** [plans/ai_story_suggestions_plan.md](plans/ai_story_suggestions_plan.md)
 - [ ] **Timeline Tracking** - Track chronological order of events across campaigns **Plan:** [plans/timeline_tracking_plan.md](plans/timeline_tracking_plan.md)
 
@@ -39,7 +38,6 @@ All features below have detailed implementation plans in the `plans/` directory.
 
 ### AI and Story Tools
 
-- [Spotlighting System](plans/spotlighting_system_plan.md) - Dynamic narrative spotlight scoring; AI prompt injection
 - [AI Story Suggestions](plans/ai_story_suggestions_plan.md) - AI-powered story development suggestions
 - [Session Notes Integration](plans/session_notes_plan.md) - Better session results and story narrative integration
 - [Timeline Tracking](plans/timeline_tracking_plan.md) - Chronological event tracking across campaigns
@@ -141,7 +139,6 @@ All Tier 1 items are complete.
 
 | # | Plan | Reason |
 |---|------|-------|
-| 9 | [Spotlighting System](plans/spotlighting_system_plan.md) | High DM value. Depends on story parsing (done) and session notes. Benefits from Milvus but works without it. |
 | 10 | [Multi-class Support](plans/multiclass_support_plan.md) | Core character system feature. Affects character profiles read by arc analysis, spotlighting, and AI prompts. |
 | 11 | [AI Story Suggestions](plans/ai_story_suggestions_plan.md) | Builds directly on spotlighting scores and Milvus semantic search. Higher quality output after those two are in place. |
 | 12 | [Major NPC Template (BBEG)](plans/major_npc_template_plan.md) | Enriches NPC data fed into spotlighting and story suggestions. Relatively self-contained. |
@@ -190,6 +187,10 @@ All Tier 1 items are complete.
 ---
 
 ## Recently Completed
+
+### Spotlighting System - March 27, 2026
+
+- [x] **Spotlighting System** - Dynamic narrative spotlight scoring for characters, NPCs, and unresolved threads; injects priority context into AI prompts.
 
 ### Session Notes Integration - March 22, 2026
 

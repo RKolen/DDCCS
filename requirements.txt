@@ -11,6 +11,7 @@ rich>=13.0.0  # Rich text and beautiful formatting for terminal output
 pyttsx3>=2.90  # Cross-platform offline TTS (uses native Windows SAPI5)
 
 # Web Scraping & HTML Parsing
+requests>=2.28.0  # HTTP library (required by rag_system.py)
 beautifulsoup4>=4.9.0  # HTML/XML parsing library
 
 # Milvus Vector Database

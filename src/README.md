@@ -36,7 +36,10 @@ src/
 |   |-- character_action_analyzer.py     # Character action analysis
 |   |-- character_fit_analyzer.py        # Character fit analysis
 |   |-- series_analyzer.py               # Story series analysis
-|   `-- equipment_checker.py             # Equipment consistency checks
+|   |-- equipment_checker.py             # Equipment consistency checks
+|   |-- spotlight_types.py               # Spotlight data types (SpotlightEntry, SpotlightReport)
+|   |-- spotlight_signals.py             # Spotlight signal collectors (recency, threads, DC, tension)
+|   `-- spotlight_engine.py              # Spotlight scoring engine and prompt injection
 |
 |-- combat/             # Combat system
 |   |-- combat_narrator.py      # Combat narration

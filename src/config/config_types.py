@@ -210,11 +210,29 @@ class PathConfig:
 
 
 @dataclass
+class SpotlightConfig:
+    """Spotlight system configuration.
+
+    Controls signal weights and the number of entries injected into AI prompts.
+    Weights determine how much each signal type contributes to the 0-100 score.
+    """
+
+    enabled: bool = True
+    recency_weight: float = 20.0
+    thread_weight: float = 25.0
+    dc_weight: float = 20.0
+    tension_weight: float = 15.0
+    max_characters_in_prompt: int = 3
+    max_npcs_in_prompt: int = 3
+
+
+@dataclass
 class ServiceConfig:
-    """Grouped service configuration (model registry and vector database)."""
+    """Grouped service configuration (model registry, vector database, spotlighting)."""
 
     model_registry: ModelRegistryConfig = field(default_factory=ModelRegistryConfig)
     milvus: MilvusConfig = field(default_factory=MilvusConfig)
+    spotlight: SpotlightConfig = field(default_factory=SpotlightConfig)
 
 
 @dataclass
@@ -254,6 +272,16 @@ class DnDConfig:
     def milvus(self, value: MilvusConfig) -> None:
         """Replace the Milvus config."""
         self.services.milvus = value
+
+    @property
+    def spotlight(self) -> "SpotlightConfig":
+        """Return the spotlight config."""
+        return self.services.spotlight
+
+    @spotlight.setter
+    def spotlight(self, value: "SpotlightConfig") -> None:
+        """Replace the spotlight config."""
+        self.services.spotlight = value
 
     def is_dirty(self) -> bool:
         """Check if configuration has unsaved changes."""

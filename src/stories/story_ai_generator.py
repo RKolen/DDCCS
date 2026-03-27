@@ -189,6 +189,12 @@ def generate_story_from_prompt(
     # Extract spell names from prompt for explicit inclusion
     spell_instructions = _extract_spell_names(story_prompt)
 
+    # Inject spotlight context if provided
+    spotlight_context = story_config.get("spotlight_context", "")
+    spotlight_block = (
+        f"\n\n{spotlight_context}" if spotlight_context else ""
+    )
+
     # Build system and user prompts
     system_prompt = _build_story_system_prompt(
         story_config.get("is_exploration", False)
@@ -198,7 +204,8 @@ def generate_story_from_prompt(
         f"Write a D&D story scene based on this prompt:\n{story_prompt}"
         f"{context}"
         f"{ability_context}"
-        f"{spell_instructions}\n\n"
+        f"{spell_instructions}"
+        f"{spotlight_block}\n\n"
         "Generate an engaging narrative that incorporates the party members "
         "and respects their personalities and backgrounds. Format as pure "
         "narrative prose suitable for a story file."

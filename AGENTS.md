@@ -221,6 +221,9 @@ src/
 |   |-- hooks_and_analysis.py
 |   |-- party_manager.py / character_manager.py
 |   |-- character_loader.py / character_load_helper.py
+|   |-- spotlight_types.py       # Spotlight data types
+|   |-- spotlight_signals.py     # Spotlight signal collectors
+|   |-- spotlight_engine.py      # Spotlight scoring + prompt injection
 |-- combat/          # Combat narration system
 |   |-- combat_narrator.py
 |   |-- narrator_ai.py / narrator_consistency.py

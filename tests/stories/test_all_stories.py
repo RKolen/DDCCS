@@ -39,6 +39,8 @@ def run_all_story_tests():
         ("test_lazy_character_loading", "Lazy Character Loading Tests"),
         ("test_character_fit_analyzer", "Character Fit Analyzer Tests"),
         ("test_story_amender", "Story Amender Tests"),
+        ("test_spotlight_signals", "Spotlight Signals Tests"),
+        ("test_spotlight_engine", "Spotlight Engine Tests")
     ]
 
     results = {}
