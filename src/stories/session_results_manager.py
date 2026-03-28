@@ -6,6 +6,7 @@ Handles session results, roll tracking, and result file generation for D&D sessi
 
 import os
 from typing import List, Dict, Any, Optional
+from src.stories.spotlight_types import SpotlightReport
 from src.utils.file_io import write_text_file
 from src.utils.string_utils import sanitize_filename, get_session_date, get_time_only
 
@@ -27,6 +28,33 @@ class StorySession:
         self.character_actions: list[str] = []
         self.narrative_events: list[str] = []
         self.recruiting_pool: list[dict[str, Any]] = []
+        self.spotlighted_characters: list[dict[str, Any]] = []
+
+    def set_spotlight_from_report(
+        self, report: SpotlightReport, max_characters: int = 3, max_npcs: int = 3
+    ) -> None:
+        """Populate spotlighted_characters from a SpotlightReport.
+
+        Args:
+            report: SpotlightReport instance from SpotlightEngine.
+            max_characters: Maximum number of top characters to include.
+            max_npcs: Maximum number of top NPCs to include.
+        """
+        self.spotlighted_characters = []
+        for entry in report.top_characters(max_characters):
+            self.spotlighted_characters.append({
+                "name": entry.name,
+                "entity_type": "character",
+                "score": entry.score,
+                "reasons": [s.description for s in entry.signals],
+            })
+        for entry in report.top_npcs(max_npcs):
+            self.spotlighted_characters.append({
+                "name": entry.name,
+                "entity_type": "npc",
+                "score": entry.score,
+                "reasons": [s.description for s in entry.signals],
+            })
 
     def add_roll_result(self, roll_data: Optional[Dict[str, Any]] = None, **kwargs):
         """
@@ -83,6 +111,102 @@ class StorySession:
         return available_agents
 
 
+def _format_spotlight_lines(entries: list) -> str:
+    """Format spotlighted character entries as markdown list lines.
+
+    Args:
+        entries: List of spotlight dicts with name, entity_type, score, reasons.
+
+    Returns:
+        Formatted markdown string, or empty string when entries is empty.
+    """
+    if not entries:
+        return ""
+    lines = []
+    for entry in entries:
+        label = "NPC" if entry["entity_type"] == "npc" else "Character"
+        reasons = "; ".join(entry["reasons"])
+        lines.append(
+            f"- **{entry['name']}** ({label}, score {entry['score']:.0f}): {reasons}"
+        )
+    return "\n".join(lines) + "\n"
+
+
+def _build_append_content(session: StorySession) -> str:
+    """Build the markdown block appended to an existing session results file.
+
+    Args:
+        session: StorySession with current session data.
+
+    Returns:
+        Formatted markdown string for appending.
+    """
+    content = "\n## Session Update\n"
+    content += f"**Updated:** {get_time_only()}\n\n"
+
+    if session.roll_results:
+        content += "### New Roll Results\n"
+        for roll in session.roll_results:
+            success_text = "SUCCESS" if roll["success"] else "FAILURE"
+            content += (
+                f"- **{roll['character']}** - {roll['action']}\n"
+                f"  - Roll: {roll['roll_value']} vs DC {roll['dc']} - {success_text}\n"
+                f"  - Outcome: {roll['outcome']}\n"
+            )
+
+    if session.character_actions:
+        content += "\n### New Character Actions\n"
+        for action in session.character_actions:
+            content += f"- {action}\n"
+
+    if session.spotlighted_characters:
+        content += "\n### Spotlighted Characters\n"
+        content += _format_spotlight_lines(session.spotlighted_characters)
+
+    return content
+
+
+def _build_new_file_content(session: StorySession) -> str:
+    """Build the full markdown content for a new session results file.
+
+    Args:
+        session: StorySession with current session data.
+
+    Returns:
+        Full formatted markdown string.
+    """
+    content = (
+        f"# Session Results: {session.story_name}\n"
+        f"**Date:** {session.session_date}\n\n## Roll Results\n"
+    )
+
+    for roll in session.roll_results:
+        success_text = "SUCCESS" if roll["success"] else "FAILURE"
+        content += (
+            f"\n### {roll['character']} - {roll['action']}\n"
+            f"- **Roll Type:** {roll['roll_type']}\n"
+            f"- **Roll Value:** {roll['roll_value']} vs DC {roll['dc']}\n"
+            f"- **Result:** {success_text}\n"
+            f"- **Outcome:** {roll['outcome']}\n"
+        )
+
+    if session.recruiting_pool:
+        content += "\n## Available Recruits\n"
+        for recruit in session.recruiting_pool:
+            content += f"- **{recruit['name']}** ({recruit['class']}) - "
+            content += f"{recruit['personality']}\n"
+
+    if session.spotlighted_characters:
+        content += "\n## Spotlighted Characters\n"
+        content += _format_spotlight_lines(session.spotlighted_characters)
+
+    content += "\n## Character Actions\n"
+    for action in session.character_actions:
+        content += f"- {action}\n"
+
+    return content
+
+
 def create_session_results_file(series_path: str, session: StorySession) -> str:
     """
     Create or append to session results file.
@@ -101,66 +225,13 @@ def create_session_results_file(series_path: str, session: StorySession) -> str:
     filename = f"session_results_{session.session_date}_{story_slug}.md"
     filepath = os.path.join(series_path, filename)
 
-    # Check if file exists - if so, append new session results
-    file_exists = os.path.exists(filepath)
-
-    if file_exists:
-        # Append mode: read existing and add new section
+    if os.path.exists(filepath):
         with open(filepath, "r", encoding="utf-8") as f:
             existing_content = f.read()
-
-        # Build new session section to append
-        append_content = "\n## Session Update\n"
-        append_content += f"**Updated:** {get_time_only()}\n\n"
-
-        # Add roll results
-        if session.roll_results:
-            append_content += "### New Roll Results\n"
-            for roll in session.roll_results:
-                success_text = "SUCCESS" if roll["success"] else "FAILURE"
-                append_content += f"""- **{roll['character']}** - {roll['action']}
-  - Roll: {roll['roll_value']} vs DC {roll['dc']} - {success_text}
-  - Outcome: {roll['outcome']}
-"""
-
-        # Add character actions
-        if session.character_actions:
-            append_content += "\n### New Character Actions\n"
-            for action in session.character_actions:
-                append_content += f"- {action}\n"
-
-        write_text_file(filepath, existing_content + append_content)
+        write_text_file(filepath, existing_content + _build_append_content(session))
         print(f"[SUCCESS] Appended to session results file: {filename}")
     else:
-        # Create new file
-        content = f"""# Session Results: {session.story_name}
-**Date:** {session.session_date}
-
-## Roll Results
-"""
-        for roll in session.roll_results:
-            success_text = "SUCCESS" if roll["success"] else "FAILURE"
-            content += f"""
-### {roll['character']} - {roll['action']}
-- **Roll Type:** {roll['roll_type']}
-- **Roll Value:** {roll['roll_value']} vs DC {roll['dc']}
-- **Result:** {success_text}
-- **Outcome:** {roll['outcome']}
-"""
-
-        if session.recruiting_pool:
-            content += "\n## Available Recruits\n"
-            for recruit in session.recruiting_pool:
-                content += f"- **{recruit['name']}** ({recruit['class']}) - "
-                content += f"{recruit['personality']}\n"
-
-        content += """
-## Character Actions
-"""
-        for action in session.character_actions:
-            content += f"- {action}\n"
-
-        write_text_file(filepath, content)
+        write_text_file(filepath, _build_new_file_content(session))
         print(f"[SUCCESS] Created session results file: {filename}")
 
     return filepath
