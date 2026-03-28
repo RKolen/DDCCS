@@ -17,7 +17,6 @@
 
 ### Phase 3: Character System
 
-- [ ] **Multi-class Support** - Enhance character profiles to support multiclassing **Plan:** [plans/multiclass_support_plan.md](plans/multiclass_support_plan.md)
 - [ ] **Relationship Mapping** - Visual or structured relationship tracking between characters **Plan:** [plans/relationship_mapping_plan.md](plans/relationship_mapping_plan.md)
 
 ### Phase 4: Story Tools
@@ -45,7 +44,6 @@ All features below have detailed implementation plans in the `plans/` directory.
 
 ### Character System
 
-- [Multi-class Support](plans/multiclass_support_plan.md) - Character profiles with multiclassing support
 - [Character Names Split](plans/character_names_plan.md) - First and last name separation
 - [Relationship Mapping](plans/relationship_mapping_plan.md) - Character relationship tracking
 
@@ -139,7 +137,6 @@ All Tier 1 items are complete.
 
 | # | Plan | Reason |
 |---|------|-------|
-| 10 | [Multi-class Support](plans/multiclass_support_plan.md) | Core character system feature. Affects character profiles read by arc analysis, spotlighting, and AI prompts. |
 | 11 | [AI Story Suggestions](plans/ai_story_suggestions_plan.md) | Builds directly on spotlighting scores and Milvus semantic search. Higher quality output after those two are in place. |
 | 12 | [Major NPC Template (BBEG)](plans/major_npc_template_plan.md) | Enriches NPC data fed into spotlighting and story suggestions. Relatively self-contained. |
 
@@ -187,6 +184,10 @@ All Tier 1 items are complete.
 ---
 
 ## Recently Completed
+
+### Multi-class Support - March 28 2026
+
+- [ ] **Multi-class Support** - Enhance character profiles to support multiclassing.
 
 ### Spotlighting System - March 27, 2026
 

@@ -29,11 +29,21 @@ LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
+class ClassEntry:
+    """A single class entry for multi-class characters."""
+
+    name: str
+    level: int
+    subclass: Optional[str] = None
+
+
+@dataclass
 class CharacterSubtype:
-    """Species lineage and class specialization sub-specifications."""
+    """Species lineage, class specialization, and multi-class entries."""
 
     lineage: Optional[str] = None
     subclass: Optional[str] = None
+    classes: List[ClassEntry] = field(default_factory=list)
 
 
 @dataclass
@@ -335,6 +345,11 @@ class CharacterProfile:
         data["species"] = self.identity.species
         data["lineage"] = self.identity.subtype.lineage
         data["subclass"] = self.identity.subtype.subclass
+        if self.identity.subtype.classes:
+            data["classes"] = [
+                {"name": c.name, "level": c.level, "subclass": c.subclass}
+                for c in self.identity.subtype.classes
+            ]
         # Structured name fields: only write when set to avoid polluting legacy files
         if self.identity.first_name is not None:
             data["first_name"] = self.identity.first_name
@@ -487,6 +502,18 @@ class CharacterProfile:
         except ValueError:
             character_class = DnDClass.FIGHTER
 
+        # Load multi-class entries if present
+        classes_data = data.get("classes", [])
+        classes: List[ClassEntry] = []
+        if isinstance(classes_data, list):
+            for entry in classes_data:
+                if isinstance(entry, dict) and "name" in entry and "level" in entry:
+                    classes.append(ClassEntry(
+                        name=entry["name"],
+                        level=entry["level"],
+                        subclass=entry.get("subclass"),
+                    ))
+
         # Create identity
         identity = CharacterIdentity(
             name=data.get("name", "Unknown"),
@@ -496,6 +523,7 @@ class CharacterProfile:
             subtype=CharacterSubtype(
                 lineage=data.get("lineage"),
                 subclass=data.get("subclass"),
+                classes=classes,
             ),
             pronouns=data.get("pronouns"),
             name_details=CharacterName.from_dict(data),

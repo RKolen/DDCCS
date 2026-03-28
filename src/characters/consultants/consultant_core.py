@@ -8,7 +8,10 @@ to provide comprehensive character consultation services.
 from typing import Dict, List, Any, Optional
 
 from src.characters.consultants.character_profile import CharacterProfile
-from src.characters.consultants.class_knowledge import get_class_knowledge
+from src.characters.consultants.class_knowledge import (
+    get_class_knowledge,
+    get_multiclass_knowledge,
+)
 from src.characters.consultants.consultant_dc import DCCalculator
 from src.characters.consultants.consultant_story import StoryAnalyzer
 from src.characters.consultants.consultant_ai import AIConsultant
@@ -34,7 +37,12 @@ class CharacterConsultant:
             ai_client: Optional global AI client (can be overridden by character config)
         """
         self.profile = profile
-        self.class_knowledge = get_class_knowledge(profile.character_class.value)
+        multiclass_entries = profile.identity.subtype.classes
+        if multiclass_entries:
+            class_names = [c.name for c in multiclass_entries]
+            self.class_knowledge = get_multiclass_knowledge(class_names)
+        else:
+            self.class_knowledge = get_class_knowledge(profile.character_class.value)
 
         # Initialize specialized components using composition
         self.dc_calculator = DCCalculator(profile, self.class_knowledge)
@@ -223,9 +231,12 @@ class CharacterConsultant:
         # Class-specific consistency
         roleplay_notes = self.class_knowledge.get("roleplay_notes", "")
         if roleplay_notes:
-            factors.append(
-                f"As a {self.profile.character_class.value}: {roleplay_notes}"
-            )
+            multiclass_entries = self.profile.identity.subtype.classes
+            if multiclass_entries:
+                class_label = "/".join(c.name for c in multiclass_entries)
+            else:
+                class_label = self.profile.character_class.value
+            factors.append(f"As a {class_label}: {roleplay_notes}")
 
         return factors
 
@@ -313,6 +324,10 @@ class CharacterConsultant:
             "lineage": getattr(self.profile, "lineage", None),
             "dnd_class": self.profile.character_class.value,
             "subclass": getattr(self.profile, "subclass", None),
+            "classes": [
+                {"name": c.name, "level": c.level, "subclass": c.subclass}
+                for c in self.profile.identity.subtype.classes
+            ],
             "level": self.profile.level,
             "ability_scores": getattr(self.profile, "ability_scores", {}),
             "skills": getattr(self.profile, "skills", {}),

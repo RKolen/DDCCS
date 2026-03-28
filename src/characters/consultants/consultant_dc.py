@@ -24,6 +24,24 @@ class DCCalculator:
         self.profile = profile
         self.class_knowledge = class_knowledge
 
+    def _get_class_dc_info(
+        self, action_type: str, class_bonuses: Dict[str, Dict[str, int]]
+    ) -> tuple:
+        """Return (class_label, class_adjustment) for DC calculation."""
+        multiclass_entries = self.profile.identity.subtype.classes
+        if multiclass_entries:
+            adjustment = sum(
+                class_bonuses.get(c.name, {}).get(action_type, 0)
+                for c in multiclass_entries
+            )
+            label = "/".join(c.name for c in multiclass_entries)
+        else:
+            adjustment = class_bonuses.get(
+                self.profile.character_class.value, {}
+            ).get(action_type, 0)
+            label = self.profile.character_class.value
+        return label, adjustment
+
     def suggest_dc_for_action(
         self, action_description: str, _character_abilities: Optional[Dict[str, int]] = None
     ) -> Dict[str, Any]:
@@ -77,7 +95,7 @@ class DCCalculator:
         else:
             adjusted_dc = base_dc
 
-        # Consider class strengths
+        # Consider class strengths - aggregate bonuses from all classes
         class_bonuses = {
             "Rogue": {"Stealth": -2, "Investigation": -2, "Deception": -1},
             "Bard": {"Persuasion": -2, "Deception": -1, "Performance": -2},
@@ -93,9 +111,7 @@ class DCCalculator:
             "Druid": {"Perception": -1, "Animal Handling": -2},
         }
 
-        class_adjustment = class_bonuses.get(
-            self.profile.character_class.value, {}
-        ).get(action_type, 0)
+        class_label, class_adjustment = self._get_class_dc_info(action_type, class_bonuses)
         final_dc = max(5, adjusted_dc + class_adjustment)
 
         return {
@@ -103,7 +119,7 @@ class DCCalculator:
             "suggested_dc": final_dc,
             "reasoning": (
                 f"Base DC {base_dc}, adjusted for difficulty and "
-                f"{self.profile.character_class.value} abilities"
+                f"{class_label} abilities"
             ),
             "alternative_approaches": self.suggest_alternative_approaches(
                 action_description
@@ -121,8 +137,6 @@ class DCCalculator:
         Returns:
             List of class-appropriate alternative approaches
         """
-        class_name = self.profile.character_class.value
-
         approach_map = {
             "Barbarian": [
                 "Use intimidation instead of persuasion",
@@ -144,8 +158,16 @@ class DCCalculator:
             "Wizard": ["Research the problem first", "Apply magical analysis"],
         }
 
+        multiclass_entries = self.profile.identity.subtype.classes
+        if multiclass_entries:
+            approaches: List[str] = []
+            for entry in multiclass_entries:
+                approaches.extend(approach_map.get(entry.name, []))
+            return approaches if approaches else ["Consider character-appropriate alternatives"]
+
         return approach_map.get(
-            class_name, ["Consider character-appropriate alternatives"]
+            self.profile.character_class.value,
+            ["Consider character-appropriate alternatives"],
         )
 
     def check_character_advantages(self, action_type: str) -> List[str]:
@@ -159,23 +181,33 @@ class DCCalculator:
             List of advantages the character has for this action
         """
         advantages = []
-        class_name = self.profile.character_class.value
 
-        # Class-based advantages
-        if class_name == "Rogue" and action_type in [
-            "Stealth",
-            "Investigation",
-            "Sleight of Hand",
-        ]:
-            advantages.append("Expertise doubles proficiency bonus")
-        elif class_name == "Bard" and action_type in [
-            "Persuasion",
-            "Deception",
-            "Performance",
-        ]:
-            advantages.append("Jack of All Trades adds bonus to non-proficient checks")
-        elif class_name == "Ranger" and action_type in ["Perception", "Survival"]:
-            advantages.append("Natural Explorer provides advantage in favored terrain")
+        # Class-based advantages - check all classes
+        multiclass_entries = self.profile.identity.subtype.classes
+        class_names_to_check = (
+            [c.name for c in multiclass_entries]
+            if multiclass_entries
+            else [self.profile.character_class.value]
+        )
+        for class_name in class_names_to_check:
+            if class_name == "Rogue" and action_type in [
+                "Stealth",
+                "Investigation",
+                "Sleight of Hand",
+            ]:
+                advantages.append("Expertise doubles proficiency bonus")
+            elif class_name == "Bard" and action_type in [
+                "Persuasion",
+                "Deception",
+                "Performance",
+            ]:
+                advantages.append(
+                    "Jack of All Trades adds bonus to non-proficient checks"
+                )
+            elif class_name == "Ranger" and action_type in ["Perception", "Survival"]:
+                advantages.append(
+                    "Natural Explorer provides advantage in favored terrain"
+                )
 
         # Check background advantages from profile
         if (

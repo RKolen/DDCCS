@@ -8,6 +8,7 @@ from src.utils.file_io import load_json_file, get_json_files_in_directory
 from src.utils.path_utils import get_characters_dir
 from src.utils.validation_helpers import get_type_name, print_validation_report
 from src.characters.npc_constants import ABILITY_SCORE_NAMES
+from src.characters.consultants.class_knowledge import get_all_class_names
 from src.utils.errors import display_error, DnDFileNotFoundError
 from src.utils.name_utils import validate_name_fields
 
@@ -162,6 +163,76 @@ def _validate_relationships(data: Dict[str, Any], file_prefix: str) -> List[str]
     return errors
 
 
+def _validate_class_entry(
+    class_entry: Any, entry_prefix: str, valid_classes: set
+) -> tuple:
+    """Validate a single class entry dict. Returns (errors, level_contribution)."""
+    errors: List[str] = []
+    level_contribution = 0
+
+    if not isinstance(class_entry, dict):
+        return [f"{entry_prefix}Must be an object"], 0
+
+    name = class_entry.get("name")
+    if not name:
+        errors.append(f"{entry_prefix}Missing required field: 'name'")
+    elif name not in valid_classes:
+        errors.append(f"{entry_prefix}Unknown class: '{name}'")
+
+    level = class_entry.get("level")
+    if level is None:
+        errors.append(f"{entry_prefix}Missing required field: 'level'")
+    elif not isinstance(level, int):
+        errors.append(f"{entry_prefix}Level must be an integer")
+    elif not 1 <= level <= 20:
+        errors.append(f"{entry_prefix}Level must be 1-20, got {level}")
+    else:
+        level_contribution = level
+
+    subclass = class_entry.get("subclass")
+    if subclass is not None and not isinstance(subclass, str):
+        errors.append(f"{entry_prefix}Field 'subclass' must be a string or null")
+
+    return errors, level_contribution
+
+
+def _validate_classes_field(data: Dict[str, Any], file_prefix: str) -> List[str]:
+    """Validate the optional classes array for multi-class characters."""
+    errors = []
+
+    if "classes" not in data:
+        return errors
+
+    classes = data["classes"]
+    if not isinstance(classes, list):
+        errors.append(f"{file_prefix}Field 'classes' must be an array")
+        return errors
+
+    if not classes:
+        errors.append(f"{file_prefix}Field 'classes' cannot be empty if present")
+        return errors
+
+    valid_classes = set(get_all_class_names())
+    total_levels = 0
+
+    for index, class_entry in enumerate(classes):
+        entry_prefix = f"{file_prefix}classes[{index}]: "
+        entry_errors, level_contribution = _validate_class_entry(
+            class_entry, entry_prefix, valid_classes
+        )
+        errors.extend(entry_errors)
+        total_levels += level_contribution
+
+    if "level" in data and total_levels > 0 and isinstance(data["level"], int):
+        if data["level"] != total_levels:
+            errors.append(
+                f"{file_prefix}Total class levels ({total_levels}) must equal "
+                f"character level ({data['level']})"
+            )
+
+    return errors
+
+
 def _validate_pronouns(data: Dict[str, Any], file_prefix: str) -> List[str]:
     """Validate pronouns field format if present."""
     errors: List[str] = []
@@ -206,6 +277,7 @@ def validate_character_json(
     errors.extend(_validate_ability_scores(data, file_prefix))
     errors.extend(_validate_relationships(data, file_prefix))
     errors.extend(_validate_pronouns(data, file_prefix))
+    errors.extend(_validate_classes_field(data, file_prefix))
 
     return len(errors) == 0, errors
 

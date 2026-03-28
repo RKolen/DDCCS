@@ -5,7 +5,7 @@ Static reference data for all 12 D&D classes including typical behaviors,
 key features, and roleplay guidance for character consultants.
 """
 
-from typing import Dict, Any
+from typing import Dict, Any, List
 
 # Class knowledge database for all 12 D&D 5e (2024) classes
 CLASS_KNOWLEDGE: Dict[str, Dict[str, Any]] = {
@@ -188,6 +188,61 @@ def get_class_knowledge(class_name: str) -> Dict[str, Any]:
         Returns empty dict if class not found
     """
     return CLASS_KNOWLEDGE.get(class_name, {})
+
+
+def get_multiclass_knowledge(class_names: List[str]) -> Dict[str, Any]:
+    """
+    Aggregate knowledge from multiple D&D classes.
+
+    For a single class, returns the same result as get_class_knowledge.
+    For multiple classes, merges reactions, features, and styles.
+
+    Args:
+        class_names: List of class names to aggregate
+
+    Returns:
+        Combined knowledge dictionary
+    """
+    if not class_names:
+        return {}
+    if len(class_names) == 1:
+        return get_class_knowledge(class_names[0])
+
+    primary_abilities: List[str] = []
+    typical_roles: List[str] = []
+    decision_styles: List[str] = []
+    key_features: List[str] = []
+    roleplay_notes: List[str] = []
+    common_reactions: Dict[str, str] = {}
+
+    for class_name in class_names:
+        knowledge = CLASS_KNOWLEDGE.get(class_name, {})
+        if not knowledge:
+            continue
+        ability = knowledge.get("primary_ability", "")
+        if ability and ability not in primary_abilities:
+            primary_abilities.append(ability)
+        role = knowledge.get("typical_role", "")
+        if role and role not in typical_roles:
+            typical_roles.append(role)
+        style = knowledge.get("decision_style", "")
+        if style:
+            decision_styles.append(style)
+        key_features.extend(knowledge.get("key_features", []))
+        # Later classes override earlier ones for the same reaction type
+        common_reactions.update(knowledge.get("common_reactions", {}))
+        note = knowledge.get("roleplay_notes", "")
+        if note:
+            roleplay_notes.append(note)
+
+    return {
+        "primary_ability": " / ".join(primary_abilities),
+        "typical_role": " / ".join(typical_roles),
+        "decision_style": " and ".join(decision_styles),
+        "key_features": key_features,
+        "common_reactions": common_reactions,
+        "roleplay_notes": "; ".join(roleplay_notes),
+    }
 
 
 def get_all_class_names() -> list[str]:
