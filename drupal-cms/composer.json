@@ -171,6 +171,9 @@
             "composer/composer": false
         },
         "patches": {
+            "drupal/ai_provider_ollama": {
+                "Fix embeddingsContextSize for non-Llama embedding models (e.g. nomic-embed-text)": "patches/ai_provider_ollama-non-llama-embeddings-context-length.patch"
+            },
             "drupal/ai_vdb_provider_sqlite": {
                 "PHP 8.4 explicit nullable database params in SQLiteProvider": "patches/ai_vdb_provider_sqlite-php84-nullable-signatures.patch"
             }

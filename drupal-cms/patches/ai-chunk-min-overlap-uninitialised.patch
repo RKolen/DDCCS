@@ -1,0 +1,13 @@
+diff --git a/modules/ai_search/src/Base/EmbeddingStrategyPluginBase.php b/modules/ai_search/src/Base/EmbeddingStrategyPluginBase.php
+--- a/modules/ai_search/src/Base/EmbeddingStrategyPluginBase.php
++++ b/modules/ai_search/src/Base/EmbeddingStrategyPluginBase.php
+@@ -136,6 +136,9 @@ abstract class EmbeddingStrategyPluginBase implements EmbeddingStrategyInterface
+     if (!empty($configuration['chunk_min_overlap'])) {
+       $this->chunkMinOverlap = (int) $configuration['chunk_min_overlap'];
+     }
++    else {
++      $this->chunkMinOverlap = 100;
++    }
+   }
+
+   /**

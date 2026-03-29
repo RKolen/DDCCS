@@ -1,5 +1,5 @@
 _core:
   default_config_hash: 5NZOobHFb17N--ZKFQxPuIXV5y5hRVdDMLJw07UQq4w
 api_key: ''
-server: ddev-drupal-cms-milvus
+server: 'http://milvus'
 port: 19530

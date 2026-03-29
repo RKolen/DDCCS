@@ -8,4 +8,4 @@ set -eu
 # Run the Python CLI reindex command from the project root (one level up from drupal-cms)
 cd "$(git -C "$(dirname "$0")" rev-parse --show-toplevel)/.." 2>/dev/null || cd ..
 
-python3 dnd_consultant.py --reindex
+.venv/bin/python dnd_consultant.py --reindex
