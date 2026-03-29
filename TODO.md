@@ -186,7 +186,7 @@ All Tier 1 items are complete.
 
 ### Multi-class Support - March 28 2026
 
-- [ ] **Multi-class Support** - Enhance character profiles to support multiclassing.
+- [x] **Multi-class Support** - Enhance character profiles to support multiclassing.
 
 ### Spotlighting System - March 27, 2026
 
