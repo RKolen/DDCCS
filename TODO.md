@@ -21,7 +21,6 @@
 
 ### Phase 4: Story Tools
 
-- [ ] **AI Story Suggestions** - Use AI to suggest story developments and narrative improvements **Plan:** [plans/ai_story_suggestions_plan.md](plans/ai_story_suggestions_plan.md)
 - [ ] **Timeline Tracking** - Track chronological order of events across campaigns **Plan:** [plans/timeline_tracking_plan.md](plans/timeline_tracking_plan.md)
 
 ### Phase 5: Quality of Life
@@ -37,7 +36,6 @@ All features below have detailed implementation plans in the `plans/` directory.
 
 ### AI and Story Tools
 
-- [AI Story Suggestions](plans/ai_story_suggestions_plan.md) - AI-powered story development suggestions
 - [Session Notes Integration](plans/session_notes_plan.md) - Better session results and story narrative integration
 - [Timeline Tracking](plans/timeline_tracking_plan.md) - Chronological event tracking across campaigns
 - [Character Arc Analysis](plans/character_arc_analysis_plan.md) - Tools to analyze character development over multiple stories
@@ -131,9 +129,7 @@ All Tier 1 items are complete.
 
 ### Tier 2 — Core Value (High DM impact, moderate effort)
 
-| # | Plan | Reason |
-|---|------|-------|
-| 11 | [AI Story Suggestions](plans/ai_story_suggestions_plan.md) | Builds directly on spotlighting scores and Milvus semantic search. Higher quality output after those two are in place. |
+All Tier 2 items are complete.
 
 ### Tier 3 — Enrichment (Meaningful, but can wait for Tier 2)
 
@@ -179,6 +175,10 @@ All Tier 1 items are complete.
 ---
 
 ## Recently Completed
+
+### AI Story Suggestions - March 29, 2026
+
+- [x] **AI Story Suggestions** - AI-powered story development suggestions with plot hooks, character moments, plot twists, narrative improvements, NPC interactions, and foreshadowing.
 
 ### Major NPC Template - March 29, 2026
 

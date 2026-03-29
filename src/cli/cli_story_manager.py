@@ -18,6 +18,7 @@ from src.stories.story_workflow_orchestrator import (
 )
 from src.stories.story_ai_generator import generate_story_from_prompt
 from src.cli.cli_session_notes import session_notes_menu
+from src.cli.cli_suggestions import suggestions_menu
 from src.stories.story_file_manager import (
     StoryFileContext,
     StoryCreationOptions,
@@ -175,6 +176,7 @@ class StoryCLIManager:
             print("10. Character Analysis (Slow)")
             print("11. Amend Story Character Actions")
             print("12. Manage Session Notes")
+            print("13. AI Story Suggestions")
             print("0. Back")
 
             choice = input("Enter your choice: ").strip()
@@ -184,77 +186,52 @@ class StoryCLIManager:
 
     def _dispatch_series_choice(
         self, choice: str, series_name: str, series_stories: List[str]
-    ):
+    ) -> None:
         """Dispatch series management menu choice to appropriate handler.
-
-        Uses decision table to avoid branch complexity.
 
         Args:
             choice: User menu choice
             series_name: Selected series name
             series_stories: List of story files in series
         """
-        story_operations = [
-            ("1", False, "_create_story_in_series"),
-            ("2", True, "_view_story_details_in_series"),
-            ("3", True, "_generate_session_results_for_story"),
-            ("4", True, "_generate_character_development_for_story"),
-            ("5", False, "_analyze_story_cli"),
-            ("6", False, "_convert_combat_cli"),
-            ("7", False, "_get_dc_suggestions_cli"),
-            ("8", False, "_get_dm_narrative_cli"),
-            ("9", True, "_analyze_series_consistency"),
-            ("10", True, "_analyze_character_development_series"),
-            ("11", True, "_amend_story_actions"),
-            ("12", False, "_manage_session_notes"),
-        ]
-
-        for op_choice, requires_stories, method_name in story_operations:
-            if choice == op_choice:
-                if requires_stories and not series_stories:
-                    print("No stories in this series to perform this action.")
-                    return
-                self._execute_series_operation(method_name, series_name, series_stories)
-                return
-
-        print("Invalid choice.")
-
-    def _execute_series_operation(
-        self, method_name: str, series_name: str, series_stories: List[str]
-    ):
-        """Execute specified series operation.
-
-        Args:
-            method_name: Name of the operation method
-            series_name: Selected series name
-            series_stories: List of story files in series
-        """
-        if method_name == "_create_story_in_series":
-            self._create_story_in_series(series_name)
-        elif method_name == "_view_story_details_in_series":
-            self._view_story_details_in_series(series_name, series_stories)
-        elif method_name == "_generate_session_results_for_story":
-            self._generate_session_results_for_story(series_name, series_stories)
-        elif method_name == "_generate_character_development_for_story":
-            self._generate_character_development_for_story(series_name, series_stories)
-        elif method_name == "_analyze_story_cli":
-            self.analysis_cli.analyze_story()
-        elif method_name == "_convert_combat_cli":
-            self.analysis_cli.convert_combat()
-        elif method_name == "_get_dc_suggestions_cli":
-            self.consultations_cli.get_dc_suggestions()
-        elif method_name == "_get_dm_narrative_cli":
-            self.consultations_cli.get_dm_narrative_suggestions()
-        elif method_name == "_analyze_series_consistency":
-            self.analysis_cli.analyze_series_consistency(series_name, series_stories)
-        elif method_name == "_analyze_character_development_series":
-            self.analysis_cli.analyze_character_development_series(
-                series_name, series_stories
-            )
-        elif method_name == "_amend_story_actions":
-            self._amend_story_actions(series_name, series_stories)
-        elif method_name == "_manage_session_notes":
-            self._manage_session_notes(series_name)
+        actions = {
+            "1": (False, lambda: self._create_story_in_series(series_name)),
+            "2": (True, lambda: self._view_story_details_in_series(series_name, series_stories)),
+            "3": (
+                True,
+                lambda: self._generate_session_results_for_story(series_name, series_stories),
+            ),
+            "4": (
+                True,
+                lambda: self._generate_character_development_for_story(series_name, series_stories),
+            ),
+            "5": (False, self.analysis_cli.analyze_story),
+            "6": (False, self.analysis_cli.convert_combat),
+            "7": (False, self.consultations_cli.get_dc_suggestions),
+            "8": (False, self.consultations_cli.get_dm_narrative_suggestions),
+            "9": (
+                True,
+                lambda: self.analysis_cli.analyze_series_consistency(series_name, series_stories),
+            ),
+            "10": (
+                True,
+                lambda: self.analysis_cli.analyze_character_development_series(
+                    series_name, series_stories
+                ),
+            ),
+            "11": (True, lambda: self._amend_story_actions(series_name, series_stories)),
+            "12": (False, lambda: self._manage_session_notes(series_name)),
+            "13": (False, lambda: self._manage_ai_suggestions(series_name)),
+        }
+        action = actions.get(choice)
+        if not action:
+            print("Invalid choice.")
+            return
+        requires_stories, handler = action
+        if requires_stories and not series_stories:
+            print("No stories in this series to perform this action.")
+            return
+        handler()
 
     def _prepare_story_content(self, story_path: str) -> tuple:
         """Prepare story content for workflow orchestration.
@@ -314,22 +291,7 @@ class StoryCLIManager:
         )
 
         try:
-            # Configure options for large parties (performance optimization)
-            options = WorkflowOptions(
-                ai_client=self.story_manager.ai_client,
-                max_characters_for_ai=12,  # Limit AI calls for performance
-            )
-
-            # Warn user about large parties
-            if len(party_names) > 12:
-                print(
-                    f"\n[PERFORMANCE] Large party ({len(party_names)} members) detected."
-                )
-                print("  AI analysis enabled for first 12 characters.")
-                remaining_count = len(party_names) - 12
-                print(
-                    f"  Remaining {remaining_count} will use faster rule-based analysis."
-                )
+            options = WorkflowOptions(ai_client=self.story_manager.ai_client)
 
             results = coordinate_story_workflow(ctx, options=options)
 
@@ -933,6 +895,27 @@ class StoryCLIManager:
             series_name: Name of the story series / campaign.
         """
         session_notes_menu(series_name, self.workspace_path)
+
+    def _manage_ai_suggestions(self, series_name: str) -> None:
+        """Open the AI story suggestions menu for this campaign.
+
+        Loads party profiles and NPC data so the suggestion engine has full
+        context when generating suggestions.
+
+        Args:
+            series_name: Name of the story series / campaign.
+        """
+        campaign_path = os.path.join(
+            self.workspace_path, "game_data", "campaigns", series_name
+        )
+        party_profiles = load_party_with_profiles(campaign_path, self.workspace_path)
+        ai_client = get_client_for_task("story_generation")
+        suggestions_menu(
+            campaign_name=series_name,
+            workspace_path=self.workspace_path,
+            ai_client=ai_client,
+            party_profiles=party_profiles,
+        )
 
     def _amend_story_actions(self, series_name: str, stories: List[str]):
         """Interactive story character action amendment.

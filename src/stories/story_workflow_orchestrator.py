@@ -8,6 +8,7 @@ development tracking.
 """
 
 import json
+import os
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
@@ -33,6 +34,9 @@ from src.cli.party_config_manager import load_party_with_profiles
 from src.characters.character_consistency import create_character_development_file
 from src.stories.character_action_analyzer import extract_character_actions
 from src.utils.string_utils import truncate_at_sentence
+from src.stories.suggestion_engine import SuggestionEngine, SuggestionConfig
+from src.stories.suggestion_storage import save_suggestions
+from src.utils.npc_lookup_helper import load_major_npcs
 
 
 @dataclass
@@ -44,8 +48,7 @@ class WorkflowOptions:
     create_character_dev_file: bool = True
     create_session_file: bool = True
     ai_client: Any = None
-    skip_ai_character_analysis: bool = False  # Skip AI calls for character analysis
-    max_characters_for_ai: int = 12  # Max characters to analyze with AI (performance)
+    generate_suggestions: bool = True  # Generate AI story suggestions post-creation
 
 
 @dataclass
@@ -65,6 +68,7 @@ class StoryWorkflowContext:
             "hooks_file": None,
             "character_dev_file": None,
             "session_file": None,
+            "suggestions_generated": 0,
             "errors": [],
         }
     )
@@ -107,6 +111,7 @@ def coordinate_story_workflow(
     _process_hooks_workflow(ctx, options)
     _process_character_dev_workflow(ctx, options)
     _process_session_workflow(ctx, options)
+    _process_suggestions_workflow(ctx, options)
 
     return ctx.results
 
@@ -194,17 +199,6 @@ def _process_character_dev_workflow(
 
     print(f"Character development workflow starting - party: {ctx.party_names}")
     try:
-        # Performance optimization for large parties
-        party_size = len(ctx.party_names)
-        if party_size > opt.max_characters_for_ai:
-            print(
-                f"[PERFORMANCE] Large party detected ({party_size} members). "
-                f"AI analysis limited to first {opt.max_characters_for_ai} "
-                "characters."
-            )
-            remaining = party_size - opt.max_characters_for_ai
-            print(f"  Remaining {remaining} will use rule-based analysis.")
-
         # Load character profiles by searching all JSON files and matching by name field
         character_profiles = {}
         chars_dir = Path("game_data") / "characters"
@@ -216,15 +210,6 @@ def _process_character_dev_workflow(
                         profile_name = profile.get("name", "")
                         # Match against party names
                         if profile_name in ctx.party_names:
-                            # Disable AI for characters beyond max limit
-                            char_index = ctx.party_names.index(profile_name)
-                            if (
-                                char_index >= opt.max_characters_for_ai
-                                or opt.skip_ai_character_analysis
-                            ):
-                                if "ai_config" not in profile:
-                                    profile["ai_config"] = {}
-                                profile["ai_config"]["enabled"] = False
                             character_profiles[profile_name] = profile
                 except (OSError, json.JSONDecodeError) as e:
                     print(f"[DEBUG] Could not load {json_file.name}: {e}")
@@ -295,6 +280,47 @@ def _process_session_workflow(ctx: StoryWorkflowContext, opt: WorkflowOptions) -
         ctx.results["session_file"] = session_path
     except (ValueError, OSError, KeyError, AttributeError) as e:
         ctx.results["errors"].append(f"Session results file creation failed: {e}")
+
+
+def _process_suggestions_workflow(
+    ctx: StoryWorkflowContext, opt: WorkflowOptions
+) -> None:
+    """Generate AI story suggestions and persist them to the campaign file.
+
+    Skipped when generate_suggestions is False or no AI client is configured.
+
+    Args:
+        ctx: StoryWorkflowContext with story and campaign data.
+        opt: WorkflowOptions controlling execution behaviour.
+    """
+    if not opt.generate_suggestions or opt.ai_client is None:
+        return
+
+    try:
+        campaign_name = os.path.basename(ctx.series_path)
+        party_profiles = load_party_with_profiles(ctx.series_path, ctx.workspace_path)
+        npc_data = load_major_npcs(ctx.workspace_path)
+
+        engine = SuggestionEngine(opt.ai_client)
+        story_file = ctx.story_name + ".md"
+
+        suggestion_set = engine.generate_comprehensive_suggestions(
+            SuggestionConfig(
+                campaign_name=campaign_name,
+                story_content=ctx.story_content,
+                story_file=story_file,
+                party_profiles=party_profiles,
+                npc_data=npc_data,
+                count_per_type=2,
+            )
+        )
+
+        if suggestion_set.suggestions:
+            save_suggestions(suggestion_set, ctx.workspace_path)
+            ctx.results["suggestions_generated"] = len(suggestion_set.suggestions)
+
+    except (ValueError, OSError, KeyError, AttributeError) as exc:
+        ctx.results["errors"].append(f"Story suggestions generation failed: {exc}")
 
 
 def _extract_story_hooks(story_content: str) -> List[str]:
@@ -384,6 +410,10 @@ def report_workflow_results(results: Dict[str, Any]) -> str:
 
     if results["session_file"]:
         report_lines.append(f"Session Results: {results['session_file']}")
+
+    if results.get("suggestions_generated"):
+        count = results["suggestions_generated"]
+        report_lines.append(f"Story Suggestions: {count} suggestion(s) generated")
 
     if results["errors"]:
         report_lines.append("\nWarnings/Errors:")

@@ -220,6 +220,7 @@ def test_workflow_results_structure():
             "hooks_file",
             "character_dev_file",
             "session_file",
+            "suggestions_generated",
             "errors",
         }
         assert set(results.keys()) == expected_keys
