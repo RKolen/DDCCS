@@ -69,6 +69,20 @@ class NPCAgent:
                 }
             )
 
+        # Add major NPC fields if this is a major profile
+        if self.profile.is_major_profile():
+            major = self.profile.major_stats
+            status.update(
+                {
+                    "legendary_actions": major.legendary_actions,
+                    "lair_actions": major.lair_actions,
+                    "regional_effects": major.regional_effects,
+                    "encounter_tactics": major.encounter_tactics,
+                    "plot_hooks": major.plot_hooks,
+                    "defeat_conditions": major.defeat_conditions,
+                }
+            )
+
         return status
 
     def add_to_memory(self, event: str):
@@ -112,8 +126,8 @@ def load_npc_from_json(json_path: Path) -> NPCProfile:
         "faction": data.get("faction", "neutral"),
     }
 
-    # Add full character profile fields if present
-    if profile_type == "full":
+    # Add full character profile fields if present (applies to full and major)
+    if profile_type in ("full", "major"):
         base_kwargs.update(
             {
                 "dnd_class": data.get("dnd_class"),
@@ -142,6 +156,19 @@ def load_npc_from_json(json_path: Path) -> NPCProfile:
             }
         )
 
+    # Add major-only fields if present
+    if profile_type == "major":
+        base_kwargs.update(
+            {
+                "legendary_actions": data.get("legendary_actions"),
+                "lair_actions": data.get("lair_actions"),
+                "regional_effects": data.get("regional_effects"),
+                "encounter_tactics": data.get("encounter_tactics", []),
+                "plot_hooks": data.get("plot_hooks", []),
+                "defeat_conditions": data.get("defeat_conditions", []),
+            }
+        )
+
     profile = NPCProfile.create(**base_kwargs)
 
     # Load AI configuration if present
@@ -155,8 +182,8 @@ def create_npc_agents(npcs_dir: Path, ai_client=None) -> list:
     """Create NPCAgent objects for all NPC JSON files in the directory."""
     agents = []
     for npc_file in npcs_dir.glob("*.json"):
-        # Skip example files
-        if npc_file.name.startswith("npc.example"):
+        # Skip example files (any file containing ".example" in the name)
+        if ".example" in npc_file.name:
             continue
         profile = load_npc_from_json(npc_file)
         agents.append(NPCAgent(profile, ai_client=ai_client))

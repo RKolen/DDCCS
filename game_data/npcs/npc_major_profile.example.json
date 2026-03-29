@@ -1,0 +1,242 @@
+{
+    "profile_type": "major",
+    "faction": "bbeg",
+    "name": "Sauron",
+    "first_name": "Sauron",
+    "last_name": null,
+    "nickname": "The Dark Lord",
+    "pronouns": "he/him",
+    "role": "Primary Antagonist - The Dark Lord of Mordor",
+    "species": "Maia",
+    "lineage": "Ainur",
+    "dnd_class": "Wizard",
+    "subclass": "Abjuration",
+    "level": 20,
+    "background": "Acolyte",
+    "ability_scores": {
+        "strength": 22,
+        "dexterity": 14,
+        "constitution": 22,
+        "intelligence": 26,
+        "wisdom": 18,
+        "charisma": 24
+    },
+    "max_hit_points": 400,
+    "armor_class": 22,
+    "movement_speed": 30,
+    "proficiency_bonus": 6,
+    "skills": {
+        "Arcana": 20,
+        "Deception": 19,
+        "History": 20,
+        "Insight": 16,
+        "Intimidation": 19,
+        "Perception": 10,
+        "Persuasion": 19
+    },
+    "equipment": {
+        "weapons": [
+            "The One Ring (as focus)",
+            "Mace of Annatar"
+        ],
+        "armor": [
+            "Black Plate of Mordor"
+        ],
+        "items": [
+            "Palantir of Orthanc",
+            "The One Ring"
+        ]
+    },
+    "spell_slots": {
+        "1": 4,
+        "2": 3,
+        "3": 3,
+        "4": 3,
+        "5": 3,
+        "6": 2,
+        "7": 2,
+        "8": 1,
+        "9": 1
+    },
+    "known_spells": [
+        "Fire Bolt",
+        "Prestidigitation",
+        "Chill Touch",
+        "Toll the Dead",
+        "Command",
+        "Charm Person",
+        "Detect Thoughts",
+        "Hold Person",
+        "Counterspell",
+        "Dispel Magic",
+        "Fear",
+        "Fireball",
+        "Dimension Door",
+        "Banishment",
+        "Wall of Fire",
+        "Dominate Person",
+        "Hold Monster",
+        "Telekinesis",
+        "Disintegrate",
+        "Globe of Invulnerability",
+        "Forcecage",
+        "Power Word Stun",
+        "Dominate Monster",
+        "Power Word Kill",
+        "Wish"
+    ],
+    "magic_items": [
+        "The One Ring",
+        "Mace of Annatar (functions as a +3 mace dealing necrotic damage)",
+        "Palantir of Orthanc"
+    ],
+    "personality": "Patient, absolute in will, and utterly contemptuous of the free peoples. Speaks rarely but with total authority. Cannot conceive that his Ring might be destroyed rather than claimed.",
+    "personality_traits": [
+        "Speaks with the quiet certainty of someone who has already won",
+        "Views all living beings as tools, servants, or obstacles"
+    ],
+    "ideals": [
+        "Order - chaos is the disease, dominion is the cure"
+    ],
+    "bonds": [
+        "The One Ring is both his greatest power and his most catastrophic vulnerability"
+    ],
+    "flaws": [
+        "Cannot comprehend selfless sacrifice - the thought of destroying the Ring rather than wielding it is literally beyond his imagination",
+        "Arrogance: his certainty of victory makes him blind to the move made in the margins"
+    ],
+    "backstory": "Once Mairon the Admirable, the greatest of Aule's servants, he was seduced by Morgoth's promise that order could be imposed upon creation. After Morgoth's fall, Sauron sought to dominate Middle-earth himself - first as Annatar the gift-giver, corrupting the Elves and Men through the Rings of Power, then as the Dark Lord of Mordor. His spirit is bound to the One Ring; destroying it will unmake him.",
+    "feats": [
+        "War Caster",
+        "Resilient (Constitution)",
+        "Sentinel",
+        "Mage Slayer"
+    ],
+    "class_abilities": [
+        "Arcane Ward (Abjuration subclass - absorbs damage)",
+        "Projected Ward",
+        "Spell Resistance",
+        "Spell Mastery",
+        "Signature Spells"
+    ],
+    "specialized_abilities": [
+        "Legendary Resistance (5/day) - as a Maia, his will is immense",
+        "Magic Resistance - advantage on saves against magic",
+        "One Ring Attunement - while wearing it: +2 to all saves, can sense all Ring-bearers within 300 miles, Dominate Monster at will on any wearer of a lesser Ring",
+        "Maia Form - can revert to formless terror (frightened condition, DC 22 Wisdom save) as a bonus action",
+        "Shapechanger - can assume any humanoid form",
+        "Undying Will - if reduced to 0 HP while the Ring exists, his spirit survives and reforms in Mordor over 1d10 years"
+    ],
+    "relationships": {
+        "The Nine Ringwraiths": "Thralls - once great kings, now his most loyal servants",
+        "Saruman": "Subordinate - admires his ambition, trusts him only as long as useful",
+        "Gollum": "Asset - tracked for decades; the creature's obsession is a useful lever",
+        "Gandalf": "Primary obstacle - correctly identifies him as the greatest threat to the plan",
+        "The Fellowship": "Acceptable casualties - except the Ring-bearer, who must be taken alive",
+        "The Free Peoples": "Future subjects, not enemies - they simply do not know it yet"
+    },
+    "key_traits": [
+        "Absolute will - does not negotiate, does not tire, does not forget",
+        "Patient strategist - thinks in centuries",
+        "Catastrophic blind spot - cannot imagine the Ring being destroyed"
+    ],
+    "abilities": [
+        "Domination through the Rings of Power",
+        "Commanding orcs, trolls, and corrupted men across vast distances",
+        "Seeing through the Palantir",
+        "Sensing Ring-bearers"
+    ],
+    "recurring": true,
+    "notes": "The ultimate campaign antagonist. His power is tied to the One Ring - every plan should escalate toward the Ring's destruction or Sauron's reclamation of it. He never appears in person until Act IV; his influence is felt through agents, Nazgul, and the corrupting pull of the Ring itself.",
+    "major_plot_actions": [
+        "Forged the One Ring in the fires of Mount Doom, binding his power to it",
+        "Corrupted the Nine Kings of Men into the Nazgul",
+        "Deceived the Elves of Eregion as Annatar the gift-giver",
+        "Rebuilt Mordor and the Dark Tower of Barad-dur after his previous defeat",
+        "Dispatched the Nazgul to hunt the Ring-bearer"
+    ],
+    "encounter_tactics": [
+        "Never engages personally until the Ring is within reach - uses agents, Nazgul, and armies instead",
+        "When forced into combat, immediately attempts to Dominate the most powerful party member",
+        "Uses legendary actions to maintain pressure while casting control spells",
+        "Targets the Ring-bearer with everything - they are the priority",
+        "If the Ring is not in play: focuses on survival and retreat to reform",
+        "If the Ring is in play: all other targets are secondary - he will take any risk to reclaim it"
+    ],
+    "plot_hooks": [
+        "A Nazgul is spotted riding toward the party's last known location",
+        "The palantir shows Sauron's eye scanning for something - the Ring-bearer feels its gaze",
+        "An ambassador from Mordor arrives with an 'offer of peace' clearly designed to identify the Ring",
+        "Orcs raid a village, but their real objective is a map leading toward the party"
+    ],
+    "defeat_conditions": [
+        "The One Ring must be cast into the fires of Mount Doom - no other method permanently destroys him",
+        "While the Ring exists, reducing him to 0 HP only unmakes his physical form for years",
+        "His armies collapse instantly upon the Ring's destruction - morale shattered by the sudden severing of his will",
+        "A party member wielding the Ring could challenge him directly but would inevitably be corrupted"
+    ],
+    "legendary_actions": {
+        "available": 3,
+        "actions": [
+            {
+                "name": "Dark Command",
+                "cost": 1,
+                "description": "Sauron issues a command. One creature within 60 ft must succeed on a DC 22 Wisdom save or use its reaction to move up to its speed toward Sauron."
+            },
+            {
+                "name": "Crushing Will",
+                "cost": 2,
+                "description": "Sauron targets a creature within 120 ft. It must succeed on a DC 22 Intelligence save or be frightened until the end of its next turn and drop any held item."
+            },
+            {
+                "name": "Eye of Mordor",
+                "cost": 3,
+                "description": "Sauron fixes his gaze on one creature within 120 ft. That creature must make a DC 22 Wisdom save. On a failure it is paralyzed for 1 minute (save ends each turn). On a success it is stunned until the end of its next turn."
+            }
+        ]
+    },
+    "lair_actions": {
+        "enabled": true,
+        "lair_location": "Barad-dur, Mordor",
+        "initiative_count": 20,
+        "actions": [
+            {
+                "name": "Tremor of the Dark Tower",
+                "description": "The tower shudders. All creatures on the ground within 60 ft must succeed on a DC 19 Dexterity saving throw or fall prone."
+            },
+            {
+                "name": "Shadow Surge",
+                "description": "Darkness boils from the walls. A 30-ft-radius sphere of magical darkness centered on a point Sauron chooses within 120 ft. Lasts until initiative count 20 next round."
+            },
+            {
+                "name": "Ring-Call",
+                "description": "If a Ring-bearer is within the lair, the Ring whispers. That creature must succeed on a DC 22 Charisma save or use its action to put on the Ring."
+            }
+        ]
+    },
+    "regional_effects": {
+        "enabled": true,
+        "radius_miles": 100,
+        "effects": [
+            {
+                "name": "Shadow of Mordor",
+                "description": "Natural light is dim within 100 miles of Barad-dur. The sun appears veiled and sickly. Creatures sensitive to sunlight have no penalty but creatures sensitive to darkness gain advantage on attack rolls."
+            },
+            {
+                "name": "Will of the Dark Lord",
+                "description": "Creatures with an Intelligence of 4 or less within the region are drawn toward Mordor. They will not attack Sauron's forces unprovoked."
+            },
+            {
+                "name": "Ring Resonance",
+                "description": "Any Ring-bearer within 100 miles feels the pull of the One Ring. They must succeed on a DC 18 Charisma save each long rest or gain one level of exhaustion from the mental strain of resisting."
+            }
+        ],
+        "dispel_condition": "All regional effects end immediately upon the destruction of the One Ring in the fires of Mount Doom."
+    },
+    "ai_config": {
+        "enabled": true,
+        "temperature": 0.65,
+        "max_tokens": 1500,
+        "system_prompt": "You are Sauron, the Dark Lord of Mordor. You do not speak often. When you do, your voice is absolute - the voice of inevitability itself. You are not cruel for sport; you are simply correct, and those who defy you are making an error they will regret. You have waited three thousand years. You can wait a little longer. Beneath your patience is contempt so vast it does not need to be expressed. You are the answer to chaos. You are order. You are the One."
+    }
+}

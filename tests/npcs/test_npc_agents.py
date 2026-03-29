@@ -11,6 +11,7 @@ from pathlib import Path
 # Direct imports for NPCAgent and related functions
 from src.npcs.npc_agents import NPCAgent, load_npc_from_json, create_npc_agents
 from src.characters.character_sheet import NPCProfile
+from tests.test_helpers import make_major_npc_profile
 
 
 def test_npc_agent_initialization():
@@ -264,6 +265,101 @@ def test_create_npc_agents_empty_directory():
     print("[PASS] Create NPC Agents - Empty Directory")
 
 
+def test_load_npc_from_json_major():
+    """Test loading a major NPC (BBEG) from JSON file."""
+    print("\n[TEST] Load NPC from JSON - Major Profile")
+
+    with tempfile.NamedTemporaryFile(
+        mode="w", suffix=".json", delete=False, encoding="utf-8"
+    ) as f:
+        f.write(
+            """{
+            "profile_type": "major",
+            "faction": "bbeg",
+            "name": "Arch Villain",
+            "role": "Primary Antagonist",
+            "species": "Human",
+            "lineage": "",
+            "dnd_class": "Wizard",
+            "level": 17,
+            "ability_scores": {
+                "strength": 10, "dexterity": 14, "constitution": 16,
+                "intelligence": 22, "wisdom": 16, "charisma": 18
+            },
+            "max_hit_points": 200,
+            "armor_class": 18,
+            "personality": "Cold and calculating",
+            "relationships": {"Party": "Enemies"},
+            "key_traits": ["Ruthless", "Intelligent"],
+            "abilities": ["Arcane mastery"],
+            "recurring": true,
+            "notes": "The ultimate foe.",
+            "ai_config": {"enabled": true},
+            "legendary_actions": {"available": 3, "actions": []},
+            "lair_actions": {"enabled": true, "actions": []},
+            "regional_effects": {"enabled": true, "effects": []},
+            "encounter_tactics": ["Opens with Cloudkill"],
+            "plot_hooks": ["Rumors of a dark tower"],
+            "defeat_conditions": ["Destroy the phylactery"]
+        }"""
+        )
+        temp_path = f.name
+
+    try:
+        profile = load_npc_from_json(Path(temp_path))
+
+        assert profile.profile_type == "major", "profile_type should be 'major'"
+        assert profile.faction == "bbeg", "faction should be 'bbeg'"
+        assert profile.is_full_profile(), "Major profile should report is_full_profile()"
+        assert profile.is_major_profile(), "is_major_profile() should be True"
+
+        major = profile.major_stats
+        assert major is not None, "major_stats should be populated"
+        assert major.legendary_actions is not None, "legendary_actions not loaded"
+        assert major.lair_actions is not None, "lair_actions not loaded"
+        assert major.regional_effects is not None, "regional_effects not loaded"
+        assert major.encounter_tactics == ["Opens with Cloudkill"]
+        assert major.plot_hooks == ["Rumors of a dark tower"]
+        assert major.defeat_conditions == ["Destroy the phylactery"]
+        print("  [OK] Major NPC loaded with all BBEG-specific fields")
+    finally:
+        os.unlink(temp_path)
+
+    print("[PASS] Load NPC from JSON - Major Profile")
+
+
+def test_npc_agent_major_status():
+    """Test that NPCAgent.get_status() includes major NPC fields."""
+    print("\n[TEST] NPCAgent Get Status - Major Profile")
+
+    profile = make_major_npc_profile(
+        name="The Shadow Lord",
+        legendary_actions={"available": 3, "actions": []},
+        lair_actions={"enabled": True, "actions": []},
+        regional_effects={"enabled": True, "effects": []},
+        encounter_tactics=["Opens with Cloudkill"],
+        plot_hooks=["Rumors of a dark tower"],
+        defeat_conditions=["Destroy the phylactery"],
+    )
+
+    agent = NPCAgent(profile)
+    status = agent.get_status()
+
+    assert status["profile_type"] == "major", "profile_type not in status"
+    assert status["faction"] == "bbeg", "faction not in status"
+    assert status["legendary_actions"] is not None, "legendary_actions missing"
+    assert status["lair_actions"] is not None, "lair_actions missing"
+    assert status["regional_effects"] is not None, "regional_effects missing"
+    assert status["encounter_tactics"] == ["Opens with Cloudkill"]
+    assert status["plot_hooks"] == ["Rumors of a dark tower"]
+    assert status["defeat_conditions"] == ["Destroy the phylactery"]
+    # Full profile fields should also be present
+    assert status["level"] == 17, "level not in status"
+    assert status["max_hit_points"] == 200, "max_hit_points not in status"
+    print("  [OK] Major NPC status includes all BBEG-specific fields")
+    print("[PASS] NPCAgent Get Status - Major Profile")
+
+
 def run_all_tests():
     """Run all NPC agent tests."""
     print("=" * 70)
@@ -276,6 +372,8 @@ def run_all_tests():
     test_load_npc_from_json_basic()
     test_load_npc_from_json_full()
     test_load_npc_from_json_defaults()
+    test_load_npc_from_json_major()
+    test_npc_agent_major_status()
     test_create_npc_agents()
     test_create_npc_agents_empty_directory()
 

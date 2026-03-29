@@ -80,10 +80,6 @@ All features below have detailed implementation plans in the `plans/` directory.
 - [ ] **Language fixes** - Filter language to only include the prompts language - [Plan](plans/language_fixes_plan.md)
 - [ ] **Story tools** - Additional story management tools - [Plan](plans/story_tools_plan.md)
 
-### NPC System
-
-- [ ] **Major NPC template (BBEG)** - Template for major NPCs and villains - [Plan](plans/major_npc_template_plan.md)
-
 ## Low Priority (No Plan Yet)
 
 ### Character System Improvements
@@ -138,7 +134,6 @@ All Tier 1 items are complete.
 | # | Plan | Reason |
 |---|------|-------|
 | 11 | [AI Story Suggestions](plans/ai_story_suggestions_plan.md) | Builds directly on spotlighting scores and Milvus semantic search. Higher quality output after those two are in place. |
-| 12 | [Major NPC Template (BBEG)](plans/major_npc_template_plan.md) | Enriches NPC data fed into spotlighting and story suggestions. Relatively self-contained. |
 
 ### Tier 3 — Enrichment (Meaningful, but can wait for Tier 2)
 
@@ -184,6 +179,10 @@ All Tier 1 items are complete.
 ---
 
 ## Recently Completed
+
+### Major NPC Template - March 29, 2026
+
+- [x] **Major NPC template (BBEG)** - Template for major NPCs and villains.
 
 ### Multi-class Support - March 28 2026
 

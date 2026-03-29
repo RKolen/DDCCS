@@ -134,6 +134,35 @@ def _validate_ability_scores(data: Dict[str, Any]) -> List[str]:
     return validation_errors
 
 
+def _validate_major_optional_fields(data: Dict[str, Any]) -> List[str]:
+    """Validate major-profile-only optional fields (only if present).
+
+    Args:
+        data: Dictionary containing NPC data
+
+    Returns:
+        List of validation error messages
+    """
+    major_errors = []
+    list_fields = ["encounter_tactics", "plot_hooks", "defeat_conditions"]
+    for field in list_fields:
+        if field in data and not isinstance(data[field], list):
+            major_errors.append(
+                f"Field '{field}' must be of type list, got "
+                f"{type(data[field]).__name__}"
+            )
+    nullable_dict_fields = ["legendary_actions", "lair_actions", "regional_effects"]
+    for field in nullable_dict_fields:
+        if field in data and data[field] is not None and not isinstance(
+            data[field], dict
+        ):
+            major_errors.append(
+                f"Field '{field}' must be dict or None, got "
+                f"{type(data[field]).__name__}"
+            )
+    return major_errors
+
+
 def validate_npc_json(
     data: Dict[str, Any], source_path: str = ""
 ) -> Tuple[bool, List[str]]:
@@ -153,16 +182,17 @@ def validate_npc_json(
 
     # Check profile type
     profile_type = data.get("profile_type", "simplified")
-    if profile_type not in ["simplified", "full"]:
+    if profile_type not in ["simplified", "full", "major"]:
         validation_errors.append(
-            "profile_type must be 'simplified' or 'full', got " f"'{profile_type}'"
+            "profile_type must be 'simplified', 'full', or 'major', got "
+            f"'{profile_type}'"
         )
 
     # Check faction field
     faction = data.get("faction", "neutral")
-    if faction not in ["ally", "neutral", "enemy"]:
+    if faction not in ["ally", "neutral", "enemy", "bbeg"]:
         validation_errors.append(
-            f"faction must be 'ally', 'neutral', or 'enemy', got '{faction}'"
+            f"faction must be 'ally', 'neutral', 'enemy', or 'bbeg', got '{faction}'"
         )
 
     # Core NPC fields (required for all profiles)
@@ -228,11 +258,15 @@ def validate_npc_json(
     # Validate structured name fields if present
     validation_errors.extend(validate_name_fields(data, source_path + ": " if source_path else ""))
 
-    # Validate full profile fields if profile_type is "full"
-    if profile_type == "full":
+    # Validate full profile fields if profile_type is "full" or "major"
+    if profile_type in ("full", "major"):
         validation_errors.extend(_validate_required_fields(data, full_profile_required))
         validation_errors.extend(_validate_optional_fields(data, full_profile_optional))
         validation_errors.extend(_validate_ability_scores(data))
+
+    # Validate major-only optional fields if profile_type is "major"
+    if profile_type == "major":
+        validation_errors.extend(_validate_major_optional_fields(data))
 
     # Disallowed characters in name
     disallowed_chars = set("'\"`$%&|<>/\\")

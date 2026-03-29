@@ -7,7 +7,7 @@ post-processing.
 """
 
 import re
-from typing import Dict
+from typing import Dict, Optional
 from src.characters.consultants.consultant_core import CharacterConsultant
 from src.utils.text_formatting_utils import wrap_narrative_text
 
@@ -123,6 +123,128 @@ class AIEnhancedNarrator:
         except (ConnectionError, TimeoutError, ValueError, KeyError, AttributeError) as e:
             print(f"[WARNING]  Title generation failed: {e}")
             return self._extract_creature_title(combat_prompt)
+
+    def narrate_with_major_npc(
+        self,
+        combat_prompt: str,
+        major_npc_status: Dict,
+        story_context: str = "",
+        style: str = "cinematic",
+    ) -> str:
+        """Narrate a boss encounter using a major NPC's profile for richer context.
+
+        Enriches the AI prompt with the boss's personality, encounter tactics,
+        legendary actions, and lair actions when the profile has them defined.
+
+        Args:
+            combat_prompt: Tactical description of the combat.
+            major_npc_status: Status dict from NPCAgent.get_status() for a major NPC.
+            story_context: Optional prior story text for continuity.
+            style: Narrative style (cinematic, gritty, heroic, tactical).
+
+        Returns:
+            Narrative prose describing the boss encounter.
+        """
+        if not self.ai_client:
+            return self._narrate_combat_fallback(combat_prompt, style)
+
+        character_context = self._build_character_context(combat_prompt)
+        npc_context = self._build_major_npc_context(major_npc_status)
+
+        system_prompt = self._create_major_npc_system_prompt(style, major_npc_status)
+        user_prompt = self._create_user_prompt(
+            {
+                "combat_prompt": combat_prompt,
+                "character_context": character_context,
+                "ability_context": npc_context,
+                "story_context": story_context,
+                "style": style,
+            }
+        )
+
+        try:
+            narrative = self.ai_client.chat_completion(
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt},
+                ],
+                temperature=0.8,
+            )
+            narrative = self._remove_mechanics_terms(narrative)
+            narrative = wrap_narrative_text(narrative, prompt=combat_prompt)
+            return narrative
+
+        except (ConnectionError, TimeoutError, ValueError, KeyError, AttributeError) as e:
+            print(f"[WARNING]  Boss narration failed: {e}")
+            return self._narrate_combat_fallback(combat_prompt, style)
+
+    def _build_major_npc_context(self, npc_status: Dict) -> str:
+        """Build a context block describing the major NPC for the AI prompt.
+
+        Always includes lair actions when present — the DM controls whether
+        the party is literally in the lair via the combat prompt text.
+
+        Args:
+            npc_status: Status dict from NPCAgent.get_status().
+
+        Returns:
+            Formatted context string, or empty string if no useful data.
+        """
+        name = npc_status.get("name", "The Villain")
+        parts = [f"\n**{name}** (Boss NPC)"]
+
+        personality = npc_status.get("personality", "")
+        if personality:
+            parts.append(f"  - Personality: {personality}")
+
+        tactics = npc_status.get("encounter_tactics", [])
+        if tactics:
+            parts.append(f"  - Combat Tactics: {'; '.join(tactics[:3])}")
+
+        legendary = npc_status.get("legendary_actions")
+        if isinstance(legendary, dict):
+            avail = legendary.get("available", 3)
+            actions = legendary.get("actions", [])
+            names = [a.get("name", "?") for a in actions]
+            if names:
+                parts.append(
+                    f"  - Legendary Actions ({avail}/round): {', '.join(names)}"
+                )
+
+        lair = npc_status.get("lair_actions")
+        if isinstance(lair, dict) and lair.get("enabled"):
+            lair_acts = lair.get("actions", [])
+            lair_names = [a.get("name", "?") for a in lair_acts]
+            if lair_names:
+                parts.append(
+                    f"  - Lair Actions: {', '.join(lair_names)}"
+                )
+
+        if len(parts) <= 1:
+            return ""
+        return "\nBoss NPC Information:" + "\n".join(parts)
+
+    def _create_major_npc_system_prompt(
+        self, style: str, npc_status: Dict
+    ) -> str:
+        """Build the system prompt for a boss encounter.
+
+        Extends the standard system prompt with the boss's own voice guide
+        taken from their ai_config.system_prompt when available.
+
+        Args:
+            style: Narrative style (cinematic, gritty, heroic, tactical).
+            npc_status: Status dict from NPCAgent.get_status().
+
+        Returns:
+            System prompt string for the AI.
+        """
+        base = self._create_system_prompt(style)
+        ai_config: Optional[Dict] = npc_status.get("ai_config") or {}
+        npc_voice = ai_config.get("system_prompt", "")
+        if npc_voice:
+            base += f"\n\nBoss Voice Guide:\n{npc_voice}"
+        return base
 
     def _create_system_prompt(self, style: str) -> str:
         """Create the system prompt for AI narration."""

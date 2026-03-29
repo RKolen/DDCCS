@@ -1,102 +1,144 @@
 {
-    "_comment": "Full character profile NPC example - combines complete D&D 5e character stats with NPC-specific fields",
     "profile_type": "full",
     "faction": "ally",
-    "_npc_fields_section": "=== CORE NPC FIELDS (REQUIRED) ===",
-    "name": "NPC Name",
-    "nickname": null,
-    "pronouns": null,
-    "role": "Role or occupation (e.g., Warrior, Merchant, Guard Captain)",
-    "species": "Human",
+    "name": "Gandalf the Grey",
+    "first_name": "Gandalf",
+    "epithet": "the Grey",
+    "nickname": "Mithrandir",
+    "pronouns": "he/him",
+    "role": "Wizard",
+    "species": "Aasimar",
     "lineage": "",
-    "_lineage_note": "Optional subspecies (e.g., 'High Elf', 'Hill Dwarf'). Leave empty if not applicable.",
-    "personality": "Brief personality description",
+    "personality": "Wise and enigmatic wizard who speaks in riddles and parables with warmth and authority",
     "relationships": {
-        "Character Name": "Relationship description"
+        "Frodo Baggins": "Protege and friend",
+        "Aragorn": "Trusted ally",
+        "Saruman": "Rival and former friend"
     },
     "key_traits": [
-        "Trait 1",
-        "Trait 2"
+        "Wise",
+        "Mysterious",
+        "Compassionate",
+        "Strategic"
     ],
     "abilities": [
-        "Ability 1",
-        "Ability 2"
+        "Wisdom of the Maia",
+        "Fire Manipulation"
     ],
-    "recurring": false,
-    "notes": "Additional notes about this NPC.",
-    "_character_fields_section": "=== FULL CHARACTER PROFILE FIELDS (REQUIRED FOR FULL PROFILES) ===",
-    "dnd_class": "Fighter",
-    "subclass": "Champion",
-    "level": 5,
+    "recurring": true,
+    "notes": "A wise and powerful wizard, member of the Istari, guiding the Free Peoples against Sauron. Often works behind the scenes to shape the fate of Middle-earth.",
+    "dnd_class": "Wizard",
+    "subclass": "Diviner",
+    "level": 10,
     "ability_scores": {
-        "strength": 16,
+        "strength": 12,
         "dexterity": 14,
-        "constitution": 15,
-        "intelligence": 10,
-        "wisdom": 12,
-        "charisma": 11
+        "constitution": 16,
+        "intelligence": 20,
+        "wisdom": 18,
+        "charisma": 17
     },
     "skills": {
-        "Athletics": 6,
-        "Intimidation": 3,
-        "Perception": 4
+        "Arcana": 10,
+        "History": 9,
+        "Insight": 8,
+        "Perception": 7,
+        "Religion": 8,
+        "Persuasion": 6
     },
-    "max_hit_points": 45,
-    "armor_class": 18,
+    "max_hit_points": 65,
+    "armor_class": 16,
     "movement_speed": 30,
-    "proficiency_bonus": 3,
+    "proficiency_bonus": 4,
     "equipment": {
         "weapons": [
-            "Longsword",
-            "Shield"
+            "Glamdring",
+            "Staff of Power"
         ],
         "armor": [
-            "Plate Armor"
+            "Robes"
         ],
         "items": [
-            "Rope",
-            "Torch"
+            "Pipe",
+            "Hat",
+            "Fireworks"
         ],
-        "magic_items": [],
-        "gold": 100
+        "magic_items": [
+            "Narya (Ring of Fire)",
+            "Staff of Power"
+        ],
+        "gold": 50
     },
-    "spell_slots": {},
-    "known_spells": [],
-    "background": "Soldier",
+    "spell_slots": {
+        "1": 4,
+        "2": 3,
+        "3": 3,
+        "4": 2,
+        "5": 1
+    },
+    "known_spells": [
+        "Fireball",
+        "Light",
+        "Shield",
+        "Teleport",
+        "Detect Magic",
+        "Counterspell",
+        "Speak with Animals"
+    ],
+    "background": "Sage",
     "personality_traits": [
-        "Disciplined",
-        "Loyal"
+        "Wise",
+        "Mysterious",
+        "Compassionate",
+        "Strategic"
     ],
     "ideals": [
-        "Duty",
-        "Honor"
+        "Defeat Sauron",
+        "Guide the Fellowship",
+        "Protect Middle-earth"
     ],
     "bonds": [
-        "My unit is my family"
+        "Frodo",
+        "The Fellowship"
     ],
     "flaws": [
-        "I obey orders without question"
+        "Burden of leadership",
+        "Fear of Sauron's power"
     ],
-    "backstory": "A veteran soldier who served in multiple campaigns.",
+    "backstory": "A wise and powerful wizard, member of the Istari, guiding the Free Peoples against Sauron. Gandalf is a master of lore and magic, often working behind the scenes to shape the fate of Middle-earth.",
     "feats": [
-        "Great Weapon Master"
+        "Ritual Caster",
+        "Inspiring Leader"
     ],
-    "magic_items": [],
+    "magic_items": [
+        "Narya (Ring of Fire)",
+        "Staff of Power"
+    ],
     "class_abilities": [
-        "Action Surge",
-        "Second Wind",
-        "Improved Critical"
+        "Spellcasting",
+        "Arcane Recovery",
+        "Ritual Casting"
     ],
     "specialized_abilities": [
-        "Military Tactics"
+        "Wisdom of the Maia",
+        "Fire Manipulation"
     ],
-    "major_plot_actions": [],
-    "_ai_config_section": "=== AI CONFIGURATION ===",
+    "major_plot_actions": [
+        "Guided the Fellowship",
+        "Defeated the Balrog",
+        "Returned as Gandalf the White"
+    ],
     "ai_config": {
-        "_comment": "AI uses centralized .env settings. Override specific fields if this NPC needs different settings.",
-        "enabled": false,
-        "temperature": 0.7,
+        "enabled": true,
+        "temperature": 0.8,
         "max_tokens": 1000,
-        "system_prompt": "Custom system prompt for this NPC's personality (optional)"
+        "system_prompt": "You are Gandalf the Grey, a wise and enigmatic wizard. Speak in riddles and parables, with warmth and authority."
+    },
+    "voice": {
+        "piper_voice_id": "en_US-joe-medium",
+        "voice_settings": {
+            "speed": 1.0,
+            "pitch_shift": 0
+        }
     }
 }

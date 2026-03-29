@@ -901,6 +901,75 @@ class RAGSystem:
         }
 
 
+    def get_major_npc_context_for_prompt(
+        self,
+        prompt: str,
+        major_npc_statuses: List[Dict[str, Any]],
+        max_npcs: int = 2,
+    ) -> str:
+        """Return backstory and plot context for major NPCs relevant to a prompt.
+
+        Keyword-matches NPC names, roles, and relationships against the prompt.
+        Does not require Milvus — works as a plain-text fallback context source.
+
+        Args:
+            prompt: Current story or AI prompt text.
+            major_npc_statuses: List of status dicts from NPCAgent.get_status().
+            max_npcs: Maximum number of NPCs to include in the returned context.
+
+        Returns:
+            Formatted context string ready for injection into an AI prompt,
+            or empty string if no major NPCs match.
+        """
+        prompt_lower = prompt.lower()
+        matched: List[Dict[str, Any]] = []
+
+        for status in major_npc_statuses:
+            name = status.get("name", "")
+            role = status.get("role", "")
+            notes = status.get("notes", "")
+            relationships = status.get("relationships", {})
+
+            # Match on name, role, notes, or relationship keys
+            is_match = (
+                name.lower() in prompt_lower
+                or role.lower() in prompt_lower
+                or (notes and any(
+                    w in prompt_lower
+                    for w in notes.lower().split()[:8]
+                    if len(w) >= 5
+                ))
+                or any(k.lower() in prompt_lower for k in relationships)
+            )
+            if is_match:
+                matched.append(status)
+                if len(matched) >= max_npcs:
+                    break
+
+        if not matched:
+            return ""
+
+        parts = ["=== MAJOR NPC CONTEXT ==="]
+        for status in matched:
+            # Notes is the primary lore source; backstory is not surfaced in
+            # get_status() so notes serves as the in-prompt campaign summary.
+            parts.append(
+                f"\n**{status.get('name', '?')}** ({status.get('role', 'Major NPC')})"
+            )
+            notes = status.get("notes", "")
+            plot_hooks = status.get("plot_hooks", [])
+            defeat = status.get("defeat_conditions", [])
+            if notes:
+                parts.append(f"  Campaign role: {notes}")
+            if plot_hooks:
+                parts.append(f"  Active plot hooks: {'; '.join(plot_hooks[:2])}")
+            if defeat:
+                parts.append(f"  Defeat conditions: {defeat[0]}")
+
+        parts.append("=== END MAJOR NPC CONTEXT ===")
+        return "\n".join(parts)
+
+
 _RAG_SYSTEM_INSTANCE: list = []  # Mutable container avoids global statement
 
 

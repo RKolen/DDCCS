@@ -165,6 +165,26 @@ def get_character_file_path(
     return os.path.join(get_characters_dir(workspace_path), f"{filename}.json")
 
 
+def get_major_npc_files(workspace_path: Optional[str] = None) -> List[str]:
+    """Get paths to all major NPC JSON files (named with 'major_' prefix).
+
+    Args:
+        workspace_path: Optional workspace root path
+
+    Returns:
+        Sorted list of absolute paths to major_*.json files in game_data/npcs/,
+        excluding example files.
+    """
+    npcs_dir = get_npcs_dir(workspace_path)
+    if not os.path.isdir(npcs_dir):
+        return []
+    return [
+        os.path.join(npcs_dir, f)
+        for f in sorted(os.listdir(npcs_dir))
+        if f.startswith("major_") and f.endswith(".json") and ".example" not in f
+    ]
+
+
 def get_npc_file_path(npc_name: str, workspace_path: Optional[str] = None) -> str:
     """Get the path to an NPC JSON file.
 

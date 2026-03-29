@@ -266,17 +266,38 @@ class DMConsultant:
         return character_context
 
     def _build_npc_context(self, npcs_present: List[str]) -> List[str]:
-        """Build context strings about present NPCs."""
+        """Build context strings about present NPCs.
+
+        For major NPCs (BBEGs and key antagonists) includes encounter tactics
+        and defeat conditions in addition to the standard personality summary.
+        """
         npc_context = []
         for npc_name in npcs_present:
-            if npc_name in self.npc_agents:
-                agent = self.npc_agents[npc_name]
-                npc_info = (
-                    f"- {agent.profile.name} ({agent.profile.role}): "
-                    f"{agent.profile.personality}"
-                )
-                npc_context.append(npc_info)
+            if npc_name not in self.npc_agents:
+                continue
+            agent = self.npc_agents[npc_name]
+            npc_info = (
+                f"- {agent.profile.name} ({agent.profile.role}): "
+                f"{agent.profile.personality}"
+            )
+            if agent.profile.is_major_profile():
+                status = agent.get_status()
+                tactics = status.get("encounter_tactics", [])
+                defeat = status.get("defeat_conditions", [])
+                if tactics:
+                    npc_info += f"\n  Tactics: {'; '.join(tactics[:2])}"
+                if defeat:
+                    npc_info += f"\n  Vulnerabilities: {defeat[0]}"
+            npc_context.append(npc_info)
         return npc_context
+
+    def get_available_major_npcs(self) -> List[str]:
+        """Get names of all loaded major NPCs (profile_type='major')."""
+        return [
+            name
+            for name, agent in self.npc_agents.items()
+            if agent.profile.is_major_profile()
+        ]
 
     def generate_narrative_content(
         self,
@@ -320,6 +341,20 @@ class DMConsultant:
                 rag_context = self.rag_system.get_context_for_query(
                     story_prompt, potential_locations, max_results=2
                 )
+
+        # Inject major NPC context when relevant (keyword-based, no Milvus required)
+        if self.rag_system:
+            major_statuses = [
+                agent.get_status()
+                for agent in self.npc_agents.values()
+                if agent.profile.is_major_profile()
+            ]
+            if major_statuses:
+                major_npc_context = self.rag_system.get_major_npc_context_for_prompt(
+                    story_prompt, major_statuses
+                )
+                if major_npc_context:
+                    rag_context = (rag_context + "\n\n" + major_npc_context).strip()
 
         # Create the AI prompt
         system_prompt = f"""You are an expert D&D Dungeon Master creating

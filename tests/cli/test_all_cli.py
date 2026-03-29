@@ -30,6 +30,7 @@ def run_all_cli_tests() -> int:
         ("test_cli_story_series_party", "CLI Story Series Party Manager Tests"),
         ("test_cli_session_manager", "CLI Session Manager Tests"),
         ("test_cli_character_development_manager", "CLI Character Development Manager Tests"),
+        ("test_cli_npc_manager", "CLI NPC Manager Tests"),
     )
 
     results: Dict[str, bool] = {}

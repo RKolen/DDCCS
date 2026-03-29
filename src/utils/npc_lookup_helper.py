@@ -12,8 +12,8 @@ Functions:
 
 from pathlib import Path
 from typing import List, Dict, Any
-from src.utils.path_utils import get_npcs_dir
-from src.npcs.npc_agents import create_npc_agents
+from src.utils.path_utils import get_npcs_dir, get_major_npc_files
+from src.npcs.npc_agents import NPCAgent, create_npc_agents, load_npc_from_json
 
 
 # Location keywords and their common role associations
@@ -193,3 +193,25 @@ def load_relevant_npcs_for_prompt(
     )
 
     return matched_npcs
+
+
+def load_major_npcs(workspace_path: str) -> List[Dict[str, Any]]:
+    """Load all major NPC profiles from game_data/npcs/major_*.json.
+
+    Returns status dicts for every major NPC, including BBEG-specific fields
+    (legendary_actions, lair_actions, regional_effects, encounter_tactics,
+    plot_hooks, defeat_conditions) alongside standard NPC and full-profile fields.
+
+    Args:
+        workspace_path: Path to workspace root directory
+
+    Returns:
+        List of status dicts from NPCAgent.get_status(), one per major NPC file.
+        Returns empty list if no major NPC files exist.
+    """
+    major_files = get_major_npc_files(workspace_path)
+    if not major_files:
+        return []
+
+    agents = [NPCAgent(load_npc_from_json(Path(f))) for f in major_files]
+    return [agent.get_status() for agent in agents]

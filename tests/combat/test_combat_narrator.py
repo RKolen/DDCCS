@@ -5,11 +5,11 @@ so we exercise CharacterProfile and CharacterConsultant wiring.
 """
 
 import unittest
-from tests.test_helpers import FakeAIClient
+from tests.test_helpers import FakeAIClient, make_major_npc_profile
 from tests import test_helpers
 
-# Import directly to avoid tuple unpacking issues with safe_from_import
 from src.combat.combat_narrator import CombatNarrator
+from src.combat.narrator_ai import AIEnhancedNarrator
 
 
 class TestCombatNarrator(unittest.TestCase):
@@ -61,6 +61,59 @@ class TestCombatNarrator(unittest.TestCase):
         out = narrator.narrate_combat_from_prompt(prompt)
         # The fake AI returns a canned string; ensure it's present after processing
         self.assertIn("generated combat narrative", out)
+
+    def test_narrate_with_major_npc_fallback(self):
+        """narrate_with_major_npc falls back gracefully when AI is absent."""
+        major = make_major_npc_profile(
+            legendary_actions={"available": 3, "actions": [{"name": "Cantrip", "cost": 1}]},
+            lair_actions={"enabled": True, "actions": [{"name": "Shadow Tendrils"}]},
+            encounter_tactics=["Opens with Cloudkill"],
+        )
+
+        narrator = CombatNarrator(self.consultants, ai_client=None)
+        prompt = "The party faces Arch Villain in his tower."
+        out = narrator.narrate_with_major_npc(prompt, major, style="cinematic")
+        self.assertIn("Combat Scene", out)
+
+    def test_narrate_with_major_npc_ai_mocked(self):
+        """narrate_with_major_npc uses AI output when client is present."""
+        major = make_major_npc_profile(
+            personality="Cold and calculating",
+            encounter_tactics=["Opens with Cloudkill"],
+            legendary_actions={"available": 3, "actions": [{"name": "Cantrip", "cost": 1}]},
+            ai_config={"enabled": True, "system_prompt": "You are the Arch Villain."},
+        )
+
+        fake = FakeAIClient()
+        narrator = CombatNarrator(self.consultants, ai_client=fake)
+        prompt = "The party faces Arch Villain at his lair."
+        out = narrator.narrate_with_major_npc(prompt, major, style="cinematic")
+        self.assertIn("generated combat narrative", out)
+
+    def test_build_major_npc_context_includes_tactics(self):
+        """_build_major_npc_context includes tactics and legendary actions."""
+        ai_narrator = AIEnhancedNarrator(self.consultants)
+
+        status = {
+            "name": "Arch Villain",
+            "personality": "Cold and calculating",
+            "encounter_tactics": ["Opens with Cloudkill", "Targets healers"],
+            "legendary_actions": {
+                "available": 3,
+                "actions": [{"name": "Cantrip", "cost": 1}],
+            },
+            "lair_actions": {
+                "enabled": True,
+                "actions": [{"name": "Shadow Tendrils"}],
+            },
+        }
+
+        context = ai_narrator._build_major_npc_context(status)  # pylint: disable=protected-access
+        self.assertIn("Arch Villain", context)
+        self.assertIn("Cold and calculating", context)
+        self.assertIn("Cantrip", context)
+        self.assertIn("Shadow Tendrils", context)
+        self.assertIn("Opens with Cloudkill", context)
 
 
 if __name__ == "__main__":

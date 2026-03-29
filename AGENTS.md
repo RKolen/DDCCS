@@ -49,6 +49,10 @@ python3 -m pylint src/ tests/
 Never use flags or pipes.
 No issue is acceptable even if score is 10/10.
 
+**All pylint output lines must be zero — including R0801 (duplicate-code).**
+Never dismiss any warning as "informational only". If pylint reports it, fix it.
+Duplicate code goes in `tests/test_helpers.py` as a shared fixture helper.
+
 #### 3.1 Pylance also needs to be happy
 
 VsCode Pylance must also be happy with the code.

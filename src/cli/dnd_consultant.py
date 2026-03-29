@@ -12,6 +12,7 @@ from src.ai.availability import AI_AVAILABLE
 from src.ai.task_router import ModelRegistry
 from src.cli.cli_character_manager import CharacterCLIManager
 from src.cli.cli_config import ConfigCLI
+from src.cli.cli_npc_manager import NpcCLIManager
 from src.cli.cli_story_manager import StoryCLIManager
 from src.cli.cli_story_reader import StoryReaderCLI
 from src.cli.milvus_commands import run_milvus_status, run_reindex
@@ -74,6 +75,7 @@ class DDConsultantCLI:
             self.story_manager, self.workspace_path, self.dm_consultant
         )
         self.story_reader = StoryReaderCLI(self.workspace_path)
+        self.npc_manager = NpcCLIManager(self.workspace_path)
 
     def run_interactive(self):
         """Run the interactive command-line interface."""
@@ -97,9 +99,11 @@ class DDConsultantCLI:
             elif choice == "3":
                 self.story_reader.display_menu()
             elif choice == "4":
+                self.npc_manager.manage_npcs()
+            elif choice == "5":
                 config_cli = ConfigCLI()
                 config_cli.run_config_menu()
-            elif choice == "5":
+            elif choice == "6":
                 self._switch_model_profile_menu()
             elif choice == "0":
                 print("Goodbye! May your adventures be epic!")
@@ -130,8 +134,9 @@ class DDConsultantCLI:
         print("1. Manage Characters")
         print("2. Manage Stories")
         print("3. Read Stories")
-        print("4. Configure Settings")
-        print(f"5. Switch Model Profile  [active: {active}]")
+        print("4. Manage NPCs")
+        print("5. Configure Settings")
+        print(f"6. Switch Model Profile  [active: {active}]")
         print("0. Exit")
         print()
 

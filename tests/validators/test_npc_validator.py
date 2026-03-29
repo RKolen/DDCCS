@@ -170,6 +170,49 @@ def test_npc_trait_validation():
     print("[OK] NPC trait validation test passed")
 
 
+def test_valid_major_npc():
+    """Test that a valid major NPC passes validation."""
+    # Build from a full-profile base and upgrade to major
+    valid_major = test_helpers.sample_full_npc_data(
+        name="Test Villain",
+        overrides={
+            "profile_type": "major",
+            "faction": "bbeg",
+            "encounter_tactics": ["Opens with area control", "Targets healers first"],
+            "plot_hooks": ["Rumors of a hooded figure"],
+            "defeat_conditions": ["Destroy the phylactery"],
+        },
+    )
+    is_valid, errors = validate_npc_json(valid_major)
+    assert is_valid, f"Valid major NPC failed validation: {errors}"
+    print("[OK] Valid major NPC test passed")
+
+
+def test_bbeg_faction_valid():
+    """Test that bbeg faction is accepted."""
+    npc = test_helpers.sample_npc_data(
+        name="Test BBEG",
+        overrides={"faction": "bbeg"},
+    )
+    is_valid, errors = validate_npc_json(npc)
+    assert is_valid, f"BBEG faction rejected: {errors}"
+    print("[OK] BBEG faction test passed")
+
+
+def test_invalid_major_npc_missing_full_fields():
+    """Test that major profile type still requires full profile fields."""
+    # Major type should require same fields as full
+    major_missing_stats = test_helpers.sample_npc_data(
+        name="Incomplete Villain",
+        overrides={"profile_type": "major", "faction": "bbeg"},
+    )
+    # This does NOT include dnd_class, level, ability_scores etc.
+    is_valid, errors = validate_npc_json(major_missing_stats)
+    assert not is_valid, "Major NPC without full profile fields should fail"
+    assert any("dnd_class" in e for e in errors), "Should require dnd_class for major type"
+    print("[OK] Major NPC missing full fields test passed")
+
+
 if __name__ == "__main__":
     print("Running NPC validator tests...\n")
     test_list = [
@@ -180,5 +223,8 @@ if __name__ == "__main__":
         test_npc_relationships_validation,
         test_npc_trait_validation,
         test_validate_actual_npc_files,
+        test_valid_major_npc,
+        test_bbeg_faction_valid,
+        test_invalid_major_npc_missing_full_fields,
     ]
     test_helpers.run_tests_safely(test_list, success_message="[OK] All NPC validator tests passed!")

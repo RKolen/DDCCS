@@ -293,6 +293,47 @@ def sample_npc_data(
     return base
 
 
+def sample_full_npc_data(
+    name: str = "Test Full NPC",
+    role: str = "Warrior",
+    species: str = "Human",
+    overrides: dict | None = None,
+):
+    """Return a canonical full-profile NPC dict for tests.
+
+    Includes all required full-profile fields (dnd_class, level,
+    ability_scores, max_hit_points, armor_class) in addition to the
+    base NPC fields returned by sample_npc_data.
+    """
+    base = sample_npc_data(name=name, role=role, species=species)
+    base.update(
+        {
+            "profile_type": "full",
+            "dnd_class": "Fighter",
+            "subclass": "Champion",
+            "level": 5,
+            "ability_scores": {
+                "strength": 16,
+                "dexterity": 14,
+                "constitution": 15,
+                "intelligence": 10,
+                "wisdom": 12,
+                "charisma": 11,
+            },
+            "max_hit_points": 45,
+            "armor_class": 18,
+            "movement_speed": 30,
+            "proficiency_bonus": 3,
+            "background": "Soldier",
+        }
+    )
+
+    if overrides:
+        base.update(overrides)
+
+    return base
+
+
 def make_fake_input(inputs: list):
     """Return a callable that can be used to monkeypatch builtins.input.
 
@@ -683,6 +724,88 @@ class FakeDMConsultant:
             "narrative_suggestions": ["A short generated narrative."],
             "consistency_notes": [],
         }
+
+
+def sample_major_npc_data(
+    name: str = "Arch Villain",
+    first_name: str | None = None,
+    last_name: str | None = None,
+    overrides: dict | None = None,
+):
+    """Return a canonical major NPC dict for tests.
+
+    Provides all required major-profile fields so tests avoid inlining large
+    identical dicts. Pass `overrides` to customise specific fields per test.
+    """
+    parts = name.split(" ", 1)
+    fn = first_name if first_name is not None else parts[0]
+    ln = last_name if last_name is not None else (parts[1] if len(parts) > 1 else None)
+    base = {
+        "profile_type": "major",
+        "faction": "bbeg",
+        "name": name,
+        "first_name": fn,
+        "last_name": ln,
+        "nickname": None,
+        "pronouns": "they/them",
+        "role": "Primary Antagonist",
+        "species": "Human",
+        "lineage": "",
+        "dnd_class": "Wizard",
+        "level": 15,
+        "ability_scores": {
+            "strength": 10, "dexterity": 14, "constitution": 16,
+            "intelligence": 22, "wisdom": 16, "charisma": 18,
+        },
+        "max_hit_points": 180,
+        "armor_class": 18,
+        "personality": "Cold and calculating",
+        "relationships": {},
+        "key_traits": ["Ruthless"],
+        "abilities": ["Arcane mastery"],
+        "recurring": True,
+        "notes": "Campaign final boss.",
+        "ai_config": {"enabled": True},
+        "encounter_tactics": ["Opens with Cloudkill"],
+        "plot_hooks": ["A scout reports a dark tower"],
+        "defeat_conditions": ["Destroy the phylactery"],
+        "legendary_actions": {"available": 3, "actions": [{"name": "Cantrip", "cost": 1}]},
+        "lair_actions": {"enabled": True, "lair_location": "Dark Tower", "actions": [
+            {"name": "Shadow Tendrils"},
+        ]},
+        "regional_effects": {"enabled": True, "radius_miles": 6, "effects": [
+            {"name": "Eternal Twilight"},
+        ]},
+    }
+    if overrides:
+        base.update(overrides)
+    return base
+
+
+def make_major_npc_profile(name: str = "Arch Villain", **kwargs):
+    """Create a major NPCProfile instance for tests.
+
+    Provides sensible BBEG defaults (level-17 Wizard, standard ability scores).
+    Pass keyword arguments to override or extend specific fields per test.
+    """
+    npc_mod = import_module("src.characters.character_sheet")
+    npc_profile_cls = getattr(npc_mod, "NPCProfile")
+    defaults = {
+        "role": "BBEG",
+        "species": "Human",
+        "profile_type": "major",
+        "faction": "bbeg",
+        "dnd_class": "Wizard",
+        "level": 17,
+        "ability_scores": {
+            "strength": 10, "dexterity": 14, "constitution": 16,
+            "intelligence": 22, "wisdom": 16, "charisma": 18,
+        },
+        "max_hit_points": 200,
+        "armor_class": 18,
+    }
+    defaults.update(kwargs)
+    return npc_profile_cls.create(name=name, **defaults)
 
 
 class NoSeriesFakeStoryManager:

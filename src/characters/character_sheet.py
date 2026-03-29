@@ -192,6 +192,23 @@ class FullCharacterStats:
 
 
 @dataclass
+class MajorNPCStats:
+    """BBEG-specific statistics for major NPC profiles.
+
+    Holds boss encounter mechanics and plot data not present in regular
+    full profiles: legendary actions, lair actions, regional effects,
+    encounter tactics, plot hooks, and defeat conditions.
+    """
+
+    legendary_actions: Optional[Dict[str, Any]] = None
+    lair_actions: Optional[Dict[str, Any]] = None
+    regional_effects: Optional[Dict[str, Any]] = None
+    encounter_tactics: List[str] = field(default_factory=list)
+    plot_hooks: List[str] = field(default_factory=list)
+    defeat_conditions: List[str] = field(default_factory=list)
+
+
+@dataclass
 class NPCProfile:
     """NPC character profile for D&D campaigns.
 
@@ -204,6 +221,7 @@ class NPCProfile:
     physical: NPCPhysicalInfo = field(default_factory=NPCPhysicalInfo)
     character: NPCCharacterInfo = field(default_factory=NPCCharacterInfo)
     combat_stats: Optional[FullCharacterStats] = None
+    major_stats: Optional[MajorNPCStats] = None
 
     @classmethod
     def create(cls, name: str, **kwargs) -> "NPCProfile":
@@ -238,8 +256,8 @@ class NPCProfile:
             ),
         )
 
-        # Add full character profile if provided
-        if kwargs.get("profile_type") == "full":
+        # Add full character profile if provided (also applies to "major")
+        if kwargs.get("profile_type") in ("full", "major"):
             profile.combat_stats = FullCharacterStats(
                 dnd_class=kwargs.get("dnd_class", "Fighter"),
                 subclass=kwargs.get("subclass"),
@@ -276,6 +294,17 @@ class NPCProfile:
                 ),
             )
 
+        # Add major-only fields if provided
+        if kwargs.get("profile_type") == "major":
+            profile.major_stats = MajorNPCStats(
+                legendary_actions=kwargs.get("legendary_actions"),
+                lair_actions=kwargs.get("lair_actions"),
+                regional_effects=kwargs.get("regional_effects"),
+                encounter_tactics=kwargs.get("encounter_tactics", []),
+                plot_hooks=kwargs.get("plot_hooks", []),
+                defeat_conditions=kwargs.get("defeat_conditions", []),
+            )
+
         return profile
 
     # Backward compatibility properties using helper
@@ -306,8 +335,16 @@ class NPCProfile:
         self.basic.ai_config = value
 
     def is_full_profile(self) -> bool:
-        """Check if this NPC has a full character profile (with combat stats)."""
-        return self.basic.profile_type == "full" and self.combat_stats is not None
+        """Check if this NPC has a full character profile (with combat stats).
+
+        Returns True for both 'full' and 'major' profile types since major
+        profiles include all full profile fields.
+        """
+        return self.basic.profile_type in ("full", "major") and self.combat_stats is not None
+
+    def is_major_profile(self) -> bool:
+        """Check if this NPC is a major NPC (BBEG or key antagonist/ally)."""
+        return self.basic.profile_type == "major" and self.major_stats is not None
 
     def has_combat_stats(self) -> bool:
         """Alias for is_full_profile (for backward compatibility)."""

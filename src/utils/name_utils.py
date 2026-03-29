@@ -302,7 +302,7 @@ def validate_name_fields(data: Dict[str, Any], file_prefix: str = "") -> List[st
 
     optional_name_fields: Dict[str, Any] = {
         "first_name": str,
-        "last_name": str,
+        "last_name": (str, type(None)),
         "title": str,
         "epithet": str,
         "nickname": (str, type(None)),

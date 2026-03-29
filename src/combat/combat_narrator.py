@@ -10,6 +10,8 @@ Converts natural language combat prompts into engaging narrative prose with:
 
 from typing import Dict, List
 from src.characters.consultants.consultant_core import CharacterConsultant
+from src.characters.character_sheet import NPCProfile
+from src.npcs.npc_agents import NPCAgent
 from src.combat.narrator_ai import AIEnhancedNarrator
 from src.combat.narrator_descriptions import CombatDescriptor
 from src.combat.narrator_consistency import ConsistencyChecker
@@ -68,6 +70,32 @@ class CombatNarrator:
             A descriptive combat title
         """
         return self.ai_narrator.generate_combat_title(combat_prompt, story_context)
+
+    def narrate_with_major_npc(
+        self,
+        combat_prompt: str,
+        major_npc: NPCProfile,
+        story_context: str = "",
+        style: str = "cinematic",
+    ) -> str:
+        """Narrate a boss encounter using a major NPC profile for richer context.
+
+        Enriches the AI prompt with the boss's personality, encounter tactics,
+        legendary actions, and lair actions (when the profile has them defined).
+
+        Args:
+            combat_prompt: Tactical description of the combat.
+            major_npc: NPCProfile instance (should be profile_type="major").
+            story_context: Optional prior story text for continuity.
+            style: Narrative style (cinematic, gritty, heroic, tactical).
+
+        Returns:
+            Narrative prose describing the boss encounter.
+        """
+        npc_status = NPCAgent(major_npc).get_status()
+        return self.ai_narrator.narrate_with_major_npc(
+            combat_prompt, npc_status, story_context, style
+        )
 
     def enhance_with_character_consistency(
         self, narrative: str, character_actions: Dict[str, List[str]]
