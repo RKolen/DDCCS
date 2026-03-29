@@ -48,14 +48,17 @@ third_party_settings:
         - field_flaws
       label: 'Character Details'
       region: content
-      parent_name: ''
+      parent_name: group_details
       weight: 1
-      format_type: tabs
+      format_type: tab
       format_settings:
         classes: ''
         show_empty_fields: false
         id: ''
         label_as_html: false
+        formatter: closed
+        description: ''
+        required_fields: true
         direction: horizontal
         width_breakpoint: 640
     group_game_abilities:
@@ -74,15 +77,37 @@ third_party_settings:
         - field_movement_speed
       label: 'Game Abilities'
       region: content
-      parent_name: ''
+      parent_name: group_details
       weight: 2
+      format_type: tab
+      format_settings:
+        classes: ''
+        show_empty_fields: false
+        id: ''
+        label_as_html: false
+        formatter: closed
+        description: ''
+        required_fields: true
+        direction: vertical
+        width_breakpoint: '640'
+    group_details:
+      children:
+        - group_character_details
+        - group_game_abilities
+      label: Details
+      region: content
+      parent_name: ''
+      weight: 1
       format_type: tabs
       format_settings:
         classes: ''
         show_empty_fields: false
         id: ''
         label_as_html: false
-        direction: horizontal
+        formatter: closed
+        description: ''
+        required_fields: true
+        direction: vertical
         width_breakpoint: 640
 id: node.character.default
 targetEntityType: node
@@ -126,7 +151,7 @@ content:
     third_party_settings: {  }
   field_backstory:
     type: string_textarea
-    weight: 13
+    weight: 7
     region: content
     settings:
       rows: 5
@@ -134,7 +159,7 @@ content:
     third_party_settings: {  }
   field_bonds:
     type: text_textfield
-    weight: 16
+    weight: 10
     region: content
     settings:
       size: 60
@@ -183,7 +208,7 @@ content:
             selector: ''
   field_first_name:
     type: string_textfield
-    weight: 8
+    weight: 2
     region: content
     settings:
       size: 60
@@ -191,7 +216,7 @@ content:
     third_party_settings: {  }
   field_flaws:
     type: text_textfield
-    weight: 17
+    weight: 11
     region: content
     settings:
       size: 60
@@ -199,13 +224,13 @@ content:
     third_party_settings: {  }
   field_gender:
     type: options_select
-    weight: 11
+    weight: 5
     region: content
     settings: {  }
     third_party_settings: {  }
   field_ideals:
     type: text_textfield
-    weight: 15
+    weight: 9
     region: content
     settings:
       size: 60
@@ -223,7 +248,7 @@ content:
     third_party_settings: {  }
   field_last_name:
     type: string_textfield
-    weight: 9
+    weight: 3
     region: content
     settings:
       size: 60
@@ -252,7 +277,7 @@ content:
     third_party_settings: {  }
   field_nickname:
     type: string_textfield
-    weight: 10
+    weight: 4
     region: content
     settings:
       size: 60
@@ -267,7 +292,7 @@ content:
     third_party_settings: {  }
   field_personality_traits:
     type: text_textarea
-    weight: 14
+    weight: 8
     region: content
     settings:
       rows: 5
@@ -285,7 +310,7 @@ content:
     third_party_settings: {  }
   field_species:
     type: entity_reference_autocomplete
-    weight: 12
+    weight: 6
     region: content
     settings:
       match_operator: CONTAINS
@@ -305,13 +330,13 @@ content:
     third_party_settings: {  }
   path:
     type: path
-    weight: 7
+    weight: 3
     region: content
     settings: {  }
     third_party_settings: {  }
   status:
     type: boolean_checkbox
-    weight: 3
+    weight: 2
     region: content
     settings:
       display_label: true
