@@ -779,3 +779,43 @@ class StoryConsistencyAnalyzer:
             )
 
         return lines
+
+
+def check_relationship_consistency(
+    character_name: str,
+    mentioned_characters: List[str],
+    relationship_manager: Any,
+) -> List[str]:
+    """Check if story content is consistent with character relationships.
+
+    Args:
+        character_name: The main character in the scene
+        mentioned_characters: Other characters mentioned in the story
+        relationship_manager: RelationshipManager instance
+
+    Returns:
+        List of consistency warnings
+    """
+    warnings = []
+    graph = relationship_manager.build_relationship_graph()
+
+    for other in mentioned_characters:
+        rels = [r for s, t, r in graph.edges
+                if (s == character_name and t == other) or
+                   (s == other and t == character_name)]
+
+        if not rels:
+            warnings.append(
+                f"{character_name} interacts with {other}, but no "
+                f"relationship is defined between them."
+            )
+        else:
+            rel = rels[0]
+            if rel.is_negative and rel.strength >= 7:
+                warnings.append(
+                    f"{character_name} has a strong negative relationship "
+                    f"with {other} ({rel.relationship_type.value}, strength {rel.strength}). "
+                    f"Consider how this affects their interaction."
+                )
+
+    return warnings

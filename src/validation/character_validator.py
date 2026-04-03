@@ -150,15 +150,43 @@ def _validate_ability_scores(data: Dict[str, Any], file_prefix: str) -> List[str
 
 
 def _validate_relationships(data: Dict[str, Any], file_prefix: str) -> List[str]:
-    """Validate relationships dictionary structure."""
+    """Validate relationships dictionary structure.
+
+    Accepts both legacy string values and structured relationship objects.
+    """
     errors = []
-    if "relationships" in data and isinstance(data["relationships"], dict):
-        relationships = data["relationships"]
-        if not all(
-            isinstance(k, str) and isinstance(v, str) for k, v in relationships.items()
-        ):
+    if "relationships" not in data or not isinstance(data["relationships"], dict):
+        return errors
+
+    relationships = data["relationships"]
+    for key, value in relationships.items():
+        if not isinstance(key, str):
             errors.append(
-                f"{file_prefix}All keys and values in 'relationships' must be strings"
+                f"{file_prefix}All keys in 'relationships' must be strings"
+            )
+            break
+        if isinstance(value, str):
+            # Legacy format - valid
+            continue
+        if isinstance(value, dict):
+            # Structured format - validate required sub-fields
+            if "type" in value and not isinstance(value["type"], str):
+                errors.append(
+                    f"{file_prefix}Relationship '{key}': 'type' must be a string"
+                )
+            if "strength" in value:
+                strength = value["strength"]
+                if not isinstance(strength, int) or not 1 <= strength <= 10:
+                    errors.append(
+                        f"{file_prefix}Relationship '{key}': 'strength' must be an integer 1-10"
+                    )
+            if "status" in value and not isinstance(value["status"], str):
+                errors.append(
+                    f"{file_prefix}Relationship '{key}': 'status' must be a string"
+                )
+        else:
+            errors.append(
+                f"{file_prefix}Relationship '{key}': value must be a string or object"
             )
     return errors
 

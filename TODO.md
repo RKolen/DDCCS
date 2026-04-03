@@ -17,8 +17,6 @@
 
 ### Phase 3: Character System
 
-- [ ] **Relationship Mapping** - Visual or structured relationship tracking between characters **Plan:** [plans/relationship_mapping_plan.md](plans/relationship_mapping_plan.md)
-
 ### Phase 4: Story Tools
 
 ### Phase 5: Quality of Life
@@ -131,7 +129,6 @@ All Tier 2 items are complete.
 
 | # | Plan | Reason |
 |---|------|--------|
-| 15 | [Relationship Mapping](plans/relationship_mapping_plan.md) | Depends on character names split. Enriches spotlighting and arc analysis. |
 | 16 | [Story Tools](plans/story_tools_plan.md) | Utility layer for story comparison, search, and stats. No hard dependencies; adds quality to existing story flow. |
 | 17 | [Language Fixes](plans/language_fixes_plan.md) | Output quality improvement. No dependencies. |
 | 18 | [Custom Spell Highlighting](plans/custom_spell_highlighting_plan.md) | Display enhancement. No dependencies on other plans. |
@@ -170,7 +167,11 @@ All Tier 2 items are complete.
 
 ## Recently Completed
 
-### Character Arc Analysis and Timeline Tracking - April 2, 2026
+### Relationship Mapping - April 3, 2026
+
+- [x] **Relationship Mapping** - Visual or structured relationship tracking between characters.
+
+### Character Arc Analysis and Timeline Tracking - April 3, 2026
 
 - [x] **Character Arc Analysis** - AI-powered and pattern-based character development
   tracking across stories. Includes arc criteria/metrics, data structures,
