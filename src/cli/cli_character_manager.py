@@ -4,8 +4,13 @@ Handles all character-related menu interactions and operations.
 """
 
 import json
+import os
 from pathlib import Path
 from typing import Optional, Union
+
+from src.character_arc.arc_analyzer import ArcAnalyzer
+from src.character_arc.arc_reports import ArcReporter
+from src.character_arc.arc_storage import ArcStorage
 from src.characters.consultants.character_profile import CharacterProfile
 from src.cli.dnd_cli_helpers import edit_character_profile_interactive
 from src.cli.cli_consultations import ConsultationsCLI
@@ -64,6 +69,7 @@ class CharacterCLIManager:
             print("4. Get Character Consultation")
             print("5. Customize ASCII Art")
             print("6. Verify Character Profile")
+            print("7. Character Arc Analysis")
             print("0. Back to Main Menu")
 
             choice = input("Enter your choice: ").strip()
@@ -80,6 +86,8 @@ class CharacterCLIManager:
                 self._customize_ascii_art()
             elif choice == "6":
                 self._verify_character_profile()
+            elif choice == "7":
+                self._arc_analysis_menu()
             elif choice == "0":
                 break
             else:
@@ -469,3 +477,145 @@ class CharacterCLIManager:
                 user_guidance="Check file permissions and ensure the JSON is valid."
             )
             display_error(err)
+
+    # ------------------------------------------------------------------
+    # Character Arc Analysis
+    # ------------------------------------------------------------------
+
+    def _arc_analysis_menu(self):
+        """Character arc analysis submenu."""
+        campaign_name = self._get_current_campaign()
+        if not campaign_name:
+            print("\n[ERROR] No campaign selected. Select a campaign first.")
+            return
+
+        storage = ArcStorage(campaign_name, self.story_manager.workspace_path)
+        reporter = ArcReporter(storage)
+
+        while True:
+            print("\n CHARACTER ARC ANALYSIS")
+            print("-" * 30)
+            print("1. View character arc summary")
+            print("2. Analyze story for character arc")
+            print("3. View campaign arc overview")
+            print("4. Export arc report to file")
+            print("0. Back")
+
+            choice = input("Enter your choice: ").strip()
+
+            if choice == "1":
+                self._arc_view_summary(reporter)
+            elif choice == "2":
+                self._arc_analyze_story(storage)
+            elif choice == "3":
+                self._arc_campaign_overview(reporter)
+            elif choice == "4":
+                self._arc_export_report(reporter)
+            elif choice == "0":
+                break
+            else:
+                print("Invalid choice. Please try again.")
+
+    def _get_current_campaign(self) -> Optional[str]:
+        """Return the current campaign name from story context, or None."""
+        try:
+            story_context = getattr(self.story_manager, "story_context", None)
+            if story_context:
+                return getattr(story_context, "campaign_name", None)
+        except AttributeError:
+            pass
+        return None
+
+    def _arc_view_summary(self, reporter: ArcReporter) -> None:
+        """Display arc summary for a selected character."""
+        self.story_manager.ensure_characters_loaded()
+        characters = self.story_manager.get_character_list()
+        if not characters:
+            print("[INFO] No characters found.")
+            return
+
+        result = select_character_from_list(characters)
+        if result:
+            _, character_name = result
+            reporter.display_character_summary(character_name)
+
+    def _arc_analyze_story(self, storage: ArcStorage) -> None:
+        """Analyze a story file and record an arc data point."""
+        self.story_manager.ensure_characters_loaded()
+        characters = self.story_manager.get_character_list()
+        if not characters:
+            print("[INFO] No characters found.")
+            return
+
+        result = select_character_from_list(characters)
+        if not result:
+            return
+        _, character_name = result
+
+        story_file = input("Enter story file path (or leave blank to cancel): ").strip()
+        if not story_file or not os.path.exists(story_file):
+            if story_file:
+                print(f"[ERROR] File not found: {story_file}")
+            return
+
+        try:
+            with open(story_file, "r", encoding="utf-8") as file_handle:
+                story_content = file_handle.read()
+        except OSError as exc:
+            print(f"[ERROR] Could not read story file: {exc}")
+            return
+
+        use_ai = input("Use AI for enhanced analysis? (y/n): ").strip().lower() == "y"
+        ai_client = self.story_manager.ai_client if use_ai else None
+        analyzer = ArcAnalyzer(ai_client=ai_client)
+
+        print(f"\nAnalyzing story for {character_name}...")
+        session_id = input("Session ID (optional): ").strip()
+        data_point = analyzer.analyze_story(
+            story_content=story_content,
+            character_name=character_name,
+            story_file=story_file,
+            session_id=session_id,
+        )
+
+        storage.add_data_point(character_name, data_point)
+        print(f"\n[SUCCESS] Arc data point added for {character_name}.")
+        self._print_arc_analysis_results(data_point)
+
+    @staticmethod
+    def _print_arc_analysis_results(data_point) -> None:
+        """Print observations and key events from an arc analysis data point."""
+        if data_point.observations:
+            print("\nObservations:")
+            for obs in data_point.observations:
+                print(f"  - {obs}")
+        if data_point.key_events:
+            print("\nKey Events:")
+            for event in data_point.key_events:
+                print(f"  - {event}")
+
+    def _arc_campaign_overview(self, reporter: ArcReporter) -> None:
+        """Print a campaign-level arc overview."""
+        report = reporter.generate_campaign_report()
+        print("\n" + report)
+
+    def _arc_export_report(self, reporter: ArcReporter) -> None:
+        """Export a character arc report to a markdown file."""
+        self.story_manager.ensure_characters_loaded()
+        characters = self.story_manager.get_character_list()
+        if not characters:
+            print("[INFO] No characters found.")
+            return
+
+        result = select_character_from_list(characters)
+        if not result:
+            return
+        _, character_name = result
+
+        default_path = f"{character_name.lower().replace(' ', '_')}_arc_report.md"
+        output_path = input(
+            f"Output file path [{default_path}]: "
+        ).strip() or default_path
+
+        reporter.export_report(character_name, output_path)
+        print(f"\n[SUCCESS] Arc report exported to: {output_path}")

@@ -162,7 +162,7 @@ ddev drush cr    # rebuild Drupal cache
 
 ## Directory Layout
 
-```
+```text
 drupal-cms/
 |-- composer.json        # Dependency manifest + patch registry
 |-- patches/             # Patch files for contrib modules

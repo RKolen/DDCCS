@@ -21,8 +21,6 @@
 
 ### Phase 4: Story Tools
 
-- [ ] **Timeline Tracking** - Track chronological order of events across campaigns **Plan:** [plans/timeline_tracking_plan.md](plans/timeline_tracking_plan.md)
-
 ### Phase 5: Quality of Life
 
 - [ ] **ComfyUI Integration** - Local image generation for character portraits and scene illustrations; optional Drupal media display **Plan:** [plans/comfyui_integration_plan.md](plans/comfyui_integration_plan.md)
@@ -37,8 +35,6 @@ All features below have detailed implementation plans in the `plans/` directory.
 ### AI and Story Tools
 
 - [Session Notes Integration](plans/session_notes_plan.md) - Better session results and story narrative integration
-- [Timeline Tracking](plans/timeline_tracking_plan.md) - Chronological event tracking across campaigns
-- [Character Arc Analysis](plans/character_arc_analysis_plan.md) - Tools to analyze character development over multiple stories
 
 ### Character System
 
@@ -135,8 +131,6 @@ All Tier 2 items are complete.
 
 | # | Plan | Reason |
 |---|------|--------|
-| 13 | [Character Arc Analysis](plans/character_arc_analysis_plan.md) | Valuable retrospective tool. Depends on session notes and story files (both done or in Tier 2). |
-| 14 | [Timeline Tracking](plans/timeline_tracking_plan.md) | Depends on session notes integration and party alterations. Natural next step after that data is structured. |
 | 15 | [Relationship Mapping](plans/relationship_mapping_plan.md) | Depends on character names split. Enriches spotlighting and arc analysis. |
 | 16 | [Story Tools](plans/story_tools_plan.md) | Utility layer for story comparison, search, and stats. No hard dependencies; adds quality to existing story flow. |
 | 17 | [Language Fixes](plans/language_fixes_plan.md) | Output quality improvement. No dependencies. |
@@ -175,6 +169,18 @@ All Tier 2 items are complete.
 ---
 
 ## Recently Completed
+
+### Character Arc Analysis and Timeline Tracking - April 2, 2026
+
+- [x] **Character Arc Analysis** - AI-powered and pattern-based character development
+  tracking across stories. Includes arc criteria/metrics, data structures,
+  storage per campaign, report generation (markdown and text), and CLI menu
+  under Character Management > Character Arc Analysis.
+
+- [x] **Timeline Tracking** - Chronological event extraction, storage, querying, and
+  display across campaigns. Pattern-based and AI-assisted event extraction from
+  story files, per-campaign timeline.json persistence, cross-campaign linking,
+  CLI menu under Story Management > Timeline Tracking.
 
 ### AI Story Suggestions - March 29, 2026
 

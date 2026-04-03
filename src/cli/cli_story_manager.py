@@ -54,6 +54,9 @@ from src.cli.cli_story_helpers import (
     CharacterSelectionHelper,
     StoryContinuationHelper,
 )
+from src.cli.cli_timeline import TimelineCLIManager, get_or_prompt_campaign
+
+
 class StoryCLIManager:
     """Manages story-related CLI operations."""
 
@@ -108,6 +111,7 @@ class StoryCLIManager:
 
             print("1. Create New Story Series")
             print("2. Work with Story Series")
+            print("3. Timeline Tracking")
             print("0. Back to Main Menu")
 
             choice = input("Enter your choice: ").strip()
@@ -116,10 +120,22 @@ class StoryCLIManager:
                 self._create_new_story_series()
             elif choice == "2":
                 self._manage_story_series()
+            elif choice == "3":
+                self._open_timeline_menu()
             elif choice == "0":
                 break
             else:
                 print("Invalid choice.")
+
+    def _open_timeline_menu(self) -> None:
+        """Open the timeline tracking submenu."""
+        campaign_name = get_or_prompt_campaign(
+            self.story_manager, self.workspace_path
+        )
+        if not campaign_name:
+            print("[ERROR] No campaign selected.")
+            return
+        TimelineCLIManager(self.workspace_path, campaign_name).timeline_menu()
 
     def _manage_story_series(self):
         """Manage story series folders."""
