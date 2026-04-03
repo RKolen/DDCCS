@@ -20,6 +20,7 @@ Why we test this:
 import json
 import tempfile
 from pathlib import Path
+from typing import Optional
 from unittest.mock import MagicMock
 
 from src.characters.relationship_types import (
@@ -29,7 +30,7 @@ from src.characters.relationship_types import (
 )
 from src.characters.relationship import Relationship, RelationshipEvent, RelationshipStatus
 from src.characters.relationship_manager import RelationshipManager, RelationshipGraph
-from src.characters.relationship_visualizer import RelationshipVisualizer, render_relationship_map
+from src.characters.relationship_visualizer import RelationshipVisualizer
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -59,14 +60,21 @@ def _make_visualizer(graph=None):
 
 
 def _write_json(path, data):
+    """Write data as JSON to path."""
     path.write_text(json.dumps(data, indent=2), encoding="utf-8")
 
 
 def _read_json(path):
+    """Read and return JSON from path."""
     return json.loads(path.read_text(encoding="utf-8"))
 
 
-def _make_manager(char_data, npc_data=None, tmp_path=None):
+def _make_manager(
+    char_data: dict,
+    npc_data: Optional[dict] = None,
+    *,
+    tmp_path: Path,
+) -> RelationshipManager:
     """Create a RelationshipManager with mock file data in a temp dir."""
     chars_dir = tmp_path / "characters"
     npcs_dir = tmp_path / "npcs"
@@ -91,6 +99,7 @@ def _make_manager(char_data, npc_data=None, tmp_path=None):
 # ─────────────────────────────────────────────────────────────────────────────
 
 def test_all_types_have_string_values():
+    """All RelationshipType enum members have non-empty string values."""
     print("\n[TEST] RelationshipType - All types have non-empty string values")
     for rel_type in RelationshipType:
         assert isinstance(rel_type.value, str) and rel_type.value, (
@@ -101,6 +110,7 @@ def test_all_types_have_string_values():
 
 
 def test_asymmetric_inverses():
+    """Asymmetric relationship types return the correct opposing type."""
     print("\n[TEST] RelationshipType - Asymmetric inverses")
     assert get_inverse(RelationshipType.MENTOR) == RelationshipType.STUDENT
     assert get_inverse(RelationshipType.STUDENT) == RelationshipType.MENTOR
@@ -115,6 +125,7 @@ def test_asymmetric_inverses():
 
 
 def test_symmetric_inverses():
+    """Symmetric relationship types return themselves as their inverse."""
     print("\n[TEST] RelationshipType - Symmetric inverses return same type")
     symmetric = [
         RelationshipType.FRIEND_CLOSE,
@@ -132,6 +143,7 @@ def test_symmetric_inverses():
 
 
 def test_unmapped_type_returns_unknown():
+    """Types not in the inverses map return UNKNOWN."""
     print("\n[TEST] RelationshipType - Unmapped types return UNKNOWN")
     for rel_type in RelationshipType:
         if rel_type not in RELATIONSHIP_INVERSES:
@@ -148,6 +160,7 @@ def test_unmapped_type_returns_unknown():
 # ─────────────────────────────────────────────────────────────────────────────
 
 def test_relationship_event_round_trip():
+    """RelationshipEvent survives a to_dict/from_dict round trip."""
     print("\n[TEST] RelationshipEvent - to_dict/from_dict round trip")
     event = RelationshipEvent(date="2024-01-01", description="First meeting", impact=2)
     restored = RelationshipEvent.from_dict(event.to_dict())
@@ -159,6 +172,7 @@ def test_relationship_event_round_trip():
 
 
 def test_relationship_event_defaults():
+    """RelationshipEvent.from_dict applies correct defaults for missing keys."""
     print("\n[TEST] RelationshipEvent - from_dict defaults")
     event = RelationshipEvent.from_dict({})
     assert event.description == ""
@@ -173,17 +187,19 @@ def test_relationship_event_defaults():
 # ─────────────────────────────────────────────────────────────────────────────
 
 def test_relationship_create_basic():
+    """Relationship can be created with required fields and defaults applied."""
     print("\n[TEST] Relationship - Basic creation")
     rel = Relationship(target_name="Gandalf", relationship_type=RelationshipType.MENTOR)
     assert rel.target_name == "Gandalf"
     assert rel.strength == 5
     assert rel.status == RelationshipStatus.CURRENT
-    assert rel.created_date is not None
+    assert rel.timestamps.created is not None
     print("  [OK] Basic creation correct")
     print("[PASS] Relationship - Basic creation")
 
 
 def test_relationship_strength_validation():
+    """Relationship raises ValueError for out-of-range strength values."""
     print("\n[TEST] Relationship - Strength validation")
     try:
         Relationship(target_name="X", relationship_type=RelationshipType.FRIEND, strength=0)
@@ -202,16 +218,26 @@ def test_relationship_strength_validation():
 
 
 def test_relationship_is_positive_negative():
+    """is_positive and is_negative return correct polarity for known types."""
     print("\n[TEST] Relationship - is_positive / is_negative")
-    assert Relationship(target_name="X", relationship_type=RelationshipType.FRIEND_CLOSE).is_positive
-    assert Relationship(target_name="X", relationship_type=RelationshipType.ALLY).is_positive
-    assert Relationship(target_name="X", relationship_type=RelationshipType.ENEMY).is_negative
-    assert Relationship(target_name="X", relationship_type=RelationshipType.NEMESIS).is_negative
+    rel_friend = Relationship(
+        target_name="X", relationship_type=RelationshipType.FRIEND_CLOSE
+    )
+    rel_ally = Relationship(target_name="X", relationship_type=RelationshipType.ALLY)
+    rel_enemy = Relationship(target_name="X", relationship_type=RelationshipType.ENEMY)
+    rel_nemesis = Relationship(
+        target_name="X", relationship_type=RelationshipType.NEMESIS
+    )
+    assert rel_friend.is_positive
+    assert rel_ally.is_positive
+    assert rel_enemy.is_negative
+    assert rel_nemesis.is_negative
     print("  [OK] Polarity detection correct")
     print("[PASS] Relationship - is_positive / is_negative")
 
 
 def test_relationship_add_event():
+    """add_event adjusts and clamps strength correctly."""
     print("\n[TEST] Relationship - add_event adjusts strength")
     rel = Relationship(target_name="X", relationship_type=RelationshipType.FRIEND, strength=5)
     rel.add_event("Saved each other", impact=3)
@@ -221,7 +247,9 @@ def test_relationship_add_event():
     rel.add_event("Epic moment", impact=5)
     assert rel.strength == 10
     # Clamp low
-    rel2 = Relationship(target_name="Y", relationship_type=RelationshipType.FRIEND, strength=2)
+    rel2 = Relationship(
+        target_name="Y", relationship_type=RelationshipType.FRIEND, strength=2
+    )
     rel2.add_event("Betrayal", impact=-5)
     assert rel2.strength == 1
     print("  [OK] Strength adjusted and clamped correctly")
@@ -229,6 +257,7 @@ def test_relationship_add_event():
 
 
 def test_relationship_round_trip():
+    """Relationship survives a to_dict/from_dict round trip."""
     print("\n[TEST] Relationship - to_dict/from_dict round trip")
     rel = Relationship(
         target_name="Arwen",
@@ -246,6 +275,7 @@ def test_relationship_round_trip():
 
 
 def test_relationship_from_dict_with_history():
+    """from_dict correctly loads relationship history events."""
     print("\n[TEST] Relationship - from_dict with history")
     data = {
         "target_name": "Legolas",
@@ -267,6 +297,7 @@ def test_relationship_from_dict_with_history():
 
 
 def test_relationship_from_legacy():
+    """from_legacy correctly infers relationship type from plain-text descriptions."""
     print("\n[TEST] Relationship - from_legacy inference")
     cases = [
         ("Arwen", "Beloved", RelationshipType.ROMANTIC_PARTNER),
@@ -291,6 +322,7 @@ def test_relationship_from_legacy():
 # ─────────────────────────────────────────────────────────────────────────────
 
 def test_relationship_graph_get_relationships_for():
+    """get_relationships_for returns all edges that include the named node."""
     print("\n[TEST] RelationshipGraph - get_relationships_for")
     r1 = Relationship(target_name="Arwen", relationship_type=RelationshipType.ROMANTIC_PARTNER)
     r2 = Relationship(target_name="Gandalf", relationship_type=RelationshipType.ALLY)
@@ -306,8 +338,13 @@ def test_relationship_graph_get_relationships_for():
 
 
 def test_relationship_graph_connection_strength():
+    """get_connection_strength returns the correct value for both directions."""
     print("\n[TEST] RelationshipGraph - get_connection_strength")
-    r = Relationship(target_name="Arwen", relationship_type=RelationshipType.ROMANTIC_PARTNER, strength=9)
+    r = Relationship(
+        target_name="Arwen",
+        relationship_type=RelationshipType.ROMANTIC_PARTNER,
+        strength=9,
+    )
     graph = RelationshipGraph(
         nodes={"Aragorn", "Arwen"},
         edges=[("Aragorn", "Arwen", r)]
@@ -324,6 +361,7 @@ def test_relationship_graph_connection_strength():
 # ─────────────────────────────────────────────────────────────────────────────
 
 def test_manager_build_graph_legacy():
+    """build_relationship_graph correctly parses legacy string relationship format."""
     print("\n[TEST] RelationshipManager - build_relationship_graph (legacy format)")
     with tempfile.TemporaryDirectory() as tmp:
         tmp_path = Path(tmp)
@@ -340,6 +378,7 @@ def test_manager_build_graph_legacy():
 
 
 def test_manager_build_graph_structured():
+    """build_relationship_graph correctly parses structured dict relationship format."""
     print("\n[TEST] RelationshipManager - build_relationship_graph (structured format)")
     with tempfile.TemporaryDirectory() as tmp:
         tmp_path = Path(tmp)
@@ -364,6 +403,7 @@ def test_manager_build_graph_structured():
 
 
 def test_manager_skips_example_files():
+    """build_relationship_graph skips files whose name contains '.example'."""
     print("\n[TEST] RelationshipManager - skips .example files")
     with tempfile.TemporaryDirectory() as tmp:
         tmp_path = Path(tmp)
@@ -381,6 +421,7 @@ def test_manager_skips_example_files():
 
 
 def test_manager_validate_consistency_finds_missing_inverse():
+    """validate_consistency reports a warning when inverse relationship is absent."""
     print("\n[TEST] RelationshipManager - validate_consistency (missing inverse)")
     with tempfile.TemporaryDirectory() as tmp:
         tmp_path = Path(tmp)
@@ -395,18 +436,21 @@ def test_manager_validate_consistency_finds_missing_inverse():
 
 
 def test_manager_validate_consistency_no_warnings_bidirectional():
+    """validate_consistency produces no warnings when both sides exist."""
     print("\n[TEST] RelationshipManager - validate_consistency (bidirectional, no warnings)")
     with tempfile.TemporaryDirectory() as tmp:
         tmp_path = Path(tmp)
+        aragorn_rel = {"type": "friend_close", "strength": 7, "status": "current"}
+        legolas_rel = {"type": "friend_close", "strength": 7, "status": "current"}
         manager = _make_manager(
             {
                 "aragorn.json": {
                     "name": "Aragorn",
-                    "relationships": {"Legolas": {"type": "friend_close", "strength": 7, "status": "current"}}
+                    "relationships": {"Legolas": aragorn_rel},
                 },
                 "legolas.json": {
                     "name": "Legolas",
-                    "relationships": {"Aragorn": {"type": "friend_close", "strength": 7, "status": "current"}}
+                    "relationships": {"Aragorn": legolas_rel},
                 },
             },
             tmp_path=tmp_path,
@@ -418,6 +462,7 @@ def test_manager_validate_consistency_no_warnings_bidirectional():
 
 
 def test_manager_sync_bidirectional_creates_inverse():
+    """sync_bidirectional creates a missing inverse relationship in the target file."""
     print("\n[TEST] RelationshipManager - sync_bidirectional creates inverse")
     with tempfile.TemporaryDirectory() as tmp:
         tmp_path = Path(tmp)
@@ -451,6 +496,7 @@ def test_manager_sync_bidirectional_creates_inverse():
 
 
 def test_manager_sync_skips_missing_targets():
+    """sync_bidirectional returns 0 when the target character file does not exist."""
     print("\n[TEST] RelationshipManager - sync_bidirectional skips missing targets")
     with tempfile.TemporaryDirectory() as tmp:
         tmp_path = Path(tmp)
@@ -469,6 +515,7 @@ def test_manager_sync_skips_missing_targets():
 # ─────────────────────────────────────────────────────────────────────────────
 
 def test_visualizer_to_dot_structure():
+    """to_dot produces valid DOT syntax containing all expected identifiers."""
     print("\n[TEST] RelationshipVisualizer - to_dot produces valid structure")
     viz = _make_visualizer()
     dot = viz.to_dot()
@@ -482,6 +529,7 @@ def test_visualizer_to_dot_structure():
 
 
 def test_visualizer_to_dot_filters_by_strength():
+    """to_dot excludes edges below min_strength."""
     print("\n[TEST] RelationshipVisualizer - to_dot filters by min_strength")
     viz = _make_visualizer()
     dot = viz.to_dot(min_strength=10)  # strength=9, should be excluded
@@ -491,6 +539,7 @@ def test_visualizer_to_dot_filters_by_strength():
 
 
 def test_visualizer_to_dot_filters_by_type():
+    """to_dot excludes edges whose type is not in include_types."""
     print("\n[TEST] RelationshipVisualizer - to_dot filters by include_types")
     viz = _make_visualizer()
     dot = viz.to_dot(include_types=[RelationshipType.ENEMY])
@@ -500,6 +549,7 @@ def test_visualizer_to_dot_filters_by_type():
 
 
 def test_visualizer_to_mermaid_structure():
+    """to_mermaid produces valid Mermaid syntax containing all expected identifiers."""
     print("\n[TEST] RelationshipVisualizer - to_mermaid produces valid structure")
     viz = _make_visualizer()
     mermaid = viz.to_mermaid()
@@ -512,6 +562,7 @@ def test_visualizer_to_mermaid_structure():
 
 
 def test_visualizer_to_mermaid_filters_by_strength():
+    """to_mermaid excludes edges below min_strength."""
     print("\n[TEST] RelationshipVisualizer - to_mermaid filters by min_strength")
     viz = _make_visualizer()
     mermaid = viz.to_mermaid(min_strength=10)
@@ -521,6 +572,7 @@ def test_visualizer_to_mermaid_filters_by_strength():
 
 
 def test_visualizer_center_on_excludes_unconnected():
+    """center_on limits the graph to nodes reachable from the named character."""
     print("\n[TEST] RelationshipVisualizer - center_on excludes unconnected nodes")
     rel = Relationship(target_name="Arwen", relationship_type=RelationshipType.ROMANTIC_PARTNER)
     graph = RelationshipGraph(
@@ -536,6 +588,7 @@ def test_visualizer_center_on_excludes_unconnected():
 
 
 def test_visualizer_export_dot_file():
+    """export_dot_file writes a file containing valid DOT syntax."""
     print("\n[TEST] RelationshipVisualizer - export_dot_file writes file")
     with tempfile.TemporaryDirectory() as tmp:
         output = Path(tmp) / "relationships.dot"
@@ -549,15 +602,17 @@ def test_visualizer_export_dot_file():
 
 
 def test_visualizer_safe_id():
-    print("\n[TEST] RelationshipVisualizer - _safe_id handles special chars")
-    assert RelationshipVisualizer._safe_id("Frodo Baggins") == "Frodo_Baggins"
-    assert RelationshipVisualizer._safe_id("Obi-Wan") == "Obi_Wan"
-    assert RelationshipVisualizer._safe_id("D'Artagnan") == "DArtagnan"
+    """safe_id replaces spaces, hyphens, and apostrophes with underscores or empty string."""
+    print("\n[TEST] RelationshipVisualizer - safe_id handles special chars")
+    assert RelationshipVisualizer.safe_id("Frodo Baggins") == "Frodo_Baggins"
+    assert RelationshipVisualizer.safe_id("Obi-Wan") == "Obi_Wan"
+    assert RelationshipVisualizer.safe_id("D'Artagnan") == "DArtagnan"
     print("  [OK] Special characters replaced correctly")
-    print("[PASS] RelationshipVisualizer - _safe_id handles special chars")
+    print("[PASS] RelationshipVisualizer - safe_id handles special chars")
 
 
 def test_render_relationship_map_dot():
+    """RelationshipVisualizer produces DOT output for an empty graph."""
     print("\n[TEST] render_relationship_map - dot format")
     graph = RelationshipGraph(nodes=set(), edges=[])
     manager = MagicMock()
@@ -571,6 +626,7 @@ def test_render_relationship_map_dot():
 
 
 def test_render_relationship_map_mermaid():
+    """RelationshipVisualizer produces Mermaid output for an empty graph."""
     print("\n[TEST] render_relationship_map - mermaid format")
     graph = RelationshipGraph(nodes=set(), edges=[])
     manager = MagicMock()

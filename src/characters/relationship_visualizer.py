@@ -26,6 +26,7 @@ class RelationshipVisualizer:
     }
 
     def __init__(self, manager: Optional[RelationshipManager] = None):
+        """Initialise with an optional RelationshipManager."""
         self.manager = manager or RelationshipManager()
 
     def to_dot(
@@ -51,7 +52,7 @@ class RelationshipVisualizer:
             '    rankdir=LR;',
             '    node [shape=box, style="rounded,filled", fillcolor=white];',
             '    edge [fontsize=10];',
-            ''
+            '',
         ]
 
         if center_on:
@@ -59,13 +60,30 @@ class RelationshipVisualizer:
         else:
             nodes = graph.nodes
 
-        for node in sorted(nodes):
-            safe_name = self._safe_id(node)
-            lines.append(f'    {safe_name} [label="{node}"];')
-
+        lines.extend(self._build_dot_node_lines(nodes))
         lines.append('')
+        lines.extend(self._build_dot_edge_lines(graph, nodes, min_strength, include_types))
+        lines.append('}')
+        return '\n'.join(lines)
 
+    def _build_dot_node_lines(self, nodes: Set[str]) -> List[str]:
+        """Build DOT node declaration lines for the given node set."""
+        return [
+            f'    {self.safe_id(node)} [label="{node}"];'
+            for node in sorted(nodes)
+        ]
+
+    def _build_dot_edge_lines(
+        self,
+        graph: RelationshipGraph,
+        nodes: Set[str],
+        min_strength: int,
+        include_types: Optional[List[RelationshipType]],
+    ) -> List[str]:
+        """Build DOT edge declaration lines, deduplicating bidirectional pairs."""
+        lines = []
         seen_edges: Set[tuple] = set()
+
         for source, target, rel in graph.edges:
             if source not in nodes or target not in nodes:
                 continue
@@ -80,8 +98,8 @@ class RelationshipVisualizer:
             seen_edges.add(edge_key)
 
             color = self.TYPE_COLORS.get(rel.relationship_type, "#6C757D")
-            safe_source = self._safe_id(source)
-            safe_target = self._safe_id(target)
+            safe_source = self.safe_id(source)
+            safe_target = self.safe_id(target)
             label = f"{rel.relationship_type.value}\\n({rel.strength})"
 
             lines.append(
@@ -89,8 +107,7 @@ class RelationshipVisualizer:
                 f'[label="{label}", color="{color}", fontcolor="{color}"];'
             )
 
-        lines.append('}')
-        return '\n'.join(lines)
+        return lines
 
     def to_mermaid(
         self,
@@ -174,8 +191,8 @@ class RelationshipVisualizer:
         return connected
 
     @staticmethod
-    def _safe_id(name: str) -> str:
-        """Convert name to safe DOT identifier."""
+    def safe_id(name: str) -> str:
+        """Convert name to a safe DOT identifier."""
         return name.replace(' ', '_').replace('-', '_').replace("'", "")
 
     @staticmethod

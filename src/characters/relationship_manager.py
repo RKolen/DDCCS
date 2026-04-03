@@ -5,7 +5,7 @@ from pathlib import Path
 from dataclasses import dataclass
 
 from src.characters.relationship import Relationship
-from src.characters.relationship_types import RelationshipType, get_inverse
+from src.characters.relationship_types import get_inverse
 from src.utils.file_io import load_json_file, save_json_file
 from src.utils.path_utils import get_characters_dir, get_npcs_dir
 
@@ -18,7 +18,7 @@ class RelationshipGraph:
 
     def get_relationships_for(self, name: str) -> List[Relationship]:
         """Get all relationships for a specific character."""
-        return [r for s, t, r in self.edges if s == name or t == name]
+        return [r for s, t, r in self.edges if name in (s, t)]
 
     def get_connection_strength(self, name1: str, name2: str) -> Optional[int]:
         """Get the strength of connection between two characters."""
