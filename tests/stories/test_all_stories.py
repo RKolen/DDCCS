@@ -44,9 +44,22 @@ def run_all_story_tests():
         ("test_suggestions", "Story Suggestions Tests"),
     ]
 
+    tools_tests = [
+        ("test_story_search", "Story Search Tests"),
+        ("test_story_statistics", "Story Statistics Tests"),
+        ("test_story_comparator", "Story Comparator Tests"),
+        ("test_story_validator", "Story Validator Tests"),
+        ("test_story_export_helpers", "Story Export Helpers Tests"),
+        ("test_story_import_helpers", "Story Import Helpers Tests"),
+        ("test_story_templates", "Story Templates Tests"),
+    ]
+
     results = {}
     for test_file, test_name in tests:
         results[test_name] = run_test_file(test_file, "stories", test_name)
+
+    for test_file, test_name in tools_tests:
+        results[test_name] = run_test_file(test_file, "stories.tools", test_name)
 
     # Summary (delegate to shared helper)
     return print_subsystem_summary(results, "STORIES SUBSYSTEM - TEST SUMMARY")

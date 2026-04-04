@@ -70,7 +70,6 @@ All features below have detailed implementation plans in the `plans/` directory.
 ### Story Tools
 
 - [ ] **Language fixes** - Filter language to only include the prompts language - [Plan](plans/language_fixes_plan.md)
-- [ ] **Story tools** - Additional story management tools - [Plan](plans/story_tools_plan.md)
 
 ## Low Priority (No Plan Yet)
 
@@ -129,7 +128,6 @@ All Tier 2 items are complete.
 
 | # | Plan | Reason |
 |---|------|--------|
-| 16 | [Story Tools](plans/story_tools_plan.md) | Utility layer for story comparison, search, and stats. No hard dependencies; adds quality to existing story flow. |
 | 17 | [Language Fixes](plans/language_fixes_plan.md) | Output quality improvement. No dependencies. |
 | 18 | [Custom Spell Highlighting](plans/custom_spell_highlighting_plan.md) | Display enhancement. No dependencies on other plans. |
 | 19 | [DC Scaling](plans/dc_scaling_plan.md) | Rules enhancement. Self-contained; no dependencies. |
@@ -166,6 +164,10 @@ All Tier 2 items are complete.
 ---
 
 ## Recently Completed
+
+### Story Tools - April 4, 2026
+
+- [x] **Story tools** - Additional story management tools.
 
 ### Relationship Mapping - April 3, 2026
 

@@ -5,8 +5,10 @@ Extracted helpers to reduce duplicate code across story modules.
 
 import os
 import re
-from typing import List, Tuple
+from typing import List, Optional, Tuple
+
 from src.utils.file_io import get_json_files_in_directory
+from src.utils.path_utils import get_campaigns_dir
 
 STORY_PATTERN = re.compile(r"\d{3}.*\.md$")
 
@@ -46,6 +48,45 @@ def next_filename_for_dir(dir_path: str, story_name: str) -> Tuple[str, str]:
     filename = f"{next_number:03d}_{clean_name}.md"
     filepath = os.path.join(dir_path, filename)
     return filename, filepath
+
+
+def get_story_file_paths_in_series(
+    workspace_path: str, series_name: str
+) -> List[str]:
+    """Return sorted absolute paths to all numbered story files in a series.
+
+    Args:
+        workspace_path: Root workspace path.
+        series_name: Campaign/series directory name under game_data/campaigns/.
+
+    Returns:
+        Sorted list of absolute file paths matching the story numbering pattern.
+    """
+    series_dir = os.path.join(get_campaigns_dir(workspace_path), series_name)
+    if not os.path.isdir(series_dir):
+        return []
+    return sorted(
+        os.path.join(series_dir, f)
+        for f in os.listdir(series_dir)
+        if STORY_PATTERN.match(f)
+    )
+
+
+def read_story_lines(filepath: str) -> Optional[List[str]]:
+    """Read all lines from a story file.
+
+    Args:
+        filepath: Absolute path to the story markdown file.
+
+    Returns:
+        List of lines (with newlines preserved), or None if the file
+        cannot be found or read.
+    """
+    try:
+        with open(filepath, encoding="utf-8") as fh:
+            return fh.readlines()
+    except OSError:
+        return None
 
 
 def list_character_json_candidates(characters_dir: str) -> List[str]:
