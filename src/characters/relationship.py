@@ -1,15 +1,16 @@
 """Relationship data structures and management."""
 
 from dataclasses import dataclass, field
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict, Any, Tuple
 from datetime import datetime
 from enum import Enum
 
-from src.characters.relationship_types import RelationshipType, get_inverse  # noqa: F401
+from src.characters.relationship_types import RelationshipType
 
 
 class RelationshipStatus(Enum):
     """Status of a relationship."""
+
     CURRENT = "current"
     FORMER = "former"
     COMPLICATED = "complicated"
@@ -19,24 +20,52 @@ class RelationshipStatus(Enum):
 @dataclass
 class RelationshipEvent:
     """A significant event in a relationship's history."""
+
     date: Optional[str] = None
     description: str = ""
     impact: int = 0  # -5 to +5, how this affected the relationship
 
     def to_dict(self) -> Dict[str, Any]:
+        """Convert to dictionary for JSON serialization."""
         return {
             "date": self.date,
             "description": self.description,
-            "impact": self.impact
+            "impact": self.impact,
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'RelationshipEvent':
+    def from_dict(cls, data: Dict[str, Any]) -> "RelationshipEvent":
+        """Create from dictionary."""
         return cls(
             date=data.get("date"),
             description=data.get("description", ""),
-            impact=data.get("impact", 0)
+            impact=data.get("impact", 0),
         )
+
+
+@dataclass
+class RelationshipTimestamps:
+    """Created and last-updated timestamps for a relationship record."""
+
+    created: Optional[str] = None
+    updated: Optional[str] = None
+
+
+# Keyword-to-type lookup table used by Relationship._infer_type_from_description.
+_DESCRIPTION_TYPE_MAP: List[Tuple[List[str], RelationshipType]] = [
+    (
+        ["father", "mother", "sibling", "son", "daughter"],
+        RelationshipType.FAMILY_CLOSE,
+    ),
+    (
+        ["beloved", "lover", "spouse", "partner", "wife", "husband"],
+        RelationshipType.ROMANTIC_PARTNER,
+    ),
+    (["friend", "companion", "trusted"], RelationshipType.FRIEND_CLOSE),
+    (["mentor", "teacher", "master"], RelationshipType.MENTOR),
+    (["enemy", "nemesis", "foe", "rival"], RelationshipType.ENEMY),
+    (["ally", "comrade"], RelationshipType.ALLY),
+]
 
 
 @dataclass
@@ -53,20 +82,18 @@ class Relationship:
     notes: str = ""
     history: List[RelationshipEvent] = field(default_factory=list)
 
-    # Metadata
-    created_date: Optional[str] = None
-    last_updated: Optional[str] = None
+    # Metadata (created_date and last_updated are stored inside timestamps)
+    timestamps: RelationshipTimestamps = field(default_factory=RelationshipTimestamps)
 
-    def __post_init__(self):
-        # Validate strength range
+    def __post_init__(self) -> None:
+        """Validate fields and initialise timestamps."""
         if not 1 <= self.strength <= 10:
             raise ValueError(f"Strength must be 1-10, got {self.strength}")
 
-        # Set timestamps if not provided
-        if self.created_date is None:
-            self.created_date = datetime.now().isoformat()
-        if self.last_updated is None:
-            self.last_updated = datetime.now().isoformat()
+        if self.timestamps.created is None:
+            self.timestamps.created = datetime.now().isoformat()
+        if self.timestamps.updated is None:
+            self.timestamps.updated = datetime.now().isoformat()
 
     @property
     def is_positive(self) -> bool:
@@ -93,18 +120,19 @@ class Relationship:
         }
         return self.relationship_type in negative_types
 
-    def add_event(self, description: str, impact: int = 0, date: str = None):
+    def add_event(
+        self, description: str, impact: int = 0, date: Optional[str] = None
+    ) -> None:
         """Add a relationship event and update strength accordingly."""
         event = RelationshipEvent(
             date=date or datetime.now().isoformat(),
             description=description,
-            impact=impact
+            impact=impact,
         )
         self.history.append(event)
 
-        # Adjust strength based on impact
         self.strength = max(1, min(10, self.strength + impact))
-        self.last_updated = datetime.now().isoformat()
+        self.timestamps.updated = datetime.now().isoformat()
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for JSON serialization."""
@@ -115,12 +143,12 @@ class Relationship:
             "status": self.status.value,
             "notes": self.notes,
             "history": [e.to_dict() for e in self.history],
-            "created_date": self.created_date,
-            "last_updated": self.last_updated
+            "created_date": self.timestamps.created,
+            "last_updated": self.timestamps.updated,
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'Relationship':
+    def from_dict(cls, data: Dict[str, Any]) -> "Relationship":
         """Create from dictionary."""
         return cls(
             target_name=data["target_name"],
@@ -129,47 +157,27 @@ class Relationship:
             status=RelationshipStatus(data.get("status", "current")),
             notes=data.get("notes", ""),
             history=[RelationshipEvent.from_dict(e) for e in data.get("history", [])],
-            created_date=data.get("created_date"),
-            last_updated=data.get("last_updated")
+            timestamps=RelationshipTimestamps(
+                created=data.get("created_date"),
+                updated=data.get("last_updated"),
+            ),
         )
 
     @classmethod
-    def from_legacy(cls, target_name: str, description: str) -> 'Relationship':
+    def from_legacy(cls, target_name: str, description: str) -> "Relationship":
         """Create from legacy simple string format."""
         inferred_type = cls._infer_type_from_description(description)
         return cls(
             target_name=target_name,
             relationship_type=inferred_type,
-            notes=description
+            notes=description,
         )
 
     @staticmethod
     def _infer_type_from_description(description: str) -> RelationshipType:
         """Attempt to infer relationship type from a text description."""
         desc_lower = description.lower()
-
-        # Family keywords
-        if any(w in desc_lower for w in ["father", "mother", "sibling", "son", "daughter"]):
-            return RelationshipType.FAMILY_CLOSE
-
-        # Romantic keywords
-        if any(w in desc_lower for w in ["beloved", "lover", "spouse", "partner", "wife", "husband"]):
-            return RelationshipType.ROMANTIC_PARTNER
-
-        # Friendship keywords
-        if any(w in desc_lower for w in ["friend", "companion", "trusted"]):
-            return RelationshipType.FRIEND_CLOSE
-
-        # Mentor keywords
-        if any(w in desc_lower for w in ["mentor", "teacher", "master"]):
-            return RelationshipType.MENTOR
-
-        # Enemy keywords
-        if any(w in desc_lower for w in ["enemy", "nemesis", "foe", "rival"]):
-            return RelationshipType.ENEMY
-
-        # Ally keywords
-        if any(w in desc_lower for w in ["ally", "comrade"]):
-            return RelationshipType.ALLY
-
+        for keywords, rel_type in _DESCRIPTION_TYPE_MAP:
+            if any(w in desc_lower for w in keywords):
+                return rel_type
         return RelationshipType.UNKNOWN
