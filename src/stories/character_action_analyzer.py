@@ -13,6 +13,7 @@ import re
 from typing import Dict, List, Optional, Any
 
 from src.ai.ai_client import get_client_for_task
+from src.ai.prompt_templates import LANGUAGE_INSTRUCTION
 from src.stories.equipment_checker import (
     check_weapon_usage_consistency,
     format_equipment_warning,
@@ -191,15 +192,8 @@ def _get_ai_analysis(
                 {
                     "role": "system",
                     "content": (
-                        "SYSTEM INSTRUCTIONS - CRITICAL:\n"
-                        "You are a D&D character analysis assistant.\n"
-                        "YOU MUST respond ONLY in English.\n"
-                        "DO NOT generate ANY Chinese characters.\n"
-                        "DO NOT generate ANY non-ASCII characters.\n"
-                        "DO NOT generate ANY special Unicode sequences.\n"
-                        "ONLY ASCII English text is acceptable.\n"
-                        "If you cannot respond in English, respond with: "
-                        "'Unable to generate response.'"
+                        "You are a D&D character analysis assistant. "
+                        + LANGUAGE_INSTRUCTION
                     ),
                 },
                 {"role": "user", "content": prompt},
@@ -207,21 +201,7 @@ def _get_ai_analysis(
             temperature=0.7,
             max_tokens=150,
         )
-        response_text = response.strip() if response else None
-
-        # Validate response contains no Chinese/Unicode characters
-        if response_text:
-            # Check for common Chinese character ranges
-            for char in response_text:
-                code = ord(char)
-                # Chinese characters are typically in ranges: 0x4E00-0x9FFF, 0x3400-0x4DBF
-                if (
-                    0x4E00 <= code <= 0x9FFF or 0x3400 <= code <= 0x4DBF or code > 127
-                ):  # Reject any non-ASCII except common punctuation
-                    # If Chinese detected, return None to trigger fallback
-                    return None
-
-        return response_text
+        return response.strip() if response else None
 
     except (AttributeError, ValueError, ConnectionError, TimeoutError):
         # AI failed, will use rule-based fallback
@@ -562,12 +542,8 @@ This could strengthen their leadership skills."""
                 {
                     "role": "system",
                     "content": (
-                        "SYSTEM INSTRUCTIONS - CRITICAL:\n"
-                        "You are a D&D character analysis assistant.\n"
-                        "YOU MUST respond ONLY in English.\n"
-                        "DO NOT generate ANY Chinese characters.\n"
-                        "DO NOT generate ANY non-ASCII characters.\n"
-                        "ONLY ASCII English text is acceptable."
+                        "You are a D&D character analysis assistant. "
+                        + LANGUAGE_INSTRUCTION
                     ),
                 },
                 {"role": "user", "content": prompt},

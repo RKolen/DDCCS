@@ -28,6 +28,7 @@ def run_all_ai_tests():
         ("test_milvus_client", "Milvus Client Tests"),
         ("test_embedding_pipeline", "Embedding Pipeline Tests"),
         ("test_semantic_retriever", "Semantic Retriever Tests"),
+        ("test_prompt_templates", "Prompt Templates Tests"),
     ]
 
 

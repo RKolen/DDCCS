@@ -7,6 +7,7 @@ Provides AI-powered consultation features with graceful fallback to rule-based m
 from typing import Dict, Any, Optional
 
 from src.ai.availability import AI_AVAILABLE, CharacterAIConfig
+from src.ai.prompt_templates import LANGUAGE_INSTRUCTION
 from src.utils.errors import UserInputError
 
 
@@ -106,6 +107,7 @@ class AIConsultant:
             "\nWhen responding, stay in character and consider your personality, "
             "motivations, and class nature."
         )
+        prompt_parts.append(f"\n{LANGUAGE_INSTRUCTION}")
 
         return "\n".join(prompt_parts)
 
@@ -228,7 +230,8 @@ Provide a natural, in-character response."""
                 f" appropriate DCs for character actions.\n\n"
                 f"Character: {self.profile.name} "
                 f"({self.profile.character_class.value} Level {self.profile.level})\n"
-                f"Class abilities: {key_features}"
+                f"Class abilities: {key_features}\n"
+                f"{LANGUAGE_INSTRUCTION}"
             )
 
             if self.profile.background_story:

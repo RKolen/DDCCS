@@ -9,6 +9,7 @@ import json
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
 
+from src.ai.prompt_templates import LANGUAGE_INSTRUCTION
 from src.stories.suggestion_types import (
     StorySuggestion,
     SuggestionContext,
@@ -236,7 +237,8 @@ class SuggestionEngine:
             return []
 
         ctx = extra_context or {}
-        system_prompt, user_template = pair
+        base_system_prompt, user_template = pair
+        system_prompt = f"{base_system_prompt} {LANGUAGE_INSTRUCTION}"
         user_prompt = user_template.format(
             count=count,
             story_context=story_context or "No story context available.",

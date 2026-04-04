@@ -11,6 +11,7 @@ from src.characters.consultants.consultant_core import CharacterConsultant
 from src.npcs.npc_agents import NPCAgent, create_npc_agents
 from src.stories.character_loader import load_all_character_consultants
 from src.ai.availability import RAG_AVAILABLE, get_rag_system
+from src.ai.prompt_templates import LANGUAGE_INSTRUCTION
 
 
 class DMConsultant:
@@ -371,7 +372,9 @@ Create vivid, engaging narrative that:
 - Maintains appropriate pacing
 - Uses proper D&D terminology
 - Respects established lore from the campaign setting (see lore context
-  if provided)"""
+  if provided)
+
+{LANGUAGE_INSTRUCTION}"""
 
         user_prompt = f"""Create D&D narrative content for this story situation:
 

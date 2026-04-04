@@ -7,7 +7,7 @@ export session notes within a campaign.
 import os
 from typing import Optional
 
-from src.sessions.session_notes import NotePriority, PlotStatus
+from src.sessions.session_notes import NotePriority, PlotStatus, SessionNotes
 from src.sessions.session_notes_manager import SessionNotesManager
 from src.utils.string_utils import get_session_date
 
@@ -226,7 +226,7 @@ def _add_session_notes(manager: SessionNotesManager) -> None:
         if not session_id:
             print("[ERROR] Session ID cannot be empty.")
             return
-        notes = manager.create_session_notes(session_id)
+        notes: Optional[SessionNotes] = manager.create_session_notes(session_id)
         print(f"[INFO] New session notes created for session {session_id} ({get_session_date()})")
     else:
         notes = manager.load_session_notes(session_id)
@@ -234,6 +234,8 @@ def _add_session_notes(manager: SessionNotesManager) -> None:
             print(f"[ERROR] Session '{session_id}' not found. Use 'new' to create it.")
             return
         print(f"[INFO] Loaded session {session_id} ({notes.session_date})")
+
+    assert notes is not None
 
     add_handlers = {
         "1": _collect_event,

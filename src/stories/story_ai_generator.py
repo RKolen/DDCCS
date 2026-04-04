@@ -10,6 +10,7 @@ D&D spell/ability descriptions via dnd5e.wikidot.com.
 from typing import Any, Dict, List, Optional
 
 from src.ai.availability import AI_AVAILABLE
+from src.ai.prompt_templates import LANGUAGE_INSTRUCTION
 from src.utils.errors import display_error, wrap_exception
 from src.utils.spell_lookup_helper import lookup_spells_and_abilities
 
@@ -252,7 +253,8 @@ def _build_story_system_prompt(is_exploration: bool = False) -> str:
         "meta-game information in the narrative.\n\n"
         "IMPORTANT: When spells or abilities are mentioned, USE THE EXACT SPELL "
         "NAMES in the narrative. For example, if 'detect magic' is mentioned, "
-        "write 'Gandalf cast detect magic' not 'Gandalf cast a detection spell'."
+        "write 'Gandalf cast detect magic' not 'Gandalf cast a detection spell'.\n\n"
+        f"{LANGUAGE_INSTRUCTION}"
     )
 
     if is_exploration:
@@ -361,7 +363,7 @@ def generate_story_description(
     system_prompt = (
         "You are a creative D&D story designer. Write concise, compelling "
         "story descriptions (1-2 sentences) that capture the essence of "
-        "a story hook."
+        f"a story hook. {LANGUAGE_INSTRUCTION}"
     )
 
     user_prompt = (
@@ -444,7 +446,7 @@ def enhance_story_narrative(
         "You are an experienced D&D storyteller refining narrative prose. "
         "Enhance the story while preserving its core elements, plot flow, "
         "and character actions. Keep lines to max 80 characters. Write in "
-        "third person narrative style suitable for a D&D story file."
+        f"third person narrative style suitable for a D&D story file. {LANGUAGE_INSTRUCTION}"
     )
 
     user_prompt = (
@@ -509,7 +511,7 @@ def generate_session_results_from_story(
         "You are a D&D session analyzer. Extract session results from "
         "story narratives. Format your response as structured data with "
         "character actions, suggested rolls, narrative events, and NPCs. "
-        "Be concise and specific."
+        f"Be concise and specific. {LANGUAGE_INSTRUCTION}"
     )
 
     user_prompt = (
@@ -645,8 +647,7 @@ def generate_story_hooks_from_content(
         "CRITICAL: Use ONLY these section headers: UNRESOLVED THREADS, "
         "CHARACTER HOOKS, NEXT SESSIONS, NPC FOLLOW-UPS. "
         "CRITICAL: Under CHARACTER HOOKS use ONLY format: #### [Name]. "
-        "Include all party members without exception. "
-        "Respond only in English."
+        f"Include all party members without exception. {LANGUAGE_INSTRUCTION}"
     )
 
     # Build explicit party member list with numbers

@@ -154,7 +154,7 @@ def _validate_relationships(data: Dict[str, Any], file_prefix: str) -> List[str]
 
     Accepts both legacy string values and structured relationship objects.
     """
-    errors = []
+    errors: List[str] = []
     if "relationships" not in data or not isinstance(data["relationships"], dict):
         return errors
 
@@ -226,7 +226,7 @@ def _validate_class_entry(
 
 def _validate_classes_field(data: Dict[str, Any], file_prefix: str) -> List[str]:
     """Validate the optional classes array for multi-class characters."""
-    errors = []
+    errors: List[str] = []
 
     if "classes" not in data:
         return errors

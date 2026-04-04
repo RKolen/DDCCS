@@ -7,8 +7,9 @@ post-processing.
 """
 
 import re
-from typing import Dict, Optional
+from typing import Dict
 from src.characters.consultants.consultant_core import CharacterConsultant
+from src.ai.prompt_templates import LANGUAGE_INSTRUCTION
 from src.utils.text_formatting_utils import wrap_narrative_text
 
 
@@ -240,7 +241,7 @@ class AIEnhancedNarrator:
             System prompt string for the AI.
         """
         base = self._create_system_prompt(style)
-        ai_config: Optional[Dict] = npc_status.get("ai_config") or {}
+        ai_config: Dict = npc_status.get("ai_config") or {}
         npc_voice = ai_config.get("system_prompt", "")
         if npc_voice:
             base += f"\n\nBoss Voice Guide:\n{npc_voice}"
@@ -270,7 +271,9 @@ Style Guidelines:
 - Cinematic: Movie-like action, dramatic descriptions, epic moments
 - Gritty: Realistic, visceral, emphasize the danger and pain
 - Heroic: Emphasize bravery, valor, and heroic deeds
-- Tactical: Clear action-by-action while maintaining narrative flow"""
+- Tactical: Clear action-by-action while maintaining narrative flow
+
+{LANGUAGE_INSTRUCTION}"""
 
     def _create_user_prompt(self, context: Dict[str, str]) -> str:
         """Create the user prompt for AI narration."""

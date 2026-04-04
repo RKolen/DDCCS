@@ -32,12 +32,7 @@ All features below have detailed implementation plans in the `plans/` directory.
 
 ### AI and Story Tools
 
-- [Session Notes Integration](plans/session_notes_plan.md) - Better session results and story narrative integration
-
 ### Character System
-
-- [Character Names Split](plans/character_names_plan.md) - First and last name separation
-- [Relationship Mapping](plans/relationship_mapping_plan.md) - Character relationship tracking
 
 ### Infrastructure
 
@@ -68,8 +63,6 @@ All features below have detailed implementation plans in the `plans/` directory.
 ## Medium Priority
 
 ### Story Tools
-
-- [ ] **Language fixes** - Filter language to only include the prompts language - [Plan](plans/language_fixes_plan.md)
 
 ## Low Priority (No Plan Yet)
 
@@ -128,7 +121,6 @@ All Tier 2 items are complete.
 
 | # | Plan | Reason |
 |---|------|--------|
-| 17 | [Language Fixes](plans/language_fixes_plan.md) | Output quality improvement. No dependencies. |
 | 18 | [Custom Spell Highlighting](plans/custom_spell_highlighting_plan.md) | Display enhancement. No dependencies on other plans. |
 | 19 | [DC Scaling](plans/dc_scaling_plan.md) | Rules enhancement. Self-contained; no dependencies. |
 | 20 | [Character Templates](plans/character_templates_plan.md) | Content creation, not code. Can be done at any time but most useful after profile verification confirms the schema is stable. |
@@ -165,7 +157,9 @@ All Tier 2 items are complete.
 
 ## Recently Completed
 
-### Story Tools - April 4, 2026
+### Story Tools and Language Fixes - April 4, 2026
+
+- [x] **Language fixes** - Filter language to only include the prompts language.
 
 - [x] **Story tools** - Additional story management tools.
 

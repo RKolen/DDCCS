@@ -86,6 +86,8 @@ class ArcAnalyzer:
         character_name: str,
     ) -> Dict[str, Any]:
         """Use AI to analyze a story for character development."""
+        if self.ai_client is None:
+            return {"metrics": {}, "observations": [], "key_events": [], "summary": ""}
         prompt = (
             f"Analyze the following story for character development of {character_name}.\n\n"
             f"Story:\n{story_content[:4000]}\n\n"
@@ -330,8 +332,7 @@ class ArcAnalyzer:
             direction_counts[key] = direction_counts.get(key, 0) + 1
 
         if direction_counts:
-            getter = direction_counts.get  # type: ignore[arg-type]
-            main_direction = max(direction_counts, key=getter)
+            main_direction = max(direction_counts, key=lambda k: direction_counts[k])
             parts.append(f"overall {main_direction}")
 
         for analysis in analyses:
@@ -349,6 +350,8 @@ class ArcAnalyzer:
         analyses: List[AnalysisResult],
     ) -> str:
         """Use AI to generate an arc summary."""
+        if self.ai_client is None:
+            return f"{arc.character_name}'s arc spans {len(arc.data_points)} stories."
         analysis_text = "\n".join(
             f"- {a.dimension.value}: {a.direction.value} (confidence: {a.confidence:.0%})"
             for a in analyses

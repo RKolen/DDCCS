@@ -85,7 +85,7 @@ class RelationshipManager:
 
     def _parse_relationships(self, data: Dict) -> List[Relationship]:
         """Parse relationships from character/NPC data."""
-        relationships = []
+        relationships: List[Relationship] = []
         rel_data = data.get("relationships", {})
 
         if not isinstance(rel_data, dict):
