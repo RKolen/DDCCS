@@ -18,6 +18,7 @@ from src.stories.story_workflow_orchestrator import (
 )
 from src.stories.story_ai_generator import generate_story_from_prompt
 from src.cli.cli_session_notes import session_notes_menu
+from src.cli.cli_spell_manager import spell_registry_menu
 from src.cli.cli_suggestions import suggestions_menu
 from src.stories.story_file_manager import (
     StoryFileContext,
@@ -89,29 +90,11 @@ class StoryCLIManager:
         while True:
             print("\n STORY MANAGEMENT")
             print("-" * 30)
-
-            # Show current existing stories
-            existing_stories = self.story_manager.get_existing_stories()
-            story_series = self.story_manager.get_story_series()
-
-            if existing_stories:
-                print(f" Existing Stories ({len(existing_stories)})")
-                for story in existing_stories:
-                    print(f"   • {story}")
-                print()
-
-            if story_series:
-                print(f" Story Series ({len(story_series)})")
-                for series in story_series:
-                    series_stories = self.story_manager.get_story_files_in_series(
-                        series
-                    )
-                    print(f"   • {series}/ ({len(series_stories)} stories)")
-                print()
-
+            self._display_story_summary()
             print("1. Create New Story Series")
             print("2. Work with Story Series")
             print("3. Timeline Tracking")
+            print("4. Spell Registry")
             print("0. Back to Main Menu")
 
             choice = input("Enter your choice: ").strip()
@@ -122,10 +105,28 @@ class StoryCLIManager:
                 self._manage_story_series()
             elif choice == "3":
                 self._open_timeline_menu()
+            elif choice == "4":
+                spell_registry_menu()
             elif choice == "0":
                 break
             else:
                 print("Invalid choice.")
+
+    def _display_story_summary(self) -> None:
+        """Print the current stories and series overview."""
+        existing_stories = self.story_manager.get_existing_stories()
+        story_series = self.story_manager.get_story_series()
+        if existing_stories:
+            print(f" Existing Stories ({len(existing_stories)})")
+            for story in existing_stories:
+                print(f"   • {story}")
+            print()
+        if story_series:
+            print(f" Story Series ({len(story_series)})")
+            for series in story_series:
+                count = len(self.story_manager.get_story_files_in_series(series))
+                print(f"   • {series}/ ({count} stories)")
+            print()
 
     def _open_timeline_menu(self) -> None:
         """Open the timeline tracking submenu."""

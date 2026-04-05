@@ -5,13 +5,14 @@ This module provides automatic highlighting of spell names in story text.
 Spell names are wrapped in bold markdown (**spell name**) for better readability.
 
 Detection Strategy:
-- Pattern matching for common spell contexts (cast, casts, casting, uses, channels)
-- Capitalized words/phrases in spell contexts
-- Integration with RAG system for official D&D 5e spells (future enhancement)
+- Known spells from character profiles are highlighted exactly.
+- Custom/homebrew spells from the SpellRegistry are always highlighted.
+- Pattern matching detects common spell contexts (cast, channels, uses, etc.)
+  as a fallback when no known spell list is provided.
 """
 
 import re
-from typing import List, Set, Optional
+from typing import List, Optional, Set
 
 # Common spell-related context words
 SPELL_CONTEXTS = [
@@ -67,6 +68,20 @@ FALSE_POSITIVES = {
 }
 
 
+def _get_registry_spell_names() -> Set[str]:
+    """Get all custom spell names from the registry (graceful no-op on failure).
+
+    Returns:
+        Set of lowercase name variants from the custom spell registry,
+        or an empty set if the registry cannot be loaded.
+    """
+    try:
+        from src.spells.spell_registry import get_spell_registry  # pylint: disable=import-outside-toplevel
+        return get_spell_registry().get_all_spell_names()
+    except (ImportError, OSError, KeyError, ValueError):
+        return set()
+
+
 def extract_spells_from_prompt(prompt: str) -> Set[str]:
     """Extract spell/ability names mentioned in a user prompt.
 
@@ -88,34 +103,34 @@ def extract_spells_from_prompt(prompt: str) -> Set[str]:
     if not prompt:
         return set()
 
-    spells = set()
+    spells: Set[str] = set()
+    registry_names = _get_registry_spell_names()
 
-    # Find all spell contexts and their following spell names
     for match in SPELL_PATTERN.finditer(prompt):
         spell_full = match.group("spell")
         words = spell_full.split()
 
-        # Try to find valid spell name (1-3 words)
-        # Prioritize 2-word spells, then 1-word
         for spell_candidate in [
             " ".join(words[:2]) if len(words) >= 2 else words[0],
             words[0],
         ]:
             if spell_candidate and spell_candidate not in FALSE_POSITIVES:
-                # Capitalize spell name properly (Title Case)
-                spell_title = spell_candidate.title()
-                spells.add(spell_title)
+                if spell_candidate.lower() in registry_names:
+                    spells.add(spell_candidate.title())
+                else:
+                    spells.add(spell_candidate.title())
                 break
 
     return spells
 
 
 def highlight_spells_in_text(text: str, known_spells: Optional[Set[str]] = None) -> str:
-    """
-    Highlight spell names in story text by wrapping them in bold markdown.
+    """Highlight spell names in story text by wrapping them in bold markdown.
 
-    When known_spells is provided (from user prompt), ONLY those spells are highlighted.
-    When known_spells is empty, falls back to pattern-based detection.
+    Priority order:
+    1. If known_spells provided, highlight those exactly.
+    2. Always additionally highlight custom spells from the registry.
+    3. Fall back to pattern-based detection for any remaining contexts.
 
     Args:
         text: Story text to process
@@ -133,115 +148,82 @@ def highlight_spells_in_text(text: str, known_spells: Optional[Set[str]] = None)
         return text
 
     known_spells = known_spells or set()
-    result_text = text
-    highlighted_spells = set()
+    registry_names = _get_registry_spell_names()
 
-    # If we have known spells from the prompt, ONLY highlight those
-    # This prevents false positives like "arrow" being highlighted
-    if known_spells:
-        for spell in known_spells:
+    # Merge character-known spells with registry spells for highlighting
+    all_known = known_spells | registry_names
+    result_text = text
+    highlighted_spells: Set[str] = set()
+
+    # Pass 1: Highlight all known/registry spells by exact name match
+    if all_known:
+        for spell in sorted(all_known, key=len, reverse=True):
             if spell.lower() in highlighted_spells:
                 continue
-
-            # Create case-insensitive pattern to find the spell in text
-            # Use word boundaries to avoid partial matches
-            # But avoid matching if already wrapped in ** (already highlighted)
+            if spell in FALSE_POSITIVES:
+                continue
             pattern = re.compile(
                 r"(?<!\*)\b" + re.escape(spell) + r"\b(?!\*)", re.IGNORECASE
             )
 
-            def replace_known_spell(match):
-                return f"**{match.group(0)}**"
+            def _make_replacer(matched_spell: str):
+                def _replace(match: re.Match) -> str:  # type: ignore[type-arg]
+                    return f"**{match.group(0)}**"
+                _ = matched_spell  # captured for clarity
+                return _replace
 
-            result_text = pattern.sub(replace_known_spell, result_text)
+            result_text = pattern.sub(_make_replacer(spell), result_text)
             highlighted_spells.add(spell.lower())
 
-        return result_text
+        # If we had known_spells (character list), skip pattern fallback
+        if known_spells:
+            return result_text
 
-    # Fallback: Pattern-based detection when no known spells provided
-    def replace_spell_context(match):
+    # Pass 2: Pattern-based detection for remaining spell contexts
+    def replace_spell_context(match: re.Match) -> str:  # type: ignore[type-arg]
         context = match.group("context")
         spell_full = match.group("spell")
-
-        # Split spell into words and try different combinations
-        # "Divine Smite Through His" -> try "Divine Smite", then "Divine"
         words = spell_full.split()
         spell = None
 
-        # Try 2-word combinations first (most spells are 1-2 words)
         if len(words) >= 2:
             two_word = " ".join(words[:2])
-            # Check if this looks like a spell
-            if two_word.lower() in {s.lower() for s in known_spells} or words[
-                1
-            ].lower().endswith(
-                (
-                    "bolt",
-                    "blast",
-                    "ray",
-                    "ward",
-                    "shield",
-                    "strike",
-                    "smite",
-                    "touch",
-                    "word",
-                    "hand",
-                    "wall",
-                    "missile",
-                )
+            if two_word.lower() in all_known or words[1].lower().endswith(
+                ("bolt", "blast", "ray", "ward", "shield", "strike",
+                 "smite", "touch", "word", "hand", "wall", "missile")
             ):
                 spell = two_word
 
-        # Try single word if no 2-word match
-        if not spell and len(words) >= 1:
+        if not spell and words:
             one_word = words[0]
-            # Check if this looks like a spell
-            if one_word.lower() in {
-                s.lower() for s in known_spells
-            } or one_word.lower().endswith(
-                (
-                    "bolt",
-                    "blast",
-                    "ray",
-                    "ward",
-                    "shield",
-                    "strike",
-                    "smite",
-                    "touch",
-                    "ball",
-                    "storm",
-                    "wave",
-                )
+            if one_word.lower() in all_known or one_word.lower().endswith(
+                ("bolt", "blast", "ray", "ward", "shield", "strike",
+                 "smite", "touch", "ball", "storm", "wave")
             ):
                 spell = one_word
 
-        # No spell found
         if not spell or spell in FALSE_POSITIVES:
             return match.group(0)
 
-        # Skip if already highlighted
         if spell.lower() in highlighted_spells:
             return match.group(0)
 
         highlighted_spells.add(spell.lower())
-        # Return context + highlighted spell + rest of the matched text
-        rest = spell_full[len(spell) :]
+        rest = spell_full[len(spell):]
         return f"{context} **{spell}**{rest}"
 
     result_text = SPELL_PATTERN.sub(replace_spell_context, result_text)
 
-    # Second pass: Find spells in parentheses (common storytelling convention)
-    def replace_parenthetical_spell(match):
+    # Pass 3: Parenthetical spells
+    def replace_parenthetical_spell(match: re.Match) -> str:  # type: ignore[type-arg]
         spell = match.group(1)
-
-        # Skip false positives
         if spell in FALSE_POSITIVES:
             return match.group(0)
-
-        # Skip if already highlighted
         if spell.lower() in highlighted_spells:
             return match.group(0)
-
+        # Only highlight if it is a registry spell or looks like a known spell
+        if spell.lower() not in all_known:
+            return match.group(0)
         highlighted_spells.add(spell.lower())
         return f"(**{spell}**)"
 
@@ -251,8 +233,7 @@ def highlight_spells_in_text(text: str, known_spells: Optional[Set[str]] = None)
 
 
 def extract_known_spells_from_characters(characters: List[dict]) -> Set[str]:
-    """
-    Extract all known spells from character profiles.
+    """Extract all known spells from character profiles.
 
     Args:
         characters: List of character profile dictionaries
@@ -260,20 +241,19 @@ def extract_known_spells_from_characters(characters: List[dict]) -> Set[str]:
     Returns:
         Set of known spell names
     """
-    known_spells: set[str] = set()
+    known_spells: Set[str] = set()
+
+    # Include custom registry spells
+    known_spells.update(_get_registry_spell_names())
 
     for char in characters:
-        # From character sheet if available
         if "character_sheet" in char:
             sheet = char["character_sheet"]
             if "known_spells" in sheet:
                 known_spells.update(spell.lower() for spell in sheet["known_spells"])
 
-        # From spellcasting_notes in profile
         if "spellcasting_notes" in char:
-            # Extract spell names from notes (simple pattern matching)
             notes = char["spellcasting_notes"]
-            # Look for capitalized words that might be spells
             potential_spells = re.findall(r"\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*\b", notes)
             known_spells.update(spell.lower() for spell in potential_spells)
 
@@ -283,8 +263,7 @@ def extract_known_spells_from_characters(characters: List[dict]) -> Set[str]:
 def highlight_spells_in_story_sections(
     story_data: dict, known_spells: Optional[Set[str]] = None
 ) -> dict:
-    """
-    Apply spell highlighting to all narrative sections of a story.
+    """Apply spell highlighting to all narrative sections of a story.
 
     Args:
         story_data: Story dictionary with various sections
@@ -296,7 +275,6 @@ def highlight_spells_in_story_sections(
     if not story_data:
         return story_data
 
-    # Sections that should have spell highlighting
     narrative_sections = [
         "story_narrative",
         "narrative",
@@ -316,7 +294,6 @@ def highlight_spells_in_story_sections(
 
 # Example usage and testing
 if __name__ == "__main__":
-    # Test cases
     test_texts = [
         "Elara casts Fireball at the approaching goblins.",
         "The paladin channels Divine Smite through his weapon.",

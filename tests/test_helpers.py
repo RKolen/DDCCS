@@ -27,9 +27,16 @@ import json
 import sys
 import types
 from pathlib import Path
+from unittest.mock import patch as mock_patch
 import importlib
 
 from src.npcs.npc_auto_detection import DEFAULT_NPC_AI_CONFIG
+from src.spells.spell_registry import (
+    CustomSpell,
+    SpellCasting,
+    SpellMeta,
+    SpellRegistry,
+)
 
 
 # Configuration for behaviour generation module handling
@@ -818,3 +825,65 @@ class NoSeriesFakeStoryManager:
     def get_story_files_in_series(self, _series_name: str):
         """Return story files (not used in this test)."""
         return []
+
+
+# ---------------------------------------------------------------------------
+# Shared spell test helpers
+# ---------------------------------------------------------------------------
+
+def make_test_spell(name: str = "Test Spell", level: int = 1, school: str = "evocation"):
+    """Build a minimal CustomSpell for use in unit tests.
+
+    Args:
+        name: Spell name.
+        level: Spell level (0 = cantrip).
+        school: Magic school.
+
+    Returns:
+        A CustomSpell with sensible test defaults.
+    """
+    return CustomSpell(
+        name=name,
+        level=level,
+        school=school,
+        description=f"A {school} spell called {name}.",
+        classes=["wizard"],
+        casting=SpellCasting(),
+        meta=SpellMeta(source="homebrew", tags=["test"]),
+    )
+
+
+def registry_in_temp(tmp_dir: str) -> SpellRegistry:
+    """Create a SpellRegistry backed by a temporary directory.
+
+    Args:
+        tmp_dir: Path to a temporary directory (caller manages cleanup).
+
+    Returns:
+        A SpellRegistry instance using tmp_dir as the data root.
+    """
+    (Path(tmp_dir) / "spells").mkdir(exist_ok=True)
+    with mock_patch("src.spells.spell_registry.get_game_data_path", return_value=tmp_dir):
+        return SpellRegistry()
+
+
+def run_test_functions(tests: list, cleanup=None) -> None:
+    """Run a list of test callables and print a pass/fail summary.
+
+    Args:
+        tests: List of zero-argument callables.
+        cleanup: Optional callable invoked after all tests.
+    """
+    num_passed = 0
+    num_failed = 0
+    for test in tests:
+        try:
+            test()
+            print(f"  PASS  {test.__name__}")
+            num_passed += 1
+        except AssertionError as exc:
+            print(f"  FAIL  {test.__name__}: {exc}")
+            num_failed += 1
+    print(f"\n{num_passed} passed, {num_failed} failed")
+    if cleanup is not None:
+        cleanup()

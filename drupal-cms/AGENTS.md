@@ -140,6 +140,65 @@ ddev drush cr    # rebuild Drupal cache
 
 ---
 
+## Custom Modules
+
+| Module | Path | Purpose |
+|--------|------|---------|
+| `dnd_migrate` | `web/modules/custom/dnd_migrate/` | Migrates D&D game data from JSON source files into Drupal content |
+| `entity_lock` | `web/modules/custom/entity_lock/` | Prevents deletion (and unpublishing) of any entity type via a locked-entity config list and admin UI |
+
+### dnd_migrate
+
+Provides Drupal migrate source and process plugins for importing the project's
+JSON game data (characters, NPCs, items) into Drupal content nodes.
+
+**Plugins provided:**
+
+| Plugin type | ID | Description |
+|-------------|-----|-------------|
+| Source | `dnd_json_directory` | Reads all `*.json` files from a directory; one row per file |
+| Source | `dnd_items_json` | Reads a keyed-object JSON file (custom_items.json); one row per key |
+| Source | `dnd_spell_slots_source` | Flattens spell_slots objects into one row per (character, slot_level) |
+| Process | `dnd_join_array` | Joins a PHP array into a single string with a configurable separator |
+| Process | `dnd_spell_slot_lookup` | Resolves spell_slots to paragraph entity_reference_revisions values |
+
+**Migration IDs and run order:**
+
+1. `dnd_items` - item nodes from `game_data/items/custom_items.json`
+2. `dnd_npc_nodes` - NPC nodes from `game_data/npcs/*.json`
+3. `dnd_character_backstory` - paragraph:wysiwyg entities for character backstories
+4. `dnd_character_spell_slots` - paragraph:spell_slot entities per slot level
+5. `dnd_character_nodes` - character nodes from `game_data/characters/*.json`
+
+**Running migrations:**
+
+Enable the module and run with Drush:
+
+```bash
+# Enable the module
+ddev drush en dnd_migrate
+
+# Run all D&D migrations in dependency order
+ddev drush migrate:import --group=dnd --execute-dependencies
+
+# Run a single migration
+ddev drush migrate:import dnd_items
+
+# Check migration status
+ddev drush migrate:status --group=dnd
+
+# Roll back (removes Drupal content, does not touch source JSON)
+ddev drush migrate:rollback --group=dnd
+```
+
+**Source path configuration:**
+
+The `data_dir` and `file_path` values in each migration YAML default to DDEV
+container paths (`/var/www/html/game_data/...`). If the project is mounted at a
+different path, update those values in each migration's `source:` block.
+
+---
+
 ## Quick Reference
 
 | Task | Command |
@@ -157,6 +216,9 @@ ddev drush cr    # rebuild Drupal cache
 | Import config | `ddev drush cim` |
 | PHPCS check | `ddev exec vendor/bin/phpcs --standard=Drupal,DrupalPractice web/modules/custom web/themes/custom` |
 | PHPStan check | `ddev exec vendor/bin/phpstan analyse --level=6 web/modules/custom web/themes/custom` |
+| Run all D&D migrations | `ddev drush migrate:import --group=dnd --execute-dependencies` |
+| Check migration status | `ddev drush migrate:status --group=dnd` |
+| Roll back D&D migrations | `ddev drush migrate:rollback --group=dnd` |
 
 ---
 
@@ -170,6 +232,7 @@ drupal-cms/
 |   |-- modules/
 |   |   |-- contrib/     # Downloaded modules - never edit directly
 |   |   `-- custom/      # Custom modules - all PHP must pass PHPCS + PHPStan
+|   |       `-- dnd_migrate/   # D&D data migration module
 |   `-- themes/
 |       |-- contrib/     # Downloaded themes - never edit directly
 |       `-- custom/      # Custom themes - all PHP must pass PHPCS + PHPStan
