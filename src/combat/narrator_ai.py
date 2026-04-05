@@ -43,7 +43,7 @@ class AIEnhancedNarrator:
         character_context = self._build_character_context(combat_prompt)
 
         # Create AI prompt
-        system_prompt = self._create_system_prompt(style)
+        system_prompt = self.create_system_prompt(style)
         user_prompt = self._create_user_prompt(
             {
                 "combat_prompt": combat_prompt,
@@ -150,7 +150,7 @@ class AIEnhancedNarrator:
             return self._narrate_combat_fallback(combat_prompt, style)
 
         character_context = self._build_character_context(combat_prompt)
-        npc_context = self._build_major_npc_context(major_npc_status)
+        npc_context = self.build_major_npc_context(major_npc_status)
 
         system_prompt = self._create_major_npc_system_prompt(style, major_npc_status)
         user_prompt = self._create_user_prompt(
@@ -179,7 +179,7 @@ class AIEnhancedNarrator:
             print(f"[WARNING]  Boss narration failed: {e}")
             return self._narrate_combat_fallback(combat_prompt, style)
 
-    def _build_major_npc_context(self, npc_status: Dict) -> str:
+    def build_major_npc_context(self, npc_status: Dict) -> str:
         """Build a context block describing the major NPC for the AI prompt.
 
         Always includes lair actions when present — the DM controls whether
@@ -240,14 +240,14 @@ class AIEnhancedNarrator:
         Returns:
             System prompt string for the AI.
         """
-        base = self._create_system_prompt(style)
+        base = self.create_system_prompt(style)
         ai_config: Dict = npc_status.get("ai_config") or {}
         npc_voice = ai_config.get("system_prompt", "")
         if npc_voice:
             base += f"\n\nBoss Voice Guide:\n{npc_voice}"
         return base
 
-    def _create_system_prompt(self, style: str) -> str:
+    def create_system_prompt(self, style: str) -> str:
         """Create the system prompt for AI narration."""
         return f"""You are an expert D&D combat narrator. Convert \
 tactical combat descriptions into engaging narrative prose.

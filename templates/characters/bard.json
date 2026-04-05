@@ -1,0 +1,143 @@
+{
+  "name": "Bard",
+  "class": "Bard",
+  "description": "An inspiring performer whose music and stories weave magic into the world",
+  "hit_die": 8,
+  "primary_abilities": ["Charisma"],
+  "saving_throws": ["Dexterity", "Charisma"],
+  "base_ability_scores": {
+    "strength": 8,
+    "dexterity": 14,
+    "constitution": 14,
+    "intelligence": 12,
+    "wisdom": 10,
+    "charisma": 16
+  },
+  "skill_options": {
+    "choose": 3,
+    "from": [
+      "Acrobatics",
+      "Animal Handling",
+      "Arcana",
+      "Athletics",
+      "Deception",
+      "History",
+      "Insight",
+      "Intimidation",
+      "Investigation",
+      "Medicine",
+      "Nature",
+      "Perception",
+      "Performance",
+      "Persuasion",
+      "Religion",
+      "Sleight of Hand",
+      "Stealth",
+      "Survival"
+    ]
+  },
+  "starting_equipment": {
+    "weapons": ["Rapier", "Dagger"],
+    "armor": ["Leather Armor"],
+    "items": ["Diplomat's Pack", "Lute", "Musical Instrument"],
+    "gold": 10
+  },
+  "class_features": {
+    "1": ["Bardic Inspiration", "Spellcasting"],
+    "2": ["Expertise", "Jack of All Trades"],
+    "3": ["Bard Subclass"],
+    "4": ["Ability Score Improvement"],
+    "5": ["Font of Inspiration"],
+    "6": ["Subclass Feature"],
+    "7": ["Countercharm"],
+    "8": ["Ability Score Improvement"],
+    "9": ["Expertise"],
+    "10": ["Magical Secrets"],
+    "11": ["Song of Rest"],
+    "12": ["Ability Score Improvement"],
+    "13": ["Subclass Feature"],
+    "14": ["Magical Secrets"],
+    "15": ["Superior Bardic Inspiration"],
+    "16": ["Ability Score Improvement"],
+    "17": ["Subclass Feature"],
+    "18": ["Magical Secrets"],
+    "19": ["Ability Score Improvement"],
+    "20": ["Words of Creation", "Epic Boon"]
+  },
+  "spellcasting": {
+    "ability": "Charisma",
+    "type": "full",
+    "cantrips_known": {
+      "1": 2,
+      "4": 3,
+      "10": 4
+    },
+    "spells_known": {
+      "1": 4,
+      "2": 5,
+      "3": 6,
+      "4": 7,
+      "5": 8,
+      "6": 9,
+      "7": 10,
+      "8": 11,
+      "9": 12,
+      "10": 14,
+      "11": 15,
+      "12": 15,
+      "13": 16,
+      "14": 18,
+      "15": 19,
+      "16": 19,
+      "17": 20,
+      "18": 22,
+      "19": 22,
+      "20": 22
+    },
+    "spell_slots": {
+      "1": {"1": 2},
+      "2": {"1": 3},
+      "3": {"1": 4, "2": 2},
+      "4": {"1": 4, "2": 3},
+      "5": {"1": 4, "2": 3, "3": 2},
+      "6": {"1": 4, "2": 3, "3": 3},
+      "7": {"1": 4, "2": 3, "3": 3, "4": 1},
+      "8": {"1": 4, "2": 3, "3": 3, "4": 2},
+      "9": {"1": 4, "2": 3, "3": 3, "4": 3, "5": 1},
+      "10": {"1": 4, "2": 3, "3": 3, "4": 3, "5": 2},
+      "11": {"1": 4, "2": 3, "3": 3, "4": 3, "5": 2, "6": 1},
+      "12": {"1": 4, "2": 3, "3": 3, "4": 3, "5": 2, "6": 1},
+      "13": {"1": 4, "2": 3, "3": 3, "4": 3, "5": 2, "6": 1, "7": 1},
+      "14": {"1": 4, "2": 3, "3": 3, "4": 3, "5": 2, "6": 1, "7": 1},
+      "15": {"1": 4, "2": 3, "3": 3, "4": 3, "5": 2, "6": 1, "7": 1, "8": 1},
+      "16": {"1": 4, "2": 3, "3": 3, "4": 3, "5": 2, "6": 1, "7": 1, "8": 1},
+      "17": {"1": 4, "2": 3, "3": 3, "4": 3, "5": 2, "6": 1, "7": 1, "8": 1, "9": 1},
+      "18": {"1": 4, "2": 3, "3": 3, "4": 3, "5": 2, "6": 1, "7": 1, "8": 1, "9": 1},
+      "19": {"1": 4, "2": 3, "3": 3, "4": 3, "5": 2, "6": 2, "7": 1, "8": 1, "9": 1},
+      "20": {"1": 4, "2": 3, "3": 3, "4": 3, "5": 2, "6": 2, "7": 2, "8": 1, "9": 1}
+    }
+  },
+  "subclass_options": {
+    "level": 3,
+    "options": [
+      "College of Lore",
+      "College of Valor",
+      "College of Glamour",
+      "College of Dance"
+    ]
+  },
+  "recommended_backgrounds": [
+    "Entertainer",
+    "Charlatan",
+    "Noble",
+    "Sage",
+    "Wayfarer"
+  ],
+  "recommended_races": [
+    "Human",
+    "Elf",
+    "Tiefling",
+    "Gnome",
+    "Halfling"
+  ]
+}

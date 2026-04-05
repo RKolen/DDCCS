@@ -1,0 +1,82 @@
+{
+  "name": "Rogue",
+  "class": "Rogue",
+  "description": "A scoundrel who uses stealth and trickery to overcome obstacles",
+  "hit_die": 8,
+  "primary_abilities": ["Dexterity"],
+  "saving_throws": ["Dexterity", "Intelligence"],
+  "base_ability_scores": {
+    "strength": 8,
+    "dexterity": 16,
+    "constitution": 14,
+    "intelligence": 14,
+    "wisdom": 10,
+    "charisma": 12
+  },
+  "skill_options": {
+    "choose": 4,
+    "from": [
+      "Acrobatics",
+      "Athletics",
+      "Deception",
+      "Insight",
+      "Intimidation",
+      "Investigation",
+      "Perception",
+      "Persuasion",
+      "Sleight of Hand",
+      "Stealth"
+    ]
+  },
+  "starting_equipment": {
+    "weapons": ["Rapier", "Shortbow", "Dagger", "Dagger"],
+    "armor": ["Leather Armor"],
+    "items": ["Thieves' Tools", "Burglar's Pack"],
+    "gold": 10
+  },
+  "class_features": {
+    "1": ["Expertise", "Sneak Attack", "Thieves' Cant", "Weapon Mastery"],
+    "2": ["Cunning Action"],
+    "3": ["Steady Aim", "Rogue Subclass"],
+    "4": ["Ability Score Improvement"],
+    "5": ["Cunning Strike", "Uncanny Dodge"],
+    "6": ["Expertise"],
+    "7": ["Evasion", "Reliable Talent"],
+    "8": ["Ability Score Improvement"],
+    "9": ["Subclass Feature"],
+    "10": ["Ability Score Improvement"],
+    "11": ["Improved Cunning Strike"],
+    "12": ["Ability Score Improvement"],
+    "13": ["Subclass Feature"],
+    "14": ["Devious Strikes"],
+    "15": ["Slippery Mind"],
+    "16": ["Ability Score Improvement"],
+    "17": ["Subclass Feature"],
+    "18": ["Elusive"],
+    "19": ["Ability Score Improvement"],
+    "20": ["Stroke of Luck", "Epic Boon"]
+  },
+  "subclass_options": {
+    "level": 3,
+    "options": [
+      "Thief",
+      "Assassin",
+      "Arcane Trickster",
+      "Soulknife"
+    ]
+  },
+  "recommended_backgrounds": [
+    "Criminal",
+    "Wayfarer",
+    "Charlatan",
+    "Entertainer",
+    "Guard"
+  ],
+  "recommended_races": [
+    "Human",
+    "Halfling",
+    "Elf",
+    "Tiefling",
+    "Gnome"
+  ]
+}

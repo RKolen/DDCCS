@@ -1,0 +1,80 @@
+{
+  "name": "Fighter",
+  "class": "Fighter",
+  "description": "A master of martial combat, skilled with a variety of weapons and armor",
+  "hit_die": 10,
+  "primary_abilities": ["Strength", "Dexterity"],
+  "saving_throws": ["Strength", "Constitution"],
+  "base_ability_scores": {
+    "strength": 16,
+    "dexterity": 14,
+    "constitution": 15,
+    "intelligence": 10,
+    "wisdom": 12,
+    "charisma": 8
+  },
+  "skill_options": {
+    "choose": 2,
+    "from": [
+      "Acrobatics",
+      "Animal Handling",
+      "Athletics",
+      "History",
+      "Insight",
+      "Intimidation",
+      "Perception",
+      "Survival"
+    ]
+  },
+  "starting_equipment": {
+    "weapons": ["Longsword", "Shield", "Handaxe"],
+    "armor": ["Chain Mail"],
+    "items": ["Explorer's Pack"],
+    "gold": 10
+  },
+  "class_features": {
+    "1": ["Fighting Style", "Second Wind", "Weapon Mastery"],
+    "2": ["Action Surge", "Tactical Mind"],
+    "3": ["Fighter Subclass"],
+    "4": ["Ability Score Improvement"],
+    "5": ["Extra Attack", "Tactical Shift"],
+    "6": ["Ability Score Improvement"],
+    "7": ["Subclass Feature"],
+    "8": ["Ability Score Improvement"],
+    "9": ["Indomitable", "Master of Armaments"],
+    "10": ["Subclass Feature"],
+    "11": ["Two Extra Attacks"],
+    "12": ["Ability Score Improvement"],
+    "13": ["Indomitable (twice)"],
+    "14": ["Ability Score Improvement"],
+    "15": ["Subclass Feature"],
+    "16": ["Ability Score Improvement"],
+    "17": ["Action Surge (twice)", "Indomitable (three times)"],
+    "18": ["Subclass Feature"],
+    "19": ["Ability Score Improvement"],
+    "20": ["Three Extra Attacks", "Epic Boon"]
+  },
+  "subclass_options": {
+    "level": 3,
+    "options": [
+      "Champion",
+      "Battle Master",
+      "Eldritch Knight",
+      "Psi Warrior"
+    ]
+  },
+  "recommended_backgrounds": [
+    "Soldier",
+    "Guard",
+    "Entertainer",
+    "Noble",
+    "Farmer"
+  ],
+  "recommended_races": [
+    "Human",
+    "Dwarf",
+    "Orc",
+    "Goliath",
+    "Dragonborn"
+  ]
+}

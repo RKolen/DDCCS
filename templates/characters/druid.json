@@ -1,0 +1,111 @@
+{
+  "name": "Druid",
+  "class": "Druid",
+  "description": "A priest of the Old Faith wielding the powers of nature and adopting animal forms",
+  "hit_die": 8,
+  "primary_abilities": ["Wisdom"],
+  "saving_throws": ["Intelligence", "Wisdom"],
+  "base_ability_scores": {
+    "strength": 10,
+    "dexterity": 12,
+    "constitution": 14,
+    "intelligence": 12,
+    "wisdom": 16,
+    "charisma": 10
+  },
+  "skill_options": {
+    "choose": 2,
+    "from": [
+      "Arcana",
+      "Animal Handling",
+      "Insight",
+      "Medicine",
+      "Nature",
+      "Perception",
+      "Religion",
+      "Survival"
+    ]
+  },
+  "starting_equipment": {
+    "weapons": ["Scimitar"],
+    "armor": ["Leather Armor", "Wooden Shield"],
+    "items": ["Druidic Focus", "Explorer's Pack"],
+    "gold": 2
+  },
+  "class_features": {
+    "1": ["Druidic", "Primal Order", "Spellcasting"],
+    "2": ["Wild Shape", "Wild Companion"],
+    "3": ["Druid Subclass"],
+    "4": ["Ability Score Improvement", "Wild Shape Improvement"],
+    "5": ["Wild Resurgence"],
+    "6": ["Subclass Feature"],
+    "7": ["Elemental Fury"],
+    "8": ["Ability Score Improvement", "Wild Shape Improvement"],
+    "9": ["Subclass Feature"],
+    "10": ["Subclass Feature"],
+    "11": ["Wild Resurgence (2)"],
+    "12": ["Ability Score Improvement"],
+    "13": ["Subclass Feature"],
+    "14": ["Improved Elemental Fury"],
+    "15": ["Subclass Feature"],
+    "16": ["Ability Score Improvement"],
+    "17": ["Subclass Feature"],
+    "18": ["Beast Spells"],
+    "19": ["Ability Score Improvement"],
+    "20": ["Archdruid", "Epic Boon"]
+  },
+  "spellcasting": {
+    "ability": "Wisdom",
+    "type": "full",
+    "cantrips_known": {
+      "1": 2,
+      "4": 3,
+      "10": 4
+    },
+    "spell_slots": {
+      "1": {"1": 2},
+      "2": {"1": 3},
+      "3": {"1": 4, "2": 2},
+      "4": {"1": 4, "2": 3},
+      "5": {"1": 4, "2": 3, "3": 2},
+      "6": {"1": 4, "2": 3, "3": 3},
+      "7": {"1": 4, "2": 3, "3": 3, "4": 1},
+      "8": {"1": 4, "2": 3, "3": 3, "4": 2},
+      "9": {"1": 4, "2": 3, "3": 3, "4": 3, "5": 1},
+      "10": {"1": 4, "2": 3, "3": 3, "4": 3, "5": 2},
+      "11": {"1": 4, "2": 3, "3": 3, "4": 3, "5": 2, "6": 1},
+      "12": {"1": 4, "2": 3, "3": 3, "4": 3, "5": 2, "6": 1},
+      "13": {"1": 4, "2": 3, "3": 3, "4": 3, "5": 2, "6": 1, "7": 1},
+      "14": {"1": 4, "2": 3, "3": 3, "4": 3, "5": 2, "6": 1, "7": 1},
+      "15": {"1": 4, "2": 3, "3": 3, "4": 3, "5": 2, "6": 1, "7": 1, "8": 1},
+      "16": {"1": 4, "2": 3, "3": 3, "4": 3, "5": 2, "6": 1, "7": 1, "8": 1},
+      "17": {"1": 4, "2": 3, "3": 3, "4": 3, "5": 2, "6": 1, "7": 1, "8": 1, "9": 1},
+      "18": {"1": 4, "2": 3, "3": 3, "4": 3, "5": 2, "6": 1, "7": 1, "8": 1, "9": 1},
+      "19": {"1": 4, "2": 3, "3": 3, "4": 3, "5": 2, "6": 2, "7": 1, "8": 1, "9": 1},
+      "20": {"1": 4, "2": 3, "3": 3, "4": 3, "5": 2, "6": 2, "7": 2, "8": 1, "9": 1}
+    }
+  },
+  "subclass_options": {
+    "level": 3,
+    "options": [
+      "Circle of the Land",
+      "Circle of the Moon",
+      "Circle of the Sea",
+      "Circle of Stars"
+    ]
+  },
+  "recommended_backgrounds": [
+    "Hermit",
+    "Sailor",
+    "Farmer",
+    "Sage",
+    "Acolyte"
+  ],
+  "recommended_races": [
+    "Elf",
+    "Human",
+    "Gnome",
+    "Halfling",
+    "Goliath"
+  ]
+}

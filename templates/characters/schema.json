@@ -1,0 +1,104 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Character Template",
+  "type": "object",
+  "required": ["name", "class", "hit_die", "primary_abilities"],
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Template display name"
+    },
+    "class": {
+      "type": "string",
+      "description": "D&D class this template represents"
+    },
+    "description": {
+      "type": "string",
+      "description": "Brief description of this class archetype"
+    },
+    "hit_die": {
+      "type": "integer",
+      "description": "Hit die type - 6, 8, 10, or 12",
+      "enum": [6, 8, 10, 12]
+    },
+    "primary_abilities": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "Primary abilities for this class"
+    },
+    "saving_throws": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "Proficient saving throws"
+    },
+    "base_ability_scores": {
+      "type": "object",
+      "description": "Recommended base ability scores using standard array",
+      "properties": {
+        "strength": {"type": "integer"},
+        "dexterity": {"type": "integer"},
+        "constitution": {"type": "integer"},
+        "intelligence": {"type": "integer"},
+        "wisdom": {"type": "integer"},
+        "charisma": {"type": "integer"}
+      }
+    },
+    "skill_options": {
+      "type": "object",
+      "description": "Available skills and number to choose",
+      "properties": {
+        "choose": {"type": "integer"},
+        "from": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "starting_equipment": {
+      "type": "object",
+      "description": "Default starting equipment",
+      "properties": {
+        "weapons": {"type": "array", "items": {"type": "string"}},
+        "armor": {"type": "array", "items": {"type": "string"}},
+        "items": {"type": "array", "items": {"type": "string"}},
+        "gold": {"type": "integer"}
+      }
+    },
+    "class_features": {
+      "type": "object",
+      "description": "Class features gained at each level",
+      "patternProperties": {
+        "^[0-9]+$": {
+          "type": "array",
+          "items": {"type": "string"}
+        }
+      }
+    },
+    "spellcasting": {
+      "type": "object",
+      "description": "Spellcasting information if applicable",
+      "properties": {
+        "ability": {"type": "string"},
+        "type": {"type": "string", "enum": ["full", "half", "pact"]},
+        "cantrips_known": {"type": "object"},
+        "spells_known": {"type": "object"},
+        "spell_slots": {"type": "object"}
+      }
+    },
+    "subclass_options": {
+      "type": "object",
+      "description": "Available subclasses by level",
+      "properties": {
+        "level": {"type": "integer"},
+        "options": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "recommended_backgrounds": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "Thematically appropriate backgrounds"
+    },
+    "recommended_races": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "Thematically appropriate races"
+    }
+  }
+}

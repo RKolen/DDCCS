@@ -9,7 +9,11 @@ import os
 import sys
 from typing import Optional
 
-from src.stories.tools.story_export_helpers import StoryExportFormat, StoryExportOptions
+from src.stories.tools.story_export_helpers import (
+    SeriesExportOptions,
+    StoryExportFormat,
+    StoryExportOptions,
+)
 from src.stories.tools.story_import_helpers import ImportOptions
 from src.stories.tools.story_search import SearchScope, SearchType
 from src.stories.tools.story_tools import StoryTools
@@ -335,8 +339,6 @@ def _handle_export_series(args: argparse.Namespace, tools: StoryTools) -> int:
     Returns:
         Exit code.
     """
-    from src.stories.tools.story_export_helpers import SeriesExportOptions  # pylint: disable=import-outside-toplevel
-
     format_map = {
         "html": StoryExportFormat.HTML,
         "md": StoryExportFormat.MARKDOWN,

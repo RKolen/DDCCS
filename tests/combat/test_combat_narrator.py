@@ -91,7 +91,7 @@ class TestCombatNarrator(unittest.TestCase):
         self.assertIn("generated combat narrative", out)
 
     def test_build_major_npc_context_includes_tactics(self):
-        """_build_major_npc_context includes tactics and legendary actions."""
+        """build_major_npc_context includes tactics and legendary actions."""
         ai_narrator = AIEnhancedNarrator(self.consultants)
 
         status = {
@@ -108,7 +108,7 @@ class TestCombatNarrator(unittest.TestCase):
             },
         }
 
-        context = ai_narrator._build_major_npc_context(status)  # pylint: disable=protected-access
+        context = ai_narrator.build_major_npc_context(status)
         self.assertIn("Arch Villain", context)
         self.assertIn("Cold and calculating", context)
         self.assertIn("Cantrip", context)

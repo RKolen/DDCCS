@@ -4,6 +4,7 @@ Provides utilities for importing stories from external formats
 into the campaign directory structure.
 """
 
+import json
 import os
 import re
 from dataclasses import dataclass, field
@@ -221,8 +222,6 @@ class StoryImportHelper:
         Returns:
             ImportResult with import status.
         """
-        import json  # pylint: disable=import-outside-toplevel
-
         result = ImportResult(success=False)
         try:
             with open(source_path, encoding="utf-8") as fh:

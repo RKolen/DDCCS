@@ -6,12 +6,22 @@ Handles all character-related menu interactions and operations.
 import json
 import os
 from pathlib import Path
-from typing import Optional, Union
+from typing import Any, Dict, Optional, Union
 
 from src.character_arc.arc_analyzer import ArcAnalyzer
 from src.character_arc.arc_reports import ArcReporter
 from src.character_arc.arc_storage import ArcStorage
+from src.characters.character_template import (
+    load_template,
+    list_available_templates,
+    build_character_data_from_template,
+)
 from src.characters.consultants.character_profile import CharacterProfile
+from src.cli.cli_template_wizard import (
+    build_options_from_prompts,
+    print_character_summary,
+    prompt_template_selection,
+)
 from src.cli.dnd_cli_helpers import edit_character_profile_interactive
 from src.cli.cli_consultations import ConsultationsCLI
 from src.utils.cli_utils import (
@@ -28,6 +38,8 @@ from src.utils.ascii_art import (
     display_character_portrait,
     create_character_portrait,
 )
+from src.utils.file_io import save_json_file
+from src.utils.path_utils import get_character_file_path
 from src.utils.string_utils import sanitize_filename
 from src.utils.errors import (
     display_error,
@@ -70,6 +82,7 @@ class CharacterCLIManager:
             print("5. Customize ASCII Art")
             print("6. Verify Character Profile")
             print("7. Character Arc Analysis")
+            print("8. Create Character from Template")
             print("0. Back to Main Menu")
 
             choice = input("Enter your choice: ").strip()
@@ -88,6 +101,8 @@ class CharacterCLIManager:
                 self._verify_character_profile()
             elif choice == "7":
                 self._arc_analysis_menu()
+            elif choice == "8":
+                self._create_character_from_template()
             elif choice == "0":
                 break
             else:
@@ -477,6 +492,85 @@ class CharacterCLIManager:
                 user_guidance="Check file permissions and ensure the JSON is valid."
             )
             display_error(err)
+
+    # ------------------------------------------------------------------
+    # Character Creation from Template
+    # ------------------------------------------------------------------
+
+    def _create_character_from_template(self) -> None:
+        """Interactive wizard for creating a character from a class template."""
+        print("\n CREATE CHARACTER FROM TEMPLATE")
+        print("-" * 40)
+
+        templates = list_available_templates()
+        if not templates:
+            display_error(DnDError(
+                message="No character templates found",
+                user_guidance="Ensure the templates/characters/ directory exists."
+            ))
+            return
+
+        template_name = prompt_template_selection(templates)
+        if not template_name:
+            return
+
+        template = load_template(template_name)
+        if not template:
+            display_error(DnDError(
+                message=f"Failed to load template for '{template_name}'",
+                user_guidance="Check that the template JSON file is valid."
+            ))
+            return
+
+        options = build_options_from_prompts(template)
+        if not options:
+            return
+
+        print_character_summary(template, options)
+        confirm = input("\nCreate this character? (y/N): ").strip().lower()
+        if confirm != "y":
+            print("[INFO] Character creation cancelled.")
+            return
+
+        self._save_character_from_options(template, options)
+
+    def _save_character_from_options(
+        self,
+        template: Dict,
+        options: Any,
+    ) -> None:
+        """Build and persist a character from gathered wizard options.
+
+        Args:
+            template: Loaded class template.
+            options: TemplateOptions instance from the wizard.
+        """
+        try:
+            data = build_character_data_from_template(template=template, options=options)
+        except ValueError as exc:
+            display_error(UserInputError(
+                message=f"Invalid character data: {exc}",
+                user_guidance="Check that all values are within valid ranges."
+            ))
+            return
+
+        filepath = get_character_file_path(options.name)
+        if os.path.exists(filepath):
+            overwrite = input(
+                f"\nCharacter '{options.name}' already exists. Overwrite? (y/N): "
+            ).strip().lower()
+            if overwrite != "y":
+                print("[INFO] Character not saved.")
+                return
+
+        try:
+            save_json_file(filepath, data)
+            print(f"\n[SUCCESS] Character '{options.name}' saved to {filepath}")
+        except (OSError, ValueError) as exc:
+            display_error(FileSystemError(
+                message=f"Failed to save character: {exc}",
+                user_guidance="Check file permissions for the characters directory."
+            ))
 
     # ------------------------------------------------------------------
     # Character Arc Analysis

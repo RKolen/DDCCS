@@ -1,0 +1,242 @@
+{
+  "name": "Paladin",
+  "class": "Paladin",
+  "description": "A holy warrior bound by a sacred oath to serve a cause greater than themselves",
+  "hit_die": 10,
+  "primary_abilities": [
+    "Strength",
+    "Charisma"
+  ],
+  "saving_throws": [
+    "Wisdom",
+    "Charisma"
+  ],
+  "base_ability_scores": {
+    "strength": 16,
+    "dexterity": 10,
+    "constitution": 14,
+    "intelligence": 8,
+    "wisdom": 12,
+    "charisma": 14
+  },
+  "skill_options": {
+    "choose": 2,
+    "from": [
+      "Athletics",
+      "Insight",
+      "Intimidation",
+      "Medicine",
+      "Persuasion",
+      "Religion"
+    ]
+  },
+  "starting_equipment": {
+    "weapons": [
+      "Longsword",
+      "Shield"
+    ],
+    "armor": [
+      "Chain Mail"
+    ],
+    "items": [
+      "Holy Symbol",
+      "Priest's Pack"
+    ],
+    "gold": 10
+  },
+  "class_features": {
+    "1": [
+      "Lay on Hands",
+      "Spellcasting",
+      "Weapon Mastery"
+    ],
+    "2": [
+      "Fighting Style",
+      "Paladin's Smite"
+    ],
+    "3": [
+      "Channel Divinity",
+      "Paladin Subclass"
+    ],
+    "4": [
+      "Ability Score Improvement"
+    ],
+    "5": [
+      "Extra Attack",
+      "Faithful Steed"
+    ],
+    "6": [
+      "Aura of Protection"
+    ],
+    "7": [
+      "Subclass Feature"
+    ],
+    "8": [
+      "Ability Score Improvement"
+    ],
+    "9": [
+      "Abjure Foes"
+    ],
+    "10": [
+      "Aura of Courage"
+    ],
+    "11": [
+      "Radiant Strikes"
+    ],
+    "12": [
+      "Ability Score Improvement"
+    ],
+    "13": [
+      "Subclass Feature"
+    ],
+    "14": [
+      "Restoring Touch"
+    ],
+    "15": [
+      "Subclass Feature"
+    ],
+    "16": [
+      "Ability Score Improvement"
+    ],
+    "17": [
+      "Aura Expansion"
+    ],
+    "18": [
+      "Subclass Feature"
+    ],
+    "19": [
+      "Ability Score Improvement"
+    ],
+    "20": [
+      "Sacred Weapon",
+      "Epic Boon"
+    ]
+  },
+  "spellcasting": {
+    "ability": "Charisma",
+    "type": "half",
+    "cantrips_known": {},
+    "spell_slots": {
+      "2": {
+        "1": 2
+      },
+      "3": {
+        "1": 3
+      },
+      "4": {
+        "1": 3
+      },
+      "5": {
+        "1": 4,
+        "2": 2
+      },
+      "6": {
+        "1": 4,
+        "2": 2
+      },
+      "7": {
+        "1": 4,
+        "2": 3
+      },
+      "8": {
+        "1": 4,
+        "2": 3
+      },
+      "9": {
+        "1": 4,
+        "2": 3,
+        "3": 2
+      },
+      "10": {
+        "1": 4,
+        "2": 3,
+        "3": 2
+      },
+      "11": {
+        "1": 4,
+        "2": 3,
+        "3": 3
+      },
+      "12": {
+        "1": 4,
+        "2": 3,
+        "3": 3
+      },
+      "13": {
+        "1": 4,
+        "2": 3,
+        "3": 3,
+        "4": 1
+      },
+      "14": {
+        "1": 4,
+        "2": 3,
+        "3": 3,
+        "4": 1
+      },
+      "15": {
+        "1": 4,
+        "2": 3,
+        "3": 3,
+        "4": 2
+      },
+      "16": {
+        "1": 4,
+        "2": 3,
+        "3": 3,
+        "4": 2
+      },
+      "17": {
+        "1": 4,
+        "2": 3,
+        "3": 3,
+        "4": 3,
+        "5": 1
+      },
+      "18": {
+        "1": 4,
+        "2": 3,
+        "3": 3,
+        "4": 3,
+        "5": 1
+      },
+      "19": {
+        "1": 4,
+        "2": 3,
+        "3": 3,
+        "4": 3,
+        "5": 2
+      },
+      "20": {
+        "1": 4,
+        "2": 3,
+        "3": 3,
+        "4": 3,
+        "5": 2
+      }
+    }
+  },
+  "subclass_options": {
+    "level": 3,
+    "options": [
+      "Oath of Devotion",
+      "Oath of the Ancients",
+      "Oath of Vengeance",
+      "Oath of Glory"
+    ]
+  },
+  "recommended_backgrounds": [
+    "Acolyte",
+    "Soldier",
+    "Noble",
+    "Guard",
+    "Farmer"
+  ],
+  "recommended_races": [
+    "Human",
+    "Dwarf",
+    "Aasimar",
+    "Dragonborn",
+    "Tiefling"
+  ]
+}

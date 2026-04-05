@@ -11,6 +11,7 @@ from src.stories.tools.story_import_helpers import (
     ImportOptions,
     StoryImportHelper,
 )
+from src.utils.path_utils import get_campaigns_dir
 
 
 def _write_file(directory: str, filename: str, content: str) -> str:
@@ -47,7 +48,6 @@ def test_import_from_markdown_creates_numbered_file():
 def test_import_from_markdown_increments_numbering():
     """Second import should create a 002_ file when a 001_ already exists."""
     with tempfile.TemporaryDirectory() as tmp:
-        from src.utils.path_utils import get_campaigns_dir  # pylint: disable=import-outside-toplevel
         series_dir = os.path.join(get_campaigns_dir(tmp), "TestSeries")
         os.makedirs(series_dir)
         existing = os.path.join(series_dir, "001_existing.md")

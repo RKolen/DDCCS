@@ -1,0 +1,78 @@
+{
+  "name": "Monk",
+  "class": "Monk",
+  "description": "A master of martial arts who harnesses the power of ki to empower unarmed combat",
+  "hit_die": 8,
+  "primary_abilities": ["Dexterity", "Wisdom"],
+  "saving_throws": ["Strength", "Dexterity"],
+  "base_ability_scores": {
+    "strength": 10,
+    "dexterity": 16,
+    "constitution": 14,
+    "intelligence": 10,
+    "wisdom": 14,
+    "charisma": 8
+  },
+  "skill_options": {
+    "choose": 2,
+    "from": [
+      "Acrobatics",
+      "Athletics",
+      "History",
+      "Insight",
+      "Religion",
+      "Stealth"
+    ]
+  },
+  "starting_equipment": {
+    "weapons": ["Quarterstaff", "Dart", "Dart", "Dart", "Dart", "Dart"],
+    "armor": [],
+    "items": ["Explorer's Pack"],
+    "gold": 10
+  },
+  "class_features": {
+    "1": ["Martial Arts", "Unarmored Defense", "Weapon Mastery"],
+    "2": ["Monk's Focus", "Unarmored Movement", "Uncanny Metabolism"],
+    "3": ["Deflect Attacks", "Monk Subclass"],
+    "4": ["Ability Score Improvement", "Slow Fall"],
+    "5": ["Extra Attack", "Stunning Strike"],
+    "6": ["Empowered Strikes", "Subclass Feature"],
+    "7": ["Evasion"],
+    "8": ["Ability Score Improvement"],
+    "9": ["Acrobatic Movement"],
+    "10": ["Height of Discipline", "Self-Restoration"],
+    "11": ["Subclass Feature"],
+    "12": ["Ability Score Improvement"],
+    "13": ["Deflect Energy"],
+    "14": ["Disciplined Survivor"],
+    "15": ["Perfect Discipline"],
+    "16": ["Ability Score Improvement"],
+    "17": ["Subclass Feature"],
+    "18": ["Superior Defense"],
+    "19": ["Ability Score Improvement"],
+    "20": ["Body and Mind", "Epic Boon"]
+  },
+  "subclass_options": {
+    "level": 3,
+    "options": [
+      "Warrior of the Open Hand",
+      "Warrior of Shadow",
+      "Warrior of the Elements",
+      "Warrior of Mercy"
+    ]
+  },
+  "recommended_backgrounds": [
+    "Hermit",
+    "Sage",
+    "Wayfarer",
+    "Acolyte",
+    "Soldier"
+  ],
+  "recommended_races": [
+    "Human",
+    "Elf",
+    "Halfling",
+    "Gnome",
+    "Tiefling"
+  ]
+}

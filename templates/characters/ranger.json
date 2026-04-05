@@ -1,0 +1,119 @@
+{
+  "name": "Ranger",
+  "class": "Ranger",
+  "description": "A warrior of the wilderness who combines martial prowess with nature magic",
+  "hit_die": 10,
+  "primary_abilities": ["Dexterity", "Wisdom"],
+  "saving_throws": ["Strength", "Dexterity"],
+  "base_ability_scores": {
+    "strength": 10,
+    "dexterity": 16,
+    "constitution": 14,
+    "intelligence": 10,
+    "wisdom": 14,
+    "charisma": 10
+  },
+  "skill_options": {
+    "choose": 3,
+    "from": [
+      "Animal Handling",
+      "Athletics",
+      "Insight",
+      "Investigation",
+      "Nature",
+      "Perception",
+      "Stealth",
+      "Survival"
+    ]
+  },
+  "starting_equipment": {
+    "weapons": ["Longsword", "Shortsword", "Longbow"],
+    "armor": ["Scale Mail"],
+    "items": ["Explorer's Pack", "Quiver", "20 Arrows"],
+    "gold": 10
+  },
+  "class_features": {
+    "1": ["Expertise", "Favored Enemy", "Spellcasting", "Weapon Mastery"],
+    "2": ["Deft Explorer", "Fighting Style"],
+    "3": ["Ranger Subclass"],
+    "4": ["Ability Score Improvement"],
+    "5": ["Extra Attack"],
+    "6": ["Roving"],
+    "7": ["Subclass Feature"],
+    "8": ["Ability Score Improvement"],
+    "9": ["Expertise"],
+    "10": ["Tireless"],
+    "11": ["Subclass Feature"],
+    "12": ["Ability Score Improvement"],
+    "13": ["Relentless Hunter"],
+    "14": ["Nature's Veil"],
+    "15": ["Subclass Feature"],
+    "16": ["Ability Score Improvement"],
+    "17": ["Precise Hunter"],
+    "18": ["Feral Senses"],
+    "19": ["Ability Score Improvement"],
+    "20": ["Foe Slayer", "Epic Boon"]
+  },
+  "spellcasting": {
+    "ability": "Wisdom",
+    "type": "half",
+    "cantrips_known": {},
+    "spells_known": {
+      "2": 2,
+      "3": 3,
+      "5": 4,
+      "7": 5,
+      "9": 6,
+      "11": 7,
+      "13": 8,
+      "15": 9,
+      "17": 10,
+      "19": 11,
+      "20": 11
+    },
+    "spell_slots": {
+      "2": {"1": 2},
+      "3": {"1": 3},
+      "4": {"1": 3},
+      "5": {"1": 4, "2": 2},
+      "6": {"1": 4, "2": 2},
+      "7": {"1": 4, "2": 3},
+      "8": {"1": 4, "2": 3},
+      "9": {"1": 4, "2": 3, "3": 2},
+      "10": {"1": 4, "2": 3, "3": 2},
+      "11": {"1": 4, "2": 3, "3": 3},
+      "12": {"1": 4, "2": 3, "3": 3},
+      "13": {"1": 4, "2": 3, "3": 3, "4": 1},
+      "14": {"1": 4, "2": 3, "3": 3, "4": 1},
+      "15": {"1": 4, "2": 3, "3": 3, "4": 2},
+      "16": {"1": 4, "2": 3, "3": 3, "4": 2},
+      "17": {"1": 4, "2": 3, "3": 3, "4": 3, "5": 1},
+      "18": {"1": 4, "2": 3, "3": 3, "4": 3, "5": 1},
+      "19": {"1": 4, "2": 3, "3": 3, "4": 3, "5": 2},
+      "20": {"1": 4, "2": 3, "3": 3, "4": 3, "5": 2}
+    }
+  },
+  "subclass_options": {
+    "level": 3,
+    "options": [
+      "Hunter",
+      "Beast Master",
+      "Gloom Stalker",
+      "Fey Wanderer"
+    ]
+  },
+  "recommended_backgrounds": [
+    "Sailor",
+    "Soldier",
+    "Farmer",
+    "Guard",
+    "Hermit"
+  ],
+  "recommended_races": [
+    "Human",
+    "Elf",
+    "Wood Elf",
+    "Halfling",
+    "Orc"
+  ]
+}

@@ -1,0 +1,131 @@
+{
+  "name": "Sorcerer",
+  "class": "Sorcerer",
+  "description": "A spellcaster who draws on inherent magic from a gift or bloodline",
+  "hit_die": 6,
+  "primary_abilities": ["Charisma"],
+  "saving_throws": ["Constitution", "Charisma"],
+  "base_ability_scores": {
+    "strength": 8,
+    "dexterity": 14,
+    "constitution": 14,
+    "intelligence": 12,
+    "wisdom": 10,
+    "charisma": 16
+  },
+  "skill_options": {
+    "choose": 2,
+    "from": [
+      "Arcana",
+      "Deception",
+      "Insight",
+      "Intimidation",
+      "Persuasion",
+      "Religion"
+    ]
+  },
+  "starting_equipment": {
+    "weapons": ["Light Crossbow", "Dagger", "Dagger"],
+    "armor": [],
+    "items": ["Arcane Focus", "Dungeoneer's Pack"],
+    "gold": 10
+  },
+  "class_features": {
+    "1": ["Innate Sorcery", "Spellcasting"],
+    "2": ["Font of Magic", "Metamagic"],
+    "3": ["Sorcerer Subclass"],
+    "4": ["Ability Score Improvement"],
+    "5": ["Sorcerous Restoration"],
+    "6": ["Subclass Feature"],
+    "7": ["Sorcery Incarnate"],
+    "8": ["Ability Score Improvement"],
+    "9": ["Subclass Feature"],
+    "10": ["Metamagic"],
+    "11": ["Subclass Feature"],
+    "12": ["Ability Score Improvement"],
+    "13": [],
+    "14": ["Subclass Feature"],
+    "15": [],
+    "16": ["Ability Score Improvement"],
+    "17": ["Metamagic"],
+    "18": ["Subclass Feature"],
+    "19": ["Ability Score Improvement"],
+    "20": ["Arcane Apotheosis", "Epic Boon"]
+  },
+  "spellcasting": {
+    "ability": "Charisma",
+    "type": "full",
+    "cantrips_known": {
+      "1": 4,
+      "4": 5,
+      "10": 6
+    },
+    "spells_known": {
+      "1": 2,
+      "2": 4,
+      "3": 6,
+      "4": 7,
+      "5": 8,
+      "6": 9,
+      "7": 10,
+      "8": 11,
+      "9": 12,
+      "10": 13,
+      "11": 14,
+      "12": 15,
+      "13": 16,
+      "14": 17,
+      "15": 18,
+      "16": 19,
+      "17": 20,
+      "18": 21,
+      "19": 22,
+      "20": 22
+    },
+    "spell_slots": {
+      "1": {"1": 2},
+      "2": {"1": 3},
+      "3": {"1": 4, "2": 2},
+      "4": {"1": 4, "2": 3},
+      "5": {"1": 4, "2": 3, "3": 2},
+      "6": {"1": 4, "2": 3, "3": 3},
+      "7": {"1": 4, "2": 3, "3": 3, "4": 1},
+      "8": {"1": 4, "2": 3, "3": 3, "4": 2},
+      "9": {"1": 4, "2": 3, "3": 3, "4": 3, "5": 1},
+      "10": {"1": 4, "2": 3, "3": 3, "4": 3, "5": 2},
+      "11": {"1": 4, "2": 3, "3": 3, "4": 3, "5": 2, "6": 1},
+      "12": {"1": 4, "2": 3, "3": 3, "4": 3, "5": 2, "6": 1},
+      "13": {"1": 4, "2": 3, "3": 3, "4": 3, "5": 2, "6": 1, "7": 1},
+      "14": {"1": 4, "2": 3, "3": 3, "4": 3, "5": 2, "6": 1, "7": 1},
+      "15": {"1": 4, "2": 3, "3": 3, "4": 3, "5": 2, "6": 1, "7": 1, "8": 1},
+      "16": {"1": 4, "2": 3, "3": 3, "4": 3, "5": 2, "6": 1, "7": 1, "8": 1},
+      "17": {"1": 4, "2": 3, "3": 3, "4": 3, "5": 2, "6": 1, "7": 1, "8": 1, "9": 1},
+      "18": {"1": 4, "2": 3, "3": 3, "4": 3, "5": 2, "6": 1, "7": 1, "8": 1, "9": 1},
+      "19": {"1": 4, "2": 3, "3": 3, "4": 3, "5": 2, "6": 2, "7": 1, "8": 1, "9": 1},
+      "20": {"1": 4, "2": 3, "3": 3, "4": 3, "5": 2, "6": 2, "7": 2, "8": 1, "9": 1}
+    }
+  },
+  "subclass_options": {
+    "level": 3,
+    "options": [
+      "Draconic Sorcery",
+      "Wild Magic Sorcery",
+      "Clockwork Sorcery",
+      "Aberrant Sorcery"
+    ]
+  },
+  "recommended_backgrounds": [
+    "Noble",
+    "Hermit",
+    "Sage",
+    "Charlatan",
+    "Wayfarer"
+  ],
+  "recommended_races": [
+    "Dragonborn",
+    "Tiefling",
+    "Human",
+    "Elf",
+    "Aasimar"
+  ]
+}

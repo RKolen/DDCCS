@@ -61,45 +61,44 @@ def test_extract_from_text_sets_campaign_and_story():
 
 
 def test_split_sections_on_headers():
-    """Test that _split_sections divides text at markdown headers."""
-    print("\n[TEST] EventExtractor._split_sections")
+    """Test that split_sections divides text at markdown headers."""
+    print("\n[TEST] EventExtractor.split_sections")
 
     extractor = EventExtractor()
     text = "# Act One\nFirst paragraph.\n\n# Act Two\nSecond paragraph."
-    sections = extractor._split_sections(text)  # pylint: disable=protected-access
+    sections = extractor.split_sections(text)
 
     titles = [title for title, _ in sections]
     assert "Act One" in titles
     assert "Act Two" in titles
     print(f"  [OK] Sections found: {titles}")
-    print("[PASS] EventExtractor._split_sections")
+    print("[PASS] EventExtractor.split_sections")
 
 
 def test_extract_character_names():
     """Test that capitalized names are extracted from text."""
-    print("\n[TEST] EventExtractor._extract_character_names")
+    print("\n[TEST] EventExtractor.extract_character_names")
 
     extractor = EventExtractor()
     text = "Elara and Theron fought bravely against the Shadow."
-    names = extractor._extract_character_names(text)  # pylint: disable=protected-access
+    names = extractor.extract_character_names(text)
 
     assert "Elara" in names
     assert "Theron" in names
     print(f"  [OK] Names found: {names}")
-    print("[PASS] EventExtractor._extract_character_names")
+    print("[PASS] EventExtractor.extract_character_names")
 
 
 def test_extract_location():
     """Test that location phrases are extracted from text."""
-    print("\n[TEST] EventExtractor._extract_location")
+    print("\n[TEST] EventExtractor.extract_location")
 
     extractor = EventExtractor()
     text = "The party arrives at Stormwatch Keep."
-    location = extractor._extract_location(text)  # pylint: disable=protected-access
-
+    location = extractor.extract_location(text)
     assert location, "Expected a location to be extracted"
     print(f"  [OK] Location found: '{location}'")
-    print("[PASS] EventExtractor._extract_location")
+    print("[PASS] EventExtractor.extract_location")
 
 
 def test_extract_from_file_missing_returns_empty():

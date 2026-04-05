@@ -214,3 +214,36 @@ def get_story_file_path(
     """
     campaign_path = get_campaign_path(campaign_name, workspace_path)
     return os.path.join(campaign_path, story_name)
+
+
+def get_character_templates_dir(workspace_path: Optional[str] = None) -> str:
+    """Get the path to the character templates directory.
+
+    Args:
+        workspace_path: Optional workspace root path (defaults to current directory)
+
+    Returns:
+        Path to templates/characters directory
+    """
+    if workspace_path is None:
+        workspace_path = os.getcwd()
+    return os.path.join(workspace_path, "templates", "characters")
+
+
+def list_character_templates(workspace_path: Optional[str] = None) -> List[str]:
+    """List available character template names (without file extension).
+
+    Args:
+        workspace_path: Optional workspace root path
+
+    Returns:
+        Sorted list of template stem names, excluding 'schema'.
+    """
+    templates_dir = get_character_templates_dir(workspace_path)
+    if not os.path.isdir(templates_dir):
+        return []
+    return sorted(
+        entry[:-5]
+        for entry in os.listdir(templates_dir)
+        if entry.endswith(".json") and entry != "schema.json"
+    )

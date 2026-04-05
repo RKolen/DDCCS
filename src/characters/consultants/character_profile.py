@@ -475,34 +475,59 @@ class CharacterProfile:
                 return dict(data["ai_config"])
         return data.get("ai_config")
 
-    @classmethod
-    def load_from_file(cls, filepath: str):
-        """Load character profile from JSON file."""
-        data = load_json_file(filepath)
+    @staticmethod
+    def _build_personality_from_data(data: Dict[str, Any]) -> "CharacterPersonality":
+        """Build a CharacterPersonality from raw character data.
 
-        # Ensure data is a dict
+        Args:
+            data: Raw character data dictionary.
+
+        Returns:
+            Populated CharacterPersonality instance.
+        """
+        backstory: str = data.get("backstory") or data.get("background_story") or ""
+        motivations: List[str] = data.get("bonds") or data.get("motivations") or []
+        fears: List[str] = data.get("flaws") or data.get("fears_weaknesses") or []
+        goals: List[str] = data.get("ideals") or data.get("goals") or []
+        return CharacterPersonality(
+            background_story=backstory,
+            personality_summary="; ".join(data.get("personality_traits") or []),
+            motivations=motivations,
+            fears_weaknesses=fears,
+            relationships=data.get("relationships") or {},
+            goals=goals,
+            secrets=data.get("secrets") or [],
+        )
+
+    @classmethod
+    def _load_from_dict(cls, data: Dict[str, Any]) -> "CharacterProfile":
+        """Create a CharacterProfile from a plain dictionary.
+
+        This is a convenience wrapper around ``load_from_file`` that accepts
+        an already-loaded data dictionary instead of a file path.
+
+        Args:
+            data: Character data dictionary.
+
+        Returns:
+            A new CharacterProfile instance.
+        """
         if not isinstance(data, dict):
             data = {}
 
-        # Ensure nickname is present (can be None)
         if "nickname" not in data:
             data["nickname"] = None
-
-        # Ensure pronouns is present (can be None)
         if "pronouns" not in data:
             data["pronouns"] = None
 
-        # Handle both 'character_class' and 'dnd_class' field names
         character_class_name = (
             data.get("dnd_class") or data.get("character_class") or "fighter"
         )
-
         try:
             character_class = DnDClass(character_class_name)
         except ValueError:
             character_class = DnDClass.FIGHTER
 
-        # Load multi-class entries if present
         classes_data = data.get("classes", [])
         classes: List[ClassEntry] = []
         if isinstance(classes_data, list):
@@ -514,7 +539,6 @@ class CharacterProfile:
                         subclass=entry.get("subclass"),
                     ))
 
-        # Create identity
         identity = CharacterIdentity(
             name=data.get("name", "Unknown"),
             character_class=character_class,
@@ -529,18 +553,8 @@ class CharacterProfile:
             name_details=CharacterName.from_dict(data),
         )
 
-        # Create personality (map field names)
-        personality = CharacterPersonality(
-            background_story=data.get("backstory", data.get("background_story", "")),
-            personality_summary="; ".join(data.get("personality_traits", [])),
-            motivations=data.get("bonds", data.get("motivations", [])),
-            fears_weaknesses=data.get("flaws", data.get("fears_weaknesses", [])),
-            relationships=data.get("relationships", {}),
-            goals=data.get("ideals", data.get("goals", [])),
-            secrets=data.get("secrets", []),
-        )
+        personality = cls._build_personality_from_data(data)
 
-        # Create behavior
         behavior = CharacterBehavior(
             preferred_strategies=data.get("preferred_strategies", []),
             typical_reactions=data.get("typical_reactions", {}),
@@ -548,21 +562,17 @@ class CharacterProfile:
             decision_making_style=data.get("decision_making_style", ""),
         )
 
-        # Create story
         story = CharacterStory(
             story_hooks=data.get("story_hooks", []),
             character_arcs=data.get("character_arcs", []),
             major_plot_actions=data.get("major_plot_actions", []),
         )
 
-        # Load mechanics and possessions
         mechanics = cls._load_mechanics_from_data(data)
         possessions = CharacterPossessions(
             equipment=data.get("equipment", {}),
             magic_items=data.get("magic_items", []),
         )
-
-        # Load AI configuration if present
         ai_config = cls._load_ai_config_from_data(data)
 
         return cls(
@@ -574,3 +584,18 @@ class CharacterProfile:
             possessions=possessions,
             ai_config=ai_config,
         )
+
+    @classmethod
+    def load_from_file(cls, filepath: str) -> "CharacterProfile":
+        """Load character profile from JSON file.
+
+        Args:
+            filepath: Path to the character JSON file.
+
+        Returns:
+            CharacterProfile populated from the file.
+        """
+        data = load_json_file(filepath)
+        if not isinstance(data, dict):
+            data = {}
+        return cls._load_from_dict(data)

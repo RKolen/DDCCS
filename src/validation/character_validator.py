@@ -3,6 +3,7 @@ Character Profile JSON Validation
 Validates character JSON files against required schema.
 """
 
+import sys
 from typing import Dict, List, Any, Tuple
 from src.utils.file_io import load_json_file, get_json_files_in_directory
 from src.utils.path_utils import get_characters_dir
@@ -333,37 +334,158 @@ def validate_character_file(filepath: str) -> Tuple[bool, List[str]]:
         return False, [f"{filepath}: Error reading file - {str(e)}"]
 
 
-if __name__ == "__main__":
-    import sys
+def _validate_template_required_fields(
+    template: Dict[str, Any], file_prefix: str
+) -> List[str]:
+    """Validate required fields of a character template.
 
+    Args:
+        template: Template data to check.
+        file_prefix: Error message prefix.
+
+    Returns:
+        List of error messages.
+    """
+    errors: List[str] = []
+    required_fields: Dict[str, type] = {
+        "name": str,
+        "class": str,
+        "hit_die": int,
+        "primary_abilities": list,
+    }
+    for field, expected_type in required_fields.items():
+        if field not in template:
+            errors.append(f"{file_prefix}Missing required field: '{field}'")
+        elif not isinstance(template[field], expected_type):
+            errors.append(
+                f"{file_prefix}Field '{field}' should be {expected_type.__name__}, "
+                f"got {type(template[field]).__name__}"
+            )
+
+    if "hit_die" in template and isinstance(template["hit_die"], int):
+        if template["hit_die"] not in (6, 8, 10, 12):
+            errors.append(
+                f"{file_prefix}Field 'hit_die' must be 6, 8, 10, or 12, "
+                f"got {template['hit_die']}"
+            )
+    return errors
+
+
+def _validate_template_ability_scores(
+    template: Dict[str, Any], file_prefix: str
+) -> List[str]:
+    """Validate base_ability_scores block of a character template.
+
+    Args:
+        template: Template data to check.
+        file_prefix: Error message prefix.
+
+    Returns:
+        List of error messages.
+    """
+    errors: List[str] = []
+    if "base_ability_scores" not in template:
+        return errors
+    scores = template["base_ability_scores"]
+    if not isinstance(scores, dict):
+        errors.append(f"{file_prefix}Field 'base_ability_scores' must be an object")
+        return errors
+    for ability in (
+        "strength", "dexterity", "constitution",
+        "intelligence", "wisdom", "charisma",
+    ):
+        if ability not in scores:
+            errors.append(
+                f"{file_prefix}base_ability_scores missing field: '{ability}'"
+            )
+        elif not isinstance(scores[ability], int):
+            errors.append(
+                f"{file_prefix}base_ability_scores['{ability}'] must be int"
+            )
+    return errors
+
+
+def _validate_template_subclass_options(
+    template: Dict[str, Any], file_prefix: str
+) -> List[str]:
+    """Validate subclass_options block of a character template.
+
+    Args:
+        template: Template data to check.
+        file_prefix: Error message prefix.
+
+    Returns:
+        List of error messages.
+    """
+    errors: List[str] = []
+    if "subclass_options" not in template:
+        return errors
+    sub = template["subclass_options"]
+    if not isinstance(sub, dict):
+        errors.append(f"{file_prefix}Field 'subclass_options' must be an object")
+        return errors
+    if "level" not in sub or not isinstance(sub["level"], int):
+        errors.append(
+            f"{file_prefix}subclass_options must contain integer field 'level'"
+        )
+    if "options" not in sub or not isinstance(sub["options"], list):
+        errors.append(
+            f"{file_prefix}subclass_options must contain array field 'options'"
+        )
+    return errors
+
+
+def validate_character_template(
+    template: Dict[str, Any], filepath: str = ""
+) -> Tuple[bool, List[str]]:
+    """Validate a character template dictionary against the required schema.
+
+    Args:
+        template: Template data to validate.
+        filepath: Optional file path for error reporting.
+
+    Returns:
+        Tuple of (is_valid, error_messages).
+    """
+    file_prefix = f"{filepath}: " if filepath else ""
+    errors: List[str] = []
+    errors.extend(_validate_template_required_fields(template, file_prefix))
+    errors.extend(_validate_template_ability_scores(template, file_prefix))
+    errors.extend(_validate_template_subclass_options(template, file_prefix))
+    return len(errors) == 0, errors
+
+
+def _run_cli() -> None:
+    """Entry point for command-line validation of character files."""
     if len(sys.argv) > 1:
-        # Validate specific file
         file_path = sys.argv[1]
         valid, error_list = validate_character_file(file_path)
         print_validation_report(file_path, valid, error_list)
         sys.exit(0 if valid else 1)
-    else:
-        # Validate all character files
-        characters_dir = get_characters_dir()
-        json_files = get_json_files_in_directory(
-            characters_dir,
-            exclude_patterns=["class.example", ".example"]
+
+    characters_dir = get_characters_dir()
+    json_files = get_json_files_in_directory(
+        characters_dir,
+        exclude_patterns=["class.example", ".example"]
+    )
+
+    if not json_files:
+        error = DnDFileNotFoundError(
+            filepath=str(characters_dir),
+            file_type="characters directory"
         )
+        display_error(error)
+        sys.exit(1)
 
-        if not json_files:
-            error = DnDFileNotFoundError(
-                filepath=str(characters_dir),
-                file_type="characters directory"
-            )
-            display_error(error)
-            sys.exit(1)
+    found_invalid = False
+    for char_path in json_files:
+        valid, error_list = validate_character_file(str(char_path))
+        print_validation_report(str(char_path), valid, error_list)
+        if not valid:
+            found_invalid = True
 
-        all_valid: bool = True
-        for char_path in json_files:
-            valid, error_list = validate_character_file(str(char_path))
-            print_validation_report(str(char_path), valid, error_list)
+    sys.exit(1 if found_invalid else 0)
 
-            if not valid:
-                all_valid = False
 
-        sys.exit(0 if all_valid else 1)
+if __name__ == "__main__":
+    _run_cli()

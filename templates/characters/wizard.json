@@ -1,0 +1,287 @@
+{
+  "name": "Wizard",
+  "class": "Wizard",
+  "description": "A scholarly magic-user capable of manipulating the structures of reality",
+  "hit_die": 6,
+  "primary_abilities": [
+    "Intelligence"
+  ],
+  "saving_throws": [
+    "Intelligence",
+    "Wisdom"
+  ],
+  "base_ability_scores": {
+    "strength": 8,
+    "dexterity": 14,
+    "constitution": 14,
+    "intelligence": 16,
+    "wisdom": 12,
+    "charisma": 10
+  },
+  "skill_options": {
+    "choose": 2,
+    "from": [
+      "Arcana",
+      "History",
+      "Insight",
+      "Investigation",
+      "Medicine",
+      "Nature",
+      "Religion"
+    ]
+  },
+  "starting_equipment": {
+    "weapons": [
+      "Quarterstaff",
+      "Dagger"
+    ],
+    "armor": [],
+    "items": [
+      "Spellbook",
+      "Arcane Focus",
+      "Scholar's Pack"
+    ],
+    "gold": 10
+  },
+  "class_features": {
+    "1": [
+      "Arcane Recovery",
+      "Spellcasting",
+      "Ritual Adept",
+      "Spellbook"
+    ],
+    "2": [
+      "Scholar"
+    ],
+    "3": [
+      "Wizard Subclass",
+      "Memorize Spell"
+    ],
+    "4": [
+      "Ability Score Improvement"
+    ],
+    "5": [
+      "Memorize Spell"
+    ],
+    "6": [
+      "Subclass Feature"
+    ],
+    "7": [],
+    "8": [
+      "Ability Score Improvement"
+    ],
+    "9": [],
+    "10": [
+      "Subclass Feature"
+    ],
+    "11": [],
+    "12": [
+      "Ability Score Improvement"
+    ],
+    "13": [],
+    "14": [
+      "Subclass Feature"
+    ],
+    "15": [],
+    "16": [
+      "Ability Score Improvement"
+    ],
+    "17": [],
+    "18": [
+      "Spell Mastery"
+    ],
+    "19": [
+      "Ability Score Improvement"
+    ],
+    "20": [
+      "Signature Spells",
+      "Epic Boon"
+    ]
+  },
+  "spellcasting": {
+    "ability": "Intelligence",
+    "type": "full",
+    "cantrips_known": {
+      "1": 3,
+      "4": 4,
+      "10": 5
+    },
+    "spells_known": {
+      "1": 6,
+      "growth": "2 per level"
+    },
+    "spell_slots": {
+      "1": {
+        "1": 2
+      },
+      "2": {
+        "1": 3
+      },
+      "3": {
+        "1": 4,
+        "2": 2
+      },
+      "4": {
+        "1": 4,
+        "2": 3
+      },
+      "5": {
+        "1": 4,
+        "2": 3,
+        "3": 2
+      },
+      "6": {
+        "1": 4,
+        "2": 3,
+        "3": 3
+      },
+      "7": {
+        "1": 4,
+        "2": 3,
+        "3": 3,
+        "4": 1
+      },
+      "8": {
+        "1": 4,
+        "2": 3,
+        "3": 3,
+        "4": 2
+      },
+      "9": {
+        "1": 4,
+        "2": 3,
+        "3": 3,
+        "4": 3,
+        "5": 1
+      },
+      "10": {
+        "1": 4,
+        "2": 3,
+        "3": 3,
+        "4": 3,
+        "5": 2
+      },
+      "11": {
+        "1": 4,
+        "2": 3,
+        "3": 3,
+        "4": 3,
+        "5": 2,
+        "6": 1
+      },
+      "12": {
+        "1": 4,
+        "2": 3,
+        "3": 3,
+        "4": 3,
+        "5": 2,
+        "6": 1
+      },
+      "13": {
+        "1": 4,
+        "2": 3,
+        "3": 3,
+        "4": 3,
+        "5": 2,
+        "6": 1,
+        "7": 1
+      },
+      "14": {
+        "1": 4,
+        "2": 3,
+        "3": 3,
+        "4": 3,
+        "5": 2,
+        "6": 1,
+        "7": 1
+      },
+      "15": {
+        "1": 4,
+        "2": 3,
+        "3": 3,
+        "4": 3,
+        "5": 2,
+        "6": 1,
+        "7": 1,
+        "8": 1
+      },
+      "16": {
+        "1": 4,
+        "2": 3,
+        "3": 3,
+        "4": 3,
+        "5": 2,
+        "6": 1,
+        "7": 1,
+        "8": 1
+      },
+      "17": {
+        "1": 4,
+        "2": 3,
+        "3": 3,
+        "4": 3,
+        "5": 2,
+        "6": 1,
+        "7": 1,
+        "8": 1,
+        "9": 1
+      },
+      "18": {
+        "1": 4,
+        "2": 3,
+        "3": 3,
+        "4": 3,
+        "5": 2,
+        "6": 1,
+        "7": 1,
+        "8": 1,
+        "9": 1
+      },
+      "19": {
+        "1": 4,
+        "2": 3,
+        "3": 3,
+        "4": 3,
+        "5": 2,
+        "6": 2,
+        "7": 1,
+        "8": 1,
+        "9": 1
+      },
+      "20": {
+        "1": 4,
+        "2": 3,
+        "3": 3,
+        "4": 3,
+        "5": 2,
+        "6": 2,
+        "7": 2,
+        "8": 1,
+        "9": 1
+      }
+    }
+  },
+  "subclass_options": {
+    "level": 3,
+    "options": [
+      "Abjurer",
+      "Diviner",
+      "Evoker",
+      "Illusionist"
+    ]
+  },
+  "recommended_backgrounds": [
+    "Sage",
+    "Acolyte",
+    "Scribe",
+    "Artisan",
+    "Wayfarer"
+  ],
+  "recommended_races": [
+    "Human",
+    "Elf",
+    "Gnome",
+    "Tiefling",
+    "High Elf"
+  ]
+}

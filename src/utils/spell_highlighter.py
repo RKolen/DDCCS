@@ -12,7 +12,13 @@ Detection Strategy:
 """
 
 import re
-from typing import List, Optional, Set
+from typing import Any, Callable, List, Optional, Set
+
+try:
+    from src.spells.spell_registry import get_spell_registry as _spell_registry_loader
+    _SPELL_REGISTRY_LOADER: Optional[Callable[[], Any]] = _spell_registry_loader
+except ImportError:
+    _SPELL_REGISTRY_LOADER = None
 
 # Common spell-related context words
 SPELL_CONTEXTS = [
@@ -75,10 +81,11 @@ def _get_registry_spell_names() -> Set[str]:
         Set of lowercase name variants from the custom spell registry,
         or an empty set if the registry cannot be loaded.
     """
+    if _SPELL_REGISTRY_LOADER is None:
+        return set()
     try:
-        from src.spells.spell_registry import get_spell_registry  # pylint: disable=import-outside-toplevel
-        return get_spell_registry().get_all_spell_names()
-    except (ImportError, OSError, KeyError, ValueError):
+        return _SPELL_REGISTRY_LOADER().get_all_spell_names()
+    except (OSError, KeyError, ValueError):
         return set()
 
 

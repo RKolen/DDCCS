@@ -27,6 +27,7 @@ def run_all_character_tests():
     print("  - Consultant Story (story analysis)")
     print("  - Consultant AI (AI integration)")
     print("  - Relationship Mapping (types, schema, manager, visualizer)")
+    print("  - Character Templates (D&D 2024 class templates and level scaling)")
 
     # Define all tests to run
     tests = [
@@ -40,6 +41,7 @@ def run_all_character_tests():
         ("test_consultant_story", "Story Analyzer Tests"),
         ("test_consultant_ai", "AI Consultant Tests"),
         ("test_relationships", "Relationship Mapping Tests"),
+        ("test_character_templates", "Character Template Tests"),
     ]
 
     results = {}

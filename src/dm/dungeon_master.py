@@ -266,7 +266,7 @@ class DMConsultant:
                 character_context.append(char_info)
         return character_context
 
-    def _build_npc_context(self, npcs_present: List[str]) -> List[str]:
+    def build_npc_context(self, npcs_present: List[str]) -> List[str]:
         """Build context strings about present NPCs.
 
         For major NPCs (BBEGs and key antagonists) includes encounter tactics
@@ -330,7 +330,7 @@ class DMConsultant:
 
         # Build context about characters and NPCs
         character_context = self._build_character_context(characters_present)
-        npc_context = self._build_npc_context(npcs_present)
+        npc_context = self.build_npc_context(npcs_present)
 
         # Get RAG context if available
         rag_context = ""

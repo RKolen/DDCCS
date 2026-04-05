@@ -1,0 +1,132 @@
+{
+  "name": "Warlock",
+  "class": "Warlock",
+  "description": "A wielder of magic derived from a bargain with an extraplanar entity",
+  "hit_die": 8,
+  "primary_abilities": ["Charisma"],
+  "saving_throws": ["Wisdom", "Charisma"],
+  "base_ability_scores": {
+    "strength": 8,
+    "dexterity": 14,
+    "constitution": 14,
+    "intelligence": 12,
+    "wisdom": 10,
+    "charisma": 16
+  },
+  "skill_options": {
+    "choose": 2,
+    "from": [
+      "Arcana",
+      "Deception",
+      "History",
+      "Intimidation",
+      "Investigation",
+      "Nature",
+      "Religion"
+    ]
+  },
+  "starting_equipment": {
+    "weapons": ["Light Crossbow", "Dagger", "Dagger"],
+    "armor": ["Leather Armor"],
+    "items": ["Arcane Focus", "Scholar's Pack"],
+    "gold": 10
+  },
+  "class_features": {
+    "1": ["Eldritch Invocations", "Pact Magic", "Spellcasting"],
+    "2": ["Magical Cunning"],
+    "3": ["Pact Boon", "Warlock Subclass"],
+    "4": ["Ability Score Improvement"],
+    "5": ["Contact Patron"],
+    "6": ["Subclass Feature"],
+    "7": ["Eldritch Invocation upgrade"],
+    "8": ["Ability Score Improvement"],
+    "9": ["Contact Patron (2)"],
+    "10": ["Subclass Feature"],
+    "11": ["Mystic Arcanum (6th level)"],
+    "12": ["Ability Score Improvement"],
+    "13": ["Mystic Arcanum (7th level)"],
+    "14": ["Subclass Feature"],
+    "15": ["Mystic Arcanum (8th level)"],
+    "16": ["Ability Score Improvement"],
+    "17": ["Mystic Arcanum (9th level)"],
+    "18": ["Eldritch Invocation upgrade"],
+    "19": ["Ability Score Improvement"],
+    "20": ["Eldritch Master", "Epic Boon"]
+  },
+  "spellcasting": {
+    "ability": "Charisma",
+    "type": "pact",
+    "cantrips_known": {
+      "1": 2,
+      "4": 3,
+      "10": 4
+    },
+    "spells_known": {
+      "1": 2,
+      "2": 3,
+      "3": 4,
+      "4": 5,
+      "5": 6,
+      "6": 7,
+      "7": 8,
+      "8": 9,
+      "9": 10,
+      "10": 10,
+      "11": 11,
+      "12": 11,
+      "13": 12,
+      "14": 12,
+      "15": 13,
+      "16": 13,
+      "17": 14,
+      "18": 14,
+      "19": 15,
+      "20": 15
+    },
+    "spell_slots": {
+      "1": {"1": 1},
+      "2": {"1": 2},
+      "3": {"2": 2},
+      "4": {"2": 2},
+      "5": {"3": 2},
+      "6": {"3": 2},
+      "7": {"4": 2},
+      "8": {"4": 2},
+      "9": {"5": 2},
+      "10": {"5": 2},
+      "11": {"5": 3},
+      "12": {"5": 3},
+      "13": {"5": 3},
+      "14": {"5": 3},
+      "15": {"5": 3},
+      "16": {"5": 3},
+      "17": {"5": 4},
+      "18": {"5": 4},
+      "19": {"5": 4},
+      "20": {"5": 4}
+    }
+  },
+  "subclass_options": {
+    "level": 3,
+    "options": [
+      "The Archfey",
+      "The Celestial",
+      "The Fiend",
+      "The Great Old One"
+    ]
+  },
+  "recommended_backgrounds": [
+    "Charlatan",
+    "Sage",
+    "Noble",
+    "Hermit",
+    "Criminal"
+  ],
+  "recommended_races": [
+    "Tiefling",
+    "Human",
+    "Elf",
+    "Aasimar",
+    "Gnome"
+  ]
+}

@@ -57,11 +57,10 @@ class FakeConsultantWithProfile:
     def __init__(self, profile):
         self.profile = profile
 
-    def suggest_reaction(self, prompt, extra=None):  # pragma: no cover - simple passthrough
+    def suggest_reaction(self, prompt, extra=None):
         """Return a deterministic suggested reaction used by the tests.
 
-        Keep this method minimal; the pragma excludes it from coverage as it's
-        a simple passthrough used only in unit tests.
+        Keep this method minimal.
         """
         _ = (prompt, extra)
         return {"suggested_reaction": "Respond", "reasoning": "Test", "class_expertise": "test"}

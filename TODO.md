@@ -119,9 +119,7 @@ All Tier 2 items are complete.
 
 ### Tier 3 — Enrichment (Meaningful, but can wait for Tier 2)
 
-| # | Plan | Reason |
-|---|------|--------|
-| 20 | [Character Templates](plans/character_templates_plan.md) | Content creation, not code. Can be done at any time but most useful after profile verification confirms the schema is stable. |
+All Tier 3 items are complete.
 
 ### Tier 4 — Infrastructure (High effort, team/web-focused)
 
@@ -157,6 +155,7 @@ All Tier 2 items are complete.
 
 ### Custom Spell Highlighting - April 5, 2026
 
+- [x] Character Templates.
 - [x] DC Scaling.
 - [x] Custom Spell Highlighting.
 

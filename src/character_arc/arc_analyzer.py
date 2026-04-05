@@ -126,7 +126,7 @@ class ArcAnalyzer:
             ]
             response = self.ai_client.chat_completion(messages)
             return self._parse_ai_response(response)
-        except Exception:  # pylint: disable=broad-except
+        except (RuntimeError, OSError, ValueError):
             return {"metrics": {}, "observations": [], "key_events": [], "summary": ""}
 
     def _parse_ai_response(self, response: str) -> Dict[str, Any]:
@@ -369,5 +369,5 @@ class ArcAnalyzer:
                 self.ai_client.create_user_message(prompt),
             ]
             return self.ai_client.chat_completion(messages)
-        except Exception:  # pylint: disable=broad-except
+        except (RuntimeError, OSError, ValueError):
             return f"{arc.character_name}'s arc spans {len(arc.data_points)} stories."

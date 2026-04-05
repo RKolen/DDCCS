@@ -80,7 +80,7 @@ def test_get_available_major_npcs_empty():
 
 
 def test_major_npc_context_in_npc_context_build():
-    """_build_npc_context enriches output for major NPCs with tactics."""
+    """build_npc_context enriches output for major NPCs with tactics."""
     major_data = sample_major_npc_data(
         name="Arch Villain",
         overrides={
@@ -99,7 +99,7 @@ def test_major_npc_context_in_npc_context_build():
         npc_path.write_text(json.dumps(major_data), encoding="utf-8")
 
         dm = DMConsultant(workspace_path=tmpdir, ai_client=None)
-        context_lines = dm._build_npc_context(["Arch Villain"])  # pylint: disable=protected-access
+        context_lines = dm.build_npc_context(["Arch Villain"])
 
         assert context_lines, "Context should not be empty for a loaded major NPC"
         combined = "\n".join(context_lines)

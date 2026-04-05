@@ -18,6 +18,7 @@ from src.stories.spotlight_types import SpotlightEntry, SpotlightReport, Spotlig
 from src.utils.character_profile_utils import list_character_names
 from src.utils.file_io import get_json_files_in_directory, load_json_file
 from src.utils.path_utils import get_campaign_path, get_npcs_dir
+from src.utils.terminal_display import display_panel
 from src.utils.string_utils import get_timestamp
 
 _MAX_SCORE = 100.0
@@ -272,8 +273,6 @@ def display_spotlight_report(report: SpotlightReport) -> None:
     Args:
         report: SpotlightReport to display.
     """
-    from src.utils.terminal_display import display_panel  # pylint: disable=import-outside-toplevel
-
     if not report.entries:
         display_panel(
             "No significant narrative spotlight signals found.",

@@ -1,0 +1,78 @@
+{
+  "name": "Barbarian",
+  "class": "Barbarian",
+  "description": "A fierce warrior who channels primal rage to overcome enemies in battle",
+  "hit_die": 12,
+  "primary_abilities": ["Strength"],
+  "saving_throws": ["Strength", "Constitution"],
+  "base_ability_scores": {
+    "strength": 16,
+    "dexterity": 14,
+    "constitution": 15,
+    "intelligence": 8,
+    "wisdom": 12,
+    "charisma": 10
+  },
+  "skill_options": {
+    "choose": 2,
+    "from": [
+      "Animal Handling",
+      "Athletics",
+      "Intimidation",
+      "Nature",
+      "Perception",
+      "Survival"
+    ]
+  },
+  "starting_equipment": {
+    "weapons": ["Greataxe", "Handaxe", "Handaxe", "Handaxe", "Handaxe"],
+    "armor": [],
+    "items": ["Explorer's Pack"],
+    "gold": 10
+  },
+  "class_features": {
+    "1": ["Rage", "Unarmored Defense", "Weapon Mastery"],
+    "2": ["Danger Sense", "Reckless Attack"],
+    "3": ["Barbarian Subclass", "Primal Knowledge"],
+    "4": ["Ability Score Improvement"],
+    "5": ["Extra Attack", "Fast Movement"],
+    "6": ["Subclass Feature"],
+    "7": ["Feral Instinct", "Instinctive Pounce"],
+    "8": ["Ability Score Improvement"],
+    "9": ["Brutal Strike"],
+    "10": ["Subclass Feature"],
+    "11": ["Relentless Rage"],
+    "12": ["Ability Score Improvement"],
+    "13": ["Improved Brutal Strike"],
+    "14": ["Subclass Feature"],
+    "15": ["Persistent Rage"],
+    "16": ["Ability Score Improvement"],
+    "17": ["Improved Brutal Strike (2)"],
+    "18": ["Indomitable Might"],
+    "19": ["Ability Score Improvement"],
+    "20": ["Primal Champion", "Epic Boon"]
+  },
+  "subclass_options": {
+    "level": 3,
+    "options": [
+      "Path of the Berserker",
+      "Path of the Wild Heart",
+      "Path of the World Tree",
+      "Path of the Zealot"
+    ]
+  },
+  "recommended_backgrounds": [
+    "Wayfarer",
+    "Soldier",
+    "Farmer",
+    "Sailor",
+    "Guard"
+  ],
+  "recommended_races": [
+    "Orc",
+    "Human",
+    "Dwarf",
+    "Goliath",
+    "Dragonborn"
+  ]
+}

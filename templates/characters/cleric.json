@@ -1,0 +1,292 @@
+{
+  "name": "Cleric",
+  "class": "Cleric",
+  "description": "A priestly champion who wields divine magic in service of a higher power",
+  "hit_die": 8,
+  "primary_abilities": [
+    "Wisdom"
+  ],
+  "saving_throws": [
+    "Wisdom",
+    "Charisma"
+  ],
+  "base_ability_scores": {
+    "strength": 14,
+    "dexterity": 10,
+    "constitution": 14,
+    "intelligence": 10,
+    "wisdom": 16,
+    "charisma": 12
+  },
+  "skill_options": {
+    "choose": 2,
+    "from": [
+      "History",
+      "Insight",
+      "Medicine",
+      "Persuasion",
+      "Religion"
+    ]
+  },
+  "starting_equipment": {
+    "weapons": [
+      "Mace"
+    ],
+    "armor": [
+      "Scale Mail",
+      "Shield",
+      "Holy Symbol"
+    ],
+    "items": [
+      "Priest's Pack"
+    ],
+    "gold": 15
+  },
+  "class_features": {
+    "1": [
+      "Divine Order",
+      "Spellcasting"
+    ],
+    "2": [
+      "Channel Divinity (2/rest)"
+    ],
+    "3": [
+      "Cleric Subclass",
+      "Sear Undead"
+    ],
+    "4": [
+      "Ability Score Improvement"
+    ],
+    "5": [
+      "Sear Undead improvement"
+    ],
+    "6": [
+      "Subclass Feature"
+    ],
+    "7": [
+      "Blessed Strikes"
+    ],
+    "8": [
+      "Ability Score Improvement"
+    ],
+    "9": [
+      "Subclass Feature"
+    ],
+    "10": [
+      "Divine Intervention"
+    ],
+    "11": [
+      "Improved Blessed Strikes"
+    ],
+    "12": [
+      "Ability Score Improvement"
+    ],
+    "13": [
+      "Subclass Feature"
+    ],
+    "14": [
+      "Improved Divine Intervention"
+    ],
+    "15": [
+      "Subclass Feature"
+    ],
+    "16": [
+      "Ability Score Improvement"
+    ],
+    "17": [
+      "Subclass Feature"
+    ],
+    "18": [
+      "Greater Channel Divinity"
+    ],
+    "19": [
+      "Ability Score Improvement"
+    ],
+    "20": [
+      "Subclass Feature",
+      "Epic Boon"
+    ]
+  },
+  "spellcasting": {
+    "ability": "Wisdom",
+    "type": "full",
+    "cantrips_known": {
+      "1": 3,
+      "4": 4,
+      "10": 5
+    },
+    "spell_slots": {
+      "1": {
+        "1": 2
+      },
+      "2": {
+        "1": 3
+      },
+      "3": {
+        "1": 4,
+        "2": 2
+      },
+      "4": {
+        "1": 4,
+        "2": 3
+      },
+      "5": {
+        "1": 4,
+        "2": 3,
+        "3": 2
+      },
+      "6": {
+        "1": 4,
+        "2": 3,
+        "3": 3
+      },
+      "7": {
+        "1": 4,
+        "2": 3,
+        "3": 3,
+        "4": 1
+      },
+      "8": {
+        "1": 4,
+        "2": 3,
+        "3": 3,
+        "4": 2
+      },
+      "9": {
+        "1": 4,
+        "2": 3,
+        "3": 3,
+        "4": 3,
+        "5": 1
+      },
+      "10": {
+        "1": 4,
+        "2": 3,
+        "3": 3,
+        "4": 3,
+        "5": 2
+      },
+      "11": {
+        "1": 4,
+        "2": 3,
+        "3": 3,
+        "4": 3,
+        "5": 2,
+        "6": 1
+      },
+      "12": {
+        "1": 4,
+        "2": 3,
+        "3": 3,
+        "4": 3,
+        "5": 2,
+        "6": 1
+      },
+      "13": {
+        "1": 4,
+        "2": 3,
+        "3": 3,
+        "4": 3,
+        "5": 2,
+        "6": 1,
+        "7": 1
+      },
+      "14": {
+        "1": 4,
+        "2": 3,
+        "3": 3,
+        "4": 3,
+        "5": 2,
+        "6": 1,
+        "7": 1
+      },
+      "15": {
+        "1": 4,
+        "2": 3,
+        "3": 3,
+        "4": 3,
+        "5": 2,
+        "6": 1,
+        "7": 1,
+        "8": 1
+      },
+      "16": {
+        "1": 4,
+        "2": 3,
+        "3": 3,
+        "4": 3,
+        "5": 2,
+        "6": 1,
+        "7": 1,
+        "8": 1
+      },
+      "17": {
+        "1": 4,
+        "2": 3,
+        "3": 3,
+        "4": 3,
+        "5": 2,
+        "6": 1,
+        "7": 1,
+        "8": 1,
+        "9": 1
+      },
+      "18": {
+        "1": 4,
+        "2": 3,
+        "3": 3,
+        "4": 3,
+        "5": 2,
+        "6": 1,
+        "7": 1,
+        "8": 1,
+        "9": 1
+      },
+      "19": {
+        "1": 4,
+        "2": 3,
+        "3": 3,
+        "4": 3,
+        "5": 2,
+        "6": 2,
+        "7": 1,
+        "8": 1,
+        "9": 1
+      },
+      "20": {
+        "1": 4,
+        "2": 3,
+        "3": 3,
+        "4": 3,
+        "5": 2,
+        "6": 2,
+        "7": 2,
+        "8": 1,
+        "9": 1
+      }
+    }
+  },
+  "subclass_options": {
+    "level": 3,
+    "options": [
+      "Life Domain",
+      "Light Domain",
+      "Trickery Domain",
+      "War Domain"
+    ]
+  },
+  "recommended_backgrounds": [
+    "Acolyte",
+    "Sage",
+    "Hermit",
+    "Farmer",
+    "Soldier"
+  ],
+  "recommended_races": [
+    "Human",
+    "Dwarf",
+    "Elf",
+    "Aasimar",
+    "Halfling"
+  ]
+}

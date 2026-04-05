@@ -48,7 +48,7 @@ class TestSystemPromptsContainLanguageInstruction(unittest.TestCase):
     def test_combat_narrator_system_prompt(self):
         """Combat narrator system prompt includes language instruction."""
         narrator = AIEnhancedNarrator(character_consultants={})
-        prompt = narrator._create_system_prompt("cinematic")  # pylint: disable=protected-access
+        prompt = narrator.create_system_prompt("cinematic")
         self.assertIn(LANGUAGE_INSTRUCTION, prompt)
 
     def test_story_ai_generator_system_prompt(self):

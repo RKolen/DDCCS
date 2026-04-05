@@ -155,7 +155,7 @@ class EventExtractor:
     ) -> List[TimelineEvent]:
         """Extract events from story text."""
         events = []
-        sections = self._split_sections(text)
+        sections = self.split_sections(text)
         for section_title, section_content in sections:
             section_events = self._extract_from_section(
                 section_content, section_title, campaign_name, story_file
@@ -163,7 +163,7 @@ class EventExtractor:
             events.extend(section_events)
         return events
 
-    def _split_sections(self, text: str) -> List[tuple]:
+    def split_sections(self, text: str) -> List[tuple]:
         """Split text into sections by markdown headers."""
         sections = []
         current_title = "Introduction"
@@ -224,8 +224,8 @@ class EventExtractor:
                         event_type=event_type,
                         context=EventContext(
                             description=ctx_text.strip(),
-                            location=self._extract_location(paragraph),
-                            characters_involved=self._extract_character_names(
+                            location=self.extract_location(paragraph),
+                            characters_involved=self.extract_character_names(
                                 paragraph
                             ),
                         ),
@@ -262,12 +262,12 @@ class EventExtractor:
                 return extraction.priority
         return EventPriority.NORMAL
 
-    def _extract_character_names(self, text: str) -> List[str]:
+    def extract_character_names(self, text: str) -> List[str]:
         """Extract potential character names from text."""
         matches = re.findall(r"\b[A-Z][a-z]+\b", text)
         return [m for m in matches if m not in _COMMON_WORDS][:5]
 
-    def _extract_location(self, text: str) -> str:
+    def extract_location(self, text: str) -> str:
         """Extract potential location from text."""
         location_patterns = [
             r"(?:in|at|near|inside|outside)\s+(?:the\s+)?([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)",
