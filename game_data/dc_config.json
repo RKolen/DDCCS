@@ -1,0 +1,10 @@
+{
+  "scaling_mode": "tiered",
+  "default_difficulty": "medium",
+  "custom_dc_overrides": {},
+  "difficulty_modifiers": {},
+  "party_level_override": null,
+  "combat_scaling_enabled": true,
+  "social_scaling_enabled": true,
+  "exploration_scaling_enabled": true
+}

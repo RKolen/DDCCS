@@ -30,6 +30,7 @@ TEST_CATEGORIES = [
     "items",
     "dm",
     "utils",
+    "encounters",
     "cli",
     "integration",
 ]

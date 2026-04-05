@@ -152,9 +152,11 @@ violation of project standards.
 | Characters | `src/utils/character_profile_utils.py` | `load_character_profile`, |
 | | | `load_character_traits`, `find_character_file`, |
 | | | `list_character_names` |
-| D&D Rules | `src/utils/dnd_rules.py` | `get_dc_for_difficulty`, |
+| D&D Rules | `src/utils/dnd_rules.py` | `get_dc_for_difficulty`, `get_dc_for_difficulty_legacy`, |
 | | | `calculate_modifier`, `get_proficiency_bonus`, |
+| | | `DifficultyTier`, `ScalingMode`, `BASE_DC`, |
 | | | `DC_EASY`, `DC_MEDIUM`, `DC_HARD` constants |
+| DC Config | `src/utils/dc_config.py` | `DCConfig`, `get_dc_config` |
 | Spells | `src/utils/spell_highlighter.py` | `highlight_spells_in_text`, |
 | | | `extract_spells_from_prompt`, |
 | | | `extract_known_spells_from_characters` |
@@ -236,6 +238,8 @@ src/
 |-- dm/              # Dungeon Master tools
 |   |-- dungeon_master.py
 |   |-- history_check_helper.py
+|-- encounters/      # Encounter difficulty scaling
+|   |-- encounter_scaler.py
 |-- validation/      # JSON validation for all data types
 |   |-- character_validator.py / npc_validator.py
 |   |-- items_validator.py / party_validator.py
@@ -274,6 +278,7 @@ tests/
 |-- combat/          # Tests for src/combat/
 |-- config/          # Tests for src/config/
 |-- dm/              # Tests for src/dm/
+|-- encounters/      # Tests for src/encounters/
 |-- integration/     # Cross-module integration tests
 |-- items/           # Tests for src/items/
 |-- npcs/            # Tests for src/npcs/

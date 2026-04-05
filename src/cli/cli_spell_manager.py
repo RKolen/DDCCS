@@ -4,6 +4,7 @@ Provides an interactive menu for managing the custom spell registry:
 adding, removing, searching, listing, and importing/exporting spells.
 """
 
+from collections.abc import Callable
 from typing import List, Optional
 
 from src.spells.spell_import_export import SpellExporter, SpellImporter
@@ -260,7 +261,7 @@ def _run_export(exporter: SpellExporter, fmt_choice: str, file_path: str) -> boo
     Returns:
         True if the export was dispatched, False if the choice was invalid.
     """
-    dispatch = {
+    dispatch: dict[str, Callable[[str], None]] = {
         "1": exporter.export_to_json,
         "2": exporter.export_to_csv,
         "3": exporter.export_to_markdown,

@@ -74,10 +74,11 @@ def test_suggest_dc_with_difficulty_modifiers():
     assert hard_result["suggested_dc"] == DC_MEDIUM + 5, "Hard DC not adjusted"
     print("  [OK] Hard modifier applied correctly")
 
-    # Impossible action (no class bonus for Fighter on Investigation)
+    # Impossible action - maps to DifficultyTier.NEARLY_IMPOSSIBLE whose base DC is 30,
+    # regardless of level (not in LEVEL_DC_MODIFIERS table).
     impossible_result = calculator.suggest_dc_for_action("impossible investigation")
     assert (
-        impossible_result["suggested_dc"] == DC_MEDIUM + 10
+        impossible_result["suggested_dc"] == 30
     ), "Impossible DC not adjusted"
     print("  [OK] Impossible modifier applied correctly")
 
@@ -153,7 +154,7 @@ def test_suggest_dc_action_type_detection():
         ("climb the wall", "Athletics"),
         ("investigate the room", "Investigation"),
         ("perceive hidden enemies", "Perception"),
-        ("cast a spell", "General"),  # Unknown action type
+        ("cast a spell", "Arcana"),  # Arcana - "cast" is a recognised keyword
     ]
 
     for action, expected_type in test_cases:

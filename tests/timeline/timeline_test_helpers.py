@@ -1,5 +1,7 @@
 """Shared helpers and imports for timeline tests."""
 
+from typing import Any
+
 from tests import test_helpers
 
 EventContext = test_helpers.safe_from_import(
@@ -34,7 +36,7 @@ def make_event(
     event_type_val: str = "combat",
     campaign_name: str = "Test_Campaign",
     **kwargs,
-) -> "TimelineEvent":
+) -> Any:
     """Create a TimelineEvent for use in tests.
 
     Extra kwargs: story_file, characters (list), location, priority_val.
