@@ -121,7 +121,6 @@ All Tier 2 items are complete.
 
 | # | Plan | Reason |
 |---|------|--------|
-| 18 | [Custom Spell Highlighting](plans/custom_spell_highlighting_plan.md) | Display enhancement. No dependencies on other plans. |
 | 19 | [DC Scaling](plans/dc_scaling_plan.md) | Rules enhancement. Self-contained; no dependencies. |
 | 20 | [Character Templates](plans/character_templates_plan.md) | Content creation, not code. Can be done at any time but most useful after profile verification confirms the schema is stable. |
 
@@ -156,6 +155,10 @@ All Tier 2 items are complete.
 ---
 
 ## Recently Completed
+
+### Custom Spell Highlighting - April 5, 2026
+
+- [x] Custom Spell Highlighting.
 
 ### Story Tools and Language Fixes - April 4, 2026
 
