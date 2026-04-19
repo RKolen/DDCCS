@@ -1,0 +1,19 @@
+# Dependencies
+node_modules/
+
+# Gatsby build output
+public/
+.cache/
+
+# Environment files — copy .env.example to .env.development and fill in values
+.env
+.env.development
+.env.production
+.env.test
+
+# TypeScript build output
+*.js.map
+
+# OS
+.DS_Store
+Thumbs.db

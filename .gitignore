@@ -193,3 +193,15 @@ drupal-cms/.ddev/solr-core/data/
 # Platform-specific SQLite extension binaries (re-downloaded on ddev start)
 drupal-cms/.ddev/sqlite-ext/*.tar.gz
 drupal-cms/.ddev/sqlite-ext/*.so
+
+# =============================================================================
+# GATSBY FRONTEND (frontend/ directory)
+# =============================================================================
+
+frontend/node_modules/
+frontend/.cache/
+frontend/public/
+frontend/.env
+frontend/.env.development
+frontend/.env.production
+frontend/.env.test
