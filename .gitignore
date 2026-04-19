@@ -1,4 +1,7 @@
 # D&D Character Consultant System - .gitignore
+# Startup script logs
+.gatsby.log
+
 # Ignore Python cache and environment files
 __pycache__/
 *.pyc
