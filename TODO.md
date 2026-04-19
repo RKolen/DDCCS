@@ -66,10 +66,6 @@ All features below have detailed implementation plans in the `plans/` directory.
 
 ## Low Priority (No Plan Yet)
 
-### Character System Improvements
-
-- [ ] **Character templates** - Create additional class-specific templates beyond the basic example - [Plan](plans/character_templates_plan.md)
-
 ### Story Tools
 
 - [ ] **Combat narrative templates** - Pre-built templates for different combat scenarios
@@ -162,7 +158,6 @@ All Tier 3 items are complete.
 ### Story Tools and Language Fixes - April 4, 2026
 
 - [x] **Language fixes** - Filter language to only include the prompts language.
-
 - [x] **Story tools** - Additional story management tools.
 
 ### Relationship Mapping - April 3, 2026

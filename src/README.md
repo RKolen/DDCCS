@@ -73,8 +73,11 @@ src/
 |   `-- index_sync.py          # Incremental sync called after JSON file saves
 |
 |-- config/             # Centralized configuration
-|   |-- config_types.py        # AIConfig, RAGConfig, DisplayConfig, PathConfig
+|   |-- config_types.py        # AIConfig, RAGConfig, DisplayConfig, PathConfig, DrupalConfig
 |   `-- config_loader.py       # Config loading from file/env
+|
+|-- integration/        # External service integration
+|   `-- drupal_sync.py         # Push characters/stories to Drupal, trigger Gatsby builds
 |
 |-- utils/              # Shared utilities (check AGENTS.md catalog first)
 |   |-- file_io.py                  # JSON and file I/O

@@ -249,8 +249,10 @@ src/
 |   |-- rag_system.py
 |   |-- availability.py
 |-- config/          # Centralized configuration
-|   |-- config_types.py  # AIConfig, RAGConfig, DisplayConfig, PathConfig
+|   |-- config_types.py  # AIConfig, RAGConfig, DisplayConfig, PathConfig, DrupalConfig
 |   |-- config_loader.py
+|-- integration/     # External service sync
+|   |-- drupal_sync.py  # DrupalSync: push_character, push_story, trigger_gatsby_build
 |-- utils/           # Shared utilities (CHECK FIRST)
 |-- cli/             # Command-line interface
 |   |-- dnd_consultant.py  # Main interactive CLI

@@ -227,12 +227,23 @@ class SpotlightConfig:
 
 
 @dataclass
+class DrupalConfig:
+    """Drupal CMS integration configuration."""
+
+    base_url: str = ""
+    user: str = ""
+    password: str = ""
+    gatsby_webhook_url: str = ""
+
+
+@dataclass
 class ServiceConfig:
     """Grouped service configuration (model registry, vector database, spotlighting)."""
 
     model_registry: ModelRegistryConfig = field(default_factory=ModelRegistryConfig)
     milvus: MilvusConfig = field(default_factory=MilvusConfig)
     spotlight: SpotlightConfig = field(default_factory=SpotlightConfig)
+    drupal: DrupalConfig = field(default_factory=DrupalConfig)
 
 
 @dataclass
@@ -282,6 +293,16 @@ class DnDConfig:
     def spotlight(self, value: "SpotlightConfig") -> None:
         """Replace the spotlight config."""
         self.services.spotlight = value
+
+    @property
+    def drupal(self) -> "DrupalConfig":
+        """Return the Drupal integration config."""
+        return self.services.drupal
+
+    @drupal.setter
+    def drupal(self, value: "DrupalConfig") -> None:
+        """Replace the Drupal integration config."""
+        self.services.drupal = value
 
     def is_dirty(self) -> bool:
         """Check if configuration has unsaved changes."""
@@ -407,5 +428,6 @@ __all__ = [
     "RAGConfig",
     "DisplayConfig",
     "PathConfig",
+    "DrupalConfig",
     "DnDConfig",
 ]
