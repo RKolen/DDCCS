@@ -1,0 +1,20 @@
+.item {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.title {
+  flex: 1;
+  font-weight: 600;
+  color: var(--color-parchment);
+}
+
+.relevance {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  min-width: 60px;
+  text-align: right;
+}

@@ -1,25 +1,34 @@
 import React from 'react';
 import { Badge } from '../atoms/Badge';
+import { GameIcon } from '../atoms/GameIcon';
+import type { GameIconName } from '../../types/icons';
 import type { SearchResult } from '../../types/search';
+import * as styles from './SearchResultItem.module.css';
 
 interface SearchResultItemProps {
   result: SearchResult;
 }
 
+const TYPE_ICONS: Record<string, GameIconName> = {
+  character: 'cowled',
+  npc: 'hood',
+  spell: 'magic-swirl',
+  item: 'swap-bag',
+  feat: 'stars-stack',
+  monster: 'skull',
+};
+
+const DEFAULT_ICON: GameIconName = 'scroll-unfurled';
+
 export function SearchResultItem({ result }: SearchResultItemProps): React.ReactElement {
+  const iconName = TYPE_ICONS[result.type] ?? DEFAULT_ICON;
+
   return (
-    <li style={{
-      padding: '12px 16px',
-      borderBottom: '1px solid #2a1f14',
-      display: 'flex',
-      alignItems: 'center',
-      gap: '12px',
-    }}>
-      <div style={{ flex: 1 }}>
-        <span style={{ fontWeight: 600, color: '#e8d5b0' }}>{result.title}</span>
-      </div>
+    <li className={styles.item}>
+      <GameIcon name={iconName} size={20} decorative />
+      <span className={styles.title}>{result.title}</span>
       <Badge label={result.type} />
-      <span style={{ fontSize: '12px', color: '#7a6a5a', minWidth: '60px', textAlign: 'right' }}>
+      <span className={styles.relevance}>
         {(result.relevance * 100).toFixed(1)}% match
       </span>
     </li>

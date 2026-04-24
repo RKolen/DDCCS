@@ -1,0 +1,135 @@
+.page {
+  min-height: 100vh;
+  background: var(--color-bg-dark);
+  color: var(--color-parchment);
+  font-family: 'Georgia', serif;
+  padding: 40px 24px;
+}
+
+.heading {
+  font-size: 28px;
+  margin-bottom: 8px;
+  color: var(--color-gold-mid);
+  letter-spacing: 0.03em;
+}
+
+.subtitle {
+  font-size: 14px;
+  color: var(--color-text-muted);
+  margin-bottom: 32px;
+}
+
+.form {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.input {
+  flex: 1;
+  min-width: 200px;
+  padding: 10px 14px;
+  background: var(--color-bg-mid);
+  border: 1px solid var(--color-border-gold);
+  border-radius: 4px;
+  color: var(--color-parchment);
+  font-size: 15px;
+  outline: none;
+}
+
+.select {
+  padding: 10px 12px;
+  background: var(--color-bg-mid);
+  border: 1px solid var(--color-border-gold);
+  border-radius: 4px;
+  color: var(--color-parchment);
+  font-size: 14px;
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  padding: 10px 20px;
+  background: var(--color-gold-mid);
+  color: var(--color-bg-dark);
+  border: none;
+  border-radius: 4px;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  letter-spacing: 0.05em;
+  gap: 6px;
+}
+
+.button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.results {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+.meta {
+  font-size: 13px;
+  color: var(--color-text-muted);
+  margin-bottom: 12px;
+}
+
+.error {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--color-danger);
+  padding: 12px;
+  background: var(--color-bg-error);
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.iconPreview {
+  margin-bottom: 32px;
+  padding: 16px;
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+}
+
+.iconPreviewLabel {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-text-muted);
+  margin: 0 0 12px;
+}
+
+.iconGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.iconCell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  width: 72px;
+}
+
+.iconName {
+  font-size: 9px;
+  color: var(--color-text-muted);
+  text-align: center;
+  word-break: break-all;
+  line-height: 1.3;
+}

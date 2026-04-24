@@ -1,0 +1,23 @@
+:root {
+  /* Gold colour filters for Game Icons (white SVG paths → design system gold) */
+  --filter-gold: invert(72%) sepia(22%) saturate(600%) hue-rotate(10deg) brightness(95%);
+  --filter-gold-bright: invert(82%) sepia(28%) saturate(700%) hue-rotate(5deg);
+  --filter-gold-dim: invert(60%) sepia(18%) saturate(500%) hue-rotate(10deg) brightness(80%);
+  --filter-white: none;
+  --filter-red: invert(27%) sepia(90%) saturate(900%) hue-rotate(340deg) brightness(90%);
+
+  /* Design system colour tokens */
+  --color-gold-mid: #c9a96e;
+  --color-gold-bright: #e8c88a;
+  --color-gold-dim: #8a7050;
+  --color-parchment: #e8d5b0;
+  --color-bg-dark: #1a1008;
+  --color-bg-mid: #2a1f14;
+  --color-bg-card: #221508;
+  --color-border: #2a1f14;
+  --color-border-gold: #c9a96e55;
+  --color-text-muted: #7a6a5a;
+  --color-danger: #c0392b;
+  --color-bg-badge: #3a2a1a;
+  --color-bg-error: #2a1008;
+}
