@@ -1,0 +1,9 @@
+uuid: 32f88a0e-30ec-4fdb-bd34-91699ee1705b
+langcode: en
+status: true
+dependencies: {  }
+name: 'Eldritch Invocations'
+vid: eldritch_invocations
+description: null
+weight: 0
+new_revision: false

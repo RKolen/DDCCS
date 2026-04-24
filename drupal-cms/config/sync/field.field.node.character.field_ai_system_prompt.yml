@@ -1,0 +1,24 @@
+uuid: w5x4s3t2-u1v0-9w9x-8y7z-6v5w4x2y3r1s
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_ai_system_prompt
+    - filter.format.plain_text
+    - node.type.character
+  module:
+    - text
+id: node.character.field_ai_system_prompt
+field_name: field_ai_system_prompt
+entity_type: node
+bundle: character
+label: 'AI System Prompt'
+description: 'Custom system prompt for this character AI consultation'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  allowed_formats:
+    - plain_text
+field_type: text_long

@@ -1,0 +1,23 @@
+uuid: g7h8i9j0-k1l2-3456-abcd-789012345678
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_item_type
+    - node.type.item
+  module:
+    - options
+id: node.item.field_item_type
+field_name: field_item_type
+entity_type: node
+bundle: item
+label: 'Item Type'
+description: 'Type of item'
+required: true
+translatable: false
+default_value:
+  -
+    value: weapon
+default_value_callback: ''
+settings: {  }
+field_type: list_string

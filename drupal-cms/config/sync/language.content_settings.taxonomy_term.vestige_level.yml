@@ -1,0 +1,11 @@
+uuid: 088bbde9-cd88-4e3c-a8ac-ac0e58f0fc35
+langcode: en
+status: true
+dependencies:
+  config:
+    - taxonomy.vocabulary.vestige_level
+id: taxonomy_term.vestige_level
+target_entity_type_id: taxonomy_term
+target_bundle: vestige_level
+default_langcode: site_default
+language_alterable: false

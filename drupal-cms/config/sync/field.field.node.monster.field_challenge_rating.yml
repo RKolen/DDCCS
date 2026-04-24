@@ -1,0 +1,23 @@
+uuid: abaaacc0-c32f-4104-b363-37116188547c
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_challenge_rating
+    - node.type.monster
+id: node.monster.field_challenge_rating
+field_name: field_challenge_rating
+entity_type: node
+bundle: monster
+label: 'Challenge Rating'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  min: null
+  max: null
+  prefix: ''
+  suffix: ''
+field_type: decimal

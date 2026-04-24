@@ -1,0 +1,7 @@
+entity_lock.settings:
+  path: '/admin/config/system/entity-lock'
+  defaults:
+    _form: '\Drupal\entity_lock\Form\EntityLockSettingsForm'
+    _title: 'Entity Lock'
+  requirements:
+    _permission: 'administer site configuration'

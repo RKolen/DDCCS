@@ -1,0 +1,22 @@
+uuid: c58605cc-3cca-4c41-8d7c-bc5533a157c7
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_legendary_actions
+    - node.type.character
+  module:
+    - text
+id: node.character.field_legendary_actions
+field_name: field_legendary_actions
+entity_type: node
+bundle: character
+label: 'Legendary Actions'
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  allowed_formats: {  }
+field_type: text_long

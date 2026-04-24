@@ -1,0 +1,29 @@
+uuid: 2981463d-e041-4be1-8b7f-4e0573776fc6
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.taxonomy_term.field_primary_ability
+    - taxonomy.vocabulary.ability_scores
+    - taxonomy.vocabulary.class
+id: taxonomy_term.class.field_primary_ability
+field_name: field_primary_ability
+entity_type: taxonomy_term
+bundle: class
+label: 'Primary Ability'
+description: 'Primary ability score for this class'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:taxonomy_term'
+  handler_settings:
+    target_bundles:
+      ability_scores: ability_scores
+    sort:
+      field: name
+      direction: asc
+    auto_create: false
+    auto_create_bundle: ''
+field_type: entity_reference

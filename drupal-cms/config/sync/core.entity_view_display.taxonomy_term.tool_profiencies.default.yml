@@ -1,0 +1,32 @@
+uuid: cf6a97fe-ec5d-47c6-b2cb-7d1635fd90a8
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.taxonomy_term.tool_profiencies.field_edition
+    - taxonomy.vocabulary.tool_profiencies
+  module:
+    - text
+id: taxonomy_term.tool_profiencies.default
+targetEntityType: taxonomy_term
+bundle: tool_profiencies
+mode: default
+content:
+  description:
+    type: text_default
+    label: hidden
+    settings: {  }
+    third_party_settings: {  }
+    weight: 0
+    region: content
+  field_edition:
+    type: entity_reference_label
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 1
+    region: content
+hidden:
+  langcode: true
+  search_api_excerpt: true

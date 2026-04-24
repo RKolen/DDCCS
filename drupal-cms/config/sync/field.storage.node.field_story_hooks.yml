@@ -1,0 +1,19 @@
+uuid: 5f8ae81f-a313-4341-ae8c-793aa9b2ae3b
+langcode: en
+status: true
+dependencies:
+  module:
+    - node
+    - text
+id: node.field_story_hooks
+field_name: field_story_hooks
+entity_type: node
+type: text_long
+settings: {  }
+module: text
+locked: false
+cardinality: 1
+translatable: false
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

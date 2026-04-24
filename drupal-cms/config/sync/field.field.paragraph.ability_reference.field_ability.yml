@@ -1,0 +1,24 @@
+uuid: ca3ac654-de80-4bfb-afc0-a3ed7dbc5c6e
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.paragraph.field_ability
+    - paragraphs.paragraphs_type.ability_reference
+    - taxonomy.vocabulary.abilities
+id: paragraph.ability_reference.field_ability
+field_name: field_ability
+entity_type: paragraph
+bundle: ability_reference
+label: Ability
+description: ''
+required: true
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:taxonomy_term'
+  handler_settings:
+    target_bundles:
+      abilities: abilities
+field_type: entity_reference

@@ -1,0 +1,10 @@
+uuid: e7f6a5b4-c3d2-1e1f-0g9h-8c7d6e4f5z3a
+langcode: en
+status: true
+dependencies: {  }
+id: spell_slot
+label: 'Spell Slot'
+icon_uuid: null
+icon_default: null
+description: 'Tracks spell slots per level for spellcasting characters'
+behavior_plugins: {  }

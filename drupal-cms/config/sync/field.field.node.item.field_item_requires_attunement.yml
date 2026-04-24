@@ -1,0 +1,23 @@
+uuid: i9j0k1l2-m3n4-5678-cdef-901234567890
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_item_requires_attunement
+    - node.type.item
+id: node.item.field_item_requires_attunement
+field_name: field_item_requires_attunement
+entity_type: node
+bundle: item
+label: 'Requires Attunement'
+description: 'Whether this item requires attunement to use'
+required: false
+translatable: false
+default_value:
+  -
+    value: 0
+default_value_callback: ''
+settings:
+  on_label: 'Yes'
+  off_label: 'No'
+field_type: boolean

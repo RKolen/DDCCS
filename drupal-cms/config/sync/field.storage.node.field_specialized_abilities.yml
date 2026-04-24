@@ -1,0 +1,19 @@
+uuid: a1ca6147-5ff5-40de-82e7-e5f3c9557e3b
+langcode: en
+status: true
+dependencies:
+  module:
+    - node
+    - text
+id: node.field_specialized_abilities
+field_name: field_specialized_abilities
+entity_type: node
+type: text_long
+settings: {  }
+module: text
+locked: false
+cardinality: -1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

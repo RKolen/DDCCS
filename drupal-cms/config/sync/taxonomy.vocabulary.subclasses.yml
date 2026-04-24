@@ -1,0 +1,9 @@
+uuid: d4e5f6g7-h8i9-0123-defa-456789012345
+langcode: en
+status: true
+dependencies: {  }
+name: Subclasses
+vid: subclasses
+description: 'D&D class subclasses and archetypes'
+weight: 0
+new_revision: false

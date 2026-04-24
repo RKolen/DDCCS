@@ -1,0 +1,11 @@
+uuid: spell-content-type-001
+langcode: en
+status: true
+dependencies: {  }
+name: Spell
+type: spell
+description: 'D&D spells with full rules and mechanics'
+help: ''
+new_revision: false
+preview_mode: 0
+display_submitted: false

@@ -1,0 +1,9 @@
+uuid: 01cdcc20-7fb4-4f5e-bb52-7f8af3c1256a
+langcode: en
+status: true
+dependencies: {  }
+name: 'Weapon Subtype'
+vid: weapon_subtype
+description: null
+weight: 0
+new_revision: false

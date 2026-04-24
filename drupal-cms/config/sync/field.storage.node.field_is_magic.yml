@@ -1,0 +1,18 @@
+uuid: 25a4c2ef-037a-4f9f-b9b1-ae8487e780a3
+langcode: en
+status: true
+dependencies:
+  module:
+    - node
+id: node.field_is_magic
+field_name: field_is_magic
+entity_type: node
+type: boolean
+settings: {  }
+module: core
+locked: false
+cardinality: 1
+translatable: false
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

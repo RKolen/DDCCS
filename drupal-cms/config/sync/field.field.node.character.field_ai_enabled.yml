@@ -1,0 +1,23 @@
+uuid: t2u1p0q9-r8s7-6t6u-5v4w-3s2t1u9v0o8p
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_ai_enabled
+    - node.type.character
+id: node.character.field_ai_enabled
+field_name: field_ai_enabled
+entity_type: node
+bundle: character
+label: 'AI Enabled'
+description: 'Enable AI consultation for this character'
+required: false
+translatable: false
+default_value:
+  -
+    value: 0
+default_value_callback: ''
+settings:
+  on_label: 'On'
+  off_label: 'Off'
+field_type: boolean

@@ -1,0 +1,32 @@
+uuid: 87540313-1ee2-44c9-ba76-b4528dcfc472
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.taxonomy_term.traits.field_trait_type
+    - taxonomy.vocabulary.traits
+  module:
+    - options
+    - text
+id: taxonomy_term.traits.default
+targetEntityType: taxonomy_term
+bundle: traits
+mode: default
+content:
+  description:
+    type: text_default
+    label: hidden
+    settings: {  }
+    third_party_settings: {  }
+    weight: 1
+    region: content
+  field_trait_type:
+    type: list_default
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    weight: 0
+    region: content
+hidden:
+  langcode: true
+  search_api_excerpt: true

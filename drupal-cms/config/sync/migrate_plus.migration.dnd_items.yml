@@ -1,0 +1,35 @@
+id: dnd_items
+migration_group: dnd
+label: 'D&D: Import items'
+source:
+  plugin: dnd_items_json
+  file_path: /var/www/html/game_data/items/custom_items.json
+process:
+  title: name
+  field_item_type: item_type
+  field_is_magic: is_magic
+  field_description:
+    plugin: dnd_paragraph_lookup
+    migration: dnd_item_descriptions
+    source_id: item_key
+    source: item_key
+  field_item_rarity:
+    plugin: extract
+    source: properties
+    index:
+      - rarity
+  field_item_requires_attunement:
+    plugin: extract
+    source: properties
+    index:
+      - attunement
+  field_notes: notes
+  status:
+    plugin: default_value
+    default_value: 1
+destination:
+  plugin: 'entity:node'
+  default_bundle: item
+migration_dependencies:
+  required:
+    - dnd_item_descriptions

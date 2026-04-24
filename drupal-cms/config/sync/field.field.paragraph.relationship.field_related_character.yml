@@ -1,0 +1,28 @@
+uuid: f4g3b2c1-d0e9-8f8g-7h6i-5e4f3g1h2a0b
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.paragraph.field_related_character
+    - paragraphs.paragraphs_type.relationship
+id: paragraph.relationship.field_related_character
+field_name: field_related_character
+entity_type: paragraph
+bundle: relationship
+label: 'Related Character'
+description: 'The character this relationship is with'
+required: true
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:node'
+  handler_settings:
+    target_bundles:
+      character: character
+    sort:
+      field: title
+      direction: ASC
+    auto_create: false
+    auto_create_bundle: ''
+field_type: entity_reference

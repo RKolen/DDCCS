@@ -1,0 +1,29 @@
+<?php
+
+/**
+ * @file
+ * D&D Data Migration module hooks.
+ */
+
+declare(strict_types=1);
+
+use Drupal\node\NodeInterface;
+
+/**
+ * Implements hook_node_presave().
+ *
+ * Ensures character nodes always have an AI model set. When field_ai_model is
+ * empty the value of the AI_CREATIVE_MODEL environment variable is used as the
+ * default, falling back to an empty string if the variable is not defined.
+ */
+function dnd_migrate_node_presave(NodeInterface $node): void {
+  if ($node->bundle() !== 'character') {
+    return;
+  }
+
+  $model = (string) ($node->field_ai_model->value ?? '');
+  if ($model === '') {
+    $env_model = (string) (getenv('AI_CREATIVE_MODEL') ?: '');
+    $node->set('field_ai_model', $env_model);
+  }
+}

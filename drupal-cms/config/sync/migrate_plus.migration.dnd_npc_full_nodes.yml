@@ -1,0 +1,137 @@
+id: dnd_npc_full_nodes
+migration_group: dnd
+label: 'D&D: Import full NPC nodes (profile_type=major) as character nodes'
+source:
+  plugin: dnd_json_directory
+  data_dir: /var/www/html/game_data/npcs
+  profile_type_filter: major
+process:
+  title: name
+  field_first_name: first_name
+  field_last_name: last_name
+  field_nickname: nickname
+  field_pronouns: pronouns
+  field_gender: gender
+  field_character_type: character_type_is_pc
+  field_npc_type: npc_type_is_simple
+  field_role: role
+  field_faction:
+    plugin: entity_lookup
+    source: faction
+    entity_type: taxonomy_term
+    bundle: factions
+    value_key: name
+    bundle_key: vid
+    ignore_case: true
+  field_species:
+    plugin: entity_lookup
+    source: species
+    entity_type: taxonomy_term
+    bundle: species
+    value_key: name
+    bundle_key: vid
+    ignore_case: true
+  field_lineage:
+    plugin: entity_lookup
+    source: lineage
+    entity_type: taxonomy_term
+    bundle: lineage
+    value_key: name
+    bundle_key: vid
+    ignore_case: true
+  field_background:
+    plugin: entity_generate
+    source: background
+    entity_type: taxonomy_term
+    bundle: backgrounds
+    value_key: name
+    bundle_key: vid
+  field_class:
+    plugin: dnd_class_paragraph
+    source: file_id
+  field_level: level
+  field_maximum_hitpoints: max_hit_points
+  field_armor_class: armor_class
+  field_movement_speed: movement_speed
+  field_proficiency_bonus: proficiency_bonus
+  field_backstory:
+    plugin: dnd_paragraph_lookup
+    source: file_id
+    migration: dnd_npc_backstory
+    source_id: file_id
+  field_personality_traits: personality_traits
+  field_ideals: ideals
+  field_bonds: bonds
+  field_flaws: flaws
+  field_major_plot_actions: major_plot_actions
+  field_specialized_abilities: specialized_abilities_normalized
+  field_personality: personality
+  field_notes: notes
+  field_recurring: recurring
+  field_key_traits:
+    plugin: dnd_array_entity_lookup
+    source: key_traits
+    entity_type: taxonomy_term
+    bundle: traits
+    search_key: name
+  field_abilities: abilities
+  field_encounter_tactics: encounter_tactics
+  field_plot_hooks: plot_hooks
+  field_defeat_conditions: defeat_conditions
+  field_legendary_actions: legendary_actions
+  field_lair_actions: lair_actions
+  field_regional_effects: regional_effects
+  field_skills:
+    plugin: dnd_array_entity_lookup
+    source: skill_names
+    entity_type: taxonomy_term
+    bundle: skills
+    search_key: name
+  field_feats_ref:
+    plugin: dnd_term_reference_paragraph
+    source: feats
+    paragraph_type: feat_reference
+    field_name: field_feat
+    vocabulary: feats
+  field_abilities_ref:
+    plugin: dnd_term_reference_paragraph
+    source: class_abilities
+    paragraph_type: ability_reference
+    field_name: field_ability
+    vocabulary: abilities
+  field_magic_items_ref:
+    plugin: dnd_array_entity_lookup
+    source: magic_items
+    entity_type: node
+    bundle: item
+    search_key: title
+  field_ai_enabled: ai_enabled
+  field_ai_model: ai_model
+  field_ai_temperature: ai_temperature
+  field_ai_max_tokens: ai_max_tokens
+  field_ai_system_prompt: ai_system_prompt
+  field_voice_speed: voice_speed
+  field_voice_pitch: voice_pitch
+  field_voice_id_ref:
+    -
+      plugin: skip_on_empty
+      method: process
+      source: voice_piper_id
+    -
+      plugin: entity_lookup
+      entity_type: taxonomy_term
+      bundle: voice_ids
+      value_key: name
+      bundle_key: vid
+      ignore_case: true
+  status:
+    plugin: default_value
+    default_value: 1
+destination:
+  plugin: 'entity:node'
+  default_bundle: character
+migration_dependencies:
+  required:
+    - dnd_npc_backstory
+    - dnd_items
+    - dnd_inert_items

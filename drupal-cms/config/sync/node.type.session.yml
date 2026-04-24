@@ -1,0 +1,11 @@
+uuid: ec53aed7-2adb-4f94-81a1-f17edfa98605
+langcode: en
+status: true
+dependencies: {  }
+name: Session
+type: session
+description: 'Session-level summaries and campaign progress tracking'
+help: ''
+new_revision: true
+preview_mode: 1
+display_submitted: false

@@ -1,0 +1,19 @@
+uuid: d32ba763-fdfa-47a0-8879-9eb0169c165a
+langcode: en
+status: true
+dependencies:
+  module:
+    - node
+id: node.field_npcs
+field_name: field_npcs
+entity_type: node
+type: entity_reference
+settings:
+  target_type: node
+module: core
+locked: false
+cardinality: -1
+translatable: false
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

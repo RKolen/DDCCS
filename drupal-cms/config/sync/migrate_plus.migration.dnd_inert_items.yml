@@ -1,0 +1,27 @@
+id: dnd_inert_items
+migration_group: dnd
+label: 'D&D: Import inert magic items as vestige item nodes'
+source:
+  plugin: dnd_inert_items_source
+  data_dirs:
+    - /var/www/html/game_data/characters
+    - /var/www/html/game_data/npcs
+process:
+  title: item_name
+  field_item_rarity:
+    plugin: default_value
+    default_value: vestige
+  field_is_magic:
+    plugin: default_value
+    default_value: 1
+  field_item_type:
+    plugin: default_value
+    default_value: magic_item
+  status:
+    plugin: default_value
+    default_value: 1
+destination:
+  plugin: 'entity:node'
+  default_bundle: item
+migration_dependencies:
+  required: {  }

@@ -1,0 +1,22 @@
+uuid: 45f33300-37ef-4729-9a00-54d8b7cd214c
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_plot_hooks
+    - node.type.character
+  module:
+    - text
+id: node.character.field_plot_hooks
+field_name: field_plot_hooks
+entity_type: node
+bundle: character
+label: 'Plot Hooks'
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  allowed_formats: {  }
+field_type: text_long

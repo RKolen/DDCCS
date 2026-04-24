@@ -1,0 +1,19 @@
+uuid: 5d972b66-30e2-45ee-a49c-3ffca8cccc5a
+langcode: en
+status: true
+dependencies:
+  module:
+    - taxonomy
+id: taxonomy_term.field_spell_school
+field_name: field_spell_school
+entity_type: taxonomy_term
+type: entity_reference
+settings:
+  target_type: taxonomy_term
+module: core
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

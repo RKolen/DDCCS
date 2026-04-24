@@ -1,10 +1,14 @@
 import type { GatsbyConfig } from 'gatsby';
+import dotenv from 'dotenv';
+
+dotenv.config({ path: `.env.${process.env.NODE_ENV ?? 'development'}` });
 
 const config: GatsbyConfig = {
   siteMetadata: {
     title: 'D&D Character Consultant',
     siteUrl: 'http://localhost:8000',
   },
+  // Proxy /api/* to Drupal during development — avoids browser cert/CORS issues.
   plugins: [
     {
       resolve: 'gatsby-source-drupal',

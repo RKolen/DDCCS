@@ -1,0 +1,23 @@
+uuid: 82fe6cb7-3a5a-4c8e-9e83-0f1c0c0239bf
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_is_magic
+    - node.type.item
+id: node.item.field_is_magic
+field_name: field_is_magic
+entity_type: node
+bundle: item
+label: 'Is Magic'
+description: 'Whether this item is magical'
+required: false
+translatable: false
+default_value:
+  -
+    value: 0
+default_value_callback: ''
+settings:
+  on_label: 'Yes'
+  off_label: 'No'
+field_type: boolean

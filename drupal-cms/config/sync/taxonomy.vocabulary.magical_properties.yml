@@ -1,0 +1,9 @@
+uuid: eacb4c80-df9d-4bc4-86b9-31bcecf8bf8d
+langcode: en
+status: true
+dependencies: {  }
+name: 'Magical Properties'
+vid: magical_properties
+description: null
+weight: 0
+new_revision: false

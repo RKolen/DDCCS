@@ -1,0 +1,25 @@
+uuid: 1dc62eaa-7838-4d04-be14-845d0e7517e5
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.paragraph.ability_reference.field_ability
+    - paragraphs.paragraphs_type.ability_reference
+id: paragraph.ability_reference.default
+targetEntityType: paragraph
+bundle: ability_reference
+mode: default
+content:
+  field_ability:
+    type: entity_reference_autocomplete
+    weight: 0
+    region: content
+    settings:
+      match_operator: CONTAINS
+      match_limit: 10
+      size: 60
+      placeholder: 'Type a ability name...'
+    third_party_settings: {  }
+hidden:
+  created: true
+  status: true

@@ -1,0 +1,23 @@
+uuid: 329a0639-1817-49e2-a69f-31a34be08d77
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_maximum_hitpoints
+    - node.type.monster
+id: node.monster.field_maximum_hitpoints
+field_name: field_maximum_hitpoints
+entity_type: node
+bundle: monster
+label: 'Maximum Hitpoints'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  min: null
+  max: null
+  prefix: ''
+  suffix: ''
+field_type: integer

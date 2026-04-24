@@ -1,0 +1,19 @@
+uuid: s5t4o3p2-q1r0-9s9t-8u7v-6q5p4r2s3n1o
+langcode: en
+status: true
+dependencies:
+  module:
+    - node
+    - text
+id: node.field_ai_system_prompt
+field_name: field_ai_system_prompt
+entity_type: node
+type: text_long
+settings: {  }
+module: text
+locked: false
+cardinality: 1
+translatable: false
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

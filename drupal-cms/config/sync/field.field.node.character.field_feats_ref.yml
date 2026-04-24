@@ -1,0 +1,27 @@
+uuid: be545408-2906-4938-a4df-2e43849fccb3
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_feats_ref
+    - node.type.character
+    - paragraphs.paragraphs_type.feat_reference
+  module:
+    - entity_reference_revisions
+id: node.character.field_feats_ref
+field_name: field_feats_ref
+entity_type: node
+bundle: character
+label: Feats
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:paragraph'
+  handler_settings:
+    target_bundles:
+      feat_reference: feat_reference
+    negate: 0
+field_type: entity_reference_revisions

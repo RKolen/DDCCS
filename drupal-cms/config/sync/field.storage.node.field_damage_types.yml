@@ -1,0 +1,20 @@
+uuid: 8a2790cb-0fdf-49e2-9f4b-0cb3a6d476a0
+langcode: en
+status: true
+dependencies:
+  module:
+    - node
+    - taxonomy
+id: node.field_damage_types
+field_name: field_damage_types
+entity_type: node
+type: entity_reference
+settings:
+  target_type: taxonomy_term
+module: core
+locked: false
+cardinality: -1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

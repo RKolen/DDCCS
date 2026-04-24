@@ -1,0 +1,19 @@
+uuid: spell-components-field
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_spell_components
+    - node.type.spell
+id: node.spell.field_spell_components
+field_name: field_spell_components
+entity_type: node
+bundle: spell
+label: Components
+description: 'e.g., V, S, M (a tiny ball of bat guano)'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string

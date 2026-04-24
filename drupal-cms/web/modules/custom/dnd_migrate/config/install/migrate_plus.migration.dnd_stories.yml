@@ -1,0 +1,62 @@
+id: dnd_stories
+label: 'D&D: Import story nodes'
+migration_group: dnd
+migration_dependencies:
+  required:
+    - dnd_character_nodes
+    - dnd_npc_nodes
+
+# ---------------------------------------------------------------------------
+# Source: one .md file per story under game_data/campaigns/<campaign>/.
+# Only files matching \d+_*.md are processed (main story files).
+# ---------------------------------------------------------------------------
+source:
+  plugin: dnd_stories_directory
+  base_dir: '/var/www/html/game_data/campaigns'
+
+# ---------------------------------------------------------------------------
+# Process: map source fields to node:story destination fields.
+# ---------------------------------------------------------------------------
+process:
+  # Node title = extracted H1/H2 heading, or derived from the slug.
+  title: story_title
+
+  # Story number (integer, leading digits from filename).
+  field_story_number: story_number
+
+  # Full markdown body of the story.
+  field_body/value: body
+
+  # Text format for the body field.
+  field_body/format:
+    plugin: default_value
+    default_value: plain_text
+
+  # Session results and story hooks companion files.
+  field_session_results: session_results
+  field_story_hooks: story_hooks
+
+  # Session date as a plain string.
+  field_session_date: session_date
+
+  # Campaign taxonomy entity reference lookup by name.
+  field_campaign:
+    plugin: entity_lookup
+    source: campaign_name
+    entity_type: taxonomy_term
+    bundle: campaign
+    value_key: name
+    bundle_key: vid
+    ignore_case: true
+
+  # Publish all imported stories immediately.
+  status:
+    plugin: default_value
+    default_value: 1
+
+# ---------------------------------------------------------------------------
+# Destination: node of type story.
+# ---------------------------------------------------------------------------
+destination:
+  plugin: 'entity:node'
+  default_bundle: story

@@ -1,0 +1,25 @@
+uuid: a9b8w7x6-y5z4-3a3b-2c1d-0z9a8b6c7v5w
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_voice_pitch
+    - node.type.character
+id: node.character.field_voice_pitch
+field_name: field_voice_pitch
+entity_type: node
+bundle: character
+label: 'Voice Pitch Shift'
+description: 'TTS voice pitch shift (0 = no shift, positive = higher, negative = lower)'
+required: false
+translatable: false
+default_value:
+  -
+    value: 0
+default_value_callback: ''
+settings:
+  min: -10
+  max: 10
+  prefix: ''
+  suffix: ''
+field_type: integer

@@ -1,0 +1,57 @@
+control_field_max_length: false
+exclude_chunk_from_metadata: false
+indexing_options:
+  nid:
+    indexing_option: ignore
+    max: -1
+  status:
+    indexing_option: ignore
+    max: -1
+  title:
+    indexing_option: main_content
+    max: -1
+  field_personality_traits:
+    indexing_option: contextual_content
+    max: -1
+  field_personality:
+    indexing_option: contextual_content
+    max: -1
+  field_bonds:
+    indexing_option: contextual_content
+    max: -1
+  field_flaws:
+    indexing_option: contextual_content
+    max: -1
+  field_ideals:
+    indexing_option: contextual_content
+    max: -1
+  field_abilities:
+    indexing_option: contextual_content
+    max: -1
+  field_notes:
+    indexing_option: contextual_content
+    max: -1
+  field_ai_system_prompt:
+    indexing_option: contextual_content
+    max: -1
+  field_role:
+    indexing_option: contextual_content
+    max: -1
+  field_first_name:
+    indexing_option: contextual_content
+    max: -1
+  field_last_name:
+    indexing_option: contextual_content
+    max: -1
+  field_nickname:
+    indexing_option: contextual_content
+    max: -1
+  field_equipment_title:
+    indexing_option: contextual_content
+    max: -1
+  field_species_name:
+    indexing_option: contextual_content
+    max: -1
+  type:
+    indexing_option: ignore
+    max: -1

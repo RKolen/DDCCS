@@ -1,0 +1,29 @@
+uuid: 008eb5b9-973a-4783-8f1c-da7cff46994d
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_weapon_mastery
+    - node.type.item
+    - taxonomy.vocabulary.weapon_mastery
+id: node.item.field_weapon_mastery
+field_name: field_weapon_mastery
+entity_type: node
+bundle: item
+label: 'Weapon Mastery'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:taxonomy_term'
+  handler_settings:
+    target_bundles:
+      weapon_mastery: weapon_mastery
+    sort:
+      field: name
+      direction: asc
+    auto_create: false
+    auto_create_bundle: ''
+field_type: entity_reference

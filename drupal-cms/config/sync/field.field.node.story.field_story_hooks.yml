@@ -1,0 +1,24 @@
+uuid: 7e923dea-854b-4c04-a0df-d93f337dc658
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_story_hooks
+    - filter.format.plain_text
+    - node.type.story
+  module:
+    - text
+id: node.story.field_story_hooks
+field_name: field_story_hooks
+entity_type: node
+bundle: story
+label: 'Story Hooks'
+description: 'Story hooks extracted or generated for next sessions'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  allowed_formats:
+    - plain_text
+field_type: text_long

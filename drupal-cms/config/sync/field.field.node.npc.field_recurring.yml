@@ -1,0 +1,23 @@
+uuid: 546def32-3ed1-4ed9-b332-f74f9d14754f
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_recurring
+    - node.type.npc
+id: node.npc.field_recurring
+field_name: field_recurring
+entity_type: node
+bundle: npc
+label: Recurring
+description: 'Whether this NPC is expected to recur'
+required: false
+translatable: false
+default_value:
+  -
+    value: 0
+default_value_callback: ''
+settings:
+  on_label: 'Yes'
+  off_label: 'No'
+field_type: boolean

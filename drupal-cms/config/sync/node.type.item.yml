@@ -1,0 +1,11 @@
+uuid: f6g7h8i9-j0k1-2345-fabc-678901234567
+langcode: en
+status: true
+dependencies: {  }
+name: Item
+type: item
+description: 'D&D items including weapons, armor, and magic items'
+help: ''
+new_revision: false
+preview_mode: 0
+display_submitted: false

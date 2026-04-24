@@ -1,0 +1,23 @@
+uuid: 52803431-ce8e-4b2c-bd13-edbf509239a7
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.taxonomy_term.field_hit_die
+    - taxonomy.vocabulary.class
+id: taxonomy_term.class.field_hit_die
+field_name: field_hit_die
+entity_type: taxonomy_term
+bundle: class
+label: 'Hit Die'
+description: 'Class hit die value (e.g. 6, 8, 10, 12)'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  min: 1
+  max: 20
+  prefix: d
+  suffix: ''
+field_type: integer

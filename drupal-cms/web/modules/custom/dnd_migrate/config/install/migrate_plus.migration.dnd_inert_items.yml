@@ -1,0 +1,45 @@
+id: dnd_inert_items
+label: 'D&D: Import inert magic items as vestige item nodes'
+migration_group: dnd
+migration_dependencies:
+  required: []
+
+# ---------------------------------------------------------------------------
+# Source: unique inert item names from character and NPC JSON files.
+# ---------------------------------------------------------------------------
+source:
+  plugin: dnd_inert_items_source
+  data_dirs:
+    - '/var/www/html/game_data/characters'
+    - '/var/www/html/game_data/npcs'
+
+# ---------------------------------------------------------------------------
+# Process
+# ---------------------------------------------------------------------------
+process:
+  # Use full item name (including the "(Inert)" suffix) as the node title
+  # so that magic_items_ref lookups by title can find them.
+  title: item_name
+
+  field_item_rarity:
+    plugin: default_value
+    default_value: vestige
+
+  field_is_magic:
+    plugin: default_value
+    default_value: 1
+
+  field_item_type:
+    plugin: default_value
+    default_value: magic_item
+
+  status:
+    plugin: default_value
+    default_value: 1
+
+# ---------------------------------------------------------------------------
+# Destination: node of type item.
+# ---------------------------------------------------------------------------
+destination:
+  plugin: 'entity:node'
+  default_bundle: item

@@ -1,0 +1,9 @@
+uuid: voice-id-taxonomy
+langcode: en
+status: true
+dependencies: {  }
+name: 'Voice IDs'
+vid: voice_ids
+description: 'Piper TTS voice identifiers'
+weight: 0
+new_revision: false

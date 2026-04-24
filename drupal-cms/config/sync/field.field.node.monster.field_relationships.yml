@@ -1,0 +1,58 @@
+uuid: 32a139c2-0777-45ee-89f9-a02a80907867
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_relationships
+    - node.type.monster
+    - paragraphs.paragraphs_type.relationship
+  module:
+    - entity_reference_revisions
+id: node.monster.field_relationships
+field_name: field_relationships
+entity_type: node
+bundle: monster
+label: Relationships
+description: 'Character relationships with other characters and NPCs'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:paragraph'
+  handler_settings:
+    target_bundles:
+      relationship: relationship
+    negate: 0
+    target_bundles_drag_drop:
+      ability_reference:
+        weight: 11
+        enabled: false
+      ability_score:
+        weight: 12
+        enabled: false
+      ability_scores:
+        weight: 13
+        enabled: false
+      class:
+        weight: 14
+        enabled: false
+      feat_reference:
+        weight: 15
+        enabled: false
+      from_library:
+        weight: 16
+        enabled: false
+      relationship:
+        weight: 0
+        enabled: true
+      spell_reference:
+        weight: 18
+        enabled: false
+      spell_slot:
+        weight: 19
+        enabled: false
+      wysiwyg:
+        weight: 20
+        enabled: false
+field_type: entity_reference_revisions

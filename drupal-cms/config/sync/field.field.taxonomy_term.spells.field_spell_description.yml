@@ -1,0 +1,22 @@
+uuid: 23a00514-4b8d-4f48-9c17-5c96b535bfef
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.taxonomy_term.field_spell_description
+    - taxonomy.vocabulary.spells
+  module:
+    - text
+id: taxonomy_term.spells.field_spell_description
+field_name: field_spell_description
+entity_type: taxonomy_term
+bundle: spells
+label: Description
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  allowed_formats: {  }
+field_type: text_long

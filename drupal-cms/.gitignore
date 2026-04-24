@@ -18,3 +18,4 @@ $RECYCLE.BIN/
 
 .ddev/docker-compose.*
 .ddev/.env
+.ddev/traefik/certs/

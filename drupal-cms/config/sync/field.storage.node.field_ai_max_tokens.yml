@@ -1,0 +1,20 @@
+uuid: r4s3n2o1-p0q9-8r8s-7t6u-5p4o3q1r2m0n
+langcode: en
+status: true
+dependencies:
+  module:
+    - node
+id: node.field_ai_max_tokens
+field_name: field_ai_max_tokens
+entity_type: node
+type: integer
+settings:
+  unsigned: false
+  size: normal
+module: core
+locked: false
+cardinality: 1
+translatable: false
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

@@ -1,0 +1,23 @@
+uuid: fc9bf2a4-7d2c-48c8-8590-1a07357a26b1
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_armor_class
+    - node.type.npc
+id: node.npc.field_armor_class
+field_name: field_armor_class
+entity_type: node
+bundle: npc
+label: 'Armor Class'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  min: 0
+  max: null
+  prefix: ''
+  suffix: ''
+field_type: integer

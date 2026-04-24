@@ -1,0 +1,122 @@
+id: dnd_character_nodes
+migration_group: dnd
+label: 'D&D: Import player character nodes'
+source:
+  plugin: dnd_json_directory
+  data_dir: /var/www/html/game_data/characters
+  profile_type_filter: ''
+process:
+  title: name
+  field_first_name: first_name
+  field_last_name: last_name
+  field_nickname: nickname
+  field_pronouns: pronouns
+  field_gender: gender
+  field_character_type: character_type_is_pc
+  field_species:
+    plugin: entity_lookup
+    source: species
+    entity_type: taxonomy_term
+    bundle: species
+    value_key: name
+    bundle_key: vid
+    ignore_case: true
+  field_lineage:
+    plugin: entity_lookup
+    source: lineage
+    entity_type: taxonomy_term
+    bundle: lineage
+    value_key: name
+    bundle_key: vid
+    ignore_case: true
+  field_background:
+    plugin: entity_generate
+    source: background
+    entity_type: taxonomy_term
+    bundle: backgrounds
+    value_key: name
+    bundle_key: vid
+  field_class:
+    plugin: dnd_class_paragraph
+    source: file_id
+  field_level: level
+  field_maximum_hitpoints: max_hit_points
+  field_armor_class: armor_class
+  field_movement_speed: movement_speed
+  field_proficiency_bonus: proficiency_bonus
+  field_gold: gold
+  field_backstory:
+    plugin: dnd_paragraph_lookup
+    source: file_id
+    migration: dnd_character_backstory
+    source_id: file_id
+  field_spell_slots:
+    plugin: dnd_spell_slot_lookup
+    source: spell_slots
+  field_personality_traits: personality_traits
+  field_ideals: ideals
+  field_bonds: bonds
+  field_flaws: flaws
+  field_major_plot_actions: major_plot_actions
+  field_specialized_abilities: specialized_abilities_normalized
+  field_skills:
+    plugin: dnd_array_entity_lookup
+    source: skill_names
+    entity_type: taxonomy_term
+    bundle: skills
+    search_key: name
+  field_spells_ref:
+    plugin: dnd_term_reference_paragraph
+    source: known_spells
+    paragraph_type: spell_reference
+    field_name: field_spell
+    vocabulary: spells
+  field_feats_ref:
+    plugin: dnd_term_reference_paragraph
+    source: feats
+    paragraph_type: feat_reference
+    field_name: field_feat
+    vocabulary: feats
+  field_abilities_ref:
+    plugin: dnd_term_reference_paragraph
+    source: class_abilities
+    paragraph_type: ability_reference
+    field_name: field_ability
+    vocabulary: abilities
+  field_magic_items_ref:
+    plugin: dnd_array_entity_lookup
+    source: magic_items
+    entity_type: node
+    bundle: item
+    search_key: title
+  field_voice_speed: voice_speed
+  field_voice_pitch: voice_pitch
+  field_voice_id_ref:
+    -
+      plugin: skip_on_empty
+      method: process
+      source: voice_piper_id
+    -
+      plugin: entity_lookup
+      entity_type: taxonomy_term
+      bundle: voice_ids
+      value_key: name
+      bundle_key: vid
+      ignore_case: true
+  field_ai_enabled: ai_enabled
+  field_ai_model: ai_model
+  field_ai_temperature: ai_temperature
+  field_ai_max_tokens: ai_max_tokens
+  field_ai_system_prompt: ai_system_prompt
+  status:
+    plugin: default_value
+    default_value: 1
+destination:
+  plugin: 'entity:node'
+  default_bundle: character
+migration_dependencies:
+  required:
+    - dnd_character_backstory
+    - dnd_character_spell_slots
+    - dnd_items
+    - dnd_inert_items

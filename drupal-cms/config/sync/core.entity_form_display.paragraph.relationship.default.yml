@@ -1,0 +1,49 @@
+uuid: m1n0o9p8-q7r6-8m8n-9o0p-1q2r3s4t5u6v
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.paragraph.relationship.field_related_character
+    - field.field.paragraph.relationship.field_relationship_description
+    - field.field.paragraph.relationship.field_relationship_strength
+    - field.field.paragraph.relationship.field_relationship_type
+    - paragraphs.paragraphs_type.relationship
+id: paragraph.relationship.default
+targetEntityType: paragraph
+bundle: relationship
+mode: default
+content:
+  field_related_character:
+    type: entity_reference_autocomplete
+    weight: 0
+    region: content
+    settings:
+      match_operator: CONTAINS
+      match_limit: 10
+      size: 60
+      placeholder: 'Character name'
+    third_party_settings: {  }
+  field_relationship_description:
+    type: string_textfield
+    weight: 2
+    region: content
+    settings:
+      size: 60
+      placeholder: 'Description (e.g., Beloved, Trusted companion)'
+    third_party_settings: {  }
+  field_relationship_strength:
+    type: number
+    weight: 3
+    region: content
+    settings:
+      placeholder: '5'
+    third_party_settings: {  }
+  field_relationship_type:
+    type: options_select
+    weight: 1
+    region: content
+    settings: {  }
+    third_party_settings: {  }
+hidden:
+  created: true
+  status: true

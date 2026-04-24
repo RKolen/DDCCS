@@ -1,0 +1,23 @@
+uuid: c1d0y9z8-a7b6-5c5d-4e3f-2b1c0d8e9x7y
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.paragraph.field_spell_level
+    - paragraphs.paragraphs_type.spell_slot
+id: paragraph.spell_slot.field_spell_level
+field_name: field_spell_level
+entity_type: paragraph
+bundle: spell_slot
+label: 'Spell Level'
+description: 'Spell slot level (1-9)'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  min: 1
+  max: 9
+  prefix: Level
+  suffix: ''
+field_type: integer

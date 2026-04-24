@@ -1,0 +1,10 @@
+uuid: term-feats-001
+langcode: en
+status: true
+dependencies:
+  config:
+    - taxonomy.vocabulary.feats
+name: Alert
+weight: 0
+parent: {  }
+vid: feats

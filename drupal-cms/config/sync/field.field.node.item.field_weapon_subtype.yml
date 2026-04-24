@@ -1,0 +1,29 @@
+uuid: 24e11ff7-7e82-4b05-b46f-8999f68857da
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_weapon_subtype
+    - node.type.item
+    - taxonomy.vocabulary.weapon_subtype
+id: node.item.field_weapon_subtype
+field_name: field_weapon_subtype
+entity_type: node
+bundle: item
+label: 'Weapon Subtype'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:taxonomy_term'
+  handler_settings:
+    target_bundles:
+      weapon_subtype: weapon_subtype
+    sort:
+      field: name
+      direction: asc
+    auto_create: false
+    auto_create_bundle: ''
+field_type: entity_reference

@@ -1,0 +1,9 @@
+uuid: bf43162d-afa3-48e3-afdb-44b0be102212
+langcode: en
+status: true
+dependencies: {  }
+name: Locations
+vid: locations
+description: 'Named locations used in stories, sessions, and NPC placement'
+weight: 0
+new_revision: false

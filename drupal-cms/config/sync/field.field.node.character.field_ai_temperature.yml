@@ -1,0 +1,25 @@
+uuid: u3v2q1r0-s9t8-7u7v-6w5x-4t3u2v0w1p9q
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_ai_temperature
+    - node.type.character
+id: node.character.field_ai_temperature
+field_name: field_ai_temperature
+entity_type: node
+bundle: character
+label: 'AI Temperature'
+description: 'AI temperature setting (0.0-2.0, lower = more deterministic)'
+required: false
+translatable: false
+default_value:
+  -
+    value: 0.7
+default_value_callback: ''
+settings:
+  min: 0.0
+  max: 2.0
+  prefix: ''
+  suffix: ''
+field_type: decimal

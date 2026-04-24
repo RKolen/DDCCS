@@ -1,0 +1,23 @@
+uuid: 769f0309-7891-4c43-9be4-4fa2b02d90ec
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.taxonomy_term.field_level_requirement
+    - taxonomy.vocabulary.feats
+id: taxonomy_term.feats.field_level_requirement
+field_name: field_level_requirement
+entity_type: taxonomy_term
+bundle: feats
+label: 'Level Requirement'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  min: null
+  max: null
+  prefix: ''
+  suffix: ''
+field_type: integer

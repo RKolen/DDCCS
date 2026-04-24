@@ -1,0 +1,16 @@
+id: dnd_character_spell_slots
+migration_group: dnd
+label: 'D&D: Import character spell slot paragraphs'
+source:
+  plugin: dnd_spell_slots_source
+  data_dir: /var/www/html/game_data/characters
+process:
+  type:
+    plugin: default_value
+    default_value: spell_slot
+  field_spell_level: slot_level
+  field_spell_slots_total: slot_total
+  field_spell_slots_available: slot_total
+destination:
+  plugin: 'entity_reference_revisions:paragraph'
+migration_dependencies: {  }

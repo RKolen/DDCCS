@@ -1,0 +1,58 @@
+uuid: dea808a3-79fe-457d-8d99-0a2dd9b7a20d
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_ability_scores
+    - node.type.monster
+    - paragraphs.paragraphs_type.ability_scores
+  module:
+    - entity_reference_revisions
+id: node.monster.field_ability_scores
+field_name: field_ability_scores
+entity_type: node
+bundle: monster
+label: 'Ability Scores'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:paragraph'
+  handler_settings:
+    target_bundles:
+      ability_scores: ability_scores
+    negate: 0
+    target_bundles_drag_drop:
+      ability_reference:
+        weight: 11
+        enabled: false
+      ability_score:
+        weight: 4
+        enabled: false
+      ability_scores:
+        weight: 5
+        enabled: true
+      class:
+        weight: 14
+        enabled: false
+      feat_reference:
+        weight: 15
+        enabled: false
+      from_library:
+        weight: 6
+        enabled: false
+      relationship:
+        weight: 17
+        enabled: false
+      spell_reference:
+        weight: 18
+        enabled: false
+      spell_slot:
+        weight: 19
+        enabled: false
+      wysiwyg:
+        weight: 20
+        enabled: false
+field_type: entity_reference_revisions

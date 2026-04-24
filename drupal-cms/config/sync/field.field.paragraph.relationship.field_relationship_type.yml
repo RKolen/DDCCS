@@ -1,0 +1,21 @@
+uuid: g5h4c3d2-e1f0-9g9h-8i7j-6f5g4h2i3b1c
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.paragraph.field_relationship_type
+    - paragraphs.paragraphs_type.relationship
+id: paragraph.relationship.field_relationship_type
+field_name: field_relationship_type
+entity_type: paragraph
+bundle: relationship
+label: 'Relationship Type'
+description: 'Type of relationship'
+required: true
+translatable: false
+default_value:
+  -
+    value: acquaintance
+default_value_callback: ''
+settings: {  }
+field_type: list_string

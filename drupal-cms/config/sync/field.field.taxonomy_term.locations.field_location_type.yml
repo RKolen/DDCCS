@@ -1,0 +1,29 @@
+uuid: 846e4e90-9c42-4839-b803-cfdf1c8f2ef1
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.taxonomy_term.field_location_type
+    - taxonomy.vocabulary.location_types
+    - taxonomy.vocabulary.locations
+id: taxonomy_term.locations.field_location_type
+field_name: field_location_type
+entity_type: taxonomy_term
+bundle: locations
+label: Type
+description: 'Location type classification'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:taxonomy_term'
+  handler_settings:
+    target_bundles:
+      location_types: location_types
+    sort:
+      field: name
+      direction: asc
+    auto_create: false
+    auto_create_bundle: ''
+field_type: entity_reference

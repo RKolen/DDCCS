@@ -1,0 +1,25 @@
+uuid: p8q7l6m5-n4o3-2p2q-1r0s-9n8o7p5q6k4l
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_gold
+    - node.type.character
+id: node.character.field_gold
+field_name: field_gold
+entity_type: node
+bundle: character
+label: Gold
+description: 'Character gold pieces'
+required: false
+translatable: false
+default_value:
+  -
+    value: 0
+default_value_callback: ''
+settings:
+  min: 0
+  max: null
+  prefix: ''
+  suffix: ' gp'
+field_type: integer

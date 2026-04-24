@@ -1,0 +1,24 @@
+uuid: 3123bb5f-7b2d-4364-a0fb-342f9f85e3f7
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.paragraph.field_spell
+    - paragraphs.paragraphs_type.spell_reference
+    - taxonomy.vocabulary.spells
+id: paragraph.spell_reference.field_spell
+field_name: field_spell
+entity_type: paragraph
+bundle: spell_reference
+label: Spell
+description: ''
+required: true
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:taxonomy_term'
+  handler_settings:
+    target_bundles:
+      spells: spells
+field_type: entity_reference

@@ -1,0 +1,11 @@
+uuid: af78a9ce-5962-49fa-b9b5-7cc70e8927a3
+langcode: en
+status: true
+dependencies:
+  config:
+    - taxonomy.vocabulary.traits
+id: taxonomy_term.traits
+target_entity_type_id: taxonomy_term
+target_bundle: traits
+default_langcode: site_default
+language_alterable: false

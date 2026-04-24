@@ -1,0 +1,9 @@
+dnd_search.search:
+  path: '/api/content-search'
+  defaults:
+    _controller: '\Drupal\dnd_search\Controller\SearchController::search'
+    _title: 'Content Search'
+  requirements:
+    _access: 'TRUE'
+  options:
+    no_cache: TRUE

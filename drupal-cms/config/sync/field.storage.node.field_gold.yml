@@ -1,0 +1,20 @@
+uuid: l8m7h6i5-j4k3-2l2m-1n0o-9j8i7k5l6g4h
+langcode: en
+status: true
+dependencies:
+  module:
+    - node
+id: node.field_gold
+field_name: field_gold
+entity_type: node
+type: integer
+settings:
+  unsigned: false
+  size: normal
+module: core
+locked: false
+cardinality: 1
+translatable: false
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

@@ -1,0 +1,11 @@
+uuid: 9e6b28d5-d897-432a-bc00-100f8a65d060
+langcode: en
+status: true
+dependencies:
+  config:
+    - taxonomy.vocabulary.magical_properties
+id: taxonomy_term.magical_properties
+target_entity_type_id: taxonomy_term
+target_bundle: magical_properties
+default_langcode: site_default
+language_alterable: false

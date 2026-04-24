@@ -1,0 +1,10 @@
+uuid: b9aab01c-0e4e-447b-8522-86cf2d697e07
+langcode: en
+status: true
+dependencies: {  }
+id: ability_reference
+label: 'Ability Reference'
+icon_uuid: null
+icon_default: null
+description: null
+behavior_plugins: {  }

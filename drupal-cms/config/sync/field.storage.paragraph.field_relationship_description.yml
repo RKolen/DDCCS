@@ -1,0 +1,21 @@
+uuid: z2a1v0w9-x8y7-6z6a-5b4c-3x2y1z9a0u8v
+langcode: en
+status: true
+dependencies:
+  module:
+    - paragraphs
+id: paragraph.field_relationship_description
+field_name: field_relationship_description
+entity_type: paragraph
+type: string
+settings:
+  max_length: 255
+  case_sensitive: false
+  is_ascii: false
+module: core
+locked: false
+cardinality: 1
+translatable: false
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

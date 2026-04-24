@@ -1,0 +1,20 @@
+uuid: w9x8s7t6-u5v4-3w3x-2y1z-0u9v8w6x7r5s
+langcode: en
+status: true
+dependencies:
+  module:
+    - node
+id: node.field_voice_pitch
+field_name: field_voice_pitch
+entity_type: node
+type: integer
+settings:
+  unsigned: false
+  size: normal
+module: core
+locked: false
+cardinality: 1
+translatable: false
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

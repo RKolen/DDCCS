@@ -1,0 +1,32 @@
+uuid: e45149a8-8756-4b0d-992e-3d1fa1fdba4c
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.node.ability.field_description
+    - node.type.ability
+  module:
+    - entity_reference_revisions
+    - user
+id: node.ability.default
+targetEntityType: node
+bundle: ability
+mode: default
+content:
+  field_description:
+    type: entity_reference_revisions_entity_view
+    label: above
+    settings:
+      view_mode: default
+      link: ''
+    third_party_settings: {  }
+    weight: 0
+    region: content
+  links:
+    settings: {  }
+    third_party_settings: {  }
+    weight: 100
+    region: content
+hidden:
+  langcode: true
+  search_api_excerpt: true

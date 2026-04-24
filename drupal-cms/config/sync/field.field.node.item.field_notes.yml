@@ -1,0 +1,24 @@
+uuid: acaf07c2-52e9-4f53-96c6-a151ef7a8bbc
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_notes
+    - filter.format.plain_text
+    - node.type.item
+  module:
+    - text
+id: node.item.field_notes
+field_name: field_notes
+entity_type: node
+bundle: item
+label: Notes
+description: 'Additional notes for this item'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  allowed_formats:
+    - plain_text
+field_type: text_long

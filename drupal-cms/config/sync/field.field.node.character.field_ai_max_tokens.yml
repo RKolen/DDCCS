@@ -1,0 +1,25 @@
+uuid: v4w3r2s1-t0u9-8v8w-7x6y-5u4v3w1x2q0r
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_ai_max_tokens
+    - node.type.character
+id: node.character.field_ai_max_tokens
+field_name: field_ai_max_tokens
+entity_type: node
+bundle: character
+label: 'AI Max Tokens'
+description: 'Maximum tokens for AI responses'
+required: false
+translatable: false
+default_value:
+  -
+    value: 1000
+default_value_callback: ''
+settings:
+  min: 100
+  max: 8000
+  prefix: ''
+  suffix: ' tokens'
+field_type: integer

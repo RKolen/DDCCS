@@ -1,19 +1,31 @@
-uuid: 1f63c6f4-d1c5-4392-910b-cf4ef2755e73
+uuid: backstory-field
 langcode: en
 status: true
 dependencies:
   config:
     - field.storage.node.field_backstory
     - node.type.character
+    - paragraphs.paragraphs_type.wysiwyg
+  module:
+    - entity_reference_revisions
 id: node.character.field_backstory
 field_name: field_backstory
 entity_type: node
 bundle: character
 label: Backstory
-description: ''
+description: 'Character backstory and history'
 required: false
 translatable: false
 default_value: {  }
 default_value_callback: ''
-settings: {  }
-field_type: string_long
+settings:
+  handler: 'default:paragraph'
+  handler_settings:
+    target_bundles:
+      wysiwyg: wysiwyg
+    negate: 0
+    target_bundles_drag_drop:
+      wysiwyg:
+        weight: 0
+        enabled: true
+field_type: entity_reference_revisions

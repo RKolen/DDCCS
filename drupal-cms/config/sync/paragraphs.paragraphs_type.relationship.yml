@@ -1,0 +1,10 @@
+uuid: f8g7b6c5-d4e3-2f2g-1h0i-9d8e7f5g6a4b
+langcode: en
+status: true
+dependencies: {  }
+id: relationship
+label: Relationship
+icon_uuid: null
+icon_default: null
+description: 'Defines a relationship between characters'
+behavior_plugins: {  }

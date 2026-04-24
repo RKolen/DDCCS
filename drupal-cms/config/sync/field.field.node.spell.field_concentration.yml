@@ -1,0 +1,23 @@
+uuid: 14cc2cc5-4116-4a31-a92b-9a577488cf54
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_concentration
+    - node.type.spell
+id: node.spell.field_concentration
+field_name: field_concentration
+entity_type: node
+bundle: spell
+label: Concentration
+description: 'Does this spell require concentration?'
+required: false
+translatable: false
+default_value:
+  -
+    value: 0
+default_value_callback: ''
+settings:
+  on_label: 'Yes'
+  off_label: 'No'
+field_type: boolean

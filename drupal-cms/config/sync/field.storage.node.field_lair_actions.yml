@@ -1,0 +1,19 @@
+uuid: be1a9537-eabb-4fae-8e47-5b8a933eba58
+langcode: en
+status: true
+dependencies:
+  module:
+    - node
+    - text
+id: node.field_lair_actions
+field_name: field_lair_actions
+entity_type: node
+type: text_long
+settings: {  }
+module: text
+locked: false
+cardinality: -1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

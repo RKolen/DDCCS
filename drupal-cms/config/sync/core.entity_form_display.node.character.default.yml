@@ -3,31 +3,67 @@ langcode: en
 status: true
 dependencies:
   config:
+    - field.field.node.character.field_abilities
+    - field.field.node.character.field_abilities_ref
     - field.field.node.character.field_ability_scores
+    - field.field.node.character.field_ai_enabled
+    - field.field.node.character.field_ai_max_tokens
+    - field.field.node.character.field_ai_model
+    - field.field.node.character.field_ai_system_prompt
+    - field.field.node.character.field_ai_temperature
     - field.field.node.character.field_armor_class
     - field.field.node.character.field_background
     - field.field.node.character.field_backstory
     - field.field.node.character.field_bonds
+    - field.field.node.character.field_campaign
     - field.field.node.character.field_character_type
     - field.field.node.character.field_class
+    - field.field.node.character.field_defeat_conditions
+    - field.field.node.character.field_encounter_tactics
+    - field.field.node.character.field_equipment_items
+    - field.field.node.character.field_faction
+    - field.field.node.character.field_feats_ref
     - field.field.node.character.field_first_name
     - field.field.node.character.field_flaws
     - field.field.node.character.field_gender
+    - field.field.node.character.field_gold
     - field.field.node.character.field_ideals
+    - field.field.node.character.field_image
+    - field.field.node.character.field_key_traits
+    - field.field.node.character.field_lair_actions
     - field.field.node.character.field_languages
     - field.field.node.character.field_last_name
+    - field.field.node.character.field_legendary_actions
     - field.field.node.character.field_level
+    - field.field.node.character.field_lineage
+    - field.field.node.character.field_magic_items_ref
+    - field.field.node.character.field_major_plot_actions
     - field.field.node.character.field_maximum_hitpoints
     - field.field.node.character.field_movement_speed
     - field.field.node.character.field_nickname
+    - field.field.node.character.field_notes
     - field.field.node.character.field_npc_type
+    - field.field.node.character.field_personality
     - field.field.node.character.field_personality_traits
+    - field.field.node.character.field_plot_hooks
+    - field.field.node.character.field_proficiency_bonus
+    - field.field.node.character.field_pronouns
+    - field.field.node.character.field_recurring
+    - field.field.node.character.field_regional_effects
+    - field.field.node.character.field_relationships
+    - field.field.node.character.field_role
     - field.field.node.character.field_skills
+    - field.field.node.character.field_source_character
+    - field.field.node.character.field_specialized_abilities
     - field.field.node.character.field_species
+    - field.field.node.character.field_spell_slots
+    - field.field.node.character.field_spells_ref
     - field.field.node.character.field_tools
+    - field.field.node.character.field_voice_id_ref
+    - field.field.node.character.field_voice_pitch
+    - field.field.node.character.field_voice_speed
     - node.type.character
   module:
-    - conditional_fields
     - field_group
     - paragraphs
     - path
@@ -36,11 +72,18 @@ third_party_settings:
   field_group:
     group_character_details:
       children:
+        - title
         - field_first_name
         - field_last_name
         - field_nickname
         - field_gender
+        - field_pronouns
+        - field_image
+        - field_character_type
+        - field_campaign
+        - field_source_character
         - field_species
+        - field_lineage
         - field_backstory
         - field_personality_traits
         - field_ideals
@@ -63,12 +106,11 @@ third_party_settings:
         width_breakpoint: 640
     group_game_abilities:
       children:
-        - field_character_type
-        - field_npc_type
         - field_ability_scores
         - field_class
         - field_level
         - field_background
+        - field_proficiency_bonus
         - field_skills
         - field_tools
         - field_languages
@@ -78,7 +120,7 @@ third_party_settings:
       label: 'Game Abilities'
       region: content
       parent_name: group_details
-      weight: 2
+      weight: 3
       format_type: tab
       format_settings:
         classes: ''
@@ -94,11 +136,166 @@ third_party_settings:
       children:
         - group_character_details
         - group_game_abilities
+        - group_equipment
+        - group_spells
+        - group_abilities
+        - group_relationships
+        - group_ai_config
+        - group_voice
+        - group_npc
       label: Details
       region: content
       parent_name: ''
-      weight: 1
+      weight: 0
       format_type: tabs
+      format_settings:
+        classes: ''
+        show_empty_fields: false
+        id: ''
+        label_as_html: false
+        direction: horizontal
+        width_breakpoint: 640
+    group_equipment:
+      children:
+        - field_gold
+        - field_equipment_items
+      label: Equipment
+      region: content
+      parent_name: group_details
+      weight: 4
+      format_type: tab
+      format_settings:
+        classes: ''
+        show_empty_fields: false
+        id: ''
+        label_as_html: false
+        formatter: closed
+        description: 'Character equipment and possessions'
+        required_fields: true
+        direction: horizontal
+        width_breakpoint: 640
+    group_spells:
+      children:
+        - field_spell_slots
+        - field_spells_ref
+        - field_magic_items_ref
+      label: Spells
+      region: content
+      parent_name: group_details
+      weight: 5
+      format_type: tab
+      format_settings:
+        classes: ''
+        show_empty_fields: false
+        id: ''
+        label_as_html: false
+        formatter: closed
+        description: 'Spellcasting abilities and magic items'
+        required_fields: true
+        direction: horizontal
+        width_breakpoint: 640
+    group_abilities:
+      children:
+        - field_abilities_ref
+        - field_feats_ref
+        - field_major_plot_actions
+        - field_specialized_abilities
+      label: Abilities
+      region: content
+      parent_name: group_details
+      weight: 6
+      format_type: tab
+      format_settings:
+        classes: ''
+        show_empty_fields: false
+        id: ''
+        label_as_html: false
+        formatter: closed
+        description: 'Class abilities, feats, and plot actions'
+        required_fields: true
+        direction: horizontal
+        width_breakpoint: 640
+    group_relationships:
+      children:
+        - field_faction
+        - field_relationships
+      label: Relationships
+      region: content
+      parent_name: group_details
+      weight: 7
+      format_type: tab
+      format_settings:
+        classes: ''
+        show_empty_fields: false
+        id: ''
+        label_as_html: false
+        formatter: closed
+        description: 'Character relationships with others'
+        required_fields: true
+        direction: horizontal
+        width_breakpoint: 640
+    group_ai_config:
+      children:
+        - field_ai_enabled
+        - field_ai_model
+        - field_ai_temperature
+        - field_ai_max_tokens
+        - field_ai_system_prompt
+      label: 'AI Configuration'
+      region: content
+      parent_name: group_details
+      weight: 8
+      format_type: tab
+      format_settings:
+        classes: ''
+        show_empty_fields: false
+        id: ''
+        label_as_html: false
+        formatter: closed
+        description: 'AI consultation settings'
+        required_fields: true
+        direction: horizontal
+        width_breakpoint: 640
+    group_voice:
+      children:
+        - field_voice_id_ref
+        - field_voice_speed
+        - field_voice_pitch
+      label: Voice
+      region: content
+      parent_name: group_details
+      weight: 9
+      format_type: tab
+      format_settings:
+        classes: ''
+        show_empty_fields: false
+        id: ''
+        label_as_html: false
+        formatter: closed
+        description: 'Text-to-speech voice settings'
+        required_fields: true
+        direction: horizontal
+        width_breakpoint: 640
+    group_npc:
+      children:
+        - field_npc_type
+        - field_recurring
+        - field_key_traits
+        - field_notes
+        - field_personality
+        - field_plot_hooks
+        - field_role
+        - field_encounter_tactics
+        - field_legendary_actions
+        - field_abilities
+        - field_regional_effects
+        - field_lair_actions
+        - field_defeat_conditions
+      label: NPC
+      region: content
+      parent_name: group_details
+      weight: 10
+      format_type: tab
       format_settings:
         classes: ''
         show_empty_fields: false
@@ -107,16 +304,40 @@ third_party_settings:
         formatter: closed
         description: ''
         required_fields: true
-        direction: vertical
-        width_breakpoint: 640
 id: node.character.default
 targetEntityType: node
 bundle: character
 mode: default
 content:
+  field_abilities:
+    type: text_textarea
+    weight: 54
+    region: content
+    settings:
+      rows: 5
+      placeholder: ''
+    third_party_settings: {  }
+  field_abilities_ref:
+    type: paragraphs
+    weight: 31
+    region: content
+    settings:
+      title: Ability
+      title_plural: Abilitys
+      edit_mode: closed
+      closed_mode: summary
+      autocollapse: none
+      closed_mode_threshold: 0
+      add_mode: dropdown
+      form_display_mode: default
+      default_paragraph_type: ability_reference
+      features:
+        collapse_edit_all: collapse_edit_all
+        duplicate: duplicate
+    third_party_settings: {  }
   field_ability_scores:
     type: paragraphs
-    weight: 9
+    weight: 12
     region: content
     settings:
       title: Paragraph
@@ -132,16 +353,53 @@ content:
         collapse_edit_all: collapse_edit_all
         duplicate: duplicate
     third_party_settings: {  }
-  field_armor_class:
-    type: number
-    weight: 16
+  field_ai_enabled:
+    type: boolean_checkbox
+    weight: 40
     region: content
     settings:
-      placeholder: ''
+      display_label: true
+    third_party_settings: {  }
+  field_ai_max_tokens:
+    type: number
+    weight: 43
+    region: content
+    settings:
+      placeholder: '1000'
+    third_party_settings: {  }
+  field_ai_model:
+    type: string_textfield
+    weight: 41
+    region: content
+    settings:
+      size: 60
+      placeholder: gpt-3.5-turbo
+    third_party_settings: {  }
+  field_ai_system_prompt:
+    type: text_textarea
+    weight: 44
+    region: content
+    settings:
+      rows: 5
+      placeholder: 'You are a helpful D&D character consultant...'
+    third_party_settings: {  }
+  field_ai_temperature:
+    type: number
+    weight: 42
+    region: content
+    settings:
+      placeholder: '0.7'
+    third_party_settings: {  }
+  field_armor_class:
+    type: number
+    weight: 21
+    region: content
+    settings:
+      placeholder: '10'
     third_party_settings: {  }
   field_background:
     type: entity_reference_autocomplete
-    weight: 12
+    weight: 16
     region: content
     settings:
       match_operator: CONTAINS
@@ -150,18 +408,38 @@ content:
       placeholder: ''
     third_party_settings: {  }
   field_backstory:
-    type: string_textarea
-    weight: 7
+    type: paragraphs
+    weight: 12
     region: content
     settings:
-      rows: 5
-      placeholder: ''
+      title: Paragraph
+      title_plural: Paragraphs
+      edit_mode: open
+      closed_mode: summary
+      autocollapse: none
+      closed_mode_threshold: 0
+      add_mode: dropdown
+      form_display_mode: default
+      default_paragraph_type: wysiwyg
+      features:
+        collapse_edit_all: collapse_edit_all
+        duplicate: duplicate
     third_party_settings: {  }
   field_bonds:
     type: text_textfield
-    weight: 10
+    weight: 15
     region: content
     settings:
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+  field_campaign:
+    type: entity_reference_autocomplete
+    weight: 8
+    region: content
+    settings:
+      match_operator: CONTAINS
+      match_limit: 10
       size: 60
       placeholder: ''
     third_party_settings: {  }
@@ -174,7 +452,7 @@ content:
     third_party_settings: {  }
   field_class:
     type: paragraphs
-    weight: 10
+    weight: 13
     region: content
     settings:
       title: Paragraph
@@ -196,7 +474,8 @@ content:
           bundle: character
           dependee: field_character_type
           settings:
-            state: required
+            state: visible
+            reset: false
             condition: checked
             grouping: AND
             values_set: 1
@@ -206,9 +485,63 @@ content:
             effect: show
             effect_options: {  }
             selector: ''
+  field_defeat_conditions:
+    type: text_textarea
+    weight: 57
+    region: content
+    settings:
+      rows: 5
+      placeholder: ''
+    third_party_settings: {  }
+  field_encounter_tactics:
+    type: text_textarea
+    weight: 52
+    region: content
+    settings:
+      rows: 5
+      placeholder: ''
+    third_party_settings: {  }
+  field_equipment_items:
+    type: entity_reference_autocomplete
+    weight: 52
+    region: content
+    settings:
+      match_operator: CONTAINS
+      match_limit: 10
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+  field_faction:
+    type: entity_reference_autocomplete
+    weight: 10
+    region: content
+    settings:
+      match_operator: CONTAINS
+      match_limit: 10
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+  field_feats_ref:
+    type: paragraphs
+    weight: 32
+    region: content
+    settings:
+      title: Feat
+      title_plural: Feats
+      edit_mode: closed
+      closed_mode: summary
+      autocollapse: none
+      closed_mode_threshold: 0
+      add_mode: dropdown
+      form_display_mode: default
+      default_paragraph_type: feat_reference
+      features:
+        collapse_edit_all: collapse_edit_all
+        duplicate: duplicate
+    third_party_settings: {  }
   field_first_name:
     type: string_textfield
-    weight: 2
+    weight: 1
     region: content
     settings:
       size: 60
@@ -216,7 +549,7 @@ content:
     third_party_settings: {  }
   field_flaws:
     type: text_textfield
-    weight: 11
+    weight: 16
     region: content
     settings:
       size: 60
@@ -224,91 +557,26 @@ content:
     third_party_settings: {  }
   field_gender:
     type: options_select
-    weight: 5
+    weight: 4
     region: content
     settings: {  }
     third_party_settings: {  }
+  field_gold:
+    type: number
+    weight: 24
+    region: content
+    settings:
+      placeholder: '0'
+    third_party_settings: {  }
   field_ideals:
     type: text_textfield
-    weight: 9
+    weight: 14
     region: content
     settings:
       size: 60
       placeholder: ''
     third_party_settings: {  }
-  field_languages:
-    type: entity_reference_autocomplete
-    weight: 15
-    region: content
-    settings:
-      match_operator: CONTAINS
-      match_limit: 10
-      size: 60
-      placeholder: ''
-    third_party_settings: {  }
-  field_last_name:
-    type: string_textfield
-    weight: 3
-    region: content
-    settings:
-      size: 60
-      placeholder: ''
-    third_party_settings: {  }
-  field_level:
-    type: number
-    weight: 11
-    region: content
-    settings:
-      placeholder: ''
-    third_party_settings: {  }
-  field_maximum_hitpoints:
-    type: number
-    weight: 17
-    region: content
-    settings:
-      placeholder: ''
-    third_party_settings: {  }
-  field_movement_speed:
-    type: number
-    weight: 18
-    region: content
-    settings:
-      placeholder: ''
-    third_party_settings: {  }
-  field_nickname:
-    type: string_textfield
-    weight: 4
-    region: content
-    settings:
-      size: 60
-      placeholder: ''
-    third_party_settings: {  }
-  field_npc_type:
-    type: boolean_checkbox
-    weight: 8
-    region: content
-    settings:
-      display_label: true
-    third_party_settings: {  }
-  field_personality_traits:
-    type: text_textarea
-    weight: 8
-    region: content
-    settings:
-      rows: 5
-      placeholder: ''
-    third_party_settings: {  }
-  field_skills:
-    type: entity_reference_autocomplete
-    weight: 13
-    region: content
-    settings:
-      match_operator: CONTAINS
-      match_limit: 10
-      size: 60
-      placeholder: ''
-    third_party_settings: {  }
-  field_species:
+  field_image:
     type: entity_reference_autocomplete
     weight: 6
     region: content
@@ -318,9 +586,9 @@ content:
       size: 60
       placeholder: ''
     third_party_settings: {  }
-  field_tools:
-    type: entity_reference_autocomplete
-    weight: 14
+  field_key_traits:
+    type: entity_reference_autocomplete_tags
+    weight: 47
     region: content
     settings:
       match_operator: CONTAINS
@@ -328,6 +596,324 @@ content:
       size: 60
       placeholder: ''
     third_party_settings: {  }
+  field_lair_actions:
+    type: text_textarea
+    weight: 56
+    region: content
+    settings:
+      rows: 5
+      placeholder: ''
+    third_party_settings: {  }
+  field_languages:
+    type: entity_reference_autocomplete
+    weight: 20
+    region: content
+    settings:
+      match_operator: CONTAINS
+      match_limit: 10
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+  field_last_name:
+    type: string_textfield
+    weight: 2
+    region: content
+    settings:
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+  field_legendary_actions:
+    type: text_textarea
+    weight: 53
+    region: content
+    settings:
+      rows: 5
+      placeholder: ''
+    third_party_settings: {  }
+  field_level:
+    type: number
+    weight: 15
+    region: content
+    settings:
+      placeholder: '1'
+    third_party_settings: {  }
+  field_lineage:
+    type: entity_reference_autocomplete
+    weight: 11
+    region: content
+    settings:
+      match_operator: CONTAINS
+      match_limit: 10
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+  field_magic_items_ref:
+    type: entity_reference_autocomplete
+    weight: 25
+    region: content
+    settings:
+      match_operator: CONTAINS
+      match_limit: 10
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+  field_major_plot_actions:
+    type: text_textarea
+    weight: 33
+    region: content
+    settings:
+      rows: 5
+      placeholder: ''
+    third_party_settings: {  }
+  field_maximum_hitpoints:
+    type: number
+    weight: 22
+    region: content
+    settings:
+      placeholder: '10'
+    third_party_settings: {  }
+  field_movement_speed:
+    type: number
+    weight: 23
+    region: content
+    settings:
+      placeholder: '30'
+    third_party_settings: {  }
+  field_nickname:
+    type: string_textfield
+    weight: 3
+    region: content
+    settings:
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+  field_notes:
+    type: text_textarea
+    weight: 48
+    region: content
+    settings:
+      rows: 5
+      placeholder: ''
+    third_party_settings: {  }
+  field_npc_type:
+    type: boolean_checkbox
+    weight: 45
+    region: content
+    settings:
+      display_label: true
+    third_party_settings: {  }
+  field_personality:
+    type: text_textarea
+    weight: 49
+    region: content
+    settings:
+      rows: 5
+      placeholder: ''
+    third_party_settings: {  }
+  field_personality_traits:
+    type: text_textarea
+    weight: 13
+    region: content
+    settings:
+      rows: 5
+      placeholder: ''
+    third_party_settings: {  }
+  field_plot_hooks:
+    type: text_textarea
+    weight: 50
+    region: content
+    settings:
+      rows: 5
+      placeholder: ''
+    third_party_settings: {  }
+  field_proficiency_bonus:
+    type: number
+    weight: 17
+    region: content
+    settings:
+      placeholder: '2'
+    third_party_settings: {  }
+  field_pronouns:
+    type: string_textfield
+    weight: 5
+    region: content
+    settings:
+      size: 60
+      placeholder: 'he/him, she/her, they/them'
+    third_party_settings: {  }
+  field_recurring:
+    type: boolean_checkbox
+    weight: 46
+    region: content
+    settings:
+      display_label: true
+    third_party_settings: {  }
+  field_regional_effects:
+    type: text_textarea
+    weight: 55
+    region: content
+    settings:
+      rows: 5
+      placeholder: ''
+    third_party_settings: {  }
+  field_relationships:
+    type: paragraphs
+    weight: 11
+    region: content
+    settings:
+      title: Relationship
+      title_plural: Relationships
+      edit_mode: open
+      closed_mode: summary
+      autocollapse: none
+      closed_mode_threshold: 0
+      add_mode: dropdown
+      form_display_mode: default
+      default_paragraph_type: ''
+      features:
+        collapse_edit_all: collapse_edit_all
+        duplicate: duplicate
+    third_party_settings: {  }
+  field_role:
+    type: string_textfield
+    weight: 51
+    region: content
+    settings:
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+  field_skills:
+    type: entity_reference_autocomplete
+    weight: 18
+    region: content
+    settings:
+      match_operator: CONTAINS
+      match_limit: 10
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+  field_source_character:
+    type: boolean_checkbox
+    weight: 9
+    region: content
+    settings:
+      display_label: true
+    third_party_settings: {  }
+  field_specialized_abilities:
+    type: text_textarea
+    weight: 35
+    region: content
+    settings:
+      rows: 5
+      placeholder: ''
+    third_party_settings: {  }
+  field_species:
+    type: entity_reference_autocomplete
+    weight: 10
+    region: content
+    settings:
+      match_operator: CONTAINS
+      match_limit: 10
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+  field_spell_slots:
+    type: paragraphs
+    weight: 23
+    region: content
+    settings:
+      title: Paragraph
+      title_plural: Paragraphs
+      edit_mode: open
+      closed_mode: summary
+      autocollapse: none
+      closed_mode_threshold: 0
+      add_mode: dropdown
+      form_display_mode: default
+      default_paragraph_type: ''
+      features:
+        collapse_edit_all: collapse_edit_all
+        duplicate: duplicate
+    third_party_settings: {  }
+  field_spells_ref:
+    type: paragraphs
+    weight: 24
+    region: content
+    settings:
+      title: Spell
+      title_plural: Spells
+      edit_mode: closed
+      closed_mode: summary
+      autocollapse: none
+      closed_mode_threshold: 0
+      add_mode: dropdown
+      form_display_mode: default
+      default_paragraph_type: spell_reference
+      features:
+        collapse_edit_all: collapse_edit_all
+        duplicate: duplicate
+    third_party_settings: {  }
+  field_tools:
+    type: entity_reference_autocomplete
+    weight: 19
+    region: content
+    settings:
+      match_operator: CONTAINS
+      match_limit: 10
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+  field_voice_id_ref:
+    type: entity_reference_autocomplete
+    weight: 46
+    region: content
+    settings:
+      match_operator: CONTAINS
+      match_limit: 10
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+  field_voice_pitch:
+    type: number
+    weight: 48
+    region: content
+    settings:
+      placeholder: '0'
+    third_party_settings: {  }
+  field_voice_speed:
+    type: number
+    weight: 47
+    region: content
+    settings:
+      placeholder: '1.0'
+    third_party_settings: {  }
+  group_npc:
+    weight: 54
+    region: content
+    settings: {  }
+    third_party_settings:
+      conditional_fields:
+        09f805cd-49f3-4149-b124-5c79f513c4e7:
+          entity_type: node
+          bundle: character
+          dependee: field_character_type
+          settings:
+            state: visible
+            reset: false
+            condition: '!checked'
+            grouping: AND
+            values_set: 1
+            value: ''
+            values: {  }
+            value_form:
+              value: 1
+            effect: show
+            effect_options: {  }
+            selector: ''
+            inheritance:
+              propagate: '0'
+              apply_to_parent: '0'
+              recurse: '0'
   path:
     type: path
     weight: 3
@@ -347,7 +933,7 @@ content:
     region: content
     settings:
       size: 60
-      placeholder: ''
+      placeholder: 'Character name'
     third_party_settings: {  }
 hidden:
   created: true

@@ -1,0 +1,22 @@
+uuid: 3f9f948a-753d-403a-8490-276057cebe73
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.taxonomy_term.field_ability_description
+    - taxonomy.vocabulary.abilities
+  module:
+    - text
+id: taxonomy_term.abilities.field_ability_description
+field_name: field_ability_description
+entity_type: taxonomy_term
+bundle: abilities
+label: Description
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  allowed_formats: {  }
+field_type: text_long

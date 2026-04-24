@@ -1,0 +1,7 @@
+name: 'Entity Lock'
+type: module
+description: 'Prevents deletion of any entity type by marking individual entities as locked. Extends the concept of homepage deletion prevention to all entity types.'
+package: Custom
+core_version_requirement: ^10 || ^11
+dependencies:
+  - drupal:system

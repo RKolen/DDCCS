@@ -1,0 +1,11 @@
+uuid: d3b325a7-a090-4d71-8fa4-7d26b212f36c
+langcode: en
+status: true
+dependencies:
+  config:
+    - node.type.npc
+id: node.npc
+target_entity_type_id: node
+target_bundle: npc
+default_langcode: site_default
+language_alterable: false

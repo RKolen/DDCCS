@@ -1,0 +1,29 @@
+uuid: j0k1l2m3-n4o5-6789-defa-012345678901
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_item_properties
+    - node.type.item
+    - taxonomy.vocabulary.magical_properties
+id: node.item.field_item_properties
+field_name: field_item_properties
+entity_type: node
+bundle: item
+label: Properties
+description: 'Item properties and tags'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:taxonomy_term'
+  handler_settings:
+    target_bundles:
+      magical_properties: magical_properties
+    sort:
+      field: name
+      direction: asc
+    auto_create: true
+    auto_create_bundle: equipment_types
+field_type: entity_reference

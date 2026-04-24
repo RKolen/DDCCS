@@ -1,0 +1,22 @@
+uuid: ea6b2272-bade-441d-a1ba-f067ca03e8f6
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_major_plot_actions
+    - node.type.character
+  module:
+    - text
+id: node.character.field_major_plot_actions
+field_name: field_major_plot_actions
+entity_type: node
+bundle: character
+label: 'major plot actions'
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  allowed_formats: {  }
+field_type: text_long

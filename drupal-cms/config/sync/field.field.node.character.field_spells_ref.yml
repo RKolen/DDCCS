@@ -1,0 +1,27 @@
+uuid: 25b9ad57-129b-4eec-af12-3ac5f1e49d22
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_spells_ref
+    - node.type.character
+    - paragraphs.paragraphs_type.spell_reference
+  module:
+    - entity_reference_revisions
+id: node.character.field_spells_ref
+field_name: field_spells_ref
+entity_type: node
+bundle: character
+label: 'Known Spells'
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:paragraph'
+  handler_settings:
+    target_bundles:
+      spell_reference: spell_reference
+    negate: 0
+field_type: entity_reference_revisions

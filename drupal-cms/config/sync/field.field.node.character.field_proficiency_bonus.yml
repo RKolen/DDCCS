@@ -1,0 +1,25 @@
+uuid: h0i9d8e7-f6g5-4h4i-3j2k-1f0g9h7i8c6d
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_proficiency_bonus
+    - node.type.character
+id: node.character.field_proficiency_bonus
+field_name: field_proficiency_bonus
+entity_type: node
+bundle: character
+label: 'Proficiency Bonus'
+description: 'Character proficiency bonus (typically 2-6 based on level)'
+required: false
+translatable: false
+default_value:
+  -
+    value: 2
+default_value_callback: ''
+settings:
+  min: 2
+  max: 6
+  prefix: +
+  suffix: ''
+field_type: integer

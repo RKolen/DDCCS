@@ -1,0 +1,19 @@
+uuid: x6y5t4u3-v2w1-0x0y-9z8a-7w6x5y3z4s2t
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_ai_model
+    - node.type.character
+id: node.character.field_ai_model
+field_name: field_ai_model
+entity_type: node
+bundle: character
+label: 'AI Model'
+description: 'AI model to use for this character (e.g., gpt-4, gpt-3.5-turbo)'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string

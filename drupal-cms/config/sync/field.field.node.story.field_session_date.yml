@@ -1,0 +1,19 @@
+uuid: 1b6b53ff-0240-474f-8fbf-7a8870c8d1c6
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_session_date
+    - node.type.story
+id: node.story.field_session_date
+field_name: field_session_date
+entity_type: node
+bundle: story
+label: 'Session Date'
+description: 'Session date text (ISO preferred)'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string

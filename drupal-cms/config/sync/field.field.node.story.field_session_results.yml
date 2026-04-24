@@ -1,0 +1,24 @@
+uuid: 016358be-48e0-4054-9eef-e0da69a315df
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_session_results
+    - filter.format.plain_text
+    - node.type.story
+  module:
+    - text
+id: node.story.field_session_results
+field_name: field_session_results
+entity_type: node
+bundle: story
+label: 'Session Results'
+description: 'Outcome summary for this story/session entry'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  allowed_formats:
+    - plain_text
+field_type: text_long

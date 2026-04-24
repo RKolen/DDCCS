@@ -1,0 +1,11 @@
+uuid: e775949d-a50f-4f7a-8fe5-aefb9c19e80b
+langcode: en
+status: true
+dependencies:
+  config:
+    - taxonomy.vocabulary.weapon_subtype
+id: taxonomy_term.weapon_subtype
+target_entity_type_id: taxonomy_term
+target_bundle: weapon_subtype
+default_langcode: site_default
+language_alterable: false

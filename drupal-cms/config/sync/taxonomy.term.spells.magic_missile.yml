@@ -1,0 +1,10 @@
+uuid: term-spells-002
+langcode: en
+status: true
+dependencies:
+  config:
+    - taxonomy.vocabulary.spells
+name: 'Magic Missile'
+weight: 0
+parent: {  }
+vid: spells

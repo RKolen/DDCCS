@@ -1,0 +1,10 @@
+uuid: term-spells-001
+langcode: en
+status: true
+dependencies:
+  config:
+    - taxonomy.vocabulary.spells
+name: Fireball
+weight: 0
+parent: {  }
+vid: spells

@@ -1,0 +1,14 @@
+uuid: 9e887e61-7c70-494b-8484-3e83a2b375a1
+langcode: en
+status: true
+dependencies:
+  module:
+    - dnd_migrate
+_core:
+  default_config_hash: fiRYmfj7zl2ZSw3iJBzm78WPGk7jrtSQ4NxC5YYvus8
+id: dnd
+label: 'D&D Data Migrations'
+description: 'Migrations that import D&D game data (characters, NPCs, items) from JSON source files.'
+source_type: 'JSON files under game_data/'
+module: dnd_migrate
+shared_configuration: null

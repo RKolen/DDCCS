@@ -1,0 +1,23 @@
+uuid: b6efe36a-29d0-42e2-a8bb-0601ce198e70
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.taxonomy_term.field_spell_level
+    - taxonomy.vocabulary.spells
+id: taxonomy_term.spells.field_spell_level
+field_name: field_spell_level
+entity_type: taxonomy_term
+bundle: spells
+label: 'Spell Level'
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  min: null
+  max: null
+  prefix: ''
+  suffix: ''
+field_type: integer

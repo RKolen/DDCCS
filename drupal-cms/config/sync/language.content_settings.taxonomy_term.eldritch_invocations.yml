@@ -1,0 +1,11 @@
+uuid: 21897d38-42ba-46ad-b1fe-0d790fe195d5
+langcode: en
+status: true
+dependencies:
+  config:
+    - taxonomy.vocabulary.eldritch_invocations
+id: taxonomy_term.eldritch_invocations
+target_entity_type_id: taxonomy_term
+target_bundle: eldritch_invocations
+default_langcode: site_default
+language_alterable: false

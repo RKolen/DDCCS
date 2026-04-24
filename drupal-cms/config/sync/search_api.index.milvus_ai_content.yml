@@ -5,45 +5,157 @@ dependencies:
   config:
     - search_api.server.milvus_ai_search
   module:
-    - ai_search
     - node
+    - search_api_solr
 id: milvus_ai_content
 name: 'Milvus AI Content Index'
 description: 'Indexes site content for semantic AI search via Milvus.'
 read_only: false
 field_settings:
-  body:
-    label: Body
+  field_abilities:
+    label: Abilities
     datasource_id: 'entity:node'
-    property_path: 'body:value'
+    property_path: field_abilities
     type: text
-    indexed_locked: false
-    type_locked: false
-    dependencies: {  }
+    dependencies:
+      module:
+        - node
+  field_ai_system_prompt:
+    label: 'AI system prompt'
+    datasource_id: 'entity:node'
+    property_path: field_ai_system_prompt
+    type: text
+    dependencies:
+      module:
+        - node
+  field_bonds:
+    label: Bonds
+    datasource_id: 'entity:node'
+    property_path: field_bonds
+    type: text
+    dependencies:
+      module:
+        - node
+  field_equipment_title:
+    label: 'Equipment items'
+    datasource_id: 'entity:node'
+    property_path: 'field_equipment_items:entity:title'
+    type: text
+    dependencies:
+      module:
+        - node
+  field_first_name:
+    label: 'First name'
+    datasource_id: 'entity:node'
+    property_path: field_first_name
+    type: string
+    dependencies:
+      module:
+        - node
+  field_flaws:
+    label: Flaws
+    datasource_id: 'entity:node'
+    property_path: field_flaws
+    type: text
+    dependencies:
+      module:
+        - node
+  field_ideals:
+    label: Ideals
+    datasource_id: 'entity:node'
+    property_path: field_ideals
+    type: text
+    dependencies:
+      module:
+        - node
+  field_last_name:
+    label: 'Last name'
+    datasource_id: 'entity:node'
+    property_path: field_last_name
+    type: string
+    dependencies:
+      module:
+        - node
+  field_nickname:
+    label: Nickname
+    datasource_id: 'entity:node'
+    property_path: field_nickname
+    type: string
+    dependencies:
+      module:
+        - node
+  field_notes:
+    label: Notes
+    datasource_id: 'entity:node'
+    property_path: field_notes
+    type: text
+    dependencies:
+      module:
+        - node
+  field_personality:
+    label: Personality
+    datasource_id: 'entity:node'
+    property_path: field_personality
+    type: text
+    dependencies:
+      module:
+        - node
+  field_personality_traits:
+    label: 'Personality traits'
+    datasource_id: 'entity:node'
+    property_path: field_personality_traits
+    type: text
+    dependencies:
+      module:
+        - node
+  field_role:
+    label: Role
+    datasource_id: 'entity:node'
+    property_path: field_role
+    type: string
+    dependencies:
+      module:
+        - node
+  field_species_name:
+    label: Species
+    datasource_id: 'entity:node'
+    property_path: 'field_species:entity:name'
+    type: text
+    dependencies:
+      module:
+        - node
   nid:
     label: 'Node ID'
     datasource_id: 'entity:node'
     property_path: nid
     type: integer
-    indexed_locked: false
-    type_locked: false
-    dependencies: {  }
+    dependencies:
+      module:
+        - node
   status:
     label: 'Publishing status'
     datasource_id: 'entity:node'
     property_path: status
     type: boolean
-    indexed_locked: false
-    type_locked: false
-    dependencies: {  }
+    dependencies:
+      module:
+        - node
   title:
     label: Title
     datasource_id: 'entity:node'
     property_path: title
     type: text
-    indexed_locked: false
-    type_locked: false
-    dependencies: {  }
+    dependencies:
+      module:
+        - node
+  type:
+    label: 'Content type'
+    datasource_id: 'entity:node'
+    property_path: 'type:target_id'
+    type: string
+    dependencies:
+      module:
+        - node
 datasource_settings:
   'entity:node':
     bundles:
@@ -56,40 +168,72 @@ processor_settings:
   add_url:
     weights:
       preprocess_index: -30
+  aggregated_field: {  }
+  auto_aggregated_fulltext_field: {  }
+  custom_value: {  }
+  entity_type: {  }
   html_filter:
     weights:
       preprocess_index: -10
       preprocess_query: -10
     all_fields: false
-    fields:
-      - body
+    fields: {  }
+    title: true
+    alt: true
     tags: {  }
   ignorecase:
     weights:
       preprocess_index: -10
       preprocess_query: -10
+    all_fields: false
     fields:
-      - body
+      - field_abilities
+      - field_ai_system_prompt
+      - field_bonds
+      - field_equipment_title
+      - field_flaws
+      - field_ideals
+      - field_notes
+      - field_personality
+      - field_personality_traits
+      - field_species_name
       - title
+  language_with_fallback: {  }
+  rendered_item: {  }
+  solr_date_range: {  }
   tokenizer:
     weights:
       preprocess_index: -6
       preprocess_query: -6
+    all_fields: false
     fields:
-      - body
+      - field_abilities
+      - field_ai_system_prompt
+      - field_bonds
+      - field_equipment_title
+      - field_flaws
+      - field_ideals
+      - field_notes
+      - field_personality
+      - field_personality_traits
+      - field_species_name
       - title
     spaces: ''
     ignored: ''
+    overlap_cjk: 1
     minimum_word_size: '3'
     overlap: 3
   transliteration:
     weights:
       preprocess_index: -4
       preprocess_query: -4
+    all_fields: false
 tracker_settings:
   default:
     indexing_order: fifo
 options:
   cron_limit: 50
+  delete_on_fail: true
   index_directly: true
+  track_changes_in_references: true
 server: milvus_ai_search

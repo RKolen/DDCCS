@@ -1,0 +1,184 @@
+uuid: 743cf759-482f-48d3-a6e4-10c42f8e78db
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.node.npc.field_abilities_ref
+    - field.field.node.npc.field_ability_scores
+    - field.field.node.npc.field_armor_class
+    - field.field.node.npc.field_class
+    - field.field.node.npc.field_faction
+    - field.field.node.npc.field_key_traits
+    - field.field.node.npc.field_level
+    - field.field.node.npc.field_lineage
+    - field.field.node.npc.field_location
+    - field.field.node.npc.field_maximum_hitpoints
+    - field.field.node.npc.field_nickname
+    - field.field.node.npc.field_notes
+    - field.field.node.npc.field_personality
+    - field.field.node.npc.field_profile_type
+    - field.field.node.npc.field_recurring
+    - field.field.node.npc.field_relationships
+    - field.field.node.npc.field_role
+    - field.field.node.npc.field_species
+    - node.type.npc
+  module:
+    - entity_reference_revisions
+    - options
+    - text
+    - user
+id: node.npc.default
+targetEntityType: node
+bundle: npc
+mode: default
+content:
+  field_ability_scores:
+    type: entity_reference_revisions_entity_view
+    label: above
+    settings:
+      view_mode: default
+      link: ''
+    third_party_settings: {  }
+    weight: 11
+    region: content
+  field_armor_class:
+    type: number_integer
+    label: above
+    settings:
+      thousand_separator: ''
+      prefix_suffix: true
+    third_party_settings: {  }
+    weight: 14
+    region: content
+  field_class:
+    type: entity_reference_revisions_entity_view
+    label: above
+    settings:
+      view_mode: default
+      link: ''
+    third_party_settings: {  }
+    weight: 10
+    region: content
+  field_faction:
+    type: entity_reference_label
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 2
+    region: content
+  field_key_traits:
+    type: entity_reference_label
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 7
+    region: content
+  field_level:
+    type: number_integer
+    label: above
+    settings:
+      thousand_separator: ''
+      prefix_suffix: true
+    third_party_settings: {  }
+    weight: 12
+    region: content
+  field_lineage:
+    type: entity_reference_label
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 5
+    region: content
+  field_location:
+    type: entity_reference_label
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 17
+    region: content
+  field_maximum_hitpoints:
+    type: number_integer
+    label: above
+    settings:
+      thousand_separator: ''
+      prefix_suffix: true
+    third_party_settings: {  }
+    weight: 15
+    region: content
+  field_nickname:
+    type: string
+    label: above
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+    weight: 1
+    region: content
+  field_notes:
+    type: text_default
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    weight: 19
+    region: content
+  field_personality:
+    type: text_default
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    weight: 6
+    region: content
+  field_profile_type:
+    type: list_default
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    weight: 3
+    region: content
+  field_recurring:
+    type: boolean
+    label: above
+    settings:
+      format: default
+      format_custom_false: ''
+      format_custom_true: ''
+    third_party_settings: {  }
+    weight: 18
+    region: content
+  field_relationships:
+    type: entity_reference_revisions_entity_view
+    label: above
+    settings:
+      view_mode: default
+      link: ''
+    third_party_settings: {  }
+    weight: 16
+    region: content
+  field_role:
+    type: string
+    label: above
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+    weight: 4
+    region: content
+  field_species:
+    type: entity_reference_label
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 9
+    region: content
+  links:
+    settings: {  }
+    third_party_settings: {  }
+    weight: 100
+    region: content
+hidden:
+  field_abilities_ref: true
+  langcode: true
+  search_api_excerpt: true

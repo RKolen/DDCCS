@@ -1,0 +1,174 @@
+uuid: f7119fde-3e9f-447b-a22d-4ffdbc141bac
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.node.monster.field_ability_scores
+    - field.field.node.monster.field_armor_class
+    - field.field.node.monster.field_challenge_rating
+    - field.field.node.monster.field_faction
+    - field.field.node.monster.field_image
+    - field.field.node.monster.field_maximum_hitpoints
+    - field.field.node.monster.field_movement_speed
+    - field.field.node.monster.field_relationships
+    - field.field.node.monster.field_specialized_abilities
+    - field.field.node.monster.field_type
+    - node.type.monster
+  module:
+    - paragraphs
+    - path
+    - text
+id: node.monster.default
+targetEntityType: node
+bundle: monster
+mode: default
+content:
+  created:
+    type: datetime_timestamp
+    weight: 4
+    region: content
+    settings: {  }
+    third_party_settings: {  }
+  field_ability_scores:
+    type: paragraphs
+    weight: 5
+    region: content
+    settings:
+      title: Paragraph
+      title_plural: Paragraphs
+      edit_mode: open
+      closed_mode: summary
+      autocollapse: none
+      closed_mode_threshold: 0
+      add_mode: dropdown
+      form_display_mode: default
+      default_paragraph_type: ''
+      features:
+        collapse_edit_all: collapse_edit_all
+        duplicate: duplicate
+    third_party_settings: {  }
+  field_armor_class:
+    type: number
+    weight: 6
+    region: content
+    settings:
+      placeholder: '10'
+    third_party_settings: {  }
+  field_challenge_rating:
+    type: number
+    weight: 36
+    region: content
+    settings:
+      placeholder: ''
+    third_party_settings: {  }
+  field_faction:
+    type: entity_reference_autocomplete
+    weight: 10
+    region: content
+    settings:
+      match_operator: CONTAINS
+      match_limit: 10
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+  field_image:
+    type: entity_reference_autocomplete
+    weight: 1
+    region: content
+    settings:
+      match_operator: CONTAINS
+      match_limit: 10
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+  field_maximum_hitpoints:
+    type: number
+    weight: 7
+    region: content
+    settings:
+      placeholder: '10'
+    third_party_settings: {  }
+  field_movement_speed:
+    type: number
+    weight: 23
+    region: content
+    settings:
+      placeholder: '30'
+    third_party_settings: {  }
+  field_relationships:
+    type: paragraphs
+    weight: 11
+    region: content
+    settings:
+      title: Relationship
+      title_plural: Relationships
+      edit_mode: open
+      closed_mode: summary
+      autocollapse: none
+      closed_mode_threshold: 0
+      add_mode: dropdown
+      form_display_mode: default
+      default_paragraph_type: ''
+      features:
+        collapse_edit_all: collapse_edit_all
+        duplicate: duplicate
+    third_party_settings: {  }
+  field_specialized_abilities:
+    type: text_textarea
+    weight: 35
+    region: content
+    settings:
+      rows: 5
+      placeholder: ''
+    third_party_settings: {  }
+  field_type:
+    type: entity_reference_autocomplete
+    weight: 10
+    region: content
+    settings:
+      match_operator: CONTAINS
+      match_limit: 10
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+  langcode:
+    type: language_select
+    weight: 2
+    region: content
+    settings:
+      include_locked: true
+    third_party_settings: {  }
+  path:
+    type: path
+    weight: 8
+    region: content
+    settings: {  }
+    third_party_settings: {  }
+  status:
+    type: boolean_checkbox
+    weight: 9
+    region: content
+    settings:
+      display_label: true
+    third_party_settings: {  }
+  title:
+    type: string_textfield
+    weight: 0
+    region: content
+    settings:
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+  uid:
+    type: entity_reference_autocomplete
+    weight: 3
+    region: content
+    settings:
+      match_operator: CONTAINS
+      match_limit: 10
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+hidden:
+  promote: true
+  sticky: true

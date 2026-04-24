@@ -1,0 +1,21 @@
+uuid: 24af742e-f9df-4c09-a3b1-3c766e7b1af6
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_recurring
+    - node.type.character
+id: node.character.field_recurring
+field_name: field_recurring
+entity_type: node
+bundle: character
+label: Recurring
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  on_label: 'On'
+  off_label: 'Off'
+field_type: boolean

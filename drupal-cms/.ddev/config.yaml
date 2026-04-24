@@ -214,9 +214,17 @@ corepack_enable: true
 # In this case the user must provide all such settings.
 
 # You can inject environment variables into the web container with:
-# web_environment:
-#     - SOMEENV=somevalue
-#     - SOMEOTHERENV=someothervalue
+web_environment:
+    - AI_CREATIVE_MODEL=${AI_CREATIVE_MODEL:-}
+    - AI_CREATIVE_BASE_URL=${AI_CREATIVE_BASE_URL:-}
+    - AI_CREATIVE_TEMPERATURE=${AI_CREATIVE_TEMPERATURE:-}
+    - AI_CREATIVE_MAX_TOKENS=${AI_CREATIVE_MAX_TOKENS:-}
+    # AI provider credentials — set real values in drupal-cms/.ddev/.env (gitignored)
+    - OLLAMA_API_KEY=${OLLAMA_API_KEY:-ollama_no_auth}
+    - OLLAMA_HOST=${OLLAMA_HOST:-http://ddev-drupal-cms-ollama}
+    - MILVUS_API_KEY=${MILVUS_API_KEY:-}
+    - MILVUS_HOST=${MILVUS_HOST:-http://milvus}
+    - GATSBY_DRUPAL_PASSWORD=${GATSBY_DRUPAL_PASSWORD:-}
 
 # no_project_mount: false
 # (Experimental) If true, DDEV will not mount the project into the web container;

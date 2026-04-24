@@ -1,0 +1,18 @@
+uuid: 6e15272e-190d-4965-bc44-81fc8afed9a2
+langcode: en
+status: true
+dependencies:
+  module:
+    - node
+id: node.field_ritual
+field_name: field_ritual
+entity_type: node
+type: boolean
+settings: {  }
+module: core
+locked: false
+cardinality: 1
+translatable: false
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

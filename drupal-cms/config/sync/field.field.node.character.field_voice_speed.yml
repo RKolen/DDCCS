@@ -1,0 +1,25 @@
+uuid: z8a7v6w5-x4y3-2z2a-1b0c-9y8z7a5b6u4v
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_voice_speed
+    - node.type.character
+id: node.character.field_voice_speed
+field_name: field_voice_speed
+entity_type: node
+bundle: character
+label: 'Voice Speed'
+description: 'TTS voice speed multiplier (1.0 = normal)'
+required: false
+translatable: false
+default_value:
+  -
+    value: 1.0
+default_value_callback: ''
+settings:
+  min: 0.5
+  max: 2.0
+  prefix: ''
+  suffix: x
+field_type: decimal

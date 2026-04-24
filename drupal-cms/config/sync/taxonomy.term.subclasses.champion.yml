@@ -1,0 +1,10 @@
+uuid: term-subclasses-002
+langcode: en
+status: true
+dependencies:
+  config:
+    - taxonomy.vocabulary.subclasses
+name: Champion
+weight: 0
+parent: {  }
+vid: subclasses

@@ -1,0 +1,31 @@
+uuid: 8ccb971a-0db5-4eaf-a39d-c1d769d8083b
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.taxonomy_term.field_edition
+    - taxonomy.vocabulary.game_edition
+    - taxonomy.vocabulary.spells
+id: taxonomy_term.spells.field_edition
+field_name: field_edition
+entity_type: taxonomy_term
+bundle: spells
+label: Edition
+description: ''
+required: false
+translatable: false
+default_value:
+  -
+    target_id: '478'
+default_value_callback: ''
+settings:
+  handler: 'default:taxonomy_term'
+  handler_settings:
+    target_bundles:
+      game_edition: game_edition
+    sort:
+      field: name
+      direction: asc
+    auto_create: false
+    auto_create_bundle: ''
+field_type: entity_reference

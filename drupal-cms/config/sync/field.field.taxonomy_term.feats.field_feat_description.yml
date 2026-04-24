@@ -1,0 +1,22 @@
+uuid: 86936613-1b92-4767-b866-ab3cc191764c
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.taxonomy_term.field_feat_description
+    - taxonomy.vocabulary.feats
+  module:
+    - text
+id: taxonomy_term.feats.field_feat_description
+field_name: field_feat_description
+entity_type: taxonomy_term
+bundle: feats
+label: Description
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  allowed_formats: {  }
+field_type: text_long

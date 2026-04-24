@@ -1,0 +1,9 @@
+uuid: 6c4dbed7-334a-4886-a26f-107f2241ae46
+langcode: en
+status: true
+dependencies: {  }
+name: Campaign
+vid: campaign
+description: 'Campaign names and grouping terms'
+weight: 0
+new_revision: false

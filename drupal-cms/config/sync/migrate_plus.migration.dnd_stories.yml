@@ -1,0 +1,34 @@
+id: dnd_stories
+migration_group: dnd
+label: 'D&D: Import story nodes'
+source:
+  plugin: dnd_stories_directory
+  base_dir: /var/www/html/game_data/campaigns
+process:
+  title: story_title
+  field_story_number: story_number
+  field_body/value: body
+  field_body/format:
+    plugin: default_value
+    default_value: plain_text
+  field_session_results: session_results
+  field_story_hooks: story_hooks
+  field_session_date: session_date
+  field_campaign:
+    plugin: entity_lookup
+    source: campaign_name
+    entity_type: taxonomy_term
+    bundle: campaign
+    value_key: name
+    bundle_key: vid
+    ignore_case: true
+  status:
+    plugin: default_value
+    default_value: 1
+destination:
+  plugin: 'entity:node'
+  default_bundle: story
+migration_dependencies:
+  required:
+    - dnd_character_nodes
+    - dnd_npc_nodes

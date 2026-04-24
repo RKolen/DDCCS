@@ -1,0 +1,10 @@
+uuid: term-feats-002
+langcode: en
+status: true
+dependencies:
+  config:
+    - taxonomy.vocabulary.feats
+name: Skilled
+weight: 0
+parent: {  }
+vid: feats

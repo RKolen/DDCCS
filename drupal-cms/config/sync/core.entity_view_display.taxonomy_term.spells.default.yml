@@ -1,0 +1,35 @@
+uuid: a12cb933-05dc-4da7-9994-c2c831dfb666
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.taxonomy_term.spells.field_edition
+    - field.field.taxonomy_term.spells.field_spell_casting_time
+    - field.field.taxonomy_term.spells.field_spell_components
+    - field.field.taxonomy_term.spells.field_spell_concentration
+    - field.field.taxonomy_term.spells.field_spell_description
+    - field.field.taxonomy_term.spells.field_spell_duration
+    - field.field.taxonomy_term.spells.field_spell_level
+    - field.field.taxonomy_term.spells.field_spell_range
+    - field.field.taxonomy_term.spells.field_spell_ritual
+    - field.field.taxonomy_term.spells.field_spell_school
+    - taxonomy.vocabulary.spells
+id: taxonomy_term.spells.default
+targetEntityType: taxonomy_term
+bundle: spells
+mode: default
+content: {  }
+hidden:
+  description: true
+  field_edition: true
+  field_spell_casting_time: true
+  field_spell_components: true
+  field_spell_concentration: true
+  field_spell_description: true
+  field_spell_duration: true
+  field_spell_level: true
+  field_spell_range: true
+  field_spell_ritual: true
+  field_spell_school: true
+  langcode: true
+  search_api_excerpt: true

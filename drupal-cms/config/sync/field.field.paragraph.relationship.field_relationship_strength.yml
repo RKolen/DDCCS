@@ -1,0 +1,25 @@
+uuid: i7j6e5f4-g3h2-1i1j-0k9l-8h7i6j4k5d3e
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.paragraph.field_relationship_strength
+    - paragraphs.paragraphs_type.relationship
+id: paragraph.relationship.field_relationship_strength
+field_name: field_relationship_strength
+entity_type: paragraph
+bundle: relationship
+label: Strength
+description: 'Relationship strength on a scale of 1-10 (1 = weak, 10 = very strong)'
+required: false
+translatable: false
+default_value:
+  -
+    value: 5
+default_value_callback: ''
+settings:
+  min: 1
+  max: 10
+  prefix: ''
+  suffix: /10
+field_type: integer

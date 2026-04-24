@@ -1,0 +1,19 @@
+uuid: s9t0u1v2-w3x4-5678-abcd-901234567890
+langcode: en
+status: true
+dependencies:
+  module:
+    - node
+id: node.field_magic_items_ref
+field_name: field_magic_items_ref
+entity_type: node
+type: entity_reference
+settings:
+  target_type: node
+module: core
+locked: false
+cardinality: -1
+translatable: false
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

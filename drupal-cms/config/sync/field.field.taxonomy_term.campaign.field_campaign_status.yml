@@ -1,0 +1,23 @@
+uuid: 4029d4d2-64fc-494a-ad8b-6c85db223ab4
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.taxonomy_term.field_campaign_status
+    - taxonomy.vocabulary.campaign
+  module:
+    - options
+id: taxonomy_term.campaign.field_campaign_status
+field_name: field_campaign_status
+entity_type: taxonomy_term
+bundle: campaign
+label: Status
+description: 'Lifecycle status for campaign tracking'
+required: false
+translatable: false
+default_value:
+  -
+    value: active
+default_value_callback: ''
+settings: {  }
+field_type: list_string

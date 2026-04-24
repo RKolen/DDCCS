@@ -1,0 +1,38 @@
+uuid: l0m9n8o7-p6q5-7l7m-8n9o-0p1q2r3s4t5u
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.paragraph.spell_slot.field_spell_level
+    - field.field.paragraph.spell_slot.field_spell_slots_available
+    - field.field.paragraph.spell_slot.field_spell_slots_total
+    - paragraphs.paragraphs_type.spell_slot
+id: paragraph.spell_slot.default
+targetEntityType: paragraph
+bundle: spell_slot
+mode: default
+content:
+  field_spell_level:
+    type: number
+    weight: 0
+    region: content
+    settings:
+      placeholder: '1'
+    third_party_settings: {  }
+  field_spell_slots_available:
+    type: number
+    weight: 2
+    region: content
+    settings:
+      placeholder: '4'
+    third_party_settings: {  }
+  field_spell_slots_total:
+    type: number
+    weight: 1
+    region: content
+    settings:
+      placeholder: '4'
+    third_party_settings: {  }
+hidden:
+  created: true
+  status: true

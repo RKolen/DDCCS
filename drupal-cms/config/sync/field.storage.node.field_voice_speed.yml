@@ -1,0 +1,20 @@
+uuid: v8w7r6s5-t4u3-2v2w-1x0y-9t8u7v5w6q4r
+langcode: en
+status: true
+dependencies:
+  module:
+    - node
+id: node.field_voice_speed
+field_name: field_voice_speed
+entity_type: node
+type: decimal
+settings:
+  precision: 3
+  scale: 2
+module: core
+locked: false
+cardinality: 1
+translatable: false
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

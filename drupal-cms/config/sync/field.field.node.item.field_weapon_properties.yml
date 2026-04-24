@@ -1,0 +1,29 @@
+uuid: 64fc1031-cc40-4df3-a4d5-1a69d65df1ef
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_weapon_properties
+    - node.type.item
+    - taxonomy.vocabulary.weapon_properties
+id: node.item.field_weapon_properties
+field_name: field_weapon_properties
+entity_type: node
+bundle: item
+label: 'Weapon Properties'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:taxonomy_term'
+  handler_settings:
+    target_bundles:
+      weapon_properties: weapon_properties
+    sort:
+      field: name
+      direction: asc
+    auto_create: false
+    auto_create_bundle: ''
+field_type: entity_reference

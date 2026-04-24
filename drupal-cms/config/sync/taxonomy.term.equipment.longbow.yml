@@ -1,0 +1,10 @@
+uuid: term-equipment-002
+langcode: en
+status: true
+dependencies:
+  config:
+    - taxonomy.vocabulary.equipment_types
+name: Longbow
+weight: 0
+parent: {  }
+vid: equipment_types

@@ -38,7 +38,7 @@
 | 9 | Gatsby frontend scaffold (gatsby-config.ts, gatsby-source-drupal) | Done |
 | 10 | Python sync layer (src/integration/drupal_sync.py) | Done |
 | **11** | **Milvus enable + index** | **Pending (infrastructure)** |
-| **12** | **Character instance fields** | **Pending (UI)** |
+| 12 | Character instance fields (field_source_character boolean, field_campaign ref) | Done |
 | **13** | **Gatsby React components** | **Pending** |
 
 ---

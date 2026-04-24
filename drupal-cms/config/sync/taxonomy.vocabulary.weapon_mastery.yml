@@ -1,0 +1,9 @@
+uuid: 9a22512d-5d9c-4fd5-a2ad-6b8e31592845
+langcode: en
+status: true
+dependencies: {  }
+name: 'Weapon Mastery'
+vid: weapon_mastery
+description: null
+weight: 0
+new_revision: false

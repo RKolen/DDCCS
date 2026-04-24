@@ -1,0 +1,11 @@
+uuid: fe149d9b-f4c7-4589-8c89-d98d4b73036b
+langcode: en
+status: true
+dependencies:
+  config:
+    - node.type.monster
+id: node.monster
+target_entity_type_id: node
+target_bundle: monster
+default_langcode: site_default
+language_alterable: false

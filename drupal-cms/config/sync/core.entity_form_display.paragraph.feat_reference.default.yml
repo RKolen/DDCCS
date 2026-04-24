@@ -1,0 +1,25 @@
+uuid: a30fa0d8-7421-47b5-8421-d01a11192ad7
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.paragraph.feat_reference.field_feat
+    - paragraphs.paragraphs_type.feat_reference
+id: paragraph.feat_reference.default
+targetEntityType: paragraph
+bundle: feat_reference
+mode: default
+content:
+  field_feat:
+    type: entity_reference_autocomplete
+    weight: 0
+    region: content
+    settings:
+      match_operator: CONTAINS
+      match_limit: 10
+      size: 60
+      placeholder: 'Type a feat name...'
+    third_party_settings: {  }
+hidden:
+  created: true
+  status: true

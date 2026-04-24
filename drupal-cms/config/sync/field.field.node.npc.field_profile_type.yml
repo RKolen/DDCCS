@@ -1,0 +1,23 @@
+uuid: 6143c00b-74e8-4f5f-950a-a46c66d1c693
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_profile_type
+    - node.type.npc
+  module:
+    - options
+id: node.npc.field_profile_type
+field_name: field_profile_type
+entity_type: node
+bundle: npc
+label: 'Profile Type'
+description: 'NPC profile depth'
+required: true
+translatable: false
+default_value:
+  -
+    value: simplified
+default_value_callback: ''
+settings: {  }
+field_type: list_string

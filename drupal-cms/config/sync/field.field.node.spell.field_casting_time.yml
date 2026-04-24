@@ -1,0 +1,19 @@
+uuid: casting-time-field
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_casting_time
+    - node.type.spell
+id: node.spell.field_casting_time
+field_name: field_casting_time
+entity_type: node
+bundle: spell
+label: 'Casting Time'
+description: 'e.g., 1 action, 1 bonus action, 1 minute'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string

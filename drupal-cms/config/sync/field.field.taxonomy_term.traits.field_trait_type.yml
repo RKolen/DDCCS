@@ -1,0 +1,21 @@
+uuid: 2077d043-5f45-4608-be3b-05103bb66840
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.taxonomy_term.field_trait_type
+    - taxonomy.vocabulary.traits
+  module:
+    - options
+id: taxonomy_term.traits.field_trait_type
+field_name: field_trait_type
+entity_type: taxonomy_term
+bundle: traits
+label: 'Trait Type'
+description: 'Type bucket for this trait term'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: list_string

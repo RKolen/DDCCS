@@ -1,0 +1,23 @@
+uuid: e3f2a1b0-c9d8-7e7f-6g5h-4d3e2f0g1z9a
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.paragraph.field_spell_slots_available
+    - paragraphs.paragraphs_type.spell_slot
+id: paragraph.spell_slot.field_spell_slots_available
+field_name: field_spell_slots_available
+entity_type: paragraph
+bundle: spell_slot
+label: 'Available Slots'
+description: 'Number of spell slots remaining for this level'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  min: 0
+  max: 4
+  prefix: ''
+  suffix: ''
+field_type: integer

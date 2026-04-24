@@ -1,0 +1,31 @@
+uuid: 90f7af9b-6dcb-49fa-b415-969162c57309
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_class
+    - node.type.npc
+    - paragraphs.paragraphs_type.class
+  module:
+    - entity_reference_revisions
+id: node.npc.field_class
+field_name: field_class
+entity_type: node
+bundle: npc
+label: Class
+description: 'Class and subclass details for full-profile NPCs'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:paragraph'
+  handler_settings:
+    target_bundles:
+      class: class
+    negate: 0
+    target_bundles_drag_drop:
+      class:
+        weight: 0
+        enabled: true
+field_type: entity_reference_revisions

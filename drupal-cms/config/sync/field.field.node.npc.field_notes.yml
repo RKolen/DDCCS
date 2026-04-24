@@ -1,0 +1,24 @@
+uuid: da87a938-617f-45c0-9cd6-7959698ca390
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_notes
+    - filter.format.plain_text
+    - node.type.npc
+  module:
+    - text
+id: node.npc.field_notes
+field_name: field_notes
+entity_type: node
+bundle: npc
+label: Notes
+description: 'DM-only or system notes for this NPC'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  allowed_formats:
+    - plain_text
+field_type: text_long

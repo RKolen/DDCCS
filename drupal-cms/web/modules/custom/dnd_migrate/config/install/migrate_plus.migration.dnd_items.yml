@@ -1,0 +1,66 @@
+id: dnd_items
+label: 'D&D: Import items'
+migration_group: dnd
+
+# ---------------------------------------------------------------------------
+# Source: custom_items.json - a keyed object where each key is item name.
+# Configure file_path to match your DDEV mount.  The default points to the
+# project-root-relative path used inside the DDEV container.
+# ---------------------------------------------------------------------------
+source:
+  plugin: dnd_items_json
+  file_path: '/var/www/html/game_data/items/custom_items.json'
+
+# ---------------------------------------------------------------------------
+# Process: map JSON fields to node:item fields.
+# ---------------------------------------------------------------------------
+process:
+  title: name
+
+  # field_item_type is a list (allowed values: weapon, armor, magic_item, etc.)
+  field_item_type: item_type
+
+  # Boolean toggle.  JSON stores true/false.
+  field_is_magic: is_magic
+
+  # Description paragraph reference.
+  # The dnd_item_descriptions sub-migration created one paragraph:wysiwyg per
+  # item.  dnd_paragraph_lookup resolves item_key -> {target_id, target_revision_id}
+  # in the exact keyed format that entity_reference_revisions fields require.
+  field_description:
+    plugin: dnd_paragraph_lookup
+    migration: dnd_item_descriptions
+    source_id: item_key
+    source: item_key
+
+  # Rarity is nested inside the properties object.
+  field_item_rarity:
+    plugin: extract
+    source: properties
+    index:
+      - rarity
+
+  # Boolean: requires attunement.
+  field_item_requires_attunement:
+    plugin: extract
+    source: properties
+    index:
+      - attunement
+
+  field_notes: notes
+
+  # Publish all imported items immediately.
+  status:
+    plugin: default_value
+    default_value: 1
+
+# ---------------------------------------------------------------------------
+# Destination: node of type item.
+# ---------------------------------------------------------------------------
+destination:
+  plugin: 'entity:node'
+  default_bundle: item
+
+migration_dependencies:
+  required:
+    - dnd_item_descriptions

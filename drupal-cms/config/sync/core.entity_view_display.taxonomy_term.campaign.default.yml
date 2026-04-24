@@ -1,0 +1,41 @@
+uuid: dea32c0b-9260-495d-87f3-5cea954e02fd
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.taxonomy_term.campaign.field_campaign_start_date
+    - field.field.taxonomy_term.campaign.field_campaign_status
+    - taxonomy.vocabulary.campaign
+  module:
+    - options
+    - text
+id: taxonomy_term.campaign.default
+targetEntityType: taxonomy_term
+bundle: campaign
+mode: default
+content:
+  description:
+    type: text_default
+    label: hidden
+    settings: {  }
+    third_party_settings: {  }
+    weight: 2
+    region: content
+  field_campaign_start_date:
+    type: string
+    label: above
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+    weight: 0
+    region: content
+  field_campaign_status:
+    type: list_default
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    weight: 1
+    region: content
+hidden:
+  langcode: true
+  search_api_excerpt: true

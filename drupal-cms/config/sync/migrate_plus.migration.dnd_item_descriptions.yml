@@ -1,0 +1,17 @@
+id: dnd_item_descriptions
+migration_group: dnd
+label: 'D&D: Import item description paragraphs'
+source:
+  plugin: dnd_items_json
+  file_path: /var/www/html/game_data/items/custom_items.json
+process:
+  type:
+    plugin: default_value
+    default_value: wysiwyg
+  field_text/value: description
+  field_text/format:
+    plugin: default_value
+    default_value: basic_html
+destination:
+  plugin: 'entity_reference_revisions:paragraph'
+migration_dependencies: {  }

@@ -1,0 +1,9 @@
+uuid: e5f6g7h8-i9j0-1234-efab-567890123456
+langcode: en
+status: true
+dependencies: {  }
+name: 'Equipment Types'
+vid: equipment_types
+description: 'Types of equipment (weapons, armor, items)'
+weight: 0
+new_revision: false

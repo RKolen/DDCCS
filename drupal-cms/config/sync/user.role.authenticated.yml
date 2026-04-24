@@ -13,4 +13,6 @@ weight: 1
 is_admin: false
 permissions:
   - 'access content'
-  - 'view media'
+  - 'view published terms in character_class'
+  - 'view published terms in game_edition'
+  - 'view published terms in species'

@@ -1,0 +1,23 @@
+uuid: f213a96b-2e60-49b3-b053-39b2a1264d42
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_maximum_hitpoints
+    - node.type.npc
+id: node.npc.field_maximum_hitpoints
+field_name: field_maximum_hitpoints
+entity_type: node
+bundle: npc
+label: 'Maximum Hitpoints'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  min: 0
+  max: null
+  prefix: ''
+  suffix: ''
+field_type: integer

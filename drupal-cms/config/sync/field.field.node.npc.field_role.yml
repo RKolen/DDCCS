@@ -1,0 +1,19 @@
+uuid: e4437907-073e-4c1b-b8ac-7343ff788481
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_role
+    - node.type.npc
+id: node.npc.field_role
+field_name: field_role
+entity_type: node
+bundle: npc
+label: Role
+description: 'Narrative or social role (innkeeper, guard, merchant, etc.)'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string

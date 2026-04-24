@@ -1,0 +1,18 @@
+id: dnd_character_backstory
+migration_group: dnd
+label: 'D&D: Import character backstory paragraphs'
+source:
+  plugin: dnd_json_directory
+  data_dir: /var/www/html/game_data/characters
+  profile_type_filter: ''
+process:
+  type:
+    plugin: default_value
+    default_value: wysiwyg
+  field_text/value: backstory
+  field_text/format:
+    plugin: default_value
+    default_value: plain_text
+destination:
+  plugin: 'entity_reference_revisions:paragraph'
+migration_dependencies: {  }

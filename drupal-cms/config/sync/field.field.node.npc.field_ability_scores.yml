@@ -1,0 +1,31 @@
+uuid: fdebb2cb-30f9-4759-aae8-8447e24b1ca8
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_ability_scores
+    - node.type.npc
+    - paragraphs.paragraphs_type.ability_scores
+  module:
+    - entity_reference_revisions
+id: node.npc.field_ability_scores
+field_name: field_ability_scores
+entity_type: node
+bundle: npc
+label: 'Ability Scores'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:paragraph'
+  handler_settings:
+    target_bundles:
+      ability_scores: ability_scores
+    negate: 0
+    target_bundles_drag_drop:
+      ability_scores:
+        weight: 0
+        enabled: true
+field_type: entity_reference_revisions

@@ -3,28 +3,65 @@ langcode: en
 status: true
 dependencies:
   config:
+    - field.field.node.character.field_abilities
+    - field.field.node.character.field_abilities_ref
     - field.field.node.character.field_ability_scores
+    - field.field.node.character.field_ai_enabled
+    - field.field.node.character.field_ai_max_tokens
+    - field.field.node.character.field_ai_model
+    - field.field.node.character.field_ai_system_prompt
+    - field.field.node.character.field_ai_temperature
     - field.field.node.character.field_armor_class
     - field.field.node.character.field_background
     - field.field.node.character.field_backstory
     - field.field.node.character.field_bonds
+    - field.field.node.character.field_campaign
     - field.field.node.character.field_character_type
     - field.field.node.character.field_class
+    - field.field.node.character.field_defeat_conditions
+    - field.field.node.character.field_encounter_tactics
+    - field.field.node.character.field_equipment_items
+    - field.field.node.character.field_faction
+    - field.field.node.character.field_feats_ref
     - field.field.node.character.field_first_name
     - field.field.node.character.field_flaws
     - field.field.node.character.field_gender
+    - field.field.node.character.field_gold
     - field.field.node.character.field_ideals
+    - field.field.node.character.field_image
+    - field.field.node.character.field_key_traits
+    - field.field.node.character.field_lair_actions
     - field.field.node.character.field_languages
     - field.field.node.character.field_last_name
+    - field.field.node.character.field_legendary_actions
     - field.field.node.character.field_level
+    - field.field.node.character.field_lineage
+    - field.field.node.character.field_magic_items_ref
+    - field.field.node.character.field_major_plot_actions
     - field.field.node.character.field_maximum_hitpoints
     - field.field.node.character.field_movement_speed
     - field.field.node.character.field_nickname
+    - field.field.node.character.field_notes
     - field.field.node.character.field_npc_type
+    - field.field.node.character.field_personality
     - field.field.node.character.field_personality_traits
+    - field.field.node.character.field_plot_hooks
+    - field.field.node.character.field_proficiency_bonus
+    - field.field.node.character.field_pronouns
+    - field.field.node.character.field_recurring
+    - field.field.node.character.field_regional_effects
+    - field.field.node.character.field_relationships
+    - field.field.node.character.field_role
     - field.field.node.character.field_skills
+    - field.field.node.character.field_source_character
+    - field.field.node.character.field_specialized_abilities
     - field.field.node.character.field_species
+    - field.field.node.character.field_spell_slots
+    - field.field.node.character.field_spells_ref
     - field.field.node.character.field_tools
+    - field.field.node.character.field_voice_id_ref
+    - field.field.node.character.field_voice_pitch
+    - field.field.node.character.field_voice_speed
     - node.type.character
   module:
     - entity_reference_revisions
@@ -76,6 +113,14 @@ content:
     third_party_settings: {  }
     weight: 120
     region: content
+  field_campaign:
+    type: entity_reference_label
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 1
+    region: content
   field_character_type:
     type: boolean
     label: above
@@ -123,6 +168,15 @@ content:
     settings: {  }
     third_party_settings: {  }
     weight: 119
+    region: content
+  field_image:
+    type: entity_reference_entity_view
+    label: above
+    settings:
+      view_mode: default
+      link: false
+    third_party_settings: {  }
+    weight: 123
     region: content
   field_languages:
     type: entity_reference_label
@@ -200,6 +254,16 @@ content:
     third_party_settings: {  }
     weight: 112
     region: content
+  field_source_character:
+    type: boolean
+    label: above
+    settings:
+      format: default
+      format_custom_false: ''
+      format_custom_true: ''
+    third_party_settings: {  }
+    weight: 124
+    region: content
   field_species:
     type: entity_reference_label
     label: above
@@ -222,5 +286,39 @@ content:
     weight: 100
     region: content
 hidden:
+  field_abilities: true
+  field_abilities_ref: true
+  field_ai_enabled: true
+  field_ai_max_tokens: true
+  field_ai_model: true
+  field_ai_system_prompt: true
+  field_ai_temperature: true
+  field_defeat_conditions: true
+  field_encounter_tactics: true
+  field_equipment_items: true
+  field_faction: true
+  field_feats_ref: true
+  field_gold: true
+  field_key_traits: true
+  field_lair_actions: true
+  field_legendary_actions: true
+  field_lineage: true
+  field_magic_items_ref: true
+  field_major_plot_actions: true
+  field_notes: true
+  field_personality: true
+  field_plot_hooks: true
+  field_proficiency_bonus: true
+  field_pronouns: true
+  field_recurring: true
+  field_regional_effects: true
+  field_relationships: true
+  field_role: true
+  field_specialized_abilities: true
+  field_spell_slots: true
+  field_spells_ref: true
+  field_voice_id_ref: true
+  field_voice_pitch: true
+  field_voice_speed: true
   langcode: true
   search_api_excerpt: true

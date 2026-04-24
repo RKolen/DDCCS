@@ -1,0 +1,53 @@
+uuid: c5ae2287-ac33-4951-93f6-12c67af30a8e
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.taxonomy_term.feats.field_edition
+    - field.field.taxonomy_term.feats.field_feat_description
+    - field.field.taxonomy_term.feats.field_feat_type
+    - field.field.taxonomy_term.feats.field_level_requirement
+    - taxonomy.vocabulary.feats
+  module:
+    - text
+id: taxonomy_term.feats.default
+targetEntityType: taxonomy_term
+bundle: feats
+mode: default
+content:
+  description:
+    type: text_default
+    label: hidden
+    settings: {  }
+    third_party_settings: {  }
+    weight: 0
+    region: content
+  field_edition:
+    type: entity_reference_label
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 1
+    region: content
+  field_feat_type:
+    type: entity_reference_label
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 3
+    region: content
+  field_level_requirement:
+    type: number_integer
+    label: above
+    settings:
+      thousand_separator: ''
+      prefix_suffix: true
+    third_party_settings: {  }
+    weight: 2
+    region: content
+hidden:
+  field_feat_description: true
+  langcode: true
+  search_api_excerpt: true

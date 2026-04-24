@@ -1,0 +1,67 @@
+uuid: 6e0e61f0-f322-48b1-8f21-124ade32160e
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.taxonomy_term.class.field_edition
+    - field.field.taxonomy_term.class.field_hit_die
+    - field.field.taxonomy_term.class.field_is_spellcaster
+    - field.field.taxonomy_term.class.field_primary_ability
+    - taxonomy.vocabulary.class
+  module:
+    - text
+id: taxonomy_term.class.default
+targetEntityType: taxonomy_term
+bundle: class
+mode: default
+content:
+  description:
+    type: text_default
+    label: hidden
+    settings: {  }
+    third_party_settings: {  }
+    weight: 3
+    region: content
+  field_edition:
+    type: entity_reference_label
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 1
+    region: content
+  field_hit_die:
+    type: number_integer
+    label: above
+    settings:
+      thousand_separator: ''
+      prefix_suffix: true
+    third_party_settings: {  }
+    weight: 0
+    region: content
+  field_is_spellcaster:
+    type: boolean
+    label: above
+    settings:
+      format: default
+      format_custom_false: ''
+      format_custom_true: ''
+    third_party_settings: {  }
+    weight: 2
+    region: content
+  field_primary_ability:
+    type: entity_reference_label
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 1
+    region: content
+  links:
+    settings: {  }
+    third_party_settings: {  }
+    weight: 100
+    region: content
+hidden:
+  langcode: true
+  search_api_excerpt: true

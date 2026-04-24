@@ -1,0 +1,10 @@
+uuid: term-abilities-002
+langcode: en
+status: true
+dependencies:
+  config:
+    - taxonomy.vocabulary.abilities
+name: 'Natural Explorer'
+weight: 0
+parent: {  }
+vid: abilities

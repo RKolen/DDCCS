@@ -1,0 +1,31 @@
+uuid: q9r8m7n6-o5p4-3q3r-2s1t-0o9p8q6r7l5m
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_spell_slots
+    - node.type.character
+    - paragraphs.paragraphs_type.spell_slot
+  module:
+    - entity_reference_revisions
+id: node.character.field_spell_slots
+field_name: field_spell_slots
+entity_type: node
+bundle: character
+label: 'Spell Slots'
+description: 'Available spell slots by level for spellcasting characters'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:paragraph'
+  handler_settings:
+    target_bundles:
+      spell_slot: spell_slot
+    negate: 0
+    target_bundles_drag_drop:
+      spell_slot:
+        weight: 0
+        enabled: true
+field_type: entity_reference_revisions

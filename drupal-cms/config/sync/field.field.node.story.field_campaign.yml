@@ -1,0 +1,29 @@
+uuid: 5f47712c-1db6-4eaf-8dc7-d3d96564df78
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_campaign
+    - node.type.story
+    - taxonomy.vocabulary.campaign
+id: node.story.field_campaign
+field_name: field_campaign
+entity_type: node
+bundle: story
+label: Campaign
+description: 'Campaign term this story belongs to'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:taxonomy_term'
+  handler_settings:
+    target_bundles:
+      campaign: campaign
+    sort:
+      field: name
+      direction: asc
+    auto_create: false
+    auto_create_bundle: ''
+field_type: entity_reference

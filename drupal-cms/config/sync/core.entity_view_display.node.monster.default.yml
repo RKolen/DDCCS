@@ -1,0 +1,121 @@
+uuid: 7f356e82-32b1-45e3-9ee6-df182ed527ef
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.node.monster.field_ability_scores
+    - field.field.node.monster.field_armor_class
+    - field.field.node.monster.field_challenge_rating
+    - field.field.node.monster.field_faction
+    - field.field.node.monster.field_image
+    - field.field.node.monster.field_maximum_hitpoints
+    - field.field.node.monster.field_movement_speed
+    - field.field.node.monster.field_relationships
+    - field.field.node.monster.field_specialized_abilities
+    - field.field.node.monster.field_type
+    - node.type.monster
+  module:
+    - entity_reference_revisions
+    - text
+    - user
+id: node.monster.default
+targetEntityType: node
+bundle: monster
+mode: default
+content:
+  field_ability_scores:
+    type: entity_reference_revisions_entity_view
+    label: above
+    settings:
+      view_mode: default
+      link: ''
+    third_party_settings: {  }
+    weight: 101
+    region: content
+  field_armor_class:
+    type: number_integer
+    label: above
+    settings:
+      thousand_separator: ''
+      prefix_suffix: true
+    third_party_settings: {  }
+    weight: 115
+    region: content
+  field_challenge_rating:
+    type: number_decimal
+    label: above
+    settings:
+      thousand_separator: ''
+      decimal_separator: .
+      scale: 2
+      prefix_suffix: true
+    third_party_settings: {  }
+    weight: 127
+    region: content
+  field_faction:
+    type: entity_reference_label
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 125
+    region: content
+  field_image:
+    type: entity_reference_entity_view
+    label: above
+    settings:
+      view_mode: default
+      link: false
+    third_party_settings: {  }
+    weight: 123
+    region: content
+  field_maximum_hitpoints:
+    type: number_integer
+    label: above
+    settings:
+      thousand_separator: ''
+      prefix_suffix: true
+    third_party_settings: {  }
+    weight: 116
+    region: content
+  field_movement_speed:
+    type: number_integer
+    label: above
+    settings:
+      thousand_separator: ''
+      prefix_suffix: true
+    third_party_settings: {  }
+    weight: 117
+    region: content
+  field_relationships:
+    type: entity_reference_revisions_entity_view
+    label: above
+    settings:
+      view_mode: default
+      link: ''
+    third_party_settings: {  }
+    weight: 124
+    region: content
+  field_specialized_abilities:
+    type: text_default
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    weight: 126
+    region: content
+  field_type:
+    type: entity_reference_label
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 101
+    region: content
+  links:
+    settings: {  }
+    third_party_settings: {  }
+    weight: 100
+    region: content
+hidden:
+  langcode: true
+  search_api_excerpt: true

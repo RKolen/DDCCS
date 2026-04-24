@@ -1,0 +1,29 @@
+uuid: 4ae283ca-8b1f-4f46-b06b-153f0e32be49
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_npcs_encountered
+    - node.type.npc
+    - node.type.session
+id: node.session.field_npcs_encountered
+field_name: field_npcs_encountered
+entity_type: node
+bundle: session
+label: 'NPCs Encountered'
+description: 'NPCs encountered during this session'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:node'
+  handler_settings:
+    target_bundles:
+      npc: npc
+    sort:
+      field: title
+      direction: ASC
+    auto_create: false
+    auto_create_bundle: ''
+field_type: entity_reference

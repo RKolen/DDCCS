@@ -1,0 +1,23 @@
+uuid: 3f1af83d-18c6-46cf-abdf-cc31c8e207b2
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_level
+    - node.type.npc
+id: node.npc.field_level
+field_name: field_level
+entity_type: node
+bundle: npc
+label: Level
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  min: 1
+  max: null
+  prefix: ''
+  suffix: ''
+field_type: integer

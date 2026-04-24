@@ -1,0 +1,43 @@
+uuid: 9cb6d9b0-6fda-4505-8329-e6806ee8d2d3
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.taxonomy_term.magical_properties.field_edition
+    - field.field.taxonomy_term.magical_properties.field_effect
+    - taxonomy.vocabulary.magical_properties
+  module:
+    - entity_reference_revisions
+    - text
+id: taxonomy_term.magical_properties.default
+targetEntityType: taxonomy_term
+bundle: magical_properties
+mode: default
+content:
+  description:
+    type: text_default
+    label: hidden
+    settings: {  }
+    third_party_settings: {  }
+    weight: 0
+    region: content
+  field_edition:
+    type: entity_reference_label
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 1
+    region: content
+  field_effect:
+    type: entity_reference_revisions_entity_view
+    label: above
+    settings:
+      view_mode: default
+      link: ''
+    third_party_settings: {  }
+    weight: 2
+    region: content
+hidden:
+  langcode: true
+  search_api_excerpt: true

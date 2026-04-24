@@ -5,6 +5,7 @@ dependencies:
   config:
     - field.field.paragraph.class.field_class
     - field.field.paragraph.class.field_level
+    - field.field.paragraph.class.field_subclass_ref
     - paragraphs.paragraphs_type.class
 id: paragraph.class.default
 targetEntityType: paragraph
@@ -26,6 +27,16 @@ content:
     weight: 1
     region: content
     settings:
+      placeholder: '1'
+    third_party_settings: {  }
+  field_subclass_ref:
+    type: entity_reference_autocomplete
+    weight: 3
+    region: content
+    settings:
+      match_operator: CONTAINS
+      match_limit: 10
+      size: 60
       placeholder: ''
     third_party_settings: {  }
 hidden:

@@ -1,0 +1,22 @@
+uuid: de3e0a02-611e-4825-ab69-8a3027e375c5
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_defeat_conditions
+    - node.type.character
+  module:
+    - text
+id: node.character.field_defeat_conditions
+field_name: field_defeat_conditions
+entity_type: node
+bundle: character
+label: 'Defeat Conditions'
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  allowed_formats: {  }
+field_type: text_long

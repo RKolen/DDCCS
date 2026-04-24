@@ -1,0 +1,29 @@
+uuid: z6a7b8c9-d0e1-2345-abcd-678901234567
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.paragraph.field_subclass_ref
+    - paragraphs.paragraphs_type.class
+    - taxonomy.vocabulary.subclasses
+id: paragraph.class.field_subclass_ref
+field_name: field_subclass_ref
+entity_type: paragraph
+bundle: class
+label: Subclass
+description: 'Class subclass or archetype'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:taxonomy_term'
+  handler_settings:
+    target_bundles:
+      subclasses: subclasses
+    sort:
+      field: name
+      direction: asc
+    auto_create: false
+    auto_create_bundle: subclasses
+field_type: entity_reference

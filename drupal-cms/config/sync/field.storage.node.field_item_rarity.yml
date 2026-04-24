@@ -1,0 +1,42 @@
+uuid: l2m3n4o5-p6q7-8901-bcde-234567890123
+langcode: en
+status: true
+dependencies:
+  module:
+    - node
+    - options
+id: node.field_item_rarity
+field_name: field_item_rarity
+entity_type: node
+type: list_string
+settings:
+  allowed_values:
+    -
+      value: common
+      label: Common
+    -
+      value: uncommon
+      label: Uncommon
+    -
+      value: rare
+      label: Rare
+    -
+      value: very_rare
+      label: 'Very Rare'
+    -
+      value: legendary
+      label: Legendary
+    -
+      value: artifact
+      label: Artifact
+    -
+      value: vestige
+      label: Vestige
+  allowed_values_function: ''
+module: options
+locked: false
+cardinality: 1
+translatable: false
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

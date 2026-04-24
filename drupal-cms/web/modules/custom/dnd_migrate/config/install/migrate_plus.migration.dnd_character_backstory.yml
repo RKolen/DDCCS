@@ -1,0 +1,37 @@
+id: dnd_character_backstory
+label: 'D&D: Import character backstory paragraphs'
+migration_group: dnd
+
+# ---------------------------------------------------------------------------
+# Source: character JSON files.  One row per character that has a non-empty
+# backstory string.  The paragraph is later referenced by dnd_character_nodes.
+# ---------------------------------------------------------------------------
+source:
+  plugin: dnd_json_directory
+  data_dir: '/var/www/html/game_data/characters'
+  profile_type_filter: ''
+
+# ---------------------------------------------------------------------------
+# Process: create one paragraph:wysiwyg entity per character.
+# ---------------------------------------------------------------------------
+process:
+  # Hard-code the paragraph type.
+  type:
+    plugin: default_value
+    default_value: wysiwyg
+
+  # Map the backstory string into the wysiwyg paragraph text field.
+  # The field_text field is a formatted text (text_long) field.
+  'field_text/value': backstory
+
+  'field_text/format':
+    plugin: default_value
+    default_value: plain_text
+
+# ---------------------------------------------------------------------------
+# Destination: paragraph entity of type wysiwyg.
+# ---------------------------------------------------------------------------
+destination:
+  plugin: 'entity_reference_revisions:paragraph'
+
+migration_dependencies: {}

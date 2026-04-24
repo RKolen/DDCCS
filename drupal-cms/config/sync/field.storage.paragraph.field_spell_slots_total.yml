@@ -1,0 +1,20 @@
+uuid: n0o9j8k7-l6m5-4n4o-3p2q-1l0k9m7n8i6j
+langcode: en
+status: true
+dependencies:
+  module:
+    - paragraphs
+id: paragraph.field_spell_slots_total
+field_name: field_spell_slots_total
+entity_type: paragraph
+type: integer
+settings:
+  unsigned: false
+  size: normal
+module: core
+locked: false
+cardinality: 1
+translatable: false
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

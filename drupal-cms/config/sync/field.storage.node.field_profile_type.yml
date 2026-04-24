@@ -1,0 +1,27 @@
+uuid: 40126591-d09f-43b0-ae0a-8baf6b865034
+langcode: en
+status: true
+dependencies:
+  module:
+    - node
+    - options
+id: node.field_profile_type
+field_name: field_profile_type
+entity_type: node
+type: list_string
+settings:
+  allowed_values:
+    -
+      value: simplified
+      label: Simplified
+    -
+      value: full
+      label: Full
+  allowed_values_function: ''
+module: options
+locked: false
+cardinality: 1
+translatable: false
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

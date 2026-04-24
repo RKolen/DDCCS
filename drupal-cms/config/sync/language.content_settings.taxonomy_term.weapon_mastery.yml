@@ -1,0 +1,11 @@
+uuid: e2cc9120-1cc5-495c-85d2-d5f014291bbc
+langcode: en
+status: true
+dependencies:
+  config:
+    - taxonomy.vocabulary.weapon_mastery
+id: taxonomy_term.weapon_mastery
+target_entity_type_id: taxonomy_term
+target_bundle: weapon_mastery
+default_langcode: site_default
+language_alterable: false

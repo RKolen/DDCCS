@@ -1,0 +1,9 @@
+uuid: f2100f58-132f-4289-b776-aad22df60355
+langcode: en
+status: true
+dependencies: {  }
+name: 'Game Edition'
+vid: game_edition
+description: 'D&D edition or ruleset: 5e, 5.5e (2024), Homebrew, etc.'
+weight: 0
+new_revision: false

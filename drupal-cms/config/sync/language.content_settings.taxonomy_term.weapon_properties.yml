@@ -1,0 +1,11 @@
+uuid: ec22880b-78e8-44b4-8324-5cdf45dd076a
+langcode: en
+status: true
+dependencies:
+  config:
+    - taxonomy.vocabulary.weapon_properties
+id: taxonomy_term.weapon_properties
+target_entity_type_id: taxonomy_term
+target_bundle: weapon_properties
+default_langcode: site_default
+language_alterable: false

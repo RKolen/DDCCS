@@ -1,0 +1,24 @@
+id: dnd_npc_backstory
+label: 'D&D: Import full NPC backstory paragraphs'
+migration_group: dnd
+
+source:
+  plugin: dnd_json_directory
+  data_dir: '/var/www/html/game_data/npcs'
+  profile_type_filter: 'major'
+
+process:
+  type:
+    plugin: default_value
+    default_value: wysiwyg
+
+  'field_text/value': backstory
+
+  'field_text/format':
+    plugin: default_value
+    default_value: plain_text
+
+destination:
+  plugin: 'entity_reference_revisions:paragraph'
+
+migration_dependencies: {}

@@ -1,0 +1,31 @@
+uuid: r0s9n8o7-p6q5-4r4s-3t2u-1p0q9r7s8m6n
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_relationships
+    - node.type.character
+    - paragraphs.paragraphs_type.relationship
+  module:
+    - entity_reference_revisions
+id: node.character.field_relationships
+field_name: field_relationships
+entity_type: node
+bundle: character
+label: Relationships
+description: 'Character relationships with other characters and NPCs'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:paragraph'
+  handler_settings:
+    target_bundles:
+      relationship: relationship
+    negate: 0
+    target_bundles_drag_drop:
+      relationship:
+        weight: 0
+        enabled: true
+field_type: entity_reference_revisions

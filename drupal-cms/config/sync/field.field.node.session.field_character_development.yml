@@ -1,0 +1,24 @@
+uuid: 66a85499-bd5a-4376-8b2e-6ac44c26ece3
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_character_development
+    - filter.format.plain_text
+    - node.type.session
+  module:
+    - text
+id: node.session.field_character_development
+field_name: field_character_development
+entity_type: node
+bundle: session
+label: 'Character Development'
+description: 'Character progression notes for this session'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  allowed_formats:
+    - plain_text
+field_type: text_long

@@ -1,0 +1,9 @@
+uuid: 3aea3e94-ceea-4fc7-838a-5e38fd791e8c
+langcode: en
+status: true
+dependencies: {  }
+name: Traits
+vid: traits
+description: 'Reusable personality and behavioral traits'
+weight: 0
+new_revision: false

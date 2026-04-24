@@ -1,0 +1,55 @@
+uuid: 76a5e3f9-b932-4479-b244-df6737270108
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.taxonomy_term.field_effect
+    - paragraphs.paragraphs_type.wysiwyg
+    - taxonomy.vocabulary.magical_properties
+  module:
+    - entity_reference_revisions
+id: taxonomy_term.magical_properties.field_effect
+field_name: field_effect
+entity_type: taxonomy_term
+bundle: magical_properties
+label: Effect
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:paragraph'
+  handler_settings:
+    target_bundles:
+      wysiwyg: wysiwyg
+    negate: 0
+    target_bundles_drag_drop:
+      ability_reference:
+        weight: 10
+        enabled: false
+      ability_score:
+        weight: 11
+        enabled: false
+      ability_scores:
+        weight: 12
+        enabled: false
+      class:
+        weight: 13
+        enabled: false
+      feat_reference:
+        weight: 14
+        enabled: false
+      relationship:
+        weight: 15
+        enabled: false
+      spell_reference:
+        weight: 16
+        enabled: false
+      spell_slot:
+        weight: 17
+        enabled: false
+      wysiwyg:
+        weight: 18
+        enabled: true
+field_type: entity_reference_revisions

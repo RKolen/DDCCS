@@ -1,0 +1,25 @@
+uuid: cc6ad31f-9b5a-485c-be5b-e107cb7a9f7b
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.paragraph.spell_reference.field_spell
+    - paragraphs.paragraphs_type.spell_reference
+id: paragraph.spell_reference.default
+targetEntityType: paragraph
+bundle: spell_reference
+mode: default
+content:
+  field_spell:
+    type: entity_reference_autocomplete
+    weight: 0
+    region: content
+    settings:
+      match_operator: CONTAINS
+      match_limit: 10
+      size: 60
+      placeholder: 'Type a spell name...'
+    third_party_settings: {  }
+hidden:
+  created: true
+  status: true

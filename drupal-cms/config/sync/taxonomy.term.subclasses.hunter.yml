@@ -1,0 +1,10 @@
+uuid: term-subclasses-001
+langcode: en
+status: true
+dependencies:
+  config:
+    - taxonomy.vocabulary.subclasses
+name: Hunter
+weight: 0
+parent: {  }
+vid: subclasses

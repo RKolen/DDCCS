@@ -1,0 +1,26 @@
+uuid: 0ebf11bc-ab54-4e24-a5aa-50eec4d794dc
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_body
+    - filter.format.plain_text
+    - node.type.story
+  module:
+    - text
+id: node.story.field_body
+field_name: field_body
+entity_type: node
+bundle: story
+label: Content
+description: 'Story content body'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  display_summary: false
+  required_summary: false
+  allowed_formats:
+    - plain_text
+field_type: text_with_summary

@@ -1,0 +1,29 @@
+uuid: c31f89c2-faa9-49d8-8ddd-e61a38ec5e78
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_faction
+    - node.type.monster
+    - taxonomy.vocabulary.factions
+id: node.monster.field_faction
+field_name: field_faction
+entity_type: node
+bundle: monster
+label: Faction
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:taxonomy_term'
+  handler_settings:
+    target_bundles:
+      factions: factions
+    sort:
+      field: name
+      direction: asc
+    auto_create: false
+    auto_create_bundle: ''
+field_type: entity_reference

@@ -1,0 +1,22 @@
+uuid: 9b618be2-5e40-439e-b203-cdd9cea61827
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_abilities
+    - node.type.character
+  module:
+    - text
+id: node.character.field_abilities
+field_name: field_abilities
+entity_type: node
+bundle: character
+label: Abilities
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  allowed_formats: {  }
+field_type: text_long

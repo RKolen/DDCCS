@@ -1,0 +1,23 @@
+uuid: fd4e450c-b1d0-45f0-a377-8881b47b2b72
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_ritual
+    - node.type.spell
+id: node.spell.field_ritual
+field_name: field_ritual
+entity_type: node
+bundle: spell
+label: Ritual
+description: 'Can this spell be cast as a ritual?'
+required: false
+translatable: false
+default_value:
+  -
+    value: 0
+default_value_callback: ''
+settings:
+  on_label: 'Yes'
+  off_label: 'No'
+field_type: boolean

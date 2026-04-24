@@ -1,0 +1,11 @@
+uuid: ability-content-type-001
+langcode: en
+status: true
+dependencies: {  }
+name: Ability
+type: ability
+description: 'D&D class abilities and features'
+help: ''
+new_revision: false
+preview_mode: 0
+display_submitted: false

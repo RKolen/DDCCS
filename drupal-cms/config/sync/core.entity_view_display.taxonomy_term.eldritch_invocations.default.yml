@@ -1,0 +1,42 @@
+uuid: 2deac8ea-5dbf-4172-986e-974c81bcea42
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.taxonomy_term.eldritch_invocations.field_edition
+    - field.field.taxonomy_term.eldritch_invocations.field_level_requirement
+    - taxonomy.vocabulary.eldritch_invocations
+  module:
+    - text
+id: taxonomy_term.eldritch_invocations.default
+targetEntityType: taxonomy_term
+bundle: eldritch_invocations
+mode: default
+content:
+  description:
+    type: text_default
+    label: hidden
+    settings: {  }
+    third_party_settings: {  }
+    weight: 0
+    region: content
+  field_edition:
+    type: entity_reference_label
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 1
+    region: content
+  field_level_requirement:
+    type: number_integer
+    label: above
+    settings:
+      thousand_separator: ''
+      prefix_suffix: true
+    third_party_settings: {  }
+    weight: 2
+    region: content
+hidden:
+  langcode: true
+  search_api_excerpt: true

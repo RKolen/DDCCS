@@ -1,0 +1,10 @@
+uuid: term-equipment-003
+langcode: en
+status: true
+dependencies:
+  config:
+    - taxonomy.vocabulary.equipment_types
+name: 'Leather Armor'
+weight: 0
+parent: {  }
+vid: equipment_types

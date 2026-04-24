@@ -11,7 +11,8 @@
 
 ### Phase 2: Infrastructure
 
-- [ ] **Drupal CMS Integration** - DDEV setup, JSON to Drupal migration, Python-to-Drupal API sync **Plan:** [plans/drupal_cms_integration.md](plans/drupal_cms_integration.md)
+- [ ] **Gatsby Frontend** - Drupal API enablement, character/NPC/story/item pages, campaign dashboard **Plan:** [plans/gatsby_frontend_plan.md](plans/gatsby_frontend_plan.md)
+- [ ] **Python Drupal Sync CLI** - Add `--sync-drupal` flag to consultant and post-session hook to push story/character updates via `drupal_sync.py`
 - [ ] **TTS Web Integration** - Pre-generated audio storage, audio sync to Drupal, React audio player components **Plan:** [plans/tts_web_integration.md](plans/tts_web_integration.md)
 - [ ] **Multi-voice TTS (Phase 3-4)** - Voice switching implementation, Piper TTS integration
 
@@ -36,7 +37,7 @@ All features below have detailed implementation plans in the `plans/` directory.
 
 ### Infrastructure
 
-- [Drupal CMS Integration](plans/drupal_cms_integration.md) - Full Drupal CMS integration
+- [Gatsby Frontend](plans/gatsby_frontend_plan.md) - React pages, GraphQL queries, campaign dashboard
 - [TTS Web Integration](plans/tts_web_integration.md) - Web-based TTS audio integration
 - [Multi-voice TTS Design](plans/multi_voice_tts_design.md) - Multi-voice narration system
 
@@ -121,8 +122,8 @@ All Tier 3 items are complete.
 
 | # | Plan | Reason |
 |---|------|--------|
-| 22 | [Drupal CMS Integration](plans/drupal_cms_integration.md) | Large effort, requires DDEV. Most valuable when the data model is stable (after Tiers 1-3). |
-| 23 | [TTS Web Integration](plans/tts_web_integration.md) | Depends on Drupal CMS being in place. Phase 1-2 multi-voice TTS is already done on the CLI side. |
+| 22 | [Gatsby Frontend](plans/gatsby_frontend_plan.md) | Direct continuation of Drupal CMS. Enables all web-facing features. Unblocks TTS web integration. |
+| 23 | [TTS Web Integration](plans/tts_web_integration.md) | Depends on Gatsby pages being in place for audio player components. |
 | 24 | [Plugin Architecture](plans/plugin_architecture_plan.md) | Extensibility framework. Most useful once the core feature set is stable and external contributors or campaign-specific needs emerge. |
 | 25 | [Interactive Setup](plans/interactive_setup_plan.md) | Onboarding improvement. More valuable once the full feature set is settled. |
 
@@ -148,6 +149,10 @@ All Tier 3 items are complete.
 ---
 
 ## Recently Completed
+
+### Drupal CMS Integration - April 24, 2026
+
+- [x] **Drupal CMS Integration** - DDEV setup, JSON to Drupal migration
 
 ### Custom Spell Highlighting - April 5, 2026
 

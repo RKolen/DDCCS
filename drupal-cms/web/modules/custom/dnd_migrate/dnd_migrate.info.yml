@@ -1,0 +1,12 @@
+name: 'D&D Data Migration'
+type: module
+description: 'Migrates D&D game data (characters, NPCs, items) from JSON source files into Drupal content nodes.'
+package: 'D&D Consultant'
+core_version_requirement: ^11
+dependencies:
+  - drupal:migrate
+  - migrate_plus:migrate_plus
+  - drupal:node
+  - drupal:taxonomy
+  - drupal:paragraphs
+  - drupal:entity_reference_revisions

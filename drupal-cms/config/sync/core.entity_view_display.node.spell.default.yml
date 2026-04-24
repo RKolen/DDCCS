@@ -1,0 +1,109 @@
+uuid: f073c430-9cbc-4ba9-b618-9f58bccf3c82
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.node.spell.field_casting_time
+    - field.field.node.spell.field_concentration
+    - field.field.node.spell.field_description
+    - field.field.node.spell.field_ritual
+    - field.field.node.spell.field_spell_components
+    - field.field.node.spell.field_spell_duration
+    - field.field.node.spell.field_spell_level
+    - field.field.node.spell.field_spell_range
+    - field.field.node.spell.field_spell_school
+    - node.type.spell
+  module:
+    - entity_reference_revisions
+    - user
+id: node.spell.default
+targetEntityType: node
+bundle: spell
+mode: default
+content:
+  field_casting_time:
+    type: string
+    label: above
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+    weight: 1
+    region: content
+  field_concentration:
+    type: boolean
+    label: above
+    settings:
+      format: default
+      format_custom_false: ''
+      format_custom_true: ''
+    third_party_settings: {  }
+    weight: 6
+    region: content
+  field_description:
+    type: entity_reference_revisions_entity_view
+    label: above
+    settings:
+      view_mode: default
+      link: ''
+    third_party_settings: {  }
+    weight: 7
+    region: content
+  field_ritual:
+    type: boolean
+    label: above
+    settings:
+      format: default
+      format_custom_false: ''
+      format_custom_true: ''
+    third_party_settings: {  }
+    weight: 5
+    region: content
+  field_spell_components:
+    type: string
+    label: above
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+    weight: 3
+    region: content
+  field_spell_duration:
+    type: string
+    label: above
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+    weight: 4
+    region: content
+  field_spell_level:
+    type: number_integer
+    label: above
+    settings:
+      thousand_separator: ''
+      prefix_suffix: true
+    third_party_settings: {  }
+    weight: 0
+    region: content
+  field_spell_range:
+    type: string
+    label: above
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+    weight: 2
+    region: content
+  field_spell_school:
+    type: entity_reference_label
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 8
+    region: content
+  links:
+    settings: {  }
+    third_party_settings: {  }
+    weight: 100
+    region: content
+hidden:
+  langcode: true
+  search_api_excerpt: true

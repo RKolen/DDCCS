@@ -1,0 +1,19 @@
+uuid: 7c01085c-ba89-4789-825b-06710d9e865f
+langcode: en
+status: true
+dependencies:
+  module:
+    - node
+id: node.field_story_files
+field_name: field_story_files
+entity_type: node
+type: entity_reference
+settings:
+  target_type: node
+module: core
+locked: false
+cardinality: -1
+translatable: false
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

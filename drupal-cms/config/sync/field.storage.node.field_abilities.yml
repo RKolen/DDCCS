@@ -1,0 +1,19 @@
+uuid: 7f93eede-f7e8-4bca-a4f0-f2ea17744abe
+langcode: en
+status: true
+dependencies:
+  module:
+    - node
+    - text
+id: node.field_abilities
+field_name: field_abilities
+entity_type: node
+type: text_long
+settings: {  }
+module: text
+locked: false
+cardinality: -1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

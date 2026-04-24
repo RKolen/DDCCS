@@ -1,0 +1,19 @@
+uuid: 2878304f-5af6-4d7b-9f28-d6ccac760b8d
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.taxonomy_term.field_spell_casting_time
+    - taxonomy.vocabulary.spells
+id: taxonomy_term.spells.field_spell_casting_time
+field_name: field_spell_casting_time
+entity_type: taxonomy_term
+bundle: spells
+label: 'Casting Time'
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string

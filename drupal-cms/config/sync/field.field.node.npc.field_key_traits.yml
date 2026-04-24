@@ -1,0 +1,29 @@
+uuid: be316a49-f830-43bc-831e-982e2397ed64
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_key_traits
+    - node.type.npc
+    - taxonomy.vocabulary.traits
+id: node.npc.field_key_traits
+field_name: field_key_traits
+entity_type: node
+bundle: npc
+label: 'Key Traits'
+description: 'Reusable trait terms for this NPC'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:taxonomy_term'
+  handler_settings:
+    target_bundles:
+      traits: traits
+    sort:
+      field: name
+      direction: asc
+    auto_create: false
+    auto_create_bundle: ''
+field_type: entity_reference

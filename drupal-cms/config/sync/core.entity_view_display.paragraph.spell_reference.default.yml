@@ -1,0 +1,22 @@
+uuid: b44ea4c7-65d4-455f-a822-7b826d753bce
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.paragraph.spell_reference.field_spell
+    - paragraphs.paragraphs_type.spell_reference
+id: paragraph.spell_reference.default
+targetEntityType: paragraph
+bundle: spell_reference
+mode: default
+content:
+  field_spell:
+    type: entity_reference_label
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 0
+    region: content
+hidden:
+  search_api_excerpt: true

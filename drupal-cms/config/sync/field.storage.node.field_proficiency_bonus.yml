@@ -1,0 +1,20 @@
+uuid: c9d8e7f6-a5b4-4c3d-2e1f-0a9b8c7d6e5f
+langcode: en
+status: true
+dependencies:
+  module:
+    - node
+id: node.field_proficiency_bonus
+field_name: field_proficiency_bonus
+entity_type: node
+type: integer
+settings:
+  unsigned: false
+  size: normal
+module: core
+locked: false
+cardinality: 1
+translatable: false
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

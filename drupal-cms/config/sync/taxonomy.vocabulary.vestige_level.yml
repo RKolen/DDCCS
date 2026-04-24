@@ -1,0 +1,9 @@
+uuid: 790e5704-f084-4fc6-a713-04be8be87cff
+langcode: en
+status: true
+dependencies: {  }
+name: 'Vestige Level'
+vid: vestige_level
+description: null
+weight: 0
+new_revision: false

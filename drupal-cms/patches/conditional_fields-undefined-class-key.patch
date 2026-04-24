@@ -1,0 +1,22 @@
+--- a/src/ConditionalFieldsFormHelper.php	2026-04-17 13:39:22.432778070 +0200
++++ b/src/ConditionalFieldsFormHelper.php	2026-04-17 13:38:31.858788581 +0200
+@@ -234,7 +234,7 @@
+         unset($dependee_info['parents'][$unset]);
+       }
+ 
+-      if (isset($this->form[$dependee]['#attributes'])
++      if (isset($this->form[$dependee]['#attributes']['class'][0])
+           && $this->form[$dependee]['#attributes']['class'][0] == 'field--type-list-string'
+           && isset($this->form[$dependee]['widget']['#type'])
+           && $this->form[$dependee]['widget']['#type'] == 'checkboxes') {
+@@ -534,6 +534,10 @@
+ 
+     /** @var \Drupal\Core\Entity\ContentEntityFormInterface $entity_form */
+     $entity_form = $form_state->getFormObject();
++    if (!$entity_form instanceof \Drupal\Core\Entity\ContentEntityFormInterface) {
++      return;
++    }
++
+     $entity_type_id = $entity_form->getEntity()->getEntityTypeId();
+     if ($inline_entity_form_parents) {
+       $ief_element = self::fieldRemoveInlineEntityFormParents($element, $inline_entity_form_parents);

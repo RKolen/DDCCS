@@ -1,0 +1,23 @@
+uuid: a41412e5-bd7d-44a0-879f-f87dfef3a03c
+langcode: en
+status: true
+dependencies:
+  config:
+    - taxonomy.vocabulary.voice_ids
+  module:
+    - text
+id: taxonomy_term.voice_ids.default
+targetEntityType: taxonomy_term
+bundle: voice_ids
+mode: default
+content:
+  description:
+    type: text_default
+    label: hidden
+    settings: {  }
+    third_party_settings: {  }
+    weight: 0
+    region: content
+hidden:
+  langcode: true
+  search_api_excerpt: true

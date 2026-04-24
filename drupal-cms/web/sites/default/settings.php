@@ -901,3 +901,30 @@ $settings['config_sync_directory'] = DRUPAL_ROOT . '/../config/sync';
 # if (file_exists($app_root . '/' . $site_path . '/settings.local.php')) {
 #   include $app_root . '/' . $site_path . '/settings.local.php';
 # }
+
+// ---------------------------------------------------------------------------
+// Sensitive credentials via environment variables.
+// Config sync stores empty strings; actual values are injected at runtime so
+// that secrets never land in version control.
+// ---------------------------------------------------------------------------
+
+// Ollama AI provider.
+if (getenv('OLLAMA_API_KEY') !== FALSE) {
+  $config['ai_provider_ollama.settings']['api_key'] = getenv('OLLAMA_API_KEY');
+}
+if (getenv('OLLAMA_HOST') !== FALSE) {
+  $config['ai_provider_ollama.settings']['host_name'] = getenv('OLLAMA_HOST');
+}
+
+// Milvus vector database provider.
+if (getenv('MILVUS_API_KEY') !== FALSE) {
+  $config['ai_vdb_provider_milvus.settings']['api_key'] = getenv('MILVUS_API_KEY');
+}
+if (getenv('MILVUS_HOST') !== FALSE) {
+  $config['ai_vdb_provider_milvus.settings']['server'] = getenv('MILVUS_HOST');
+}
+
+// Gatsby user credentials (used by the gatsby module webhook auth).
+if (getenv('GATSBY_DRUPAL_PASSWORD') !== FALSE) {
+  $config['gatsby.settings']['preview_secret'] = getenv('GATSBY_DRUPAL_PASSWORD');
+}

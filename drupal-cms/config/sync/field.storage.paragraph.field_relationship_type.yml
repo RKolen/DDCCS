@@ -1,0 +1,51 @@
+uuid: y1z0u9v8-w7x6-5y5z-4a3b-2w1x0y8z9t7u
+langcode: en
+status: true
+dependencies:
+  module:
+    - options
+    - paragraphs
+id: paragraph.field_relationship_type
+field_name: field_relationship_type
+entity_type: paragraph
+type: list_string
+settings:
+  allowed_values:
+    -
+      value: ally
+      label: Ally
+    -
+      value: enemy
+      label: Enemy
+    -
+      value: friend
+      label: Friend
+    -
+      value: family
+      label: Family
+    -
+      value: mentor
+      label: Mentor
+    -
+      value: student
+      label: Student
+    -
+      value: romantic_partner
+      label: 'Romantic Partner'
+    -
+      value: rival
+      label: Rival
+    -
+      value: acquaintance
+      label: Acquaintance
+    -
+      value: unknown
+      label: Unknown
+  allowed_values_function: ''
+module: options
+locked: false
+cardinality: 1
+translatable: false
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

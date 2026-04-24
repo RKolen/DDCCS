@@ -1,0 +1,19 @@
+uuid: 70e8c857-8845-4bec-b04f-ba05c8813fd6
+langcode: en
+status: true
+dependencies:
+  module:
+    - node
+id: node.field_npcs_encountered
+field_name: field_npcs_encountered
+entity_type: node
+type: entity_reference
+settings:
+  target_type: node
+module: core
+locked: false
+cardinality: -1
+translatable: false
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

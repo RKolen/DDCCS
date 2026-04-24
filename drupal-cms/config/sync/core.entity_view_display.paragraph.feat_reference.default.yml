@@ -1,0 +1,22 @@
+uuid: 6b6e7058-1341-4ac2-8d85-2191725ebb49
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.paragraph.feat_reference.field_feat
+    - paragraphs.paragraphs_type.feat_reference
+id: paragraph.feat_reference.default
+targetEntityType: paragraph
+bundle: feat_reference
+mode: default
+content:
+  field_feat:
+    type: entity_reference_label
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 0
+    region: content
+hidden:
+  search_api_excerpt: true

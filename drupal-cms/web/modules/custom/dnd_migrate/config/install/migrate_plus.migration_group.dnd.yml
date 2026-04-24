@@ -1,0 +1,5 @@
+id: dnd
+label: 'D&D Data Migrations'
+description: 'Migrations that import D&D game data (characters, NPCs, items) from JSON source files.'
+source_type: 'JSON files under game_data/'
+module: dnd_migrate

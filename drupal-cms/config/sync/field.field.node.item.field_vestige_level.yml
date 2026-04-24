@@ -1,0 +1,33 @@
+uuid: a15b701c-2827-40c3-8a32-20987ed89ed9
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_vestige_level
+    - node.type.item
+    - taxonomy.vocabulary.vestige_level
+  content:
+    - 'taxonomy_term:vestige_level:57f41497-037f-48d9-9513-ca013b1b0c17'
+id: node.item.field_vestige_level
+field_name: field_vestige_level
+entity_type: node
+bundle: item
+label: 'Vestige Level'
+description: ''
+required: false
+translatable: false
+default_value:
+  -
+    target_uuid: 57f41497-037f-48d9-9513-ca013b1b0c17
+default_value_callback: ''
+settings:
+  handler: 'default:taxonomy_term'
+  handler_settings:
+    target_bundles:
+      vestige_level: vestige_level
+    sort:
+      field: name
+      direction: asc
+    auto_create: false
+    auto_create_bundle: ''
+field_type: entity_reference

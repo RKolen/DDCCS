@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<ruleset name="Drupal">
+  <description>Drupal coding standards for this project.</description>
+
+  <!-- Use Drupal and DrupalPractice standards. -->
+  <rule ref="Drupal"/>
+  <rule ref="DrupalPractice"/>
+
+  <!-- Only check custom code. -->
+  <file>web/modules/custom</file>
+  <file>web/themes/custom</file>
+
+  <!-- Exclude generated or vendor files. -->
+  <exclude-pattern>*/vendor/*</exclude-pattern>
+  <exclude-pattern>*/node_modules/*</exclude-pattern>
+</ruleset>

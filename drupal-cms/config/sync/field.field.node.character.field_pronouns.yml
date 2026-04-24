@@ -1,0 +1,19 @@
+uuid: g9h8c7d6-e5f4-3g3h-2i1j-0e9f8g6h7b5c
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_pronouns
+    - node.type.character
+id: node.character.field_pronouns
+field_name: field_pronouns
+entity_type: node
+bundle: character
+label: Pronouns
+description: 'Character pronouns (e.g., he/him, she/her, they/them)'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string

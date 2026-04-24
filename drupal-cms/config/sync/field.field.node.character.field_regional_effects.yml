@@ -1,0 +1,22 @@
+uuid: 89b27146-62e3-4fb7-8a78-7be2ce032a47
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_regional_effects
+    - node.type.character
+  module:
+    - text
+id: node.character.field_regional_effects
+field_name: field_regional_effects
+entity_type: node
+bundle: character
+label: 'Regional Effects'
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  allowed_formats: {  }
+field_type: text_long

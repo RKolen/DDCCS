@@ -1,0 +1,19 @@
+uuid: spell-range-field
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_spell_range
+    - node.type.spell
+id: node.spell.field_spell_range
+field_name: field_spell_range
+entity_type: node
+bundle: spell
+label: Range
+description: 'e.g., Self, Touch, 60 feet, 120 feet'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string

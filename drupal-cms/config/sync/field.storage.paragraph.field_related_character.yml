@@ -1,0 +1,19 @@
+uuid: x0y9t8u7-v6w5-4x4y-3z2a-1v0w9x7y8s6t
+langcode: en
+status: true
+dependencies:
+  module:
+    - paragraphs
+id: paragraph.field_related_character
+field_name: field_related_character
+entity_type: paragraph
+type: entity_reference
+settings:
+  target_type: node
+module: core
+locked: false
+cardinality: 1
+translatable: false
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

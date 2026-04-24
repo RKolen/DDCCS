@@ -1,0 +1,21 @@
+uuid: 61dcf89b-9a97-4c27-9992-bf19ce3a5031
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.taxonomy_term.field_spell_concentration
+    - taxonomy.vocabulary.spells
+id: taxonomy_term.spells.field_spell_concentration
+field_name: field_spell_concentration
+entity_type: taxonomy_term
+bundle: spells
+label: Concentration
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  on_label: 'On'
+  off_label: 'Off'
+field_type: boolean

@@ -1,0 +1,23 @@
+uuid: 7ad4ae99-9240-49dd-ac4b-ad53509c4ce3
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.taxonomy_term.field_is_spellcaster
+    - taxonomy.vocabulary.class
+id: taxonomy_term.class.field_is_spellcaster
+field_name: field_is_spellcaster
+entity_type: taxonomy_term
+bundle: class
+label: Spellcaster
+description: 'Whether this class has spellcasting capability'
+required: false
+translatable: false
+default_value:
+  -
+    value: 0
+default_value_callback: ''
+settings:
+  on_label: 'Yes'
+  off_label: 'No'
+field_type: boolean

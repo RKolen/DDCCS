@@ -1,0 +1,9 @@
+uuid: 0975ad34-5aef-4709-9f3d-ee33ff7b8570
+langcode: en
+status: true
+dependencies: {  }
+name: 'Weapon Properties'
+vid: weapon_properties
+description: null
+weight: 0
+new_revision: false

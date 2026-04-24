@@ -1,0 +1,11 @@
+uuid: 08694a64-d04e-4b04-913f-0e84237a26da
+langcode: en
+status: true
+dependencies: {  }
+name: NPC
+type: npc
+description: 'Non-player characters for campaign storytelling and encounters'
+help: ''
+new_revision: true
+preview_mode: 1
+display_submitted: false

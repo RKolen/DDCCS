@@ -1,0 +1,23 @@
+uuid: h8i9j0k1-l2m3-4567-bcde-890123456789
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_item_rarity
+    - node.type.item
+  module:
+    - options
+id: node.item.field_item_rarity
+field_name: field_item_rarity
+entity_type: node
+bundle: item
+label: Rarity
+description: 'Item rarity'
+required: false
+translatable: false
+default_value:
+  -
+    value: common
+default_value_callback: ''
+settings: {  }
+field_type: list_string

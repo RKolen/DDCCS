@@ -21,5 +21,7 @@ backend_config:
     set_dimensions: false
     dimensions: 768
   embedding_strategy: contextual_chunks
-  embedding_strategy_configuration: {  }
+  embedding_strategy_configuration:
+    chunk_size: '500'
+    chunk_min_overlap: '100'
   include_raw_embedding_vector: false

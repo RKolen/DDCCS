@@ -1,0 +1,19 @@
+uuid: h6i5d4e3-f2g1-0h0i-9j8k-7g6h5i3j4c2d
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.paragraph.field_relationship_description
+    - paragraphs.paragraphs_type.relationship
+id: paragraph.relationship.field_relationship_description
+field_name: field_relationship_description
+entity_type: paragraph
+bundle: relationship
+label: Description
+description: 'Description of the relationship (e.g., Beloved, Trusted companion)'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string

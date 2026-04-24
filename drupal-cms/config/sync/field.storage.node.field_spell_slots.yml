@@ -1,0 +1,20 @@
+uuid: b4c3x2y1-z0a9-8b8c-7d6e-5z4a3b1c2w0x
+langcode: en
+status: true
+dependencies:
+  module:
+    - node
+    - paragraphs
+id: node.field_spell_slots
+field_name: field_spell_slots
+entity_type: node
+type: entity_reference_revisions
+settings:
+  target_type: paragraph
+module: paragraphs
+locked: false
+cardinality: -1
+translatable: false
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

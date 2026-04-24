@@ -1,0 +1,173 @@
+id: dnd_character_nodes
+label: 'D&D: Import player character nodes'
+migration_group: dnd
+migration_dependencies:
+  required:
+    - dnd_character_backstory
+    - dnd_character_spell_slots
+    - dnd_items
+    - dnd_inert_items
+
+# ---------------------------------------------------------------------------
+# Source: one JSON file per player character (no profile_type key).
+# ---------------------------------------------------------------------------
+source:
+  plugin: dnd_json_directory
+  data_dir: '/var/www/html/game_data/characters'
+  profile_type_filter: ''
+
+# ---------------------------------------------------------------------------
+# Process
+# ---------------------------------------------------------------------------
+process:
+  # --- Core identity ---
+  title: name
+  field_first_name: first_name
+  field_last_name: last_name
+  field_nickname: nickname
+  field_pronouns: pronouns
+
+  # Gender derived from pronouns by the source plugin (she/her=female, he/him=male).
+  field_gender: gender
+
+  # field_character_type=TRUE means player character.
+  field_character_type: character_type_is_pc
+
+  # --- Taxonomy lookups (auto-create background terms) ---
+  field_species:
+    plugin: entity_lookup
+    source: species
+    entity_type: taxonomy_term
+    bundle: species
+    value_key: name
+    bundle_key: vid
+    ignore_case: true
+
+  field_lineage:
+    plugin: entity_lookup
+    source: lineage
+    entity_type: taxonomy_term
+    bundle: lineage
+    value_key: name
+    bundle_key: vid
+    ignore_case: true
+
+  # Background: create term if it does not yet exist.
+  field_background:
+    plugin: entity_generate
+    source: background
+    entity_type: taxonomy_term
+    bundle: backgrounds
+    value_key: name
+    bundle_key: vid
+
+  # --- Class paragraph (dnd_class + subclass + level, auto-create terms) ---
+  field_class:
+    plugin: dnd_class_paragraph
+    source: file_id
+
+  # --- Numeric character sheet fields ---
+  field_level: level
+  field_maximum_hitpoints: max_hit_points
+  field_armor_class: armor_class
+  field_movement_speed: movement_speed
+  field_proficiency_bonus: proficiency_bonus
+  field_gold: gold
+
+  # --- Backstory paragraph (sub-migration lookup) ---
+  field_backstory:
+    plugin: dnd_paragraph_lookup
+    source: file_id
+    migration: dnd_character_backstory
+    source_id: file_id
+
+  # --- Spell slots paragraph (sub-migration lookup) ---
+  field_spell_slots:
+    plugin: dnd_spell_slot_lookup
+    source: spell_slots
+
+  # --- Multi-value text fields (now unlimited cardinality) ---
+  field_personality_traits: personality_traits
+  field_ideals: ideals
+  field_bonds: bonds
+  field_flaws: flaws
+  field_major_plot_actions: major_plot_actions
+
+  # Normalized: dict (name->desc) on PC becomes "Name: Desc" strings.
+  field_specialized_abilities: specialized_abilities_normalized
+
+  # --- Skills: each proficient skill name looked up in taxonomy ---
+  field_skills:
+    plugin: dnd_array_entity_lookup
+    source: skill_names
+    entity_type: taxonomy_term
+    bundle: skills
+    search_key: name
+
+  # --- Spells: each spell gets its own spell_reference paragraph ---
+  field_spells_ref:
+    plugin: dnd_term_reference_paragraph
+    source: known_spells
+    paragraph_type: spell_reference
+    field_name: field_spell
+    vocabulary: spells
+
+  # --- Feats: each feat gets its own feat_reference paragraph ---
+  field_feats_ref:
+    plugin: dnd_term_reference_paragraph
+    source: feats
+    paragraph_type: feat_reference
+    field_name: field_feat
+    vocabulary: feats
+
+  # --- Class abilities: each ability gets its own ability_reference paragraph ---
+  field_abilities_ref:
+    plugin: dnd_term_reference_paragraph
+    source: class_abilities
+    paragraph_type: ability_reference
+    field_name: field_ability
+    vocabulary: abilities
+
+  # --- Magic items: look up existing item nodes by title ---
+  field_magic_items_ref:
+    plugin: dnd_array_entity_lookup
+    source: magic_items
+    entity_type: node
+    bundle: item
+    search_key: title
+
+  # --- Voice ---
+  field_voice_speed: voice_speed
+  field_voice_pitch: voice_pitch
+  field_voice_id_ref:
+    -
+      plugin: skip_on_empty
+      method: process
+      source: voice_piper_id
+    -
+      plugin: entity_lookup
+      entity_type: taxonomy_term
+      bundle: voice_ids
+      value_key: name
+      bundle_key: vid
+      ignore_case: true
+
+  # --- AI config ---
+  field_ai_enabled: ai_enabled
+  # Use ai_model from JSON if present; presave hook fills empty values from
+  # the AI_CREATIVE_MODEL environment variable.
+  field_ai_model: ai_model
+  field_ai_temperature: ai_temperature
+  field_ai_max_tokens: ai_max_tokens
+  field_ai_system_prompt: ai_system_prompt
+
+  status:
+    plugin: default_value
+    default_value: 1
+
+# ---------------------------------------------------------------------------
+# Destination
+# ---------------------------------------------------------------------------
+destination:
+  plugin: 'entity:node'
+  default_bundle: character

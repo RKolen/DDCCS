@@ -1,0 +1,31 @@
+uuid: ability-description-field
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_description
+    - node.type.ability
+    - paragraphs.paragraphs_type.wysiwyg
+  module:
+    - entity_reference_revisions
+id: node.ability.field_description
+field_name: field_description
+entity_type: node
+bundle: ability
+label: Description
+description: 'Ability description and mechanics'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:paragraph'
+  handler_settings:
+    target_bundles:
+      wysiwyg: wysiwyg
+    negate: 0
+    target_bundles_drag_drop:
+      wysiwyg:
+        weight: 0
+        enabled: true
+field_type: entity_reference_revisions

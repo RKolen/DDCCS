@@ -1,0 +1,31 @@
+uuid: c103e40d-dadf-45dd-b357-e101c03f5af9
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_relationships
+    - node.type.npc
+    - paragraphs.paragraphs_type.relationship
+  module:
+    - entity_reference_revisions
+id: node.npc.field_relationships
+field_name: field_relationships
+entity_type: node
+bundle: npc
+label: Relationships
+description: 'Structured relationship links to characters'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:paragraph'
+  handler_settings:
+    target_bundles:
+      relationship: relationship
+    negate: 0
+    target_bundles_drag_drop:
+      relationship:
+        weight: 0
+        enabled: true
+field_type: entity_reference_revisions

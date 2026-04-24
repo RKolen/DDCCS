@@ -1,0 +1,23 @@
+uuid: 9e77e25e-169d-498c-825e-4ea25b7142e8
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_session_number
+    - node.type.session
+id: node.session.field_session_number
+field_name: field_session_number
+entity_type: node
+bundle: session
+label: 'Session Number'
+description: 'Sequential session number for the campaign'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  min: 0
+  max: null
+  prefix: ''
+  suffix: ''
+field_type: integer

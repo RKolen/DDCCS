@@ -1,0 +1,33 @@
+id: dnd_item_descriptions
+label: 'D&D: Import item description paragraphs'
+migration_group: dnd
+
+# ---------------------------------------------------------------------------
+# Source: custom_items.json.  One row per item that has a non-empty
+# description string.  The paragraph is later referenced by dnd_items.
+# ---------------------------------------------------------------------------
+source:
+  plugin: dnd_items_json
+  file_path: '/var/www/html/game_data/items/custom_items.json'
+
+# ---------------------------------------------------------------------------
+# Process: create one paragraph:wysiwyg entity per item.
+# ---------------------------------------------------------------------------
+process:
+  type:
+    plugin: default_value
+    default_value: wysiwyg
+
+  'field_text/value': description
+
+  'field_text/format':
+    plugin: default_value
+    default_value: basic_html
+
+# ---------------------------------------------------------------------------
+# Destination: paragraph entity of type wysiwyg.
+# ---------------------------------------------------------------------------
+destination:
+  plugin: 'entity_reference_revisions:paragraph'
+
+migration_dependencies: {}

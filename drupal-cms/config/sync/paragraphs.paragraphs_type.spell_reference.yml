@@ -1,0 +1,10 @@
+uuid: 30df97d4-b15f-440e-bb6b-ecba497e3ed3
+langcode: en
+status: true
+dependencies: {  }
+id: spell_reference
+label: 'Spell Reference'
+icon_uuid: null
+icon_default: null
+description: 'A reference to a single spell taxonomy term.'
+behavior_plugins: {  }

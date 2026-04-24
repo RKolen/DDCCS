@@ -1,0 +1,29 @@
+uuid: b81b2bc1-c0d1-4e6e-b249-06776aaafa5a
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_story_files
+    - node.type.session
+    - node.type.story
+id: node.session.field_story_files
+field_name: field_story_files
+entity_type: node
+bundle: session
+label: 'Story Files'
+description: 'Related story nodes for this session'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:node'
+  handler_settings:
+    target_bundles:
+      story: story
+    sort:
+      field: title
+      direction: ASC
+    auto_create: false
+    auto_create_bundle: ''
+field_type: entity_reference

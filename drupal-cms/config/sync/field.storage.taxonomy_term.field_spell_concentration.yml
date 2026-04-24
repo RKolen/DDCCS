@@ -1,0 +1,18 @@
+uuid: 4a8d4564-f6dd-4547-9ab9-9f881193ccb4
+langcode: en
+status: true
+dependencies:
+  module:
+    - taxonomy
+id: taxonomy_term.field_spell_concentration
+field_name: field_spell_concentration
+entity_type: taxonomy_term
+type: boolean
+settings: {  }
+module: core
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

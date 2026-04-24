@@ -1,0 +1,22 @@
+uuid: 24b78058-8b47-4438-a0de-8e386657f251
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_specialized_abilities
+    - node.type.monster
+  module:
+    - text
+id: node.monster.field_specialized_abilities
+field_name: field_specialized_abilities
+entity_type: node
+bundle: monster
+label: 'specialized abilities'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  allowed_formats: {  }
+field_type: text_long

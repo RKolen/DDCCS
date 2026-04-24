@@ -1,0 +1,8 @@
+name: 'D&D Content Search'
+type: module
+description: 'Exposes a JSON search endpoint backed by the Milvus AI Search API index.'
+package: 'D&D Consultant'
+core_version_requirement: ^11
+dependencies:
+  - drupal:basic_auth
+  - search_api:search_api

@@ -1,0 +1,20 @@
+uuid: c5d4y3z2-a1b0-9c9d-8e7f-6a5b4c2d3x1y
+langcode: en
+status: true
+dependencies:
+  module:
+    - node
+    - paragraphs
+id: node.field_relationships
+field_name: field_relationships
+entity_type: node
+type: entity_reference_revisions
+settings:
+  target_type: paragraph
+module: paragraphs
+locked: false
+cardinality: -1
+translatable: false
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

@@ -1,0 +1,51 @@
+uuid: 19fd7de7-6986-4642-bcbc-7f49eafe7e7b
+langcode: en
+status: true
+dependencies:
+  config:
+    - taxonomy.vocabulary.voice_ids
+  module:
+    - path
+    - text
+id: taxonomy_term.voice_ids.default
+targetEntityType: taxonomy_term
+bundle: voice_ids
+mode: default
+content:
+  description:
+    type: text_textarea
+    weight: 2
+    region: content
+    settings:
+      rows: 3
+      placeholder: ''
+    third_party_settings: {  }
+  langcode:
+    type: language_select
+    weight: 3
+    region: content
+    settings:
+      include_locked: true
+    third_party_settings: {  }
+  name:
+    type: string_textfield
+    weight: 0
+    region: content
+    settings:
+      size: 60
+      placeholder: en_US-amy-medium
+    third_party_settings: {  }
+  path:
+    type: path
+    weight: 4
+    region: content
+    settings: {  }
+    third_party_settings: {  }
+  status:
+    type: boolean_checkbox
+    weight: 5
+    region: content
+    settings:
+      display_label: true
+    third_party_settings: {  }
+hidden: {  }

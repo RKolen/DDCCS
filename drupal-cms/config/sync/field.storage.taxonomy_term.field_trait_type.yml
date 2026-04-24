@@ -1,0 +1,33 @@
+uuid: 05aacde4-8941-4472-a3c0-b53b2ff06c94
+langcode: en
+status: true
+dependencies:
+  module:
+    - options
+    - taxonomy
+id: taxonomy_term.field_trait_type
+field_name: field_trait_type
+entity_type: taxonomy_term
+type: list_string
+settings:
+  allowed_values:
+    -
+      value: personality
+      label: Personality
+    -
+      value: ideal
+      label: Ideal
+    -
+      value: bond
+      label: Bond
+    -
+      value: flaw
+      label: Flaw
+  allowed_values_function: ''
+module: options
+locked: false
+cardinality: 1
+translatable: false
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

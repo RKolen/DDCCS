@@ -1,0 +1,21 @@
+uuid: f6fdbf22-5cef-48be-ad78-30c045adb8f6
+langcode: en
+status: true
+dependencies:
+  module:
+    - node
+id: node.field_session_date
+field_name: field_session_date
+entity_type: node
+type: string
+settings:
+  max_length: 64
+  case_sensitive: false
+  is_ascii: false
+module: core
+locked: false
+cardinality: 1
+translatable: false
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

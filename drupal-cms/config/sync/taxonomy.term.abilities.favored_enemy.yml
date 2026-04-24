@@ -1,0 +1,10 @@
+uuid: term-abilities-001
+langcode: en
+status: true
+dependencies:
+  config:
+    - taxonomy.vocabulary.abilities
+name: 'Favored Enemy'
+weight: 0
+parent: {  }
+vid: abilities

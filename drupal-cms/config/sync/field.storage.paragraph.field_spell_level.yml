@@ -1,0 +1,20 @@
+uuid: m9n8i7j6-k5l4-3m3n-2o1p-0k9j8l6m7h5i
+langcode: en
+status: true
+dependencies:
+  module:
+    - paragraphs
+id: paragraph.field_spell_level
+field_name: field_spell_level
+entity_type: paragraph
+type: integer
+settings:
+  unsigned: false
+  size: normal
+module: core
+locked: false
+cardinality: 1
+translatable: false
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

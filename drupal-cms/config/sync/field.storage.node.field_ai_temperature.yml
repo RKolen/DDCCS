@@ -1,0 +1,20 @@
+uuid: q3r2m1n0-o9p8-7q7r-6s5t-4o3n2p0q1l9m
+langcode: en
+status: true
+dependencies:
+  module:
+    - node
+id: node.field_ai_temperature
+field_name: field_ai_temperature
+entity_type: node
+type: decimal
+settings:
+  precision: 3
+  scale: 2
+module: core
+locked: false
+cardinality: 1
+translatable: false
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

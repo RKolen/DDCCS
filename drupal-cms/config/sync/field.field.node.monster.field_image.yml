@@ -1,0 +1,29 @@
+uuid: 1fffd269-7d99-4a69-bff6-a977d9e94cb7
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_image
+    - media.type.image
+    - node.type.monster
+id: node.monster.field_image
+field_name: field_image
+entity_type: node
+bundle: monster
+label: Image
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:media'
+  handler_settings:
+    target_bundles:
+      image: image
+    sort:
+      field: name
+      direction: ASC
+    auto_create: false
+    auto_create_bundle: ''
+field_type: entity_reference

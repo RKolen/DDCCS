@@ -1,0 +1,162 @@
+uuid: 0d6714f5-7d05-451c-aa3f-5dc4077253c7
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.node.item.field_damage
+    - field.field.node.item.field_damage_types
+    - field.field.node.item.field_description
+    - field.field.node.item.field_edition
+    - field.field.node.item.field_image
+    - field.field.node.item.field_is_magic
+    - field.field.node.item.field_item_properties
+    - field.field.node.item.field_item_rarity
+    - field.field.node.item.field_item_requires_attunement
+    - field.field.node.item.field_item_type
+    - field.field.node.item.field_notes
+    - field.field.node.item.field_vestige_level
+    - field.field.node.item.field_weapon_mastery
+    - field.field.node.item.field_weapon_properties
+    - field.field.node.item.field_weapon_subtype
+    - node.type.item
+  module:
+    - entity_reference_revisions
+    - options
+    - text
+    - user
+id: node.item.default
+targetEntityType: node
+bundle: item
+mode: default
+content:
+  field_damage:
+    type: string
+    label: above
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+    weight: 107
+    region: content
+  field_damage_types:
+    type: entity_reference_label
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 106
+    region: content
+  field_description:
+    type: entity_reference_revisions_entity_view
+    label: above
+    settings:
+      view_mode: default
+      link: ''
+    third_party_settings: {  }
+    weight: 5
+    region: content
+  field_edition:
+    type: entity_reference_label
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 101
+    region: content
+  field_image:
+    type: entity_reference_entity_view
+    label: above
+    settings:
+      view_mode: default
+      link: false
+    third_party_settings: {  }
+    weight: 8
+    region: content
+  field_is_magic:
+    type: boolean
+    label: above
+    settings:
+      format: default
+      format_custom_false: ''
+      format_custom_true: ''
+    third_party_settings: {  }
+    weight: 3
+    region: content
+  field_item_properties:
+    type: entity_reference_label
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 6
+    region: content
+  field_item_rarity:
+    type: list_default
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    weight: 1
+    region: content
+  field_item_requires_attunement:
+    type: boolean
+    label: above
+    settings:
+      format: default
+      format_custom_false: ''
+      format_custom_true: ''
+    third_party_settings: {  }
+    weight: 4
+    region: content
+  field_item_type:
+    type: list_default
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    weight: 0
+    region: content
+  field_notes:
+    type: text_default
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    weight: 9
+    region: content
+  field_vestige_level:
+    type: entity_reference_label
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 102
+    region: content
+  field_weapon_mastery:
+    type: entity_reference_label
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 103
+    region: content
+  field_weapon_properties:
+    type: entity_reference_label
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 105
+    region: content
+  field_weapon_subtype:
+    type: entity_reference_label
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 104
+    region: content
+  links:
+    settings: {  }
+    third_party_settings: {  }
+    weight: 100
+    region: content
+hidden:
+  langcode: true
+  search_api_excerpt: true

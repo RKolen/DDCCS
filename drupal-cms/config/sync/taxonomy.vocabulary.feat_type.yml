@@ -1,0 +1,9 @@
+uuid: 68683d22-6512-4235-bd1b-ffb4467443d0
+langcode: en
+status: true
+dependencies: {  }
+name: 'Feat Type'
+vid: feat_type
+description: null
+weight: 0
+new_revision: false

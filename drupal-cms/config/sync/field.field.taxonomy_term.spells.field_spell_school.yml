@@ -1,0 +1,24 @@
+uuid: ff379925-3028-4bac-a9e8-5b3616def040
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.taxonomy_term.field_spell_school
+    - taxonomy.vocabulary.spell_schools
+    - taxonomy.vocabulary.spells
+id: taxonomy_term.spells.field_spell_school
+field_name: field_spell_school
+entity_type: taxonomy_term
+bundle: spells
+label: 'School of Magic'
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:taxonomy_term'
+  handler_settings:
+    target_bundles:
+      spell_schools: spell_schools
+field_type: entity_reference

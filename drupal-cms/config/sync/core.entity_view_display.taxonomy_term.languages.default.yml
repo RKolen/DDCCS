@@ -1,0 +1,32 @@
+uuid: 6edd1b23-e066-4600-aa28-13a012232a8d
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.taxonomy_term.languages.field_edition
+    - taxonomy.vocabulary.languages
+  module:
+    - text
+id: taxonomy_term.languages.default
+targetEntityType: taxonomy_term
+bundle: languages
+mode: default
+content:
+  description:
+    type: text_default
+    label: hidden
+    settings: {  }
+    third_party_settings: {  }
+    weight: 0
+    region: content
+  field_edition:
+    type: entity_reference_label
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 1
+    region: content
+hidden:
+  langcode: true
+  search_api_excerpt: true

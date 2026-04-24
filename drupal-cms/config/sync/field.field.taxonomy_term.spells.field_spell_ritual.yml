@@ -1,0 +1,21 @@
+uuid: 80d57fcc-3c4a-486c-897c-ad53329d75c6
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.taxonomy_term.field_spell_ritual
+    - taxonomy.vocabulary.spells
+id: taxonomy_term.spells.field_spell_ritual
+field_name: field_spell_ritual
+entity_type: taxonomy_term
+bundle: spells
+label: Ritual
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  on_label: 'On'
+  off_label: 'Off'
+field_type: boolean
