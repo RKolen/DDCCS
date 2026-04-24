@@ -1,7 +1,0 @@
-services:
-  entity_lock.manager:
-    class: Drupal\entity_lock\EntityLockManager
-    arguments:
-      - '@config.factory'
-      - '@messenger'
-      - '@request_stack'
