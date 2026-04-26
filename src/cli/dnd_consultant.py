@@ -12,10 +12,12 @@ from src.ai.availability import AI_AVAILABLE
 from src.ai.task_router import ModelRegistry
 from src.cli.cli_character_manager import CharacterCLIManager
 from src.cli.cli_config import ConfigCLI
+from src.cli.cli_enhancements import CLIEnhancementsMenu
 from src.cli.cli_npc_manager import NpcCLIManager
 from src.cli.cli_story_manager import StoryCLIManager
 from src.cli.cli_story_reader import StoryReaderCLI
 from src.cli.drupal_commands import run_sync_drupal
+from src.cli.history import get_command_history
 from src.cli.milvus_commands import run_milvus_status, run_reindex
 from src.config.config_loader import load_config
 from src.dm.dungeon_master import DMConsultant
@@ -89,23 +91,34 @@ class DDConsultantCLI:
             print("Characters: Not yet loaded (lazy loading enabled)")
         print()
 
+        history = get_command_history()
+
         while True:
             self._show_main_menu()
             choice = input("Enter your choice: ").strip()
 
             if choice == "1":
+                history.add_command("manage_characters")
                 self.character_manager.manage_characters()
             elif choice == "2":
+                history.add_command("manage_stories")
                 self.story_cli.manage_stories()
             elif choice == "3":
+                history.add_command("read_stories")
                 self.story_reader.display_menu()
             elif choice == "4":
+                history.add_command("manage_npcs")
                 self.npc_manager.manage_npcs()
             elif choice == "5":
+                history.add_command("configure_settings")
                 config_cli = ConfigCLI()
                 config_cli.run_config_menu()
             elif choice == "6":
+                history.add_command("switch_model_profile")
                 self._switch_model_profile_menu()
+            elif choice == "7":
+                history.add_command("tools_and_batch")
+                CLIEnhancementsMenu().run()
             elif choice == "0":
                 print("Goodbye! May your adventures be epic!")
                 break
@@ -127,7 +140,7 @@ class DDConsultantCLI:
         else:
             print(f"Unknown command: {command}")
 
-    def _show_main_menu(self):
+    def _show_main_menu(self) -> None:
         """Display the main menu."""
         active = ModelRegistry.get_active_profile_name()
         print("\n[MENU] MAIN MENU")
@@ -138,6 +151,7 @@ class DDConsultantCLI:
         print("4. Manage NPCs")
         print("5. Configure Settings")
         print(f"6. Switch Model Profile  [active: {active}]")
+        print("7. Tools & Batch Operations")
         print("0. Exit")
         print()
 

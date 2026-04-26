@@ -377,8 +377,8 @@ content:
             selector: ''
             inheritance:
               propagate: propagate
-              apply_to_parent: apply_to_parent
-              recurse: recurse
+              apply_to_parent: ''
+              recurse: ''
   group_weapon:
     weight: 27
     region: content
@@ -405,8 +405,8 @@ content:
             selector: ''
             inheritance:
               propagate: propagate
-              apply_to_parent: apply_to_parent
-              recurse: recurse
+              apply_to_parent: ''
+              recurse: ''
   group_armor:
     weight: 28
     region: content
@@ -433,8 +433,8 @@ content:
             selector: ''
             inheritance:
               propagate: propagate
-              apply_to_parent: apply_to_parent
-              recurse: recurse
+              apply_to_parent: ''
+              recurse: ''
   path:
     type: path
     weight: 2

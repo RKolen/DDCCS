@@ -12,7 +12,7 @@
 ### Phase 2: Infrastructure
 
 - [ ] **Gatsby Frontend** - Drupal API enablement, character/NPC/story/item pages, campaign dashboard **Plan:** [plans/gatsby_frontend_plan.md](plans/gatsby_frontend_plan.md)
-- [ ] **Python Drupal Sync CLI** - Add `--sync-drupal` flag to consultant and post-session hook to push story/character updates via `drupal_sync.py`
+- [x] **Python Drupal Sync CLI** - Add `--sync-drupal` flag to consultant and post-session hook to push story/character updates via `drupal_sync.py`
 - [ ] **TTS Web Integration** - Pre-generated audio storage, audio sync to Drupal, React audio player components **Plan:** [plans/tts_web_integration.md](plans/tts_web_integration.md)
 - [ ] **Multi-voice TTS (Phase 3-4)** - Voice switching implementation, Piper TTS integration
 
@@ -23,7 +23,6 @@
 ### Phase 5: Quality of Life
 
 - [ ] **ComfyUI Integration** - Local image generation for character portraits and scene illustrations; optional Drupal media display **Plan:** [plans/comfyui_integration_plan.md](plans/comfyui_integration_plan.md)
-- [ ] **CLI Enhancements** - Tab completion, command history, batch operations **Plan:** [plans/cli_enhancements_plan.md](plans/cli_enhancements_plan.md)
 - [ ] **Export Functionality** - Export stories to different formats (PDF, HTML, etc.) **Plan:** [plans/export_functionality_plan.md](plans/export_functionality_plan.md)
 - [ ] **Backup System** - Automated backup of character profiles and party configurations **Plan:** [plans/backup_system_plan.md](plans/backup_system_plan.md)
 
@@ -44,7 +43,6 @@ All features below have detailed implementation plans in the `plans/` directory.
 ### Quality of Life
 
 - [ComfyUI Integration](plans/comfyui_integration_plan.md) - Local image generation for portraits and scenes; optional Drupal display
-- [CLI Enhancements](plans/cli_enhancements_plan.md) - Tab completion, command history, batch operations
 - [Export Functionality](plans/export_functionality_plan.md) - Export to PDF, HTML, and other formats
 - [Backup System](plans/backup_system_plan.md) - Automated backup system
 - [Interactive Setup](plans/interactive_setup_plan.md) - More interactive setup for first-time users
@@ -131,7 +129,6 @@ All Tier 3 items are complete.
 
 | # | Plan | Reason |
 |---|------|--------|
-| 26 | [CLI Enhancements](plans/cli_enhancements_plan.md) | Tab completion and history are nice-to-have. No dependencies. |
 | 27 | [Export Functionality](plans/export_functionality_plan.md) | Useful but not blocking any DM workflow. Can leverage Drupal if that is in place. |
 | 28 | [Backup System](plans/backup_system_plan.md) | Safety net. Valuable but not urgent for a solo DM using git. |
 | 29 | [Calendar Tracking](plans/calendar_tracking_plan.md) | Nice-to-have in-world time tracking. Depends on timeline being in place. |
@@ -149,6 +146,18 @@ All Tier 3 items are complete.
 ---
 
 ## Recently Completed
+
+### CLI Enhancements - April 26, 2026
+
+- [x] **Command History** - Persistent cross-session history stored in
+  `~/.dnd_consultant/command_history.json`. View, search, clear, and stats
+  via the new Tools menu.
+- [x] **Completion Helpers** - `src/cli/completion.py` provides sorted name
+  lists for characters, NPCs, campaigns, and story files; used by batch UI
+  and available for future shell completion wiring.
+- [x] **Batch Operations** - `BatchProcessor` supports level-up and item
+  distribution across multiple characters in one step; accessible from
+  main menu option 7 (Tools & Batch Operations).
 
 ### Icon System Plan for Design System - April 24, 2026
 

@@ -1778,10 +1778,47 @@ Use existing test data:
 
 ### Phase 4: CLI Integration
 
-1. Add export commands
-2. Add batch export support
-3. Add progress reporting
-4. Document usage
+1. Add export commands (`src/cli/cli_export.py`)
+2. Implement `batch_export` operation in `src/cli/batch_operations.py` (see below)
+3. Wire `batch_export` into `src/cli/cli_enhancements.py` batch menu
+4. Add progress reporting
+5. Document usage
+
+#### batch_export integration (deferred from CLI Enhancements)
+
+The `CLIEnhancementsMenu` in `src/cli/cli_enhancements.py` already has the
+batch character level-up and add-item options. A third option — batch export —
+was intentionally left out because it depends on `ExportManager`. Once Phase 1
+of this plan is complete, add the following to `src/cli/batch_operations.py`:
+
+```python
+def batch_export(
+    format_type: str, output_dir: str
+) -> Callable[[str, Dict[str, Any]], BatchResult]:
+    """Create a character export operation for BatchProcessor.
+
+    Args:
+        format_type: Export format string (pdf, html, md, txt).
+        output_dir: Directory to write exported files into.
+
+    Returns:
+        Operation callable suitable for BatchProcessor.process_characters.
+    """
+    def operation(name: str, _data: Dict[str, Any]) -> BatchResult:
+        from src.export.export_manager import get_export_manager
+        from src.export.formats import ExportFormat
+        manager = get_export_manager()
+        output_path = Path(output_dir) / f"{name}.{format_type}"
+        result = manager.export_character(name, str(output_path), ExportFormat(format_type))
+        message = result.errors[0] if result.errors else f"Exported to {output_path}"
+        return BatchResult(item=name, success=result.success, message=message)
+    return operation
+```
+
+Then add a "Batch Export Characters" entry to the menu in
+`CLIEnhancementsMenu.run()` and a `_batch_export_characters()` method that
+prompts for format and output directory before calling
+`BatchProcessor.process_characters(batch_export(...), ...)`.
 
 ### Backward Compatibility
 

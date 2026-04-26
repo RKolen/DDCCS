@@ -17,3 +17,6 @@ beautifulsoup4>=4.9.0  # HTML/XML parsing library
 # Milvus Vector Database
 pymilvus>=2.4.0  # Milvus Python client for vector similarity search
 
+# Interactive CLI
+prompt_toolkit>=3.0.0  # History navigation and tab completion in interactive prompts
+
