@@ -15,6 +15,7 @@ from src.cli.cli_config import ConfigCLI
 from src.cli.cli_npc_manager import NpcCLIManager
 from src.cli.cli_story_manager import StoryCLIManager
 from src.cli.cli_story_reader import StoryReaderCLI
+from src.cli.drupal_commands import run_sync_drupal
 from src.cli.milvus_commands import run_milvus_status, run_reindex
 from src.config.config_loader import load_config
 from src.dm.dungeon_master import DMConsultant
@@ -204,6 +205,15 @@ def main():
         action="store_true",
         help="Check Milvus connection and print collection statistics, then exit.",
     )
+    parser.add_argument(
+        "--sync-drupal",
+        action="store_true",
+        help=(
+            "Push character and story updates to Drupal via JSON:API, then exit."
+            " Requires DRUPAL_BASE_URL, DRUPAL_USER, and DRUPAL_PASSWORD."
+            " Use with --campaign to also sync campaign story files."
+        ),
+    )
 
     args = parser.parse_args()
 
@@ -223,6 +233,9 @@ def main():
         return
     if args.milvus_status:
         run_milvus_status()
+        return
+    if args.sync_drupal:
+        run_sync_drupal(campaign)
         return
 
     @handle_errors(OSError, ValueError, KeyError, AttributeError, default_return=None)

@@ -112,6 +112,7 @@ src/
 `-- cli/                # Command-line interface
     |-- dnd_consultant.py                  # Main interactive CLI
     |-- dnd_cli_helpers.py                 # CLI helper functions
+    |-- drupal_commands.py                 # --sync-drupal handler
     |-- milvus_commands.py                 # --reindex and --milvus-status handlers
     |-- cli_story_manager.py               # Story management CLI
     |-- cli_character_manager.py           # Character management CLI

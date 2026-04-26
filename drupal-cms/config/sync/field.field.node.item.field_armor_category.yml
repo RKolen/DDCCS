@@ -1,0 +1,19 @@
+uuid: d0e1f2a3-b4c5-6789-defa-item-armor-cat
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_armor_category
+    - node.type.item
+id: node.item.field_armor_category
+field_name: field_armor_category
+entity_type: node
+bundle: item
+label: 'Armor Category'
+description: 'Weight class of this armor.'
+required: false
+translatable: false
+default_value: {}
+default_value_callback: ''
+settings: {}
+field_type: list_string

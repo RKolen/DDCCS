@@ -1,0 +1,29 @@
+uuid: e1f2a3b4-c5d6-7890-efab-item-armor-pr1
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_armor_properties
+    - node.type.item
+    - taxonomy.vocabulary.armor_properties
+id: node.item.field_armor_properties
+field_name: field_armor_properties
+entity_type: node
+bundle: item
+label: 'Armor Properties'
+description: 'Special rules that apply to this armor (e.g. Stealth Disadvantage).'
+required: false
+translatable: false
+default_value: {}
+default_value_callback: ''
+settings:
+  handler: 'default:taxonomy_term'
+  handler_settings:
+    target_bundles:
+      armor_properties: armor_properties
+    sort:
+      field: name
+      direction: asc
+    auto_create: false
+    auto_create_bundle: ''
+field_type: entity_reference

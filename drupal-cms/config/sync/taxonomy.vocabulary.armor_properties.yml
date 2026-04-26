@@ -1,0 +1,9 @@
+uuid: a1b2c3d4-e5f6-7890-abcd-armor-props-01
+langcode: en
+status: true
+dependencies: {}
+name: 'Armor Properties'
+vid: armor_properties
+description: null
+weight: 0
+new_revision: false

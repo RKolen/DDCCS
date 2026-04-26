@@ -17,6 +17,7 @@ from src.config.config_types import (
     AIConfig,
     DisplayConfig,
     DnDConfig,
+    DrupalConfig,
     MilvusConfig,
     MilvusEmbeddingConfig,
     ModelProfile,
@@ -179,6 +180,18 @@ def _merge_config(base: DnDConfig, override: Dict[str, Any]) -> DnDConfig:
             ),
         )
 
+    # Drupal integration config
+    if "drupal" in override:
+        drupal_data = override["drupal"]
+        base.drupal = DrupalConfig(
+            base_url=drupal_data.get("base_url", base.drupal.base_url),
+            user=drupal_data.get("user", base.drupal.user),
+            password=drupal_data.get("password", base.drupal.password),
+            gatsby_webhook_url=drupal_data.get(
+                "gatsby_webhook_url", base.drupal.gatsby_webhook_url
+            ),
+        )
+
     # Model registry config
     if "model_registry" in override:
         base.model_registry = _parse_model_registry(override["model_registry"])
@@ -251,6 +264,30 @@ def _apply_env_model_profiles(
             max_tokens=get_env_int("AI_FAST_MAX_TOKENS", 500),
             description="Fast model for analysis and evaluation tasks",
         )
+
+
+def _apply_env_drupal_overrides(config: DnDConfig, get_env: Any) -> None:
+    """Apply Drupal integration overrides from environment variables.
+
+    Args:
+        config: DnDConfig to update in-place.
+        get_env: Callable to read a string env var.
+    """
+    drupal_base_url = get_env("DRUPAL_BASE_URL")
+    if drupal_base_url:
+        config.drupal.base_url = drupal_base_url
+
+    drupal_user = get_env("DRUPAL_USER")
+    if drupal_user:
+        config.drupal.user = drupal_user
+
+    drupal_password = get_env("DRUPAL_PASSWORD")
+    if drupal_password:
+        config.drupal.password = drupal_password
+
+    gatsby_webhook_url = get_env("DRUPAL_GATSBY_WEBHOOK_URL")
+    if gatsby_webhook_url:
+        config.drupal.gatsby_webhook_url = gatsby_webhook_url
 
 
 def _apply_env_milvus_overrides(
@@ -384,6 +421,7 @@ def _apply_env_overrides(config: DnDConfig, prefix: str = "") -> DnDConfig:
         config.paths.cache_dir = Path(cache_dir)
 
     _apply_env_milvus_overrides(config, get_env, get_env_bool, get_env_int, get_env_float)
+    _apply_env_drupal_overrides(config, get_env)
 
     return config
 

@@ -1,0 +1,11 @@
+uuid: b2c3d4e5-f6a7-8901-bcde-armor-lang-01
+langcode: en
+status: true
+dependencies:
+  config:
+    - taxonomy.vocabulary.armor_properties
+id: taxonomy_term.armor_properties
+target_entity_type_id: taxonomy_term
+target_bundle: armor_properties
+default_langcode: site_default
+language_alterable: false

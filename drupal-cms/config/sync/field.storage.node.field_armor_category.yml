@@ -1,0 +1,30 @@
+uuid: f6a7b8c9-d0e1-2345-fabc-armor-category
+langcode: en
+status: true
+dependencies:
+  module:
+    - node
+    - options
+id: node.field_armor_category
+field_name: field_armor_category
+entity_type: node
+type: list_string
+settings:
+  allowed_values:
+    -
+      value: light
+      label: Light
+    -
+      value: medium
+      label: Medium
+    -
+      value: heavy
+      label: Heavy
+  allowed_values_function: ''
+module: options
+locked: false
+cardinality: 1
+translatable: false
+indexes: {}
+persist_with_no_fields: false
+custom_storage: false

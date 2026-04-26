@@ -65,7 +65,7 @@ class DrupalSync:
         data: Dict[str, Any] = raw if raw is not None else {}
         title = data.get("name", character_file.stem)
         existing_uuid = self._find_node_uuid("character", title)
-        payload: Dict[str, Any] = self._build_character_payload(data)
+        payload: Dict[str, Any] = self.build_character_payload(data)
 
         if existing_uuid:
             self._patch_node("character", existing_uuid, payload)
@@ -92,7 +92,7 @@ class DrupalSync:
         body = story_file.read_text(encoding="utf-8")
         title = f"{campaign} — {story_file.stem}"
         existing_uuid = self._find_node_uuid("story", title)
-        payload = self._build_story_payload(title, body)
+        payload = self.build_story_payload(title, body)
 
         if existing_uuid:
             self._patch_node("story", existing_uuid, payload)
@@ -253,7 +253,7 @@ class DrupalSync:
         self._request("PATCH", url, payload)
 
     @staticmethod
-    def _build_character_payload(data: Dict[str, Any]) -> Dict[str, Any]:
+    def build_character_payload(data: Dict[str, Any]) -> Dict[str, Any]:
         """Convert a character dict to a JSON:API POST/PATCH payload.
 
         Args:
@@ -309,7 +309,7 @@ class DrupalSync:
         }
 
     @staticmethod
-    def _build_story_payload(title: str, body: str) -> Dict[str, Any]:
+    def build_story_payload(title: str, body: str) -> Dict[str, Any]:
         """Convert a story Markdown body to a JSON:API POST/PATCH payload.
 
         Args:

@@ -1,0 +1,20 @@
+uuid: e5f6a7b8-c9d0-1234-efab-armor-str-req
+langcode: en
+status: true
+dependencies:
+  module:
+    - node
+id: node.field_armor_str_requirement
+field_name: field_armor_str_requirement
+entity_type: node
+type: integer
+settings:
+  unsigned: false
+  size: normal
+module: core
+locked: false
+cardinality: 1
+translatable: true
+indexes: {}
+persist_with_no_fields: false
+custom_storage: false

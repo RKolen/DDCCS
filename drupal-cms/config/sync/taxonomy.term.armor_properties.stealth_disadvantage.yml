@@ -1,0 +1,10 @@
+uuid: c3d4e5f6-a7b8-9012-cdef-stealth-disadv
+langcode: en
+status: true
+dependencies:
+  config:
+    - taxonomy.vocabulary.armor_properties
+name: 'Stealth Disadvantage'
+weight: 0
+parent: {}
+vid: armor_properties

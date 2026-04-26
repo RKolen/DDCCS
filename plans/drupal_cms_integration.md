@@ -323,24 +323,27 @@ Milvus search can filter by `field_campaign` to scope results per campaign.
 
 ### Drupal side
 
-- [ ] Enable `jsonapi`, `gatsby`, `basic_auth`, `serialization`
-- [ ] Configure CORS in `services.yml`
-- [ ] Create `gatsby_user` with read permissions
-- [ ] Add `field_source_character` and `field_campaign` to character (UI)
-- [ ] Enable Milvus modules when instance available
-- [ ] Configure Gatsby webhook URL in Drupal admin
+- [x] Enable `jsonapi`, `gatsby`, `basic_auth`, `serialization` (Phase 8)
+- [x] Configure CORS in `services.yml` (Phase 8)
+- [x] Create `gatsby_user` with read permissions (Phase 8)
+- [x] Add `field_source_character` and `field_campaign` to character (Phase 12)
+- [ ] Enable Milvus modules when instance available (deferred — after content migration)
+- [x] Configure Gatsby webhook URL in Drupal admin (Phase 8)
 
 ### Gatsby frontend
 
-- [ ] Scaffold Gatsby project in `frontend/`
-- [ ] Install and configure `gatsby-source-drupal`
-- [ ] Build GraphQL queries for character, npc, story, item pages
-- [ ] Build component library (CharacterSheet, NPCCard, StoryReader, ItemCard)
-- [ ] Build campaign dashboard with character instance support
-- [ ] Add search UI backed by Milvus (via Drupal Search API or direct)
+- [x] Scaffold Gatsby project in `frontend/` (Phase 9)
+- [x] Install and configure `gatsby-source-drupal` (Phase 9)
+- [ ] Build GraphQL queries for character, npc, story, item pages (Gatsby Frontend plan)
+- [ ] Build component library (CharacterSheet, NPCCard, StoryReader, ItemCard) (Gatsby Frontend plan)
+- [ ] Build campaign dashboard with character instance support (Gatsby Frontend plan)
+- [ ] Add search UI backed by Milvus (Gatsby Frontend plan)
 
 ### Python app
 
-- [ ] Create `src/integration/drupal_sync.py` for delta updates
-- [ ] Add `--sync-drupal` CLI flag to consultant
+- [x] Create `src/integration/drupal_sync.py` for delta updates
+- [x] Add `--sync-drupal` CLI flag to consultant (use with `--campaign` to also sync stories)
+- [x] Env vars `DRUPAL_BASE_URL`, `DRUPAL_USER`, `DRUPAL_PASSWORD`, `DRUPAL_GATSBY_WEBHOOK_URL`
+    loaded by `config_loader.py`; documented in `.env.example`
+- [x] Unit tests in `tests/integration/test_drupal_sync.py` (14 tests, 10.00/10 Pylint)
 - [ ] Add post-session hook to push story + character updates

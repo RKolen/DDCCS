@@ -1,0 +1,19 @@
+uuid: b8c9d0e1-f2a3-4567-bcde-item-ac-base01
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_armor_ac_base
+    - node.type.item
+id: node.item.field_armor_ac_base
+field_name: field_armor_ac_base
+entity_type: node
+bundle: item
+label: 'AC Base'
+description: 'Base armor class provided by this armor.'
+required: false
+translatable: false
+default_value: {}
+default_value_callback: ''
+settings: {}
+field_type: integer

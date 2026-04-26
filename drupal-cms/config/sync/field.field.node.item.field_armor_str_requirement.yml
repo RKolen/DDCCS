@@ -1,0 +1,19 @@
+uuid: c9d0e1f2-a3b4-5678-cdef-item-str-req01
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_armor_str_requirement
+    - node.type.item
+id: node.item.field_armor_str_requirement
+field_name: field_armor_str_requirement
+entity_type: node
+bundle: item
+label: 'Strength Requirement'
+description: 'Minimum Strength score required to wear this armor without speed penalty.'
+required: false
+translatable: false
+default_value: {}
+default_value_callback: ''
+settings: {}
+field_type: integer
