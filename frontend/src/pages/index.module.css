@@ -1,0 +1,230 @@
+.page {
+  padding: var(--space-8) var(--space-10);
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.pageHeader {
+  margin-bottom: var(--space-8);
+}
+
+.heading {
+  font-size: var(--text-xl);
+  color: var(--color-gold-bright);
+  margin-bottom: var(--space-1);
+}
+
+.subtitle {
+  font-family: var(--font-body);
+  font-style: italic;
+  font-size: var(--text-base);
+  color: var(--color-text-secondary);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-10);
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-4);
+}
+
+.sectionTitle {
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: var(--font-bold);
+  color: var(--color-gold-mid);
+  letter-spacing: var(--tracking-widest);
+  text-transform: uppercase;
+}
+
+.sectionLink {
+  font-family: var(--font-display);
+  font-size: 10px;
+  color: var(--color-text-secondary);
+  letter-spacing: var(--tracking-wide);
+}
+
+.sectionLink:hover {
+  color: var(--color-gold-mid);
+}
+
+.charList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.charCard {
+  display: block;
+  background: var(--color-bg-surface);
+  border: var(--border-thin);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  cursor: pointer;
+  transition: background var(--transition-fast), border-color var(--transition-fast);
+  text-decoration: none;
+}
+
+.charCard:hover {
+  background: var(--color-bg-hover);
+  border-color: var(--color-gold-muted);
+}
+
+.charCardTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-2);
+}
+
+.charCardIdent {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.charName {
+  font-family: var(--font-display);
+  font-size: var(--text-base);
+  font-weight: var(--font-semibold);
+  color: var(--color-gold-bright);
+}
+
+.charAc {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--color-text-secondary);
+}
+
+.charBadges {
+  display: flex;
+  gap: var(--space-1);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-3);
+}
+
+.hpRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.hpBar {
+  flex: 1;
+  height: 4px;
+  background: var(--color-bg-overlay);
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+}
+
+.hpFill {
+  width: 100%;
+  height: 100%;
+  background: var(--color-success);
+  border-radius: var(--radius-pill);
+}
+
+.hpLabel {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--color-success);
+  min-width: 50px;
+  text-align: right;
+}
+
+.sessionList {
+  display: flex;
+  flex-direction: column;
+}
+
+.sessionRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 12px var(--space-4);
+  background: var(--color-bg-surface);
+  border: var(--border-thin);
+  border-top: none;
+  cursor: pointer;
+  transition: background var(--transition-fast);
+  text-decoration: none;
+}
+
+.sessionFirst {
+  border-top: var(--border-thin);
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+}
+
+.sessionLast {
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+}
+
+.sessionRow:hover {
+  background: var(--color-bg-hover);
+}
+
+.sessionInfo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sessionTitle {
+  font-family: var(--font-display);
+  font-size: 13px;
+  color: var(--color-text-primary);
+}
+
+.sessionMeta {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--color-text-secondary);
+}
+
+.actions {
+  margin-top: var(--space-6);
+}
+
+.actionButtons {
+  display: flex;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  margin-top: var(--space-4);
+}
+
+.actionBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: var(--font-bold);
+  letter-spacing: var(--tracking-wide);
+  color: var(--color-gold-mid);
+  background: transparent;
+  border: 1px solid var(--color-gold-border);
+  border-radius: var(--radius-sm);
+  padding: 7px var(--space-3);
+  text-decoration: none;
+  transition: background var(--transition-fast), border-color var(--transition-fast);
+}
+
+.actionBtn:hover {
+  background: var(--color-bg-hover);
+  border-color: var(--color-gold-muted);
+  color: var(--color-gold-bright);
+}
+
+.empty {
+  font-family: var(--font-body);
+  font-style: italic;
+  font-size: var(--text-base);
+  color: var(--color-text-secondary);
+}

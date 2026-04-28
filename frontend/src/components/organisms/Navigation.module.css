@@ -1,0 +1,72 @@
+.nav {
+  background: var(--color-bg-surface);
+  border-bottom: var(--border-thin);
+  padding: 0 var(--space-8);
+  display: flex;
+  align-items: center;
+  height: 52px;
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-right: var(--space-10);
+  text-decoration: none;
+  flex-shrink: 0;
+}
+
+.brandName {
+  font-family: var(--font-display);
+  font-size: var(--text-base);
+  font-weight: var(--font-bold);
+  color: var(--color-gold-bright);
+  letter-spacing: var(--tracking-widest);
+  text-transform: uppercase;
+}
+
+.links {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  flex: 1;
+}
+
+.link {
+  font-family: var(--font-display);
+  font-size: 11px;
+  letter-spacing: var(--tracking-wide);
+  color: var(--color-text-secondary);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0 13px;
+  height: 100%;
+  border-bottom: 2px solid transparent;
+  transition: color var(--transition-fast), border-color var(--transition-fast);
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+}
+
+.link:hover {
+  color: var(--color-gold-mid);
+}
+
+.linkActive {
+  color: var(--color-gold-bright);
+  border-bottom-color: var(--color-gold-bright);
+}
+
+.linkActive:hover {
+  color: var(--color-gold-bright);
+}
+
+.link:focus-visible {
+  outline: 2px solid var(--color-gold-bright);
+  outline-offset: -2px;
+}

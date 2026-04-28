@@ -1,0 +1,50 @@
+.page {
+  padding: var(--space-6) var(--space-10);
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.tabBar {
+  display: flex;
+  border-bottom: 1px solid var(--color-gold-border);
+  margin: var(--space-4) 0 var(--space-6);
+}
+
+.tabBtn {
+  font-family: var(--font-display);
+  font-size: 11px;
+  letter-spacing: var(--tracking-wide);
+  color: var(--color-text-secondary);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 10px 18px;
+  border-bottom: 2px solid transparent;
+  transition: color var(--transition-fast), border-color var(--transition-fast);
+}
+
+.tabBtn:hover {
+  color: var(--color-gold-mid);
+}
+
+.tabBtnActive {
+  color: var(--color-gold-bright);
+  border-bottom-color: var(--color-gold-bright);
+}
+
+.tabBtn:focus-visible {
+  outline: 2px solid var(--color-gold-bright);
+  outline-offset: -2px;
+}
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-8);
+}
+
+.empty {
+  font-family: var(--font-body);
+  font-style: italic;
+  color: var(--color-text-secondary);
+}
