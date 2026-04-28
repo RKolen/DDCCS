@@ -1,23 +1,132 @@
-:root {
-  /* Gold colour filters for Game Icons (white SVG paths → design system gold) */
-  --filter-gold: invert(72%) sepia(22%) saturate(600%) hue-rotate(10deg) brightness(95%);
-  --filter-gold-bright: invert(82%) sepia(28%) saturate(700%) hue-rotate(5deg);
-  --filter-gold-dim: invert(60%) sepia(18%) saturate(500%) hue-rotate(10deg) brightness(80%);
-  --filter-white: none;
-  --filter-red: invert(27%) sepia(90%) saturate(900%) hue-rotate(340deg) brightness(90%);
+/* ============================================================
+   DDCCS — tokens.css  (frontend/src/styles/)
+   Single source of truth for all CSS custom properties.
 
-  /* Design system colour tokens */
-  --color-gold-mid: #c9a96e;
-  --color-gold-bright: #e8c88a;
-  --color-gold-dim: #8a7050;
-  --color-parchment: #e8d5b0;
-  --color-bg-dark: #1a1008;
-  --color-bg-mid: #2a1f14;
-  --color-bg-card: #221508;
-  --color-border: #2a1f14;
-  --color-border-gold: #c9a96e55;
-  --color-text-muted: #7a6a5a;
-  --color-danger: #c0392b;
-  --color-bg-badge: #3a2a1a;
-  --color-bg-error: #2a1008;
+   NAMING GUIDE
+   - Canonical names follow the design-system plan
+   - Legacy aliases at the bottom preserve backwards compat with
+     existing CSS Modules (search.module.css, Badge.module.css, etc.)
+   - For self-hosting fonts, replace the Google import below with:
+       @import url('../../../fonts/fonts.css');
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&family=Fira+Code:wght@400;500&display=swap');
+
+:root {
+
+  /* ── Icon colour filters (Game Icons are white SVG paths) ── */
+  --filter-gold:        invert(72%) sepia(22%) saturate(600%) hue-rotate(10deg) brightness(95%);
+  --filter-gold-bright: invert(82%) sepia(28%) saturate(700%) hue-rotate(5deg);
+  --filter-gold-dim:    invert(60%) sepia(18%) saturate(500%) hue-rotate(10deg) brightness(80%);
+  --filter-white:       none;
+  --filter-red:         invert(27%) sepia(90%) saturate(900%) hue-rotate(340deg) brightness(90%);
+  --filter-green:       invert(60%) sepia(40%) saturate(500%) hue-rotate(90deg) brightness(95%);
+  --filter-blue:        invert(55%) sepia(30%) saturate(600%) hue-rotate(190deg) brightness(95%);
+
+  /* ── Backgrounds ─────────────────────────────────────────── */
+  --color-bg-base:    #1a1208;
+  --color-bg-surface: #2a1e0f;
+  --color-bg-overlay: #3a2a1a;
+  --color-bg-hover:   #4a3520;
+  --color-bg-error:   #2a1008;
+
+  /* ── Gold / Parchment ────────────────────────────────────── */
+  --color-gold-bright: #f0c060;
+  --color-gold-mid:    #c9a96e;
+  --color-gold-muted:  #8a6d3e;
+  --color-gold-border: rgba(201, 169, 110, 0.33);
+
+  /* ── Text ────────────────────────────────────────────────── */
+  --color-text-primary:   #e8d5b0;
+  --color-text-secondary: #b09070;
+  --color-text-disabled:  #5a4a38;
+  --color-text-inverse:   #1a1208;
+
+  /* ── Semantic / Status ───────────────────────────────────── */
+  --color-success: #4caf6e;
+  --color-warning: #e8a030;
+  --color-danger:  #c0392b;
+  --color-info:    #5b9bd5;
+  --color-neutral: #7a6a58;
+
+  /* ── Rarity (D&D 5e) ─────────────────────────────────────── */
+  --color-rarity-common:    #b0b0b0;
+  --color-rarity-uncommon:  #5ec45e;
+  --color-rarity-rare:      #5ba8f5;
+  --color-rarity-very-rare: #bf7fe0;
+  --color-rarity-legendary: #ffa830;
+  --color-rarity-artifact:  #f06055;
+
+  /* ── Typography ──────────────────────────────────────────── */
+  --font-display: 'Cinzel', 'Palatino Linotype', serif;
+  --font-body:    'Crimson Text', 'Georgia', serif;
+  --font-mono:    'Fira Code', 'Courier New', monospace;
+
+  --text-xs:   0.64rem;
+  --text-sm:   0.8rem;
+  --text-base: 1rem;
+  --text-md:   1.25rem;
+  --text-lg:   1.563rem;
+  --text-xl:   1.953rem;
+  --text-2xl:  2.441rem;
+
+  --font-normal:   400;
+  --font-semibold: 600;
+  --font-bold:     700;
+
+  --leading-tight:  1.2;
+  --leading-normal: 1.5;
+  --leading-loose:  1.8;
+
+  --tracking-tight:   -0.01em;
+  --tracking-normal:   0em;
+  --tracking-wide:     0.05em;
+  --tracking-widest:   0.12em;
+
+  /* ── Spacing (4px base unit) ─────────────────────────────── */
+  --space-1:   4px;
+  --space-2:   8px;
+  --space-3:  12px;
+  --space-4:  16px;
+  --space-5:  20px;
+  --space-6:  24px;
+  --space-8:  32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  /* ── Borders ─────────────────────────────────────────────── */
+  --border-thin:   1px solid var(--color-gold-border);
+  --border-mid:    1px solid var(--color-gold-muted);
+  --border-accent: 1px solid var(--color-gold-mid);
+
+  /* ── Border Radius ───────────────────────────────────────── */
+  --radius-sm:   4px;
+  --radius-md:   8px;
+  --radius-lg:  12px;
+  --radius-pill: 9999px;
+
+  /* ── Shadows ─────────────────────────────────────────────── */
+  --shadow-sm:        0 1px 3px rgba(0, 0, 0, 0.5);
+  --shadow-md:        0 4px 12px rgba(0, 0, 0, 0.6);
+  --shadow-lg:        0 8px 24px rgba(0, 0, 0, 0.7);
+  --shadow-glow-gold: 0 0 8px rgba(201, 169, 110, 0.3);
+
+  /* ── Transitions ─────────────────────────────────────────── */
+  --transition-fast:   120ms ease;
+  --transition-normal: 220ms ease;
+
+  /* ══════════════════════════════════════════════════════════
+     LEGACY ALIASES — backwards compat for existing CSS Modules
+     Do not use these names in new files.
+     ══════════════════════════════════════════════════════════ */
+  --color-bg-dark:    var(--color-bg-base);
+  --color-bg-mid:     var(--color-bg-surface);
+  --color-bg-card:    var(--color-bg-overlay);
+  --color-bg-badge:   var(--color-bg-overlay);
+  --color-parchment:  var(--color-text-primary);
+  --color-text-muted: var(--color-text-secondary);
+  --color-border:     var(--color-gold-border);
+  --color-gold-dim:   var(--color-gold-muted);
+  --color-border-gold: var(--color-gold-border);
 }

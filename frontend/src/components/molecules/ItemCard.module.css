@@ -1,0 +1,42 @@
+.card {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  background: var(--color-bg-surface);
+  border: var(--border-thin);
+  border-radius: var(--radius-md);
+  padding: 12px 16px;
+}
+
+.icon {
+  flex-shrink: 0;
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+  min-width: 140px;
+}
+
+.name {
+  font-family: var(--font-display);
+  font-size: 14px;
+  color: var(--color-text-primary);
+}
+
+.detail {
+  font-family: var(--font-body);
+  font-style: italic;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+.badges {
+  display: flex;
+  gap: var(--space-1);
+  flex-wrap: wrap;
+  align-items: center;
+}

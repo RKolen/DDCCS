@@ -1,0 +1,80 @@
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.label {
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: var(--font-bold);
+  color: var(--color-gold-mid);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+}
+
+.input {
+  width: 100%;
+  padding: 10px 14px;
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-gold-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-primary);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  outline: none;
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+.input::placeholder {
+  color: var(--color-text-disabled);
+}
+
+.input:focus {
+  border-color: var(--color-gold-mid);
+  box-shadow: var(--shadow-glow-gold);
+}
+
+.input:disabled {
+  color: var(--color-text-disabled);
+  cursor: not-allowed;
+}
+
+.input.hasError {
+  border-color: var(--color-danger);
+}
+
+.input.hasError:focus {
+  box-shadow: 0 0 8px rgba(192, 57, 43, 0.3);
+}
+
+.errorMsg {
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  color: var(--color-danger);
+  font-style: italic;
+}
+
+.select {
+  padding: 10px 12px;
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-gold-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-primary);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  outline: none;
+  cursor: pointer;
+  transition: border-color var(--transition-fast);
+}
+
+.select:focus {
+  border-color: var(--color-gold-mid);
+  box-shadow: var(--shadow-glow-gold);
+}
+
+.select option {
+  background: var(--color-bg-surface);
+}

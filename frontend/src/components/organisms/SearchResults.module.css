@@ -1,0 +1,21 @@
+.count {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-3);
+}
+
+.list {
+  list-style: none;
+  background: var(--color-bg-surface);
+  border: var(--border-thin);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.empty {
+  font-family: var(--font-body);
+  font-style: italic;
+  font-size: var(--text-base);
+  color: var(--color-text-secondary);
+}

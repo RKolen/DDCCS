@@ -1,0 +1,21 @@
+.divider {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: var(--space-2) 0;
+}
+
+.line {
+  flex: 1;
+  height: 1px;
+}
+
+.lineLeft  { background: linear-gradient(to right, transparent, rgba(201, 169, 110, 0.25)); }
+.lineRight { background: linear-gradient(to left, transparent, rgba(201, 169, 110, 0.25)); }
+.lineFull  { background: linear-gradient(to right, transparent, rgba(201, 169, 110, 0.25), transparent); }
+
+.iconEl {
+  flex-shrink: 0;
+  opacity: 0.5;
+}

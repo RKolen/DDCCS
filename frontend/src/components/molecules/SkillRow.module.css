@@ -1,0 +1,35 @@
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 4px 0;
+}
+
+.pip {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--color-gold-border);
+  background: transparent;
+  flex-shrink: 0;
+}
+
+.pipFilled {
+  background: var(--color-gold-mid);
+  border-color: var(--color-gold-mid);
+}
+
+.name {
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  color: var(--color-text-primary);
+  flex: 1;
+}
+
+.modifier {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--color-gold-bright);
+  min-width: 28px;
+  text-align: right;
+}

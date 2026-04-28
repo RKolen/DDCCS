@@ -1,0 +1,12 @@
+.panel {
+  background: var(--color-bg-surface);
+  border: var(--border-thin);
+  border-radius: var(--radius-md);
+  padding: 16px 20px;
+}
+
+.divider {
+  height: 1px;
+  background: var(--color-bg-base);
+  margin: 1px 0;
+}
