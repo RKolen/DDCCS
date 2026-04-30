@@ -24,6 +24,7 @@ from src.config.config_types import (
     ModelRegistryConfig,
     PathConfig,
     RAGConfig,
+    SidecarConfig,
 )
 from src.utils.errors import display_error, FileSystemError
 
@@ -196,6 +197,16 @@ def _merge_config(base: DnDConfig, override: Dict[str, Any]) -> DnDConfig:
     if "model_registry" in override:
         base.model_registry = _parse_model_registry(override["model_registry"])
 
+    # Sidecar config
+    if "sidecar" in override:
+        sc = override["sidecar"]
+        base.sidecar = SidecarConfig(
+            host=sc.get("host", base.sidecar.host),
+            port=sc.get("port", base.sidecar.port),
+            timeout=sc.get("timeout", base.sidecar.timeout),
+            min_confidence=sc.get("min_confidence", base.sidecar.min_confidence),
+        )
+
     return base
 
 
@@ -331,6 +342,31 @@ def _apply_env_milvus_overrides(
     )
 
 
+def _apply_env_sidecar_overrides(
+    config: DnDConfig,
+    get_env: Any,
+    get_env_float: Any,
+    get_env_int: Any,
+) -> None:
+    """Apply sidecar configuration overrides from environment variables.
+
+    Args:
+        config: DnDConfig to update in-place.
+        get_env: Callable to read a string env var.
+        get_env_float: Callable to read a float env var with default.
+        get_env_int: Callable to read an int env var with default.
+    """
+    sidecar_host = get_env("SIDECAR_HOST")
+    if sidecar_host:
+        config.sidecar.host = sidecar_host
+
+    config.sidecar.port = get_env_int("SIDECAR_PORT", config.sidecar.port)
+    config.sidecar.timeout = get_env_float("SIDECAR_TIMEOUT", config.sidecar.timeout)
+    config.sidecar.min_confidence = get_env_float(
+        "SIDECAR_MIN_CONFIDENCE", config.sidecar.min_confidence
+    )
+
+
 def _apply_env_overrides(config: DnDConfig, prefix: str = "") -> DnDConfig:
     """Apply environment variable overrides.
 
@@ -422,6 +458,7 @@ def _apply_env_overrides(config: DnDConfig, prefix: str = "") -> DnDConfig:
 
     _apply_env_milvus_overrides(config, get_env, get_env_bool, get_env_int, get_env_float)
     _apply_env_drupal_overrides(config, get_env)
+    _apply_env_sidecar_overrides(config, get_env, get_env_float, get_env_int)
 
     return config
 

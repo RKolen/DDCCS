@@ -20,3 +20,8 @@ pymilvus>=2.4.0  # Milvus Python client for vector similarity search
 # Interactive CLI
 prompt_toolkit>=3.0.0  # History navigation and tab completion in interactive prompts
 
+# Search query parser sidecar
+fastapi>=0.100.0       # ASGI web framework for the query parser sidecar
+uvicorn[standard]>=0.22.0  # ASGI server to run the sidecar
+httpx>=0.24.0          # HTTP client required by FastAPI TestClient in tests
+

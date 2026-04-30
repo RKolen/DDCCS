@@ -10,12 +10,13 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 FRONTEND_DIR="$SCRIPT_DIR/frontend"
 DRUPAL_DIR="$SCRIPT_DIR/drupal-cms"
 
-# Service ports and URLs — set in .env or environment variables.
-GATSBY_PORT="${GATSBY_PORT}"
-SIDECAR_PORT="${SIDECAR_PORT}"
-DRUPAL_URL="${DRUPAL_URL}"
-OLLAMA_PORT="${OLLAMA_PORT}"
-MILVUS_PORT="${MILVUS_PORT}"
+# Load .env so port/URL variables are available before use.
+if [[ -f "$SCRIPT_DIR/.env" ]]; then
+  set -a
+  # shellcheck source=/dev/null
+  source "$SCRIPT_DIR/.env"
+  set +a
+fi
 
 NO_CLI=false
 for arg in "$@"; do
@@ -56,17 +57,24 @@ if [[ ! -f ".env.development" ]]; then
   GATSBY_STARTED=false
 else
   echo ""
-  echo "==> Stopping any existing Gatsby instance on port $GATSBY_PORT..."
+  echo "==> Stopping any existing process on port $GATSBY_PORT..."
   OLD_GATSBY=$(lsof -ti :"$GATSBY_PORT" 2>/dev/null || true)
   if [[ -n "$OLD_GATSBY" ]]; then
     kill "$OLD_GATSBY" 2>/dev/null && echo "    Killed existing process(es): $OLD_GATSBY"
+    # Wait until the port is actually free (max 10 s).
+    for i in {1..10}; do
+      lsof -ti :"$GATSBY_PORT" > /dev/null 2>&1 || break
+      sleep 1
+    done
   fi
 
   echo "==> Clearing Gatsby cache..."
   npm run clean > /dev/null 2>&1
 
   echo "==> Starting Gatsby dev server (background)..."
-  npm run develop > "$SCRIPT_DIR/.gatsby.log" 2>&1 &
+  # Answer Gatsby's interactive port-conflict prompt with 'n' via stdin so
+  # the background process never blocks waiting for keyboard input.
+  echo "n" | npm run develop > "$SCRIPT_DIR/.gatsby.log" 2>&1 &
   GATSBY_PID=$!
   echo "    Gatsby PID: $GATSBY_PID (logs: .gatsby.log)"
   echo "    Frontend:   http://localhost:$GATSBY_PORT"

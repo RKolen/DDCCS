@@ -237,6 +237,16 @@ class DrupalConfig:
 
 
 @dataclass
+class SidecarConfig:
+    """Query-parser sidecar configuration."""
+
+    host: str = "localhost"
+    port: int = 8765
+    timeout: float = 5.0
+    min_confidence: float = 0.6
+
+
+@dataclass
 class ServiceConfig:
     """Grouped service configuration (model registry, vector database, spotlighting)."""
 
@@ -244,6 +254,7 @@ class ServiceConfig:
     milvus: MilvusConfig = field(default_factory=MilvusConfig)
     spotlight: SpotlightConfig = field(default_factory=SpotlightConfig)
     drupal: DrupalConfig = field(default_factory=DrupalConfig)
+    sidecar: SidecarConfig = field(default_factory=SidecarConfig)
 
 
 @dataclass
@@ -303,6 +314,16 @@ class DnDConfig:
     def drupal(self, value: "DrupalConfig") -> None:
         """Replace the Drupal integration config."""
         self.services.drupal = value
+
+    @property
+    def sidecar(self) -> "SidecarConfig":
+        """Return the query-parser sidecar config."""
+        return self.services.sidecar
+
+    @sidecar.setter
+    def sidecar(self, value: "SidecarConfig") -> None:
+        """Replace the query-parser sidecar config."""
+        self.services.sidecar = value
 
     def is_dirty(self) -> bool:
         """Check if configuration has unsaved changes."""
@@ -429,5 +450,6 @@ __all__ = [
     "DisplayConfig",
     "PathConfig",
     "DrupalConfig",
+    "SidecarConfig",
     "DnDConfig",
 ]

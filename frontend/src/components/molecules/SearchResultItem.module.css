@@ -1,9 +1,18 @@
 .item {
   padding: 12px 16px;
   border-bottom: 1px solid var(--color-border);
+  border-left: 3px solid transparent;
   display: flex;
   align-items: center;
   gap: 12px;
+}
+
+.match_exact {
+  border-left-color: var(--color-gold);
+}
+
+.match_keyword {
+  border-left-color: var(--color-text-muted);
 }
 
 .title {
@@ -12,9 +21,28 @@
   color: var(--color-parchment);
 }
 
+.matchBadge {
+  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-family: var(--font-ui);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-muted);
+  background: transparent;
+}
+
+.matchBadge_exact {
+  color: var(--color-gold);
+}
+
+.matchBadge_keyword {
+  color: var(--color-text-muted);
+}
+
 .relevance {
   font-size: 12px;
   color: var(--color-text-muted);
-  min-width: 60px;
+  min-width: 44px;
   text-align: right;
 }

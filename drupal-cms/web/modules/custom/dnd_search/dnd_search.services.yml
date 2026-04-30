@@ -1,0 +1,21 @@
+services:
+  logger.channel.dnd_search:
+    parent: logger.channel_base
+    arguments: ['dnd_search']
+
+  dnd_search.query_decomposer:
+    class: Drupal\dnd_search\Service\QueryDecomposer
+    arguments:
+      - '@ai.provider'
+      - '@logger.factory'
+
+  dnd_search.structured_filter_resolver:
+    class: Drupal\dnd_search\Service\StructuredFilterResolver
+    arguments:
+      - '@entity_type.manager'
+
+  dnd_search.solr_resolver:
+    class: Drupal\dnd_search\Service\SolrResolver
+    arguments:
+      - '@entity_type.manager'
+      - '@logger.factory'

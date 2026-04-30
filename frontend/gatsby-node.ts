@@ -67,6 +67,137 @@ export const createPages: GatsbyNode['createPages'] = async ({ graphql, actions 
     });
 };
 
+export const createSchemaCustomization: GatsbyNode['createSchemaCustomization'] = ({ actions }) => {
+  const { createTypes } = actions;
+
+  createTypes(`
+    # -------------------------------------------------------------------------
+    # Scalar / value-object helpers (not Drupal entities, no Node interface)
+    # -------------------------------------------------------------------------
+    type FieldTextValue {
+      value: String
+    }
+    type FieldTextWithSummary {
+      value: String
+      processed: String
+    }
+    type FilePath {
+      alias: String
+    }
+
+    # -------------------------------------------------------------------------
+    # Taxonomy terms — stub fields so fragments compile when terms are empty
+    # -------------------------------------------------------------------------
+    type TaxonomyTermSpecies implements Node {
+      name: String
+    }
+    type TaxonomyTermCharacterClass implements Node {
+      name: String
+    }
+    type TaxonomyTermBackground implements Node {
+      name: String
+    }
+    type TaxonomyTermSkill implements Node {
+      name: String
+    }
+    type TaxonomyTermRole implements Node {
+      name: String
+    }
+    type TaxonomyTermLocation implements Node {
+      name: String
+    }
+    type TaxonomyTermSpellSchool implements Node {
+      name: String
+    }
+
+    # -------------------------------------------------------------------------
+    # Paragraph types — defined so inline fragments compile when empty
+    # -------------------------------------------------------------------------
+    type paragraph__class implements Node {
+      fieldClass: [TaxonomyTermCharacterClass]
+      fieldSubclassRef: [TaxonomyTermCharacterClass]
+    }
+    type paragraph__ability_scores implements Node {
+      fieldStrength: Int
+      fieldDexterity: Int
+      fieldConstitution: Int
+      fieldIntelligence: Int
+      fieldWisdom: Int
+      fieldCharisma: Int
+    }
+    type paragraph__spell_slot implements Node {
+      fieldSpellLevel: Int
+      fieldSpellSlotsTotal: Int
+      fieldSpellSlotsAvailable: Int
+    }
+    type paragraph__spell_reference implements Node {
+      fieldSpell: [node__spell]
+    }
+    type paragraph__relationship implements Node {
+      fieldRelatedCharacter: [node__character]
+      fieldRelationshipDescription: [FieldTextValue]
+    }
+
+    # -------------------------------------------------------------------------
+    # Content types — ensures allNodeX queries exist even with no nodes
+    # -------------------------------------------------------------------------
+    type node__spell implements Node {
+      title: String
+      fieldSpellLevel: Int
+      fieldSpellSchool: [TaxonomyTermSpellSchool]
+      fieldConcentration: Boolean
+    }
+    type node__item implements Node {
+      title: String
+      fieldItemType: String
+      fieldItemRarity: String
+      fieldDescription: [FieldTextValue]
+      drupalInternalNid: Int
+      path: FilePath
+    }
+    type node__npc implements Node {
+      title: String
+      fieldRole: [TaxonomyTermRole]
+      fieldLocation: [TaxonomyTermLocation]
+      fieldPersonality: [FieldTextValue]
+      fieldRelationships: [paragraph__relationship]
+      drupalInternalNid: Int
+      path: FilePath
+    }
+    type node__story implements Node {
+      title: String
+      fieldStoryNumber: Int
+      fieldSessionDate: Date
+      fieldBody: FieldTextWithSummary
+      fieldStoryHooks: [FieldTextValue]
+      fieldCharacters: [node__character]
+      drupalInternalNid: Int
+      path: FilePath
+    }
+    type node__character implements Node {
+      title: String
+      fieldFirstName: String
+      fieldNickname: String
+      fieldLevel: Int
+      fieldArmorClass: Int
+      fieldMaximumHitpoints: Int
+      fieldMovementSpeed: Int
+      fieldProficiencyBonus: Int
+      fieldPersonality: [FieldTextValue]
+      fieldSpecies: [TaxonomyTermSpecies]
+      fieldBackground: [TaxonomyTermBackground]
+      fieldClass: [paragraph__class]
+      fieldAbilityScores: [paragraph__ability_scores]
+      fieldSpellSlots: [paragraph__spell_slot]
+      fieldSpellsRef: [paragraph__spell_reference]
+      fieldSkills: [TaxonomyTermSkill]
+      fieldEquipmentItems: [node__item]
+      drupalInternalNid: Int
+      path: FilePath
+    }
+  `);
+};
+
 export const onCreateDevServer: GatsbyNode['onCreateDevServer'] = ({ app }) => {
   app.use(
     createProxyMiddleware({

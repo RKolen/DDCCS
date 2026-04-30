@@ -206,6 +206,10 @@ violation of project standards.
 ### Source Code Organization
 
 src/
+|-- sidecar/         # Search query parser sidecar (FastAPI microservice)
+|   |-- app.py           # FastAPI app (/health, /parse-query endpoints)
+|   |-- models.py        # Pydantic request/response models
+|   |-- query_parser.py  # AI query normalisation and content type inference
 |-- characters/      # Character management + consultants subsystem
 |   |-- consultants/ # Per-character consultant classes
 |   |-- character_sheet.py
@@ -535,3 +539,4 @@ python3 -m src.validation.validate_all
 | Main CLI | `dnd_consultant.py` |
 | Test runner | `tests/run_all_tests.py` |
 | Validation | `src/validation/validate_all.py` |
+| Search sidecar | `run_sidecar.py` |

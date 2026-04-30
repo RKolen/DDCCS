@@ -42,13 +42,15 @@ export function Navigation({
       </a>
 
       <div className={styles.links}>
-        {links.map(link =>
-          renderLink({
-            href: link.path,
-            className: `${styles.link}${link.active ? ` ${styles.linkActive}` : ''}`,
-            children: link.label.toUpperCase(),
-          })
-        )}
+        {links.map(link => (
+          <React.Fragment key={link.path}>
+            {renderLink({
+              href: link.path,
+              className: `${styles.link}${link.active ? ` ${styles.linkActive}` : ''}`,
+              children: link.label.toUpperCase(),
+            })}
+          </React.Fragment>
+        ))}
       </div>
     </nav>
   );

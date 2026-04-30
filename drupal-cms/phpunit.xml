@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
+  bootstrap="web/modules/custom/dnd_search/tests/bootstrap.php"
+  colors="true"
+  failOnNotice="false"
+>
+  <testsuites>
+    <testsuite name="dnd_search Unit">
+      <directory>web/modules/custom/dnd_search/tests/src/Unit</directory>
+    </testsuite>
+  </testsuites>
+</phpunit>

@@ -33,6 +33,7 @@ TEST_CATEGORIES = [
     "encounters",
     "cli",
     "integration",
+    "sidecar",
 ]
 
 
