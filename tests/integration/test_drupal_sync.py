@@ -20,7 +20,12 @@ from io import BytesIO
 from pathlib import Path
 from typing import Any, Optional
 
-from tests.test_helpers import setup_test_environment, import_module
+from tests.test_helpers import (
+    make_drupal_config,
+    make_mock_urlopen,
+    setup_test_environment,
+    import_module,
+)
 
 
 setup_test_environment()
@@ -37,32 +42,11 @@ get_characters_dir = path_utils_mod.get_characters_dir
 
 
 # ---------------------------------------------------------------------------
-# Helpers
+# Helpers (local aliases for shared test_helpers utilities)
 # ---------------------------------------------------------------------------
 
-def _make_config(
-    base_url: str = "https://drupal-cms.ddev.site",
-    user: str = "admin",
-    password: str = "password",
-    gatsby_webhook_url: str = "",
-) -> Any:
-    """Return a minimal DrupalConfig for tests."""
-    return DrupalConfig(
-        base_url=base_url,
-        user=user,
-        password=password,
-        gatsby_webhook_url=gatsby_webhook_url,
-    )
-
-
-def _mock_urlopen(status: int, body: bytes = b"") -> unittest.mock.MagicMock:
-    """Return a MagicMock patching urlopen with the given status and body."""
-    mock = unittest.mock.MagicMock()
-    mock.status = status
-    mock.read.return_value = body
-    mock.__enter__.return_value = mock
-    mock.__exit__.return_value = False
-    return mock
+_make_config = make_drupal_config
+_mock_urlopen = make_mock_urlopen
 
 
 def _skip_if_no_live_drupal() -> Optional[str]:

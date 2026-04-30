@@ -1,0 +1,19 @@
+uuid: 083d501c-21c2-4a2e-b5c5-0736504a93b5
+langcode: en
+status: true
+dependencies:
+  module:
+    - node
+    - text
+id: node.field_monster_reactions
+field_name: field_monster_reactions
+entity_type: node
+type: text_long
+settings: {  }
+module: text
+locked: false
+cardinality: 1
+translatable: false
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

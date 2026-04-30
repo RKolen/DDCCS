@@ -1,0 +1,20 @@
+uuid: d4525f8f-df05-412e-9b87-d08c898a66a2
+langcode: en
+status: true
+dependencies:
+  module:
+    - node
+id: node.field_item_bonus
+field_name: field_item_bonus
+entity_type: node
+type: integer
+settings:
+  unsigned: false
+  size: normal
+module: core
+locked: false
+cardinality: 1
+translatable: false
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

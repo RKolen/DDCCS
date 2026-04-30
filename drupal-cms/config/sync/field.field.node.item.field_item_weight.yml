@@ -1,0 +1,23 @@
+uuid: 58e46ccd-4961-420f-872d-2379c82a1183
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_item_weight
+    - node.type.item
+id: node.item.field_item_weight
+field_name: field_item_weight
+entity_type: node
+bundle: item
+label: 'Weight'
+description: 'Item weight in pounds'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  min: null
+  max: null
+  prefix: ''
+  suffix: ' lbs'
+field_type: decimal

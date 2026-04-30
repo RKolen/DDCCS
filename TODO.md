@@ -13,6 +13,7 @@
 
 - [ ] **Gatsby Frontend** - Drupal API enablement, character/NPC/story/item pages, campaign dashboard **Plan:** [plans/gatsby_frontend_plan.md](plans/gatsby_frontend_plan.md)
 - [x] **Python Drupal Sync CLI** - Add `--sync-drupal` flag to consultant and post-session hook to push story/character updates via `drupal_sync.py`
+- [ ] **FGU Migration** - Migrate items and NPCs/monsters from Fantasy Grounds Unity to Drupal CMS (Python parser + DrupalSync extensions + Migrate API bulk import). Python/Drupal steps are Gatsby-independent; full web display depends on Gatsby item/monster pages. **Plan:** [plans/FGU_migration_plan.md](plans/FGU_migration_plan.md)
 - [ ] **TTS Web Integration** - Pre-generated audio storage, audio sync to Drupal, React audio player components **Plan:** [plans/tts_web_integration.md](plans/tts_web_integration.md)
 - [ ] **Multi-voice TTS (Phase 3-4)** - Voice switching implementation, Piper TTS integration
 
@@ -37,6 +38,7 @@ All features below have detailed implementation plans in the `plans/` directory.
 ### Infrastructure
 
 - [Gatsby Frontend](plans/gatsby_frontend_plan.md) - React pages, GraphQL queries, campaign dashboard
+- [FGU Migration](plans/FGU_migration_plan.md) - FGU to Drupal items/monster migration; Python parser + DrupalSync + Migrate API
 - [TTS Web Integration](plans/tts_web_integration.md) - Web-based TTS audio integration
 - [Multi-voice TTS Design](plans/multi_voice_tts_design.md) - Multi-voice narration system
 
@@ -121,9 +123,10 @@ All Tier 3 items are complete.
 | # | Plan | Reason |
 |---|------|--------|
 | 22 | [Gatsby Frontend](plans/gatsby_frontend_plan.md) | Direct continuation of Drupal CMS. Enables all web-facing features. Unblocks TTS web integration. |
-| 23 | [TTS Web Integration](plans/tts_web_integration.md) | Depends on Gatsby pages being in place for audio player components. |
-| 24 | [Plugin Architecture](plans/plugin_architecture_plan.md) | Extensibility framework. Most useful once the core feature set is stable and external contributors or campaign-specific needs emerge. |
-| 25 | [Interactive Setup](plans/interactive_setup_plan.md) | Onboarding improvement. More valuable once the full feature set is settled. |
+| 23 | [FGU Migration](plans/FGU_migration_plan.md) | Extends DrupalSync for FGU items and monsters. Python/Drupal steps are Gatsby-independent and unblocked now. Full web display value requires Gatsby item/monster pages. |
+| 24 | [TTS Web Integration](plans/tts_web_integration.md) | Depends on Gatsby pages being in place for audio player components. |
+| 25 | [Plugin Architecture](plans/plugin_architecture_plan.md) | Extensibility framework. Most useful once the core feature set is stable and external contributors or campaign-specific needs emerge. |
+| 26 | [Interactive Setup](plans/interactive_setup_plan.md) | Onboarding improvement. More valuable once the full feature set is settled. |
 
 ### Tier 5 — Quality of Life (Low urgency, high polish)
 

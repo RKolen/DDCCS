@@ -1,0 +1,19 @@
+uuid: 704f01ed-174f-4542-8f15-fb033cd1738c
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_source
+    - node.type.item
+id: node.item.field_source
+field_name: field_source
+entity_type: node
+bundle: item
+label: 'Source'
+description: 'Source campaign or module'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string

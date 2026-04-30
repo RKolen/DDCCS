@@ -20,6 +20,15 @@ settings:
     -
       value: item
       label: Item
+    -
+      value: wondrous_item
+      label: 'Wondrous Item'
+    -
+      value: adventuring_gear
+      label: 'Adventuring Gear'
+    -
+      value: amulet
+      label: Amulet
   allowed_values_function: ''
 module: options
 locked: false

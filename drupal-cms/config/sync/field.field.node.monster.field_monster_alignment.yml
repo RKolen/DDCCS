@@ -1,0 +1,19 @@
+uuid: 3eee17e4-f85b-4ca7-bd39-cf9adc55fedf
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_monster_alignment
+    - node.type.monster
+id: node.monster.field_monster_alignment
+field_name: field_monster_alignment
+entity_type: node
+bundle: monster
+label: 'Alignment'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string

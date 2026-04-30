@@ -1,0 +1,22 @@
+uuid: 6d0b777b-078e-41f2-ad99-79c3ca48c3b6
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_monster_lair_actions
+    - node.type.monster
+  module:
+    - text
+id: node.monster.field_monster_lair_actions
+field_name: field_monster_lair_actions
+entity_type: node
+bundle: monster
+label: 'Lair Actions'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  allowed_formats: {  }
+field_type: text_long

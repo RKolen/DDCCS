@@ -1,0 +1,19 @@
+uuid: b66ed845-183b-4d3b-8c70-8b49ff01f1ad
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_monster_speed
+    - node.type.monster
+id: node.monster.field_monster_speed
+field_name: field_monster_speed
+entity_type: node
+bundle: monster
+label: 'Speed'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string

@@ -1,0 +1,22 @@
+uuid: cca79a41-2a42-47ab-8fad-8c8cfa0bc48a
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_monster_actions
+    - node.type.monster
+  module:
+    - text
+id: node.monster.field_monster_actions
+field_name: field_monster_actions
+entity_type: node
+bundle: monster
+label: 'Actions'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  allowed_formats: {  }
+field_type: text_long

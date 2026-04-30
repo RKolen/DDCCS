@@ -252,7 +252,7 @@ src/
 |   |-- config_types.py  # AIConfig, RAGConfig, DisplayConfig, PathConfig, DrupalConfig
 |   |-- config_loader.py
 |-- integration/     # External service sync
-|   |-- drupal_sync.py  # DrupalSync: push_character, push_story, trigger_gatsby_build
+|   |-- drupal_sync.py  # DrupalSync: push_character, push_story, push_item, push_monster, trigger_gatsby_build
 |-- utils/           # Shared utilities (CHECK FIRST)
 |-- cli/             # Command-line interface
 |   |-- dnd_consultant.py  # Main interactive CLI
@@ -281,7 +281,7 @@ tests/
 |-- config/          # Tests for src/config/
 |-- dm/              # Tests for src/dm/
 |-- encounters/      # Tests for src/encounters/
-|-- integration/     # Cross-module integration tests
+|-- integration/     # Cross-module integration tests (Drupal sync)
 |-- items/           # Tests for src/items/
 |-- npcs/            # Tests for src/npcs/
 |-- stories/         # Tests for src/stories/

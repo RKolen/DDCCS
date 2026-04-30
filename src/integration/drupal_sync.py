@@ -64,17 +64,7 @@ class DrupalSync:
         raw = load_json_file(str(character_file))
         data: Dict[str, Any] = raw if raw is not None else {}
         title = data.get("name", character_file.stem)
-        existing_uuid = self._find_node_uuid("character", title)
-        payload: Dict[str, Any] = self.build_character_payload(data)
-
-        if existing_uuid:
-            self._patch_node("character", existing_uuid, payload)
-            logger.info("Updated character '%s' (%s)", title, existing_uuid)
-            return existing_uuid
-
-        uuid = self._post_node("character", payload)
-        logger.info("Created character '%s' (%s)", title, uuid)
-        return uuid
+        return self._upsert_node("character", str(title), self.build_character_payload(data))
 
     def push_story(self, story_file: Path, campaign: str) -> str:
         """Push a Markdown story file to Drupal as a story node.
@@ -91,17 +81,51 @@ class DrupalSync:
         """
         body = story_file.read_text(encoding="utf-8")
         title = f"{campaign} — {story_file.stem}"
-        existing_uuid = self._find_node_uuid("story", title)
-        payload = self.build_story_payload(title, body)
+        return self._upsert_node("story", title, self.build_story_payload(title, body))
 
-        if existing_uuid:
-            self._patch_node("story", existing_uuid, payload)
-            logger.info("Updated story '%s' (%s)", title, existing_uuid)
-            return existing_uuid
+    def push_item(self, item_data: Dict[str, Any], skip_existing: bool = True) -> str:
+        """Push a single parsed FGU item to Drupal as a node--item node.
 
-        uuid = self._post_node("story", payload)
-        logger.info("Created story '%s' (%s)", title, uuid)
-        return uuid
+        By default, existing nodes are left untouched (skip_existing=True) so
+        that manually-curated Drupal items are never overwritten by the import.
+
+        Args:
+            item_data: Normalized item dict from FguXmlParser.iter_items().
+            skip_existing: When True (default), return the existing UUID without
+                updating if a node with the same title already exists.
+
+        Returns:
+            The Drupal node UUID of the created or found node.
+
+        Raises:
+            DrupalSyncError: On HTTP error or unexpected response shape.
+        """
+        title = str(item_data.get("name", ""))
+        return self._upsert_node(
+            "item", title, self.build_item_payload(item_data), skip_existing=skip_existing
+        )
+
+    def push_monster(self, monster_data: Dict[str, Any], skip_existing: bool = True) -> str:
+        """Push a single parsed FGU npc stat block to Drupal as a node--monster node.
+
+        By default, existing nodes are left untouched (skip_existing=True) so
+        that manually-curated Drupal monsters are never overwritten by the import.
+
+        Args:
+            monster_data: Normalized monster dict from FguXmlParser.iter_monsters().
+            skip_existing: When True (default), return the existing UUID without
+                updating if a node with the same title already exists.
+
+        Returns:
+            The Drupal node UUID of the created or found node.
+
+        Raises:
+            DrupalSyncError: On HTTP error or unexpected response shape.
+        """
+        title = str(monster_data.get("name", ""))
+        return self._upsert_node(
+            "monster", title, self.build_monster_payload(monster_data), skip_existing=skip_existing
+        )
 
     def trigger_gatsby_build(self) -> bool:
         """Fire the Gatsby Preview webhook to start an incremental rebuild.
@@ -192,6 +216,44 @@ class DrupalSync:
             raise DrupalSyncError(
                 f"{method} {url} connection error: {exc.reason}"
             ) from exc
+
+    def _upsert_node(
+        self,
+        node_type: str,
+        title: str,
+        payload: Dict[str, Any],
+        skip_existing: bool = False,
+    ) -> str:
+        """Create or update a Drupal node, returning its UUID.
+
+        Looks up an existing node by content type and title.  When
+        ``skip_existing`` is True and a match is found, returns the existing
+        UUID without modifying the node.  Otherwise PATCHes the existing node.
+        POSTs a new node when none is found.
+
+        Args:
+            node_type: Drupal machine name of the content type.
+            title: Node title used for the duplicate lookup.
+            payload: JSON:API resource object body.
+            skip_existing: When True, never overwrite an existing node.
+
+        Returns:
+            UUID of the created, updated, or found node.
+
+        Raises:
+            DrupalSyncError: On HTTP error or unexpected response shape.
+        """
+        existing_uuid = self._find_node_uuid(node_type, title)
+        if existing_uuid:
+            if skip_existing:
+                logger.info("Skipped %s '%s' (manual version kept)", node_type, title)
+                return existing_uuid
+            self._patch_node(node_type, existing_uuid, payload)
+            logger.info("Updated %s '%s' (%s)", node_type, title, existing_uuid)
+            return existing_uuid
+        uuid = self._post_node(node_type, payload)
+        logger.info("Created %s '%s' (%s)", node_type, title, uuid)
+        return uuid
 
     def _find_node_uuid(self, node_type: str, title: str) -> Optional[str]:
         """Look up a node UUID by content type and title.
@@ -328,3 +390,96 @@ class DrupalSync:
                 },
             }
         }
+
+    @staticmethod
+    def build_item_payload(data: Dict[str, Any]) -> Dict[str, Any]:
+        """Convert a normalized FGU item dict to a JSON:API POST/PATCH payload.
+
+        Rarity values already contain the Drupal slug (common/uncommon/rare/
+        very_rare/legendary/artifact/vestige) as produced by FguXmlParser.
+        Magic flag is derived from rarity: anything uncommon or above is magic.
+
+        Args:
+            data: Normalized item dict from FguXmlParser.iter_items().
+
+        Returns:
+            JSON:API resource object suitable for node--item.
+        """
+        magic_rarities = {"uncommon", "rare", "very_rare", "legendary", "artifact", "vestige"}
+        rarity = str(data.get("rarity", ""))
+        notes = str(data.get("description_text", ""))
+        restriction = str(data.get("attunement_restriction", ""))
+        if restriction:
+            notes = f"{notes}\n\nAttunement restriction: {restriction}".strip()
+
+        attrs: Dict[str, Any] = {
+            "title": str(data.get("name", "")),
+            "field_item_type": str(data.get("item_type", "item")),
+            "field_is_magic": rarity in magic_rarities,
+            "field_item_rarity": rarity,
+            "field_item_requires_attunement": bool(data.get("attunement", False)),
+            "field_notes": notes,
+            "field_item_cost": str(data.get("cost", "")),
+            "field_item_weight": data.get("weight", 0.0),
+            "field_item_bonus": data.get("bonus", 0),
+            "field_nonidentified_name": str(data.get("nonid_name", "")),
+            "field_edition": str(data.get("version", "")),
+        }
+
+        if data.get("damage"):
+            attrs["field_damage"] = str(data["damage"])
+        if data.get("mastery"):
+            attrs["field_weapon_mastery"] = str(data["mastery"])
+        if data.get("properties"):
+            attrs["field_weapon_properties"] = str(data["properties"])
+        if data.get("subtype"):
+            attrs["field_weapon_subtype"] = str(data["subtype"])
+        if data.get("ac") is not None:
+            attrs["field_armor_ac_base"] = int(data["ac"])
+        if data.get("str_requirement") is not None:
+            attrs["field_armor_str_requirement"] = int(data["str_requirement"])
+
+        return {"data": {"type": "node--item", "attributes": attrs}}
+
+    @staticmethod
+    def build_monster_payload(data: Dict[str, Any]) -> Dict[str, Any]:
+        """Convert a normalized FGU npc dict to a JSON:API POST/PATCH payload.
+
+        Maps FGU <npc> stat blocks to node--monster.  Does NOT touch node--npc,
+        which is reserved for CLI-sourced narrative NPC profiles.
+
+        The field_ability_scores paragraph and field_type taxonomy reference
+        are skipped in the Python push path (handled by the Migrate API bulk
+        import instead).
+
+        Args:
+            data: Normalized monster dict from FguXmlParser.iter_monsters().
+
+        Returns:
+            JSON:API resource object suitable for node--monster.
+        """
+        speed_numeric = data.get("speed_numeric")
+        attrs: Dict[str, Any] = {
+            "title": str(data.get("name", "")),
+            "field_challenge_rating": data.get("cr", 0.0),
+            "field_armor_class": data.get("ac", 0),
+            "field_maximum_hitpoints": data.get("hp", 0),
+            "field_movement_speed": speed_numeric if speed_numeric is not None else 0,
+            "field_monster_speed": str(data.get("speed", "")),
+            "field_monster_size": str(data.get("size", "")),
+            "field_monster_alignment": str(data.get("alignment", "")),
+            "field_monster_senses": str(data.get("senses", "")),
+            "field_monster_languages": str(data.get("languages", "")),
+            "field_monster_skills": str(data.get("skills", "")),
+            "field_monster_hit_dice": str(data.get("hit_dice", "")),
+            "field_monster_xp": data.get("xp", 0),
+            "field_specialized_abilities": str(data.get("traits_text", "")),
+            "field_monster_actions": str(data.get("actions_text", "")),
+            "field_monster_bonus_actions": str(data.get("bonus_actions_text", "")),
+            "field_monster_reactions": str(data.get("reactions_text", "")),
+            "field_monster_legendary_actions": str(data.get("legendary_actions_text", "")),
+            "field_monster_lair_actions": str(data.get("lair_actions_text", "")),
+            "field_monster_damage_immunities": str(data.get("damage_immunities", "")),
+            "field_monster_damage_resistances": str(data.get("damage_resistances", "")),
+        }
+        return {"data": {"type": "node--monster", "attributes": attrs}}

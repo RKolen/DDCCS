@@ -23,12 +23,14 @@ Usage in test files:
 
 """
 
+import importlib
 import json
 import sys
 import types
+import unittest.mock
 from pathlib import Path
+from typing import Any
 from unittest.mock import patch as mock_patch
-import importlib
 
 from src.npcs.npc_auto_detection import DEFAULT_NPC_AI_CONFIG
 from src.spells.spell_registry import (
@@ -865,6 +867,50 @@ def registry_in_temp(tmp_dir: str) -> SpellRegistry:
     (Path(tmp_dir) / "spells").mkdir(exist_ok=True)
     with mock_patch("src.spells.spell_registry.get_game_data_path", return_value=tmp_dir):
         return SpellRegistry()
+
+
+def make_drupal_config(
+    base_url: str = "https://drupal-cms.ddev.site",
+    user: str = "admin",
+    password: str = "password",
+    gatsby_webhook_url: str = "",
+) -> Any:
+    """Return a minimal DrupalConfig suitable for unit tests.
+
+    Args:
+        base_url: Drupal base URL.
+        user: HTTP Basic Auth username.
+        password: HTTP Basic Auth password.
+        gatsby_webhook_url: Optional Gatsby webhook URL.
+
+    Returns:
+        DrupalConfig instance with the given settings.
+    """
+    drupal_config_mod = import_module("src.config.config_types")
+    return drupal_config_mod.DrupalConfig(
+        base_url=base_url,
+        user=user,
+        password=password,
+        gatsby_webhook_url=gatsby_webhook_url,
+    )
+
+
+def make_mock_urlopen(status: int, body: bytes = b"") -> unittest.mock.MagicMock:
+    """Return a context-manager MagicMock simulating a urllib response.
+
+    Args:
+        status: HTTP status code exposed as ``mock.status``.
+        body: Response body bytes returned by ``mock.read()``.
+
+    Returns:
+        Configured MagicMock ready for use as a urlopen return value.
+    """
+    mock = unittest.mock.MagicMock()
+    mock.status = status
+    mock.read.return_value = body
+    mock.__enter__.return_value = mock
+    mock.__exit__.return_value = False
+    return mock
 
 
 def run_test_functions(tests: list, cleanup=None) -> None:

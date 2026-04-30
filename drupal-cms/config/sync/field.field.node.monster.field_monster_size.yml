@@ -1,0 +1,21 @@
+uuid: e830738d-1ce1-49e2-8811-79421a7481ec
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_monster_size
+    - node.type.monster
+  module:
+    - options
+id: node.monster.field_monster_size
+field_name: field_monster_size
+entity_type: node
+bundle: monster
+label: 'Size'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: list_string

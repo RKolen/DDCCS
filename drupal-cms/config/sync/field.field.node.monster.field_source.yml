@@ -1,0 +1,19 @@
+uuid: fb1dc22b-7f69-4751-a534-853ea942cf4d
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_source
+    - node.type.monster
+id: node.monster.field_source
+field_name: field_source
+entity_type: node
+bundle: monster
+label: 'Source'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string

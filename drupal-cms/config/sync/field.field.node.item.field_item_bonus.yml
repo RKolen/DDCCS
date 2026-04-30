@@ -1,0 +1,23 @@
+uuid: 0990ea2d-cb76-4861-8b99-48f895ee7703
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_item_bonus
+    - node.type.item
+id: node.item.field_item_bonus
+field_name: field_item_bonus
+entity_type: node
+bundle: item
+label: 'Bonus'
+description: 'Enhancement bonus (+1/+2/+3)'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  min: null
+  max: null
+  prefix: '+'
+  suffix: ''
+field_type: integer

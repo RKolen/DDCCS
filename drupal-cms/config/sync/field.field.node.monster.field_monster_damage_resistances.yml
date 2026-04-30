@@ -1,0 +1,19 @@
+uuid: a0635f5e-5931-40dd-ba7b-88f36d7cf99f
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_monster_damage_resistances
+    - node.type.monster
+id: node.monster.field_monster_damage_resistances
+field_name: field_monster_damage_resistances
+entity_type: node
+bundle: monster
+label: 'Damage Resistances'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string

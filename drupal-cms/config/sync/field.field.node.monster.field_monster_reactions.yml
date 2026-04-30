@@ -1,0 +1,22 @@
+uuid: 987b1f8a-a42e-4a38-a6dd-29011297edd6
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_monster_reactions
+    - node.type.monster
+  module:
+    - text
+id: node.monster.field_monster_reactions
+field_name: field_monster_reactions
+entity_type: node
+bundle: monster
+label: 'Reactions'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  allowed_formats: {  }
+field_type: text_long

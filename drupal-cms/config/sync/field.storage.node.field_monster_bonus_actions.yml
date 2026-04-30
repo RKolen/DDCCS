@@ -1,0 +1,19 @@
+uuid: c3144649-be8d-42ca-ad94-5097a245cc8f
+langcode: en
+status: true
+dependencies:
+  module:
+    - node
+    - text
+id: node.field_monster_bonus_actions
+field_name: field_monster_bonus_actions
+entity_type: node
+type: text_long
+settings: {  }
+module: text
+locked: false
+cardinality: 1
+translatable: false
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

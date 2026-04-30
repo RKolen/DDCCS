@@ -1,0 +1,19 @@
+uuid: ddcec291-1d27-4579-ab03-3d1e4e5d3f6b
+langcode: en
+status: true
+dependencies:
+  module:
+    - node
+    - text
+id: node.field_monster_actions
+field_name: field_monster_actions
+entity_type: node
+type: text_long
+settings: {  }
+module: text
+locked: false
+cardinality: 1
+translatable: false
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

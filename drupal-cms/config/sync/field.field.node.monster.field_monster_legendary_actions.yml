@@ -1,0 +1,22 @@
+uuid: ff5cb1be-d436-4a5a-a2bd-39f0d0d22d45
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_monster_legendary_actions
+    - node.type.monster
+  module:
+    - text
+id: node.monster.field_monster_legendary_actions
+field_name: field_monster_legendary_actions
+entity_type: node
+bundle: monster
+label: 'Legendary Actions'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  allowed_formats: {  }
+field_type: text_long

@@ -1,0 +1,39 @@
+uuid: da291ec9-633f-41cb-8f36-58e9809cc5fc
+langcode: en
+status: true
+dependencies:
+  module:
+    - node
+    - options
+id: node.field_monster_size
+field_name: field_monster_size
+entity_type: node
+type: list_string
+settings:
+  allowed_values:
+    -
+      value: tiny
+      label: Tiny
+    -
+      value: small
+      label: Small
+    -
+      value: medium
+      label: Medium
+    -
+      value: large
+      label: Large
+    -
+      value: huge
+      label: Huge
+    -
+      value: gargantuan
+      label: Gargantuan
+  allowed_values_function: ''
+module: options
+locked: false
+cardinality: 1
+translatable: false
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

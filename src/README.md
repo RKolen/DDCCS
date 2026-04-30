@@ -77,7 +77,7 @@ src/
 |   `-- config_loader.py       # Config loading from file/env
 |
 |-- integration/        # External service integration
-|   `-- drupal_sync.py         # Push characters/stories to Drupal, trigger Gatsby builds
+|   `-- drupal_sync.py         # Push characters/stories/items/monsters to Drupal, trigger Gatsby builds
 |
 |-- utils/              # Shared utilities (check AGENTS.md catalog first)
 |   |-- file_io.py                  # JSON and file I/O

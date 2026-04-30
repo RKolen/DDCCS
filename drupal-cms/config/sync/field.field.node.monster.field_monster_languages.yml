@@ -1,0 +1,19 @@
+uuid: 251c1256-8956-4527-8796-34275dec1a7d
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_monster_languages
+    - node.type.monster
+id: node.monster.field_monster_languages
+field_name: field_monster_languages
+entity_type: node
+bundle: monster
+label: 'Languages'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string
