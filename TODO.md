@@ -12,7 +12,6 @@
 ### Phase 2: Infrastructure
 
 - [ ] **Gatsby Frontend** - Drupal API enablement, character/NPC/story/item pages, campaign dashboard **Plan:** [plans/gatsby_frontend_plan.md](plans/gatsby_frontend_plan.md)
-- [x] **Python Drupal Sync CLI** - Add `--sync-drupal` flag to consultant and post-session hook to push story/character updates via `drupal_sync.py`
 - [ ] **FGU Migration** - Migrate items and NPCs/monsters from Fantasy Grounds Unity to Drupal CMS (Python parser + DrupalSync extensions + Migrate API bulk import). Python/Drupal steps are Gatsby-independent; full web display depends on Gatsby item/monster pages. **Plan:** [plans/FGU_migration_plan.md](plans/FGU_migration_plan.md)
 - [ ] **TTS Web Integration** - Pre-generated audio storage, audio sync to Drupal, React audio player components **Plan:** [plans/tts_web_integration.md](plans/tts_web_integration.md)
 - [ ] **Multi-voice TTS (Phase 3-4)** - Voice switching implementation, Piper TTS integration
@@ -149,6 +148,10 @@ All Tier 3 items are complete.
 ---
 
 ## Recently Completed
+
+### **AI Search Query Parsing** - April 30, 2026
+
+- [x] **Multi-backend lore search** Ollama decomposes natural-language queries into EntityQuery (exact attribute matches), Milvus (semantic), and Solr (keyword) backends. Python sidecar for query normalisation. Gatsby schema stubs for empty content types. Match-type result badges.
 
 ### CLI Enhancements - April 26, 2026
 
