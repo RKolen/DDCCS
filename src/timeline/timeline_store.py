@@ -3,7 +3,7 @@
 import os
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 from src.timeline.event_schema import EventPriority, EventType, TimelineEvent
 from src.utils.file_io import load_json_file, save_json_file
@@ -115,9 +115,14 @@ class TimelineStore:
         self._save_campaign_timeline(event.source.campaign_name)
 
     def _save_campaign_timeline(self, campaign: str) -> None:
-        """Persist the timeline for a campaign."""
+        """Persist the timeline for a campaign, preserving any extra top-level fields."""
         if not campaign:
             return
+
+        timeline_path = self._timeline_path(campaign)
+        existing: Dict[str, Any] = {}
+        if os.path.exists(timeline_path):
+            existing = load_json_file(timeline_path) or {}
 
         event_ids = self._campaign_index.get(campaign, [])
         events = [
@@ -126,12 +131,12 @@ class TimelineStore:
             if eid in self._events
         ]
 
-        data = {
+        existing.update({
             "campaign_name": campaign,
             "last_updated": datetime.now().isoformat(),
             "events": events,
-        }
-        save_json_file(self._timeline_path(campaign), data)
+        })
+        save_json_file(timeline_path, existing)
 
     def get_event(self, event_id: str) -> Optional[TimelineEvent]:
         """Get an event by ID."""

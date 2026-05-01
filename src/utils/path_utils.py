@@ -216,6 +216,18 @@ def get_story_file_path(
     return os.path.join(campaign_path, story_name)
 
 
+def get_calendars_dir(workspace_path: Optional[str] = None) -> str:
+    """Get the path to the calendars data directory.
+
+    Args:
+        workspace_path: Optional workspace root path (defaults to current directory)
+
+    Returns:
+        Path to game_data/calendars directory
+    """
+    return os.path.join(get_game_data_path(workspace_path), "calendars")
+
+
 def get_character_templates_dir(workspace_path: Optional[str] = None) -> str:
     """Get the path to the character templates directory.
 

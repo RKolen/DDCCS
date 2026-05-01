@@ -6,6 +6,10 @@ This directory contains all source code organized into logical packages.
 
 ```text
 src/
+|-- calendar/            # In-world calendar tracking
+|   |-- calendar_engine.py   # CalendarEngine, InWorldDate, date arithmetic, season/holiday detection
+|   `-- date_tracker.py      # DateTracker: per-campaign current date persisted in timeline.json
+|
 |-- characters/          # Character management
 |   |-- consultants/     # Per-character consultant classes
 |   |-- character_sheet.py           # Character and NPC data models

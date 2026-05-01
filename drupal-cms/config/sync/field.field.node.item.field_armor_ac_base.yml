@@ -13,7 +13,11 @@ label: 'AC Base'
 description: 'Base armor class provided by this armor.'
 required: false
 translatable: false
-default_value: {}
+default_value: {  }
 default_value_callback: ''
-settings: {}
+settings:
+  min: null
+  max: null
+  prefix: ''
+  suffix: ''
 field_type: integer

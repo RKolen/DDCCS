@@ -25,6 +25,7 @@ TEST_CATEGORIES = [
     "npcs",
     "stories",
     "sessions",
+    "calendar",
     "timeline",
     "combat",
     "items",

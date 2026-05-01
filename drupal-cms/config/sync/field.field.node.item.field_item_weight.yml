@@ -9,7 +9,7 @@ id: node.item.field_item_weight
 field_name: field_item_weight
 entity_type: node
 bundle: item
-label: 'Weight'
+label: Weight
 description: 'Item weight in pounds'
 required: false
 translatable: false

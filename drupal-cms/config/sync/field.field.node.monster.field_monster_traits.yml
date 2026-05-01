@@ -11,7 +11,7 @@ id: node.monster.field_monster_traits
 field_name: field_monster_traits
 entity_type: node
 bundle: monster
-label: 'Traits'
+label: Traits
 description: ''
 required: false
 translatable: false

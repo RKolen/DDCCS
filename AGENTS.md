@@ -137,7 +137,7 @@ violation of project standards.
 | | | `file_exists`, `ensure_directory` |
 | Paths | `src/utils/path_utils.py` | `get_characters_dir`, `get_campaign_path`, |
 | | | `get_story_file_path`, `get_game_data_path`, |
-| | | `get_npcs_dir` |
+| | | `get_npcs_dir`, `get_calendars_dir` |
 | Strings | `src/utils/string_utils.py` | `sanitize_filename`, `normalize_name`, |
 | | | `slugify`, `truncate_text`, `get_session_date`, |
 | | | `get_timestamp` |
@@ -206,6 +206,9 @@ violation of project standards.
 ### Source Code Organization
 
 src/
+|-- calendar/        # In-world calendar engine and date tracker
+|   |-- calendar_engine.py   # CalendarEngine, InWorldDate, Month, Season, Holiday
+|   |-- date_tracker.py      # DateTracker: per-campaign current date, persisted in timeline.json
 |-- sidecar/         # Search query parser sidecar (FastAPI microservice)
 |   |-- app.py           # FastAPI app (/health, /parse-query endpoints)
 |   |-- models.py        # Pydantic request/response models

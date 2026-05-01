@@ -9,7 +9,7 @@ id: node.monster.field_monster_alignment
 field_name: field_monster_alignment
 entity_type: node
 bundle: monster
-label: 'Alignment'
+label: Alignment
 description: ''
 required: false
 translatable: false

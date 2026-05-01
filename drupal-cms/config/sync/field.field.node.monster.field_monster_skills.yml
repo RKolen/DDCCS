@@ -9,7 +9,7 @@ id: node.monster.field_monster_skills
 field_name: field_monster_skills
 entity_type: node
 bundle: monster
-label: 'Skills'
+label: Skills
 description: ''
 required: false
 translatable: false

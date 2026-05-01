@@ -6,5 +6,5 @@ dependencies:
     - taxonomy.vocabulary.armor_properties
 name: 'Stealth Disadvantage'
 weight: 0
-parent: {}
+parent: {  }
 vid: armor_properties

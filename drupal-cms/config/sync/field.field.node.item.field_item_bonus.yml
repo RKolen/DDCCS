@@ -9,7 +9,7 @@ id: node.item.field_item_bonus
 field_name: field_item_bonus
 entity_type: node
 bundle: item
-label: 'Bonus'
+label: Bonus
 description: 'Enhancement bonus (+1/+2/+3)'
 required: false
 translatable: false
@@ -18,6 +18,6 @@ default_value_callback: ''
 settings:
   min: null
   max: null
-  prefix: '+'
+  prefix: +
   suffix: ''
 field_type: integer

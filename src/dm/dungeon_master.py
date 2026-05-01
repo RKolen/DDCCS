@@ -7,6 +7,7 @@ Enhanced with RAG (Retrieval-Augmented Generation) for campaign wiki integration
 import re
 from typing import Dict, List, Any, Optional
 from pathlib import Path
+from src.calendar.date_tracker import DateTracker
 from src.characters.consultants.consultant_core import CharacterConsultant
 from src.npcs.npc_agents import NPCAgent, create_npc_agents
 from src.stories.character_loader import load_all_character_consultants
@@ -25,10 +26,11 @@ class DMConsultant:
     ):
         self.workspace_path = Path(workspace_path) if workspace_path else Path.cwd()
         self.ai_client = ai_client
-        self.lazy_load = lazy_load
+
         self._character_consultants = None
         self._npc_agents = None
         self.narrative_style = "immersive"  # immersive, cinematic, descriptive
+        self.active_campaign: str = ""
 
         # Initialize RAG system for wiki integration
         self.rag_system = get_rag_system() if RAG_AVAILABLE else None
@@ -300,50 +302,23 @@ class DMConsultant:
             if agent.profile.is_major_profile()
         ]
 
-    def generate_narrative_content(
-        self,
-        story_prompt: str,
-        characters_present: Optional[List[str]] = None,
-        npcs_present: Optional[List[str]] = None,
-        style: str = "immersive",
-    ) -> str:
-        """
-        Generate narrative content using AI based on story prompt and present characters/NPCs.
+    def _build_rag_context(self, story_prompt: str) -> str:
+        """Gather RAG wiki and major NPC context for a story prompt.
 
         Args:
-            story_prompt: The story situation/prompt to generate narrative for
-            characters_present: List of character names present in the scene
-            npcs_present: List of NPC names present in the scene
-            style: Narrative style (immersive, cinematic, descriptive)
+            story_prompt: The story situation to search context for.
 
         Returns:
-            Generated narrative content as markdown text
+            Combined RAG context string, or empty string if RAG is unavailable.
         """
-        characters_present = characters_present or []
-        npcs_present = npcs_present or []
-
-        # If AI not available, return rule-based narrative
-        if not self.ai_client:
-            return self._generate_fallback_narrative(
-                story_prompt, characters_present, npcs_present
-            )
-
-        # Build context about characters and NPCs
-        character_context = self._build_character_context(characters_present)
-        npc_context = self.build_npc_context(npcs_present)
-
-        # Get RAG context if available
         rag_context = ""
         if self.rag_system and self.rag_system.enabled:
-            # Extract location names from prompt (simple keyword extraction)
             potential_locations = self._extract_locations_from_prompt(story_prompt)
             if potential_locations:
                 print(f" RAG: Searching wiki for: {', '.join(potential_locations)}")
                 rag_context = self.rag_system.get_context_for_query(
                     story_prompt, potential_locations, max_results=2
                 )
-
-        # Inject major NPC context when relevant (keyword-based, no Milvus required)
         if self.rag_system:
             major_statuses = [
                 agent.get_status()
@@ -356,45 +331,138 @@ class DMConsultant:
                 )
                 if major_npc_context:
                     rag_context = (rag_context + "\n\n" + major_npc_context).strip()
+        return rag_context
 
-        # Create the AI prompt
-        system_prompt = f"""You are an expert D&D Dungeon Master creating
-engaging narrative content.
-Style: {style} - Write in an {style} style that draws readers into the story.
-Format: Use markdown with ## headers for scenes, write in past tense, keep
-paragraphs to 2-3 sentences.
-Line length: Keep lines to approximately 70-80 characters for readability.
+    def _build_date_context(self) -> str:
+        """Return a formatted in-world date context string for the active campaign.
 
-Create vivid, engaging narrative that:
-- Shows character personalities through actions and dialogue
-- Includes environmental descriptions
-- Advances the plot naturally
-- Maintains appropriate pacing
-- Uses proper D&D terminology
-- Respects established lore from the campaign setting (see lore context
-  if provided)
+        Returns:
+            Formatted context string, or empty string if unavailable or no campaign set.
+        """
+        if not self.active_campaign:
+            return ""
+        try:
+            tracker = DateTracker(
+                self.active_campaign, workspace_path=str(self.workspace_path)
+            )
+            return tracker.get_date_context_for_prompt()
+        except (FileNotFoundError, OSError, KeyError, ValueError):
+            return ""
 
-{LANGUAGE_INSTRUCTION}"""
+    def _build_narrative_system_prompt(self, style: str) -> str:
+        """Build the system prompt for AI narrative generation.
 
-        user_prompt = f"""Create D&D narrative content for this story situation:
+        Args:
+            style: Narrative style name (immersive, cinematic, descriptive).
 
-{story_prompt}
+        Returns:
+            System prompt string.
+        """
+        return (
+            f"You are an expert D&D Dungeon Master creating\n"
+            f"engaging narrative content.\n"
+            f"Style: {style} - Write in an {style} style that draws readers into the story.\n"
+            "Format: Use markdown with ## headers for scenes, write in past tense, keep\n"
+            "paragraphs to 2-3 sentences.\n"
+            "Line length: Keep lines to approximately 70-80 characters for readability.\n"
+            "\n"
+            "Create vivid, engaging narrative that:\n"
+            "- Shows character personalities through actions and dialogue\n"
+            "- Includes environmental descriptions\n"
+            "- Advances the plot naturally\n"
+            "- Maintains appropriate pacing\n"
+            "- Uses proper D&D terminology\n"
+            "- Respects established lore from the campaign setting (see lore context\n"
+            "  if provided)\n"
+            "\n"
+            f"{LANGUAGE_INSTRUCTION}"
+        )
 
-Characters present:
-{chr(10).join(character_context) if character_context else "No specific characters mentioned"}
+    def _build_narrative_user_prompt(
+        self,
+        story_prompt: str,
+        context: Dict[str, Any],
+    ) -> str:
+        """Build the user prompt for AI narrative generation.
 
-NPCs present:
-{chr(10).join(npc_context) if npc_context else "No specific NPCs mentioned"}
-{rag_context}
-Generate a complete narrative scene with:
-1. An opening that sets the scene
-2. Character interactions and dialogue
-3. Plot developments
-4. A natural transition or hook for continuation
+        Args:
+            story_prompt: The story situation to narrate.
+            context: Dict with keys character_context (List[str]), npc_context (List[str]),
+                rag_context (str), and date_context (str).
 
-Keep the narrative between 300-500 words.
-{("IMPORTANT: Use the lore context provided above to ensure accuracy "
-"and enrich the narrative." if rag_context else "")}"""
+        Returns:
+            User prompt string.
+        """
+        char_block = (
+            chr(10).join(context.get("character_context") or [])
+            or "No specific characters mentioned"
+        )
+        npc_block = (
+            chr(10).join(context.get("npc_context") or [])
+            or "No specific NPCs mentioned"
+        )
+        date_context = context.get("date_context", "")
+        rag_context = context.get("rag_context", "")
+        date_block = f"In-world date context:\n{date_context}\n" if date_context else ""
+        lore_note = (
+            "IMPORTANT: Use the lore context provided above to ensure accuracy "
+            "and enrich the narrative."
+            if rag_context else ""
+        )
+        return (
+            f"Create D&D narrative content for this story situation:\n\n"
+            f"{story_prompt}\n\n"
+            f"Characters present:\n{char_block}\n\n"
+            f"NPCs present:\n{npc_block}\n"
+            f"{date_block}{rag_context}\n"
+            "Generate a complete narrative scene with:\n"
+            "1. An opening that sets the scene\n"
+            "2. Character interactions and dialogue\n"
+            "3. Plot developments\n"
+            "4. A natural transition or hook for continuation\n\n"
+            f"Keep the narrative between 300-500 words.\n{lore_note}"
+        )
+
+    def generate_narrative_content(
+        self,
+        story_prompt: str,
+        characters_present: Optional[List[str]] = None,
+        npcs_present: Optional[List[str]] = None,
+        style: str = "immersive",
+    ) -> str:
+        """Generate narrative content using AI based on story prompt and characters/NPCs.
+
+        Set ``self.active_campaign`` before calling to include in-world date context.
+
+        Args:
+            story_prompt: The story situation/prompt to generate narrative for.
+            characters_present: List of character names present in the scene.
+            npcs_present: List of NPC names present in the scene.
+            style: Narrative style (immersive, cinematic, descriptive).
+
+        Returns:
+            Generated narrative content as markdown text.
+        """
+        characters_present = characters_present or []
+        npcs_present = npcs_present or []
+
+        if not self.ai_client:
+            return self._generate_fallback_narrative(
+                story_prompt, characters_present, npcs_present
+            )
+
+        character_context = self._build_character_context(characters_present)
+        npc_context = self.build_npc_context(npcs_present)
+        rag_context = self._build_rag_context(story_prompt)
+        date_context = self._build_date_context()
+
+        system_prompt = self._build_narrative_system_prompt(style)
+        user_prompt = self._build_narrative_user_prompt(story_prompt, {
+            "character_context": character_context,
+            "npc_context": npc_context,
+            "rag_context": rag_context,
+            "date_context": date_context,
+        })
 
         try:
             narrative = self.ai_client.chat_completion(
@@ -402,7 +470,7 @@ Keep the narrative between 300-500 words.
                     self.ai_client.create_system_message(system_prompt),
                     self.ai_client.create_user_message(user_prompt),
                 ],
-                temperature=0.8,  # Higher temperature for creative narrative
+                temperature=0.8,
                 max_tokens=2000,
             )
 

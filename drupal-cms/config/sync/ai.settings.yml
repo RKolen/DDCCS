@@ -5,10 +5,10 @@ prompt_logging_tags: ''
 default_providers:
   chat:
     provider_id: ollama
-    model_id: glm_4_7_flash_latest
+    model_id: ''
   embeddings:
     provider_id: ollama
-    model_id: nomic_embed_text_latest
+    model_id: ''
 default_vdb_provider: milvus
 request_timeout: 60
 allowed_hosts: {  }

@@ -225,6 +225,8 @@ web_environment:
     - MILVUS_API_KEY=${MILVUS_API_KEY:-}
     - MILVUS_HOST=${MILVUS_HOST:-http://milvus}
     - GATSBY_DRUPAL_PASSWORD=${GATSBY_DRUPAL_PASSWORD:-}
+    - AI_CHAT_MODEL_ID=${AI_CHAT_MODEL_ID:-}
+    - AI_EMBEDDINGS_MODEL_ID=${AI_EMBEDDINGS_MODEL_ID:-}
 
 # no_project_mount: false
 # (Experimental) If true, DDEV will not mount the project into the web container;

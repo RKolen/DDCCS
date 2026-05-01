@@ -12,7 +12,6 @@
 ### Phase 2: Infrastructure
 
 - [ ] **Gatsby Frontend** - Drupal API enablement, character/NPC/story/item pages, campaign dashboard **Plan:** [plans/gatsby_frontend_plan.md](plans/gatsby_frontend_plan.md)
-- [ ] **FGU Migration** - Migrate items and NPCs/monsters from Fantasy Grounds Unity to Drupal CMS (Python parser + DrupalSync extensions + Migrate API bulk import). Python/Drupal steps are Gatsby-independent; full web display depends on Gatsby item/monster pages. **Plan:** [plans/FGU_migration_plan.md](plans/FGU_migration_plan.md)
 - [ ] **TTS Web Integration** - Pre-generated audio storage, audio sync to Drupal, React audio player components **Plan:** [plans/tts_web_integration.md](plans/tts_web_integration.md)
 - [ ] **Multi-voice TTS (Phase 3-4)** - Voice switching implementation, Piper TTS integration
 
@@ -37,7 +36,6 @@ All features below have detailed implementation plans in the `plans/` directory.
 ### Infrastructure
 
 - [Gatsby Frontend](plans/gatsby_frontend_plan.md) - React pages, GraphQL queries, campaign dashboard
-- [FGU Migration](plans/FGU_migration_plan.md) - FGU to Drupal items/monster migration; Python parser + DrupalSync + Migrate API
 - [TTS Web Integration](plans/tts_web_integration.md) - Web-based TTS audio integration
 - [Multi-voice TTS Design](plans/multi_voice_tts_design.md) - Multi-voice narration system
 
@@ -52,12 +50,10 @@ All features below have detailed implementation plans in the `plans/` directory.
 
 - [Configuration System](plans/configuration_system_plan.md) - Centralized configuration management
 - [DC Scaling](plans/dc_scaling_plan.md) - Optional level-based DC scaling recommendations
-- [Custom Spell Highlighting](plans/custom_spell_highlighting_plan.md) - Support for homebrew/custom spells
 
 ### Campaign Management
 
 - [Campaign Templates](plans/campaign_templates_plan.md) - Templates for common campaign types
-- [Calendar Tracking](plans/calendar_tracking_plan.md) - In-world calendar and timeline tracking
 - [Plugin Architecture](plans/plugin_architecture_plan.md) - Custom modules/plugins support
 
 ## Medium Priority
@@ -122,7 +118,6 @@ All Tier 3 items are complete.
 | # | Plan | Reason |
 |---|------|--------|
 | 22 | [Gatsby Frontend](plans/gatsby_frontend_plan.md) | Direct continuation of Drupal CMS. Enables all web-facing features. Unblocks TTS web integration. |
-| 23 | [FGU Migration](plans/FGU_migration_plan.md) | Extends DrupalSync for FGU items and monsters. Python/Drupal steps are Gatsby-independent and unblocked now. Full web display value requires Gatsby item/monster pages. |
 | 24 | [TTS Web Integration](plans/tts_web_integration.md) | Depends on Gatsby pages being in place for audio player components. |
 | 25 | [Plugin Architecture](plans/plugin_architecture_plan.md) | Extensibility framework. Most useful once the core feature set is stable and external contributors or campaign-specific needs emerge. |
 | 26 | [Interactive Setup](plans/interactive_setup_plan.md) | Onboarding improvement. More valuable once the full feature set is settled. |
@@ -133,7 +128,6 @@ All Tier 3 items are complete.
 |---|------|--------|
 | 27 | [Export Functionality](plans/export_functionality_plan.md) | Useful but not blocking any DM workflow. Can leverage Drupal if that is in place. |
 | 28 | [Backup System](plans/backup_system_plan.md) | Safety net. Valuable but not urgent for a solo DM using git. |
-| 29 | [Calendar Tracking](plans/calendar_tracking_plan.md) | Nice-to-have in-world time tracking. Depends on timeline being in place. |
 | 30 | [Campaign Templates](plans/campaign_templates_plan.md) | Content creation. Most useful as onboarding material once interactive setup is done. |
 | 31 | [Quick Start Guide](plans/quick_start_guide_plan.md) | Documentation. Best written last, once all major features are stable. |
 | 32 | [Startup Optimization](plans/startup_optimization_plan.md) | Largely done (lazy loading). Revisit only if startup regresses. |
@@ -148,6 +142,14 @@ All Tier 3 items are complete.
 ---
 
 ## Recently Completed
+
+### **Calendar Tracking** - May 1, 2026
+
+- [x] **In-World Calendar Engine** - `src/calendar/calendar_engine.py` with
+  `CalendarEngine`, `InWorldDate`, `Month`, `Season`, and `Holiday` dataclasses.
+  Supports custom calendar definitions (JSON), season detection with year-boundary
+  handling, holiday lookup, weekday cycling, date arithmetic (add/subtract days),
+  multiple format styles, and AI prompt context generation.
 
 ### **AI Search Query Parsing** - April 30, 2026
 

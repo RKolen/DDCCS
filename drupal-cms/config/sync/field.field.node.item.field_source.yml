@@ -9,7 +9,7 @@ id: node.item.field_source
 field_name: field_source
 entity_type: node
 bundle: item
-label: 'Source'
+label: Source
 description: 'Source campaign or module'
 required: false
 translatable: false

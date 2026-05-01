@@ -11,7 +11,7 @@ id: node.monster.field_monster_size
 field_name: field_monster_size
 entity_type: node
 bundle: monster
-label: 'Size'
+label: Size
 description: ''
 required: false
 translatable: false

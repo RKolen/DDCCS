@@ -1,0 +1,47 @@
+{
+  "calendar_name": "Forgotten Realms - Dalereckoning",
+  "calendar_id": "forgotten_realms_dr",
+  "description": "Standard Forgotten Realms calendar using Dalereckoning",
+  "year_length": 365,
+  "months": [
+    {"name": "Hammer", "days": 30, "nickname": "Deepwinter"},
+    {"name": "Midwinter", "days": 1, "type": "festival"},
+    {"name": "Alturiak", "days": 30, "nickname": "The Claw of Winter"},
+    {"name": "Ches", "days": 30, "nickname": "The Claw of the Sunsets"},
+    {"name": "Tarsakh", "days": 30, "nickname": "The Claw of the Storms"},
+    {"name": "Greengrass", "days": 1, "type": "festival"},
+    {"name": "Mirtul", "days": 30, "nickname": "The Melting"},
+    {"name": "Kythorn", "days": 30, "nickname": "The Time of Flowers"},
+    {"name": "Flamerule", "days": 30, "nickname": "Summertide"},
+    {"name": "Midsummer", "days": 1, "type": "festival"},
+    {"name": "Shieldmeet", "days": 1, "type": "festival", "frequency": "leap_year"},
+    {"name": "Eleasis", "days": 30, "nickname": "Highsun"},
+    {"name": "Eleint", "days": 30, "nickname": "The Fading"},
+    {"name": "Higharvestide", "days": 1, "type": "festival"},
+    {"name": "Marpenoth", "days": 30, "nickname": "Leafall"},
+    {"name": "Uktar", "days": 30, "nickname": "The Rotting"},
+    {"name": "The Feast of the Moon", "days": 1, "type": "festival"},
+    {"name": "Nightal", "days": 30, "nickname": "The Drawing Down"}
+  ],
+  "week": {
+    "days": ["Sulday", "Molday", "Tiewday", "Watersday", "Earthday", "Starday", "Sunday"],
+    "length": 7
+  },
+  "seasons": [
+    {"name": "Spring", "start_month": "Ches", "start_day": 15, "end_month": "Kythorn", "end_day": 15},
+    {"name": "Summer", "start_month": "Kythorn", "start_day": 16, "end_month": "Eleint", "end_day": 15},
+    {"name": "Autumn", "start_month": "Eleint", "start_day": 16, "end_month": "Uktar", "end_day": 15},
+    {"name": "Winter", "start_month": "Uktar", "start_day": 16, "end_month": "Ches", "end_day": 14}
+  ],
+  "epochs": [
+    {"name": "Dalereckoning", "abbreviation": "DR", "start_year": 1}
+  ],
+  "holidays": [
+    {"name": "Midwinter", "month": "Midwinter", "day": 1, "description": "Midwinter festival"},
+    {"name": "Greengrass", "month": "Greengrass", "day": 1, "description": "Spring festival"},
+    {"name": "Midsummer", "month": "Midsummer", "day": 1, "description": "Summer festival"},
+    {"name": "Higharvestide", "month": "Higharvestide", "day": 1, "description": "Harvest festival"},
+    {"name": "Feast of the Moon", "month": "The Feast of the Moon", "day": 1,
+      "description": "Remembrance of the dead"}
+  ]
+}

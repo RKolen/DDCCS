@@ -9,7 +9,7 @@ id: node.item.field_item_cost
 field_name: field_item_cost
 entity_type: node
 bundle: item
-label: 'Cost'
+label: Cost
 description: 'Item cost in gp'
 required: false
 translatable: false

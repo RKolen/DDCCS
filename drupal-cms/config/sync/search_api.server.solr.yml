@@ -1,0 +1,41 @@
+uuid: 03c6e235-e8c6-4124-832a-40718f5abd2d
+langcode: en
+status: true
+dependencies:
+  module:
+    - search_api_solr
+id: solr
+name: 'Local Solr'
+description: 'Local standalone Solr 9 instance running in DDEV'
+backend: search_api_solr
+backend_config:
+  retrieve_data: false
+  highlight_data: false
+  server_prefix: ''
+  domain: ''
+  connector: standard
+  connector_config:
+    scheme: http
+    host: solr
+    port: 8983
+    path: /
+    core: drupal
+    timeout: 5
+    index_timeout: 5
+    optimize_timeout: 10
+    finalize_timeout: 30
+    solr_version: ''
+    http_method: AUTO
+    commit_within: 1000
+    jmx: false
+    jts: false
+    sasm_factor: 1
+    sasm_read_only: false
+  rows: 10
+  skip_schema_check: false
+  fallback_multiple_fields: false
+  excerpt: false
+  excerpt_length: 256
+  highlight_prefix: '<strong>'
+  highlight_suffix: '</strong>'
+  flush_batch_queue: false

@@ -14,7 +14,7 @@ label: 'Armor Properties'
 description: 'Special rules that apply to this armor (e.g. Stealth Disadvantage).'
 required: false
 translatable: false
-default_value: {}
+default_value: {  }
 default_value_callback: ''
 settings:
   handler: 'default:taxonomy_term'

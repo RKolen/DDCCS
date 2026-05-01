@@ -9,7 +9,7 @@ id: node.monster.field_monster_speed
 field_name: field_monster_speed
 entity_type: node
 bundle: monster
-label: 'Speed'
+label: Speed
 description: ''
 required: false
 translatable: false

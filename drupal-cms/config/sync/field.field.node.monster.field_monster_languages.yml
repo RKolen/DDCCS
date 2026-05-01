@@ -9,7 +9,7 @@ id: node.monster.field_monster_languages
 field_name: field_monster_languages
 entity_type: node
 bundle: monster
-label: 'Languages'
+label: Languages
 description: ''
 required: false
 translatable: false

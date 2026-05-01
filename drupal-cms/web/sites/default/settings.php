@@ -928,3 +928,10 @@ if (getenv('MILVUS_HOST') !== FALSE) {
 if (getenv('GATSBY_DRUPAL_PASSWORD') !== FALSE) {
   $config['gatsby.settings']['preview_secret'] = getenv('GATSBY_DRUPAL_PASSWORD');
 }
+
+// AI default model selection — env vars take priority; fallbacks keep the site
+// functional when no env var is set (e.g. fresh checkout without a .env file).
+$config['ai.settings']['default_providers']['chat']['model_id'] =
+  getenv('AI_CHAT_MODEL_ID') ?: 'qwen3_4b';
+$config['ai.settings']['default_providers']['embeddings']['model_id'] =
+  getenv('AI_EMBEDDINGS_MODEL_ID') ?: 'nomic_embed_text_latest';
