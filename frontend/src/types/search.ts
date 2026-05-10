@@ -14,12 +14,21 @@ export interface SearchFilters {
   campaign: string[];
 }
 
+export interface SearchTimings {
+  decompose_ms: number;
+  entity_query_ms: number | null;
+  solr_ms: number | null;
+  milvus_ms: number | null;
+  total_ms: number;
+}
+
 export interface SearchDecomposition {
   backends: string[];
   entity_types: string[];
   filters: SearchFilters;
   semantic_query: string;
   keyword_query: string;
+  timings?: SearchTimings;
 }
 
 export interface SearchResponse {

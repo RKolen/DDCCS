@@ -8,13 +8,13 @@ import { Select } from '../components/atoms/Input';
 import type { SearchDecomposition, SearchResponse } from '../types/search';
 
 const CONTENT_TYPES = [
-  { value: '',          label: 'All types' },
+  { value: '', label: 'All types' },
   { value: 'character', label: 'Characters' },
-  { value: 'npc',       label: 'NPCs' },
-  { value: 'spell',     label: 'Spells' },
-  { value: 'item',      label: 'Items' },
-  { value: 'feat',      label: 'Feats' },
-  { value: 'monster',   label: 'Monsters' },
+  { value: 'npc', label: 'NPCs' },
+  { value: 'spell', label: 'Spells' },
+  { value: 'item', label: 'Items' },
+  { value: 'feat', label: 'Feats' },
+  { value: 'monster', label: 'Monsters' },
 ];
 
 interface DecompositionPanelProps {
@@ -76,17 +76,35 @@ function DecompositionPanel({ decomposition }: DecompositionPanelProps): React.R
             &ldquo;{decomposition.keyword_query}&rdquo;
           </span>
         )}
+        {decomposition.timings && (
+          <span>
+            <strong>Timings:</strong>{' '}
+            {[
+              `total: ${decomposition.timings.total_ms}ms`,
+              `decompose: ${decomposition.timings.decompose_ms}ms`,
+              ...(decomposition.timings.entity_query_ms !== null
+                ? [`entity query: ${decomposition.timings.entity_query_ms}ms`]
+                : []),
+              ...(decomposition.timings.solr_ms !== null
+                ? [`solr: ${decomposition.timings.solr_ms}ms`]
+                : []),
+              ...(decomposition.timings.milvus_ms !== null
+                ? [`milvus: ${decomposition.timings.milvus_ms}ms`]
+                : []),
+            ].join('  |  ')}
+          </span>
+        )}
       </div>
     </details>
   );
 }
 
 const SearchPage: React.FC<PageProps> = ({ location }) => {
-  const [query,       setQuery]       = useState('');
+  const [query, setQuery] = useState('');
   const [contentType, setContentType] = useState('');
-  const [response,    setResponse]    = useState<SearchResponse | null>(null);
-  const [loading,     setLoading]     = useState(false);
-  const [error,       setError]       = useState<string | null>(null);
+  const [response, setResponse] = useState<SearchResponse | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const runSearch = useCallback(async (q: string, type: string) => {
     if (!q.trim()) return;

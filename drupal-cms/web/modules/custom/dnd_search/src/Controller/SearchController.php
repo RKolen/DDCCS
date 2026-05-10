@@ -113,16 +113,34 @@ class SearchController extends ControllerBase {
       return new JsonResponse(['results' => [], 'query' => '', 'count' => 0]);
     }
 
+    $totalStart = microtime(TRUE);
+
     // Step 1: Decompose the query into structured intent.
+    $decomposeStart = microtime(TRUE);
     $decomposition = $this->queryDecomposer->decompose($rawQuery);
+    $decomposeMs = (int) round((microtime(TRUE) - $decomposeStart) * 1000);
 
     // A caller-supplied type parameter overrides the AI-inferred entity types.
     $entityTypes = $typeOverride !== '' ? [$typeOverride] : $decomposition->entityTypes;
 
     // Step 2: Run all selected backends and collect raw results.
+    $entityQueryStart = microtime(TRUE);
     $exactNids = $this->runEntityQuery($decomposition);
+    $entityQueryMs = (in_array('entity_query', $decomposition->backends, TRUE) && $decomposition->hasFilters())
+      ? (int) round((microtime(TRUE) - $entityQueryStart) * 1000)
+      : NULL;
+
+    $solrStart = microtime(TRUE);
     $solrRows = $this->runSolrQuery($decomposition, $limit);
+    $solrMs = in_array('solr', $decomposition->backends, TRUE)
+      ? (int) round((microtime(TRUE) - $solrStart) * 1000)
+      : NULL;
+
+    $milvusStart = microtime(TRUE);
     $milvusItems = $this->runMilvusQuery($decomposition, $rawQuery, $limit);
+    $milvusMs = in_array('milvus', $decomposition->backends, TRUE)
+      ? (int) round((microtime(TRUE) - $milvusStart) * 1000)
+      : NULL;
 
     // Step 3: Merge in priority order, deduplicating by nid.
     $output = [];
@@ -168,10 +186,21 @@ class SearchController extends ControllerBase {
 
     $output = array_slice($output, 0, $limit);
 
+    $totalMs = (int) round((microtime(TRUE) - $totalStart) * 1000);
+
+    $decompositionData = $decomposition->toArray();
+    $decompositionData['timings'] = [
+      'decompose_ms' => $decomposeMs,
+      'entity_query_ms' => $entityQueryMs,
+      'solr_ms' => $solrMs,
+      'milvus_ms' => $milvusMs,
+      'total_ms' => $totalMs,
+    ];
+
     return new JsonResponse([
       'query' => $rawQuery,
       'count' => count($output),
-      'decomposition' => $decomposition->toArray(),
+      'decomposition' => $decompositionData,
       'results' => $output,
     ]);
   }

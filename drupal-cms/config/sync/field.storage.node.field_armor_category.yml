@@ -20,6 +20,9 @@ settings:
     -
       value: heavy
       label: Heavy
+    -
+      value: shield
+      label: Shield
   allowed_values_function: ''
 module: options
 locked: false
