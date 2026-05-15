@@ -1,0 +1,128 @@
+/* ============================================================
+   stories.module.css
+   Campaign Chronicle — campaign index cards
+   ============================================================ */
+
+/* ── Page shell ───────────────────────────────────────────────── */
+.page {
+  padding: var(--space-8) var(--space-10);
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+/* ── Page header ──────────────────────────────────────────────── */
+.pageHeader {
+  margin-bottom: var(--space-8);
+}
+
+.heading {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: var(--font-bold);
+  color: var(--color-gold-bright);
+  margin: 0 0 var(--space-1);
+  letter-spacing: var(--tracking-wide);
+}
+
+.subtitle {
+  font-family: var(--font-body);
+  font-style: italic;
+  font-size: var(--text-base);
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+
+/* ── Campaign cards grid ──────────────────────────────────────── */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: var(--space-6);
+}
+
+/* ── Individual campaign card ─────────────────────────────────── */
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  background: var(--color-bg-surface);
+  border: var(--border-thin);
+  border-radius: var(--radius-md);
+  padding: var(--space-6);
+  cursor: pointer;
+  text-decoration: none;
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    transform var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+.card:hover {
+  background: var(--color-bg-hover);
+  border-color: var(--color-gold-mid);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+/* ── Card icon ────────────────────────────────────────────────── */
+.cardIcon {
+  display: flex;
+  align-items: center;
+  margin-bottom: var(--space-2);
+}
+
+/* ── Card campaign name ───────────────────────────────────────── */
+.cardName {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: var(--font-bold);
+  color: var(--color-gold-bright);
+  margin: 0;
+  line-height: var(--leading-tight);
+}
+
+/* ── Session count ────────────────────────────────────────────── */
+.cardCount {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+
+/* ── Session range ────────────────────────────────────────────── */
+.cardRange {
+  font-family: var(--font-body);
+  font-style: italic;
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+
+/* ── CTA link at bottom-right ─────────────────────────────────── */
+.cardCta {
+  display: block;
+  margin-top: auto;
+  padding-top: var(--space-4);
+  text-align: right;
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: var(--font-semibold);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-widest);
+  color: var(--color-gold-mid);
+  transition: color var(--transition-fast);
+}
+
+.card:hover .cardCta {
+  color: var(--color-gold-bright);
+}
+
+/* ── Empty state ──────────────────────────────────────────────── */
+.empty {
+  font-family: var(--font-body);
+  font-style: italic;
+  font-size: var(--text-base);
+  color: var(--color-text-secondary);
+  text-align: center;
+  padding: var(--space-16) 0;
+}

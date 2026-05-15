@@ -49,3 +49,5 @@ cloneable_entities:
   - jsonapi_resource_config
   - gatsby_log_entity
   - rest_resource_config
+  - graphql_server
+  - menu_link_content

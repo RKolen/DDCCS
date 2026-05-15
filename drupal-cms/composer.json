@@ -51,6 +51,8 @@
         "drupal/gatsby": "^2.0@RC",
         "drupal/gin": "^5",
         "drupal/gin_login": "^2.1.4",
+        "drupal/graphql": "^5.0@RC",
+        "drupal/graphql_compose": "3.0.x-dev",
         "drupal/honeypot": "^2.1",
         "drupal/jquery_ui": "^1.8",
         "drupal/klaro": "^3",

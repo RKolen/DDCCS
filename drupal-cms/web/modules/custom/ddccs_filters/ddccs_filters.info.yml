@@ -1,0 +1,5 @@
+name: 'DDCCS Filters'
+type: module
+description: 'Custom HTML filter that cleans CKEditor br-spam artefacts from WYSIWYG output.'
+package: 'DDCCS'
+core_version_requirement: ^10 || ^11

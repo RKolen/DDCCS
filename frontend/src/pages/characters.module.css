@@ -1,0 +1,160 @@
+/* ============================================================
+   characters.module.css
+   Full party listing — card grid with class icon, badges, stats
+   ============================================================ */
+
+/* ── Page shell ──────────────────────────────────────────────── */
+.page {
+  padding: var(--space-8) var(--space-10);
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+/* ── Page header ─────────────────────────────────────────────── */
+.pageHeader {
+  margin-bottom: var(--space-6);
+}
+
+.heading {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: var(--font-bold);
+  color: var(--color-gold-bright);
+  margin: 0 0 var(--space-1);
+  letter-spacing: var(--tracking-wide);
+}
+
+.subtitle {
+  font-family: var(--font-body);
+  font-style: italic;
+  font-size: var(--text-base);
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+
+/* ── Divider breathing room ──────────────────────────────────── */
+.dividerSpacer {
+  margin-bottom: var(--space-8);
+}
+
+/* ── Character card grid ─────────────────────────────────────── */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--space-6);
+}
+
+/* ── Character card ──────────────────────────────────────────── */
+.card {
+  display: block;
+  background: var(--color-bg-surface);
+  border: var(--border-thin);
+  border-radius: var(--radius-md);
+  padding: var(--space-5);
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    transform var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+.card:hover {
+  background: var(--color-bg-hover);
+  border-color: var(--color-gold-mid);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+/* ── Card top row: icon + name + AC ─────────────────────────── */
+.cardTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-3);
+  gap: var(--space-2);
+}
+
+.cardIdent {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.cardName {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: var(--font-semibold);
+  color: var(--color-gold-bright);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cardAc {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--color-gold-mid);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* ── Badge chips row ─────────────────────────────────────────── */
+.cardBadges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  margin-bottom: var(--space-3);
+}
+
+/* ── Stats row ───────────────────────────────────────────────── */
+.cardStats {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-2);
+  line-height: var(--leading-normal);
+}
+
+/* ── Subclass ────────────────────────────────────────────────── */
+.cardSubclass {
+  font-family: var(--font-body);
+  font-style: italic;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  line-height: var(--leading-normal);
+}
+
+/* ── Empty state ─────────────────────────────────────────────── */
+.emptyPanel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  background: var(--color-bg-surface);
+  border: var(--border-thin);
+  border-radius: var(--radius-md);
+  padding: var(--space-8);
+  gap: var(--space-4);
+  max-width: 400px;
+  margin: var(--space-8) auto 0;
+}
+
+.emptyHeading {
+  font-family: var(--font-display);
+  font-size: var(--text-md);
+  font-weight: var(--font-semibold);
+  color: var(--color-gold-mid);
+  margin: 0;
+}
+
+.emptyBody {
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  color: var(--color-text-secondary);
+  margin: 0;
+  line-height: var(--leading-normal);
+}

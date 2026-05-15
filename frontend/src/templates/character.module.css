@@ -1,0 +1,86 @@
+.page {
+  padding: var(--space-8) var(--space-10);
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+.header {
+  margin-bottom: var(--space-4);
+}
+
+.name {
+  font-size: var(--text-2xl);
+  color: var(--color-gold-bright);
+  margin-bottom: var(--space-1);
+}
+
+.nickname {
+  font-family: var(--font-body);
+  font-style: italic;
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-3);
+}
+
+.badges {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.stats {
+  display: flex;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  margin: var(--space-6) 0;
+}
+
+.statBlock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  background: var(--color-bg-surface);
+  border: var(--border-thin);
+  border-radius: var(--radius-md);
+  padding: var(--space-3) var(--space-5);
+  min-width: 72px;
+}
+
+.statLabel {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-widest);
+  color: var(--color-text-secondary);
+}
+
+.statValue {
+  font-family: var(--font-mono);
+  font-size: var(--text-xl);
+  font-weight: var(--font-bold);
+  color: var(--color-text-primary);
+  line-height: 1;
+}
+
+.section {
+  margin: var(--space-8) 0;
+}
+
+.sectionTitle {
+  font-family: var(--font-display);
+  font-size: var(--text-md);
+  color: var(--color-gold-mid);
+  margin-bottom: var(--space-3);
+  letter-spacing: var(--tracking-wide);
+}
+
+.prose {
+  font-family: var(--font-body);
+  font-size: var(--text-md);
+  line-height: var(--leading-loose);
+  color: var(--color-text-primary);
+}
+
+.prose p { margin-bottom: var(--space-3); }
+.prose strong { color: var(--color-gold-bright); font-weight: var(--font-semibold); }
+.prose em { font-style: italic; color: var(--color-text-secondary); }

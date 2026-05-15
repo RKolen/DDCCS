@@ -3,7 +3,7 @@ langcode: en
 status: true
 dependencies:
   module:
-    - media
+    - graphql
     - system
 _core:
   default_config_hash: dJ0L2DNSj5q6XVZAGsuVDpJTh5UeYkIPwKrUOOpr8YI
@@ -13,6 +13,4 @@ weight: 1
 is_admin: false
 permissions:
   - 'access content'
-  - 'view published terms in character_class'
-  - 'view published terms in game_edition'
-  - 'view published terms in species'
+  - 'execute graphql_compose_server arbitrary graphql requests'

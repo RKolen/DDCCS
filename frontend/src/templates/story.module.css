@@ -1,8 +1,79 @@
 .page {
-  padding: var(--space-8) var(--space-10);
+  padding: var(--space-6) var(--space-10) var(--space-16);
   max-width: 760px;
   margin: 0 auto;
 }
+
+/* ── Back link ───────────────────────────────────────────── */
+.backLink {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+  text-decoration: none;
+  margin-bottom: var(--space-6);
+  transition: color var(--transition-fast);
+}
+.backLink:hover { color: var(--color-gold-mid); }
+.backLink svg { flex-shrink: 0; }
+
+/* ── Prev / Next navigation ──────────────────────────────── */
+.storyNav {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-top: var(--space-10);
+  padding-top: var(--space-6);
+  border-top: var(--border-thin);
+}
+
+.navBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-5);
+  background: var(--color-bg-surface);
+  border: var(--border-thin);
+  border-radius: var(--radius-md);
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  letter-spacing: var(--tracking-wide);
+  color: var(--color-text-secondary);
+  text-decoration: none;
+  max-width: 48%;
+  transition: background var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast);
+}
+.navBtn:hover {
+  background: var(--color-bg-hover);
+  border-color: var(--color-gold-mid);
+  color: var(--color-gold-bright);
+}
+.navBtn svg { flex-shrink: 0; }
+
+.navBtnLabel {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.navBtnEyebrow {
+  font-size: 9px;
+  letter-spacing: var(--tracking-widest);
+  color: var(--color-gold-muted);
+  text-transform: uppercase;
+}
+.navBtnTitle {
+  font-size: var(--text-sm);
+  color: inherit;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.navBtnNext { margin-left: auto; text-align: right; }
 
 .header {
   margin-bottom: var(--space-4);

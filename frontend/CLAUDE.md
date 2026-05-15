@@ -1,7 +1,7 @@
 # Frontend — D&D Character Consultant
 
 Gatsby 5 + TypeScript 6 frontend that reads content from Drupal via
-`gatsby-source-drupal` (JSON:API) and exposes it as a GraphQL layer.
+`gatsby-source-graphql` pointing at a `drupal/graphql_compose` v3 endpoint.
 
 ---
 
@@ -12,7 +12,7 @@ Gatsby 5 + TypeScript 6 frontend that reads content from Drupal via
 | Gatsby | 5.x | Static site generator + dev server |
 | React | 18.x | Component rendering |
 | TypeScript | 6.x | Strict type safety |
-| gatsby-source-drupal | 6.x | Pulls Drupal JSON:API into GraphQL |
+| gatsby-source-graphql | 5.x | Stitches remote Drupal GraphQL into Gatsby's data layer |
 | gatsby-plugin-image | 3.x | Optimised image handling |
 
 ---
@@ -108,19 +108,22 @@ pages/
 
 ## Data Layer (Drupal → GraphQL)
 
-`gatsby-source-drupal` turns every Drupal JSON:API resource into a GraphQL
-node type. The naming convention is `nodeCamelCase` for content types and
-`taxonomyTermCamelCase` for taxonomy terms.
+`gatsby-source-graphql` stitches the remote `drupal/graphql_compose` schema
+into Gatsby's data layer under the `drupal` field. All Drupal data is accessed
+via `{ drupal { ... } }` in page queries.
 
-| Drupal content type | GraphQL type |
-| ------------------- | ------------ |
-| `node--character` | `allNodeCharacter` / `nodeCharacter` |
-| `node--story` | `allNodeStory` / `nodeStory` |
-| `node--npc` | `allNodeNpc` / `nodeNpc` |
-| `node--item` | `allNodeItem` / `nodeItem` |
-| `node--spell` | `allNodeSpell` / `nodeSpell` |
-| `taxonomy_term--species` | `allTaxonomyTermSpecies` |
-| `taxonomy_term--character_class` | `allTaxonomyTermCharacterClass` |
+Field names use **camelCase without the `field_` prefix** (e.g. `storyNumber`,
+not `fieldStoryNumber`). The `path` field is a plain `String` (not an object).
+
+| Drupal content type | GraphQL list query | Single-node query |
+| ------------------- | ------------------ | ----------------- |
+| character | `drupal { nodeCharacters(first: N) { nodes { ... } } }` | `drupal { node(id: $id) { ... on Drupal_NodeCharacter { ... } } }` |
+| story | `drupal { nodeStories(first: N) { nodes { ... } } }` | `drupal { node(id: $id) { ... on Drupal_NodeStory { ... } } }` |
+| npc | `drupal { nodeNpcs(first: N) { nodes { ... } } }` | `drupal { node(id: $id) { ... on Drupal_NodeNpc { ... } } }` |
+| item | `drupal { nodeItems(first: N) { nodes { ... } } }` | `drupal { node(id: $id) { ... on Drupal_NodeItem { ... } } }` |
+| spell | `drupal { nodeSpells(first: N) { nodes { ... } } }` | `drupal { node(id: $id) { ... on Drupal_NodeSpell { ... } } }` |
+
+Page context uses `id` (UUID string). Template variable is `$id: ID!`.
 
 Explore the full schema at `http://localhost:8000/___graphql` while the dev
 server is running.
@@ -129,31 +132,23 @@ server is running.
 
 - Use page queries (exported `query`) in `pages/` — never in components.
 - Use `useStaticQuery` only for truly site-wide static data (site title, etc.).
-- Always type query results against the interfaces in `src/types/`.
+- Define query result types as local interfaces in the same file.
 
 ```tsx
-// pages/characters/[id].tsx
-import type { PageProps } from 'gatsby';
-import { graphql } from 'gatsby';
-import type { CharacterQuery } from '../../types/queries';
-
-const CharacterPage: React.FC<PageProps<CharacterQuery>> = ({ data }) => (
-  <CharacterSheetTemplate
-    header={<CharacterHeader character={data.nodeCharacter} />}
-    abilityScores={<AbilityScoreGrid scores={data.nodeCharacter?.fieldAbilityScores} />}
-  />
-);
-
+// src/templates/story.tsx
 export const query = graphql`
-  query Character($id: String!) {
-    nodeCharacter(id: { eq: $id }) {
-      title
-      fieldAbilityScores { ...AbilityScoresFragment }
+  query StoryPage($id: ID!) {
+    drupal {
+      node(id: $id) {
+        ... on Drupal_NodeStory {
+          title
+          storyNumber
+          body { processed }
+        }
+      }
     }
   }
 `;
-
-export default CharacterPage;
 ```
 
 ---
@@ -227,6 +222,6 @@ options are evaluated.
 
 | Variable | Purpose |
 | -------- | ------- |
-| `DRUPAL_BASE_URL` | Drupal site URL (default: `https://drupal-cms.ddev.site`) |
-| `DRUPAL_USER` | gatsby_user (read-only JSON:API account) |
-| `DRUPAL_PASSWORD` | gatsby_user password |
+| `DRUPAL_BASE_URL` | **Required.** Drupal site URL — no default, build fails without it. |
+| `DRUPAL_USER` | Drupal account for GraphQL Basic Auth (optional for anonymous access) |
+| `DRUPAL_PASSWORD` | Password for `DRUPAL_USER` |

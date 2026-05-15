@@ -6,19 +6,20 @@ import { NPCCard } from '../components/organisms/NPCCard';
 import * as styles from './npcs.module.css';
 
 interface NPCNode {
-  id:               string;
-  title:            string;
-  fieldRole:        Array<{ name: string }> | null;
-  fieldLocation:    Array<{ name: string }> | null;
-  fieldPersonality: { value: string } | null;
+  id:          string;
+  title:       string;
+  role:        string | null;
+  personality: { value: string } | null;
 }
 
 interface NPCListData {
-  allNodeNpc: { nodes: NPCNode[] };
+  drupal: {
+    nodeNpcs: { nodes: NPCNode[] };
+  };
 }
 
 const NPCsPage: React.FC<PageProps<NPCListData>> = ({ data, location }) => {
-  const npcs = data.allNodeNpc.nodes;
+  const npcs = data.drupal.nodeNpcs.nodes;
 
   return (
     <BaseTemplate currentPath={location.pathname}>
@@ -34,9 +35,8 @@ const NPCsPage: React.FC<PageProps<NPCListData>> = ({ data, location }) => {
               <NPCCard
                 key={npc.id}
                 name={npc.title}
-                role={npc.fieldRole?.[0]?.name ?? ''}
-                location={npc.fieldLocation?.[0]?.name}
-                personality={npc.fieldPersonality?.value ?? ''}
+                role={npc.role ?? ''}
+                personality={npc.personality?.value ?? ''}
               />
             ))}
           </div>
@@ -50,13 +50,14 @@ const NPCsPage: React.FC<PageProps<NPCListData>> = ({ data, location }) => {
 
 export const query = graphql`
   query NPCList {
-    allNodeNpc(sort: { title: ASC }) {
-      nodes {
-        id
-        title
-        fieldRole { name }
-        fieldLocation { name }
-        fieldPersonality { value }
+    drupal {
+      nodeNpcs(first: 100) {
+        nodes {
+          id
+          title
+          role
+          personality { value }
+        }
       }
     }
   }

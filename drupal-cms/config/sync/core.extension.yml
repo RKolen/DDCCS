@@ -13,6 +13,7 @@ module:
   conditional_fields: 0
   content_moderation: 0
   dblog: 0
+  ddccs_filters: 0
   dnd_migrate: 0
   dnd_search: 0
   dynamic_page_cache: 0
@@ -25,12 +26,18 @@ module:
   field_ui: 0
   file: 0
   filter: 0
+  graphql: 0
+  graphql_compose: 0
+  graphql_compose_edges: 0
+  graphql_compose_menus: 0
+  graphql_compose_routes: 0
+  graphql_compose_users: 0
   image: 0
-  jsonapi: 0
-  jsonapi_extras: 0
   key: 0
   language: 0
+  link: 0
   media: 0
+  menu_link_content: 0
   migrate: 0
   migrate_plus: 0
   migrate_tools: 0
@@ -50,6 +57,7 @@ module:
   text: 0
   token: 0
   toolbar: 0
+  typed_data: 0
   update: 0
   user: 0
   views_ui: 0
@@ -57,7 +65,6 @@ module:
   pathauto: 1
   views: 10
   paragraphs: 11
-  gatsby: 100
   minimal: 1000
 theme:
   stark: 0

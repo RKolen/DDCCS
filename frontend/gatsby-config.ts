@@ -1,29 +1,41 @@
 import type { GatsbyConfig } from 'gatsby';
 import dotenv from 'dotenv';
 
+// Load env-specific file first, then fall back to .env.development for any
+// unset values. dotenv does not override variables already in process.env.
 dotenv.config({ path: `.env.${process.env.NODE_ENV ?? 'development'}` });
+dotenv.config({ path: '.env.development' });
+
+const DRUPAL_URL  = process.env.DRUPAL_BASE_URL;
+const DRUPAL_USER = process.env.DRUPAL_USER;
+const DRUPAL_PASS = process.env.DRUPAL_PASSWORD;
+const SITE_URL    = process.env.SITE_URL;
+const SITE_TITLE  = process.env.SITE_TITLE;
+
+if (!DRUPAL_URL) {
+  throw new Error('DRUPAL_BASE_URL is required but not set in the environment.');
+}
+if (!SITE_URL) {
+  throw new Error('SITE_URL is required but not set in the environment.');
+}
+
+const authHeader = DRUPAL_USER && DRUPAL_PASS
+  ? `Basic ${Buffer.from(`${DRUPAL_USER}:${DRUPAL_PASS}`).toString('base64')}`
+  : undefined;
 
 const config: GatsbyConfig = {
   siteMetadata: {
-    title: 'D&D Character Consultant',
-    siteUrl: 'http://localhost:8000',
+    title: SITE_TITLE ?? 'D&D Campaign Console',
+    siteUrl: SITE_URL,
   },
-  // Proxy /api/* to Drupal during development — avoids browser cert/CORS issues.
   plugins: [
     {
-      resolve: 'gatsby-source-drupal',
+      resolve: 'gatsby-source-graphql',
       options: {
-        baseUrl: process.env.DRUPAL_BASE_URL ?? 'https://drupal-cms.ddev.site',
-        apiBase: 'jsonapi',
-        basicAuth: {
-          username: process.env.DRUPAL_USER,
-          password: process.env.DRUPAL_PASSWORD,
-        },
-        fastBuilds: true,
-        // Only pull published content.
-        params: {
-          'filter[status]': 1,
-        },
+        typeName: 'Drupal',
+        fieldName: 'drupal',
+        url: `${DRUPAL_URL}/graphql`,
+        headers: authHeader ? { Authorization: authHeader } : {},
       },
     },
     'gatsby-plugin-image',

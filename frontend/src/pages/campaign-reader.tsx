@@ -1,321 +1,391 @@
-import React, { useState } from 'react';
-import { graphql } from 'gatsby';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { graphql, Link } from 'gatsby';
 import type { HeadFC, PageProps } from 'gatsby';
-import { BaseTemplate } from '../components/templates/BaseTemplate';
+import { cleanHtml } from '../utils/cleanHtml';
 import * as styles from './campaign-reader.module.css';
 
-// ── Roman numeral lookup (I–XII) ─────────────────────────────────────────────
+// ── Roman numeral lookup (I–L) ────────────────────────────────────────────────
 
-const ROMAN_NUMERALS: readonly string[] = [
-  'I', 'II', 'III', 'IV', 'V', 'VI',
-  'VII', 'VIII', 'IX', 'X', 'XI', 'XII',
+const ROMAN: readonly string[] = [
+  'I',    'II',   'III',  'IV',   'V',
+  'VI',   'VII',  'VIII', 'IX',   'X',
+  'XI',   'XII',  'XIII', 'XIV',  'XV',
+  'XVI',  'XVII', 'XVIII','XIX',  'XX',
+  'XXI',  'XXII', 'XXIII','XXIV', 'XXV',
+  'XXVI', 'XXVII','XXVIII','XXIX','XXX',
+  'XXXI', 'XXXII','XXXIII','XXXIV','XXXV',
+  'XXXVI','XXXVII','XXXVIII','XXXIX','XL',
+  'XLI',  'XLII', 'XLIII','XLIV', 'XLV',
+  'XLVI', 'XLVII','XLVIII','XLIX', 'L',
 ];
 
 function toRoman(index: number): string {
-  return ROMAN_NUMERALS[index] ?? String(index + 1);
+  return ROMAN[index] ?? String(index + 1);
 }
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-interface StoryNode {
-  id:               string;
-  title:            string;
-  fieldStoryNumber: number | null;
-  fieldSessionDate: string | null;
-  fieldBody:        { processed: string } | null;
-  fieldCharacters:  Array<{ title: string }> | null;
-  path:             { alias: string } | null;
-}
-
-interface CampaignReaderData {
-  allNodeStory: { nodes: StoryNode[] };
-}
-
-type ImageState = 'idle' | 'running' | 'done';
-
-// ── StoryMedallions ───────────────────────────────────────────────────────────
-
-interface StoryMedallionsProps {
+interface CharacterRef {
   title: string;
 }
 
-function StoryMedallions({ title }: StoryMedallionsProps): React.ReactElement {
-  const [narrating, setNarrating] = useState(false);
-  const [imgState, setImgState] = useState<ImageState>('idle');
+interface CampaignTerm {
+  name: string;
+}
 
-  const toggleNarrate = (): void => setNarrating(n => !n);
+interface StoryNode {
+  id:          string;
+  title:       string;
+  storyNumber: number | null;
+  sessionDate: string | null;
+  body:        { processed: string } | null;
+  characters:  CharacterRef[] | null;
+  campaign:    CampaignTerm | null;
+}
 
-  const generateImage = (): void => {
-    if (imgState === 'running') return;
-    setImgState('running');
-    setTimeout(() => setImgState('done'), 1800);
+interface CampaignReaderData {
+  drupal: {
+    nodeStories: { nodes: StoryNode[] };
   };
+}
 
-  const narrateLabel = narrating ? 'Listening...' : 'Narrate';
-  const imgLabel =
-    imgState === 'idle'    ? 'Generate image' :
-    imgState === 'running' ? 'Conjuring...'   :
-    'View image';
+// ── Date formatter ────────────────────────────────────────────────────────────
+
+const MONTH_NAMES: readonly string[] = [
+  'January', 'February', 'March',     'April',   'May',      'June',
+  'July',    'August',   'September', 'October', 'November', 'December',
+];
+
+function formatDate(iso: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return iso;
+  const day  = d.getUTCDate();
+  const mon  = MONTH_NAMES[d.getUTCMonth()] ?? '';
+  const year = d.getUTCFullYear();
+  return `${String(day)} ${mon} ${String(year)}`;
+}
+
+// ── Left page ─────────────────────────────────────────────────────────────────
+
+interface StoryPageProps {
+  story:    StoryNode;
+  innerRef?: React.RefObject<HTMLDivElement | null>;
+}
+
+function LeftPage({ story, innerRef }: StoryPageProps): React.ReactElement {
+  const characters = story.characters ?? [];
+  const dateStr    = story.sessionDate ? formatDate(story.sessionDate) : null;
+
+  const metaParts: string[] = [];
+  if (dateStr !== null) metaParts.push(dateStr);
+  if (characters.length > 0) metaParts.push(characters.map(c => c.title).join(' · '));
 
   return (
-    <div className={styles.medallions} role="group" aria-label={`Actions for ${title}`}>
-      <button
-        className={`${styles.medallion}${narrating ? ` ${styles.medallionActive}` : ''}`}
-        onClick={toggleNarrate}
-        title={narrateLabel}
-        aria-pressed={narrating}
-        type="button"
-      >
-        <svg
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.6"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          aria-hidden="true"
-        >
-          <path d="M4 9h3l5-4v14l-5-4H4z" />
-          <path d="M16 9c1.2 1.2 1.8 2 1.8 3s-.6 1.8-1.8 3" />
-          {narrating && <path d="M19 6c2 2 3 4 3 6s-1 4-3 6" />}
-        </svg>
-        <span className={styles.medallionTooltip}>{narrateLabel}</span>
-      </button>
-
-      <button
-        className={[
-          styles.medallion,
-          styles.medallionAi,
-          imgState === 'done' ? styles.medallionDone : '',
-        ].filter(Boolean).join(' ')}
-        onClick={generateImage}
-        title={imgLabel}
-        disabled={imgState === 'running'}
-        type="button"
-      >
-        {imgState === 'running' ? (
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.6"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden="true"
-          >
-            <circle
-              cx="12"
-              cy="12"
-              r="8"
-              strokeDasharray="14 8"
-              className={styles.medallionSpinner}
-            />
-          </svg>
-        ) : (
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.6"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden="true"
-          >
-            <rect x="3" y="5" width="18" height="14" rx="1" />
-            <circle cx="8.5" cy="10" r="1.4" />
-            <path d="M3 17l5-5 4 4 3-3 6 5" />
-            <path
-              d="M18 3l.6 1.6L20 5l-1.4.4L18 7l-.6-1.6L16 5l1.4-.4z"
-              fill="currentColor"
-              stroke="none"
-            />
-          </svg>
+    <div className={styles.pageInner} ref={innerRef}>
+      <div className={styles.pageContent}>
+        {story.storyNumber !== null && (
+          <span className={styles.sessionChip}>
+            Session {story.storyNumber}
+          </span>
         )}
-        <span className={styles.medallionTooltip}>{imgLabel}</span>
-      </button>
+
+        <h2 className={styles.storyTitle}>{story.title}</h2>
+
+        {metaParts.length > 0 && (
+          <p className={styles.storyMeta}>{metaParts.join('  ·  ')}</p>
+        )}
+
+        <div className={styles.ornamentalDivider} aria-hidden="true" />
+
+        {story.body !== null ? (
+          <>
+            <div
+              className={styles.body}
+              dangerouslySetInnerHTML={{ __html: cleanHtml(story.body.processed) }}
+            />
+            <p className={styles.endOrnament} aria-hidden="true">
+              &#10087;&nbsp;&middot;&nbsp;&#10087;
+            </p>
+          </>
+        ) : (
+          <p className={styles.noBody}>No story content yet.</p>
+        )}
+      </div>
     </div>
   );
 }
 
-// ── StoryReader ───────────────────────────────────────────────────────────────
+// ── Right page (next story or end-of-chronicle) ───────────────────────────────
 
-interface StoryReaderProps {
-  story: StoryNode;
+interface RightPageProps {
+  story:    StoryNode | null;
+  innerRef?: React.RefObject<HTMLDivElement | null>;
 }
 
-function StoryReader({ story }: StoryReaderProps): React.ReactElement {
-  const characters = story.fieldCharacters ?? [];
+function RightPage({ story, innerRef }: RightPageProps): React.ReactElement {
+  if (story === null) {
+    return (
+      <div className={styles.endChronicle}>
+        <span className={styles.endOrnamentLarge} aria-hidden="true">
+          &#10087;
+        </span>
+        <p className={styles.endChronicleText}>End of Chronicle</p>
+        <span className={styles.endOrnamentLarge} aria-hidden="true">
+          &#10087;
+        </span>
+      </div>
+    );
+  }
 
-  const formattedDate = story.fieldSessionDate
-    ? new Date(story.fieldSessionDate).toLocaleDateString('en-GB', {
-        day: 'numeric', month: 'long', year: 'numeric',
-      })
-    : null;
+  return <LeftPage story={story} innerRef={innerRef} />;
+}
+
+// ── Dot indicator ─────────────────────────────────────────────────────────────
+
+interface DotIndicatorProps {
+  total:   number;
+  current: number;
+}
+
+function DotIndicator({ total, current }: DotIndicatorProps): React.ReactElement {
+  const MAX_DOTS = 20;
+  const visible  = Math.min(total, MAX_DOTS);
 
   return (
-    <div key={story.id} className={styles.storyContent}>
-      <header className={styles.storyHeader}>
-        <h2 className={styles.storyTitle}>{story.title}</h2>
-        <div className={styles.storyMeta}>
-          {story.fieldStoryNumber !== null && (
-            <span className={styles.storySession}>
-              Session {story.fieldStoryNumber}
-            </span>
-          )}
-          {formattedDate && (
-            <time className={styles.storyDate} dateTime={story.fieldSessionDate ?? ''}>
-              {formattedDate}
-            </time>
-          )}
-        </div>
-        {characters.length > 0 && (
-          <p className={styles.storyCharacters}>
-            {characters.map(c => c.title).join(' · ')}
-          </p>
-        )}
-      </header>
-
-      {story.fieldBody && (
-        <div className={styles.scroll}>
-          <div className={styles.scrollDowel} aria-hidden="true" />
-          <div className={styles.parchment}>
-            <div
-              className={styles.body}
-              dangerouslySetInnerHTML={{ __html: story.fieldBody.processed }}
-            />
-            <p className={styles.ornament}>{'❧ · ❧ · ❧'}</p>
-            <StoryMedallions title={story.title} />
-          </div>
-          <div className={styles.scrollDowel} aria-hidden="true" />
-        </div>
-      )}
+    <div className={styles.dots} aria-label={`Session ${String(current + 1)} of ${String(total)}`}>
+      {Array.from({ length: visible }, (_, i) => (
+        <span
+          key={i}
+          className={i === current ? `${styles.dot} ${styles.dotActive}` : styles.dot}
+          aria-hidden="true"
+        />
+      ))}
     </div>
   );
 }
 
 // ── CampaignReaderPage ────────────────────────────────────────────────────────
 
+const ANIM_DURATION = 600;
+
 const CampaignReaderPage: React.FC<PageProps<CampaignReaderData>> = ({
   data,
   location,
 }) => {
-  const stories = data.allNodeStory.nodes;
-  const [activeIndex, setActiveIndex] = useState(0);
+  const allStories = data.drupal.nodeStories.nodes;
 
-  if (stories.length === 0) {
-    return (
-      <BaseTemplate currentPath={location.pathname}>
-        <p className={styles.empty}>No stories found for this campaign.</p>
-      </BaseTemplate>
-    );
-  }
+  // Determine which campaign to show from ?campaign= query param
+  const [campaignName, setCampaignName] = useState<string | null>(null);
 
-  const activeStory = stories[activeIndex];
-  const hasPrev = activeIndex > 0;
-  const hasNext = activeIndex < stories.length - 1;
+  useEffect(() => {
+    const params  = new URLSearchParams(location.search);
+    const raw     = params.get('campaign');
+    if (raw) {
+      setCampaignName(raw);
+    } else {
+      // Default: first campaign alphabetically
+      const names = Array.from(
+        new Set(
+          allStories
+            .map(s => s.campaign?.name ?? null)
+            .filter((n): n is string => n !== null),
+        ),
+      ).sort();
+      setCampaignName(names[0] ?? null);
+    }
+  }, [location.search, allStories]);
+
+  const stories = allStories
+    .filter(s => s.campaign?.name === campaignName)
+    .slice()
+    .sort((a, b) => (a.storyNumber ?? 0) - (b.storyNumber ?? 0));
+
+  // Spread model: each turn shows two consecutive stories (left + right page).
+  // spread 0 → stories[0] + stories[1], spread 1 → stories[2] + stories[3], etc.
+  const leftPageRef  = useRef<HTMLDivElement>(null);
+  const rightPageRef = useRef<HTMLDivElement>(null);
+
+  const spreadCount  = Math.ceil(stories.length / 2);
+
+  // activeSpread  = spread currently fully displayed
+  // sourceSpread  = spread we are leaving (kept during flip animation for the front face)
+  const [activeSpread, setActiveSpread] = useState(0);
+  const [sourceSpread, setSourceSpread] = useState<number | null>(null);
+  const [animDir,      setAnimDir]      = useState<'forward' | 'back'>('forward');
+  const [animating,    setAnimating]    = useState(false);
+
+  // Scroll both pages to top whenever the spread changes.
+  useEffect(() => {
+    leftPageRef.current?.scrollTo({ top: 0 });
+    rightPageRef.current?.scrollTo({ top: 0 });
+  }, [activeSpread]);
+
+  const navigate = useCallback((nextSpread: number, dir: 'forward' | 'back'): void => {
+    if (animating) return;
+    setAnimDir(dir);
+    setSourceSpread(activeSpread);   // remember what we're leaving
+    setActiveSpread(nextSpread);     // new content appears underneath immediately
+    setAnimating(true);
+    setTimeout(() => {
+      setAnimating(false);
+      setSourceSpread(null);
+    }, ANIM_DURATION);
+  }, [animating, activeSpread]);
 
   const goToPrev = (): void => {
-    if (hasPrev) setActiveIndex(i => i - 1);
+    if (activeSpread > 0) navigate(activeSpread - 1, 'back');
   };
 
   const goToNext = (): void => {
-    if (hasNext) setActiveIndex(i => i + 1);
+    if (activeSpread < spreadCount - 1) navigate(activeSpread + 1, 'forward');
   };
 
-  const tocEntries = stories.slice(0, ROMAN_NUMERALS.length);
+  const hasPrev = activeSpread > 0;
+  const hasNext = activeSpread < spreadCount - 1;
+
+  // What the underlying spread shows (the destination).
+  const leftStory  = stories[activeSpread * 2] ?? null;
+  const rightStory = stories[activeSpread * 2 + 1] ?? null;
+
+  // The page faces shown on the turning page during animation.
+  // Forward flip: front = old right page, back = new left page.
+  // Backward flip: front = old left page, back = new right page.
+  const srcLeft  = sourceSpread !== null ? (stories[sourceSpread * 2] ?? null) : null;
+  const srcRight = sourceSpread !== null ? (stories[sourceSpread * 2 + 1] ?? null) : null;
+  const flipFrontStory = animDir === 'forward' ? srcRight : srcLeft;
+  const flipBackStory  = animDir === 'forward' ? leftStory : rightStory;
+
+  const prevLeftTitle = stories[(activeSpread - 1) * 2]?.title ?? '';
+  const nextLeftTitle = stories[(activeSpread + 1) * 2]?.title ?? '';
+  const currentStory  = leftStory;
+
+  if (stories.length === 0 && campaignName !== null) {
+    return (
+      <div className={styles.shell}>
+        <div className={styles.topBar}>
+          <Link to="/stories/" className={styles.backLink}>&larr; Back to Chronicles</Link>
+          <span className={styles.topCenter}>{campaignName ?? ''}</span>
+          <span className={styles.topRight} />
+        </div>
+        <div className={styles.emptyBook}>
+          <p className={styles.emptyText}>No stories recorded for this campaign.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <BaseTemplate currentPath={location.pathname}>
-      <div className={styles.shell}>
+    <div className={styles.shell}>
 
-        {/* TOC Sidebar */}
-        <nav aria-label="Table of contents">
-          <div className={styles.toc}>
-            <h2 className={styles.tocHeading}>Table of Contents</h2>
-            <div className={styles.tocDivider} aria-hidden="true" />
-            <ol className={styles.tocList}>
-              {tocEntries.map((story, index) => (
-                <li key={story.id} className={styles.tocItem}>
-                  <button
-                    type="button"
-                    className={
-                      index === activeIndex
-                        ? `${styles.tocButton} ${styles.tocButtonActive}`
-                        : styles.tocButton
-                    }
-                    onClick={() => setActiveIndex(index)}
-                    aria-current={index === activeIndex ? 'true' : undefined}
-                  >
-                    <span className={styles.tocNumeral}>{toRoman(index)}</span>
-                    <span className={styles.tocLabel}>{story.title}</span>
-                  </button>
-                </li>
-              ))}
-            </ol>
-          </div>
-        </nav>
+      {/* Top bar */}
+      <div className={styles.topBar}>
+        <Link to="/stories/" className={styles.backLink}>
+          &larr; Back to Chronicles
+        </Link>
+        <span className={styles.topCenter}>
+          <span className={styles.topCampaign}>{campaignName ?? ''}</span>
+          {currentStory !== null && (
+            <>
+              <span className={styles.topSep}>&thinsp;&mdash;&thinsp;</span>
+              <span className={styles.topStoryTitle}>{currentStory.title}</span>
+            </>
+          )}
+        </span>
+        <span className={styles.topRight}>
+          Spread {String(activeSpread + 1)} of {String(spreadCount)}
+        </span>
+      </div>
 
-        {/* Reader column */}
-        <div className={styles.reader}>
+      {/* Book area */}
+      <div className={styles.bookArea}>
+        <div className={styles.bookContainer}>
+          <div className={styles.book}>
 
-          {/* Campaign eyebrow */}
-          <div className={styles.eyebrow} aria-hidden="true">
-            <span className={styles.eyebrowText}>Campaign · New Beginnings</span>
-          </div>
+            {/* Destination spread — always visible underneath */}
+            <div className={`${styles.page} ${styles.pageLeft}`}>
+              {leftStory !== null && <LeftPage story={leftStory} innerRef={leftPageRef} />}
+            </div>
+            <div className={styles.spine} aria-hidden="true" />
+            <div className={`${styles.page} ${styles.pageRight}`}>
+              <RightPage story={rightStory} innerRef={rightPageRef} />
+            </div>
 
-          {/* Campaign title */}
-          <h1 className={styles.campaignTitle}>The New Beginnings</h1>
+            {/* 3D page-turn overlay — only during animation */}
+            {animating && (
+              <div
+                className={`${styles.pageFlipper} ${
+                  animDir === 'forward'
+                    ? styles.pageFlipperForward
+                    : styles.pageFlipperBack
+                }`}
+                aria-hidden="true"
+              >
+                {/* Front face: the page we are leaving */}
+                <div className={`${styles.flipFace} ${styles.flipFaceFront}`}>
+                  {flipFrontStory !== null && (
+                    <LeftPage story={flipFrontStory} />
+                  )}
+                </div>
+                {/* Back face: the page that appears as the flip completes */}
+                <div className={`${styles.flipFace} ${styles.flipFaceBack}`}>
+                  {flipBackStory !== null && (
+                    <LeftPage story={flipBackStory} />
+                  )}
+                </div>
+              </div>
+            )}
 
-          {/* Active story — key forces remount + CSS fade-in on change */}
-          <StoryReader key={activeStory.id} story={activeStory} />
-
-          {/* Prev / Next navigation */}
-          <div className={styles.nav}>
-            <button
-              type="button"
-              className={styles.navButton}
-              onClick={goToPrev}
-              disabled={!hasPrev}
-              aria-label="Previous story"
-            >
-              &larr; Previous
-            </button>
-            <button
-              type="button"
-              className={styles.navButton}
-              onClick={goToNext}
-              disabled={!hasNext}
-              aria-label="Next story"
-            >
-              Next &rarr;
-            </button>
           </div>
         </div>
       </div>
-    </BaseTemplate>
+
+      {/* Bottom navigation */}
+      <div className={styles.navBar}>
+        <button
+          type="button"
+          className={styles.navButton}
+          onClick={goToPrev}
+          disabled={!hasPrev}
+          aria-label="Previous spread"
+        >
+          &larr; Previous{hasPrev ? ` — ${prevLeftTitle}` : ''}
+        </button>
+
+        <DotIndicator total={spreadCount} current={activeSpread} />
+
+        <button
+          type="button"
+          className={`${styles.navButton} ${styles.navButtonRight}`}
+          onClick={goToNext}
+          disabled={!hasNext}
+          aria-label="Next spread"
+        >
+          {hasNext ? `${nextLeftTitle} · ` : ''}Next &rarr;
+        </button>
+      </div>
+
+    </div>
   );
 };
 
-// ── GraphQL page query ────────────────────────────────────────────────────────
+// ── GraphQL query ─────────────────────────────────────────────────────────────
 
 export const query = graphql`
   query CampaignReader {
-    allNodeStory(sort: { fieldStoryNumber: ASC }) {
-      nodes {
-        id
-        title
-        fieldStoryNumber
-        fieldSessionDate
-        fieldBody {
-          processed
-        }
-        fieldCharacters {
-          ... on node__character {
-            title
+    drupal {
+      nodeStories(first: 100) {
+        nodes {
+          id
+          title
+          storyNumber
+          sessionDate
+          body { processed }
+          characters {
+            ... on Drupal_NodeCharacter { title }
           }
-        }
-        path {
-          alias
+          campaign {
+            ... on Drupal_TermCampaign { name }
+          }
         }
       }
     }

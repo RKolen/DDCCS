@@ -1,0 +1,482 @@
+_core:
+  default_config_hash: Sd_9jXBxw3mGn9d_y94jvlitI0wpvj6x2dQ0p6aGhJo
+entity_config:
+  node--character:
+    enabled: '1'
+    query_load_enabled: '1'
+    edges_enabled: '1'
+    simple_queries: '1'
+  node--story:
+    enabled: '1'
+    query_load_enabled: '1'
+    edges_enabled: '1'
+    simple_queries: '1'
+  node--npc:
+    enabled: '1'
+    query_load_enabled: '1'
+    edges_enabled: '1'
+    simple_queries: '1'
+  node--item:
+    enabled: '1'
+    query_load_enabled: '1'
+    edges_enabled: '1'
+    simple_queries: '1'
+  node--spell:
+    enabled: '1'
+    query_load_enabled: '1'
+    edges_enabled: '1'
+    simple_queries: '1'
+  node--monster:
+    enabled: '1'
+    query_load_enabled: '1'
+    edges_enabled: '1'
+    simple_queries: '1'
+  node--session:
+    enabled: '1'
+    query_load_enabled: '1'
+    edges_enabled: '1'
+    simple_queries: '1'
+  node:
+    character:
+      enabled: true
+      query_load_enabled: true
+      edges_enabled: true
+      simple_queries: '1'
+    story:
+      enabled: true
+      query_load_enabled: true
+      edges_enabled: true
+      simple_queries: '1'
+      field_config:
+        field_campaign:
+          enabled: 'TRUE'
+    npc:
+      enabled: true
+      query_load_enabled: true
+      edges_enabled: true
+      simple_queries: '1'
+    item:
+      enabled: true
+      query_load_enabled: true
+      edges_enabled: true
+      simple_queries: '1'
+    spell:
+      enabled: true
+      query_load_enabled: true
+      edges_enabled: true
+      simple_queries: '1'
+    monster:
+      enabled: true
+      query_load_enabled: true
+      edges_enabled: true
+      simple_queries: '1'
+    session:
+      enabled: true
+      query_load_enabled: true
+      edges_enabled: true
+      simple_queries: '1'
+  paragraph:
+    ability_scores:
+      enabled: true
+      query_load_enabled: true
+    class:
+      enabled: true
+      query_load_enabled: true
+    spell_reference:
+      enabled: true
+      query_load_enabled: true
+    spell_slot:
+      enabled: true
+      query_load_enabled: true
+    relationship:
+      enabled: true
+      query_load_enabled: true
+  taxonomy_term:
+    campaign:
+      enabled: true
+      query_load_enabled: true
+field_config:
+  node:
+    character:
+      path:
+        enabled: true
+      field_abilities:
+        enabled: true
+      field_abilities_ref:
+        enabled: true
+      field_ability_scores:
+        enabled: true
+      field_ai_enabled:
+        enabled: true
+      field_ai_max_tokens:
+        enabled: true
+      field_ai_model:
+        enabled: true
+      field_ai_system_prompt:
+        enabled: true
+      field_ai_temperature:
+        enabled: true
+      field_armor_class:
+        enabled: true
+      field_background:
+        enabled: true
+      field_backstory:
+        enabled: true
+      field_bonds:
+        enabled: true
+      field_campaign:
+        enabled: true
+      field_character_type:
+        enabled: true
+      field_class:
+        enabled: true
+      field_defeat_conditions:
+        enabled: true
+      field_encounter_tactics:
+        enabled: true
+      field_equipment_items:
+        enabled: true
+      field_faction:
+        enabled: true
+      field_feats_ref:
+        enabled: true
+      field_first_name:
+        enabled: true
+      field_flaws:
+        enabled: true
+      field_gender:
+        enabled: true
+      field_gold:
+        enabled: true
+      field_ideals:
+        enabled: true
+      field_image:
+        enabled: true
+      field_key_traits:
+        enabled: true
+      field_lair_actions:
+        enabled: true
+      field_languages:
+        enabled: true
+      field_last_name:
+        enabled: true
+      field_legendary_actions:
+        enabled: true
+      field_level:
+        enabled: true
+      field_lineage:
+        enabled: true
+      field_magic_items_ref:
+        enabled: true
+      field_major_plot_actions:
+        enabled: true
+      field_maximum_hitpoints:
+        enabled: true
+      field_movement_speed:
+        enabled: true
+      field_nickname:
+        enabled: true
+      field_notes:
+        enabled: true
+      field_npc_type:
+        enabled: true
+      field_personality:
+        enabled: true
+      field_personality_traits:
+        enabled: true
+      field_plot_hooks:
+        enabled: true
+      field_proficiency_bonus:
+        enabled: true
+      field_pronouns:
+        enabled: true
+      field_recurring:
+        enabled: true
+      field_regional_effects:
+        enabled: true
+      field_relationships:
+        enabled: true
+      field_role:
+        enabled: true
+      field_skills:
+        enabled: true
+      field_source_character:
+        enabled: true
+      field_specialized_abilities:
+        enabled: true
+      field_species:
+        enabled: true
+      field_spells_ref:
+        enabled: true
+      field_spell_slots:
+        enabled: true
+      field_tools:
+        enabled: true
+      field_voice_id_ref:
+        enabled: true
+      field_voice_pitch:
+        enabled: true
+      field_voice_speed:
+        enabled: true
+    story:
+      path:
+        enabled: true
+      field_body:
+        enabled: true
+      field_campaign:
+        enabled: true
+      field_characters:
+        enabled: true
+      field_locations:
+        enabled: true
+      field_npcs:
+        enabled: true
+      field_session_date:
+        enabled: true
+      field_session_results:
+        enabled: true
+      field_story_hooks:
+        enabled: true
+      field_story_number:
+        enabled: true
+      field_story_tags:
+        enabled: true
+    npc:
+      path:
+        enabled: true
+      field_abilities_ref:
+        enabled: true
+      field_ability_scores:
+        enabled: true
+      field_armor_class:
+        enabled: true
+      field_class:
+        enabled: true
+      field_faction:
+        enabled: true
+      field_key_traits:
+        enabled: true
+      field_level:
+        enabled: true
+      field_lineage:
+        enabled: true
+      field_location:
+        enabled: true
+      field_maximum_hitpoints:
+        enabled: true
+      field_nickname:
+        enabled: true
+      field_notes:
+        enabled: true
+      field_personality:
+        enabled: true
+      field_profile_type:
+        enabled: true
+      field_recurring:
+        enabled: true
+      field_relationships:
+        enabled: true
+      field_role:
+        enabled: true
+      field_species:
+        enabled: true
+    item:
+      path:
+        enabled: true
+      field_armor_ac_base:
+        enabled: true
+      field_armor_category:
+        enabled: true
+      field_armor_properties:
+        enabled: true
+      field_armor_str_requirement:
+        enabled: true
+      field_damage:
+        enabled: true
+      field_damage_types:
+        enabled: true
+      field_description:
+        enabled: true
+      field_edition:
+        enabled: true
+      field_image:
+        enabled: true
+      field_is_magic:
+        enabled: true
+      field_item_bonus:
+        enabled: true
+      field_item_cost:
+        enabled: true
+      field_item_properties:
+        enabled: true
+      field_item_rarity:
+        enabled: true
+      field_item_requires_attunement:
+        enabled: true
+      field_item_type:
+        enabled: true
+      field_item_weight:
+        enabled: true
+      field_nonidentified_name:
+        enabled: true
+      field_notes:
+        enabled: true
+      field_source:
+        enabled: true
+      field_vestige_level:
+        enabled: true
+      field_weapon_mastery:
+        enabled: true
+      field_weapon_properties:
+        enabled: true
+      field_weapon_subtype:
+        enabled: true
+    spell:
+      path:
+        enabled: true
+      field_casting_time:
+        enabled: true
+      field_concentration:
+        enabled: true
+      field_description:
+        enabled: true
+      field_ritual:
+        enabled: true
+      field_spell_components:
+        enabled: true
+      field_spell_duration:
+        enabled: true
+      field_spell_level:
+        enabled: true
+      field_spell_range:
+        enabled: true
+      field_spell_school:
+        enabled: true
+    monster:
+      path:
+        enabled: true
+      field_ability_scores:
+        enabled: true
+      field_armor_class:
+        enabled: true
+      field_challenge_rating:
+        enabled: true
+      field_faction:
+        enabled: true
+      field_image:
+        enabled: true
+      field_maximum_hitpoints:
+        enabled: true
+      field_monster_actions:
+        enabled: true
+      field_monster_alignment:
+        enabled: true
+      field_monster_bonus_actions:
+        enabled: true
+      field_monster_damage_immunities:
+        enabled: true
+      field_monster_damage_resistances:
+        enabled: true
+      field_monster_hit_dice:
+        enabled: true
+      field_monster_lair_actions:
+        enabled: true
+      field_monster_languages:
+        enabled: true
+      field_monster_legendary_actions:
+        enabled: true
+      field_monster_reactions:
+        enabled: true
+      field_monster_senses:
+        enabled: true
+      field_monster_size:
+        enabled: true
+      field_monster_skills:
+        enabled: true
+      field_monster_speed:
+        enabled: true
+      field_monster_traits:
+        enabled: true
+      field_monster_xp:
+        enabled: true
+      field_movement_speed:
+        enabled: true
+      field_relationships:
+        enabled: true
+      field_source:
+        enabled: true
+      field_specialized_abilities:
+        enabled: true
+      field_type:
+        enabled: true
+    session:
+      path:
+        enabled: true
+      field_body:
+        enabled: true
+      field_campaign:
+        enabled: true
+      field_characters_present:
+        enabled: true
+      field_character_development:
+        enabled: true
+      field_npcs_encountered:
+        enabled: true
+      field_session_date:
+        enabled: true
+      field_session_number:
+        enabled: true
+      field_story_files:
+        enabled: true
+  paragraph:
+    ability_scores:
+      created:
+        enabled: true
+      field_charisma:
+        enabled: true
+      field_constitution:
+        enabled: true
+      field_dexterity:
+        enabled: true
+      field_intelligence:
+        enabled: true
+      field_strength:
+        enabled: true
+      field_wisdom:
+        enabled: true
+    class:
+      created:
+        enabled: true
+      field_class:
+        enabled: true
+      field_level:
+        enabled: true
+      field_subclass_ref:
+        enabled: true
+    spell_reference:
+      created:
+        enabled: true
+      field_spell:
+        enabled: true
+    spell_slot:
+      created:
+        enabled: true
+      field_spell_level:
+        enabled: true
+      field_spell_slots_available:
+        enabled: true
+      field_spell_slots_total:
+        enabled: true
+settings:
+  exclude_unpublished: true
+  expose_entity_ids: false
+  field_required_override: false
+  schema_description: 'GraphQL Compose'
+  schema_version: '1'
+  simple_queries: true
+  simple_unions: true
+  site_name: false
+  site_slogan: false
+  site_front: true
+  inflector_langcode: en
+  inflector_singularize: true

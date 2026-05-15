@@ -897,10 +897,9 @@ $settings['config_sync_directory'] = DRUPAL_ROOT . '/../config/sync';
  *
  * Keep this code block at the end of this file to take full effect.
  */
-#
-# if (file_exists($app_root . '/' . $site_path . '/settings.local.php')) {
-#   include $app_root . '/' . $site_path . '/settings.local.php';
-# }
+if (file_exists($app_root . '/' . $site_path . '/settings.local.php')) {
+  include $app_root . '/' . $site_path . '/settings.local.php';
+}
 
 // ---------------------------------------------------------------------------
 // Sensitive credentials via environment variables.
@@ -929,9 +928,25 @@ if (getenv('GATSBY_DRUPAL_PASSWORD') !== FALSE) {
   $config['gatsby.settings']['preview_secret'] = getenv('GATSBY_DRUPAL_PASSWORD');
 }
 
-// AI default model selection — env vars take priority; fallbacks keep the site
-// functional when no env var is set (e.g. fresh checkout without a .env file).
-$config['ai.settings']['default_providers']['chat']['model_id'] =
-  getenv('AI_CHAT_MODEL_ID') ?: 'qwen3_4b';
-$config['ai.settings']['default_providers']['embeddings']['model_id'] =
-  getenv('AI_EMBEDDINGS_MODEL_ID') ?: 'nomic_embed_text_latest';
+// AI model selection — env vars only; no fallback. Configure via .env (DDEV)
+// or settings.local.php. If unset the config sync empty string is used and
+// the model must be selected via the Drupal admin UI.
+if (getenv('AI_CHAT_PROVIDER_ID') !== FALSE) {
+  $config['ai.settings']['default_providers']['chat']['provider_id'] =
+    getenv('AI_CHAT_PROVIDER_ID');
+}
+if (getenv('AI_CHAT_MODEL_ID') !== FALSE) {
+  $config['ai.settings']['default_providers']['chat']['model_id'] =
+    getenv('AI_CHAT_MODEL_ID');
+}
+if (getenv('AI_EMBEDDINGS_PROVIDER_ID') !== FALSE) {
+  $config['ai.settings']['default_providers']['embeddings']['provider_id'] =
+    getenv('AI_EMBEDDINGS_PROVIDER_ID');
+}
+if (getenv('AI_EMBEDDINGS_MODEL_ID') !== FALSE) {
+  $config['ai.settings']['default_providers']['embeddings']['model_id'] =
+    getenv('AI_EMBEDDINGS_MODEL_ID');
+}
+if (getenv('AI_VDB_PROVIDER') !== FALSE) {
+  $config['ai.settings']['default_vdb_provider'] = getenv('AI_VDB_PROVIDER');
+}
