@@ -1,17 +1,17 @@
-uuid: 8b7f5f84-073f-4848-91c2-8509542794a2
+uuid: fa109be7-5281-4b47-84c9-7a4642952fc1
 langcode: en
 status: true
 dependencies:
   config:
-    - field.storage.node.field_characters
+    - field.storage.taxonomy_term.field_current_party
     - node.type.character
-    - node.type.story
-id: node.story.field_characters
-field_name: field_characters
-entity_type: node
-bundle: story
-label: Characters
-description: 'Characters referenced in this story'
+    - taxonomy.vocabulary.campaign
+id: taxonomy_term.campaign.field_current_party
+field_name: field_current_party
+entity_type: taxonomy_term
+bundle: campaign
+label: 'Current Party'
+description: 'Player characters who are active members of this campaign.'
 required: false
 translatable: false
 default_value: {  }

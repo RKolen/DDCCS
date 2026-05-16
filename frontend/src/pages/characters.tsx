@@ -4,10 +4,17 @@ import type { HeadFC, PageProps } from 'gatsby';
 import { BaseTemplate } from '../components/templates/BaseTemplate';
 import { Badge } from '../components/atoms/Badge';
 import { Divider } from '../components/atoms/Divider';
-import { GameIcon } from '../components/atoms/GameIcon';
 import * as styles from './characters.module.css';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
+
+interface CampaignRef {
+  name: string;
+}
+
+interface CharacterImage {
+  mediaImage: { url: string; alt: string } | null;
+}
 
 interface CharacterNode {
   id:               string;
@@ -17,6 +24,8 @@ interface CharacterNode {
   armorClass:       number | null;
   maximumHitpoints: number | null;
   path:             string | null;
+  campaign:         CampaignRef | null;
+  image:            CharacterImage | null;
 }
 
 interface CharactersData {
@@ -33,33 +42,43 @@ interface CharacterCardProps {
 
 function CharacterCard({ char }: CharacterCardProps): React.ReactElement {
   const href = char.path ?? '#';
-
-  const statParts: string[] = [];
-  if (char.maximumHitpoints !== null) {
-    statParts.push(`HP ${char.maximumHitpoints}`);
-  }
+  const initial = char.title.charAt(0).toUpperCase();
 
   return (
     <Link to={href} className={styles.card}>
-      <div className={styles.cardTop}>
-        <div className={styles.cardIdent}>
-          <GameIcon name="crossed-swords" size={24} colorFilter="var(--filter-gold-dim)" decorative />
-          <span className={styles.cardName}>{char.title}</span>
-        </div>
-        <span className={styles.cardAc}>AC {char.armorClass ?? '—'}</span>
-      </div>
-
-      <div className={styles.cardBadges}>
-        {char.level !== null && (
-          <Badge label={`Lv ${char.level}`} size="sm" />
+      <div className={styles.cardAvatar} aria-hidden="true">
+        {char.image?.mediaImage?.url ? (
+          <img
+            src={char.image.mediaImage.url}
+            alt={char.image.mediaImage.alt || char.title}
+            className={styles.cardAvatarImg}
+          />
+        ) : (
+          <span className={styles.cardAvatarInitial}>{initial}</span>
         )}
       </div>
 
-      {statParts.length > 0 && (
-        <div className={styles.cardStats}>
-          {statParts.join(' · ')}
+      <div className={styles.cardBody}>
+        <div className={styles.cardTop}>
+          <span className={styles.cardName}>{char.title}</span>
+          {char.armorClass !== null && (
+            <span className={styles.cardAc}>AC {char.armorClass}</span>
+          )}
         </div>
-      )}
+
+        {char.campaign && (
+          <p className={styles.cardCampaign}>{char.campaign.name}</p>
+        )}
+
+        <div className={styles.cardBadges}>
+          {char.level !== null && (
+            <Badge label={`Level ${char.level}`} size="sm" />
+          )}
+          {char.maximumHitpoints !== null && (
+            <Badge label={`HP ${char.maximumHitpoints}`} size="sm" />
+          )}
+        </div>
+      </div>
     </Link>
   );
 }
@@ -69,7 +88,6 @@ function CharacterCard({ char }: CharacterCardProps): React.ReactElement {
 function EmptyState(): React.ReactElement {
   return (
     <div className={styles.emptyPanel}>
-      <GameIcon name="crossed-swords" size={32} colorFilter="var(--filter-gold-dim)" decorative />
       <h2 className={styles.emptyHeading}>No characters yet.</h2>
       <p className={styles.emptyBody}>
         Add characters via the Python CLI then sync to Drupal.
@@ -87,8 +105,8 @@ const CharactersPage: React.FC<PageProps<CharactersData>> = ({ data, location })
     <BaseTemplate currentPath={location.pathname}>
       <div className={styles.page}>
         <header className={styles.pageHeader}>
-          <h1 className={styles.heading}>Party</h1>
-          <p className={styles.subtitle}>Active adventurers in this campaign.</p>
+          <h1 className={styles.heading}>Characters</h1>
+          <p className={styles.subtitle}>All adventurers across every campaign.</p>
         </header>
 
         <Divider icon="crossed-swords" />
@@ -123,12 +141,22 @@ export const query = graphql`
           armorClass
           maximumHitpoints
           path
+          campaign {
+            ... on Drupal_TermCampaign {
+              name
+            }
+          }
+          image {
+            ... on Drupal_MediaImage {
+              mediaImage { url alt }
+            }
+          }
         }
       }
     }
   }
 `;
 
-export const Head: HeadFC = () => <title>Party | D&D Consultant</title>;
+export const Head: HeadFC = () => <title>Characters | D&D Consultant</title>;
 
 export default CharactersPage;

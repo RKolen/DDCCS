@@ -6,13 +6,22 @@ import { Divider } from '../components/atoms/Divider';
 import { cleanHtml } from '../utils/cleanHtml';
 import * as styles from './story.module.css';
 
+interface CharacterImage {
+  mediaImage: { url: string; alt: string } | null;
+}
+
+interface CharacterRef {
+  title: string;
+  image: CharacterImage | null;
+}
+
 interface StoryNode {
   title:       string;
   storyNumber: number | null;
   sessionDate: string | null;
   body:        { value: string; processed: string } | null;
   storyHooks:  Array<{ value: string }> | null;
-  characters:  Array<{ title: string }> | null;
+  campaign:    { currentParty: Array<CharacterRef> | null } | null;
 }
 
 interface StoryData {
@@ -31,7 +40,7 @@ interface StoryPageContext {
 
 type ImageState = 'idle' | 'running' | 'done';
 
-function StoryMedallions({ title }: { title: string }): React.ReactElement {
+function ActionSidebar({ title }: { title: string }): React.ReactElement {
   const [narrating, setNarrating] = useState(false);
   const [imgState, setImgState] = useState<ImageState>('idle');
 
@@ -50,7 +59,7 @@ function StoryMedallions({ title }: { title: string }): React.ReactElement {
     'View image';
 
   return (
-    <div className={styles.medallions} role="group" aria-label={`Actions for ${title}`}>
+    <div className={styles.actionSidebar} role="group" aria-label={`Actions for ${title}`}>
       <button
         className={`${styles.medallion}${narrating ? ` ${styles.medallionActive}` : ''}`}
         onClick={toggleNarrate}
@@ -95,9 +104,40 @@ function StoryMedallions({ title }: { title: string }): React.ReactElement {
   );
 }
 
+function PartyPanel({ characters }: { characters: CharacterRef[] }): React.ReactElement {
+  if (characters.length === 0) return <></>;
+
+  return (
+    <aside className={styles.partySidebar}>
+      <h3 className={styles.partyTitle}>The Party</h3>
+      <ul className={styles.partyList}>
+        {characters.map(c => (
+          <li key={c.title} className={styles.partyCard}>
+            <div className={styles.partyAvatar}>
+              {c.image?.mediaImage?.url ? (
+                <img
+                  src={c.image.mediaImage.url}
+                  alt={c.image.mediaImage.alt || c.title}
+                  className={styles.partyAvatarImg}
+                />
+              ) : (
+                <span className={styles.partyAvatarInitial}>
+                  {c.title.charAt(0).toUpperCase()}
+                </span>
+              )}
+            </div>
+            <span className={styles.partyName}>{c.title}</span>
+          </li>
+        ))}
+      </ul>
+    </aside>
+  );
+}
+
 const StoryPage: React.FC<PageProps<StoryData, StoryPageContext>> = ({ data, location, pageContext }) => {
   const story = data.drupal?.node as StoryNode | null;
   const { prevPath, prevTitle, nextPath, nextTitle } = pageContext;
+  const [scrollOpen, setScrollOpen] = useState(false);
 
   if (!story || !story.title) {
     return (
@@ -107,7 +147,7 @@ const StoryPage: React.FC<PageProps<StoryData, StoryPageContext>> = ({ data, loc
     );
   }
 
-  const characters = story.characters ?? [];
+  const characters = story.campaign?.currentParty ?? [];
   const hooks = story.storyHooks ?? [];
 
   return (
@@ -121,81 +161,104 @@ const StoryPage: React.FC<PageProps<StoryData, StoryPageContext>> = ({ data, loc
           All Stories
         </Link>
 
-        <header className={styles.header}>
-          <div className={styles.meta}>
-            {story.storyNumber !== null && story.storyNumber !== undefined && (
-              <span className={styles.session}>Session {story.storyNumber}</span>
+        <div className={styles.storyLayout}>
+
+          {/* Left: action buttons */}
+          {story.body ? <ActionSidebar title={story.title} /> : <div />}
+
+          {/* Center: main content */}
+          <div className={styles.storyMain}>
+            <header className={styles.header}>
+              <div className={styles.meta}>
+                {story.storyNumber !== null && story.storyNumber !== undefined && (
+                  <span className={styles.session}>Session {story.storyNumber}</span>
+                )}
+                {story.sessionDate && (
+                  <time className={styles.date} dateTime={story.sessionDate}>
+                    {new Date(story.sessionDate).toLocaleDateString('en-GB', {
+                      day: 'numeric', month: 'long', year: 'numeric',
+                    })}
+                  </time>
+                )}
+              </div>
+              <h1 className={styles.title}>{story.title}</h1>
+            </header>
+
+            <Divider icon="scroll-unfurled" />
+
+            {story.body && (
+              <div className={styles.scroll}>
+                <button
+                  type="button"
+                  className={styles.scrollDowelBtn}
+                  onClick={() => setScrollOpen(o => !o)}
+                  aria-expanded={scrollOpen}
+                  aria-label={scrollOpen ? 'Roll up chronicle' : 'Unfurl chronicle'}
+                >
+                  <div className={styles.scrollDowel} aria-hidden="true" />
+                  {!scrollOpen && (
+                    <span className={styles.scrollHint}>Tap to unfurl the chronicle</span>
+                  )}
+                </button>
+
+                <div className={`${styles.scrollBody} ${scrollOpen ? styles.scrollBodyOpen : ''}`}>
+                  <div className={styles.scrollBodyInner}>
+                    <div className={styles.parchment}>
+                      <div
+                        className={styles.body}
+                        dangerouslySetInnerHTML={{ __html: cleanHtml(story.body.processed) }}
+                      />
+                      <p className={styles.ornament}>{'-- . -- . --'}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className={styles.scrollDowel} aria-hidden="true" />
+              </div>
             )}
-            {story.sessionDate && (
-              <time className={styles.date} dateTime={story.sessionDate}>
-                {new Date(story.sessionDate).toLocaleDateString('en-GB', {
-                  day: 'numeric', month: 'long', year: 'numeric',
-                })}
-              </time>
+
+            {hooks.length > 0 && (
+              <aside className={styles.hooks}>
+                <h3 className={styles.hooksTitle}>Story Hooks</h3>
+                <ul className={styles.hooksList}>
+                  {hooks.map((hook, i) => (
+                    <li key={`hook-${String(i)}`} className={styles.hookItem}>{hook.value}</li>
+                  ))}
+                </ul>
+              </aside>
             )}
+
+            <nav className={styles.storyNav} aria-label="Story navigation">
+              {prevPath ? (
+                <Link to={prevPath} className={styles.navBtn}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <polyline points="15 18 9 12 15 6"/>
+                  </svg>
+                  <span className={styles.navBtnLabel}>
+                    <span className={styles.navBtnEyebrow}>Previous</span>
+                    <span className={styles.navBtnTitle}>{prevTitle}</span>
+                  </span>
+                </Link>
+              ) : <span />}
+
+              {nextPath && (
+                <Link to={nextPath} className={`${styles.navBtn} ${styles.navBtnNext}`}>
+                  <span className={styles.navBtnLabel}>
+                    <span className={styles.navBtnEyebrow}>Next</span>
+                    <span className={styles.navBtnTitle}>{nextTitle}</span>
+                  </span>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <polyline points="9 18 15 12 9 6"/>
+                  </svg>
+                </Link>
+              )}
+            </nav>
           </div>
-          <h1 className={styles.title}>{story.title}</h1>
-          {characters.length > 0 && (
-            <p className={styles.party}>
-              {characters.map(c => c.title).join(' · ')}
-            </p>
-          )}
-        </header>
 
-        <Divider icon="scroll-unfurled" />
+          {/* Right: party panel */}
+          <PartyPanel characters={characters} />
 
-        {story.body && (
-          <div className={styles.scroll}>
-            <div className={styles.scrollDowel} aria-hidden="true" />
-            <div className={styles.parchment}>
-              <div
-                className={styles.body}
-                dangerouslySetInnerHTML={{ __html: cleanHtml(story.body.processed) }}
-              />
-              <p className={styles.ornament}>{'-- . -- . --'}</p>
-              <StoryMedallions title={story.title} />
-            </div>
-            <div className={styles.scrollDowel} aria-hidden="true" />
-          </div>
-        )}
-
-        {hooks.length > 0 && (
-          <aside className={styles.hooks}>
-            <h3 className={styles.hooksTitle}>Story Hooks</h3>
-            <ul className={styles.hooksList}>
-              {hooks.map((hook, i) => (
-                <li key={i} className={styles.hookItem}>{hook.value}</li>
-              ))}
-            </ul>
-          </aside>
-        )}
-
-        <nav className={styles.storyNav} aria-label="Story navigation">
-          {prevPath ? (
-            <Link to={prevPath} className={styles.navBtn}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <polyline points="15 18 9 12 15 6"/>
-              </svg>
-              <span className={styles.navBtnLabel}>
-                <span className={styles.navBtnEyebrow}>Previous</span>
-                <span className={styles.navBtnTitle}>{prevTitle}</span>
-              </span>
-            </Link>
-          ) : <span />}
-
-          {nextPath && (
-            <Link to={nextPath} className={`${styles.navBtn} ${styles.navBtnNext}`}>
-              <span className={styles.navBtnLabel}>
-                <span className={styles.navBtnEyebrow}>Next</span>
-                <span className={styles.navBtnTitle}>{nextTitle}</span>
-              </span>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <polyline points="9 18 15 12 9 6"/>
-              </svg>
-            </Link>
-          )}
-        </nav>
-
+        </div>
       </div>
     </BaseTemplate>
   );
@@ -211,8 +274,19 @@ export const query = graphql`
           sessionDate
           body { value processed }
           storyHooks { value }
-          characters {
-            ... on Drupal_NodeCharacter { title }
+          campaign {
+            ... on Drupal_TermCampaign {
+              currentParty {
+                ... on Drupal_NodeCharacter {
+                  title
+                  image {
+                    ... on Drupal_MediaImage {
+                      mediaImage { url alt }
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       }

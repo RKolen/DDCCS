@@ -30,7 +30,8 @@ interface CharacterRef {
 }
 
 interface CampaignTerm {
-  name: string;
+  name:         string;
+  currentParty: CharacterRef[] | null;
 }
 
 interface StoryNode {
@@ -39,7 +40,6 @@ interface StoryNode {
   storyNumber: number | null;
   sessionDate: string | null;
   body:        { processed: string } | null;
-  characters:  CharacterRef[] | null;
   campaign:    CampaignTerm | null;
 }
 
@@ -73,7 +73,7 @@ interface StoryPageProps {
 }
 
 function LeftPage({ story, innerRef }: StoryPageProps): React.ReactElement {
-  const characters = story.characters ?? [];
+  const characters = story.campaign?.currentParty ?? [];
   const dateStr    = story.sessionDate ? formatDate(story.sessionDate) : null;
 
   const metaParts: string[] = [];
@@ -380,11 +380,13 @@ export const query = graphql`
           storyNumber
           sessionDate
           body { processed }
-          characters {
-            ... on Drupal_NodeCharacter { title }
-          }
           campaign {
-            ... on Drupal_TermCampaign { name }
+            ... on Drupal_TermCampaign {
+              name
+              currentParty {
+                ... on Drupal_NodeCharacter { title }
+              }
+            }
           }
         }
       }

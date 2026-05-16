@@ -5,6 +5,7 @@ dependencies:
   config:
     - field.field.taxonomy_term.campaign.field_campaign_start_date
     - field.field.taxonomy_term.campaign.field_campaign_status
+    - field.field.taxonomy_term.campaign.field_current_party
     - taxonomy.vocabulary.campaign
   module:
     - options
@@ -19,7 +20,7 @@ content:
     label: hidden
     settings: {  }
     third_party_settings: {  }
-    weight: 2
+    weight: 4
     region: content
   field_campaign_start_date:
     type: string
@@ -35,6 +36,14 @@ content:
     settings: {  }
     third_party_settings: {  }
     weight: 1
+    region: content
+  field_current_party:
+    type: entity_reference_label
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 3
     region: content
 hidden:
   langcode: true

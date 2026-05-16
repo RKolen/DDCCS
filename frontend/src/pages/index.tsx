@@ -8,25 +8,25 @@ import { GameIcon } from '../components/atoms/GameIcon';
 import * as styles from './index.module.css';
 
 interface CharacterNode {
-  id:                    string;
-  title:                 string;
-  level:                 number | null;
-  armorClass:            number | null;
-  maximumHitpoints:      number | null;
-  path:                  string | null;
+  id: string;
+  title: string;
+  level: number | null;
+  armorClass: number | null;
+  maximumHitpoints: number | null;
+  path: string | null;
 }
 
 interface StoryNode {
-  id:          string;
-  title:       string;
+  id: string;
+  title: string;
   storyNumber: number | null;
-  path:        string | null;
+  path: string | null;
 }
 
 interface DashboardData {
   drupal: {
     nodeCharacters: { nodes: CharacterNode[] };
-    nodeStories:    { nodes: StoryNode[] };
+    nodeStories: { nodes: StoryNode[] };
   };
 }
 
@@ -35,7 +35,7 @@ interface CharacterCardProps {
 }
 
 function CharacterCard({ char }: CharacterCardProps): React.ReactElement {
-  const hp   = char.maximumHitpoints ?? 0;
+  const hp = char.maximumHitpoints ?? 0;
   const href = char.path ?? '#';
 
   return (
@@ -63,7 +63,7 @@ function CharacterCard({ char }: CharacterCardProps): React.ReactElement {
 
 const IndexPage: React.FC<PageProps<DashboardData>> = ({ data, location }) => {
   const characters = data.drupal.nodeCharacters.nodes;
-  const stories    = data.drupal.nodeStories.nodes;
+  const stories = data.drupal.nodeStories.nodes;
 
   return (
     <BaseTemplate currentPath={location.pathname}>
@@ -80,7 +80,7 @@ const IndexPage: React.FC<PageProps<DashboardData>> = ({ data, location }) => {
         <div className={styles.grid}>
           <section>
             <div className={styles.sectionHeader}>
-              <h3 className={styles.sectionTitle}>Active Party</h3>
+              <h3 className={styles.sectionTitle}>Character Database, total: {characters.length}</h3>
               <Link to="/characters" className={styles.sectionLink}>Manage</Link>
             </div>
             <div className={styles.charList}>

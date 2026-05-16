@@ -95,6 +95,10 @@ entity_config:
     campaign:
       enabled: true
       query_load_enabled: true
+  media:
+    image:
+      enabled: true
+      query_load_enabled: true
 field_config:
   node:
     character:
@@ -224,8 +228,6 @@ field_config:
       field_body:
         enabled: true
       field_campaign:
-        enabled: true
-      field_characters:
         enabled: true
       field_locations:
         enabled: true
@@ -466,6 +468,18 @@ field_config:
       field_spell_slots_available:
         enabled: true
       field_spell_slots_total:
+        enabled: true
+  taxonomy_term:
+    campaign:
+      field_campaign_start_date:
+        enabled: true
+      field_campaign_status:
+        enabled: true
+      field_current_party:
+        enabled: true
+  media:
+    image:
+      field_media_image:
         enabled: true
 settings:
   exclude_unpublished: true

@@ -1,12 +1,13 @@
-uuid: e20aa668-b3b6-4635-abb7-acc4873fd34f
+uuid: 9cfbd653-b1cf-4a5b-9230-06d35cecd950
 langcode: en
 status: true
 dependencies:
   module:
     - node
-id: node.field_characters
-field_name: field_characters
-entity_type: node
+    - taxonomy
+id: taxonomy_term.field_current_party
+field_name: field_current_party
+entity_type: taxonomy_term
 type: entity_reference
 settings:
   target_type: node
