@@ -182,8 +182,6 @@ field_config:
         enabled: true
       field_notes:
         enabled: true
-      field_npc_type:
-        enabled: true
       field_personality:
         enabled: true
       field_personality_traits:
@@ -245,42 +243,6 @@ field_config:
         enabled: true
     npc:
       path:
-        enabled: true
-      field_abilities_ref:
-        enabled: true
-      field_ability_scores:
-        enabled: true
-      field_armor_class:
-        enabled: true
-      field_class:
-        enabled: true
-      field_faction:
-        enabled: true
-      field_key_traits:
-        enabled: true
-      field_level:
-        enabled: true
-      field_lineage:
-        enabled: true
-      field_location:
-        enabled: true
-      field_maximum_hitpoints:
-        enabled: true
-      field_nickname:
-        enabled: true
-      field_notes:
-        enabled: true
-      field_personality:
-        enabled: true
-      field_profile_type:
-        enabled: true
-      field_recurring:
-        enabled: true
-      field_relationships:
-        enabled: true
-      field_role:
-        enabled: true
-      field_species:
         enabled: true
     item:
       path:

@@ -42,7 +42,6 @@ dependencies:
     - field.field.node.character.field_movement_speed
     - field.field.node.character.field_nickname
     - field.field.node.character.field_notes
-    - field.field.node.character.field_npc_type
     - field.field.node.character.field_personality
     - field.field.node.character.field_personality_traits
     - field.field.node.character.field_plot_hooks
@@ -468,23 +467,7 @@ content:
         collapse_edit_all: collapse_edit_all
         duplicate: duplicate
     third_party_settings:
-      conditional_fields:
-        1d1620e0-2aba-465a-858f-bb08c0150a34:
-          entity_type: node
-          bundle: character
-          dependee: field_character_type
-          settings:
-            state: visible
-            reset: false
-            condition: checked
-            grouping: AND
-            values_set: 1
-            value: ''
-            values: {  }
-            value_form: {  }
-            effect: show
-            effect_options: {  }
-            selector: ''
+      conditional_fields: {  }
   field_defeat_conditions:
     type: text_textarea
     weight: 57
@@ -694,13 +677,6 @@ content:
     settings:
       rows: 5
       placeholder: ''
-    third_party_settings: {  }
-  field_npc_type:
-    type: boolean_checkbox
-    weight: 45
-    region: content
-    settings:
-      display_label: true
     third_party_settings: {  }
   field_personality:
     type: text_textarea

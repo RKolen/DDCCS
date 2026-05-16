@@ -42,7 +42,6 @@ dependencies:
     - field.field.node.character.field_movement_speed
     - field.field.node.character.field_nickname
     - field.field.node.character.field_notes
-    - field.field.node.character.field_npc_type
     - field.field.node.character.field_personality
     - field.field.node.character.field_personality_traits
     - field.field.node.character.field_plot_hooks
@@ -228,16 +227,6 @@ content:
       link_to_entity: false
     third_party_settings: {  }
     weight: 106
-    region: content
-  field_npc_type:
-    type: boolean
-    label: above
-    settings:
-      format: default
-      format_custom_false: ''
-      format_custom_true: ''
-    third_party_settings: {  }
-    weight: 122
     region: content
   field_personality_traits:
     type: text_default
