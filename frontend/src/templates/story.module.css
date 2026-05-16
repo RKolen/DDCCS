@@ -18,8 +18,14 @@
   margin-bottom: var(--space-6);
   transition: color var(--transition-fast);
 }
-.backLink:hover { color: var(--color-gold-mid); }
-.backLink svg { flex-shrink: 0; }
+
+.backLink:hover {
+  color: var(--color-gold-mid);
+}
+
+.backLink svg {
+  flex-shrink: 0;
+}
 
 /* ── Three-column layout ─────────────────────────────────── */
 .storyLayout {
@@ -162,7 +168,14 @@
 .scrollDowelBtn {
   display: block;
   width: 100%;
-  background: none;
+  background:
+    radial-gradient(ellipse at top left, rgba(107, 74, 31, 0.35), transparent 40%),
+    radial-gradient(ellipse at top right, rgba(107, 74, 31, 0.35), transparent 40%),
+    radial-gradient(ellipse at bottom left, rgba(107, 74, 31, 0.35), transparent 40%),
+    radial-gradient(ellipse at bottom right, rgba(107, 74, 31, 0.35), transparent 40%),
+    radial-gradient(circle at 20% 30%, rgba(140, 90, 40, 0.08) 0 1px, transparent 2px),
+    radial-gradient(circle at 80% 60%, rgba(140, 90, 40, 0.10) 0 1px, transparent 2px),
+    linear-gradient(170deg, #efdcb0 0%, #e2c98c 70%, #b89758 100%);
   border: none;
   padding: 0;
   cursor: pointer;
@@ -179,14 +192,14 @@
   position: relative;
   height: 28px;
   background:
-    radial-gradient(circle at 16px 50%, rgba(0,0,0,0.4) 0 2.5px, transparent 3px),
-    radial-gradient(circle at calc(100% - 16px) 50%, rgba(0,0,0,0.4) 0 2.5px, transparent 3px),
+    radial-gradient(circle at 16px 50%, rgba(0, 0, 0, 0.4) 0 2.5px, transparent 3px),
+    radial-gradient(circle at calc(100% - 16px) 50%, rgba(0, 0, 0, 0.4) 0 2.5px, transparent 3px),
     linear-gradient(to bottom, #6b4a1f 0%, #8a6533 18%, #a07a3e 35%, #6b4a1f 60%, #3d2810 100%);
   border-radius: 4px;
   box-shadow:
-    inset 0 1px 0 rgba(255,200,120,0.25),
-    inset 0 -2px 4px rgba(0,0,0,0.5),
-    0 4px 10px rgba(0,0,0,0.55);
+    inset 0 1px 0 rgba(255, 200, 120, 0.25),
+    inset 0 -2px 4px rgba(0, 0, 0, 0.5),
+    0 4px 10px rgba(0, 0, 0, 0.55);
   pointer-events: none;
 }
 
@@ -196,7 +209,6 @@
   font-size: var(--text-sm);
   letter-spacing: var(--tracking-wide);
   text-transform: uppercase;
-  color: var(--color-gold-muted);
   padding: var(--space-3) 0 var(--space-2);
   transition: color var(--transition-fast);
   pointer-events: none;
@@ -225,22 +237,22 @@
   position: relative;
   padding: 48px 56px;
   background:
-    radial-gradient(ellipse at top left, rgba(107,74,31,0.35), transparent 40%),
-    radial-gradient(ellipse at top right, rgba(107,74,31,0.35), transparent 40%),
-    radial-gradient(ellipse at bottom left, rgba(107,74,31,0.35), transparent 40%),
-    radial-gradient(ellipse at bottom right, rgba(107,74,31,0.35), transparent 40%),
-    radial-gradient(circle at 20% 30%, rgba(140,90,40,0.08) 0 1px, transparent 2px),
-    radial-gradient(circle at 80% 60%, rgba(140,90,40,0.10) 0 1px, transparent 2px),
+    radial-gradient(ellipse at top left, rgba(107, 74, 31, 0.35), transparent 40%),
+    radial-gradient(ellipse at top right, rgba(107, 74, 31, 0.35), transparent 40%),
+    radial-gradient(ellipse at bottom left, rgba(107, 74, 31, 0.35), transparent 40%),
+    radial-gradient(ellipse at bottom right, rgba(107, 74, 31, 0.35), transparent 40%),
+    radial-gradient(circle at 20% 30%, rgba(140, 90, 40, 0.08) 0 1px, transparent 2px),
+    radial-gradient(circle at 80% 60%, rgba(140, 90, 40, 0.10) 0 1px, transparent 2px),
     linear-gradient(170deg, #efdcb0 0%, #e2c98c 70%, #b89758 100%);
   color: #2a1e0f;
   font-family: var(--font-body);
   font-size: 17px;
   line-height: 1.75;
   box-shadow:
-    inset 0 8px 20px rgba(107,74,31,0.45),
-    inset 0 -8px 20px rgba(107,74,31,0.45);
-  border-top: 1px solid rgba(107,74,31,0.4);
-  border-bottom: 1px solid rgba(107,74,31,0.4);
+    inset 0 8px 20px rgba(107, 74, 31, 0.45),
+    inset 0 -8px 20px rgba(107, 74, 31, 0.45);
+  border-top: 1px solid rgba(107, 74, 31, 0.4);
+  border-bottom: 1px solid rgba(107, 74, 31, 0.4);
 }
 
 .parchment::before {
@@ -277,16 +289,28 @@
   margin-bottom: 0.5em;
   text-align: center;
 }
-.body h2 { font-size: 26px; }
-.body h3 { font-size: 20px; }
-.body h4 { font-size: 17px; }
-.body h5 { font-size: 15px; }
 
-.body > p:first-child::first-letter,
-.body h5 + p::first-letter,
-.body h4 + p::first-letter,
-.body h3 + p::first-letter,
-.body h2 + p::first-letter {
+.body h2 {
+  font-size: 26px;
+}
+
+.body h3 {
+  font-size: 20px;
+}
+
+.body h4 {
+  font-size: 17px;
+}
+
+.body h5 {
+  font-size: 15px;
+}
+
+.body>p:first-child::first-letter,
+.body h5+p::first-letter,
+.body h4+p::first-letter,
+.body h3+p::first-letter,
+.body h2+p::first-letter {
   font-family: var(--font-display);
   font-size: 4.5em;
   font-weight: 700;
@@ -294,11 +318,19 @@
   line-height: 0.85;
   margin: 0.05em 0.08em 0 0;
   color: #8b1d1a;
-  text-shadow: 1px 1px 0 rgba(255,240,200,0.4);
+  text-shadow: 1px 1px 0 rgba(255, 240, 200, 0.4);
 }
 
-.body strong { color: #8b1d1a; font-weight: 600; font-style: italic; }
-.body em     { font-style: italic; color: #4a3520; }
+.body strong {
+  color: #8b1d1a;
+  font-weight: 600;
+  font-style: italic;
+}
+
+.body em {
+  font-style: italic;
+  color: #4a3520;
+}
 
 .ornament {
   text-align: center;
@@ -364,24 +396,30 @@
   max-width: 48%;
   transition: background var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast);
 }
+
 .navBtn:hover {
   background: var(--color-bg-hover);
   border-color: var(--color-gold-mid);
   color: var(--color-gold-bright);
 }
-.navBtn svg { flex-shrink: 0; }
+
+.navBtn svg {
+  flex-shrink: 0;
+}
 
 .navBtnLabel {
   display: flex;
   flex-direction: column;
   min-width: 0;
 }
+
 .navBtnEyebrow {
   font-size: 9px;
   letter-spacing: var(--tracking-widest);
   color: var(--color-gold-muted);
   text-transform: uppercase;
 }
+
 .navBtnTitle {
   font-size: var(--text-sm);
   color: inherit;
@@ -390,7 +428,10 @@
   text-overflow: ellipsis;
 }
 
-.navBtnNext { margin-left: auto; text-align: right; }
+.navBtnNext {
+  margin-left: auto;
+  text-align: right;
+}
 
 /* ── Action medallions ───────────────────────────────────── */
 .medallion {
@@ -427,9 +468,18 @@
   transform: translateY(-1px);
 }
 
-.medallion:hover svg { color: #2a1e0f; }
-.medallion:active { transform: translateY(0); }
-.medallion:disabled { cursor: progress; opacity: 0.7; }
+.medallion:hover svg {
+  color: #2a1e0f;
+}
+
+.medallion:active {
+  transform: translateY(0);
+}
+
+.medallion:disabled {
+  cursor: progress;
+  opacity: 0.7;
+}
 
 .medallionActive {
   border-color: #b04030;
@@ -557,10 +607,19 @@
 }
 
 @keyframes medallionPulse {
-  0%, 100% { box-shadow: inset 0 1px 0 rgba(255, 240, 200, 0.4), 0 0 0 0 rgba(176, 64, 48, 0.5); }
-  50%       { box-shadow: inset 0 1px 0 rgba(255, 240, 200, 0.4), 0 0 0 6px rgba(176, 64, 48, 0); }
+
+  0%,
+  100% {
+    box-shadow: inset 0 1px 0 rgba(255, 240, 200, 0.4), 0 0 0 0 rgba(176, 64, 48, 0.5);
+  }
+
+  50% {
+    box-shadow: inset 0 1px 0 rgba(255, 240, 200, 0.4), 0 0 0 6px rgba(176, 64, 48, 0);
+  }
 }
 
 @keyframes medallionSpin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
