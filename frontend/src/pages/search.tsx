@@ -10,10 +10,8 @@ import type { SearchDecomposition, SearchResponse } from '../types/search';
 const CONTENT_TYPES = [
   { value: '', label: 'All types' },
   { value: 'character', label: 'Characters' },
-  { value: 'npc', label: 'NPCs' },
   { value: 'spell', label: 'Spells' },
   { value: 'item', label: 'Items' },
-  { value: 'feat', label: 'Feats' },
   { value: 'monster', label: 'Monsters' },
 ];
 

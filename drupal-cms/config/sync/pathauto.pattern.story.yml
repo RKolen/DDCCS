@@ -1,0 +1,23 @@
+uuid: e6e42d4f-9d52-4cfe-806f-d0f4d80e9f6f
+langcode: en
+status: true
+dependencies:
+  config:
+    - node.type.story
+  module:
+    - node
+id: story
+label: Story
+type: 'canonical_entities:node'
+pattern: '/[node:field_campaign:entity:name]/[node:field_story_number]/[node:title]'
+selection_criteria:
+  71def42f-1fdf-484b-ba9a-c1b45a2f1462:
+    id: 'entity_bundle:node'
+    negate: false
+    context_mapping:
+      node: node
+    bundles:
+      story: story
+selection_logic: and
+weight: -5
+relationships: {  }

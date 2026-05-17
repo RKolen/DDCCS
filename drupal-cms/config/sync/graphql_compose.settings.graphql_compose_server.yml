@@ -11,11 +11,6 @@ entity_config:
     query_load_enabled: '1'
     edges_enabled: '1'
     simple_queries: '1'
-  node--npc:
-    enabled: '1'
-    query_load_enabled: '1'
-    edges_enabled: '1'
-    simple_queries: '1'
   node--item:
     enabled: '1'
     query_load_enabled: '1'
@@ -50,11 +45,6 @@ entity_config:
       field_config:
         field_campaign:
           enabled: 'TRUE'
-    npc:
-      enabled: true
-      query_load_enabled: true
-      edges_enabled: true
-      simple_queries: '1'
     item:
       enabled: true
       query_load_enabled: true
@@ -240,9 +230,6 @@ field_config:
       field_story_number:
         enabled: true
       field_story_tags:
-        enabled: true
-    npc:
-      path:
         enabled: true
     item:
       path:

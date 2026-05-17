@@ -1,0 +1,23 @@
+uuid: 21ace9cc-4a94-424a-bc77-6e8902364f82
+langcode: en
+status: true
+dependencies:
+  config:
+    - node.type.character
+  module:
+    - node
+id: character
+label: Character
+type: 'canonical_entities:node'
+pattern: '/[node:content-type]/[node:field_character_type]/[node:title]'
+selection_criteria:
+  f47dfa93-7798-4a9f-81be-ea3ac73bc8c7:
+    id: 'entity_bundle:node'
+    negate: false
+    context_mapping:
+      node: node
+    bundles:
+      character: character
+selection_logic: and
+weight: -5
+relationships: {  }

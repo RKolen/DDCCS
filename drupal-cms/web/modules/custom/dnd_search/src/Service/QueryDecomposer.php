@@ -24,10 +24,8 @@ class QueryDecomposer {
 
   private const VALID_ENTITY_TYPES = [
     'character',
-    'npc',
     'spell',
     'item',
-    'feat',
     'monster',
   ];
 
@@ -227,6 +225,9 @@ Return ONLY valid JSON in this exact shape — no prose, no markdown fences:
 Examples:
   Input:  "find character who has a backpack"
   Output: {"backends":["entity_query","milvus"],"entity_types":["character"],"filters":{"equipment":["Backpack"],"species":[],"class":[],"campaign":[]},"semantic_query":"adventurer character","keyword_query":""}
+
+  Input:  "list all monsters"
+  Output: {"backends":["entity_query","solr"],"entity_types":["monster"],"filters":{"equipment":[],"species":[],"class":[],"campaign":[]},"semantic_query":"","keyword_query":"monster"}
 
   Input:  "brooding ranger with a dark past"
   Output: {"backends":["milvus"],"entity_types":[],"filters":{"equipment":[],"species":[],"class":[],"campaign":[]},"semantic_query":"brooding dark troubled past ranger","keyword_query":""}

@@ -56,17 +56,21 @@ if [[ ! -f ".env.development" ]]; then
   echo "  Skipping Gatsby dev server."
   GATSBY_STARTED=false
 else
+  # Always kill port 8000 (the Gatsby dev server port) regardless of $GATSBY_PORT.
+  # Running `npm run develop` manually without this script leaves stale processes
+  # that serve old broken bundles even after code changes.
+  for PORT in 8000 "${GATSBY_PORT}"; do
+    OLD=$(lsof -ti :"$PORT" 2>/dev/null || true)
+    if [[ -n "$OLD" ]]; then
+      kill "$OLD" 2>/dev/null && echo "    Killed existing process(es) on :$PORT — PIDs: $OLD"
+      for i in {1..10}; do
+        lsof -ti :"$PORT" > /dev/null 2>&1 || break
+        sleep 1
+      done
+    fi
+  done
   echo ""
-  echo "==> Stopping any existing process on port $GATSBY_PORT..."
-  OLD_GATSBY=$(lsof -ti :"$GATSBY_PORT" 2>/dev/null || true)
-  if [[ -n "$OLD_GATSBY" ]]; then
-    kill "$OLD_GATSBY" 2>/dev/null && echo "    Killed existing process(es): $OLD_GATSBY"
-    # Wait until the port is actually free (max 10 s).
-    for i in {1..10}; do
-      lsof -ti :"$GATSBY_PORT" > /dev/null 2>&1 || break
-      sleep 1
-    done
-  fi
+  echo "==> Port ${GATSBY_PORT} is free."
 
   echo "==> Clearing Gatsby cache..."
   npm run clean > /dev/null 2>&1

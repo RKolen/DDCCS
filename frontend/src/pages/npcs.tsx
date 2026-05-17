@@ -1,3 +1,10 @@
+/**
+ * NPCs page — /npcs/
+ *
+ * NPCs are character nodes with field_character_type = false.
+ * Queries nodeCharacters and filters to characterType === false.
+ */
+
 import React from 'react';
 import { graphql } from 'gatsby';
 import type { HeadFC, PageProps } from 'gatsby';
@@ -6,20 +13,22 @@ import { NPCCard } from '../components/organisms/NPCCard';
 import * as styles from './npcs.module.css';
 
 interface NPCNode {
-  id:          string;
-  title:       string;
-  role:        string | null;
-  personality: { value: string } | null;
+  id:            string;
+  title:         string;
+  characterType: boolean | null;
+  role:          string | null;
+  personality:   { value: string } | null;
+  path:          string | null;
 }
 
 interface NPCListData {
   drupal: {
-    nodeNpcs: { nodes: NPCNode[] };
+    nodeCharacters: { nodes: NPCNode[] };
   };
 }
 
 const NPCsPage: React.FC<PageProps<NPCListData>> = ({ data, location }) => {
-  const npcs = data.drupal.nodeNpcs.nodes;
+  const npcs = data.drupal.nodeCharacters.nodes.filter(n => n.characterType === false);
 
   return (
     <BaseTemplate currentPath={location.pathname}>
@@ -51,12 +60,14 @@ const NPCsPage: React.FC<PageProps<NPCListData>> = ({ data, location }) => {
 export const query = graphql`
   query NPCList {
     drupal {
-      nodeNpcs(first: 100) {
+      nodeCharacters(first: 200) {
         nodes {
           id
           title
+          characterType
           role
           personality { value }
+          path
         }
       }
     }

@@ -7,6 +7,7 @@ import { NPCCard } from '../components/organisms/NPCCard';
 interface NpcNode {
   title:       string;
   personality: { value: string } | null;
+  role:        string | null;
   path:        string | null;
 }
 
@@ -32,7 +33,7 @@ const NPCPage: React.FC<PageProps<NPCData>> = ({ data, location }) => {
       <div style={{ padding: 'var(--space-8) var(--space-10)', maxWidth: 760, margin: '0 auto' }}>
         <NPCCard
           name={npc.title}
-          role=""
+          role={npc.role ?? ''}
           location={undefined}
           personality={npc.personality?.value ?? ''}
           relationships={undefined}
@@ -46,9 +47,10 @@ export const query = graphql`
   query NPCPage($id: ID!) {
     drupal {
       node(id: $id) {
-        ... on Drupal_NodeNpc {
+        ... on Drupal_NodeCharacter {
           title
           personality { value }
+          role
           path
         }
       }

@@ -10,31 +10,22 @@ const devAgent = new https.Agent({ rejectUnauthorized: false });
 interface DrupalNode {
   id: string;
   path: string | null;
+  characterType: boolean | null;
 }
 
-interface DrupalStoryNode extends DrupalNode {
+interface DrupalStoryNode {
+  id: string;
+  path: string | null;
   title: string;
   storyNumber: number | null;
 }
 
-interface DrupalNodeConnection {
-  nodes: DrupalNode[];
-}
-
-interface DrupalStoryConnection {
-  nodes: DrupalStoryNode[];
-}
-
 interface CharactersQueryData {
-  drupal: { nodeCharacters: DrupalNodeConnection };
-}
-
-interface NpcsQueryData {
-  drupal: { nodeNpcs: DrupalNodeConnection };
+  drupal: { nodeCharacters: { nodes: DrupalNode[] } };
 }
 
 interface StoriesQueryData {
-  drupal: { nodeStories: DrupalStoryConnection };
+  drupal: { nodeStories: { nodes: DrupalStoryNode[] } };
 }
 
 export const createPages: GatsbyNode['createPages'] = async ({ graphql, actions }) => {
@@ -53,17 +44,7 @@ export const createPages: GatsbyNode['createPages'] = async ({ graphql, actions 
     {
       drupal {
         nodeCharacters(first: 100) {
-          nodes { id path }
-        }
-      }
-    }
-  `);
-
-  const npcQuery = await graphql<NpcsQueryData>(`
-    {
-      drupal {
-        nodeNpcs(first: 100) {
-          nodes { id path }
+          nodes { id path characterType }
         }
       }
     }
@@ -80,13 +61,13 @@ export const createPages: GatsbyNode['createPages'] = async ({ graphql, actions 
   `);
 
   characterQuery.data?.drupal.nodeCharacters.nodes.forEach(node => {
-    const pagePath = node.path ? node.path : `/characters/${node.id}`;
-    createPage({ path: pagePath, component: characterTemplate, context: { id: node.id } });
-  });
-
-  npcQuery.data?.drupal.nodeNpcs.nodes.forEach(node => {
-    const pagePath = node.path ? node.path : `/npcs/${node.id}`;
-    createPage({ path: pagePath, component: npcTemplate, context: { id: node.id } });
+    if (node.characterType === false) {
+      const pagePath = node.path ? node.path : `/npcs/${node.id}`;
+      createPage({ path: pagePath, component: npcTemplate, context: { id: node.id } });
+    } else {
+      const pagePath = node.path ? node.path : `/characters/${node.id}`;
+      createPage({ path: pagePath, component: characterTemplate, context: { id: node.id } });
+    }
   });
 
   // Sort stories by storyNumber so prev/next are in session order.
