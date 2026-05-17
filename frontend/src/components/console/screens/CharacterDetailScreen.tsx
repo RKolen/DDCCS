@@ -9,12 +9,27 @@ import * as React from 'react';
 import { Link } from 'gatsby';
 import type { ScreenProps } from '../ScreenRouter';
 import { useConsoleData, playerCharacters, npcCharacters } from '../ConsoleContext';
+import type { DrupalCampaign } from '../ConsoleContext';
+import { drupalAdminUrl } from '../../../utils/drupalLinks';
+
+function partyIdsForCampaign(campaigns: DrupalCampaign[], name: string): Set<string> {
+  const camp = campaigns.find(c => c.name === name);
+  return new Set(camp?.currentPartyIds ?? []);
+}
 import { Icon } from '../atoms';
 
 export function CharacterDetailScreen({ ctx, setCtx }: ScreenProps): React.ReactElement {
-  const data    = useConsoleData();
-  const isNpc   = Boolean(ctx.npcMode);
-  const roster  = isNpc ? npcCharacters(data) : playerCharacters(data);
+  const data       = useConsoleData();
+  const isNpc      = Boolean(ctx.npcMode);
+  const allInType  = isNpc ? npcCharacters(data) : playerCharacters(data);
+  // PCs: filter by the campaign's currentPartyIds.
+  // NPCs: show all (their campaign link isn't via currentParty).
+  const partyIds = (!isNpc && ctx.activeCampaignName)
+    ? partyIdsForCampaign(data.campaigns, ctx.activeCampaignName)
+    : null;
+  const roster = (partyIds && partyIds.size > 0)
+    ? allInType.filter(c => partyIds.has(c.id))
+    : allInType;
   const idx     = ctx.charIdx ?? 0;
   const char    = roster[idx] ?? null;
   const eyebrow = isNpc ? 'NPC Profile' : 'Character Sheet';
@@ -96,7 +111,7 @@ export function CharacterDetailScreen({ ctx, setCtx }: ScreenProps): React.React
                   </Link>
                 )}
                 <a
-                  href={`https://drupal-cms.ddev.site/node/${char.id}/edit`}
+                  href={drupalAdminUrl(`/node/${char.id}/edit`)}
                   target="_blank"
                   rel="noreferrer"
                   className="ghost-btn"

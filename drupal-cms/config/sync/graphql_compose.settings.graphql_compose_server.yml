@@ -85,6 +85,9 @@ entity_config:
     campaign:
       enabled: true
       query_load_enabled: true
+    class:
+      enabled: true
+      query_load_enabled: true
   media:
     image:
       enabled: true
@@ -124,6 +127,7 @@ field_config:
         enabled: true
       field_class:
         enabled: true
+        name_sdl: characterClasses
       field_defeat_conditions:
         enabled: true
       field_encounter_tactics:
@@ -400,6 +404,7 @@ field_config:
         enabled: true
       field_class:
         enabled: true
+        name_sdl: classRef
       field_level:
         enabled: true
       field_subclass_ref:

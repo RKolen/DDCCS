@@ -144,6 +144,7 @@ ddev drush cr    # rebuild Drupal cache
 
 | Module | Path | Purpose |
 |--------|------|---------|
+| `ddccs_gatsby_auth` | `web/modules/custom/ddccs_gatsby_auth/` | Authenticates Gatsby GraphQL sourcing with a bearer token mapped to `gatsby_user` |
 | `dnd_migrate` | `web/modules/custom/dnd_migrate/` | Migrates D&D game data from JSON source files into Drupal content |
 | `entity_lock` | `web/modules/custom/entity_lock/` | Prevents deletion (and unpublishing) of any entity type via a locked-entity config list and admin UI |
 

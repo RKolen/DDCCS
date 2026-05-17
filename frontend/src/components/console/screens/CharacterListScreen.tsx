@@ -11,37 +11,45 @@ import { Link } from 'gatsby';
 import type { ScreenProps } from '../ScreenRouter';
 import { Icon } from '../atoms';
 import { useConsoleData, playerCharacters, npcCharacters } from '../ConsoleContext';
-import type { DrupalCharacter } from '../ConsoleContext';
+import type { DrupalCharacter, DrupalCampaign } from '../ConsoleContext';
+import { drupalAdminUrl } from '../../../utils/drupalLinks';
 
-function CharCard({
-  char, onClick,
-}: { char: DrupalCharacter; onClick: () => void }): React.ReactElement {
+function CharCard({ char }: { char: DrupalCharacter }): React.ReactElement {
   const initials = char.title.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
+  const href = char.path ?? '#';
+
+  const classLabel = char.characterType !== false
+    ? [char.characterClass, char.level !== null ? `Lv ${char.level}` : null].filter(Boolean).join(' · ')
+    : char.role ?? null;
+
   return (
-    <button className="char-card" onClick={onClick}>
+    <Link to={href} className="char-card" style={{ textDecoration: 'none' }}>
       <div className="char-portrait">
         {char.imageUrl
-          ? <img src={char.imageUrl} alt={char.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          ? <img src={char.imageUrl} alt={char.title} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
           : <span className="portrait-placeholder">{initials}</span>
         }
       </div>
       <div className="char-card-body">
         <h4>{char.title}</h4>
         {char.nickname && <span className="char-card-meta" style={{ fontStyle: 'italic' }}>{char.nickname}</span>}
-        {char.characterClass && <span className="char-card-meta">{char.characterClass}</span>}
+        {classLabel && <span className="char-card-meta">{classLabel}</span>}
         {char.pronouns && <span className="char-card-pron">{char.pronouns}</span>}
-        {char.campaign && <span className="char-card-pron">{char.campaign}</span>}
       </div>
       <div className="char-card-stats">
-        {char.level !== null      && <span>Lv {char.level}</span>}
         {char.armorClass !== null && <span>AC {char.armorClass}</span>}
         {char.maximumHitpoints !== null && <span>HP {char.maximumHitpoints}</span>}
       </div>
-    </button>
+    </Link>
   );
 }
 
-export function CharacterListScreen({ ctx, setCtx }: ScreenProps): React.ReactElement {
+function partyIdsForCampaign(campaigns: DrupalCampaign[], name: string): Set<string> {
+  const camp = campaigns.find(c => c.name === name);
+  return new Set(camp?.currentPartyIds ?? []);
+}
+
+export function CharacterListScreen({ ctx }: ScreenProps): React.ReactElement {
   const data      = useConsoleData();
   const isNpcMode = Boolean(ctx.npcMode);
   const roster    = isNpcMode ? npcCharacters(data) : playerCharacters(data);
@@ -49,19 +57,23 @@ export function CharacterListScreen({ ctx, setCtx }: ScreenProps): React.ReactEl
   const [search,   setSearch]   = React.useState('');
   const [campaign, setCampaign] = React.useState(ctx.activeCampaignName ?? '');
 
-  const campaigns = Array.from(new Set(roster.map(c => c.campaign).filter(Boolean))) as string[];
+  // PCs: filter by campaign's currentPartyIds (characters are linked via the campaign term).
+  // NPCs: filter by their own campaign field if set, otherwise show all.
+  const partyIds = (!isNpcMode && campaign) ? partyIdsForCampaign(data.campaigns, campaign) : null;
 
   const filtered = roster.filter(c => {
-    const matchSearch   = !search   || c.title.toLowerCase().includes(search.toLowerCase()) || (c.nickname ?? '').toLowerCase().includes(search.toLowerCase());
-    const matchCampaign = !campaign || c.campaign === campaign;
+    const matchSearch = !search
+      || c.title.toLowerCase().includes(search.toLowerCase())
+      || (c.nickname ?? '').toLowerCase().includes(search.toLowerCase());
+    const matchCampaign = isNpcMode
+      ? (!campaign || c.campaign === campaign || c.campaign === null)
+      : (!partyIds || partyIds.size === 0 || partyIds.has(c.id));
     return matchSearch && matchCampaign;
   });
 
   const eyebrow = isNpcMode ? 'NPCs' : 'Characters';
   const heading = isNpcMode ? 'Major NPCs' : 'All Characters';
-  const drupalAddUrl = isNpcMode
-    ? 'https://drupal-cms.ddev.site/node/add/character'
-    : 'https://drupal-cms.ddev.site/node/add/character';
+  const drupalAddUrl = drupalAdminUrl('/node/add/character');
 
   if (roster.length === 0) {
     return (
@@ -120,10 +132,10 @@ export function CharacterListScreen({ ctx, setCtx }: ScreenProps): React.ReactEl
             onChange={e => setSearch(e.target.value)}
           />
         </div>
-        {campaigns.length > 1 && (
+        {data.campaigns.length > 1 && (
           <select value={campaign} onChange={e => setCampaign(e.target.value)}>
             <option value="">All campaigns</option>
-            {campaigns.map(c => <option key={c} value={c}>{c}</option>)}
+            {data.campaigns.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
           </select>
         )}
         <span className="muted mono" style={{ fontSize: 11 }}>
@@ -134,24 +146,9 @@ export function CharacterListScreen({ ctx, setCtx }: ScreenProps): React.ReactEl
       {/* Card grid */}
       {filtered.length > 0 ? (
         <div className="char-grid">
-          {filtered.map(char => {
-            const idx = roster.indexOf(char);
-            return (
-              <CharCard
-                key={char.id}
-                char={char}
-                onClick={() => setCtx({
-                  ...ctx,
-                  charIdx: idx,
-                  _jumpTo: {
-                    sectionId: isNpcMode ? 'npcs' : 'characters',
-                    itemId: isNpcMode ? 'n-view' : 'view',
-                    charIdx: idx,
-                  },
-                })}
-              />
-            );
-          })}
+          {filtered.map(char => (
+            <CharCard key={char.id} char={char} />
+          ))}
         </div>
       ) : (
         <p style={{ fontFamily: 'var(--font-body)', color: 'var(--ink-dim)', fontStyle: 'italic' }}>

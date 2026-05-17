@@ -1,0 +1,8 @@
+name: 'DDCCS Gatsby Auth'
+type: module
+description: 'Provides bearer token authentication for Gatsby GraphQL sourcing.'
+package: 'DDCCS'
+core_version_requirement: ^11
+dependencies:
+  - drupal:graphql
+  - drupal:user

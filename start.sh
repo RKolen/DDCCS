@@ -18,6 +18,23 @@ if [[ -f "$SCRIPT_DIR/.env" ]]; then
   set +a
 fi
 
+DRUPAL_URL="${DRUPAL_URL:-${DRUPAL_BASE_URL:-https://drupal-cms.ddev.site}}"
+GATSBY_HOST="${GATSBY_HOST:-localhost}"
+GATSBY_PORT="${GATSBY_PORT:-8000}"
+GATSBY_DEFAULT_PORT="${GATSBY_DEFAULT_PORT:-8000}"
+GATSBY_CLEAN_ON_START="${GATSBY_CLEAN_ON_START:-true}"
+GATSBY_KILL_STALE_LISTENERS="${GATSBY_KILL_STALE_LISTENERS:-true}"
+GATSBY_LOG_FILE="${GATSBY_LOG_FILE:-$SCRIPT_DIR/.gatsby.log}"
+SIDECAR_HOST="${SIDECAR_HOST:-localhost}"
+SIDECAR_PORT="${SIDECAR_PORT:-8765}"
+SIDECAR_LOG_FILE="${SIDECAR_LOG_FILE:-$SCRIPT_DIR/.sidecar.log}"
+OLLAMA_HOST="${OLLAMA_HOST:-localhost}"
+OLLAMA_PORT="${OLLAMA_PORT:-11434}"
+DDEV_OLLAMA_HOST="${DDEV_OLLAMA_HOST:-ddev-drupal-cms-ollama}"
+MILVUS_HOST="${MILVUS_HOST:-localhost}"
+MILVUS_PORT="${MILVUS_PORT:-19530}"
+MKCERT_CA="${MKCERT_CA:-$HOME/.local/share/mkcert/rootCA.pem}"
+
 NO_CLI=false
 for arg in "$@"; do
   [[ "$arg" == "--no-cli" ]] && NO_CLI=true
@@ -31,18 +48,18 @@ cd "$DRUPAL_DIR"
 ddev start
 
 echo "    Drupal:  $DRUPAL_URL"
-echo "    Ollama:  http://localhost:$OLLAMA_PORT (inside ddev: http://ddev-drupal-cms-ollama:$OLLAMA_PORT)"
-echo "    Milvus:  localhost:$MILVUS_PORT"
+echo "    Ollama:  http://$OLLAMA_HOST:$OLLAMA_PORT (inside ddev: http://$DDEV_OLLAMA_HOST:$OLLAMA_PORT)"
+echo "    Milvus:  $MILVUS_HOST:$MILVUS_PORT"
 
 # ---------------------------------------------------------------------------
 # 2. Search query parser sidecar (background)
 # ---------------------------------------------------------------------------
 echo ""
 echo "==> Starting search query parser sidecar (background)..."
-python3 run_sidecar.py > "$SCRIPT_DIR/.sidecar.log" 2>&1 &
+python3 run_sidecar.py > "$SIDECAR_LOG_FILE" 2>&1 &
 SIDECAR_PID=$!
-echo "    Sidecar PID: $SIDECAR_PID (logs: .sidecar.log)"
-echo "    Sidecar:     http://localhost:$SIDECAR_PORT"
+echo "    Sidecar PID: $SIDECAR_PID (logs: $SIDECAR_LOG_FILE)"
+echo "    Sidecar:     http://$SIDECAR_HOST:$SIDECAR_PORT"
 
 # ---------------------------------------------------------------------------
 # 3. Gatsby frontend (dev server in background)
@@ -56,32 +73,37 @@ if [[ ! -f ".env.development" ]]; then
   echo "  Skipping Gatsby dev server."
   GATSBY_STARTED=false
 else
-  # Always kill port 8000 (the Gatsby dev server port) regardless of $GATSBY_PORT.
-  # Running `npm run develop` manually without this script leaves stale processes
-  # that serve old broken bundles even after code changes.
-  for PORT in 8000 "${GATSBY_PORT}"; do
-    OLD=$(lsof -ti :"$PORT" 2>/dev/null || true)
-    if [[ -n "$OLD" ]]; then
-      kill "$OLD" 2>/dev/null && echo "    Killed existing process(es) on :$PORT — PIDs: $OLD"
-      for i in {1..10}; do
-        lsof -ti :"$PORT" > /dev/null 2>&1 || break
+  if [[ "$GATSBY_KILL_STALE_LISTENERS" == "true" ]]; then
+    # Only stop processes listening on Gatsby ports. Plain `lsof -ti :PORT`
+    # also returns browser clients connected to that port, which can close tabs.
+    declare -A CHECKED_PORTS=()
+    for PORT in "$GATSBY_DEFAULT_PORT" "$GATSBY_PORT"; do
+      [[ -n "${CHECKED_PORTS[$PORT]:-}" ]] && continue
+      CHECKED_PORTS[$PORT]=1
+      OLD=$(lsof -tiTCP:"$PORT" -sTCP:LISTEN 2>/dev/null || true)
+      if [[ -n "$OLD" ]]; then
+        kill $OLD 2>/dev/null && echo "    Stopped Gatsby listener(s) on :$PORT - PIDs: $OLD"
         sleep 1
-      done
-    fi
-  done
+      fi
+    done
+  fi
   echo ""
   echo "==> Port ${GATSBY_PORT} is free."
 
-  echo "==> Clearing Gatsby cache..."
-  npm run clean > /dev/null 2>&1
+  if [[ "$GATSBY_CLEAN_ON_START" == "true" ]]; then
+    echo "==> Clearing Gatsby cache..."
+    npm run clean > /dev/null 2>&1
+  fi
 
   echo "==> Starting Gatsby dev server (background)..."
   # Answer Gatsby's interactive port-conflict prompt with 'n' via stdin so
   # the background process never blocks waiting for keyboard input.
-  echo "n" | npm run develop > "$SCRIPT_DIR/.gatsby.log" 2>&1 &
+  # Trust DDEV's mkcert certificate so gatsby-source-graphql can reach site.
+  # The snap mkcert (used by VS Code) has a different CAROOT than the system mkcert used by DDEV.
+  echo "n" | NODE_EXTRA_CA_CERTS="$MKCERT_CA" npm run develop > "$GATSBY_LOG_FILE" 2>&1 &
   GATSBY_PID=$!
-  echo "    Gatsby PID: $GATSBY_PID (logs: .gatsby.log)"
-  echo "    Frontend:   http://localhost:$GATSBY_PORT"
+  echo "    Gatsby PID: $GATSBY_PID (logs: $GATSBY_LOG_FILE)"
+  echo "    Frontend:   http://$GATSBY_HOST:$GATSBY_PORT"
   GATSBY_STARTED=true
 fi
 

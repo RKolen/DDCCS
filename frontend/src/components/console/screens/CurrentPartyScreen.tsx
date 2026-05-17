@@ -11,6 +11,7 @@ import { Link } from 'gatsby';
 import type { ScreenProps } from '../ScreenRouter';
 import { useConsoleData, playerCharacters, storiesForCampaign } from '../ConsoleContext';
 import { Icon } from '../atoms';
+import { drupalAdminUrl } from '../../../utils/drupalLinks';
 
 export function CurrentPartyScreen({ ctx }: ScreenProps): React.ReactElement {
   const data         = useConsoleData();
@@ -49,7 +50,7 @@ export function CurrentPartyScreen({ ctx }: ScreenProps): React.ReactElement {
             <Icon name="book" size={11} /> Story log
           </Link>
           <a
-            href="https://drupal-cms.ddev.site/node/add/story"
+            href={drupalAdminUrl('/node/add/story')}
             target="_blank"
             rel="noreferrer"
             className="primary-btn"

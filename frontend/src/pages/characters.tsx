@@ -20,6 +20,7 @@ interface CharacterNode {
   id:               string;
   title:            string;
   firstName:        string | null;
+  characterType:    boolean | null;
   level:            number | null;
   armorClass:       number | null;
   maximumHitpoints: number | null;
@@ -31,7 +32,7 @@ interface CharacterNode {
 interface CharactersData {
   drupal: {
     nodeCharacters: { nodes: CharacterNode[] };
-  };
+  } | null;
 }
 
 // ── Character card ────────────────────────────────────────────────────────────
@@ -99,7 +100,7 @@ function EmptyState(): React.ReactElement {
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 const CharactersPage: React.FC<PageProps<CharactersData>> = ({ data, location }) => {
-  const characters = data.drupal.nodeCharacters.nodes;
+  const characters = data.drupal?.nodeCharacters.nodes.filter(char => char.characterType !== false) ?? [];
 
   return (
     <BaseTemplate currentPath={location.pathname}>
@@ -137,6 +138,7 @@ export const query = graphql`
           id
           title
           firstName
+          characterType
           level
           armorClass
           maximumHitpoints

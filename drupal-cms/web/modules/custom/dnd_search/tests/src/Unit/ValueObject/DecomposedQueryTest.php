@@ -51,6 +51,15 @@ class DecomposedQueryTest extends TestCase {
 
   /**
    * Tests that hasFilters() returns TRUE when any filter list is non-empty.
+   *
+   * @param array<string> $equipment
+   *   Equipment filter values.
+   * @param array<string> $species
+   *   Species filter values.
+   * @param array<string> $classes
+   *   Class filter values.
+   * @param array<string> $campaigns
+   *   Campaign filter values.
    */
   #[\PHPUnit\Framework\Attributes\DataProvider('provideFilterCombinations')]
   public function testHasFiltersReturnsTrueForAnyNonEmptyFilter(

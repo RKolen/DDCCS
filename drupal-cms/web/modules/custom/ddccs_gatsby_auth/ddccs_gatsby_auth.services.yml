@@ -1,0 +1,11 @@
+services:
+  ddccs_gatsby_auth.authentication.gatsby_token:
+    class: Drupal\ddccs_gatsby_auth\Authentication\Provider\GatsbyTokenAuth
+    arguments: ['@entity_type.manager']
+    tags:
+      - { name: authentication_provider, provider_id: ddccs_gatsby_token, priority: 200 }
+
+  ddccs_gatsby_auth.route_subscriber:
+    class: Drupal\ddccs_gatsby_auth\Routing\GraphqlRouteSubscriber
+    tags:
+      - { name: event_subscriber }

@@ -985,6 +985,7 @@ kbd {
   gap: 14px;
 }
 .char-card {
+  display: block;
   background: var(--canvas-raised);
   border: 1px solid var(--rule);
   border-radius: 4px;

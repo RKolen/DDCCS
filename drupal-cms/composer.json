@@ -47,6 +47,7 @@
         "drupal/entity_clone": "^2.0@beta",
         "drupal/entity_usage": "^2.0@beta",
         "drupal/field_group": "^4.0",
+        "drupal/flood_control": "^3.0",
         "drupal/focal_point": "^2.1",
         "drupal/gatsby": "^2.0@RC",
         "drupal/gin": "^5",

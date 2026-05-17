@@ -158,6 +158,9 @@ const IndexPage: React.FC<PageProps<ConsoleQueryData>> = ({ data }) => (
      Confirmed in stories.tsx      → storyNumber, campaign.name
      Enabled in graphql_compose,
        not yet in a working query  → pronouns, species, background, campaignStatus
+     Pending Drupal config import  → characterClasses (field_class renamed via
+       name_sdl to avoid JS `class` keyword; also needs taxonomy_term.class
+       enabled in graphql_compose settings). Re-add after `ddev drush cim`.
    ──────────────────────────────────────────────────────────── */
 
 export const query = graphql`
