@@ -87,12 +87,12 @@ function LiveCampaignChip({ campaigns, activeName, onSwitch }: CampaignChipProps
 
 const SECTION_DEFAULTS: Record<MenuSection['id'], string> = {
   characters: 'list',
-  stories:    'work-series',
-  read:       'r-story',
-  npcs:       'n-list',
-  config:     'c-view',
-  model:      'm-switch',
-  tools:      't-recent',
+  stories: 'work-series',
+  read: 'r-story',
+  npcs: 'n-list',
+  config: 'c-view',
+  model: 'm-switch',
+  tools: 't-recent',
 };
 
 interface StatelyLedgerProps {
@@ -109,15 +109,17 @@ export function StatelyLedger({
   liveData,
 }: StatelyLedgerProps): React.ReactElement {
   const [activeSection, setActiveSection] = React.useState<MenuSection['id']>(initialSection);
-  const [activeItem,    setActiveItem]    = React.useState<string>(
+  const [activeItem, setActiveItem] = React.useState<string>(
     initialItem
-      ?? SECTION_DEFAULTS[initialSection]
-      ?? MENU_DATA.sections.find(s => s.id === initialSection)?.items[0]?.id
-      ?? ''
+    ?? SECTION_DEFAULTS[initialSection]
+    ?? MENU_DATA.sections.find(s => s.id === initialSection)?.items[0]?.id
+    ?? ''
   );
-  const [drawerOpen,    setDrawerOpen]    = React.useState(true);
-  const [activityFull,  setActivityFull]  = React.useState(false);
-  const [ctx,           setCtxRaw]        = React.useState<ScreenContext>({ storyIdx: 0, charIdx: 0 });
+  const [drawerOpen, setDrawerOpen]     = React.useState(true);
+  const [activityFull, setActivityFull] = React.useState(false);
+  /* Live activity items — populated via SSE/websocket once wired up */
+  const [activityItems] = React.useState<import('./menuData').ActivityItem[]>([]);
+  const [ctx, setCtxRaw] = React.useState<ScreenContext>({ storyIdx: 0, charIdx: 0 });
 
   /* Active campaign state — defaults to first campaign from Drupal */
   const campaigns = liveData?.campaigns ?? [];
@@ -136,7 +138,7 @@ export function StatelyLedger({
     if (next?._jumpTo) {
       const j = next._jumpTo;
       if (j.sectionId) setActiveSection(j.sectionId as MenuSection['id']);
-      if (j.itemId)    setActiveItem(j.itemId);
+      if (j.itemId) setActiveItem(j.itemId);
       const { _jumpTo, ...clean } = next;
       setCtxRaw({ ...clean, ...j });
     } else {
@@ -145,19 +147,19 @@ export function StatelyLedger({
   }, []);
 
   /* Patch sidebar counts from real Drupal data */
-  const pcs    = liveData ? playerCharacters(liveData) : null;
-  const npcs   = liveData ? npcCharacters(liveData) : null;
+  const pcs = liveData ? playerCharacters(liveData) : null;
+  const npcs = liveData ? npcCharacters(liveData) : null;
   const stories = liveData?.stories ?? null;
 
   const sections = MENU_DATA.sections.map(s => {
-    if (s.id === 'characters' && pcs)    return { ...s, count: pcs.length };
-    if (s.id === 'npcs'       && npcs)   return { ...s, count: npcs.length };
+    if (s.id === 'characters' && pcs) return { ...s, count: pcs.length };
+    if (s.id === 'npcs' && npcs) return { ...s, count: npcs.length };
     if ((s.id === 'stories' || s.id === 'read') && stories) return { ...s, count: stories.length };
     return s;
   });
 
   const section = sections.find(s => s.id === activeSection);
-  const item    = section?.items.find(i => i.id === activeItem);
+  const item = section?.items.find(i => i.id === activeItem);
 
   /* Enrich ctx with active campaign so screens can filter by it */
   const enrichedCtx: ScreenContext = { ...ctx, activeCampaignName };
@@ -272,7 +274,7 @@ export function StatelyLedger({
           {/* Right activity drawer */}
           {!activityFull && (
             <ActivityDrawer
-              items={MENU_DATA.activityLog}
+              items={activityItems}
               open={drawerOpen}
               onToggle={() => setDrawerOpen(!drawerOpen)}
             />
@@ -291,7 +293,7 @@ export function StatelyLedger({
 
         {activityFull && (
           <div className="activity-overlay">
-            <ActivityFullScreen onClose={() => setActivityFull(false)} />
+            <ActivityFullScreen items={activityItems} onClose={() => setActivityFull(false)} />
           </div>
         )}
       </div>

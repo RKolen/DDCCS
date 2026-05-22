@@ -7,8 +7,10 @@
  *   t-clear              → confirmation dialog
  *   t-level | t-item     → batch operation form
  *
+ * History data comes from the Python CLI backend (not available here yet).
+ * Batch targets come from ConsoleContext (Drupal characters).
+ *
  * Port of `ToolsHistoryScreen` + `BatchOpScreen` from screens-admin.jsx.
- * Uses real character data from ConsoleContext for batch targets.
  */
 
 import * as React from 'react';
@@ -29,17 +31,6 @@ function Toggle({ defaultOn = false }: { defaultOn?: boolean }): React.ReactElem
     </button>
   );
 }
-
-/* ── History entries (static — from CLI history file, not Drupal) ── */
-const HISTORY_ENTRIES = [
-  { date: '2026-05-12', status: 'ok',   cmd: 'story generate --series fellowship --prompt "the cairn stirs"' },
-  { date: '2026-05-12', status: 'ok',   cmd: 'characters consult aragorn --question "What does he fear most?"' },
-  { date: '2026-05-12', status: 'fail', cmd: 'reindex --vector-db' },
-  { date: '2026-05-11', status: 'ok',   cmd: 'session-results generate --story 003_weathertop' },
-  { date: '2026-05-11', status: 'ok',   cmd: 'batch level-up --all +1' },
-  { date: '2026-05-10', status: 'ok',   cmd: 'story add --series fellowship' },
-  { date: '2026-05-09', status: 'ok',   cmd: 'npc validate' },
-];
 
 function HistoryView({ variant }: { variant: string }): React.ReactElement {
   return (
@@ -62,16 +53,9 @@ function HistoryView({ variant }: { variant: string }): React.ReactElement {
           <button type="button" className="ghost-btn">Export</button>
         </div>
       </header>
-      <ol className="history-list" style={{ listStyle: 'none', margin: 0, padding: 0 }}>
-        {HISTORY_ENTRIES.map((e, i) => (
-          <li key={i} className={`history-row status-${e.status}`}>
-            <span className="history-date mono">{e.date}</span>
-            <span className={`history-status status-${e.status}`}>{e.status === 'ok' ? '[OK]' : '[FAIL]'}</span>
-            <code className="history-cmd">{e.cmd}</code>
-            <button type="button" className="ghost-btn ghost-small">Re-run</button>
-          </li>
-        ))}
-      </ol>
+      <p style={{ fontFamily: 'var(--font-body)', color: 'var(--ink-dim)', fontStyle: 'italic', fontSize: 14 }}>
+        Command history is stored by the Python CLI backend. Connect the history API endpoint to populate this view.
+      </p>
     </div>
   );
 }
@@ -85,37 +69,9 @@ function StatsView(): React.ReactElement {
           <h2>History statistics</h2>
         </div>
       </header>
-      <div className="stat-cards">
-        {([
-          ['Total commands', '1,284'],
-          ['Sessions', '47'],
-          ['Avg / session', '27.3'],
-          ['Failures', '38', 'danger'],
-        ] as Array<[string, string, string?]>).map(([l, v, tone]) => (
-          <div key={l} className={`big-stat${tone ? ` tone-${tone}` : ''}`}>
-            <span className="big-stat-val">{v}</span>
-            <span className="big-stat-label">{l}</span>
-          </div>
-        ))}
-      </div>
-      <section className="stat-list-section">
-        <h4>Most used commands</h4>
-        <ul className="stat-bars">
-          {([
-            ['story generate', 184],
-            ['consult', 142],
-            ['session-results generate', 98],
-            ['npc view', 72],
-            ['reindex', 24],
-          ] as Array<[string, number]>).map(([cmd, n]) => (
-            <li key={cmd}>
-              <span className="bar-label mono">{cmd}</span>
-              <span className="bar-track"><span className="bar-fill" style={{ width: `${(n / 184) * 100}%` }} /></span>
-              <span className="bar-val">{n}</span>
-            </li>
-          ))}
-        </ul>
-      </section>
+      <p style={{ fontFamily: 'var(--font-body)', color: 'var(--ink-dim)', fontStyle: 'italic', fontSize: 14 }}>
+        Statistics are calculated from the Python CLI history file. Connect the history API endpoint to populate this view.
+      </p>
     </div>
   );
 }
@@ -130,7 +86,7 @@ function ClearView(): React.ReactElement {
         </div>
       </header>
       <div className="confirm-card danger">
-        <p>This will permanently delete <strong>1,284 history entries</strong> across <strong>47 sessions</strong>.</p>
+        <p>This will permanently delete all command history entries stored by the Python CLI backend.</p>
         <p>This cannot be undone. Consider exporting history first.</p>
         <div className="confirm-actions">
           <button type="button" className="ghost-btn">Export first</button>
@@ -189,7 +145,7 @@ function BatchView({ isLevel }: { isLevel: boolean }): React.ReactElement {
                 <input type="number" defaultValue="1" min="1" max="20" />
               </label>
               <p className="caption">
-                Each character will roll for new HP using their class's hit die. ASIs at levels 4, 8, 12, 16, 19 will be queued for review.
+                Each character will roll for new HP using their class hit die. ASIs at levels 4, 8, 12, 16, 19 will be queued for review.
               </p>
             </>
           ) : (

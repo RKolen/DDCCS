@@ -1,21 +1,24 @@
 /**
  * Activity log full-screen overlay.
  *
- * Renders when the user clicks "Expand" on the right-rail activity
- * drawer. A larger view of all jobs in the `MENU_DATA.activityLog` channel.
- *
- * Canonical reference: /menu/variant-ledger.jsx + /menu/screens-admin.jsx
+ * Renders when the user clicks "Expand" on the right-rail activity drawer.
+ * Items come from the parent (StatelyLedger) which receives them from the
+ * live SSE/websocket channel — never from MENU_DATA.
  */
 
 import * as React from 'react';
-import { MENU_DATA } from './menuData';
+import type { ActivityItem } from './menuData';
 import { Icon, ActivityRow } from './atoms';
 
-export function ActivityFullScreen({ onClose }: { onClose: () => void }): React.ReactElement {
-  const log = MENU_DATA.activityLog;
-  const running = log.filter(i => i.status === 'running');
-  const done    = log.filter(i => i.status === 'done');
-  const failed  = log.filter(i => i.status === 'failed');
+interface ActivityFullScreenProps {
+  items: ActivityItem[];
+  onClose: () => void;
+}
+
+export function ActivityFullScreen({ items, onClose }: ActivityFullScreenProps): React.ReactElement {
+  const running = items.filter(i => i.status === 'running');
+  const failed  = items.filter(i => i.status === 'failed');
+  const done    = items.filter(i => i.status === 'done');
 
   return (
     <div className="activity-fullscreen">
@@ -29,11 +32,17 @@ export function ActivityFullScreen({ onClose }: { onClose: () => void }): React.
           {failed.length  > 0 && <span className="pill pill-failed">{failed.length} failed</span>}
           {done.length    > 0 && <span className="pill pill-done">{done.length} done</span>}
         </div>
-        <button className="ghost-btn" onClick={onClose}>
+        <button type="button" className="ghost-btn" onClick={onClose}>
           <Icon name="close" size={12} /> Close
         </button>
       </div>
+
       <div className="activity-full-body">
+        {items.length === 0 && (
+          <p style={{ fontFamily: 'var(--font-body)', color: 'var(--ink-dim)', fontStyle: 'italic', fontSize: 14, padding: '16px 0' }}>
+            No activity yet. Jobs dispatched from the console will appear here.
+          </p>
+        )}
         {running.length > 0 && (
           <section>
             <h4>Running</h4>
