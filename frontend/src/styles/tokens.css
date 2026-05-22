@@ -53,9 +53,21 @@
   --color-rarity-common:    #b0b0b0;
   --color-rarity-uncommon:  #5ec45e;
   --color-rarity-rare:      #5ba8f5;
-  --color-rarity-very-rare: #bf7fe0;
+  --color-rarity-very-rare: #c084fc;
   --color-rarity-legendary: #ffa830;
   --color-rarity-artifact:  #f06055;
+  --color-rarity-vestige:   #d4a6f0;
+
+  /* ── Parchment scroll ────────────────────────────────────── */
+  --parchment-light:      #efdcb0;  /* gradient top  */
+  --parchment-mid:        #e2c98c;  /* gradient mid  */
+  --parchment-dark:       #b89758;  /* gradient base */
+  --parchment-ink:        #2a1e0f;  /* text on parchment */
+  --parchment-shadow:     #6b4a1f;  /* corner vignette + wood base */
+  --parchment-wood-mid:   #8a6533;
+  --parchment-wood-light: #a07a3e;
+  --parchment-wood-dark:  #3d2810;
+  --parchment-highlight:  rgba(255, 200, 120, 0.25); /* dowel shine */
 
   /* ── Typography ──────────────────────────────────────────── */
   --font-display: 'Cinzel', 'Palatino Linotype', serif;

@@ -1,86 +1,471 @@
+/* ── Page shell ──────────────────────────────────────────────── */
 .page {
   padding: var(--space-8) var(--space-10);
-  max-width: 760px;
+  max-width: 1100px;
   margin: 0 auto;
 }
 
-.header {
-  margin-bottom: var(--space-4);
+/* ── Hero ─────────────────────────────────────────────────────── */
+.hero {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: var(--space-6);
+  align-items: flex-start;
+  margin-bottom: var(--space-8);
+}
+
+.heroPortrait {
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.heroBody {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.heroTop {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
 }
 
 .name {
+  font-family: var(--font-display);
   font-size: var(--text-2xl);
+  font-weight: var(--font-bold);
   color: var(--color-gold-bright);
-  margin-bottom: var(--space-1);
+  margin: 0;
+  letter-spacing: var(--tracking-wide);
+  line-height: 1.1;
+}
+
+.canonPill {
+  flex-shrink: 0;
+  font-family: var(--font-display);
+  font-size: 9px;
+  letter-spacing: var(--tracking-widest);
+  text-transform: uppercase;
+  color: var(--color-info);
+  border: 1px solid color-mix(in srgb, var(--color-info) 35%, transparent);
+  border-radius: var(--radius-pill);
+  padding: 2px 8px;
 }
 
 .nickname {
   font-family: var(--font-body);
   font-style: italic;
+  font-size: var(--text-md);
   color: var(--color-text-secondary);
-  margin-bottom: var(--space-3);
+  margin: 0;
 }
 
-.badges {
+.pronouns {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--color-text-disabled);
+  letter-spacing: var(--tracking-wide);
+  margin: 0;
+}
+
+.heroBadges {
   display: flex;
   gap: var(--space-2);
   flex-wrap: wrap;
+  align-items: center;
+  margin-top: var(--space-2);
 }
 
-.stats {
+.classBadge {
+  font-family: var(--font-display);
+  font-size: var(--text-xs);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--color-gold-bright);
+  background: color-mix(in srgb, var(--color-gold-mid) 12%, transparent);
+  border: 1px solid var(--color-gold-border);
+  border-radius: var(--radius-sm);
+  padding: 3px 10px;
+}
+
+.levelBadge {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--color-gold-mid);
+  background: var(--color-bg-overlay);
+  border: 1px solid var(--color-gold-border);
+  border-radius: var(--radius-sm);
+  padding: 3px 10px;
+}
+
+/* ── Vitals strip ────────────────────────────────────────────── */
+.vitalsStrip {
   display: flex;
-  gap: var(--space-4);
+  gap: var(--space-2);
   flex-wrap: wrap;
-  margin: var(--space-6) 0;
+  margin-top: var(--space-3);
 }
 
-.statBlock {
+.vital {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--space-1);
+  background: var(--color-bg-overlay);
+  border: 1px solid var(--color-gold-border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-3);
+  min-width: 56px;
+}
+
+.vitalHp {
+  border-color: var(--color-success);
+  background: color-mix(in srgb, var(--color-success) 6%, transparent);
+}
+
+.vitalLabel {
+  font-family: var(--font-display);
+  font-size: 9px;
+  letter-spacing: var(--tracking-widest);
+  text-transform: uppercase;
+  color: var(--color-gold-muted);
+}
+
+.vitalVal {
+  font-family: var(--font-mono);
+  font-size: var(--text-md);
+  font-weight: var(--font-bold);
+  color: var(--color-text-primary);
+  line-height: 1.1;
+}
+
+/* ── Back link ───────────────────────────────────────────────── */
+.backLink {
+  font-family: var(--font-display);
+  font-size: var(--text-xs);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--color-gold-muted);
+  text-decoration: none;
+  white-space: nowrap;
+  align-self: center;
+  transition: color var(--transition-fast);
+}
+
+.backLink:hover { color: var(--color-gold-bright); }
+
+/* ── Section divider ─────────────────────────────────────────── */
+.divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--color-gold-border), transparent);
+  margin-bottom: var(--space-8);
+}
+
+/* ── Main two-column grid ────────────────────────────────────── */
+.mainGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-6);
+}
+
+@media (max-width: 760px) {
+  .mainGrid { grid-template-columns: 1fr; }
+  .hero { grid-template-columns: auto 1fr; }
+  .backLink { display: none; }
+}
+
+.leftCol,
+.rightCol {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+/* ── Panel card ──────────────────────────────────────────────── */
+.panel {
   background: var(--color-bg-surface);
   border: var(--border-thin);
   border-radius: var(--radius-md);
-  padding: var(--space-3) var(--space-5);
-  min-width: 72px;
+  padding: var(--space-5);
 }
 
-.statLabel {
-  font-family: var(--font-mono);
+.panelTitle {
+  font-family: var(--font-display);
   font-size: var(--text-xs);
-  text-transform: uppercase;
   letter-spacing: var(--tracking-widest);
-  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  color: var(--color-gold-mid);
+  margin: 0 0 var(--space-3);
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--color-gold-border);
 }
 
-.statValue {
+/* ── Character personality 2×2 ───────────────────────────────── */
+.characterGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: var(--space-3);
+}
+
+.characterBox {
+  background: var(--color-bg-overlay);
+  border: 1px solid var(--color-gold-border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-3);
+}
+
+.boxLabel {
+  font-family: var(--font-display);
+  font-size: 9px;
+  letter-spacing: var(--tracking-widest);
+  text-transform: uppercase;
+  color: var(--color-gold-muted);
+  margin: 0 0 var(--space-2);
+}
+
+/* ── Text lists (traits/bonds/etc.) ──────────────────────────── */
+.textList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.textList li {
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  color: var(--color-text-primary);
+  line-height: var(--leading-normal);
+  padding: var(--space-1) 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-gold-mid) 7%, transparent);
+}
+
+.textList li:last-child { border-bottom: 0; }
+.textList li p { margin: 0; }
+
+/* ── Item list (equipment) ───────────────────────────────────── */
+.itemList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.itemRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-2) 0;
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  color: var(--color-text-primary);
+  border-bottom: 1px solid var(--color-bg-overlay);
+}
+
+.itemRow:last-child { border-bottom: 0; }
+
+.itemLink {
+  color: var(--color-gold-mid);
+  text-decoration: none;
+}
+.itemLink:hover { color: var(--color-gold-bright); }
+
+.itemMeta {
+  display: flex;
+  gap: var(--space-1);
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.attuneChip {
+  font-family: var(--font-display);
+  font-size: 9px;
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--color-info);
+  border: 1px solid color-mix(in srgb, var(--color-info) 35%, transparent);
+  border-radius: var(--radius-pill);
+  padding: 1px 6px;
+}
+
+/* Rarity chips */
+.rarityChip {
+  font-family: var(--font-display);
+  font-size: 9px;
+  letter-spacing: var(--tracking-wide);
+  text-transform: capitalize;
+  border-radius: var(--radius-pill);
+  padding: 1px 6px;
+  border: 1px solid;
+}
+
+.rarityUncommon { color: var(--color-success);  border-color: color-mix(in srgb, var(--color-success) 40%, transparent); }
+.rarityRare     { color: var(--color-info);     border-color: color-mix(in srgb, var(--color-info) 40%, transparent); }
+.rarityVeryRare { color: var(--color-rarity-very-rare);               border-color: color-mix(in srgb, var(--color-rarity-very-rare) 40%, transparent); }
+.rarityLegendary{ color: var(--color-warning);  border-color: color-mix(in srgb, var(--color-warning) 40%, transparent); }
+.rarityArtifact { color: var(--color-danger);   border-color: color-mix(in srgb, var(--color-danger) 40%, transparent); }
+.rarityVestige  { color: var(--color-rarity-vestige);               border-color: color-mix(in srgb, var(--color-rarity-vestige) 40%, transparent); }
+
+/* ── Ability score grid ──────────────────────────────────────── */
+.abilityGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-2);
+}
+
+.abilityTile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  background: var(--color-bg-overlay);
+  border: 1px solid var(--color-gold-border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-3) var(--space-2);
+}
+
+.abilityLabel {
+  font-family: var(--font-display);
+  font-size: 9px;
+  letter-spacing: var(--tracking-widest);
+  text-transform: uppercase;
+  color: var(--color-gold-muted);
+}
+
+.abilityScore {
   font-family: var(--font-mono);
   font-size: var(--text-xl);
   font-weight: var(--font-bold);
-  color: var(--color-text-primary);
+  color: var(--color-gold-bright);
   line-height: 1;
 }
 
-.section {
-  margin: var(--space-8) 0;
+.abilityMod {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
 }
 
-.sectionTitle {
+/* ── Backstory scroll ────────────────────────────────────────── */
+.backstoryScroll {
+  position: relative;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.scrollDowelBtn {
+  display: block;
+  width: 100%;
+  background:
+    radial-gradient(ellipse at top left,  color-mix(in srgb, var(--parchment-shadow) 35%, transparent), transparent 40%),
+    radial-gradient(ellipse at top right, color-mix(in srgb, var(--parchment-shadow) 35%, transparent), transparent 40%),
+    radial-gradient(ellipse at bottom left,  color-mix(in srgb, var(--parchment-shadow) 35%, transparent), transparent 40%),
+    radial-gradient(ellipse at bottom right, color-mix(in srgb, var(--parchment-shadow) 35%, transparent), transparent 40%),
+    linear-gradient(170deg, var(--parchment-light) 0%, var(--parchment-mid) 70%, var(--parchment-dark) 100%);
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  text-align: center;
+}
+
+.scrollDowelBtn:focus-visible {
+  outline: 2px solid var(--color-gold-mid);
+  outline-offset: 2px;
+}
+
+.scrollDowel {
+  height: 28px;
+  background:
+    radial-gradient(circle at 16px 50%, rgba(0,0,0,.4) 0 2.5px, transparent 3px),
+    radial-gradient(circle at calc(100% - 16px) 50%, rgba(0,0,0,.4) 0 2.5px, transparent 3px),
+    linear-gradient(to bottom, var(--parchment-shadow) 0%, var(--parchment-wood-mid) 18%, var(--parchment-wood-light) 35%, var(--parchment-shadow) 60%, var(--parchment-wood-dark) 100%);
+  border-radius: 4px;
+  box-shadow:
+    inset 0 1px 0 var(--parchment-highlight),
+    inset 0 -2px 4px rgba(0,0,0,.5),
+    0 4px 10px rgba(0,0,0,.55);
+}
+
+.scrollHint {
+  display: block;
   font-family: var(--font-display);
-  font-size: var(--text-md);
-  color: var(--color-gold-mid);
-  margin-bottom: var(--space-3);
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
   letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--parchment-ink);
+  padding: var(--space-3) 0 var(--space-2);
+  transition: color var(--transition-fast);
 }
 
+.scrollDowelBtn:hover .scrollHint {
+  color: var(--parchment-shadow);
+}
+
+.scrollBody {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.55s ease;
+}
+
+.scrollBodyOpen { grid-template-rows: 1fr; }
+
+.scrollBodyInner { overflow: hidden; }
+
+.parchment {
+  position: relative;
+  padding: 40px 48px;
+  background:
+    radial-gradient(ellipse at top left,  color-mix(in srgb, var(--parchment-shadow) 35%, transparent), transparent 40%),
+    radial-gradient(ellipse at top right, color-mix(in srgb, var(--parchment-shadow) 35%, transparent), transparent 40%),
+    radial-gradient(ellipse at bottom left,  color-mix(in srgb, var(--parchment-shadow) 35%, transparent), transparent 40%),
+    radial-gradient(ellipse at bottom right, color-mix(in srgb, var(--parchment-shadow) 35%, transparent), transparent 40%),
+    linear-gradient(170deg, var(--parchment-light) 0%, var(--parchment-mid) 70%, var(--parchment-dark) 100%);
+  color: var(--parchment-ink);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.75;
+  box-shadow:
+    inset 0 8px 20px color-mix(in srgb, var(--parchment-shadow) 45%, transparent),
+    inset 0 -8px 20px color-mix(in srgb, var(--parchment-shadow) 45%, transparent);
+  border-top: 1px solid color-mix(in srgb, var(--parchment-shadow) 40%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--parchment-shadow) 40%, transparent);
+}
+
+.parchment::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.55;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.45 0 0 0 0 0.32 0 0 0 0 0.12 0 0 0 0.18 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+}
+
+.parchmentBody {
+  position: relative;
+  z-index: 1;
+}
+
+.parchmentBody p { margin: 0 0 1em; text-align: justify; hyphens: auto; color: var(--parchment-ink); }
+.parchmentBody p:last-child { margin-bottom: 0; }
+
+/* ── Prose ───────────────────────────────────────────────────── */
 .prose {
   font-family: var(--font-body);
-  font-size: var(--text-md);
-  line-height: var(--leading-loose);
+  font-size: var(--text-base);
+  line-height: var(--leading-normal);
   color: var(--color-text-primary);
+  margin-bottom: var(--space-2);
 }
 
-.prose p { margin-bottom: var(--space-3); }
+.prose:last-child { margin-bottom: 0; }
+.prose p { margin: 0 0 var(--space-2); }
+.prose p:last-child { margin-bottom: 0; }
 .prose strong { color: var(--color-gold-bright); font-weight: var(--font-semibold); }
-.prose em { font-style: italic; color: var(--color-text-secondary); }

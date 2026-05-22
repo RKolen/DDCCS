@@ -89,13 +89,13 @@
   border: 1px solid var(--color-gold-border);
   flex-shrink: 0;
   background:
-    radial-gradient(circle at 32% 28%, rgba(240, 192, 96, 0.2), transparent 60%),
+    radial-gradient(circle at 32% 28%, color-mix(in srgb, var(--color-gold-bright) 20%, transparent), transparent 60%),
     var(--color-bg-surface);
   display: flex;
   align-items: center;
   justify-content: center;
   box-shadow:
-    inset 0 1px 0 rgba(255, 220, 130, 0.2),
+    inset 0 1px 0 color-mix(in srgb, var(--color-gold-bright) 20%, transparent),
     0 2px 6px rgba(0, 0, 0, 0.3);
 }
 
@@ -169,13 +169,13 @@
   display: block;
   width: 100%;
   background:
-    radial-gradient(ellipse at top left, rgba(107, 74, 31, 0.35), transparent 40%),
-    radial-gradient(ellipse at top right, rgba(107, 74, 31, 0.35), transparent 40%),
-    radial-gradient(ellipse at bottom left, rgba(107, 74, 31, 0.35), transparent 40%),
-    radial-gradient(ellipse at bottom right, rgba(107, 74, 31, 0.35), transparent 40%),
+    radial-gradient(ellipse at top left, color-mix(in srgb, var(--parchment-shadow) 35%, transparent), transparent 40%),
+    radial-gradient(ellipse at top right, color-mix(in srgb, var(--parchment-shadow) 35%, transparent), transparent 40%),
+    radial-gradient(ellipse at bottom left, color-mix(in srgb, var(--parchment-shadow) 35%, transparent), transparent 40%),
+    radial-gradient(ellipse at bottom right, color-mix(in srgb, var(--parchment-shadow) 35%, transparent), transparent 40%),
     radial-gradient(circle at 20% 30%, rgba(140, 90, 40, 0.08) 0 1px, transparent 2px),
     radial-gradient(circle at 80% 60%, rgba(140, 90, 40, 0.10) 0 1px, transparent 2px),
-    linear-gradient(170deg, #efdcb0 0%, #e2c98c 70%, #b89758 100%);
+    linear-gradient(170deg, var(--parchment-light) 0%, var(--parchment-mid) 70%, var(--parchment-dark) 100%);
   border: none;
   padding: 0;
   cursor: pointer;
@@ -194,10 +194,10 @@
   background:
     radial-gradient(circle at 16px 50%, rgba(0, 0, 0, 0.4) 0 2.5px, transparent 3px),
     radial-gradient(circle at calc(100% - 16px) 50%, rgba(0, 0, 0, 0.4) 0 2.5px, transparent 3px),
-    linear-gradient(to bottom, #6b4a1f 0%, #8a6533 18%, #a07a3e 35%, #6b4a1f 60%, #3d2810 100%);
+    linear-gradient(to bottom, var(--parchment-shadow) 0%, var(--parchment-wood-mid) 18%, var(--parchment-wood-light) 35%, var(--parchment-shadow) 60%, var(--parchment-wood-dark) 100%);
   border-radius: 4px;
   box-shadow:
-    inset 0 1px 0 rgba(255, 200, 120, 0.25),
+    inset 0 1px 0 var(--parchment-highlight),
     inset 0 -2px 4px rgba(0, 0, 0, 0.5),
     0 4px 10px rgba(0, 0, 0, 0.55);
   pointer-events: none;
@@ -207,16 +207,17 @@
   display: block;
   font-family: var(--font-display);
   font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
   letter-spacing: var(--tracking-wide);
   text-transform: uppercase;
-  color: var(--color-text-inverse);
+  color: var(--parchment-ink);
   padding: var(--space-3) 0 var(--space-2);
   transition: color var(--transition-fast);
   pointer-events: none;
 }
 
 .scrollDowelBtn:hover .scrollHint {
-  color: var(--color-gold-mid);
+  color: var(--parchment-shadow);
 }
 
 /* Expand/collapse using CSS grid trick */
@@ -238,22 +239,22 @@
   position: relative;
   padding: 48px 56px;
   background:
-    radial-gradient(ellipse at top left, rgba(107, 74, 31, 0.35), transparent 40%),
-    radial-gradient(ellipse at top right, rgba(107, 74, 31, 0.35), transparent 40%),
-    radial-gradient(ellipse at bottom left, rgba(107, 74, 31, 0.35), transparent 40%),
-    radial-gradient(ellipse at bottom right, rgba(107, 74, 31, 0.35), transparent 40%),
+    radial-gradient(ellipse at top left, color-mix(in srgb, var(--parchment-shadow) 35%, transparent), transparent 40%),
+    radial-gradient(ellipse at top right, color-mix(in srgb, var(--parchment-shadow) 35%, transparent), transparent 40%),
+    radial-gradient(ellipse at bottom left, color-mix(in srgb, var(--parchment-shadow) 35%, transparent), transparent 40%),
+    radial-gradient(ellipse at bottom right, color-mix(in srgb, var(--parchment-shadow) 35%, transparent), transparent 40%),
     radial-gradient(circle at 20% 30%, rgba(140, 90, 40, 0.08) 0 1px, transparent 2px),
     radial-gradient(circle at 80% 60%, rgba(140, 90, 40, 0.10) 0 1px, transparent 2px),
-    linear-gradient(170deg, #efdcb0 0%, #e2c98c 70%, #b89758 100%);
-  color: #2a1e0f;
+    linear-gradient(170deg, var(--parchment-light) 0%, var(--parchment-mid) 70%, var(--parchment-dark) 100%);
+  color: var(--parchment-ink);
   font-family: var(--font-body);
   font-size: 17px;
   line-height: 1.75;
   box-shadow:
-    inset 0 8px 20px rgba(107, 74, 31, 0.45),
-    inset 0 -8px 20px rgba(107, 74, 31, 0.45);
-  border-top: 1px solid rgba(107, 74, 31, 0.4);
-  border-bottom: 1px solid rgba(107, 74, 31, 0.4);
+    inset 0 8px 20px color-mix(in srgb, var(--parchment-shadow) 45%, transparent),
+    inset 0 -8px 20px color-mix(in srgb, var(--parchment-shadow) 45%, transparent);
+  border-top: 1px solid color-mix(in srgb, var(--parchment-shadow) 40%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--parchment-shadow) 40%, transparent);
 }
 
 .parchment::before {
@@ -275,7 +276,7 @@
   margin: 0 0 1em;
   text-align: justify;
   hyphens: auto;
-  color: #2a1e0f;
+  color: var(--parchment-ink);
 }
 
 .body h2,
@@ -284,7 +285,7 @@
 .body h5 {
   font-family: var(--font-display);
   font-weight: 700;
-  color: #2a1e0f;
+  color: var(--parchment-ink);
   letter-spacing: 0.04em;
   margin-top: 1.6em;
   margin-bottom: 0.5em;
@@ -318,25 +319,25 @@
   float: left;
   line-height: 0.85;
   margin: 0.05em 0.08em 0 0;
-  color: #8b1d1a;
-  text-shadow: 1px 1px 0 rgba(255, 240, 200, 0.4);
+  color: var(--color-danger);
+  text-shadow: 1px 1px 0 color-mix(in srgb, var(--parchment-light) 40%, transparent);
 }
 
 .body strong {
-  color: #8b1d1a;
+  color: var(--color-danger);
   font-weight: 600;
   font-style: italic;
 }
 
 .body em {
   font-style: italic;
-  color: #4a3520;
+  color: var(--color-bg-hover);
 }
 
 .ornament {
   text-align: center;
   font-size: 18px;
-  color: #6b4a1f;
+  color: var(--parchment-shadow);
   opacity: 0.6;
   margin-top: var(--space-8);
   padding-top: var(--space-4);
@@ -440,17 +441,17 @@
   width: 48px;
   height: 48px;
   border-radius: 50%;
-  border: 1px solid rgba(107, 74, 31, 0.35);
+  border: 1px solid color-mix(in srgb, var(--parchment-shadow) 35%, transparent);
   background:
-    radial-gradient(circle at 32% 28%, rgba(240, 192, 96, 0.3), transparent 60%),
-    rgba(107, 74, 31, 0.08);
-  color: #2a1e0f;
+    radial-gradient(circle at 32% 28%, color-mix(in srgb, var(--color-gold-bright) 30%, transparent), transparent 60%),
+    color-mix(in srgb, var(--parchment-shadow) 8%, transparent);
+  color: var(--parchment-ink);
   cursor: pointer;
   display: grid;
   place-items: center;
   transition: transform 160ms ease, background 160ms ease, border-color 160ms ease;
   box-shadow:
-    inset 0 1px 0 rgba(255, 240, 200, 0.4),
+    inset 0 1px 0 color-mix(in srgb, var(--parchment-light) 40%, transparent),
     inset 0 -2px 4px rgba(60, 30, 10, 0.15),
     0 1px 2px rgba(40, 20, 0, 0.18);
 }
@@ -458,19 +459,19 @@
 .medallion svg {
   width: 20px;
   height: 20px;
-  color: rgba(42, 30, 15, 0.75);
+  color: color-mix(in srgb, var(--parchment-ink) 75%, transparent);
 }
 
 .medallion:hover {
-  border-color: rgba(107, 74, 31, 0.6);
+  border-color: color-mix(in srgb, var(--parchment-shadow) 60%, transparent);
   background:
-    radial-gradient(circle at 32% 28%, rgba(240, 192, 96, 0.55), transparent 70%),
-    rgba(107, 74, 31, 0.14);
+    radial-gradient(circle at 32% 28%, color-mix(in srgb, var(--color-gold-bright) 55%, transparent), transparent 70%),
+    color-mix(in srgb, var(--parchment-shadow) 14%, transparent);
   transform: translateY(-1px);
 }
 
 .medallion:hover svg {
-  color: #2a1e0f;
+  color: var(--parchment-ink);
 }
 
 .medallion:active {
@@ -483,10 +484,10 @@
 }
 
 .medallionActive {
-  border-color: #b04030;
+  border-color: var(--color-danger);
   background:
-    radial-gradient(circle at 32% 28%, rgba(240, 192, 96, 0.55), transparent 70%),
-    rgba(176, 64, 48, 0.18);
+    radial-gradient(circle at 32% 28%, color-mix(in srgb, var(--color-gold-bright) 55%, transparent), transparent 70%),
+    color-mix(in srgb, var(--color-danger) 18%, transparent);
   animation: medallionPulse 1.4s ease-in-out infinite;
 }
 
@@ -498,21 +499,21 @@
   width: 14px;
   height: 14px;
   border-radius: 50%;
-  background: #f0c060;
-  color: #2a1e0f;
+  background: var(--color-gold-bright);
+  color: var(--parchment-ink);
   font-size: 9px;
   line-height: 14px;
   text-align: center;
   font-weight: 700;
-  border: 1px solid #2a1e0f;
-  box-shadow: 0 0 4px rgba(240, 192, 96, 0.5);
+  border: 1px solid var(--parchment-ink);
+  box-shadow: 0 0 4px color-mix(in srgb, var(--color-gold-bright) 50%, transparent);
 }
 
 .medallionDone {
-  border-color: #4caf6e;
+  border-color: var(--color-success);
   background:
-    radial-gradient(circle at 32% 28%, rgba(240, 192, 96, 0.5), transparent 70%),
-    rgba(76, 175, 110, 0.16);
+    radial-gradient(circle at 32% 28%, color-mix(in srgb, var(--color-gold-bright) 50%, transparent), transparent 70%),
+    color-mix(in srgb, var(--color-success) 16%, transparent);
 }
 
 .medallionSpinner {
@@ -529,9 +530,9 @@
   font-size: 10px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: #f0e6c8;
-  background: #1a1208;
-  border: 1px solid rgba(160, 120, 50, 0.6);
+  color: var(--parchment-light);
+  background: var(--color-bg-base);
+  border: 1px solid color-mix(in srgb, var(--color-gold-muted) 60%, transparent);
   padding: 5px 10px;
   border-radius: 3px;
   white-space: nowrap;
@@ -611,11 +612,11 @@
 
   0%,
   100% {
-    box-shadow: inset 0 1px 0 rgba(255, 240, 200, 0.4), 0 0 0 0 rgba(176, 64, 48, 0.5);
+    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--parchment-light) 40%, transparent), 0 0 0 0 color-mix(in srgb, var(--color-danger) 50%, transparent);
   }
 
   50% {
-    box-shadow: inset 0 1px 0 rgba(255, 240, 200, 0.4), 0 0 0 6px rgba(176, 64, 48, 0);
+    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--parchment-light) 40%, transparent), 0 0 0 6px color-mix(in srgb, var(--color-danger) 0%, transparent);
   }
 }
 

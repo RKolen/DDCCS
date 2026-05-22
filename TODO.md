@@ -12,6 +12,7 @@
 ### Phase 2: Infrastructure
 
 - [ ] **Gatsby Frontend** - Drupal API enablement, character/NPC/story/item pages, campaign dashboard **Plan:** [plans/gatsby_frontend_plan.md](plans/gatsby_frontend_plan.md)
+- [ ] **Player Roles & Auth** - Drupal Player/DM roles, `field_player` on character, Simple OAuth PKCE, Gatsby auth context; players see only their assigned character **Plan:** [plans/player_roles_auth_plan.md](plans/player_roles_auth_plan.md)
 - [ ] **TTS Web Integration** - Pre-generated audio storage, audio sync to Drupal, React audio player components **Plan:** [plans/tts_web_integration.md](plans/tts_web_integration.md)
 - [ ] **Multi-voice TTS (Phase 3-4)** - Voice switching implementation, Piper TTS integration
 
@@ -139,6 +140,7 @@ All Tier 3 items are complete.
 | 33 | [ComfyUI Integration](plans/comfyui_integration_plan.md) | Optional visual feature. Requires Drupal for web display. No impact on core DM workflow. |
 | 34 | [Coqui TTS](plans/multi_voice_tts_design.md) | Requires powerful GPU. Only relevant if Piper voice quality is insufficient. |
 | 35 | [Interactive Combat Emulator](plans/game_plan.md) | 2D top-down grid combat (FGU-style). Pygame MVP reuses existing stats/rules/AI. Future phase adds AI DM optimal turn selection. |
+| 36 | [Player Roles & Auth](plans/player_roles_auth_plan.md) | Drupal Player/DM roles, `field_player` on character, Simple OAuth PKCE flow, Gatsby runtime auth context; players are redirected to their single assigned character. |
 
 ---
 

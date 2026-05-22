@@ -66,6 +66,10 @@ entity_config:
       edges_enabled: true
       simple_queries: '1'
   paragraph:
+    ability_score:
+      enabled: '1'
+      query_load_enabled: '1'
+      type_sdl: AbilityScoreItem
     ability_scores:
       enabled: true
       query_load_enabled: true
@@ -81,10 +85,15 @@ entity_config:
     relationship:
       enabled: true
       query_load_enabled: true
+    wysiwyg:
+      enabled: '1'
+      query_load_enabled: '1'
   taxonomy_term:
     campaign:
       enabled: true
       query_load_enabled: true
+      edges_enabled: '1'
+      simple_queries: '1'
     class:
       enabled: true
       query_load_enabled: true
@@ -384,6 +393,13 @@ field_config:
       field_story_files:
         enabled: true
   paragraph:
+    ability_score:
+      created:
+        enabled: true
+      field_ability:
+        enabled: true
+      field_score:
+        enabled: true
     ability_scores:
       created:
         enabled: true
@@ -422,6 +438,9 @@ field_config:
       field_spell_slots_available:
         enabled: true
       field_spell_slots_total:
+        enabled: true
+    wysiwyg:
+      field_text:
         enabled: true
   taxonomy_term:
     campaign:

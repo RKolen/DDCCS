@@ -1,48 +1,39 @@
 /**
  * GlobalLayout — wraps every Gatsby page.
  *
- * Receives the Gatsby `location` object from wrapPageElement so the topbar
- * can stay in sync with the current URL (e.g., showing/clearing the search
- * query on /search/).
+ * Owns activeCampaignName as the single source of truth.
+ * StatelyLedger registers the campaign list here; the chip's onSwitchCampaign
+ * updates this state directly — no callback indirection, no stale closures.
  */
 
 import * as React from 'react';
-/* Minimal shape from Gatsby's PageProps location — avoids importing @gatsbyjs/reach-router */
-interface GatsbyLocation { pathname: string; search: string; }
 import { GlobalTopbar } from './GlobalTopbar';
 import { TopbarContext } from './TopbarContext';
 import type { DrupalCampaign } from '../console/ConsoleContext';
 
 interface GlobalLayoutProps {
-  children: React.ReactNode;
-  location?: GatsbyLocation;
+  children:  React.ReactNode;
+  location?: { pathname: string; search: string };
 }
 
 export function GlobalLayout({ children, location }: GlobalLayoutProps): React.ReactElement {
-  const [campaigns, setCampaigns] = React.useState<DrupalCampaign[]>([]);
+  const [campaigns,          setCampaigns]          = React.useState<DrupalCampaign[]>([]);
   const [activeCampaignName, setActiveCampaignName] = React.useState<string | null>(null);
-  const [switchFn, setSwitchFn] = React.useState<((name: string) => void) | null>(null);
 
+  /* Pages register their campaign list + initial active campaign.
+     We only set the initial active name if nothing has been chosen yet. */
   const register = React.useCallback(
-    (
-      liveCampaigns: DrupalCampaign[],
-      activeName: string | null,
-      onSwitch: (name: string) => void,
-    ) => {
+    (liveCampaigns: DrupalCampaign[], initialActiveName: string | null) => {
       setCampaigns(liveCampaigns);
-      setActiveCampaignName(activeName);
-      setSwitchFn(() => onSwitch);
+      setActiveCampaignName(prev => prev ?? initialActiveName);
     },
     [],
   );
 
-  const onSwitchCampaign = React.useCallback(
-    (name: string) => {
-      setActiveCampaignName(name);
-      switchFn?.(name);
-    },
-    [switchFn],
-  );
+  /* Switching always goes through this one setter — no stale closures. */
+  const onSwitchCampaign = React.useCallback((name: string) => {
+    setActiveCampaignName(name);
+  }, []);
 
   return (
     <TopbarContext.Provider value={{ campaigns, activeCampaignName, onSwitchCampaign, register }}>

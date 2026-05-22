@@ -73,24 +73,21 @@ export const query = graphql`
       }
       nodeStories(first: 100) {
         nodes {
-          id
-          title
-          storyNumber
-          path
-          sessionDate
+          id title storyNumber path sessionDate
           campaign {
             ... on Drupal_TermCampaign {
-              id
-              name
-              campaignStatus
-              currentParty {
-                ... on Drupal_NodeCharacter {
-                  id
-                  title
-                }
-              }
+              id name campaignStatus
+              currentParty { ... on Drupal_NodeCharacter { id title } }
             }
           }
+        }
+      }
+      termCampaigns(first: 50) {
+        nodes {
+          id
+          name
+          campaignStatus
+          currentParty { ... on Drupal_NodeCharacter { id title } }
         }
       }
     }

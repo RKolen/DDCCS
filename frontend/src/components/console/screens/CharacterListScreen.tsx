@@ -57,6 +57,11 @@ export function CharacterListScreen({ ctx }: ScreenProps): React.ReactElement {
   const [search,   setSearch]   = React.useState('');
   const [campaign, setCampaign] = React.useState(ctx.activeCampaignName ?? '');
 
+  /* Sync local campaign filter when the global active campaign changes */
+  React.useEffect(() => {
+    setCampaign(ctx.activeCampaignName ?? '');
+  }, [ctx.activeCampaignName]);
+
   // PCs: filter by campaign's currentPartyIds (characters are linked via the campaign term).
   // NPCs: filter by their own campaign field if set, otherwise show all.
   const partyIds = (!isNpcMode && campaign) ? partyIdsForCampaign(data.campaigns, campaign) : null;

@@ -34,7 +34,8 @@
   border-bottom: 1px solid var(--rule-strong);
   background: linear-gradient(180deg, var(--desk-wood-light), var(--desk-wood));
   box-shadow: 0 2px 12px rgba(0, 0, 0, .4);
-  position: relative;
+  position: sticky;
+  top: 0;
   z-index: 20;
 }
 

@@ -13,74 +13,10 @@ import { Icon, AiTag, SlowTag, ActivityDrawer } from './atoms';
 import { ScreenRouter, type ScreenContext } from './ScreenRouter';
 import { ActivityFullScreen } from './ActivityFullScreen';
 import {
-  ConsoleContext, type ConsoleData, type DrupalCampaign,
+  ConsoleContext, type ConsoleData,
   playerCharacters, npcCharacters,
 } from './ConsoleContext';
 import { useTopbar } from '../layout/TopbarContext';
-
-/* ────────────────────────────────────────────────────────────
-   Campaign chip — uses real Drupal taxonomy terms
-   ──────────────────────────────────────────────────────────── */
-
-interface CampaignChipProps {
-  campaigns: DrupalCampaign[];
-  activeName: string | null;
-  onSwitch: (name: string) => void;
-}
-
-function LiveCampaignChip({ campaigns, activeName, onSwitch }: CampaignChipProps): React.ReactElement {
-  const [open, setOpen] = React.useState(false);
-  const active = campaigns.find(c => c.name === activeName) ?? campaigns[0] ?? null;
-
-  if (campaigns.length === 0) {
-    return (
-      <div className="campaign-chip campaign-chip-ledger">
-        <span className="campaign-chip-btn" style={{ cursor: 'default' }}>
-          <span className="chip-pin" />
-          <span className="chip-meta">
-            <span className="chip-eyebrow">Active campaign</span>
-            <span className="chip-name" style={{ color: 'var(--ink-faint)' }}>No campaigns in Drupal</span>
-          </span>
-        </span>
-      </div>
-    );
-  }
-
-  return (
-    <div className="campaign-chip campaign-chip-ledger">
-      <button className="campaign-chip-btn" onClick={() => setOpen(!open)}>
-        <span className="chip-pin" />
-        <span className="chip-meta">
-          <span className="chip-eyebrow">Active campaign</span>
-          <span className="chip-name">{active?.name ?? 'Select campaign'}</span>
-        </span>
-        {active?.campaignStatus && (
-          <span className="chip-stats">
-            <span>{active.campaignStatus}</span>
-          </span>
-        )}
-        {campaigns.length > 1 && <Icon name="chevronDown" size={12} />}
-      </button>
-      {open && campaigns.length > 1 && (
-        <div className="campaign-chip-pop">
-          <div className="chip-pop-header">Switch campaign</div>
-          {campaigns.map(c => (
-            <button
-              key={c.id}
-              className={`chip-pop-item${c.name === activeName ? ' active' : ''}`}
-              onClick={() => { onSwitch(c.name); setOpen(false); }}
-            >
-              <span className="chip-pop-name">{c.name}</span>
-              {c.campaignStatus && (
-                <span className="chip-pop-stats">{c.campaignStatus}</span>
-              )}
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
 
 /* ────────────────────────────────────────────────────────────
    Per-section default landing item
@@ -122,26 +58,16 @@ export function StatelyLedger({
   const [activityItems] = React.useState<import('./menuData').ActivityItem[]>([]);
   const [ctx, setCtxRaw] = React.useState<ScreenContext>({ storyIdx: 0, charIdx: 0 });
 
-  /* Active campaign state — defaults to first campaign from Drupal */
   const campaigns = liveData?.campaigns ?? [];
-  const [activeCampaignName, setActiveCampaignName] = React.useState<string | null>(
-    campaigns[0]?.name ?? null
-  );
 
-  /* Sync active campaign when live data first arrives */
-  React.useEffect(() => {
-    if (campaigns.length > 0 && !activeCampaignName) {
-      setActiveCampaignName(campaigns[0].name);
-    }
-  }, [campaigns, activeCampaignName]);
-
-  /* Register campaigns with the global topbar — only when we have real data */
-  const { register } = useTopbar();
+  /* Register campaigns with the global topbar. GlobalLayout owns
+     activeCampaignName — we read it back via useTopbar(). */
+  const { register, activeCampaignName } = useTopbar();
   React.useEffect(() => {
     if (campaigns.length > 0) {
-      register(campaigns, activeCampaignName, setActiveCampaignName);
+      register(campaigns, campaigns[0].name);
     }
-  }, [register, campaigns, activeCampaignName]);
+  }, [register, campaigns]);
 
   const setCtx = React.useCallback((next: ScreenContext) => {
     if (next?._jumpTo) {

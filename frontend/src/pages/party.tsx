@@ -50,6 +50,12 @@ export const query = graphql`
           }
         }
       }
+      termCampaigns(first: 50) {
+        nodes {
+          id name campaignStatus
+          currentParty { ... on Drupal_NodeCharacter { id title } }
+        }
+      }
     }
   }
 `;

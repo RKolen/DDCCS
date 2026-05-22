@@ -37,7 +37,6 @@ export const createPages: GatsbyNode['createPages'] = async ({ graphql, actions 
   const { createPage } = actions;
 
   const characterTemplate = nodePath.resolve('./src/templates/character.tsx');
-  const npcTemplate       = nodePath.resolve('./src/templates/npc.tsx');
   const storyTemplate     = nodePath.resolve('./src/templates/story.tsx');
 
   const characterQuery = await graphql<CharactersQueryData>(`
@@ -60,14 +59,14 @@ export const createPages: GatsbyNode['createPages'] = async ({ graphql, actions 
     }
   `);
 
+  /* Both PCs and NPCs use the same character sheet template — NPCs are
+     character nodes with characterType === false, same data shape. */
   characterQuery.data?.drupal.nodeCharacters.nodes.forEach(node => {
-    if (node.characterType === false) {
-      const pagePath = node.path ? node.path : `/npcs/${node.id}`;
-      createPage({ path: pagePath, component: npcTemplate, context: { id: node.id } });
-    } else {
-      const pagePath = node.path ? node.path : `/characters/${node.id}`;
-      createPage({ path: pagePath, component: characterTemplate, context: { id: node.id } });
-    }
+    const isNpc   = node.characterType === false;
+    const pagePath = node.path
+      ? node.path
+      : isNpc ? `/npcs/${node.id}` : `/characters/${node.id}`;
+    createPage({ path: pagePath, component: characterTemplate, context: { id: node.id } });
   });
 
   // Sort stories by storyNumber so prev/next are in session order.

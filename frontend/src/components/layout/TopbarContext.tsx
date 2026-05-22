@@ -1,30 +1,27 @@
 /**
  * TopbarContext — bridges the global topbar with page-level campaign data.
  *
- * Pages that have campaign data (primarily the console) register their
- * campaigns and active selection here so the global topbar can render a
- * live campaign chip. Non-console pages leave it at the empty default.
+ * GlobalLayout owns activeCampaignName as the single source of truth.
+ * Pages register their campaign list via `register`; switching always goes
+ * through onSwitchCampaign which updates only GlobalLayout's state.
  */
 
 import * as React from 'react';
 import type { DrupalCampaign } from '../console/ConsoleContext';
 
 export interface TopbarContextValue {
-  campaigns: DrupalCampaign[];
+  campaigns:          DrupalCampaign[];
   activeCampaignName: string | null;
-  onSwitchCampaign: (name: string) => void;
-  register: (
-    campaigns: DrupalCampaign[],
-    activeName: string | null,
-    onSwitch: (name: string) => void,
-  ) => void;
+  onSwitchCampaign:   (name: string) => void;
+  /** Register the available campaign list and the initial active campaign. */
+  register: (campaigns: DrupalCampaign[], initialActiveName: string | null) => void;
 }
 
 export const TopbarContext = React.createContext<TopbarContextValue>({
-  campaigns: [],
+  campaigns:          [],
   activeCampaignName: null,
-  onSwitchCampaign: () => undefined,
-  register: () => undefined,
+  onSwitchCampaign:   () => undefined,
+  register:           () => undefined,
 });
 
 TopbarContext.displayName = 'TopbarContext';
