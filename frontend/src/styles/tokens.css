@@ -95,6 +95,9 @@
   --space-12: 48px;
   --space-16: 64px;
 
+  /* ── Layout ──────────────────────────────────────────────── */
+  --topbar-h: 60px;   /* global site topbar height */
+
   /* ── Borders ─────────────────────────────────────────────── */
   --border-thin:   1px solid var(--color-gold-border);
   --border-mid:    1px solid var(--color-gold-muted);

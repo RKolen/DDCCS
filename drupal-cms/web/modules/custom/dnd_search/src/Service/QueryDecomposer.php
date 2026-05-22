@@ -54,26 +54,49 @@ class QueryDecomposer {
   public function decompose(string $rawQuery): DecomposedQuery {
     $default = $this->aiProvider->getDefaultProviderForOperationType('chat');
     if (!is_array($default) || empty($default['provider_id'])) {
+      $this->loggerFactory->get('dnd_search')->warning(
+        'QueryDecomposer: no chat provider configured — falling back to milvus-only.',
+      );
       return DecomposedQuery::fallback($rawQuery);
     }
+
+    $providerId = (string) $default['provider_id'];
+    $modelId    = (string) $default['model_id'];
+
+    if ($modelId === '') {
+      $this->loggerFactory->get('dnd_search')->warning(
+        'QueryDecomposer: provider @provider has no model_id set — falling back to milvus-only. Set AI_CHAT_MODEL_ID in .ddev/config.local.yaml.',
+        ['@provider' => $providerId],
+      );
+      return DecomposedQuery::fallback($rawQuery);
+    }
+
+    $this->loggerFactory->get('dnd_search')->info(
+      'QueryDecomposer: using @provider/@model for query "@q"',
+      ['@provider' => $providerId, '@model' => $modelId, '@q' => $rawQuery],
+    );
 
     try {
       // getDefaultProviderForOperationType('chat') already guarantees the
       // provider supports chat. ProviderProxy delegates via __call(); the call
       // is safe at runtime — see phpstan.neon ignoreErrors for the suppression.
-      $provider = $this->aiProvider->createInstance($default['provider_id']);
+      $provider = $this->aiProvider->createInstance($providerId);
       $input = new ChatInput([
         new ChatMessage('system', $this->buildSystemPrompt()),
         new ChatMessage('user', $rawQuery),
       ]);
-      $output = $this->executeChat($provider, $input, (string) $default['model_id']);
+      $output = $this->executeChat($provider, $input, $modelId);
       $text = $output->getNormalized()->getText();
       return $this->parseResponse((string) $text, $rawQuery);
     }
     catch (\Throwable $e) {
       $this->loggerFactory->get('dnd_search')->warning(
-        'QueryDecomposer: AI call failed — @msg',
-        ['@msg' => $e->getMessage()],
+        'QueryDecomposer: AI call failed (@provider/@model) — @msg',
+        [
+          '@provider' => $providerId,
+          '@model'    => $modelId,
+          '@msg'      => $e->getMessage(),
+        ],
       );
       return DecomposedQuery::fallback($rawQuery);
     }

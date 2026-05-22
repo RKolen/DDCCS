@@ -1,4 +1,5 @@
 import React, { useState, useCallback } from 'react';
+import { navigate } from 'gatsby';
 import type { HeadFC, PageProps } from 'gatsby';
 import { BaseTemplate } from '../components/templates/BaseTemplate';
 import { SearchTemplate } from '../components/templates/SearchTemplate';
@@ -98,7 +99,8 @@ function DecompositionPanel({ decomposition }: DecompositionPanelProps): React.R
 }
 
 const SearchPage: React.FC<PageProps> = ({ location }) => {
-  const [query, setQuery] = useState('');
+  const initialQuery = new URLSearchParams(location.search).get('q') ?? '';
+  const [query, setQuery] = useState(initialQuery);
   const [contentType, setContentType] = useState('');
   const [response, setResponse] = useState<SearchResponse | null>(null);
   const [loading, setLoading] = useState(false);
@@ -127,8 +129,23 @@ const SearchPage: React.FC<PageProps> = ({ location }) => {
     }
   }, []);
 
+  /* Auto-run once on mount when arriving from the topbar with ?q=.
+     Deferred one tick so the page finishes rendering before the fetch fires. */
+  const didAutoSearch = React.useRef(false);
+  React.useEffect(() => {
+    if (!didAutoSearch.current && initialQuery) {
+      didAutoSearch.current = true;
+      const id = setTimeout(() => { void runSearch(initialQuery, ''); }, 0);
+      return () => clearTimeout(id);
+    }
+    return undefined;
+  }, [initialQuery, runSearch]);
+
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (!query.trim()) return;
+    /* Update the URL so it's shareable and reflects the current search */
+    void navigate(`/search/?q=${encodeURIComponent(query.trim())}`, { replace: true });
     void runSearch(query, contentType);
   };
 
@@ -153,7 +170,28 @@ const SearchPage: React.FC<PageProps> = ({ location }) => {
           />
         }
         results={
-          error ? (
+          loading ? (
+            <p style={{
+              fontFamily: 'var(--font-body)',
+              fontStyle: 'italic',
+              color: 'var(--color-text-secondary)',
+              fontSize: 'var(--text-base)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+            }}>
+              <span style={{
+                display: 'inline-block',
+                width: '1em',
+                height: '1em',
+                border: '2px solid var(--color-gold-muted)',
+                borderTopColor: 'var(--color-gold-bright)',
+                borderRadius: '50%',
+                animation: 'spin 0.7s linear infinite',
+              }} />
+              Searching...
+            </p>
+          ) : error ? (
             <p style={{ color: 'var(--color-danger)', fontFamily: 'var(--font-body)', fontSize: 'var(--text-base)' }}>
               {error}
             </p>

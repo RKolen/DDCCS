@@ -224,17 +224,47 @@ export function CampaignChip({ campaigns, onSwitch, variant = 'default' }: Campa
 interface SearchFieldProps {
   placeholder?: string;
   shortcut?: string;
+  onSearch?: (query: string) => void;
+  /** When provided, resets the internal value whenever it changes. Pass '' to clear. */
+  syncValue?: string;
 }
 
 export function SearchField({
   placeholder = 'Search characters, stories, NPCs...',
   shortcut = 'Cmd+K',
+  onSearch,
+  syncValue,
 }: SearchFieldProps): React.ReactElement {
+  const [value, setValue] = React.useState('');
+
+  /* Reset internal value when the caller changes syncValue (e.g., empty on /search/) */
+  React.useEffect(() => {
+    if (syncValue !== undefined) setValue(syncValue);
+  }, [syncValue]);
+
+  const submit = (): void => {
+    if (onSearch && value.trim()) onSearch(value.trim());
+  };
+
   return (
     <div className="search-field">
       <Icon name="search" size={14} />
-      <input type="text" placeholder={placeholder} />
-      <kbd>{shortcut}</kbd>
+      <input
+        type="text"
+        placeholder={placeholder}
+        value={value}
+        onChange={e => setValue(e.target.value)}
+        onKeyDown={e => { if (e.key === 'Enter') submit(); }}
+      />
+      <kbd
+        role="button"
+        tabIndex={0}
+        style={{ cursor: onSearch ? 'pointer' : 'default' }}
+        onClick={submit}
+        onKeyDown={e => { if (e.key === 'Enter') submit(); }}
+      >
+        {shortcut}
+      </kbd>
     </div>
   );
 }

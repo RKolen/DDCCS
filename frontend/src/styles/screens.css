@@ -4,7 +4,7 @@
    ============================================================ */
 
 /* ─── Shell promotion: full-screen ─── */
-.ledger-fullscreen { height: 100vh; width: 100vw; }
+.ledger-fullscreen { height: calc(100vh - var(--topbar-h)); width: 100vw; }
 .ledger-fullscreen .ledger-body { flex: 1; min-height: 0; }
 .ledger-fullscreen .ledger-sidebar { width: 240px; }
 .ledger-fullscreen .ledger-detail  { display: none; }   /* hide old middle column */

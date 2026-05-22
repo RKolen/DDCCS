@@ -510,7 +510,7 @@ kbd {
    ============================================================ */
 
 .ledger-shell {
-  height: 100vh;
+  height: calc(100vh - var(--topbar-h));
   display: flex;
   flex-direction: column;
   background: var(--desk-wood);

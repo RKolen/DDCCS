@@ -9,13 +9,14 @@
 
 import * as React from 'react';
 import { MENU_DATA, type MenuSection, type MenuItem } from './menuData';
-import { Icon, AiTag, SlowTag, ActivityDrawer, SearchField } from './atoms';
+import { Icon, AiTag, SlowTag, ActivityDrawer } from './atoms';
 import { ScreenRouter, type ScreenContext } from './ScreenRouter';
 import { ActivityFullScreen } from './ActivityFullScreen';
 import {
   ConsoleContext, type ConsoleData, type DrupalCampaign,
   playerCharacters, npcCharacters,
 } from './ConsoleContext';
+import { useTopbar } from '../layout/TopbarContext';
 
 /* ────────────────────────────────────────────────────────────
    Campaign chip — uses real Drupal taxonomy terms
@@ -134,6 +135,14 @@ export function StatelyLedger({
     }
   }, [campaigns, activeCampaignName]);
 
+  /* Register campaigns with the global topbar — only when we have real data */
+  const { register } = useTopbar();
+  React.useEffect(() => {
+    if (campaigns.length > 0) {
+      register(campaigns, activeCampaignName, setActiveCampaignName);
+    }
+  }, [register, campaigns, activeCampaignName]);
+
   const setCtx = React.useCallback((next: ScreenContext) => {
     if (next?._jumpTo) {
       const j = next._jumpTo;
@@ -169,25 +178,6 @@ export function StatelyLedger({
   return (
     <ConsoleContext.Provider value={consoleData}>
       <div className={`ledger-shell${fullscreen ? ' ledger-fullscreen' : ''}`}>
-
-        {/* Top bar — brand | campaign chip | search */}
-        <header className="ledger-topbar">
-          <div className="ledger-brand">
-            <span className="brand-mark">DD</span>
-            <span className="brand-name">DDCCS</span>
-            <span className="brand-sub">Campaign Console</span>
-          </div>
-          <div className="ledger-top-center">
-            <LiveCampaignChip
-              campaigns={campaigns}
-              activeName={activeCampaignName}
-              onSwitch={setActiveCampaignName}
-            />
-          </div>
-          <div className="ledger-top-right">
-            <SearchField />
-          </div>
-        </header>
 
         <div className="ledger-body">
 

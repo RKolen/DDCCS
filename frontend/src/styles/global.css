@@ -88,3 +88,9 @@ pre {
 ::-webkit-scrollbar          { width: 6px; background: var(--color-bg-base); }
 ::-webkit-scrollbar-thumb    { background: var(--color-bg-overlay); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--color-bg-hover); }
+
+/* ── Utility animations ──────────────────────────────────── */
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}

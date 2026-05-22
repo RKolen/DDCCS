@@ -2,13 +2,7 @@ _core:
   default_config_hash: xBacXNIAeqGYsfpaWGL1l22dWVUT-YmLNlB3pdU0Czk
 prompt_logging: false
 prompt_logging_tags: ''
-default_providers:
-  chat:
-    provider_id: ''
-    model_id: ''
-  embeddings:
-    provider_id: ''
-    model_id: ''
+default_providers: {  }
 default_vdb_provider: ''
 request_timeout: 60
 allowed_hosts: {  }
