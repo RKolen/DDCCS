@@ -138,6 +138,7 @@ All Tier 3 items are complete.
 |---|------|--------|
 | 33 | [ComfyUI Integration](plans/comfyui_integration_plan.md) | Optional visual feature. Requires Drupal for web display. No impact on core DM workflow. |
 | 34 | [Coqui TTS](plans/multi_voice_tts_design.md) | Requires powerful GPU. Only relevant if Piper voice quality is insufficient. |
+| 35 | [Interactive Combat Emulator](plans/game_plan.md) | 2D top-down grid combat (FGU-style). Pygame MVP reuses existing stats/rules/AI. Future phase adds AI DM optimal turn selection. |
 
 ---
 
