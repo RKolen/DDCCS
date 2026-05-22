@@ -8,21 +8,13 @@
  * dispatch table rather than per-route file structure — it mirrors
  * the CLI's section/item taxonomy and lets us share state via `ctx`.
  *
- * Canonical reference for full screen list:
+ * Canonical reference:
  *   /menu/screens-router.jsx          <- the routing table
  *   /menu/screens-content.jsx         <- story/reader screens
  *   /menu/screens-admin.jsx           <- settings/tools/NPC screens
  *
  * NPC note: NPCs are character nodes with field_character_type=false.
  * The `npcs/*` routes query nodeCharacter filtered by that field.
- *
- * IMPORTANT: the three character pages we designed (see
- * /All Characters.html, /Character Sheet.html, /Current Party.html)
- * are NOT routed inside the console alone — they also have direct
- * Gatsby routes (/characters/, /characters/:slug/, /party/). When
- * navigated from within the console, render the same components
- * inline; when deep-linked, the page-level wrapper provides the
- * StatelyLedger chrome around them.
  */
 
 import * as React from 'react';
@@ -35,9 +27,9 @@ import type { MenuSection, MenuItem } from './menuData';
 export interface ScreenContext {
   storyIdx?: number;
   charIdx?: number;
-  /** Name of the currently active campaign (from Campaign taxonomy term) */
   activeCampaignName?: string | null;
-  settingsTab?: 'view' | 'ai' | 'rag' | 'display' | 'paths' | 'validate';
+  settingsTab?: 'view' | 'ai' | 'rag' | 'display' | 'paths' | 'validate' | 'save';
+  modelId?: string;
   _jumpTo?: {
     sectionId?: string;
     itemId?: string;
@@ -65,12 +57,20 @@ interface ScreenRouterProps {
    Screen imports
    ──────────────────────────────────────────────────────────── */
 
-import { CharacterListScreen }    from './screens/CharacterListScreen';
-import { CharacterDetailScreen }  from './screens/CharacterDetailScreen';
-import { CurrentPartyScreen }     from './screens/CurrentPartyScreen';
-import { ReadStoryFileScreen }    from './screens/ReadStoryFileScreen';
-import { ConsultScreen }          from './screens/ConsultScreen';
-import { PlaceholderScreen }      from './screens/PlaceholderScreen';
+import { CharacterListScreen }          from './screens/CharacterListScreen';
+import { CharacterDetailScreen }        from './screens/CharacterDetailScreen';
+import { CurrentPartyScreen }           from './screens/CurrentPartyScreen';
+import { ReadStoryFileScreen }          from './screens/ReadStoryFileScreen';
+import { ConsultScreen }                from './screens/ConsultScreen';
+import { StorySeriesWorkspaceScreen }   from './screens/StorySeriesWorkspaceScreen';
+import { TimelineScreen }               from './screens/TimelineScreen';
+import { SpellRegistryScreen }          from './screens/SpellRegistryScreen';
+import { NewSeriesScreen }              from './screens/NewSeriesScreen';
+import { SettingsScreen }               from './screens/SettingsScreen';
+import { ModelProfileScreen }           from './screens/ModelProfileScreen';
+import { ToolsScreen }                  from './screens/ToolsScreen';
+import { DeprecatedScreen }             from './screens/DeprecatedScreen';
+import { PlaceholderScreen }            from './screens/PlaceholderScreen';
 
 /* ────────────────────────────────────────────────────────────
    Dispatch table
@@ -79,9 +79,9 @@ import { PlaceholderScreen }      from './screens/PlaceholderScreen';
 export function ScreenRouter({ section, item, ctx, setCtx }: ScreenRouterProps): React.ReactElement | null {
   if (!section || !item) return null;
 
-  const key = `${section.id}/${item.id}`;
+  const key  = `${section.id}/${item.id}`;
   const ictx: ScreenContext = { ...ctx, _itemId: item.id, _sectionId: section.id };
-  const set = (next: ScreenContext): void => {
+  const set  = (next: ScreenContext): void => {
     setCtx({ ...next, _itemId: next._itemId ?? item.id });
   };
 
@@ -89,14 +89,48 @@ export function ScreenRouter({ section, item, ctx, setCtx }: ScreenRouterProps):
   if (key === 'characters/list')    return <CharacterListScreen ctx={ictx} setCtx={set} />;
   if (key === 'characters/view')    return <CharacterDetailScreen ctx={ictx} setCtx={set} />;
   if (key === 'characters/consult') return <ConsultScreen ctx={ictx} setCtx={set} />;
+  if (key === 'characters/ascii')   return <DeprecatedScreen item={item} />;
 
-  /* ───── Stories / Read ───── */
-  if (key === 'read/r-story')       return <ReadStoryFileScreen ctx={ictx} setCtx={set} />;
-  if (key === 'read/r-char')        return <CharacterDetailScreen ctx={ictx} setCtx={set} />;
+  /* ───── Stories ───── */
+  if (key === 'stories/work-series') return <StorySeriesWorkspaceScreen ctx={ictx} setCtx={set} />;
+  if (key === 'stories/timeline')    return <TimelineScreen ctx={ictx} setCtx={set} />;
+  if (key === 'stories/spells')      return <SpellRegistryScreen ctx={ictx} setCtx={set} />;
+  if (key === 'stories/new-series')  return <NewSeriesScreen ctx={ictx} setCtx={set} />;
+
+  /* ───── Read Stories ───── */
+  if (key === 'read/r-story')   return <ReadStoryFileScreen ctx={ictx} setCtx={set} />;
+  if (key === 'read/r-char')    return <CharacterDetailScreen ctx={ictx} setCtx={set} />;
+  if (key === 'read/r-session') return <ReadStoryFileScreen ctx={ictx} setCtx={set} />;
+  if (key === 'read/r-dev')     return <PlaceholderScreen section={section} item={item} />;
 
   /* ───── NPCs (character nodes with field_character_type=false) ───── */
-  if (key === 'npcs/n-list')        return <CharacterListScreen ctx={{ ...ictx, npcMode: true }} setCtx={set} />;
-  if (key === 'npcs/n-view')        return <CharacterDetailScreen ctx={{ ...ictx, npcMode: true }} setCtx={set} />;
+  if (key === 'npcs/n-list')     return <CharacterListScreen ctx={{ ...ictx, npcMode: true }} setCtx={set} />;
+  if (key === 'npcs/n-view')     return <CharacterDetailScreen ctx={{ ...ictx, npcMode: true }} setCtx={set} />;
+  if (key === 'npcs/n-validate') return <PlaceholderScreen section={section} item={item} />;
+
+  /* ───── Settings (all config items → same screen, different tab) ───── */
+  if (section.id === 'config') {
+    const tabMap: Record<string, ScreenContext['settingsTab']> = {
+      'c-view':     'view',
+      'c-ai':       'ai',
+      'c-rag':      'rag',
+      'c-display':  'display',
+      'c-paths':    'paths',
+      'c-validate': 'validate',
+      'c-save':     'save',
+    };
+    const settingsTab = tabMap[item.id] ?? 'view';
+    return <SettingsScreen ctx={{ ...ictx, settingsTab }} setCtx={set} />;
+  }
+
+  /* ───── Model Profile ───── */
+  if (section.id === 'model') return <ModelProfileScreen ctx={ictx} setCtx={set} />;
+
+  /* ───── Tools & Batch ───── */
+  if (section.id === 'tools') return <ToolsScreen ctx={ictx} setCtx={set} />;
+
+  /* ───── Characters — party ───── */
+  if (key === 'characters/party') return <CurrentPartyScreen ctx={ictx} setCtx={set} />;
 
   /* Fallback — loud placeholder so missing screens can't be shipped silently */
   return <PlaceholderScreen section={section} item={item} />;
