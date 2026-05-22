@@ -1,0 +1,43 @@
+.portrait {
+  position: relative;
+  flex-shrink: 0;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-gold-border);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 220, 130, 0.12),
+    0 2px 8px rgba(0, 0, 0, 0.4);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Faint icon watermark */
+.watermark {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(201, 169, 110, 0.15);
+  pointer-events: none;
+}
+
+/* Initials on top of watermark */
+.initials {
+  position: relative;
+  z-index: 1;
+  font-family: var(--font-display);
+  font-weight: var(--font-bold);
+  color: var(--color-gold-mid);
+  line-height: 1;
+  letter-spacing: var(--tracking-tight);
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+}

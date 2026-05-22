@@ -29,7 +29,72 @@
 
 /* ── Divider breathing room ──────────────────────────────────── */
 .dividerSpacer {
-  margin-bottom: var(--space-8);
+  margin-bottom: var(--space-6);
+}
+
+/* ── Filter bar ──────────────────────────────────────────────── */
+.filterBar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-bg-surface);
+  border: var(--border-thin);
+  border-radius: var(--radius-md);
+}
+
+.filterSearch {
+  flex: 1;
+  min-width: 200px;
+  background: var(--color-bg-overlay);
+  border: 1px solid var(--color-gold-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-primary);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  padding: var(--space-2) var(--space-3);
+  outline: none;
+}
+
+.filterSearch:focus {
+  border-color: var(--color-gold-mid);
+  box-shadow: 0 0 0 2px rgba(201, 169, 110, 0.15);
+}
+
+.filterSearch::placeholder {
+  color: var(--color-text-disabled);
+}
+
+.filterToggle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--font-display);
+  font-size: var(--text-xs);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  user-select: none;
+}
+
+.filterToggle input[type="checkbox"] {
+  accent-color: var(--color-gold-mid);
+  cursor: pointer;
+}
+
+.filterToggle:has(input:checked) {
+  color: var(--color-gold-bright);
+}
+
+.filterCount {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--color-text-disabled);
+  white-space: nowrap;
 }
 
 /* ── Character card grid ─────────────────────────────────────── */
@@ -64,57 +129,47 @@
   box-shadow: var(--shadow-md);
 }
 
-/* ── Avatar ──────────────────────────────────────────────────── */
-.cardAvatar {
+/* Party members get a subtle gold left accent */
+.cardParty {
+  border-left: 3px solid var(--color-gold-mid);
+}
+
+/* ── Portrait wrapper (hosts the Portrait atom + party dot) ──── */
+.portraitWrap {
+  position: relative;
   flex-shrink: 0;
-  width: 48px;
-  height: 48px;
+}
+
+/* Green dot bottom-right when character is in current party */
+.partyDot {
+  position: absolute;
+  bottom: 3px;
+  right: 3px;
+  width: 9px;
+  height: 9px;
   border-radius: 50%;
-  border: 1px solid var(--color-gold-border);
-  background:
-    radial-gradient(circle at 32% 28%, rgba(240, 192, 96, 0.22), transparent 60%),
-    var(--color-bg-raised);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 220, 130, 0.18),
-    0 2px 6px rgba(0, 0, 0, 0.3);
+  background: var(--color-success);
+  border: 1px solid var(--color-bg-surface);
+  z-index: 2;
 }
 
-.cardAvatarImg {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: 50%;
-}
-
-.cardAvatarInitial {
-  font-family: var(--font-display);
-  font-size: var(--text-lg);
-  font-weight: var(--font-bold);
-  color: var(--color-gold-mid);
-  line-height: 1;
-}
-
-/* ── Card body (right of avatar) ─────────────────────────────── */
+/* ── Card body ───────────────────────────────────────────────── */
 .cardBody {
   min-width: 0;
   flex: 1;
 }
 
-/* ── Top row: name + AC ──────────────────────────────────────── */
 .cardTop {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
   gap: var(--space-2);
-  margin-bottom: var(--space-1);
+  margin-bottom: 2px;
 }
 
 .cardName {
   font-family: var(--font-display);
-  font-size: 17px;
+  font-size: 15px;
   font-weight: var(--font-semibold);
   color: var(--color-gold-bright);
   white-space: nowrap;
@@ -122,15 +177,41 @@
   text-overflow: ellipsis;
 }
 
-.cardAc {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--color-gold-muted);
-  white-space: nowrap;
+/* "Canon" source-character label */
+.canonBadge {
   flex-shrink: 0;
+  font-family: var(--font-display);
+  font-size: 9px;
+  letter-spacing: var(--tracking-widest);
+  text-transform: uppercase;
+  color: var(--color-info);
+  border: 1px solid rgba(91, 155, 213, 0.35);
+  border-radius: var(--radius-pill);
+  padding: 1px 6px;
 }
 
-/* ── Campaign label ──────────────────────────────────────────── */
+/* Nickname */
+.cardNickname {
+  font-family: var(--font-body);
+  font-style: italic;
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  margin: 0 0 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Pronouns */
+.cardPronouns {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--color-text-disabled);
+  margin: 0 0 var(--space-2);
+  letter-spacing: var(--tracking-wide);
+}
+
+/* Campaign attribution */
 .cardCampaign {
   font-family: var(--font-body);
   font-style: italic;
@@ -142,41 +223,35 @@
   text-overflow: ellipsis;
 }
 
-/* ── Badge chips row ─────────────────────────────────────────── */
-.cardBadges {
+/* Stat strip: HP / AC / Level */
+.cardStats {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-1);
+  gap: var(--space-2);
 }
 
-/* ── Empty state ─────────────────────────────────────────────── */
+.statChip {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--color-gold-muted);
+  background: var(--color-bg-overlay);
+  border: 1px solid var(--color-gold-border);
+  border-radius: var(--radius-sm);
+  padding: 1px 6px;
+  white-space: nowrap;
+}
+
+/* ── Empty / no-results state ────────────────────────────────── */
 .emptyPanel {
   display: flex;
-  flex-direction: column;
-  align-items: center;
   justify-content: center;
-  text-align: center;
-  background: var(--color-bg-surface);
-  border: var(--border-thin);
-  border-radius: var(--radius-md);
   padding: var(--space-8);
-  gap: var(--space-4);
-  max-width: 400px;
-  margin: var(--space-8) auto 0;
-}
-
-.emptyHeading {
-  font-family: var(--font-display);
-  font-size: var(--text-md);
-  font-weight: var(--font-semibold);
-  color: var(--color-gold-mid);
-  margin: 0;
 }
 
 .emptyBody {
   font-family: var(--font-body);
+  font-style: italic;
   font-size: var(--text-base);
   color: var(--color-text-secondary);
   margin: 0;
-  line-height: var(--leading-normal);
 }
