@@ -3,6 +3,8 @@ import { graphql, Link } from 'gatsby';
 import type { HeadFC, PageProps } from 'gatsby';
 import { cleanHtml } from '../utils/cleanHtml';
 import * as styles from './campaign-reader.module.css';
+import { useTopbar } from '../components/layout/TopbarContext';
+import type { DrupalCampaign } from '../components/console/ConsoleContext';
 
 // ── Roman numeral lookup (I–L) ────────────────────────────────────────────────
 
@@ -173,17 +175,33 @@ const CampaignReaderPage: React.FC<PageProps<CampaignReaderData>> = ({
   location,
 }) => {
   const allStories = data.drupal.nodeStories.nodes;
+  const { activeCampaignName: contextCampaign, register } = useTopbar();
 
-  // Determine which campaign to show from ?campaign= query param
+  // Register campaigns so the topbar chip works on this page.
+  // Uses allStories (stable Gatsby prop) as the dep, not a derived array.
+  useEffect(() => {
+    const names = Array.from(
+      new Set(allStories.map(s => s.campaign?.name).filter((n): n is string => n !== undefined && n !== null)),
+    ).sort();
+    const drupalCampaigns: DrupalCampaign[] = names.map(n => ({
+      id:             n,
+      name:           n,
+      campaignStatus: null,
+    }));
+    register(drupalCampaigns, names[0] ?? null);
+  }, [allStories, register]);
+
+  // Priority: ?campaign= URL param > active campaign from console > first alphabetically.
   const [campaignName, setCampaignName] = useState<string | null>(null);
 
   useEffect(() => {
-    const params  = new URLSearchParams(location.search);
-    const raw     = params.get('campaign');
-    if (raw) {
+    const params = new URLSearchParams(location.search);
+    const raw    = params.get('campaign');
+    if (raw !== null && raw !== '') {
       setCampaignName(raw);
+    } else if (contextCampaign !== null) {
+      setCampaignName(contextCampaign);
     } else {
-      // Default: first campaign alphabetically
       const names = Array.from(
         new Set(
           allStories
@@ -193,7 +211,7 @@ const CampaignReaderPage: React.FC<PageProps<CampaignReaderData>> = ({
       ).sort();
       setCampaignName(names[0] ?? null);
     }
-  }, [location.search, allStories]);
+  }, [location.search, contextCampaign, allStories]);
 
   const stories = allStories
     .filter(s => s.campaign?.name === campaignName)
@@ -213,6 +231,11 @@ const CampaignReaderPage: React.FC<PageProps<CampaignReaderData>> = ({
   const [sourceSpread, setSourceSpread] = useState<number | null>(null);
   const [animDir,      setAnimDir]      = useState<'forward' | 'back'>('forward');
   const [animating,    setAnimating]    = useState(false);
+
+  // Reset to spread 0 when the active campaign changes.
+  useEffect(() => {
+    setActiveSpread(0);
+  }, [campaignName]);
 
   // Scroll both pages to top whenever the spread changes.
   useEffect(() => {

@@ -279,17 +279,16 @@ kbd {
   margin-right: 6px;
 }
 .chip-pop-name {
-  display: block;
   font-family: var(--font-display);
   font-size: 13px;
   color: var(--ink);
-  margin-bottom: 2px;
 }
 .chip-pop-stats {
   display: block;
   font-size: 10px;
   font-family: var(--font-mono);
   color: var(--ink-faint);
+  margin-top: 2px;
 }
 .chip-pop-foot {
   border-top: 1px solid var(--rule);

@@ -9,7 +9,9 @@ dotenv.config({ path: path.resolve(__dirname, '..', '.env') });
 dotenv.config({ path: `.env.${process.env.NODE_ENV ?? 'development'}` });
 dotenv.config({ path: '.env.development' });
 
-const DRUPAL_URL  = process.env.DRUPAL_BASE_URL;
+// Prefer GATSBY_DRUPAL_BASE_URL (set in .env.development as HTTP to avoid
+// Node.js rejecting DDEV's self-signed cert) over the shared DRUPAL_BASE_URL.
+const DRUPAL_URL  = process.env.GATSBY_DRUPAL_BASE_URL ?? process.env.DRUPAL_BASE_URL;
 const DRUPAL_TOKEN = process.env.DRUPAL_GRAPHQL_TOKEN;
 const SITE_URL    = process.env.SITE_URL;
 const SITE_TITLE  = process.env.SITE_TITLE;
@@ -38,6 +40,10 @@ const config: GatsbyConfig = {
         fieldName: 'drupal',
         url: `${DRUPAL_URL}/graphql`,
         headers: authHeader ? { Authorization: authHeader } : {},
+        // Poll Drupal every 30 s in dev so content changes propagate
+        // without needing a manual restart. /__refresh provides the
+        // immediate push; refetchInterval is the fallback safety net.
+        refetchInterval: 30,
       },
     },
     'gatsby-plugin-image',

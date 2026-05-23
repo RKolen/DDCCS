@@ -44,6 +44,7 @@ function TopbarCampaignChip(): React.ReactElement {
   const { campaigns, activeCampaignName, onSwitchCampaign } = useTopbar();
   const [open, setOpen] = React.useState(false);
   const active = campaigns.find(c => c.name === activeCampaignName) ?? campaigns[0] ?? null;
+  const activeName = active?.name ?? null;
 
   if (!active) {
     return (
@@ -67,9 +68,7 @@ function TopbarCampaignChip(): React.ReactElement {
           <span className="chip-eyebrow">Active campaign</span>
           <span className="chip-name">{active.name}</span>
         </span>
-        {active.campaignStatus && (
-          <span className="chip-status">{active.campaignStatus}</span>
-        )}
+        <span className="chip-status">active</span>
         {campaigns.length > 1 && <Icon name="chevronDown" size={12} />}
       </button>
       {open && campaigns.length > 1 && (
@@ -79,7 +78,7 @@ function TopbarCampaignChip(): React.ReactElement {
             <button
               key={c.id}
               type="button"
-              className={`chip-pop-item${c.name === activeCampaignName ? ' active' : ''}`}
+              className={`chip-pop-item${c.name === activeName ? ' active' : ''}`}
               onClick={() => { onSwitchCampaign(c.name); setOpen(false); }}
             >
               <span className="chip-pop-name">{c.name}</span>

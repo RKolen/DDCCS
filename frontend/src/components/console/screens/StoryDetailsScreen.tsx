@@ -133,12 +133,12 @@ const DEMO_STORY: StoryDetail = {
 };
 
 const RARITY_COLORS: Record<string, string> = {
-  common: '#9e9e9e',
-  uncommon: '#4caf50',
-  rare: '#2196f3',
-  'very-rare': '#9c27b0',
-  legendary: '#ff9800',
-  artifact: '#f44336',
+  common: 'var(--color-rarity-common)',
+  uncommon: 'var(--color-rarity-uncommon)',
+  rare: 'var(--color-rarity-rare)',
+  'very-rare': 'var(--color-rarity-very-rare)',
+  legendary: 'var(--color-rarity-legendary)',
+  artifact: 'var(--color-rarity-artifact)',
 };
 
 /* ─────────────────────────────────────────────────────────────
@@ -165,9 +165,9 @@ function renderInline(s: string): React.ReactNode[] {
 ───────────────────────────────────────────────────────────── */
 
 export function StoryDetailsScreen({ ctx, setCtx }: ScreenProps): React.ReactElement {
-  const data      = useConsoleData();
-  const campaign  = (ctx.activeCampaignName as string | null | undefined) ?? data.campaigns[0]?.name ?? null;
-  const stories   = campaign ? storiesForCampaign(data, campaign) : data.stories;
+  const data = useConsoleData();
+  const campaign = (ctx.activeCampaignName as string | null | undefined) ?? data.campaigns[0]?.name ?? null;
+  const stories = campaign ? storiesForCampaign(data, campaign) : data.stories;
 
   const storyIndex: StoryIndex[] = stories.map((s, i) => ({
     id: String(s.storyNumber ?? i + 1).padStart(3, '0'),
@@ -332,7 +332,7 @@ export function StoryDetailsScreen({ ctx, setCtx }: ScreenProps): React.ReactEle
                 <li key={i} className="loot-entry">
                   <span
                     className="loot-rarity"
-                    style={{ background: RARITY_COLORS[l.rarity] ?? '#777' }}
+                    style={{ background: RARITY_COLORS[l.rarity] ?? 'var(--ink-dim)' }}
                   />
                   <span className="loot-name">{l.name}</span>
                   <span className="loot-meta">{l.meta}</span>

@@ -639,7 +639,7 @@ function AiActionWorkbench({ actionId, ctx, setCtx, entry }: ActionScreenProps):
                 type="button"
                 className="ai-run-btn"
                 onClick={run.cancel}
-                style={{ background: 'linear-gradient(180deg,#b04a3a,#832d23)', borderColor: '#6b1f17', color: '#fff7e8' }}
+                style={{ background: 'var(--color-danger)', borderColor: 'var(--color-danger)', color: 'var(--parchment)' }}
               >
                 <Icon name="close" size={11} /> Cancel
               </button>

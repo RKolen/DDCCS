@@ -7,6 +7,7 @@
 
 declare(strict_types=1);
 
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\node\NodeInterface;
 
 /**
@@ -25,5 +26,49 @@ function dnd_migrate_node_presave(NodeInterface $node): void {
   if ($model === '') {
     $env_model = (string) (getenv('AI_CREATIVE_MODEL') ?: '');
     $node->set('field_ai_model', $env_model);
+  }
+}
+
+/**
+ * Implements hook_entity_update().
+ *
+ * When an item node is updated, enqueue every character node that references
+ * it (via field_equipment_items or field_magic_items_ref) for a Gatsby build.
+ * Without this, updating an item in isolation would leave the character profile
+ * pages stale until the next full rebuild.
+ *
+ * Only runs when the gatsby.logger service is available — the gatsby module
+ * may not be enabled in all environments.
+ */
+function dnd_migrate_entity_update(EntityInterface $entity): void {
+  if (!$entity instanceof NodeInterface || $entity->bundle() !== 'item') {
+    return;
+  }
+
+  if (!\Drupal::hasService('gatsby.logger')) {
+    return;
+  }
+
+  $item_id = (int) $entity->id();
+  $storage = \Drupal::entityTypeManager()->getStorage('node');
+
+  $query = $storage->getQuery();
+  $query->accessCheck(FALSE);
+  $query->condition('type', 'character');
+  $group = $query->orConditionGroup()
+    ->condition('field_equipment_items', $item_id)
+    ->condition('field_magic_items_ref', $item_id);
+  $query->condition($group);
+
+  $character_ids = $query->execute();
+  if (empty($character_ids)) {
+    return;
+  }
+
+  /** @var \Drupal\gatsby\GatsbyEntityLogger $gatsby_logger */
+  $gatsby_logger = \Drupal::service('gatsby.logger');
+
+  foreach ($storage->loadMultiple($character_ids) as $character) {
+    $gatsby_logger->logEntity($character, 'update');
   }
 }

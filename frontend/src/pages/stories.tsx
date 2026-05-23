@@ -3,6 +3,8 @@ import { graphql, Link } from 'gatsby';
 import type { HeadFC, PageProps } from 'gatsby';
 import { BaseTemplate } from '../components/templates/BaseTemplate';
 import { GameIcon } from '../components/atoms/GameIcon';
+import { useTopbar } from '../components/layout/TopbarContext';
+import type { DrupalCampaign } from '../components/console/ConsoleContext';
 import * as styles from './stories.module.css';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -110,14 +112,39 @@ function EmptyState(): React.ReactElement {
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 const StoriesPage: React.FC<PageProps<StoriesData>> = ({ data, location }) => {
-  const groups = groupByCampaign(data.drupal.nodeStories.nodes);
+  const storyNodes = data.drupal.nodeStories.nodes;
+  const allGroups  = groupByCampaign(storyNodes);
+  const { activeCampaignName, register } = useTopbar();
+
+  React.useEffect(() => {
+    const names = Array.from(
+      new Set(storyNodes.map(n => n.campaign?.name).filter((n): n is string => n !== undefined && n !== null)),
+    );
+    const drupalCampaigns: DrupalCampaign[] = names.map(n => ({
+      id: n,
+      name: n,
+      campaignStatus: null,
+    }));
+    register(drupalCampaigns, names[0] ?? null);
+  }, [storyNodes, register]);
+
+  const activeGroup = activeCampaignName !== null
+    ? (allGroups.find(g => g.name === activeCampaignName) ?? null)
+    : null;
+
+  const showAll = activeCampaignName === null;
+  const groups  = showAll ? allGroups : (activeGroup !== null ? [activeGroup] : []);
 
   return (
     <BaseTemplate currentPath={location.pathname}>
       <div className={styles.page}>
         <header className={styles.pageHeader}>
           <h1 className={styles.heading}>Chronicle</h1>
-          <p className={styles.subtitle}>Select a campaign to begin reading.</p>
+          <p className={styles.subtitle}>
+            {activeCampaignName !== null
+              ? activeCampaignName
+              : 'Select a campaign to begin reading.'}
+          </p>
         </header>
 
         {groups.length > 0 ? (
@@ -125,6 +152,19 @@ const StoriesPage: React.FC<PageProps<StoriesData>> = ({ data, location }) => {
             {groups.map(group => (
               <CampaignCard key={group.name} group={group} />
             ))}
+          </div>
+        ) : activeCampaignName !== null ? (
+          <div className={styles.grid}>
+            <div className={styles.card} style={{ cursor: 'default', opacity: 0.7 }}>
+              <div className={styles.cardIcon}>
+                <GameIcon name="scroll-unfurled" size={28} colorFilter="var(--filter-gold-dim)" decorative />
+              </div>
+              <h2 className={styles.cardName}>{activeCampaignName}</h2>
+              <p className={styles.cardCount}>0 sessions recorded</p>
+              <p className={styles.cardRange}>
+                No stories yet — sync from the Python CLI or add one from the console.
+              </p>
+            </div>
           </div>
         ) : (
           <EmptyState />
