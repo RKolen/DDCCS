@@ -66,7 +66,7 @@ const ACTION_GROUPS: ActionGroup[] = [
   },
 ];
 
-export function StorySeriesWorkspaceScreen({ ctx }: ScreenProps): React.ReactElement {
+export function StorySeriesWorkspaceScreen({ ctx, setCtx }: ScreenProps): React.ReactElement {
   const data         = useConsoleData();
   const campaignName = (ctx.activeCampaignName as string | null | undefined) ?? data.campaigns[0]?.name ?? null;
 
@@ -143,7 +143,12 @@ export function StorySeriesWorkspaceScreen({ ctx }: ScreenProps): React.ReactEle
               <h5 className="action-group-title">{g.title}</h5>
               <div className="action-group-cards">
                 {g.items.map(it => (
-                  <button key={it.id} type="button" className="series-action-card">
+                  <button
+                    key={it.id}
+                    type="button"
+                    className="series-action-card"
+                    onClick={() => { setCtx({ ...ctx, workSeriesAction: it.id }); }}
+                  >
                     <span className="series-action-label">
                       {it.label}
                       {it.ai && <AiTag />}

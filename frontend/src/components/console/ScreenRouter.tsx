@@ -63,6 +63,9 @@ import { CurrentPartyScreen }           from './screens/CurrentPartyScreen';
 import { ReadStoryFileScreen }          from './screens/ReadStoryFileScreen';
 import { ConsultScreen }                from './screens/ConsultScreen';
 import { StorySeriesWorkspaceScreen }   from './screens/StorySeriesWorkspaceScreen';
+import { AiActionScreen }               from './screens/AiActionScreen';
+import { StoryDetailsScreen }           from './screens/StoryDetailsScreen';
+import { SessionNotesScreen }           from './screens/SessionNotesScreen';
 import { TimelineScreen }               from './screens/TimelineScreen';
 import { SpellRegistryScreen }          from './screens/SpellRegistryScreen';
 import { NewSeriesScreen }              from './screens/NewSeriesScreen';
@@ -92,7 +95,13 @@ export function ScreenRouter({ section, item, ctx, setCtx }: ScreenRouterProps):
   if (key === 'characters/ascii')   return <DeprecatedScreen item={item} />;
 
   /* ───── Stories ───── */
-  if (key === 'stories/work-series') return <StorySeriesWorkspaceScreen ctx={ictx} setCtx={set} />;
+  if (key === 'stories/work-series') {
+    const actionId = ictx.workSeriesAction as string | undefined;
+    if (actionId === 's-view')  return <StoryDetailsScreen  ctx={ictx} setCtx={set} />;
+    if (actionId === 's-notes') return <SessionNotesScreen  ctx={ictx} setCtx={set} />;
+    if (actionId !== undefined) return <AiActionScreen      ctx={ictx} setCtx={set} />;
+    return <StorySeriesWorkspaceScreen ctx={ictx} setCtx={set} />;
+  }
   if (key === 'stories/timeline')    return <TimelineScreen ctx={ictx} setCtx={set} />;
   if (key === 'stories/spells')      return <SpellRegistryScreen ctx={ictx} setCtx={set} />;
   if (key === 'stories/new-series')  return <NewSeriesScreen ctx={ictx} setCtx={set} />;
