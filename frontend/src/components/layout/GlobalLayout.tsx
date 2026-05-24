@@ -51,6 +51,11 @@ export function GlobalLayout({ children, location }: GlobalLayoutProps): React.R
     () => readStorage<string | null>(ACTIVE_KEY, null),
   );
 
+  /* Always-current ref so the memoised register() can read activeCampaignName
+     without closing over a stale value (register has [] deps). */
+  const activeNameRef = React.useRef(activeCampaignName);
+  activeNameRef.current = activeCampaignName;
+
   React.useEffect(() => {
     if (campaigns.length > 0) {
       window.localStorage.setItem(CAMPAIGNS_KEY, JSON.stringify(campaigns));
@@ -59,7 +64,7 @@ export function GlobalLayout({ children, location }: GlobalLayoutProps): React.R
 
   React.useEffect(() => {
     if (activeCampaignName !== null) {
-      window.localStorage.setItem(ACTIVE_KEY, activeCampaignName);
+      window.localStorage.setItem(ACTIVE_KEY, JSON.stringify(activeCampaignName));
     }
   }, [activeCampaignName]);
 
@@ -70,19 +75,23 @@ export function GlobalLayout({ children, location }: GlobalLayoutProps): React.R
     (liveCampaigns: DrupalCampaign[], initialActiveName: string | null, canonical = false) => {
       setCampaigns(prev => {
         if (canonical) {
-          return dedupeByName(liveCampaigns);
+          const liveNames     = new Set(liveCampaigns.map(c => c.name));
+          const currentActive = activeNameRef.current;
+          const base          = dedupeByName(liveCampaigns);
+          /* If the active campaign isn't in Drupal's response yet (Gatsby's
+             GraphQL cache can lag up to 30 s after creation), keep it in the
+             list so the chip doesn't jump to campaigns[0]. */
+          if (currentActive && !liveNames.has(currentActive)) {
+            const activeEntry = prev.find(c => c.name === currentActive);
+            return activeEntry ? dedupeByName([...base, activeEntry]) : base;
+          }
+          return base;
         }
         const existingNames = new Set(prev.map(c => c.name));
         const toAdd = liveCampaigns.filter(c => !existingNames.has(c.name));
         return toAdd.length > 0 ? dedupeByName([...prev, ...toAdd]) : prev;
       });
-      setActiveCampaignName(prev => {
-        const liveNames = new Set(liveCampaigns.map(c => c.name));
-        if (canonical && prev !== null && !liveNames.has(prev)) {
-          return liveCampaigns[0]?.name ?? null;
-        }
-        return prev ?? initialActiveName;
-      });
+      setActiveCampaignName(prev => prev ?? initialActiveName);
     },
     [],
   );
@@ -100,7 +109,7 @@ export function GlobalLayout({ children, location }: GlobalLayoutProps): React.R
       return updated;
     });
     setActiveCampaignName(campaign.name);
-    window.localStorage.setItem(ACTIVE_KEY, campaign.name);
+    window.localStorage.setItem(ACTIVE_KEY, JSON.stringify(campaign.name));
   }, []);
 
   return (
