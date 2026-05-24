@@ -37,6 +37,8 @@ export interface DrupalCharacter {
   characterClass: string | null;
   /** true = player character, false = NPC */
   characterType: boolean | null;
+  /** true = template / source character, false = campaign clone */
+  sourceCharacter: boolean | null;
   campaign: string | null;
   campaignId: string | null;
   path: string | null;

@@ -9,4 +9,15 @@ extend type Mutation {
     "Optional lifecycle status: active, completed, or on_hold."
     status: String
   ): TermCampaign
+
+  """
+  Add an existing character node to a campaign's current party.
+  Returns the updated campaign term. No-op if already a member.
+  """
+  addCharacterToCampaign(
+    "UUID of the campaign taxonomy term."
+    campaignId: ID!
+    "UUID of the character node."
+    characterId: ID!
+  ): TermCampaign
 }

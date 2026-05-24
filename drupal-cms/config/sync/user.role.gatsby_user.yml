@@ -3,6 +3,7 @@ langcode: en
 status: true
 dependencies:
   config:
+    - node.type.character
     - node.type.ability
     - node.type.item
     - node.type.monster
@@ -53,6 +54,8 @@ label: gatsby_user
 weight: 2
 is_admin: false
 permissions:
+  - 'create character content'
+  - 'edit terms in campaign'
   - 'create ability content'
   - 'create item content'
   - 'create monster content'

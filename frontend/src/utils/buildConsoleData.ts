@@ -41,6 +41,7 @@ export interface RawCharacter {
   proficiencyBonus: number | null;
   pronouns:        string | null;
   characterType:   boolean | null;
+  sourceCharacter: boolean | null;
   role:            string | null;
   path:            string | null;
   campaign:        RawCampaignOnCharacter | null;
@@ -80,6 +81,7 @@ export function buildConsoleData(data: ConsoleQueryData | null | undefined): Con
     role:             n.role,
     characterClass:   null,
     characterType:    n.characterType,
+    sourceCharacter:  n.sourceCharacter,
     campaign:         n.campaign?.name ?? null,
     campaignId:       n.campaign?.id ?? null,
     path:             n.path,

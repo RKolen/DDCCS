@@ -1563,3 +1563,24 @@ kbd {
   .ledger-detail { width: 300px; }
   .ledger-sidebar { width: 220px; }
 }
+
+/* ── Image lightbox ──────────────────────────────────────────── */
+.lightbox-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: color-mix(in srgb, var(--desk-wood-dark) 92%, transparent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: zoom-out;
+}
+.lightbox-img {
+  max-width: 90vw;
+  max-height: 90vh;
+  object-fit: contain;
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-deep);
+  cursor: default;
+}
+

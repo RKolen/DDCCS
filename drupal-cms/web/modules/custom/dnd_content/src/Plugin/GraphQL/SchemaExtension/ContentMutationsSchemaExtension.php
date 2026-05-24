@@ -45,6 +45,14 @@ class ContentMutationsSchemaExtension extends SdlSchemaExtensionPluginBase {
         ->map('name', $builder->fromArgument('name'))
         ->map('status', $builder->fromArgument('status')),
     );
+
+    $registry->addFieldResolver(
+      'Mutation',
+      'addCharacterToCampaign',
+      $builder->produce('add_character_to_campaign')
+        ->map('campaign_id',  $builder->fromArgument('campaignId'))
+        ->map('character_id', $builder->fromArgument('characterId')),
+    );
   }
 
 }

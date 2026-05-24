@@ -3,6 +3,7 @@ import { graphql, Link } from 'gatsby';
 import type { HeadFC, PageProps } from 'gatsby';
 import { BaseTemplate } from '../components/templates/BaseTemplate';
 import { Portrait } from '../components/atoms/Portrait';
+import { ImageLightbox } from '../components/atoms/ImageLightbox';
 import { cleanHtml } from '../utils/cleanHtml';
 import * as styles from './character.module.css';
 
@@ -131,6 +132,8 @@ const CharacterPage: React.FC<PageProps<CharacterData>> = ({ data, location }) =
     );
   }
 
+  const [lightboxOpen, setLightboxOpen] = React.useState(false);
+
   const cls        = char.characterClasses?.[0] ?? null;
   const className  = cls?.classRef?.name ?? null;
   const subclass   = cls?.subclassRef?.name ?? null;
@@ -166,7 +169,15 @@ const CharacterPage: React.FC<PageProps<CharacterData>> = ({ data, location }) =
 
         {/* ── Hero ── */}
         <header className={styles.hero}>
-          <Portrait name={char.title} size={120} imageUrl={imageUrl} className={styles.heroPortrait} />
+          <div
+            onClick={imageUrl ? () => setLightboxOpen(true) : undefined}
+            style={imageUrl ? { cursor: 'zoom-in' } : undefined}
+          >
+            <Portrait name={char.title} size={120} imageUrl={imageUrl} className={styles.heroPortrait} />
+          </div>
+          {lightboxOpen && imageUrl && (
+            <ImageLightbox src={imageUrl} alt={char.title} onClose={() => setLightboxOpen(false)} />
+          )}
 
           <div className={styles.heroBody}>
             <div className={styles.heroTop}>

@@ -11,16 +11,18 @@ import type { ScreenProps } from '../ScreenRouter';
 import { useConsoleData, playerCharacters, npcCharacters } from '../ConsoleContext';
 import type { DrupalCampaign } from '../ConsoleContext';
 import { drupalAdminUrl } from '../../../utils/drupalLinks';
+import { Icon } from '../atoms';
+import { ImageLightbox } from '../../atoms/ImageLightbox';
 
 function partyIdsForCampaign(campaigns: DrupalCampaign[], name: string): Set<string> {
   const camp = campaigns.find(c => c.name === name);
   return new Set(camp?.currentPartyIds ?? []);
 }
-import { Icon } from '../atoms';
 
 export function CharacterDetailScreen({ ctx, setCtx }: ScreenProps): React.ReactElement {
   const data       = useConsoleData();
   const isNpc      = Boolean(ctx.npcMode);
+  const [lightboxOpen, setLightboxOpen] = React.useState(false);
   const allInType  = isNpc ? npcCharacters(data) : playerCharacters(data);
   // PCs: filter by the campaign's currentPartyIds.
   // NPCs: show all (their campaign link isn't via currentParty).
@@ -83,7 +85,11 @@ export function CharacterDetailScreen({ ctx, setCtx }: ScreenProps): React.React
         ) : (
           <>
             <div className="char-sheet-head">
-              <div className="char-sheet-portrait">
+              <div
+                className="char-sheet-portrait"
+                onClick={char.imageUrl ? () => setLightboxOpen(true) : undefined}
+                style={char.imageUrl ? { cursor: 'zoom-in' } : undefined}
+              >
                 {char.imageUrl
                   ? <img src={char.imageUrl} alt={char.title} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 2 }} />
                   : <span className="portrait-placeholder">
@@ -91,6 +97,9 @@ export function CharacterDetailScreen({ ctx, setCtx }: ScreenProps): React.React
                     </span>
                 }
               </div>
+              {lightboxOpen && char.imageUrl && (
+                <ImageLightbox src={char.imageUrl} alt={char.title} onClose={() => setLightboxOpen(false)} />
+              )}
               <div className="char-sheet-title">
                 <span className="reader-eyebrow">{eyebrow}</span>
                 <h1>{char.title}</h1>
