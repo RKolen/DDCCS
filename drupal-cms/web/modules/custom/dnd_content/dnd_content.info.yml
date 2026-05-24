@@ -1,0 +1,9 @@
+name: 'D&D Content Mutations'
+type: module
+description: 'GraphQL mutations for creating D&D campaign content from the Gatsby frontend without accessing Drupal admin.'
+package: 'D&D Consultant'
+core_version_requirement: ^10.4 || ^11
+dependencies:
+  - graphql:graphql
+  - graphql_compose:graphql_compose
+  - taxonomy:taxonomy

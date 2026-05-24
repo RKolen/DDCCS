@@ -21,4 +21,5 @@ schema_configuration:
       graphql_compose_routes: graphql_compose_routes
       graphql_compose_menus: graphql_compose_menus
       graphql_compose_users: graphql_compose_users
+      dnd_content: dnd_content
 persisted_queries_settings: {  }

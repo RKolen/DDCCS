@@ -67,8 +67,8 @@ entity_config:
       simple_queries: '1'
   paragraph:
     ability_score:
-      enabled: '1'
-      query_load_enabled: '1'
+      enabled: true
+      query_load_enabled: true
       type_sdl: AbilityScoreItem
     ability_scores:
       enabled: true
@@ -86,13 +86,13 @@ entity_config:
       enabled: true
       query_load_enabled: true
     wysiwyg:
-      enabled: '1'
-      query_load_enabled: '1'
+      enabled: true
+      query_load_enabled: true
   taxonomy_term:
     campaign:
       enabled: true
       query_load_enabled: true
-      edges_enabled: '1'
+      edges_enabled: true
       simple_queries: '1'
     class:
       enabled: true

@@ -65,7 +65,7 @@ export function StatelyLedger({
   const { register, activeCampaignName } = useTopbar();
   React.useEffect(() => {
     if (campaigns.length > 0) {
-      register(campaigns, campaigns[0].name);
+      register(campaigns, campaigns[0].name, true);
     }
   }, [register, campaigns]);
 

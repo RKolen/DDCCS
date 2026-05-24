@@ -1,0 +1,14 @@
+uuid: 92bc84c4-cfae-45fb-82a9-bf4e155b7c2a
+langcode: en
+status: true
+dependencies:
+  config:
+    - user.role.gatsby_user
+  module:
+    - user
+id: user_remove_role_action.gatsby_user
+label: 'Remove the gatsby_user role from the selected user(s)'
+type: user
+plugin: user_remove_role_action
+configuration:
+  rid: gatsby_user

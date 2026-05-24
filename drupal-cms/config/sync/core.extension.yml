@@ -15,6 +15,7 @@ module:
   dblog: 0
   ddccs_filters: 0
   ddccs_gatsby_auth: 0
+  dnd_content: 0
   dnd_migrate: 0
   dnd_search: 0
   dynamic_page_cache: 0
@@ -35,6 +36,8 @@ module:
   graphql_compose_routes: 0
   graphql_compose_users: 0
   image: 0
+  jsonapi: 0
+  jsonapi_extras: 0
   key: 0
   language: 0
   link: 0
@@ -67,6 +70,7 @@ module:
   pathauto: 1
   views: 10
   paragraphs: 11
+  gatsby: 100
   minimal: 1000
 theme:
   stark: 0

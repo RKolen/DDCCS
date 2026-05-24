@@ -14,8 +14,10 @@ import * as React from 'react';
 import { Link, navigate } from 'gatsby';
 interface GatsbyLocation { pathname: string; search: string; }
 import { useTopbar } from './TopbarContext';
+import { CreateCampaignModal } from './CreateCampaignModal';
 import { Icon, SearchField } from '../console/atoms';
 import type { IconName } from '../console/menuData';
+import type { DrupalCampaign } from '../console/ConsoleContext';
 
 interface GlobalTopbarProps {
   location?: GatsbyLocation;
@@ -41,55 +43,87 @@ const NAV_ITEMS: NavItem[] = [
 /* ── Campaign chip (reads TopbarContext) ── */
 
 function TopbarCampaignChip(): React.ReactElement {
-  const { campaigns, activeCampaignName, onSwitchCampaign } = useTopbar();
-  const [open, setOpen] = React.useState(false);
-  const active = campaigns.find(c => c.name === activeCampaignName) ?? campaigns[0] ?? null;
+  const { campaigns, activeCampaignName, onSwitchCampaign, addCampaign } = useTopbar();
+  const [open,        setOpen]        = React.useState(false);
+  const [showModal,   setShowModal]   = React.useState(false);
+  const active     = campaigns.find(c => c.name === activeCampaignName) ?? campaigns[0] ?? null;
   const activeName = active?.name ?? null;
+
+  const handleCampaignCreated = (campaign: DrupalCampaign): void => {
+    addCampaign(campaign);
+    setShowModal(false);
+    window.location.reload();
+  };
 
   if (!active) {
     return (
-      <div className="topbar-chip topbar-chip--empty">
-        <span className="chip-eyebrow">Active campaign</span>
-        <span className="chip-name">—</span>
-      </div>
+      <>
+        <div className="topbar-chip topbar-chip--empty">
+          <span className="chip-eyebrow">Active campaign</span>
+          <span className="chip-name">—</span>
+        </div>
+        {showModal && (
+          <CreateCampaignModal
+            onCreated={handleCampaignCreated}
+            onClose={() => setShowModal(false)}
+          />
+        )}
+      </>
     );
   }
 
   return (
-    <div className="topbar-chip" style={{ position: 'relative' }}>
-      <button
-        type="button"
-        className="topbar-chip-btn"
-        onClick={() => campaigns.length > 1 && setOpen(o => !o)}
-        style={{ cursor: campaigns.length > 1 ? 'pointer' : 'default' }}
-      >
-        <span className="chip-dot" />
-        <span className="chip-meta">
-          <span className="chip-eyebrow">Active campaign</span>
-          <span className="chip-name">{active.name}</span>
-        </span>
-        <span className="chip-status">active</span>
-        {campaigns.length > 1 && <Icon name="chevronDown" size={12} />}
-      </button>
-      {open && campaigns.length > 1 && (
-        <div className="campaign-chip-pop">
-          <div className="chip-pop-header">Switch campaign</div>
-          {campaigns.map(c => (
-            <button
-              key={c.id}
-              type="button"
-              className={`chip-pop-item${c.name === activeName ? ' active' : ''}`}
-              onClick={() => { onSwitchCampaign(c.name); setOpen(false); }}
-            >
-              <span className="chip-pop-name">{c.name}</span>
-              {c.campaignStatus && (
-                <span className="chip-pop-stats">{c.campaignStatus}</span>
-              )}
-            </button>
-          ))}
-        </div>
+    <>
+      <div className="topbar-chip" style={{ position: 'relative' }}>
+        <button
+          type="button"
+          className="topbar-chip-btn"
+          onClick={() => setOpen(o => !o)}
+          style={{ cursor: 'pointer' }}
+        >
+          <span className="chip-dot" />
+          <span className="chip-meta">
+            <span className="chip-eyebrow">Active campaign</span>
+            <span className="chip-name">{active.name}</span>
+          </span>
+          <span className="chip-status">active</span>
+          <Icon name="chevronDown" size={12} />
+        </button>
+        {open && (
+          <div className="campaign-chip-pop">
+            <div className="chip-pop-header">Switch campaign</div>
+            {campaigns.map(c => (
+              <button
+                key={c.id}
+                type="button"
+                className={`chip-pop-item${c.name === activeName ? ' active' : ''}`}
+                onClick={() => { onSwitchCampaign(c.name); setOpen(false); }}
+              >
+                <span className="chip-pop-name">{c.name}</span>
+                {c.campaignStatus && (
+                  <span className="chip-pop-stats">{c.campaignStatus}</span>
+                )}
+              </button>
+            ))}
+            <div className="chip-pop-foot">
+              <button
+                type="button"
+                className="chip-pop-new"
+                onClick={() => { setOpen(false); setShowModal(true); }}
+              >
+                <Icon name="plus" size={11} /> New campaign
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+      {showModal && (
+        <CreateCampaignModal
+          onCreated={handleCampaignCreated}
+          onClose={() => setShowModal(false)}
+        />
       )}
-    </div>
+    </>
   );
 }
 

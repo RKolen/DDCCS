@@ -1,0 +1,97 @@
+uuid: b2f3aa5c-2477-453e-a9c9-caaa21878f24
+langcode: en
+status: true
+dependencies:
+  config:
+    - node.type.ability
+    - node.type.item
+    - node.type.monster
+    - node.type.session
+    - node.type.spell
+    - node.type.story
+    - taxonomy.vocabulary.abilities
+    - taxonomy.vocabulary.ability_scores
+    - taxonomy.vocabulary.action_types
+    - taxonomy.vocabulary.armor_properties
+    - taxonomy.vocabulary.backgrounds
+    - taxonomy.vocabulary.campaign
+    - taxonomy.vocabulary.class
+    - taxonomy.vocabulary.conditions
+    - taxonomy.vocabulary.creature_types
+    - taxonomy.vocabulary.damage_types
+    - taxonomy.vocabulary.eldritch_invocations
+    - taxonomy.vocabulary.equipment_types
+    - taxonomy.vocabulary.factions
+    - taxonomy.vocabulary.feat_type
+    - taxonomy.vocabulary.feats
+    - taxonomy.vocabulary.game_edition
+    - taxonomy.vocabulary.importance
+    - taxonomy.vocabulary.languages
+    - taxonomy.vocabulary.lineage
+    - taxonomy.vocabulary.location_types
+    - taxonomy.vocabulary.locations
+    - taxonomy.vocabulary.lore_tags
+    - taxonomy.vocabulary.magical_properties
+    - taxonomy.vocabulary.skills
+    - taxonomy.vocabulary.species
+    - taxonomy.vocabulary.spell_schools
+    - taxonomy.vocabulary.spells
+    - taxonomy.vocabulary.story_tags
+    - taxonomy.vocabulary.subclasses
+    - taxonomy.vocabulary.tool_profiencies
+    - taxonomy.vocabulary.traits
+    - taxonomy.vocabulary.vestige_level
+    - taxonomy.vocabulary.voice_ids
+    - taxonomy.vocabulary.weapon_mastery
+    - taxonomy.vocabulary.weapon_properties
+    - taxonomy.vocabulary.weapon_subtype
+  module:
+    - node
+    - taxonomy
+id: gatsby_user
+label: gatsby_user
+weight: 2
+is_admin: false
+permissions:
+  - 'create ability content'
+  - 'create item content'
+  - 'create monster content'
+  - 'create session content'
+  - 'create spell content'
+  - 'create story content'
+  - 'create terms in abilities'
+  - 'create terms in ability_scores'
+  - 'create terms in action_types'
+  - 'create terms in armor_properties'
+  - 'create terms in backgrounds'
+  - 'create terms in campaign'
+  - 'create terms in class'
+  - 'create terms in conditions'
+  - 'create terms in creature_types'
+  - 'create terms in damage_types'
+  - 'create terms in eldritch_invocations'
+  - 'create terms in equipment_types'
+  - 'create terms in factions'
+  - 'create terms in feat_type'
+  - 'create terms in feats'
+  - 'create terms in game_edition'
+  - 'create terms in importance'
+  - 'create terms in languages'
+  - 'create terms in lineage'
+  - 'create terms in location_types'
+  - 'create terms in locations'
+  - 'create terms in lore_tags'
+  - 'create terms in magical_properties'
+  - 'create terms in skills'
+  - 'create terms in species'
+  - 'create terms in spell_schools'
+  - 'create terms in spells'
+  - 'create terms in story_tags'
+  - 'create terms in subclasses'
+  - 'create terms in tool_profiencies'
+  - 'create terms in traits'
+  - 'create terms in vestige_level'
+  - 'create terms in voice_ids'
+  - 'create terms in weapon_mastery'
+  - 'create terms in weapon_properties'
+  - 'create terms in weapon_subtype'

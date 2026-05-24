@@ -13,8 +13,17 @@ export interface TopbarContextValue {
   campaigns:          DrupalCampaign[];
   activeCampaignName: string | null;
   onSwitchCampaign:   (name: string) => void;
-  /** Register the available campaign list and the initial active campaign. */
-  register: (campaigns: DrupalCampaign[], initialActiveName: string | null) => void;
+  /**
+   * Register the available campaign list and the initial active campaign.
+   * Pass canonical=true only from callers that have the complete list from
+   * Drupal — this prunes deleted campaigns from localStorage.
+   */
+  register: (campaigns: DrupalCampaign[], initialActiveName: string | null, canonical?: boolean) => void;
+  /**
+   * Add a newly created campaign and activate it. Writes to localStorage
+   * synchronously so the value survives an immediate page reload.
+   */
+  addCampaign: (campaign: DrupalCampaign) => void;
 }
 
 export const TopbarContext = React.createContext<TopbarContextValue>({
@@ -22,6 +31,7 @@ export const TopbarContext = React.createContext<TopbarContextValue>({
   activeCampaignName: null,
   onSwitchCampaign:   () => undefined,
   register:           () => undefined,
+  addCampaign:        () => undefined,
 });
 
 TopbarContext.displayName = 'TopbarContext';

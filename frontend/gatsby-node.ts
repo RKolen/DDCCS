@@ -99,12 +99,14 @@ export const onCreateDevServer: GatsbyNode['onCreateDevServer'] = ({ app }) => {
     throw new Error('DRUPAL_BASE_URL is required but not set in the environment.');
   }
 
+  // Only proxy Drupal REST endpoints — Gatsby Functions also live at /api/*
+  // and must not be forwarded to Drupal.
   app.use(
     createProxyMiddleware({
       target: drupalUrl,
       changeOrigin: true,
       agent: devAgent,
-      pathFilter: '/api',
+      pathFilter: (pathname: string) => pathname.startsWith('/api/content-search'),
       headers: { 'X-Forwarded-Proto': 'https' },
     }),
   );

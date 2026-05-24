@@ -1,0 +1,12 @@
+extend type Mutation {
+  """
+  Create a new campaign taxonomy term. Returns the created term on success,
+  or null if creation fails validation.
+  """
+  createCampaign(
+    "The campaign name."
+    name: String!
+    "Optional lifecycle status: active, completed, or on_hold."
+    status: String
+  ): TermCampaign
+}
