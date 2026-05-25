@@ -53,6 +53,17 @@ class ContentMutationsSchemaExtension extends SdlSchemaExtensionPluginBase {
         ->map('campaign_id',  $builder->fromArgument('campaignId'))
         ->map('character_id', $builder->fromArgument('characterId')),
     );
+
+    $registry->addFieldResolver(
+      'Mutation',
+      'createStory',
+      $builder->produce('create_story')
+        ->map('campaign_id',  $builder->fromArgument('campaignId'))
+        ->map('title',        $builder->fromArgument('title'))
+        ->map('body',         $builder->fromArgument('body'))
+        ->map('story_number', $builder->fromArgument('storyNumber'))
+        ->map('session_date', $builder->fromArgument('sessionDate')),
+    );
   }
 
 }
