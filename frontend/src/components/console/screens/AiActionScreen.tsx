@@ -713,6 +713,12 @@ function AiActionWorkbench({ actionId, ctx, setCtx, entry }: ActionScreenProps):
   consoleDataRef.current = data;
   const run = useAiRun(actionId, formValuesRef, consoleDataRef);
 
+  React.useEffect(() => {
+    if (actionId === 's-add' && activeCampaignName) {
+      setFormValues(o => ({ ...o, series: activeCampaignName }));
+    }
+  }, [actionId, activeCampaignName]);
+
   const resolvedInputs = React.useMemo((): InputSpec[] => {
     if (actionId !== 's-add') return preset?.inputs ?? [];
     const campaignNames = data.campaigns.map(c => c.name);
@@ -974,6 +980,12 @@ function AiActionForge({ actionId, ctx, setCtx, entry }: ActionScreenProps): Rea
   const consoleDataRef = React.useRef(data);
   consoleDataRef.current = data;
   const run = useAiRun(actionId, formValuesRef, consoleDataRef);
+
+  React.useEffect(() => {
+    if (actionId === 's-add' && activeCampaignName) {
+      setFormValues(o => ({ ...o, series: activeCampaignName }));
+    }
+  }, [actionId, activeCampaignName]);
 
   const resolvedInputs = React.useMemo((): InputSpec[] => {
     if (actionId !== 's-add') return preset?.inputs ?? [];
