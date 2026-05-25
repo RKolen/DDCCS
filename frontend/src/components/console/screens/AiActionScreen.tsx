@@ -22,7 +22,7 @@ import type { ConsoleData } from '../ConsoleContext';
    Types
 ───────────────────────────────────────────────────────────── */
 
-type InputKind = 'select' | 'textarea' | 'segment' | 'text' | 'static';
+type InputKind = 'select' | 'textarea' | 'segment' | 'text' | 'static' | 'spotlight';
 
 interface InputSpec {
   id: string;
@@ -32,6 +32,27 @@ interface InputSpec {
   rows?: number;
   placeholder?: string;
   default?: string;
+  maxFixed?: number;
+  scores?: Record<string, number>;
+}
+
+interface SpotlightValue {
+  fixed: string[];
+  random: string | null;
+  locked: boolean;
+}
+
+interface PartyMember {
+  name: string;
+  characterClass: string | null;
+  role: string | null;
+  pronouns: string | null;
+  species: string | null;
+  lineage: string | null;
+  background: string | null;
+  bonds: string[];
+  personalityTraits: string[];
+  majorPlotActions: string[];
 }
 
 interface ModelSpec {
@@ -133,7 +154,7 @@ Recommended check: **DEX (Sleight of Hand)** — DC **18** *(hard)*.
 ───────────────────────────────────────────────────────────── */
 
 function targetWords(length: string | undefined): number {
-  if (length?.includes('800'))  return 800;
+  if (length?.includes('800')) return 800;
   if (length?.includes('1600')) return 1600;
   return 3000;
 }
@@ -162,16 +183,26 @@ const ACTION_PRESETS: Record<string, ActionPreset> = {
     model: { name: process.env.GATSBY_AI_MODEL ?? '', task: 'story_generation', tone: 'creative' },
     duration: 16000,
     inputs: [
-      { id: 'series', label: 'Series', kind: 'select',
-        options: ['Whispers of the Sundered Crown', 'The Ironroot Pact', 'Mistveil Quest'] },
-      { id: 'order', label: 'Slot in series', kind: 'select',
-        options: ['006 — next story', '003 — between Trollshaws and Weathertop', '— end of series'] },
-      { id: 'beats', label: 'Story beats (one per line)', kind: 'textarea', rows: 7,
-        placeholder: '- Party reaches Weathertop at dusk\n- Aragorn refuses the summit; they camp in the dell\n- Five riders cross the ridge\n- Frodo puts on the Ring; Morgul wound\n- Aragorn drives them back with fire' },
-      { id: 'length', label: 'Length', kind: 'segment',
-        options: ['Short (800)', 'Medium (1600)', 'Long (3000)'], default: 'Long (3000)' },
-      { id: 'pov', label: 'POV', kind: 'segment',
-        options: ['Omniscient', 'Per-character', 'DM voice'], default: 'Omniscient' },
+      {
+        id: 'series', label: 'Series', kind: 'select',
+        options: ['Whispers of the Sundered Crown', 'The Ironroot Pact', 'Mistveil Quest']
+      },
+      {
+        id: 'order', label: 'Slot in series', kind: 'select',
+        options: ['006 — next story', '003 — between Trollshaws and Weathertop', '— end of series']
+      },
+      {
+        id: 'beats', label: 'Story beats (one per line)', kind: 'textarea', rows: 7,
+        placeholder: '- Party reaches Weathertop at dusk\n- Aragorn refuses the summit; they camp in the dell\n- Five riders cross the ridge\n- Frodo puts on the Ring; Morgul wound\n- Aragorn drives them back with fire'
+      },
+      {
+        id: 'length', label: 'Length', kind: 'segment',
+        options: ['Short (800)', 'Medium (1600)', 'Long (3000)'], default: 'Long (3000)'
+      },
+      {
+        id: 'pov', label: 'POV', kind: 'segment',
+        options: ['Omniscient', 'Per-character', 'DM voice'], default: 'Omniscient'
+      },
     ],
     outputKind: 'narrative',
     target: { kind: 'node--story', path: 'campaigns/example/006_weathertop.md' },
@@ -189,14 +220,22 @@ const ACTION_PRESETS: Record<string, ActionPreset> = {
     model: { name: 'Sonnet · Narrative', task: 'story_generation', tone: 'creative' },
     duration: 14000,
     inputs: [
-      { id: 'series', label: 'Series', kind: 'select',
-        options: ['Whispers of the Sundered Crown', 'The Ironroot Pact', 'Mistveil Quest'] },
-      { id: 'session', label: 'Session #', kind: 'select',
-        options: ['003 — Trollshaws', '002 — Bree', '001 — Start'] },
-      { id: 'rawnotes', label: 'Raw session notes', kind: 'textarea', rows: 6,
-        placeholder: 'rough notes, bullet points, dice results, who said what...' },
-      { id: 'tone', label: 'Tone', kind: 'segment',
-        options: ['Dark', 'Heroic', 'Mystery', 'Comic'], default: 'Dark' },
+      {
+        id: 'series', label: 'Series', kind: 'select',
+        options: ['Whispers of the Sundered Crown', 'The Ironroot Pact', 'Mistveil Quest']
+      },
+      {
+        id: 'session', label: 'Session #', kind: 'select',
+        options: ['003 — Trollshaws', '002 — Bree', '001 — Start']
+      },
+      {
+        id: 'rawnotes', label: 'Raw session notes', kind: 'textarea', rows: 6,
+        placeholder: 'rough notes, bullet points, dice results, who said what...'
+      },
+      {
+        id: 'tone', label: 'Tone', kind: 'segment',
+        options: ['Dark', 'Heroic', 'Mystery', 'Comic'], default: 'Dark'
+      },
     ],
     outputKind: 'narrative',
     target: { kind: 'node--story', path: 'campaigns/example/003_end.md' },
@@ -207,12 +246,18 @@ const ACTION_PRESETS: Record<string, ActionPreset> = {
     model: { name: 'Sonnet · Narrative', task: 'character_development', tone: 'creative' },
     duration: 10000,
     inputs: [
-      { id: 'char', label: 'Character', kind: 'select',
-        options: ['Aragorn', 'Frodo', 'Gandalf'] },
-      { id: 'session', label: 'Session', kind: 'select',
-        options: ['003 — Trollshaws', '002 — Bree', '001 — Start'] },
-      { id: 'focus', label: 'Focus', kind: 'segment',
-        options: ['Inner change', 'Relationships', 'Goals', 'Trauma'], default: 'Inner change' },
+      {
+        id: 'char', label: 'Character', kind: 'select',
+        options: ['Aragorn', 'Frodo', 'Gandalf']
+      },
+      {
+        id: 'session', label: 'Session', kind: 'select',
+        options: ['003 — Trollshaws', '002 — Bree', '001 — Start']
+      },
+      {
+        id: 'focus', label: 'Focus', kind: 'segment',
+        options: ['Inner change', 'Relationships', 'Goals', 'Trauma'], default: 'Inner change'
+      },
     ],
     outputKind: 'narrative',
     target: { kind: 'node--character_development', path: 'campaigns/example/dev/003-frodo.md' },
@@ -223,10 +268,14 @@ const ACTION_PRESETS: Record<string, ActionPreset> = {
     model: { name: 'Sonnet · Narrative', task: 'combat_narrative', tone: 'creative' },
     duration: 9000,
     inputs: [
-      { id: 'log', label: 'Combat log (one entry per line)', kind: 'textarea', rows: 8,
-        placeholder: 'R1 Aragorn longsword vs Rider1 -> 17 hit 8 dmg\nR1 Frodo Sting -> miss\nR1 Rider1 Morgul blade vs Frodo -> 19 hit 5 dmg\n...' },
-      { id: 'style', label: 'Style', kind: 'segment',
-        options: ['Tight', 'Cinematic', 'Pulpy'], default: 'Cinematic' },
+      {
+        id: 'log', label: 'Combat log (one entry per line)', kind: 'textarea', rows: 8,
+        placeholder: 'R1 Aragorn longsword vs Rider1 -> 17 hit 8 dmg\nR1 Frodo Sting -> miss\nR1 Rider1 Morgul blade vs Frodo -> 19 hit 5 dmg\n...'
+      },
+      {
+        id: 'style', label: 'Style', kind: 'segment',
+        options: ['Tight', 'Cinematic', 'Pulpy'], default: 'Cinematic'
+      },
     ],
     outputKind: 'narrative',
     target: { kind: 'node--story section', path: '003_end.md#combat' },
@@ -237,10 +286,14 @@ const ACTION_PRESETS: Record<string, ActionPreset> = {
     model: { name: 'Haiku · Analysis', task: 'dc_evaluation', tone: 'fast' },
     duration: 6000,
     inputs: [
-      { id: 'situation', label: 'Situation', kind: 'textarea', rows: 5,
-        placeholder: 'Pippin wants to lift a key off a sleeping cave troll...' },
-      { id: 'ability', label: 'Suggested ability', kind: 'segment',
-        options: ['Auto', 'STR', 'DEX', 'CON', 'INT', 'WIS', 'CHA'], default: 'Auto' },
+      {
+        id: 'situation', label: 'Situation', kind: 'textarea', rows: 5,
+        placeholder: 'Pippin wants to lift a key off a sleeping cave troll...'
+      },
+      {
+        id: 'ability', label: 'Suggested ability', kind: 'segment',
+        options: ['Auto', 'STR', 'DEX', 'CON', 'INT', 'WIS', 'CHA'], default: 'Auto'
+      },
     ],
     outputKind: 'analysis',
     target: null,
@@ -251,10 +304,14 @@ const ACTION_PRESETS: Record<string, ActionPreset> = {
     model: { name: 'Sonnet · Narrative', task: 'dm_narrative', tone: 'creative' },
     duration: 8000,
     inputs: [
-      { id: 'scene', label: 'Scene', kind: 'textarea', rows: 5,
-        placeholder: 'The party has just returned to Bree; the gate is unguarded...' },
-      { id: 'mood', label: 'Mood', kind: 'segment',
-        options: ['Tense', 'Eerie', 'Hopeful', 'Comedic'], default: 'Eerie' },
+      {
+        id: 'scene', label: 'Scene', kind: 'textarea', rows: 5,
+        placeholder: 'The party has just returned to Bree; the gate is unguarded...'
+      },
+      {
+        id: 'mood', label: 'Mood', kind: 'segment',
+        options: ['Tense', 'Eerie', 'Hopeful', 'Comedic'], default: 'Eerie'
+      },
     ],
     outputKind: 'suggestions',
     target: null,
@@ -265,10 +322,14 @@ const ACTION_PRESETS: Record<string, ActionPreset> = {
     model: { name: 'Sonnet · Narrative', task: 'story_suggestion', tone: 'creative' },
     duration: 8000,
     inputs: [
-      { id: 'series', label: 'Series', kind: 'select',
-        options: ['Whispers of the Sundered Crown', 'The Ironroot Pact', 'Mistveil Quest'] },
-      { id: 'mood', label: 'Where the party left off', kind: 'segment',
-        options: ['Restless', 'Tired', 'Clever', 'Wounded'], default: 'Restless' },
+      {
+        id: 'series', label: 'Series', kind: 'select',
+        options: ['Whispers of the Sundered Crown', 'The Ironroot Pact', 'Mistveil Quest']
+      },
+      {
+        id: 'mood', label: 'Where the party left off', kind: 'segment',
+        options: ['Restless', 'Tired', 'Clever', 'Wounded'], default: 'Restless'
+      },
     ],
     outputKind: 'suggestions',
     target: null,
@@ -279,10 +340,14 @@ const ACTION_PRESETS: Record<string, ActionPreset> = {
     model: { name: 'Haiku · Analysis', task: 'story_analysis', tone: 'fast' },
     duration: 7000,
     inputs: [
-      { id: 'story', label: 'Story', kind: 'select',
-        options: ['003 — Trollshaws', '002 — Bree', '001 — Start'] },
-      { id: 'depth', label: 'Depth', kind: 'segment',
-        options: ['Shallow', 'Standard', 'Deep'], default: 'Standard' },
+      {
+        id: 'story', label: 'Story', kind: 'select',
+        options: ['003 — Trollshaws', '002 — Bree', '001 — Start']
+      },
+      {
+        id: 'depth', label: 'Depth', kind: 'segment',
+        options: ['Shallow', 'Standard', 'Deep'], default: 'Standard'
+      },
     ],
     outputKind: 'analysis',
     target: { kind: 'node--analysis_report', path: 'cache/analysis/003_end.json' },
@@ -293,10 +358,14 @@ const ACTION_PRESETS: Record<string, ActionPreset> = {
     model: { name: 'Sonnet · Deep Arc', task: 'series_analysis', tone: 'deep' },
     duration: 22000,
     inputs: [
-      { id: 'series', label: 'Series', kind: 'select',
-        options: ['Whispers of the Sundered Crown', 'The Ironroot Pact', 'Mistveil Quest'] },
-      { id: 'scope', label: 'Scope', kind: 'segment',
-        options: ['Last 5', 'Last 10', 'All'], default: 'All' },
+      {
+        id: 'series', label: 'Series', kind: 'select',
+        options: ['Whispers of the Sundered Crown', 'The Ironroot Pact', 'Mistveil Quest']
+      },
+      {
+        id: 'scope', label: 'Scope', kind: 'segment',
+        options: ['Last 5', 'Last 10', 'All'], default: 'All'
+      },
     ],
     outputKind: 'analysis',
     target: { kind: 'node--series_report', path: 'cache/analysis/example-series.json' },
@@ -307,10 +376,14 @@ const ACTION_PRESETS: Record<string, ActionPreset> = {
     model: { name: 'Sonnet · Deep Arc', task: 'character_analysis', tone: 'deep' },
     duration: 24000,
     inputs: [
-      { id: 'char', label: 'Character', kind: 'select',
-        options: ['Aragorn', 'Frodo', 'Gandalf'] },
-      { id: 'scope', label: 'Scope', kind: 'segment',
-        options: ['Recent arc', 'Full campaign'], default: 'Full campaign' },
+      {
+        id: 'char', label: 'Character', kind: 'select',
+        options: ['Aragorn', 'Frodo', 'Gandalf']
+      },
+      {
+        id: 'scope', label: 'Scope', kind: 'segment',
+        options: ['Recent arc', 'Full campaign'], default: 'Full campaign'
+      },
     ],
     outputKind: 'analysis',
     target: { kind: 'node--character_report', path: 'cache/analysis/frodo-arc.json' },
@@ -321,14 +394,22 @@ const ACTION_PRESETS: Record<string, ActionPreset> = {
     model: { name: 'Sonnet · Narrative', task: 'story_amend', tone: 'creative' },
     duration: 9000,
     inputs: [
-      { id: 'story', label: 'Story', kind: 'select',
-        options: ['003 — Trollshaws', '002 — Bree', '001 — Start'] },
-      { id: 'find', label: 'Find', kind: 'textarea', rows: 3,
-        placeholder: 'It was Sam who saw them first' },
-      { id: 'change', label: 'Change to', kind: 'textarea', rows: 3,
-        placeholder: 'It was Merry who saw them first' },
-      { id: 'sweep', label: 'AI rewrite sweep', kind: 'segment',
-        options: ['None', 'Affected paragraph', 'Whole scene'], default: 'Affected paragraph' },
+      {
+        id: 'story', label: 'Story', kind: 'select',
+        options: ['003 — Trollshaws', '002 — Bree', '001 — Start']
+      },
+      {
+        id: 'find', label: 'Find', kind: 'textarea', rows: 3,
+        placeholder: 'It was Sam who saw them first'
+      },
+      {
+        id: 'change', label: 'Change to', kind: 'textarea', rows: 3,
+        placeholder: 'It was Merry who saw them first'
+      },
+      {
+        id: 'sweep', label: 'AI rewrite sweep', kind: 'segment',
+        options: ['None', 'Affected paragraph', 'Whole scene'], default: 'Affected paragraph'
+      },
     ],
     outputKind: 'narrative',
     target: { kind: 'node--story', path: 'campaigns/example/003_end.md' },
@@ -342,40 +423,40 @@ const ACTION_PRESETS: Record<string, ActionPreset> = {
 type RunPhase = 'setup' | 'running' | 'done';
 
 interface AiRunState {
-  phase:        RunPhase;
-  streamed:     string;
-  progress:     number;
-  elapsed:      number;
-  tokens:       number;
+  phase: RunPhase;
+  streamed: string;
+  progress: number;
+  elapsed: number;
+  tokens: number;
   tokensPerSec: number;
-  events:       EventEntry[];
-  errorMsg:     string | null;
-  start:        () => void;
-  cancel:       () => void;
-  reset:        () => void;
+  events: EventEntry[];
+  errorMsg: string | null;
+  start: () => void;
+  cancel: () => void;
+  reset: () => void;
 }
 
 function useAiRun(
-  actionId:       string,
-  formValuesRef:  React.MutableRefObject<Record<string, string>>,
+  actionId: string,
+  formValuesRef: React.MutableRefObject<Record<string, string>>,
   consoleDataRef: React.MutableRefObject<ConsoleData>,
 ): AiRunState {
-  const preset        = ACTION_PRESETS[actionId];
+  const preset = ACTION_PRESETS[actionId];
   const totalDuration = preset?.duration ?? 10000;
-  const fullText      = preset ? mockForAction(actionId, preset) : MOCK_NARRATIVE;
-  const tickMs        = 50;
-  const isReal        = actionId === 's-add';
+  const fullText = preset ? mockForAction(actionId, preset) : MOCK_NARRATIVE;
+  const tickMs = 50;
+  const isReal = actionId === 's-add';
 
-  const [phase, setPhase]           = React.useState<RunPhase>('setup');
-  const [streamed, setStreamed]     = React.useState('');
-  const [progress, setProgress]     = React.useState(0);
-  const [elapsed, setElapsed]       = React.useState(0);
-  const [tokens, setTokens]         = React.useState(0);
-  const [tokensPerSec, setTPS]      = React.useState(0);
-  const [events, setEvents]         = React.useState<EventEntry[]>([]);
-  const [errorMsg, setErrorMsg]     = React.useState<string | null>(null);
-  const timerRef                    = React.useRef<ReturnType<typeof setInterval> | null>(null);
-  const abortRef                    = React.useRef<AbortController | null>(null);
+  const [phase, setPhase] = React.useState<RunPhase>('setup');
+  const [streamed, setStreamed] = React.useState('');
+  const [progress, setProgress] = React.useState(0);
+  const [elapsed, setElapsed] = React.useState(0);
+  const [tokens, setTokens] = React.useState(0);
+  const [tokensPerSec, setTPS] = React.useState(0);
+  const [events, setEvents] = React.useState<EventEntry[]>([]);
+  const [errorMsg, setErrorMsg] = React.useState<string | null>(null);
+  const timerRef = React.useRef<ReturnType<typeof setInterval> | null>(null);
+  const abortRef = React.useRef<AbortController | null>(null);
 
   const stopTimer = (): void => {
     if (timerRef.current !== null) {
@@ -406,14 +487,37 @@ function useAiRun(
       const fv = formValuesRef.current;
       const cd = consoleDataRef.current;
 
-      const campaignName    = fv.series || consoleDataRef.current.campaigns[0]?.name || '';
-      const campaign        = cd.campaigns.find(c => c.name === campaignName);
-      const partyIds        = campaign?.currentPartyIds ?? [];
-      const partyChars      = cd.characters.filter(c => partyIds.includes(c.id));
+      const campaignName = fv.series || cd.campaigns[0]?.name || '';
+      const campaign = cd.campaigns.find(c => c.name === campaignName);
+      const partyIds = campaign?.currentPartyIds ?? [];
+      const allPartyChars = cd.characters.filter(c => partyIds.includes(c.id) && c.characterType !== false);
       const campaignStories = cd.stories.filter(s => s.campaign === campaignName);
-      const allNums         = campaignStories.map(s => s.storyNumber ?? 0);
-      const nextNum         = allNums.length > 0 ? Math.max(...allNums) + 1 : 1;
-      const maxChars        = targetWords(fv.length) * 5;
+      const allNums = campaignStories.map(s => s.storyNumber ?? 0);
+      const nextNum = allNums.length > 0 ? Math.max(...allNums) + 1 : 1;
+      const maxChars = targetWords(fv.length) * 5;
+
+      // Resolve spotlight selection — fall back to first 5 party chars when unset
+      const sv = parseSpotlight(fv.spotlight ?? '');
+      const spotlightNames = sv.fixed.length > 0 || sv.random !== null
+        ? [...sv.fixed, ...(sv.random !== null ? [sv.random] : [])]
+        : allPartyChars.slice(0, 5).map(c => c.title);
+
+      const spotlightChars = spotlightNames
+        .map(name => allPartyChars.find(c => c.title === name))
+        .filter((c): c is typeof allPartyChars[0] => c !== undefined);
+
+      const partyMembers: PartyMember[] = spotlightChars.map(c => ({
+        name:              c.title,
+        characterClass:    c.characterClass,
+        role:              c.role ?? null,
+        pronouns:          c.pronouns,
+        species:           c.species ?? null,
+        lineage:           c.lineage ?? null,
+        background:        c.background ?? null,
+        bonds:             c.bonds ?? [],
+        personalityTraits: c.personalityTraits ?? [],
+        majorPlotActions:  c.majorPlotActions ?? [],
+      }));
 
       const intervalId = setInterval(() => {
         setElapsed((Date.now() - t0) / 1000);
@@ -421,17 +525,19 @@ function useAiRun(
       timerRef.current = intervalId;
 
       fetch('/api/generate-story', {
-        method:  'POST',
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           campaignName,
-          campaignId:          campaign?.id ?? '',
-          beats:               fv.beats ?? '',
-          length:              fv.length ?? 'Long (3000)',
-          pov:                 fv.pov ?? 'Omniscient',
-          storyNumber:         nextNum,
-          partyNames:          partyChars.map(c => c.title),
-          recentStoryTitles:   campaignStories.slice(-3).map(s => s.title),
+          campaignId: campaign?.id ?? '',
+          beats: fv.beats ?? '',
+          length: fv.length ?? 'Long (3000)',
+          pov: fv.pov ?? 'Omniscient',
+          storyNumber: nextNum,
+          partyNames: spotlightNames,
+          partyMembers,
+          location: fv.location ?? '',
+          recentStoryTitles: campaignStories.slice(-3).map(s => s.title),
         }),
         signal: ctrl.signal,
       }).then(async (res) => {
@@ -452,8 +558,8 @@ function useAiRun(
           return;
         }
 
-        const decoder    = new TextDecoder();
-        let accumulated  = '';
+        const decoder = new TextDecoder();
+        let accumulated = '';
 
         try {
           while (true) {
@@ -502,18 +608,18 @@ function useAiRun(
 
     } else {
       // Mock streaming for all non-s-add actions
-      const t0           = Date.now();
+      const t0 = Date.now();
       const presetEvents = (preset?.eventsLog ?? []).slice();
 
       timerRef.current = setInterval(() => {
-        const eMs  = Date.now() - t0;
+        const eMs = Date.now() - t0;
         const eSec = eMs / 1000;
         setElapsed(eSec);
-        const p      = Math.min(1, eMs / totalDuration);
+        const p = Math.min(1, eMs / totalDuration);
         setProgress(p);
         const target = Math.floor(p * fullText.length);
         setStreamed(fullText.slice(0, target));
-        const toks   = Math.floor(target / 4.5);
+        const toks = Math.floor(target / 4.5);
         setTokens(toks);
         setTPS(eSec > 0.1 ? Math.floor(toks / eSec) : 0);
 
@@ -558,7 +664,139 @@ function useAiRun(
 }
 
 /* ─────────────────────────────────────────────────────────────
-   AiFormControl — select / textarea / segment / text
+   SpotlightPicker — 4 pinned + 1 random character selector
+───────────────────────────────────────────────────────────── */
+
+const EMPTY_SPOTLIGHT: SpotlightValue = { fixed: [], random: null, locked: false };
+
+function parseSpotlight(raw: string): SpotlightValue {
+  if (!raw) return EMPTY_SPOTLIGHT;
+  try {
+    return JSON.parse(raw) as SpotlightValue;
+  } catch {
+    return EMPTY_SPOTLIGHT;
+  }
+}
+
+function scoreColor(score: number): string {
+  if (score <= 0) return 'var(--ink-faint)';
+  if (score < 40) return 'var(--brass-dim)';
+  if (score < 70) return 'var(--brass)';
+  return 'var(--brass-bright)';
+}
+
+interface SpotlightPickerProps {
+  options: string[];
+  maxFixed: number;
+  scores: Record<string, number>;
+  value: string;
+  onChange: (v: string) => void;
+}
+
+function SpotlightPicker({ options, maxFixed, scores, value, onChange }: SpotlightPickerProps): React.ReactElement {
+  const sv = parseSpotlight(value);
+
+  const emit = (next: SpotlightValue): void => { onChange(JSON.stringify(next)); };
+
+  const toggleFixed = (name: string): void => {
+    if (sv.fixed.includes(name)) {
+      emit({ ...sv, fixed: sv.fixed.filter(n => n !== name) });
+    } else if (sv.fixed.length < maxFixed) {
+      const newRandom = sv.random === name ? null : sv.random;
+      emit({ ...sv, fixed: [...sv.fixed, name], random: newRandom, locked: sv.random === name ? false : sv.locked });
+    }
+  };
+
+  const rollRandom = (): void => {
+    const pool = options.filter(n => !sv.fixed.includes(n));
+    if (pool.length === 0) return;
+    const hasScores = pool.some(n => (scores[n] ?? 0) > 0);
+    let picked: string;
+    if (hasScores) {
+      const weights = pool.map(n => Math.max(1, scores[n] ?? 0));
+      const total = weights.reduce((a, b) => a + b, 0);
+      let rand = Math.random() * total;
+      picked = pool[pool.length - 1] ?? '';
+      for (let i = 0; i < pool.length; i++) {
+        rand -= weights[i] ?? 0;
+        if (rand <= 0) { picked = pool[i] ?? ''; break; }
+      }
+    } else {
+      const others = pool.filter(n => n !== sv.random);
+      const src = others.length > 0 ? others : pool;
+      picked = src[Math.floor(Math.random() * src.length)] ?? '';
+    }
+    emit({ ...sv, random: picked, locked: false });
+  };
+
+  const toggleLock = (): void => { emit({ ...sv, locked: !sv.locked }); };
+  const clearRandom = (): void => { emit({ ...sv, random: null, locked: false }); };
+
+  const totalSelected = sv.fixed.length + (sv.random !== null ? 1 : 0);
+  const maxTotal = maxFixed + 1;
+  const canAddFixed = sv.fixed.length < maxFixed;
+  const canRoll = options.filter(n => !sv.fixed.includes(n)).length > 0;
+
+  const sorted = [...options].sort((a, b) => (scores[b] ?? 0) - (scores[a] ?? 0));
+
+  return (
+    <div className="spotlight-picker">
+      <div className="spotlight-chars">
+        {sorted.map(name => {
+          const isPinned = sv.fixed.includes(name);
+          const isRandom = sv.random === name;
+          const score = scores[name] ?? 0;
+          return (
+            <button
+              key={name}
+              type="button"
+              className={`spotlight-char${isPinned ? ' is-pinned' : isRandom ? ' is-random' : ''}`}
+              onClick={() => { toggleFixed(name); }}
+              disabled={!isPinned && !canAddFixed}
+              title={isPinned ? 'Click to unpin' : canAddFixed ? 'Click to pin' : `Max ${maxFixed} pinned`}
+            >
+              <span className="spotlight-char-dot" style={{ background: scoreColor(score) }} />
+              {name}
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="spotlight-random-row">
+        <span className="spotlight-random-label">Random</span>
+        {sv.random !== null ? (
+          <>
+            <span className={`spotlight-random-name${sv.locked ? ' is-locked' : ''}`}>{sv.random}</span>
+            {!sv.locked && (
+              <button type="button" className="spotlight-roll" onClick={rollRandom} title="Re-roll">
+                <Icon name="sparkle" size={10} /> Re-roll
+              </button>
+            )}
+            <button
+              type="button"
+              className={`spotlight-lock-btn${sv.locked ? ' is-locked' : ''}`}
+              onClick={toggleLock}
+              title={sv.locked ? 'Unlock random slot' : 'Pin this pick'}
+            >
+              {sv.locked ? 'Pinned' : 'Pin'}
+            </button>
+            <button type="button" className="spotlight-clear" onClick={clearRandom} title="Remove random slot">
+              <Icon name="close" size={9} />
+            </button>
+          </>
+        ) : (
+          <button type="button" className="spotlight-roll" onClick={rollRandom} disabled={!canRoll} title="Add a random character">
+            <Icon name="sparkle" size={10} /> Roll
+          </button>
+        )}
+        <span className="spotlight-count">{totalSelected} / {maxTotal}</span>
+      </div>
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────
+   AiFormControl — select / textarea / segment / text / spotlight
 ───────────────────────────────────────────────────────────── */
 
 interface FormControlProps {
@@ -570,6 +808,18 @@ interface FormControlProps {
 function AiFormControl({ input, value, onChange }: FormControlProps): React.ReactElement {
   if (input.kind === 'static') {
     return <span className="ai-form-static">{value ?? ''}</span>;
+  }
+
+  if (input.kind === 'spotlight') {
+    return (
+      <SpotlightPicker
+        options={input.options ?? []}
+        maxFixed={input.maxFixed ?? 4}
+        scores={input.scores ?? {}}
+        value={value ?? ''}
+        onChange={onChange}
+      />
+    );
   }
 
   if (input.kind === 'select') {
@@ -694,19 +944,18 @@ interface ActionScreenProps {
 }
 
 function AiActionWorkbench({ actionId, ctx, setCtx, entry }: ActionScreenProps): React.ReactElement {
-  const preset     = ACTION_PRESETS[actionId];
-  const data       = useConsoleData();
+  const preset = ACTION_PRESETS[actionId];
+  const data = useConsoleData();
   const activeCampaignName = (ctx.activeCampaignName as string | undefined) ?? '';
 
   const [formValues, setFormValues] = React.useState<Record<string, string>>(() => {
     const init: Record<string, string> = {};
-    if (actionId === 's-add' && activeCampaignName) {
-      init.series = activeCampaignName;
-    }
+    if (actionId === 's-add' && activeCampaignName) init.series = activeCampaignName;
     return init;
   });
-  const [toast, setToast]         = React.useState<{ tag: string; path: string } | null>(null);
+  const [toast, setToast] = React.useState<{ tag: string; path: string } | null>(null);
   const [accepting, setAccepting] = React.useState(false);
+  const [spotlightScores, setScores] = React.useState<Record<string, number>>({});
   const formValuesRef = React.useRef(formValues);
   formValuesRef.current = formValues;
   const consoleDataRef = React.useRef(data);
@@ -719,21 +968,59 @@ function AiActionWorkbench({ actionId, ctx, setCtx, entry }: ActionScreenProps):
     }
   }, [actionId, activeCampaignName]);
 
+  React.useEffect(() => {
+    if (actionId !== 's-add' || !activeCampaignName) return;
+    const partyIds = data.campaigns.find(c => c.name === activeCampaignName)?.currentPartyIds ?? [];
+    const partyNames = data.characters
+      .filter(c => partyIds.includes(c.id) && c.characterType !== false)
+      .map(c => c.title);
+    if (partyNames.length === 0) return;
+    void fetch('/api/spotlight', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ campaignName: activeCampaignName, characterNames: partyNames }),
+    }).then(async (res: Response) => {
+      if (!res.ok) return;
+      const payload = (await res.json()) as { scores: Record<string, number> };
+      setScores(payload.scores ?? {});
+    }).catch(() => undefined);
+  }, [actionId, activeCampaignName, data.campaigns, data.characters]);
+
   const resolvedInputs = React.useMemo((): InputSpec[] => {
     if (actionId !== 's-add') return preset?.inputs ?? [];
-    const campaignNames = data.campaigns.map(c => c.name);
-    const selectedName  = formValues.series ?? activeCampaignName;
-    const storyNums     = data.stories
+    const selectedName = formValues.series || activeCampaignName;
+    const storyNums = data.stories
       .filter(s => s.campaign === selectedName)
       .map(s => s.storyNumber ?? 0);
-    const nextNum  = storyNums.length > 0 ? Math.max(...storyNums) + 1 : 1;
+    const nextNum = storyNums.length > 0 ? Math.max(...storyNums) + 1 : 1;
     const nextSlot = `${String(nextNum).padStart(3, '0')} — next story`;
-    return (preset?.inputs ?? []).map(inp => {
-      if (inp.id === 'series') return { ...inp, kind: 'static' as InputKind };
-      if (inp.id === 'order')  return { ...inp, options: [nextSlot], default: nextSlot };
-      return inp;
-    });
-  }, [actionId, data.campaigns, data.stories, formValues.series, activeCampaignName, preset]);
+    const partyIds = data.campaigns.find(c => c.name === selectedName)?.currentPartyIds ?? [];
+    const partyNames = data.characters
+      .filter(c => partyIds.includes(c.id) && c.characterType !== false)
+      .map(c => c.title);
+
+    const result: InputSpec[] = [];
+    for (const inp of preset?.inputs ?? []) {
+      if (inp.id === 'series') {
+        result.push({ ...inp, kind: 'static' as InputKind });
+      } else if (inp.id === 'order') {
+        result.push({ ...inp, options: [nextSlot], default: nextSlot });
+      } else if (inp.id === 'beats') {
+        result.push({
+          id: 'spotlight', label: 'Featured characters', kind: 'spotlight' as InputKind,
+          options: partyNames, maxFixed: 4, scores: spotlightScores,
+        });
+        result.push({
+          id: 'location', label: 'Location', kind: 'text' as InputKind,
+          placeholder: 'Enter the location of the session (optional)',
+        });
+        result.push(inp);
+      } else {
+        result.push(inp);
+      }
+    }
+    return result;
+  }, [actionId, data.campaigns, data.characters, data.stories, formValues.series, activeCampaignName, preset, spotlightScores]);
 
   if (preset === undefined) {
     return <div className="screen-blurb">Unknown action: {actionId}</div>;
@@ -753,27 +1040,27 @@ function AiActionWorkbench({ actionId, ctx, setCtx, entry }: ActionScreenProps):
       setTimeout(() => { setToast(null); }, 4200);
       return;
     }
-    const fv           = formValuesRef.current;
-    const cd           = consoleDataRef.current;
+    const fv = formValuesRef.current;
+    const cd = consoleDataRef.current;
     const campaignName = fv.series || activeCampaignName;
-    const campaign     = cd.campaigns.find(c => c.name === campaignName);
+    const campaign = cd.campaigns.find(c => c.name === campaignName);
     if (!campaign?.id) {
       setToast({ tag: 'Error: campaign not found', path: '' });
       setTimeout(() => { setToast(null); }, 4200);
       return;
     }
-    const storyNums  = cd.stories.filter(s => s.campaign === campaignName).map(s => s.storyNumber ?? 0);
-    const nextNum    = storyNums.length > 0 ? Math.max(...storyNums) + 1 : 1;
+    const storyNums = cd.stories.filter(s => s.campaign === campaignName).map(s => s.storyNumber ?? 0);
+    const nextNum = storyNums.length > 0 ? Math.max(...storyNums) + 1 : 1;
     const storyTitle = extractStoryTitle(run.streamed, `Session ${nextNum}`);
     setAccepting(true);
     try {
       const res = await fetch('/api/create-story', {
-        method:  'POST',
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          campaignId:  campaign.id,
-          title:       storyTitle,
-          body:        run.streamed,
+          campaignId: campaign.id,
+          title: storyTitle,
+          body: run.streamed,
           storyNumber: nextNum,
           sessionDate: new Date().toISOString().slice(0, 10),
         }),
@@ -935,7 +1222,7 @@ function AiActionWorkbench({ actionId, ctx, setCtx, entry }: ActionScreenProps):
                     type="button"
                     className="ai-accept-btn"
                     onClick={() => { void onAccept(); }}
-                    disabled={accepting}
+                    disabled={accepting || !run.streamed.trim()}
                   >
                     <Icon name="plus" size={11} />
                     {accepting ? ' Saving…' : ' Accept & save'}
@@ -962,19 +1249,18 @@ function AiActionWorkbench({ actionId, ctx, setCtx, entry }: ActionScreenProps):
 ───────────────────────────────────────────────────────────── */
 
 function AiActionForge({ actionId, ctx, setCtx, entry }: ActionScreenProps): React.ReactElement {
-  const preset     = ACTION_PRESETS[actionId];
-  const data       = useConsoleData();
+  const preset = ACTION_PRESETS[actionId];
+  const data = useConsoleData();
   const activeCampaignName = (ctx.activeCampaignName as string | undefined) ?? '';
 
   const [formValues, setFormValues] = React.useState<Record<string, string>>(() => {
     const init: Record<string, string> = {};
-    if (actionId === 's-add' && activeCampaignName) {
-      init.series = activeCampaignName;
-    }
+    if (actionId === 's-add' && activeCampaignName) init.series = activeCampaignName;
     return init;
   });
-  const [toast, setToast]         = React.useState<{ tag: string; path: string } | null>(null);
+  const [toast, setToast] = React.useState<{ tag: string; path: string } | null>(null);
   const [accepting, setAccepting] = React.useState(false);
+  const [spotlightScores, setScores] = React.useState<Record<string, number>>({});
   const formValuesRef = React.useRef(formValues);
   formValuesRef.current = formValues;
   const consoleDataRef = React.useRef(data);
@@ -987,21 +1273,59 @@ function AiActionForge({ actionId, ctx, setCtx, entry }: ActionScreenProps): Rea
     }
   }, [actionId, activeCampaignName]);
 
+  React.useEffect(() => {
+    if (actionId !== 's-add' || !activeCampaignName) return;
+    const partyIds = data.campaigns.find(c => c.name === activeCampaignName)?.currentPartyIds ?? [];
+    const partyNames = data.characters
+      .filter(c => partyIds.includes(c.id) && c.characterType !== false)
+      .map(c => c.title);
+    if (partyNames.length === 0) return;
+    void fetch('/api/spotlight', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ campaignName: activeCampaignName, characterNames: partyNames }),
+    }).then(async (res: Response) => {
+      if (!res.ok) return;
+      const payload = (await res.json()) as { scores: Record<string, number> };
+      setScores(payload.scores ?? {});
+    }).catch(() => undefined);
+  }, [actionId, activeCampaignName, data.campaigns, data.characters]);
+
   const resolvedInputs = React.useMemo((): InputSpec[] => {
     if (actionId !== 's-add') return preset?.inputs ?? [];
-    const campaignNames = data.campaigns.map(c => c.name);
-    const selectedName  = formValues.series || activeCampaignName;
-    const storyNums     = data.stories
+    const selectedName = formValues.series || activeCampaignName;
+    const storyNums = data.stories
       .filter(s => s.campaign === selectedName)
       .map(s => s.storyNumber ?? 0);
-    const nextNum  = storyNums.length > 0 ? Math.max(...storyNums) + 1 : 1;
+    const nextNum = storyNums.length > 0 ? Math.max(...storyNums) + 1 : 1;
     const nextSlot = `${String(nextNum).padStart(3, '0')} — next story`;
-    return (preset?.inputs ?? []).map(inp => {
-      if (inp.id === 'series') return { ...inp, kind: 'static' as InputKind };
-      if (inp.id === 'order')  return { ...inp, options: [nextSlot], default: nextSlot };
-      return inp;
-    });
-  }, [actionId, data.campaigns, data.stories, formValues.series, activeCampaignName, preset]);
+    const partyIds = data.campaigns.find(c => c.name === selectedName)?.currentPartyIds ?? [];
+    const partyNames = data.characters
+      .filter(c => partyIds.includes(c.id) && c.characterType !== false)
+      .map(c => c.title);
+
+    const result: InputSpec[] = [];
+    for (const inp of preset?.inputs ?? []) {
+      if (inp.id === 'series') {
+        result.push({ ...inp, kind: 'static' as InputKind });
+      } else if (inp.id === 'order') {
+        result.push({ ...inp, options: [nextSlot], default: nextSlot });
+      } else if (inp.id === 'beats') {
+        result.push({
+          id: 'spotlight', label: 'Featured characters', kind: 'spotlight' as InputKind,
+          options: partyNames, maxFixed: 4, scores: spotlightScores,
+        });
+        result.push({
+          id: 'location', label: 'Location', kind: 'text' as InputKind,
+          placeholder: 'Enter location of this session',
+        });
+        result.push(inp);
+      } else {
+        result.push(inp);
+      }
+    }
+    return result;
+  }, [actionId, data.campaigns, data.characters, data.stories, formValues.series, activeCampaignName, preset, spotlightScores]);
 
   if (preset === undefined) {
     return <div className="screen-blurb">Unknown action: {actionId}</div>;
@@ -1021,27 +1345,27 @@ function AiActionForge({ actionId, ctx, setCtx, entry }: ActionScreenProps): Rea
       setTimeout(() => { setToast(null); }, 4200);
       return;
     }
-    const fv           = formValuesRef.current;
-    const cd           = consoleDataRef.current;
+    const fv = formValuesRef.current;
+    const cd = consoleDataRef.current;
     const campaignName = fv.series || activeCampaignName;
-    const campaign     = cd.campaigns.find(c => c.name === campaignName);
+    const campaign = cd.campaigns.find(c => c.name === campaignName);
     if (!campaign?.id) {
       setToast({ tag: 'Error: campaign not found', path: '' });
       setTimeout(() => { setToast(null); }, 4200);
       return;
     }
-    const storyNums  = cd.stories.filter(s => s.campaign === campaignName).map(s => s.storyNumber ?? 0);
-    const nextNum    = storyNums.length > 0 ? Math.max(...storyNums) + 1 : 1;
+    const storyNums = cd.stories.filter(s => s.campaign === campaignName).map(s => s.storyNumber ?? 0);
+    const nextNum = storyNums.length > 0 ? Math.max(...storyNums) + 1 : 1;
     const storyTitle = extractStoryTitle(run.streamed, `Session ${nextNum}`);
     setAccepting(true);
     try {
       const res = await fetch('/api/create-story', {
-        method:  'POST',
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          campaignId:  campaign.id,
-          title:       storyTitle,
-          body:        run.streamed,
+          campaignId: campaign.id,
+          title: storyTitle,
+          body: run.streamed,
           storyNumber: nextNum,
           sessionDate: new Date().toISOString().slice(0, 10),
         }),
@@ -1231,7 +1555,7 @@ function AiActionForge({ actionId, ctx, setCtx, entry }: ActionScreenProps): Rea
                       type="button"
                       className="ai-accept-btn"
                       onClick={() => { void onAccept(); }}
-                      disabled={accepting}
+                      disabled={accepting || !run.streamed.trim()}
                     >
                       <Icon name="plus" size={11} />
                       {accepting ? ' Saving…' : ' Accept & save'}
@@ -1260,8 +1584,8 @@ function AiActionForge({ actionId, ctx, setCtx, entry }: ActionScreenProps): Rea
 
 export function AiActionScreen({ ctx, setCtx }: ScreenProps): React.ReactElement {
   const actionId = (ctx.workSeriesAction as string | undefined) ?? 's-session';
-  const variant  = (ctx.aiLayout as string | undefined) ?? 'workbench';
-  const entry    = (ctx._entryFrom as string | undefined) ?? 'workspace';
+  const variant = (ctx.aiLayout as string | undefined) ?? 'workbench';
+  const entry = (ctx._entryFrom as string | undefined) ?? 'workspace';
 
   if (variant === 'forge') {
     return <AiActionForge actionId={actionId} ctx={ctx} setCtx={setCtx} entry={entry} />;

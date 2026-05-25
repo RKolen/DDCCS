@@ -2,11 +2,12 @@
  * Homepage — DDCCS Campaign Console
  * Route: /
  *
- * Query uses only fields confirmed working in existing pages, plus
- * pronouns/species/background/campaignStatus which are enabled in
- * graphql_compose settings. The `class` paragraph field is intentionally
- * omitted — graphql-js's tagged-template parser rejects `class` as a
- * fragment field name, cascading all other queries to fail.
+ * Query includes rich character profile fields for story generation:
+ * personalityTraits, bonds, ideals, flaws, majorPlotActions are text fields
+ * (already enabled). species/lineage/background reference taxonomy terms enabled
+ * via entity_config.taxonomy_term in graphql_compose settings (requires ddev drush cim).
+ * The `class` paragraph field is intentionally omitted — graphql-js's tagged-template
+ * parser rejects `class` as a fragment field name, cascading all other queries to fail.
  */
 
 import * as React from 'react';
@@ -70,6 +71,14 @@ export const query = graphql`
               mediaImage { url alt }
             }
           }
+          species    { ... on Drupal_TermSpecies     { name } }
+          lineage    { ... on Drupal_TermLineage     { name } }
+          background { ... on Drupal_TermBackground  { name } }
+          personalityTraits { value }
+          bonds             { value }
+          ideals            { value }
+          flaws             { value }
+          majorPlotActions  { value }
         }
       }
       nodeStories(first: 100) {

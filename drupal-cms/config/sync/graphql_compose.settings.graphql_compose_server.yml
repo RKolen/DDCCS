@@ -97,6 +97,15 @@ entity_config:
     class:
       enabled: true
       query_load_enabled: true
+    species:
+      enabled: true
+      query_load_enabled: true
+    lineage:
+      enabled: true
+      query_load_enabled: true
+    backgrounds:
+      enabled: true
+      query_load_enabled: true
   media:
     image:
       enabled: true

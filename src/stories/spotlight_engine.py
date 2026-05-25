@@ -44,6 +44,7 @@ class SpotlightEngine:
         campaign_name: str,
         workspace_path: Optional[str] = None,
         config: Optional[SpotlightConfig] = None,
+        character_names: Optional[List[str]] = None,
     ) -> SpotlightReport:
         """Generate a full spotlight report for the given campaign.
 
@@ -56,6 +57,10 @@ class SpotlightEngine:
             workspace_path: Optional workspace root path.
             config: Optional SpotlightConfig controlling signal weights. Uses
                 SpotlightConfig defaults when not provided.
+            character_names: Optional explicit list of character names to score.
+                When provided, overrides the local file discovery so callers
+                (e.g. the sidecar bridging Drupal data) can pass authoritative
+                names without requiring local game_data files to exist.
 
         Returns:
             SpotlightReport with all entries sorted by score descending.
@@ -65,13 +70,16 @@ class SpotlightEngine:
             campaign_path=get_campaign_path(campaign_name, workspace_path),
             workspace_path=workspace_path,
         )
-        character_names = list_character_names(workspace_path)
+        resolved_chars = (
+            character_names if character_names is not None
+            else list_character_names(workspace_path)
+        )
         npc_names = self._load_npc_names(workspace_path)
         thread_signals = collect_unresolved_thread_signals(
-            ctx.campaign_path, character_names + npc_names, cfg.thread_weight
+            ctx.campaign_path, resolved_chars + npc_names, cfg.thread_weight
         )
         char_entries = self._build_character_entries(
-            ctx, character_names, cfg, thread_signals
+            ctx, resolved_chars, cfg, thread_signals
         )
         npc_entries = self._build_npc_entries(ctx, npc_names, cfg, thread_signals)
         return SpotlightReport(
@@ -151,6 +159,7 @@ class SpotlightEngine:
         campaign_name: str,
         workspace_path: Optional[str] = None,
         config: Optional[SpotlightConfig] = None,
+        character_names: Optional[List[str]] = None,
     ) -> str:
         """Return a brief spotlight context block for injection into AI prompts.
 
@@ -161,13 +170,15 @@ class SpotlightEngine:
             campaign_name: Name of the campaign directory.
             workspace_path: Optional workspace root path.
             config: Optional SpotlightConfig. Uses defaults when not provided.
+            character_names: Optional explicit character names. Passed through
+                to generate_report when provided.
 
         Returns:
             Formatted spotlight context string, or empty string if nothing is
             noteworthy (all scores are zero).
         """
         cfg = config or SpotlightConfig()
-        report = self.generate_report(campaign_name, workspace_path, cfg)
+        report = self.generate_report(campaign_name, workspace_path, cfg, character_names)
         top_chars = report.top_characters(cfg.max_characters_in_prompt)
         top_npcs = report.top_npcs(cfg.max_npcs_in_prompt)
 

@@ -1,0 +1,23 @@
+uuid: ce385c17-9130-433d-a36d-770a553db08b
+langcode: en
+status: true
+dependencies:
+  config:
+    - node.type.item
+  module:
+    - node
+id: item
+label: Item
+type: 'canonical_entities:node'
+pattern: '/[node:content-type]/[current-page:title]'
+selection_criteria:
+  3f48900e-8b49-48a2-b878-b6f91f8b57b6:
+    id: 'entity_bundle:node'
+    negate: false
+    context_mapping:
+      node: node
+    bundles:
+      item: item
+selection_logic: and
+weight: -5
+relationships: {  }

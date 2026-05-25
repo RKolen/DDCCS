@@ -43,6 +43,15 @@ export interface DrupalCharacter {
   campaignId: string | null;
   path: string | null;
   imageUrl: string | null;
+  /** Rich profile fields for story generation */
+  species: string | null;
+  lineage: string | null;
+  background: string | null;
+  bonds: string[];
+  ideals: string[];
+  flaws: string[];
+  personalityTraits: string[];
+  majorPlotActions: string[];
 }
 
 export interface DrupalStory {

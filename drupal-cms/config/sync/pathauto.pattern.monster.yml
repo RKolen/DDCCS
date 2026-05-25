@@ -1,0 +1,23 @@
+uuid: 3a7c6c23-9bbd-40df-866f-8ec5f5df8d50
+langcode: en
+status: true
+dependencies:
+  config:
+    - node.type.monster
+  module:
+    - node
+id: monster
+label: Monster
+type: 'canonical_entities:node'
+pattern: '/[node:content-type]/[current-page:title]'
+selection_criteria:
+  e7c9dbda-676e-41b7-9b78-9867fd332ef3:
+    id: 'entity_bundle:node'
+    negate: false
+    context_mapping:
+      node: node
+    bundles:
+      monster: monster
+selection_logic: and
+weight: -5
+relationships: {  }

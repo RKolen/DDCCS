@@ -971,6 +971,159 @@
 }
 
 /* ────────────────────────────────────────────────────────────
+   Spotlight character picker (s-add setup form)
+   ──────────────────────────────────────────────────────────── */
+.spotlight-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.spotlight-chars {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.spotlight-char {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  background: var(--canvas);
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  font-family: var(--font-body);
+  font-size: 12px;
+  color: var(--ink-dim);
+  cursor: pointer;
+  transition: border-color 120ms, color 120ms, background 120ms;
+  white-space: nowrap;
+}
+.spotlight-char:hover:not(:disabled) {
+  border-color: var(--brass-dim);
+  color: var(--ink);
+}
+.spotlight-char.is-pinned {
+  background: rgba(201, 169, 110, 0.14);
+  border-color: var(--brass);
+  color: var(--brass-bright);
+  font-weight: 600;
+}
+.spotlight-char.is-random {
+  background: rgba(91, 155, 213, 0.1);
+  border-color: rgba(91, 155, 213, 0.5);
+  color: #92bce0;
+}
+.spotlight-char:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+.spotlight-char-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--brass);
+  flex-shrink: 0;
+}
+.spotlight-char.is-pinned .spotlight-char-dot { background: var(--brass-bright); }
+.spotlight-char.is-random .spotlight-char-dot { background: #5b9bd5; }
+
+.spotlight-random-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  background: var(--canvas);
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  min-height: 36px;
+}
+
+.spotlight-random-label {
+  font-family: var(--font-display);
+  font-size: 9px;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--brass-dim);
+  flex-shrink: 0;
+}
+
+.spotlight-random-name {
+  font-family: var(--font-body);
+  font-size: 12px;
+  color: #92bce0;
+  flex: 1;
+}
+.spotlight-random-name.is-locked {
+  color: var(--brass-bright);
+  font-weight: 600;
+}
+
+.spotlight-roll {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  background: transparent;
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  font-family: var(--font-display);
+  font-size: 9px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.spotlight-roll:hover:not(:disabled) { border-color: var(--brass-dim); color: var(--brass); }
+.spotlight-roll:disabled { opacity: 0.35; cursor: not-allowed; }
+
+.spotlight-lock-btn {
+  padding: 3px 9px;
+  background: transparent;
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  font-family: var(--font-display);
+  font-size: 9px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.spotlight-lock-btn:hover { border-color: var(--brass-dim); color: var(--brass); }
+.spotlight-lock-btn.is-locked {
+  background: rgba(201, 169, 110, 0.12);
+  border-color: var(--brass);
+  color: var(--brass);
+}
+
+.spotlight-clear {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 50%;
+  color: var(--ink-faint);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.spotlight-clear:hover { border-color: var(--rule); color: var(--ink-dim); }
+
+.spotlight-count {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--brass-dim);
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+/* ────────────────────────────────────────────────────────────
    Session Notes timeline (s-notes)
    ──────────────────────────────────────────────────────────── */
 .screen-notes {

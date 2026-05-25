@@ -1,0 +1,23 @@
+uuid: db119d9c-315c-4865-8b1c-e321081885dd
+langcode: en
+status: true
+dependencies:
+  config:
+    - node.type.ability
+  module:
+    - node
+id: ability
+label: Ability
+type: 'canonical_entities:node'
+pattern: '/[node:content-type]/[current-page:title]'
+selection_criteria:
+  df879270-6455-4363-b8bd-1a6871e822e3:
+    id: 'entity_bundle:node'
+    negate: false
+    context_mapping:
+      node: node
+    bundles:
+      ability: ability
+selection_logic: and
+weight: -5
+relationships: {  }

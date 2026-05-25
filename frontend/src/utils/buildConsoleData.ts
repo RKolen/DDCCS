@@ -46,6 +46,14 @@ export interface RawCharacter {
   path:            string | null;
   campaign:        RawCampaignOnCharacter | null;
   image:           { mediaImage: { url: string; alt: string } | null } | null;
+  species?:          { name: string } | null;
+  lineage?:          { name: string } | null;
+  background?:       { name: string } | null;
+  bonds?:            Array<{ value: string }> | null;
+  ideals?:           Array<{ value: string }> | null;
+  flaws?:            Array<{ value: string }> | null;
+  personalityTraits?: Array<{ value: string }> | null;
+  majorPlotActions?:  Array<{ value: string }> | null;
 }
 
 export interface RawStory {
@@ -86,6 +94,14 @@ export function buildConsoleData(data: ConsoleQueryData | null | undefined): Con
     campaignId:       n.campaign?.id ?? null,
     path:             n.path,
     imageUrl:         n.image?.mediaImage?.url ?? null,
+    species:          n.species?.name ?? null,
+    lineage:          n.lineage?.name ?? null,
+    background:       n.background?.name ?? null,
+    bonds:            (n.bonds ?? []).map(b => b.value),
+    ideals:           (n.ideals ?? []).map(b => b.value),
+    flaws:            (n.flaws ?? []).map(b => b.value),
+    personalityTraits: (n.personalityTraits ?? []).map(b => b.value),
+    majorPlotActions:  (n.majorPlotActions ?? []).map(b => b.value),
   }));
 
   const stories: DrupalStory[] = data.drupal.nodeStories.nodes

@@ -1,6 +1,6 @@
 """Pydantic request and response models for the query parser sidecar."""
 
-from typing import Optional
+from typing import List, Optional
 
 from pydantic import BaseModel, field_validator
 
@@ -44,3 +44,24 @@ class HealthResponse(BaseModel):
 
     status: str
     ai_configured: bool
+
+
+class SpotlightRequest(BaseModel):
+    """Spotlight score request from the Gatsby frontend."""
+
+    campaign_name: str
+    character_names: List[str]
+
+
+class SpotlightCharacterScore(BaseModel):
+    """Spotlight score for a single character."""
+
+    name: str
+    score: float
+
+
+class SpotlightResponse(BaseModel):
+    """Spotlight scores for all requested characters."""
+
+    campaign_name: str
+    entries: List[SpotlightCharacterScore]

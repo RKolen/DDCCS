@@ -1,48 +1,100 @@
 import type { GatsbyFunctionRequest, GatsbyFunctionResponse } from 'gatsby';
 
+interface PartyMember {
+  name: string;
+  characterClass: string | null;
+  role: string | null;
+  pronouns: string | null;
+  species: string | null;
+  lineage: string | null;
+  background: string | null;
+  bonds: string[];
+  personalityTraits: string[];
+  majorPlotActions: string[];
+}
+
 interface GenerateStoryBody {
-  campaignName:        string;
-  campaignId:          string;
-  beats:               string;
-  length:              string;
-  pov:                 string;
-  storyNumber:         number;
-  partyNames:          string[];
-  recentStoryTitles:   string[];
+  campaignName: string;
+  campaignId: string;
+  beats: string;
+  length: string;
+  pov: string;
+  storyNumber: number;
+  partyNames: string[];
+  partyMembers?: PartyMember[];
+  location?: string;
+  recentStoryTitles: string[];
 }
 
 function targetWords(length: string): number {
-  if (length.includes('800'))  return 800;
+  if (length.includes('800')) return 800;
   if (length.includes('1600')) return 1600;
   return 3000;
 }
 
+function buildMemberBlock(m: PartyMember): string {
+  const speciesPart = [m.lineage, m.species].filter(Boolean).join(' ');
+  const classPart = [speciesPart || null, m.characterClass].filter(Boolean).join(' ');
+  const header = [m.name, classPart || null, m.role || null, m.pronouns ? `(${m.pronouns})` : null]
+    .filter(Boolean).join(' · ');
+
+  const lines = [header];
+  if (m.background) lines.push(`  Background: ${m.background}`);
+  if (m.personalityTraits.length > 0) lines.push(`  Traits: ${m.personalityTraits.join(', ')}`);
+  if (m.bonds.length > 0) lines.push(`  Bonds: ${m.bonds.join(', ')}`);
+  if (m.majorPlotActions.length > 0) lines.push(`  Current goals: ${m.majorPlotActions.join(', ')}`);
+  return lines.join('\n');
+}
+
+function buildPartyLine(body: GenerateStoryBody): string {
+  if (body.partyMembers && body.partyMembers.length > 0) {
+    const blocks = body.partyMembers.map(buildMemberBlock).join('\n\n');
+    return `Characters featured this session (${body.partyMembers.length}):\n\n${blocks}`;
+  }
+  if (body.partyNames.length > 0) {
+    return `Characters featured this session: ${body.partyNames.join(', ')}.`;
+  }
+  return 'Party composition unknown.';
+}
+
 function buildPrompt(body: GenerateStoryBody): string {
-  const words       = targetWords(body.length);
-  const partyLine   = body.partyNames.length > 0
-    ? `Party present this session: ${body.partyNames.join(', ')}.`
-    : 'Party composition unknown.';
+  const words = targetWords(body.length);
+  const partyLine = buildPartyLine(body);
+  const locationLine = body.location?.trim()
+    ? `Setting for this session: ${body.location.trim()}.`
+    : '';
   const contextLine = body.recentStoryTitles.length > 0
     ? `Previous sessions in this campaign: ${body.recentStoryTitles.join('; ')}.`
     : '';
   const povLine =
     body.pov === 'Per-character' ? 'Write from a rotating close third-person perspective, one character per scene.' :
-    body.pov === 'DM voice'      ? 'Write in DM voice — present tense, directed at the players as "you".' :
-    'Write in omniscient third-person narrator voice.';
+      body.pov === 'DM voice' ? 'Write in DM voice — present tense, directed at the players as "you".' :
+        'Write in omniscient third-person narrator voice.';
 
-  return `You are a D&D session narrative writer. Write a ${words}-word story for session ${body.storyNumber} of the campaign "${body.campaignName}".
+  const lines = [
+    `You are a D&D session narrative writer. Write a ${words}-word story for session ${body.storyNumber} of the campaign "${body.campaignName}".`,
+    '',
+    partyLine,
+  ];
+  if (locationLine) lines.push(locationLine);
+  if (contextLine) lines.push(contextLine);
+  lines.push('', povLine, '');
+  lines.push(
+    'Use the following story beats as your structure (cover all of them):',
+    body.beats,
+    '',
+    'Write a compelling, immersive narrative in the style of high fantasy literary fiction. ' +
+    'Use markdown headers (### Heading) to separate major scene breaks. ' +
+    'Bold character names on first appearance in each scene (**Name**). ' +
+    'Italicise in-world proper nouns (*name*). ' +
+    'Do not include a title at the top — begin the narrative directly with the first scene. ' +
+    `Target approximately ${words} words. Do not cut off mid-sentence.`,
+    // /no_think disables qwen3 extended-thinking mode at the message level
+    // (belt-and-suspenders with think:false in the API call).
+    '/no_think',
+  );
 
-${partyLine}
-${contextLine}
-
-${povLine}
-
-Use the following story beats as your structure (cover all of them):
-${body.beats}
-
-Write a compelling, immersive narrative in the style of high fantasy literary fiction. Use markdown headers (### Heading) to separate major scene breaks. Bold character names on first appearance in each scene (**Name**). Italicise in-world proper nouns (*name*).
-
-Do not include a title at the top — begin the narrative directly with the first scene. Target approximately ${words} words.`;
+  return lines.join('\n');
 }
 
 export default async function handler(
@@ -55,8 +107,8 @@ export default async function handler(
   }
 
   const baseUrl = process.env.AI_CREATIVE_BASE_URL;
-  const model   = process.env.AI_CREATIVE_MODEL;
-  const apiKey  = process.env.OLLAMA_API_KEY;
+  const model = process.env.AI_CREATIVE_MODEL;
+  const apiKey = process.env.OLLAMA_API_KEY;
 
   if (!baseUrl || !model || !apiKey) {
     res.status(500).json({ error: 'AI_CREATIVE_BASE_URL, AI_CREATIVE_MODEL, and OLLAMA_API_KEY must be set in the root .env' });
@@ -68,14 +120,21 @@ export default async function handler(
     res.status(400).json({ error: 'beats are required' });
     return;
   }
+  if ((body.partyNames?.length ?? 0) === 0 && (body.partyMembers?.length ?? 0) === 0) {
+    res.status(400).json({ error: 'At least one featured character is required' });
+    return;
+  }
 
-  const prompt    = buildPrompt(body);
-  const words     = targetWords(body.length);
-  const maxTokens = Math.ceil(words * 1.6);
+  const prompt = buildPrompt(body);
+  const words = targetWords(body.length);
+  // 3.5× budget: 2.2 chars/token for the story itself, plus ~1.3× headroom for
+  // any residual thinking tokens even when /no_think is set, and to avoid
+  // mid-sentence cutoff on longer stories with many characters.
+  const maxTokens = Math.ceil(words * 3.5);
 
-  res.setHeader('Content-Type',  'text/event-stream');
+  res.setHeader('Content-Type', 'text/event-stream');
   res.setHeader('Cache-Control', 'no-cache');
-  res.setHeader('Connection',    'keep-alive');
+  res.setHeader('Connection', 'keep-alive');
 
   let llmRes: Response;
   try {
@@ -83,14 +142,15 @@ export default async function handler(
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization:  `Bearer ${apiKey}`,
+        Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
         model,
         max_tokens: maxTokens,
-        stream:     true,
-        think:      false,
-        messages:   [{ role: 'user', content: prompt }],
+        num_ctx: 16384,
+        stream: true,
+        think: false,
+        messages: [{ role: 'user', content: prompt }],
       }),
     });
   } catch (err) {
@@ -127,9 +187,14 @@ export default async function handler(
         if (payload === '[DONE]') continue;
         try {
           const event = JSON.parse(payload) as {
-            choices?: Array<{ delta?: { content?: string } }>;
+            choices?: Array<{
+              delta?: { content?: string; reasoning_content?: string };
+            }>;
           };
-          const text = event.choices?.[0]?.delta?.content;
+          const delta = event.choices?.[0]?.delta;
+          // Prefer content; fall back to reasoning_content if the model
+          // ignored /no_think and routed all output through thinking tokens.
+          const text = delta?.content || delta?.reasoning_content;
           if (text) {
             contentReceived = true;
             res.write(`data: ${JSON.stringify({ text })}\n\n`);
