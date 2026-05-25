@@ -9,6 +9,11 @@ dotenv.config({ path: path.resolve(__dirname, '..', '.env') });
 dotenv.config({ path: `.env.${process.env.NODE_ENV ?? 'development'}` });
 dotenv.config({ path: '.env.development' });
 
+// Bridge server-only AI vars to browser context (no GATSBY_ prefix in root .env).
+// dotenv does not override, so only set if not already present.
+process.env.GATSBY_AI_MODEL    = process.env.GATSBY_AI_MODEL    ?? process.env.AI_CREATIVE_MODEL;
+process.env.GATSBY_AI_BASE_URL = process.env.GATSBY_AI_BASE_URL ?? process.env.AI_CREATIVE_BASE_URL;
+
 // Prefer GATSBY_DRUPAL_BASE_URL (set in .env.development as HTTP to avoid
 // Node.js rejecting DDEV's self-signed cert) over the shared DRUPAL_BASE_URL.
 const DRUPAL_URL  = process.env.GATSBY_DRUPAL_BASE_URL ?? process.env.DRUPAL_BASE_URL;

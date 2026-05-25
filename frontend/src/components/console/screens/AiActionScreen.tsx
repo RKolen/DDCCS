@@ -15,12 +15,14 @@
 import * as React from 'react';
 import type { ScreenProps } from '../ScreenRouter';
 import { Icon, AiTag, SlowTag } from '../atoms';
+import { useConsoleData } from '../ConsoleContext';
+import type { ConsoleData } from '../ConsoleContext';
 
 /* ─────────────────────────────────────────────────────────────
    Types
 ───────────────────────────────────────────────────────────── */
 
-type InputKind = 'select' | 'textarea' | 'segment' | 'text';
+type InputKind = 'select' | 'textarea' | 'segment' | 'text' | 'static';
 
 interface InputSpec {
   id: string;
@@ -126,6 +128,21 @@ Recommended check: **DEX (Sleight of Hand)** — DC **18** *(hard)*.
 
 **Critical success:** Pippin lifts the keys and finds a bone whistle on the same ring — one rune carved into it (*si-*, Quenya for "silence").`;
 
+/* ─────────────────────────────────────────────────────────────
+   Story generation helpers
+───────────────────────────────────────────────────────────── */
+
+function targetWords(length: string | undefined): number {
+  if (length?.includes('800'))  return 800;
+  if (length?.includes('1600')) return 1600;
+  return 3000;
+}
+
+function extractStoryTitle(text: string, fallback: string): string {
+  const m = text.match(/^###\s+(.+)$/m);
+  return m?.[1]?.trim() ?? fallback;
+}
+
 function mockForAction(id: string, preset: ActionPreset): string {
   if (preset.mock) return preset.mock;
   if (id === 's-dc') return MOCK_DC;
@@ -142,7 +159,7 @@ const ACTION_PRESETS: Record<string, ActionPreset> = {
   's-add': {
     label: 'Add new story to series', group: 'Authoring',
     blurb: 'Drafts a session-shaped story from a list of beats. Lands as the next numbered file in the series.',
-    model: { name: 'Sonnet · Narrative', task: 'story_generation', tone: 'creative' },
+    model: { name: process.env.GATSBY_AI_MODEL ?? '', task: 'story_generation', tone: 'creative' },
     duration: 16000,
     inputs: [
       { id: 'series', label: 'Series', kind: 'select',
@@ -319,44 +336,54 @@ const ACTION_PRESETS: Record<string, ActionPreset> = {
 };
 
 /* ─────────────────────────────────────────────────────────────
-   useAiRun — simulated phased streaming (setup → running → done)
+   useAiRun — real streaming for s-add, mock for all others
 ───────────────────────────────────────────────────────────── */
 
 type RunPhase = 'setup' | 'running' | 'done';
 
 interface AiRunState {
-  phase: RunPhase;
-  streamed: string;
-  progress: number;
-  elapsed: number;
-  tokens: number;
+  phase:        RunPhase;
+  streamed:     string;
+  progress:     number;
+  elapsed:      number;
+  tokens:       number;
   tokensPerSec: number;
-  events: EventEntry[];
-  start: () => void;
-  cancel: () => void;
-  reset: () => void;
+  events:       EventEntry[];
+  errorMsg:     string | null;
+  start:        () => void;
+  cancel:       () => void;
+  reset:        () => void;
 }
 
-function useAiRun(actionId: string): AiRunState {
-  const preset = ACTION_PRESETS[actionId];
+function useAiRun(
+  actionId:       string,
+  formValuesRef:  React.MutableRefObject<Record<string, string>>,
+  consoleDataRef: React.MutableRefObject<ConsoleData>,
+): AiRunState {
+  const preset        = ACTION_PRESETS[actionId];
   const totalDuration = preset?.duration ?? 10000;
-  const fullText = preset ? mockForAction(actionId, preset) : MOCK_NARRATIVE;
-  const tickMs = 50;
+  const fullText      = preset ? mockForAction(actionId, preset) : MOCK_NARRATIVE;
+  const tickMs        = 50;
+  const isReal        = actionId === 's-add';
 
-  const [phase, setPhase]                 = React.useState<RunPhase>('setup');
-  const [streamed, setStreamed]           = React.useState('');
-  const [progress, setProgress]           = React.useState(0);
-  const [elapsed, setElapsed]             = React.useState(0);
-  const [tokens, setTokens]               = React.useState(0);
-  const [tokensPerSec, setTPS]            = React.useState(0);
-  const [events, setEvents]               = React.useState<EventEntry[]>([]);
-  const timerRef                           = React.useRef<ReturnType<typeof setInterval> | null>(null);
+  const [phase, setPhase]           = React.useState<RunPhase>('setup');
+  const [streamed, setStreamed]     = React.useState('');
+  const [progress, setProgress]     = React.useState(0);
+  const [elapsed, setElapsed]       = React.useState(0);
+  const [tokens, setTokens]         = React.useState(0);
+  const [tokensPerSec, setTPS]      = React.useState(0);
+  const [events, setEvents]         = React.useState<EventEntry[]>([]);
+  const [errorMsg, setErrorMsg]     = React.useState<string | null>(null);
+  const timerRef                    = React.useRef<ReturnType<typeof setInterval> | null>(null);
+  const abortRef                    = React.useRef<AbortController | null>(null);
 
   const stopTimer = (): void => {
     if (timerRef.current !== null) {
       clearInterval(timerRef.current);
       timerRef.current = null;
     }
+    abortRef.current?.abort();
+    abortRef.current = null;
   };
 
   React.useEffect(() => stopTimer, []);
@@ -370,39 +397,144 @@ function useAiRun(actionId: string): AiRunState {
     setTokens(0);
     setTPS(0);
     setEvents([]);
+    setErrorMsg(null);
 
-    const t0 = Date.now();
-    const presetEvents = (preset?.eventsLog ?? []).slice();
+    if (isReal) {
+      const ctrl = new AbortController();
+      abortRef.current = ctrl;
+      const t0 = Date.now();
+      const fv = formValuesRef.current;
+      const cd = consoleDataRef.current;
 
-    timerRef.current = setInterval(() => {
-      const eMs  = Date.now() - t0;
-      const eSec = eMs / 1000;
-      setElapsed(eSec);
-      const p = Math.min(1, eMs / totalDuration);
-      setProgress(p);
-      const target = Math.floor(p * fullText.length);
-      setStreamed(fullText.slice(0, target));
-      const toks = Math.floor(target / 4.5);
-      setTokens(toks);
-      setTPS(eSec > 0.1 ? Math.floor(toks / eSec) : 0);
+      const campaignName    = fv.series || consoleDataRef.current.campaigns[0]?.name || '';
+      const campaign        = cd.campaigns.find(c => c.name === campaignName);
+      const partyIds        = campaign?.currentPartyIds ?? [];
+      const partyChars      = cd.characters.filter(c => partyIds.includes(c.id));
+      const campaignStories = cd.stories.filter(s => s.campaign === campaignName);
+      const allNums         = campaignStories.map(s => s.storyNumber ?? 0);
+      const nextNum         = allNums.length > 0 ? Math.max(...allNums) + 1 : 1;
+      const maxChars        = targetWords(fv.length) * 5;
 
-      while (presetEvents.length > 0) {
-        const next = presetEvents[0];
-        const [mm, ss] = next.t.split(':').map(Number);
-        if ((mm ?? 0) * 60 + (ss ?? 0) <= eSec) {
-          presetEvents.shift();
-          setEvents(ev => [...ev, next]);
-        } else {
-          break;
+      const intervalId = setInterval(() => {
+        setElapsed((Date.now() - t0) / 1000);
+      }, 100);
+      timerRef.current = intervalId;
+
+      fetch('/api/generate-story', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          campaignName,
+          campaignId:          campaign?.id ?? '',
+          beats:               fv.beats ?? '',
+          length:              fv.length ?? 'Long (3000)',
+          pov:                 fv.pov ?? 'Omniscient',
+          storyNumber:         nextNum,
+          partyNames:          partyChars.map(c => c.title),
+          recentStoryTitles:   campaignStories.slice(-3).map(s => s.title),
+        }),
+        signal: ctrl.signal,
+      }).then(async (res) => {
+        if (!res.ok) {
+          clearInterval(intervalId);
+          timerRef.current = null;
+          const errText = await res.text();
+          setErrorMsg(`Server error ${res.status}: ${errText}`);
+          setPhase('setup');
+          return;
         }
-      }
 
-      if (p >= 1) {
-        stopTimer();
+        const reader = res.body?.getReader();
+        if (!reader) {
+          clearInterval(intervalId);
+          timerRef.current = null;
+          setPhase('setup');
+          return;
+        }
+
+        const decoder    = new TextDecoder();
+        let accumulated  = '';
+
+        try {
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            const chunk = decoder.decode(value, { stream: true });
+            for (const line of chunk.split('\n')) {
+              if (!line.startsWith('data: ')) continue;
+              const payload = line.slice(6).trim();
+              if (payload === '[DONE]') continue;
+              try {
+                const parsed = JSON.parse(payload) as { text?: string; error?: string };
+                if (parsed.error) {
+                  setErrorMsg(parsed.error as string);
+                } else if (parsed.text) {
+                  accumulated += parsed.text;
+                  setStreamed(accumulated);
+                  const toks = Math.floor(accumulated.length / 4.5);
+                  setTokens(toks);
+                  const eSec = (Date.now() - t0) / 1000;
+                  setTPS(eSec > 0.1 ? Math.floor(toks / eSec) : 0);
+                  setProgress(Math.min(0.98, accumulated.length / maxChars));
+                }
+              } catch {
+                // skip non-JSON SSE lines
+              }
+            }
+          }
+        } finally {
+          reader.releaseLock();
+        }
+
+        clearInterval(intervalId);
+        timerRef.current = null;
+        setProgress(1);
         setPhase('done');
-      }
-    }, tickMs);
-  }, [actionId, fullText, preset, totalDuration]);
+      }).catch((err: unknown) => {
+        if (err instanceof Error && err.name === 'AbortError') return;
+        if (timerRef.current !== null) {
+          clearInterval(timerRef.current);
+          timerRef.current = null;
+        }
+        setErrorMsg(`Error: ${String(err)}`);
+        setPhase('setup');
+      });
+
+    } else {
+      // Mock streaming for all non-s-add actions
+      const t0           = Date.now();
+      const presetEvents = (preset?.eventsLog ?? []).slice();
+
+      timerRef.current = setInterval(() => {
+        const eMs  = Date.now() - t0;
+        const eSec = eMs / 1000;
+        setElapsed(eSec);
+        const p      = Math.min(1, eMs / totalDuration);
+        setProgress(p);
+        const target = Math.floor(p * fullText.length);
+        setStreamed(fullText.slice(0, target));
+        const toks   = Math.floor(target / 4.5);
+        setTokens(toks);
+        setTPS(eSec > 0.1 ? Math.floor(toks / eSec) : 0);
+
+        while (presetEvents.length > 0) {
+          const next = presetEvents[0];
+          const [mm, ss] = next.t.split(':').map(Number);
+          if ((mm ?? 0) * 60 + (ss ?? 0) <= eSec) {
+            presetEvents.shift();
+            setEvents(ev => [...ev, next]);
+          } else {
+            break;
+          }
+        }
+
+        if (p >= 1) {
+          stopTimer();
+          setPhase('done');
+        }
+      }, tickMs);
+    }
+  }, [isReal, formValuesRef, consoleDataRef, fullText, preset, totalDuration, tickMs]);
 
   const cancel = React.useCallback((): void => {
     stopTimer();
@@ -412,15 +544,17 @@ function useAiRun(actionId: string): AiRunState {
     setElapsed(0);
     setTokens(0);
     setTPS(0);
+    setErrorMsg(null);
   }, []);
 
   const reset = React.useCallback((): void => {
     stopTimer();
     setPhase('setup');
     setStreamed('');
+    setErrorMsg(null);
   }, []);
 
-  return { phase, streamed, progress, elapsed, tokens, tokensPerSec, events, start, cancel, reset };
+  return { phase, streamed, progress, elapsed, tokens, tokensPerSec, events, errorMsg, start, cancel, reset };
 }
 
 /* ─────────────────────────────────────────────────────────────
@@ -434,6 +568,10 @@ interface FormControlProps {
 }
 
 function AiFormControl({ input, value, onChange }: FormControlProps): React.ReactElement {
+  if (input.kind === 'static') {
+    return <span className="ai-form-static">{value ?? ''}</span>;
+  }
+
   if (input.kind === 'select') {
     const opts = input.options ?? [];
     return (
@@ -556,10 +694,40 @@ interface ActionScreenProps {
 }
 
 function AiActionWorkbench({ actionId, ctx, setCtx, entry }: ActionScreenProps): React.ReactElement {
-  const preset = ACTION_PRESETS[actionId];
-  const [formValues, setFormValues] = React.useState<Record<string, string>>({});
-  const [toast, setToast]           = React.useState<{ tag: string; path: string } | null>(null);
-  const run = useAiRun(actionId);
+  const preset     = ACTION_PRESETS[actionId];
+  const data       = useConsoleData();
+  const activeCampaignName = (ctx.activeCampaignName as string | undefined) ?? '';
+
+  const [formValues, setFormValues] = React.useState<Record<string, string>>(() => {
+    const init: Record<string, string> = {};
+    if (actionId === 's-add' && activeCampaignName) {
+      init.series = activeCampaignName;
+    }
+    return init;
+  });
+  const [toast, setToast]         = React.useState<{ tag: string; path: string } | null>(null);
+  const [accepting, setAccepting] = React.useState(false);
+  const formValuesRef = React.useRef(formValues);
+  formValuesRef.current = formValues;
+  const consoleDataRef = React.useRef(data);
+  consoleDataRef.current = data;
+  const run = useAiRun(actionId, formValuesRef, consoleDataRef);
+
+  const resolvedInputs = React.useMemo((): InputSpec[] => {
+    if (actionId !== 's-add') return preset?.inputs ?? [];
+    const campaignNames = data.campaigns.map(c => c.name);
+    const selectedName  = formValues.series ?? activeCampaignName;
+    const storyNums     = data.stories
+      .filter(s => s.campaign === selectedName)
+      .map(s => s.storyNumber ?? 0);
+    const nextNum  = storyNums.length > 0 ? Math.max(...storyNums) + 1 : 1;
+    const nextSlot = `${String(nextNum).padStart(3, '0')} — next story`;
+    return (preset?.inputs ?? []).map(inp => {
+      if (inp.id === 'series') return { ...inp, kind: 'static' as InputKind };
+      if (inp.id === 'order')  return { ...inp, options: [nextSlot], default: nextSlot };
+      return inp;
+    });
+  }, [actionId, data.campaigns, data.stories, formValues.series, activeCampaignName, preset]);
 
   if (preset === undefined) {
     return <div className="screen-blurb">Unknown action: {actionId}</div>;
@@ -573,9 +741,52 @@ function AiActionWorkbench({ actionId, ctx, setCtx, entry }: ActionScreenProps):
     setCtx({ ...ctx, workSeriesAction: null });
   };
 
-  const onAccept = (): void => {
-    setToast({ tag: 'Saved to Drupal', path: preset.target?.path ?? 'campaigns/example/' });
-    setTimeout(() => { setToast(null); }, 4200);
+  const onAccept = async (): Promise<void> => {
+    if (actionId !== 's-add' || preset.target === null) {
+      setToast({ tag: 'Saved to Drupal', path: preset.target?.path ?? 'campaigns/example/' });
+      setTimeout(() => { setToast(null); }, 4200);
+      return;
+    }
+    const fv           = formValuesRef.current;
+    const cd           = consoleDataRef.current;
+    const campaignName = fv.series || activeCampaignName;
+    const campaign     = cd.campaigns.find(c => c.name === campaignName);
+    if (!campaign?.id) {
+      setToast({ tag: 'Error: campaign not found', path: '' });
+      setTimeout(() => { setToast(null); }, 4200);
+      return;
+    }
+    const storyNums  = cd.stories.filter(s => s.campaign === campaignName).map(s => s.storyNumber ?? 0);
+    const nextNum    = storyNums.length > 0 ? Math.max(...storyNums) + 1 : 1;
+    const storyTitle = extractStoryTitle(run.streamed, `Session ${nextNum}`);
+    setAccepting(true);
+    try {
+      const res = await fetch('/api/create-story', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          campaignId:  campaign.id,
+          title:       storyTitle,
+          body:        run.streamed,
+          storyNumber: nextNum,
+          sessionDate: new Date().toISOString().slice(0, 10),
+        }),
+      });
+      if (!res.ok) {
+        const errText = await res.text();
+        setToast({ tag: `Error: ${errText}`, path: '' });
+        setTimeout(() => { setToast(null); }, 4200);
+      } else {
+        const story = (await res.json()) as { id: string; title: string; path: string | null };
+        setToast({ tag: `Saved: ${storyTitle}`, path: story.path ?? `campaigns/${campaignName}/` });
+        setTimeout(() => { window.location.reload(); }, 2000);
+      }
+    } catch (err: unknown) {
+      setToast({ tag: `Error: ${String(err)}`, path: '' });
+      setTimeout(() => { setToast(null); }, 4200);
+    } finally {
+      setAccepting(false);
+    }
   };
 
   const statusClass = run.phase === 'running' ? 'running' : run.phase === 'done' ? 'done' : 'idle';
@@ -610,7 +821,7 @@ function AiActionWorkbench({ actionId, ctx, setCtx, entry }: ActionScreenProps):
         <aside className="ai-form-pane">
           <h3><Icon name="gear" size={11} /> Setup</h3>
 
-          {preset.inputs.map(inp => (
+          {resolvedInputs.map(inp => (
             <div key={inp.id} className="ai-form-row">
               <label>{inp.label}</label>
               <AiFormControl
@@ -622,10 +833,12 @@ function AiActionWorkbench({ actionId, ctx, setCtx, entry }: ActionScreenProps):
           ))}
 
           <dl className="ai-model-readout">
-            <dt>Model</dt><dd>{preset.model.name}</dd>
+            {preset.model.name !== '' && <><dt>Model</dt><dd>{preset.model.name}</dd></>}
             <dt>Task</dt><dd><em>{preset.model.task}</em></dd>
             {preset.target !== null && <><dt>Lands as</dt><dd>{preset.target.kind}</dd></>}
-            {preset.target !== null && <><dt>Path</dt><dd className="mono">{preset.target.path}</dd></>}
+            {preset.target !== null && actionId !== 's-add' && (
+              <><dt>Path</dt><dd className="mono">{preset.target.path}</dd></>
+            )}
           </dl>
 
           <div className="ai-form-foot">
@@ -671,14 +884,22 @@ function AiActionWorkbench({ actionId, ctx, setCtx, entry }: ActionScreenProps):
 
           <div className="ai-result-canvas">
             {run.phase === 'setup' ? (
-              <div className="ai-result-empty">
-                <span className="glyph"><Icon name="sparkle" size={22} /></span>
-                <h4>Ready when you are</h4>
-                <p>
-                  Fill the form on the left and hit <b>Run</b>. The result will stream in here.
-                  Nothing is written to your campaign until you accept it.
-                </p>
-              </div>
+              run.errorMsg !== null ? (
+                <div className="ai-result-error">
+                  <span className="glyph"><Icon name="close" size={22} /></span>
+                  <h4>Generation failed</h4>
+                  <p className="mono">{run.errorMsg}</p>
+                </div>
+              ) : (
+                <div className="ai-result-empty">
+                  <span className="glyph"><Icon name="sparkle" size={22} /></span>
+                  <h4>Ready when you are</h4>
+                  <p>
+                    Fill the form on the left and hit <b>Run</b>. The result will stream in here.
+                    Nothing is written to your campaign until you accept it.
+                  </p>
+                </div>
+              )
             ) : (
               <AiStreamBody text={run.streamed} caret={run.phase === 'running'} />
             )}
@@ -689,7 +910,7 @@ function AiActionWorkbench({ actionId, ctx, setCtx, entry }: ActionScreenProps):
               <div className="ai-result-foot-left">
                 <span className="ai-result-foot-target">
                   {preset.target !== null
-                    ? <>Will save as <b>{preset.target.kind}</b> &middot; <span className="mono">{preset.target.path}</span></>
+                    ? <>Will save as <b>{preset.target.kind}</b>{actionId === 's-add' ? <> &middot; {formValues.series || activeCampaignName}</> : <> &middot; <span className="mono">{preset.target.path}</span></>}</>
                     : 'Consult-only — not saved to Drupal'}
                 </span>
                 <span className="ai-result-foot-hint">
@@ -704,8 +925,14 @@ function AiActionWorkbench({ actionId, ctx, setCtx, entry }: ActionScreenProps):
                   <Icon name="sparkle" size={11} /> Regenerate
                 </button>
                 {preset.target !== null && (
-                  <button type="button" className="ai-accept-btn" onClick={onAccept}>
-                    <Icon name="plus" size={11} /> Accept &amp; save
+                  <button
+                    type="button"
+                    className="ai-accept-btn"
+                    onClick={() => { void onAccept(); }}
+                    disabled={accepting}
+                  >
+                    <Icon name="plus" size={11} />
+                    {accepting ? ' Saving…' : ' Accept & save'}
                   </button>
                 )}
               </div>
@@ -729,10 +956,40 @@ function AiActionWorkbench({ actionId, ctx, setCtx, entry }: ActionScreenProps):
 ───────────────────────────────────────────────────────────── */
 
 function AiActionForge({ actionId, ctx, setCtx, entry }: ActionScreenProps): React.ReactElement {
-  const preset = ACTION_PRESETS[actionId];
-  const [formValues, setFormValues] = React.useState<Record<string, string>>({});
-  const [toast, setToast]           = React.useState<{ tag: string; path: string } | null>(null);
-  const run = useAiRun(actionId);
+  const preset     = ACTION_PRESETS[actionId];
+  const data       = useConsoleData();
+  const activeCampaignName = (ctx.activeCampaignName as string | undefined) ?? '';
+
+  const [formValues, setFormValues] = React.useState<Record<string, string>>(() => {
+    const init: Record<string, string> = {};
+    if (actionId === 's-add' && activeCampaignName) {
+      init.series = activeCampaignName;
+    }
+    return init;
+  });
+  const [toast, setToast]         = React.useState<{ tag: string; path: string } | null>(null);
+  const [accepting, setAccepting] = React.useState(false);
+  const formValuesRef = React.useRef(formValues);
+  formValuesRef.current = formValues;
+  const consoleDataRef = React.useRef(data);
+  consoleDataRef.current = data;
+  const run = useAiRun(actionId, formValuesRef, consoleDataRef);
+
+  const resolvedInputs = React.useMemo((): InputSpec[] => {
+    if (actionId !== 's-add') return preset?.inputs ?? [];
+    const campaignNames = data.campaigns.map(c => c.name);
+    const selectedName  = formValues.series || activeCampaignName;
+    const storyNums     = data.stories
+      .filter(s => s.campaign === selectedName)
+      .map(s => s.storyNumber ?? 0);
+    const nextNum  = storyNums.length > 0 ? Math.max(...storyNums) + 1 : 1;
+    const nextSlot = `${String(nextNum).padStart(3, '0')} — next story`;
+    return (preset?.inputs ?? []).map(inp => {
+      if (inp.id === 'series') return { ...inp, kind: 'static' as InputKind };
+      if (inp.id === 'order')  return { ...inp, options: [nextSlot], default: nextSlot };
+      return inp;
+    });
+  }, [actionId, data.campaigns, data.stories, formValues.series, activeCampaignName, preset]);
 
   if (preset === undefined) {
     return <div className="screen-blurb">Unknown action: {actionId}</div>;
@@ -746,9 +1003,52 @@ function AiActionForge({ actionId, ctx, setCtx, entry }: ActionScreenProps): Rea
     setCtx({ ...ctx, workSeriesAction: null });
   };
 
-  const onAccept = (): void => {
-    setToast({ tag: 'Saved to Drupal', path: preset.target?.path ?? 'campaigns/example/' });
-    setTimeout(() => { setToast(null); }, 4200);
+  const onAccept = async (): Promise<void> => {
+    if (actionId !== 's-add' || preset.target === null) {
+      setToast({ tag: 'Saved to Drupal', path: preset.target?.path ?? 'campaigns/example/' });
+      setTimeout(() => { setToast(null); }, 4200);
+      return;
+    }
+    const fv           = formValuesRef.current;
+    const cd           = consoleDataRef.current;
+    const campaignName = fv.series || activeCampaignName;
+    const campaign     = cd.campaigns.find(c => c.name === campaignName);
+    if (!campaign?.id) {
+      setToast({ tag: 'Error: campaign not found', path: '' });
+      setTimeout(() => { setToast(null); }, 4200);
+      return;
+    }
+    const storyNums  = cd.stories.filter(s => s.campaign === campaignName).map(s => s.storyNumber ?? 0);
+    const nextNum    = storyNums.length > 0 ? Math.max(...storyNums) + 1 : 1;
+    const storyTitle = extractStoryTitle(run.streamed, `Session ${nextNum}`);
+    setAccepting(true);
+    try {
+      const res = await fetch('/api/create-story', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          campaignId:  campaign.id,
+          title:       storyTitle,
+          body:        run.streamed,
+          storyNumber: nextNum,
+          sessionDate: new Date().toISOString().slice(0, 10),
+        }),
+      });
+      if (!res.ok) {
+        const errText = await res.text();
+        setToast({ tag: `Error: ${errText}`, path: '' });
+        setTimeout(() => { setToast(null); }, 4200);
+      } else {
+        const story = (await res.json()) as { id: string; title: string; path: string | null };
+        setToast({ tag: `Saved: ${storyTitle}`, path: story.path ?? `campaigns/${campaignName}/` });
+        setTimeout(() => { window.location.reload(); }, 2000);
+      }
+    } catch (err: unknown) {
+      setToast({ tag: `Error: ${String(err)}`, path: '' });
+      setTimeout(() => { setToast(null); }, 4200);
+    } finally {
+      setAccepting(false);
+    }
   };
 
   const stepClass = (id: 'setup' | 'stream' | 'result'): string => {
@@ -804,7 +1104,7 @@ function AiActionForge({ actionId, ctx, setCtx, entry }: ActionScreenProps): Rea
               <h3>{preset.label}</h3>
               <p className="forge-blurb">{preset.blurb}</p>
 
-              {preset.inputs.map(inp => (
+              {resolvedInputs.map(inp => (
                 <div key={inp.id} className="ai-form-row">
                   <label>{inp.label}</label>
                   <AiFormControl
@@ -816,10 +1116,13 @@ function AiActionForge({ actionId, ctx, setCtx, entry }: ActionScreenProps): Rea
               ))}
 
               <dl className="ai-model-readout" style={{ marginTop: 8 }}>
-                <dt>Model</dt><dd>{preset.model.name}</dd>
+                {preset.model.name !== '' && <><dt>Model</dt><dd>{preset.model.name}</dd></>}
                 <dt>Task</dt><dd><em>{preset.model.task}</em></dd>
                 {preset.target !== null && (
-                  <><dt>Lands as</dt><dd>{preset.target.kind} &middot; <span className="mono">{preset.target.path}</span></dd></>
+                  <><dt>Lands as</dt><dd>
+                    {preset.target.kind}
+                    {actionId !== 's-add' && <> &middot; <span className="mono">{preset.target.path}</span></>}
+                  </dd></>
                 )}
               </dl>
 
@@ -897,7 +1200,7 @@ function AiActionForge({ actionId, ctx, setCtx, entry }: ActionScreenProps): Rea
                 <div className="ai-result-foot-left">
                   <span className="ai-result-foot-target">
                     {preset.target !== null
-                      ? <>Will save as <b>{preset.target.kind}</b> &middot; <span className="mono">{preset.target.path}</span></>
+                      ? <>Will save as <b>{preset.target.kind}</b>{actionId === 's-add' ? <> &middot; {formValues.series || activeCampaignName}</> : <> &middot; <span className="mono">{preset.target.path}</span></>}</>
                       : 'Consult-only — not saved to Drupal'}
                   </span>
                   <span className="ai-result-foot-hint">
@@ -912,8 +1215,14 @@ function AiActionForge({ actionId, ctx, setCtx, entry }: ActionScreenProps): Rea
                     <Icon name="sparkle" size={11} /> Regenerate
                   </button>
                   {preset.target !== null && (
-                    <button type="button" className="ai-accept-btn" onClick={onAccept}>
-                      <Icon name="plus" size={11} /> Accept &amp; save
+                    <button
+                      type="button"
+                      className="ai-accept-btn"
+                      onClick={() => { void onAccept(); }}
+                      disabled={accepting}
+                    >
+                      <Icon name="plus" size={11} />
+                      {accepting ? ' Saving…' : ' Accept & save'}
                     </button>
                   )}
                 </div>

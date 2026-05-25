@@ -20,4 +20,21 @@ extend type Mutation {
     "UUID of the character node."
     characterId: ID!
   ): TermCampaign
+
+  """
+  Create a new story node linked to a campaign.
+  Returns the created story node on success.
+  """
+  createStory(
+    "UUID of the campaign taxonomy term."
+    campaignId: ID!
+    "Story title."
+    title: String!
+    "Story body text (markdown)."
+    body: String!
+    "Story number within the campaign series."
+    storyNumber: Int!
+    "Session date in YYYY-MM-DD format. Defaults to today."
+    sessionDate: String
+  ): NodeStory
 }

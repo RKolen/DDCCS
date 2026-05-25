@@ -95,6 +95,15 @@
   font-size: 11px;
   color: var(--ink-faint);
 }
+.ai-form-static {
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--ink);
+  padding: 5px 0;
+  font-weight: 600;
+  letter-spacing: .01em;
+}
+
 .ai-form-row select,
 .ai-form-row input,
 .ai-form-row textarea {
@@ -266,6 +275,49 @@
   text-transform: uppercase;
   color: var(--brass-dim);
   font-style: normal;
+}
+
+/* Error state — mirrors empty state layout but danger-toned */
+.ai-result-error {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  flex-direction: column;
+  gap: 12px;
+  padding: 40px;
+  text-align: center;
+  color: var(--ink-faint);
+  font-family: var(--font-body);
+  font-size: 13px;
+  line-height: 1.6;
+  max-width: 520px;
+  margin: 0 auto;
+}
+.ai-result-error .glyph {
+  width: 56px; height: 56px;
+  border: 1px solid var(--color-danger, #c0392b);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--color-danger, #c0392b);
+  background: var(--canvas-soft);
+}
+.ai-result-error h4 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 12px;
+  letter-spacing: .15em;
+  text-transform: uppercase;
+  color: var(--color-danger, #c0392b);
+  font-style: normal;
+}
+.ai-result-error .mono {
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  background: var(--canvas-soft);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-sm);
+  padding: 6px 10px;
+  word-break: break-all;
+  text-align: left;
 }
 
 /* Streaming prose styles */
