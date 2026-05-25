@@ -21,6 +21,9 @@ Modelfile
 # Ignore personal documentation folder
 docs_personal/
 
+# Ignore local AI agent skills
+skills/
+
 # Ignore OS-specific files
 .DS_Store
 Thumbs.db

@@ -1,5 +1,9 @@
 # Drupal CMS
 
+> **NOT PROJECT-SPECIFIC** — This is the upstream Drupal CMS boilerplate README.
+> It does not describe the DDCCS-specific setup, custom modules, DDEV services,
+> or migration workflow. For that, see `drupal-cms/AGENTS.md`.
+
 Drupal CMS is a fast-moving open source product that enables site builders to easily create new Drupal sites and extend them with smart defaults, all using their browser.
 
 ## Getting started

@@ -1,5 +1,14 @@
 # D&D Character Consultant System
 
+> **OUT OF DATE** — This README describes the early Python-only phase of the
+> project. It does not cover the Drupal CMS, Gatsby frontend, Milvus semantic
+> search, FastAPI sidecar, multi-voice TTS, calendar engine, or any Tier 1–3
+> features completed after October 2025. The party configuration section is
+> stale: `current_party.json` is now per-campaign (inside each campaign folder),
+> not a global file. For authoritative project structure see `AGENTS.md`.
+> For Drupal specifics see `drupal-cms/AGENTS.md`.
+> For frontend specifics see `frontend/CLAUDE.md` and `frontend/DESIGN.md`.
+
 A Python-based system for managing D&D Documentation
 
 - **[AI Integration Guide](docs/AI_INTEGRATION.md)** - Complete AI setup (Ollama, OpenAI, Anthropic)
