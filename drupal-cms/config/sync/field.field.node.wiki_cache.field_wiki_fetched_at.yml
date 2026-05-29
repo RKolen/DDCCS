@@ -1,0 +1,23 @@
+uuid: db2a52c5-a9da-4ed4-a3d4-e11487e5ad31
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_wiki_fetched_at
+    - node.type.wiki_cache
+id: node.wiki_cache.field_wiki_fetched_at
+field_name: field_wiki_fetched_at
+entity_type: node
+bundle: wiki_cache
+label: 'Fetched At'
+description: 'Unix timestamp of when this page was fetched from the external wiki'
+required: true
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  min: null
+  max: null
+  prefix: ''
+  suffix: ''
+field_type: decimal

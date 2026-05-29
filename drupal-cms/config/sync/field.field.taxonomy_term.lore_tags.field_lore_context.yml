@@ -1,0 +1,22 @@
+uuid: 2d521ca1-767a-429b-9018-1818c2215a5c
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.taxonomy_term.field_lore_context
+    - taxonomy.vocabulary.lore_tags
+  module:
+    - text
+id: taxonomy_term.lore_tags.field_lore_context
+field_name: field_lore_context
+entity_type: taxonomy_term
+bundle: lore_tags
+label: 'Lore Context'
+description: 'Pre-written lore used as RAG context when this tag appears in a prompt'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  allowed_formats: {  }
+field_type: text_long

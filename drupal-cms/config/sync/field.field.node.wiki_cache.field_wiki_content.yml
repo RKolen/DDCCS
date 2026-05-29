@@ -1,0 +1,22 @@
+uuid: c2ea3df4-aceb-4f67-8773-740677f185eb
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_wiki_content
+    - node.type.wiki_cache
+  module:
+    - text
+id: node.wiki_cache.field_wiki_content
+field_name: field_wiki_content
+entity_type: node
+bundle: wiki_cache
+label: 'Wiki Content'
+description: 'Serialized JSON of page sections fetched from the external wiki'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  allowed_formats: {  }
+field_type: text_long

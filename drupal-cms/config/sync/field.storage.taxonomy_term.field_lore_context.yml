@@ -1,0 +1,19 @@
+uuid: f98b3414-eae9-4bf3-8656-a542dabb32d4
+langcode: en
+status: true
+dependencies:
+  module:
+    - taxonomy
+    - text
+id: taxonomy_term.field_lore_context
+field_name: field_lore_context
+entity_type: taxonomy_term
+type: text_long
+settings: {  }
+module: text
+locked: false
+cardinality: 1
+translatable: false
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

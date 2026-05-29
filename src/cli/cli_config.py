@@ -60,8 +60,8 @@ class ConfigCLI:
         print(f"  Max Cache Size: {config.rag.max_cache_size}")
         print(f"  Search Depth: {config.rag.search_depth}")
         print(f"  Min Relevance: {config.rag.min_relevance}")
-        print(f"  Cache Backend: {config.paths.rag_cache_backend}")
-        print(f"  Vector DB Path: {config.paths.rag_vector_db_path}")
+        print("  Cache Backend: drupal")
+        print(f"  Cache Dir: {config.paths.cache_dir}")
 
         # Display Config
         print("\n[Display Settings]")
@@ -213,27 +213,6 @@ class ConfigCLI:
                     user_guidance="Enter a positive integer."
                 )
                 display_error(error)
-
-        # Cache backend
-        new_backend = input(
-            f"Cache Backend (json/sqlite) [{config.paths.rag_cache_backend}]: "
-        ).strip().lower()
-        if new_backend:
-            if new_backend in ("json", "sqlite"):
-                config.paths.rag_cache_backend = new_backend
-            else:
-                error = UserInputError(
-                    message="Invalid cache backend value",
-                    user_guidance="Use 'json' or 'sqlite'."
-                )
-                display_error(error)
-
-        # SQLite vector DB path
-        new_vector_db_path = input(
-            f"Vector DB Path [{config.paths.rag_vector_db_path}]: "
-        ).strip()
-        if new_vector_db_path:
-            config.paths.rag_vector_db_path = Path(new_vector_db_path)
 
         print("[SUCCESS] RAG settings updated")
 

@@ -1,16 +1,13 @@
-"""
-AI Client Module - Flexible OpenAI-compatible client for LLM integration
-Supports OpenAI, Ollama, OpenRouter, and other OpenAI-compatible providers
-"""
+"""AI Client Module - Flexible OpenAI-compatible client for LLM integration."""
 
-import os
-import json
-import re
 import ast
+import functools
+import json
+import os
+import re
 from typing import Any, Dict, List, Optional
 from dataclasses import dataclass, field
 
-# Optional imports - openai for AI client
 try:
     from openai import OpenAI
     OPENAI_AVAILABLE = True
@@ -18,15 +15,13 @@ except ImportError:
     OpenAI = None
     OPENAI_AVAILABLE = False
 
-# Load environment variables from .env file
 try:
     from dotenv import load_dotenv
 
     load_dotenv()
 except ImportError:
-    pass  # dotenv not available, will use system environment variables only
+    pass
 
-# Optional config module for centralized configuration
 try:
     from src.config.config_loader import load_config
     CONFIG_AVAILABLE = True
@@ -37,31 +32,11 @@ from src.ai.task_router import ModelRegistry
 
 
 class AIClient:
-    """
-    Flexible AI client that works with any OpenAI-compatible API.
+    """Flexible AI client for any OpenAI-compatible API.
 
-    Configuration can be provided via:
-    1. Centralized config system (src.config)
-    2. Direct parameters when initializing
-    3. Per-request overrides
-
-    Examples:
-        # OpenAI (default)
-        client = AIClient()
-
-        # Ollama (local)
-        client = AIClient(
-            base_url="http://localhost:11434/v1",
-            api_key="ollama",  # Ollama doesn't need a real key
-            model="llama3.2"
-        )
-
-        # OpenRouter
-        client = AIClient(
-            base_url="https://openrouter.ai/api/v1",
-            api_key="your-api-key",
-            model="meta-llama/llama-3.1-8b-instruct"
-        )
+    Configuration is resolved via centralized config, then env vars.
+    All provider details (base_url, model, api_key) must be set via
+    config or environment — no hardcoded defaults.
     """
 
     def __init__(
@@ -75,32 +50,33 @@ class AIClient:
         Initialize AI client with configuration.
 
         Args:
-            api_key: API key for the provider
-            base_url: Base URL for the API
-            model: Model to use
-            **config: Additional config:
-                - default_temperature (float): Default temperature (default: 0.7)
-                - default_max_tokens (int): Default max tokens (default: 1000)
+            api_key: API key for the provider.
+            base_url: Base URL for the API endpoint.
+            model: Model name to use.
+            **config: Additional config keys:
+                - default_temperature (float)
+                - default_max_tokens (int)
+                - embedding_model (str)
                 - ai_config: Optional AIConfig object from src.config (takes precedence)
         """
-        # Support centralized config system
         ai_config = config.pop("ai_config", None)
         if ai_config is not None:
-            # Use centralized config
             self.api_key = api_key or ai_config.api_key
             self.base_url = base_url or ai_config.base_url
             self.model = model or ai_config.model
             self.default_temperature = config.get("default_temperature", ai_config.temperature)
             self.default_max_tokens = config.get("default_max_tokens", ai_config.max_tokens)
         else:
-            # Fall back to environment variables
             self.api_key = api_key or os.getenv("OPENAI_API_KEY", "")
             self.base_url = base_url or os.getenv("OPENAI_BASE_URL", None)
-            self.model = model or os.getenv("OPENAI_MODEL", "gpt-3.5-turbo")
+            self.model = model or os.getenv("OPENAI_MODEL", "")
             self.default_temperature = config.get("default_temperature", 0.7)
             self.default_max_tokens = config.get("default_max_tokens", 1000)
 
-        # Initialize OpenAI client
+        self.embedding_model: str = str(
+            config.get("embedding_model") or os.getenv("OPENAI_EMBEDDING_MODEL", "")
+        )
+
         self.client = None
         if OPENAI_AVAILABLE:
             client_kwargs = {}
@@ -109,7 +85,6 @@ class AIClient:
             if self.base_url and isinstance(self.base_url, str) and self.base_url.strip():
                 client_kwargs["base_url"] = self.base_url
 
-            # Only pass allowed kwargs to OpenAI constructor and ensure no empty strings
             allowed_keys = {"api_key", "base_url"}
             filtered_kwargs = {
                 k: v for k, v in client_kwargs.items() if k in allowed_keys and v
@@ -119,7 +94,7 @@ class AIClient:
 
     def chat_completion(
         self,
-        messages: List[Any],
+        messages: List[Dict[str, str]],
         model: Optional[str] = None,
         temperature: Optional[float] = None,
         max_tokens: Optional[int] = None,
@@ -129,14 +104,14 @@ class AIClient:
         Get a chat completion from the LLM.
 
         Args:
-            messages: List of message dicts with 'role' and 'content'
-            model: Override default model for this request
-            temperature: Override default temperature
-            max_tokens: Override default max_tokens
-            **kwargs: Additional parameters to pass to the API
+            messages: List of message dicts with 'role' and 'content'.
+            model: Override default model for this request.
+            temperature: Override default temperature.
+            max_tokens: Override default max_tokens.
+            **kwargs: Additional parameters passed to the API.
 
         Returns:
-            The assistant's response content as a string
+            The assistant's response content as a string.
         """
         if self.client is None:
             raise RuntimeError(
@@ -149,34 +124,37 @@ class AIClient:
                 temperature=(
                     temperature if temperature is not None else self.default_temperature
                 ),
-                max_tokens=max_tokens or self.default_max_tokens,
+                max_tokens=max_tokens if max_tokens is not None else self.default_max_tokens,
                 **kwargs,
             )
-            return response.choices[0].message.content
+            return response.choices[0].message.content or ""
         except Exception as e:
-            # Provide helpful error message
-            error_msg = f"AI completion failed: {str(e)}"
-            if "api_key" in str(e).lower():
-                error_msg += "\n  Hint: Check your API key configuration"
-            elif "connection" in str(e).lower():
-                error_msg += (
-                    f"\n  Hint: Check that {self.base_url or 'OpenAI'} is accessible"
-                )
-            raise RuntimeError(error_msg) from e
+            error_type = type(e).__name__
+            if error_type == "AuthenticationError":
+                raise RuntimeError("AI completion failed: Invalid API key") from e
+            if error_type == "RateLimitError":
+                raise RuntimeError("AI completion failed: Rate limit exceeded") from e
+            if error_type == "APIConnectionError":
+                raise RuntimeError(
+                    f"AI completion failed: Cannot reach {self.base_url or 'provider'}"
+                ) from e
+            if error_type == "APITimeoutError":
+                raise RuntimeError("AI completion failed: Request timed out") from e
+            if error_type == "BadRequestError":
+                raise RuntimeError(f"AI completion failed: Bad request: {e}") from e
+            raise RuntimeError(f"AI completion failed: {e}") from e
 
     def embed(self, text: str, model: str = "") -> List[float]:
         """Generate an embedding vector for text.
 
-        Uses the same base_url and api_key as chat completions.
-
         Args:
             text: Text to embed.
-            model: Embedding model name to use.
+            model: Embedding model name. Falls back to OPENAI_EMBEDDING_MODEL env var.
 
         Returns:
             List of floats representing the embedding, or [] on failure.
         """
-        effective_model = model or self.model
+        effective_model = model or self.embedding_model
         if not effective_model or self.client is None:
             return []
         try:
@@ -262,10 +240,10 @@ class CharacterAIConfig:
         (model, base_url, api_key) are only used if explicitly set in character JSON.
 
         Args:
-            default_client: Default client to use if character doesn't have custom config
+            default_client: Default client to use if character doesn't have custom config.
 
         Returns:
-            AIClient configured for this character with .env defaults + character overrides
+            AIClient configured for this character with .env defaults + character overrides.
         """
         if not self.enabled:
             if default_client:
@@ -274,13 +252,9 @@ class CharacterAIConfig:
                 "AI is not enabled for this character and no default client provided"
             )
 
-        # If no custom configuration at all, use default client or create from .env
         if not any([self.model, self.base_url, self.api_key]):
             return default_client if default_client else AIClient()
 
-        # Load .env defaults, then apply character-specific overrides
-        # This allows characters to override just one field (e.g., model)
-        # while using .env for the rest
         env_config = load_ai_config_from_env()
 
         return AIClient(
@@ -293,50 +267,31 @@ class CharacterAIConfig:
 
 
 def load_ai_config_from_env() -> Dict[str, Any]:
-    """
-    Load AI configuration from environment variables or centralized config.
-
-    This function first tries to use the centralized config system,
-    then falls back to environment variables.
+    """Load AI configuration from centralized config, then env var fallback.
 
     Returns:
-        Dictionary with configuration values
+        Dictionary with configuration values.
     """
-    # Try to use centralized config first
     if CONFIG_AVAILABLE:
         try:
             config = load_config()
             return config.ai.get_client_config()
         except (OSError, ImportError, AttributeError):
-            # Fall back to environment variables on config errors
             pass
 
     return {
         "api_key": os.getenv("OPENAI_API_KEY", ""),
         "base_url": os.getenv("OPENAI_BASE_URL", ""),
-        "model": os.getenv("OPENAI_MODEL", "gpt-3.5-turbo"),
+        "model": os.getenv("OPENAI_MODEL", ""),
         "temperature": float(os.getenv("AI_TEMPERATURE", "0.7")),
         "max_tokens": int(os.getenv("AI_MAX_TOKENS", "1000")),
     }
 
 
-# Lazy-initialized default AI client holder
-class _DefaultClientHolder:
-    """Holder for lazy-loaded default AI client."""
-
-    client = None
-
-    @classmethod
-    def get_client(cls) -> AIClient:
-        """Get or create the default AI client (lazy initialization)."""
-        if cls.client is None:
-            cls.client = AIClient()
-        return cls.client
-
-    @classmethod
-    def reset(cls) -> None:
-        """Reset the default client (for testing)."""
-        cls.client = None
+@functools.lru_cache(maxsize=1)
+def _get_default_client() -> AIClient:
+    """Get or create the default AI client (lazy initialization)."""
+    return AIClient()
 
 
 def get_client_for_task(
@@ -346,8 +301,7 @@ def get_client_for_task(
     """Return an AIClient configured for the given task type.
 
     Uses the session-level ModelRegistry to resolve the appropriate model
-    profile.  Falls back to a plain AIClient() when the registry has not
-    been initialized or the resolved profile has no model/base_url set.
+    profile. Falls back to the default client when no profile matches.
 
     Args:
         task_type: Task type key (e.g. "story_generation", "combat_narration").
@@ -359,41 +313,33 @@ def get_client_for_task(
     kwargs = ModelRegistry.get_router().get_client_kwargs(task_type, character_override)
     if kwargs:
         return AIClient(**kwargs)
-    return _DefaultClientHolder.get_client()
+    return _get_default_client()
 
 
 def call_ai_for_behavior_block(prompt: str) -> dict:
     """
     Calls the LLM to generate a CharacterBehavior block from a prompt.
-    Returns a dict with keys: preferred_strategies, typical_reactions, "
-    "speech_patterns, decision_making_style.
+    Returns a dict with keys: preferred_strategies, typical_reactions,
+    speech_patterns, decision_making_style.
     """
     client = get_client_for_task("npc_dialogue")
-    # Compose messages for chat completion
     messages: List[Dict[str, str]] = [
         client.create_system_message(
-            "You are a D&D character consultant AI."
+            "You are a D&D character consultant AI. "
             "Respond ONLY with a JSON object for the CharacterBehavior dataclass."
         ),
         client.create_user_message(prompt),
     ]
     response = client.chat_completion(messages)
-    # Try to extract JSON from the response (handles code block formatting)
     match = re.search(r"```json\n(.*?)```", response, re.DOTALL)
-    if match:
-        json_str = match.group(1)
-    else:
-        # Fallback: try to parse the whole response
-        json_str = response
+    json_str = match.group(1) if match else response
 
     try:
         return json.loads(json_str)
     except (json.JSONDecodeError, ValueError):
-        # Fallback: attempt a safe Python literal evaluation (safer than eval)
         try:
             return ast.literal_eval(json_str)
         except (ValueError, SyntaxError) as e:
-            # Provide a clear error including the raw response for debugging
             raise RuntimeError(
                 "Failed to parse AI response as JSON or Python literal. "
                 f"Original error: {e}. Response content: {response!r}"

@@ -1,0 +1,11 @@
+uuid: afa6c439-7d66-4d09-8884-e4393be96dfb
+langcode: en
+status: true
+dependencies: {  }
+name: 'Wiki Cache'
+type: wiki_cache
+description: 'Temporary cache for external wiki page data fetched by the RAG system'
+help: ''
+new_revision: false
+preview_mode: 0
+display_submitted: false

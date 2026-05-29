@@ -1,0 +1,19 @@
+uuid: 8dd2fa80-9e28-4448-854a-6bc1e4b39761
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.taxonomy_term.field_source_url
+    - taxonomy.vocabulary.locations
+id: taxonomy_term.locations.field_source_url
+field_name: field_source_url
+entity_type: taxonomy_term
+bundle: locations
+label: 'Source URL'
+description: 'External wiki or reference URL for auto-fetching lore via the RAG system'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string

@@ -1,0 +1,19 @@
+uuid: d520ae56-1ffa-45b5-844f-8c9f3c910026
+langcode: en
+status: true
+dependencies:
+  module:
+    - node
+    - text
+id: node.field_wiki_content
+field_name: field_wiki_content
+entity_type: node
+type: text_long
+settings: {  }
+module: text
+locked: false
+cardinality: 1
+translatable: false
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

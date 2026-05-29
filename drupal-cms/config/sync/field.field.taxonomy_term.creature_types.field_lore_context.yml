@@ -1,0 +1,22 @@
+uuid: c51dc850-2d2e-414e-9511-060bdd17fead
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.taxonomy_term.field_lore_context
+    - taxonomy.vocabulary.creature_types
+  module:
+    - text
+id: taxonomy_term.creature_types.field_lore_context
+field_name: field_lore_context
+entity_type: taxonomy_term
+bundle: creature_types
+label: 'Lore Context'
+description: 'Pre-written or fetched lore used as RAG context when this creature type appears in a prompt'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  allowed_formats: {  }
+field_type: text_long

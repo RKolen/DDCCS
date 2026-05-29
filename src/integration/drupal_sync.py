@@ -483,3 +483,109 @@ class DrupalSync:
             "field_monster_damage_resistances": str(data.get("damage_resistances", "")),
         }
         return {"data": {"type": "node--monster", "attributes": attrs}}
+
+    # ------------------------------------------------------------------
+    # Wiki cache helpers (used by DrupalWikiCache in src/ai/rag_system.py)
+    # ------------------------------------------------------------------
+
+    def get_wiki_page_cache(self, url_hash: str) -> Optional[Dict[str, Any]]:
+        """Fetch a cached wiki page by its URL hash.
+
+        Args:
+            url_hash: MD5 hash of the original URL (used as node title).
+
+        Returns:
+            Dict with field values or None if not found.
+
+        Raises:
+            DrupalSyncError: On HTTP or decoding error.
+        """
+        encoded = urllib.parse.quote(url_hash)
+        fields = "title,field_wiki_url,field_wiki_fetched_at,field_wiki_content"
+        url = (
+            self._api_url("node", "wiki_cache")
+            + f"?filter[title]={encoded}&page[limit]=1&fields[node--wiki_cache]={fields}"
+        )
+        try:
+            result = self._request("GET", url)
+        except DrupalSyncError as exc:
+            logger.debug("Wiki cache lookup failed: %s", exc)
+            return None
+        items = result.get("data", [])
+        if not items or not isinstance(items, list):
+            return None
+        attrs = items[0].get("attributes", {})
+        return {
+            "field_wiki_url": attrs.get("field_wiki_url", ""),
+            "field_wiki_fetched_at": attrs.get("field_wiki_fetched_at", 0),
+            "field_wiki_content": attrs.get("field_wiki_content", ""),
+        }
+
+    def set_wiki_page_cache(
+        self,
+        url_hash: str,
+        url: str,
+        fetched_at: float,
+        content_json: str,
+    ) -> str:
+        """Upsert a wiki page cache entry in Drupal.
+
+        Args:
+            url_hash: MD5 hash of the URL (used as node title for keying).
+            url: Original page URL.
+            fetched_at: Unix timestamp of when the page was fetched.
+            content_json: Serialized JSON of page sections.
+
+        Returns:
+            UUID of the created or updated node.
+
+        Raises:
+            DrupalSyncError: On HTTP error or unexpected response shape.
+        """
+        payload = {
+            "data": {
+                "type": "node--wiki_cache",
+                "attributes": {
+                    "title": url_hash,
+                    "field_wiki_url": url,
+                    "field_wiki_fetched_at": str(fetched_at),
+                    "field_wiki_content": {
+                        "value": content_json,
+                        "format": "plain_text",
+                    },
+                },
+            }
+        }
+        return self._upsert_node("wiki_cache", url_hash, payload)
+
+    def delete_wiki_page_cache(self, url_hash: str) -> None:
+        """Delete a wiki page cache entry by its URL hash.
+
+        Args:
+            url_hash: MD5 hash of the URL (used as node title).
+
+        Raises:
+            DrupalSyncError: On HTTP error.
+        """
+        existing_uuid = self._find_node_uuid("wiki_cache", url_hash)
+        if not existing_uuid:
+            return
+        delete_url = self._api_url("node", "wiki_cache", existing_uuid)
+        self._request("DELETE", delete_url)
+
+    def count_wiki_page_cache(self) -> int:
+        """Return the number of wiki_cache nodes in Drupal.
+
+        Returns:
+            Total count of wiki cache entries.
+
+        Raises:
+            DrupalSyncError: On HTTP error.
+        """
+        url = self._api_url("node", "wiki_cache") + "?page[limit]=1"
+        result = self._request("GET", url)
+        meta = result.get("meta", {})
+        try:
+            return int(meta.get("count", 0))
+        except (TypeError, ValueError):
+            return 0
