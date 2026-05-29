@@ -11,15 +11,20 @@ dotenv.config({ path: '.env.development' });
 
 // Bridge server-only AI vars to browser context (no GATSBY_ prefix in root .env).
 // dotenv does not override, so only set if not already present.
-process.env.GATSBY_AI_MODEL    = process.env.GATSBY_AI_MODEL    ?? process.env.AI_CREATIVE_MODEL;
+process.env.GATSBY_AI_MODEL = process.env.GATSBY_AI_MODEL ?? process.env.AI_CREATIVE_MODEL;
 process.env.GATSBY_AI_BASE_URL = process.env.GATSBY_AI_BASE_URL ?? process.env.AI_CREATIVE_BASE_URL;
+
+// Bridge RAG vars from the root .env (RAG_WIKI_BASE_URL / RAG_RULES_BASE_URL)
+// to the GATSBY_ prefix so they are available in the browser bundle.
+process.env.GATSBY_RAG_WIKI_URL = process.env.GATSBY_RAG_WIKI_URL ?? process.env.RAG_WIKI_BASE_URL;
+process.env.GATSBY_RAG_RULES_URL = process.env.GATSBY_RAG_RULES_URL ?? process.env.RAG_RULES_BASE_URL;
 
 // Prefer GATSBY_DRUPAL_BASE_URL (set in .env.development as HTTP to avoid
 // Node.js rejecting DDEV's self-signed cert) over the shared DRUPAL_BASE_URL.
-const DRUPAL_URL  = process.env.GATSBY_DRUPAL_BASE_URL ?? process.env.DRUPAL_BASE_URL;
+const DRUPAL_URL = process.env.GATSBY_DRUPAL_BASE_URL ?? process.env.DRUPAL_BASE_URL;
 const DRUPAL_TOKEN = process.env.DRUPAL_GRAPHQL_TOKEN;
-const SITE_URL    = process.env.SITE_URL;
-const SITE_TITLE  = process.env.SITE_TITLE;
+const SITE_URL = process.env.SITE_URL;
+const SITE_TITLE = process.env.SITE_TITLE;
 
 if (!DRUPAL_URL) {
   throw new Error('DRUPAL_BASE_URL is required but not set in the environment.');

@@ -15,13 +15,13 @@ import * as React from 'react';
 import type { ScreenProps } from '../ScreenRouter';
 
 /* ── Env var defaults ── */
-const envAiModel      = process.env.GATSBY_AI_MODEL       ?? '';
-const envAiBaseUrl    = process.env.GATSBY_AI_BASE_URL    ?? '';
-const envAiTemp       = parseFloat(process.env.GATSBY_AI_TEMPERATURE ?? '0.7');
-const envAiMaxTokens  = parseInt(process.env.GATSBY_AI_MAX_TOKENS    ?? '2048', 10);
-const envRagWikiUrl   = process.env.GATSBY_RAG_WIKI_URL   ?? '';
-const envRagRulesUrl  = process.env.GATSBY_RAG_RULES_URL  ?? '';
-const envDrupalUrl    = process.env.GATSBY_DRUPAL_BASE_URL ?? '';
+const envAiModel = process.env.GATSBY_AI_MODEL ?? '';
+const envAiBaseUrl = process.env.GATSBY_AI_BASE_URL ?? '';
+const envAiTemp = parseFloat(process.env.GATSBY_AI_TEMPERATURE ?? '0.7');
+const envAiMaxTokens = parseInt(process.env.GATSBY_AI_MAX_TOKENS ?? '2048', 10);
+const envRagWikiUrl = process.env.GATSBY_RAG_WIKI_URL ?? '';
+const envRagRulesUrl = process.env.GATSBY_RAG_RULES_URL ?? '';
+const envDrupalUrl = process.env.GATSBY_DRUPAL_BASE_URL ?? '';
 
 /* ── Toggle atom (local) ── */
 function Toggle({ defaultOn = false }: { defaultOn?: boolean }): React.ReactElement {
@@ -175,13 +175,6 @@ function RAGConfigPane(): React.ReactElement {
           <span>Min relevance</span>
           <input type="number" step="0.01" defaultValue="0.62" />
         </label>
-        <label className="form-row">
-          <span>Cache backend</span>
-          <div className="seg-control">
-            <button type="button" className="seg active">sqlite</button>
-            <button type="button" className="seg">json</button>
-          </div>
-        </label>
       </div>
     </div>
   );
@@ -244,7 +237,7 @@ function PathsConfigPane(): React.ReactElement {
 
 function ValidatePane(): React.ReactElement {
   const drupalOk = Boolean(envDrupalUrl);
-  const aiOk     = Boolean(envAiModel);
+  const aiOk = Boolean(envAiModel);
 
   return (
     <div className="validate-pane">
@@ -295,16 +288,27 @@ function SaveConfirmPane(): React.ReactElement {
 type SettingsTab = 'view' | 'ai' | 'rag' | 'display' | 'paths' | 'validate' | 'save';
 
 const TABS: Array<{ id: SettingsTab; label: string }> = [
-  { id: 'view',     label: 'Current' },
-  { id: 'ai',       label: 'AI' },
-  { id: 'rag',      label: 'RAG' },
-  { id: 'display',  label: 'Display' },
-  { id: 'paths',    label: 'Paths' },
+  { id: 'view', label: 'Current' },
+  { id: 'ai', label: 'AI' },
+  { id: 'rag', label: 'RAG' },
+  { id: 'display', label: 'Display' },
+  { id: 'paths', label: 'Paths' },
   { id: 'validate', label: 'Validate' },
 ];
 
 export function SettingsScreen({ ctx, setCtx }: ScreenProps): React.ReactElement {
-  const tab = (ctx.settingsTab as SettingsTab | undefined) ?? 'ai';
+  // Use local state so clicking a tab actually switches panes.
+  // Seed from ctx.settingsTab (set by the router from the menu item) so that
+  // navigating to e.g. "config/c-rag" opens the RAG pane directly.
+  const [tab, setTab] = React.useState<SettingsTab>(
+    (ctx.settingsTab as SettingsTab | undefined) ?? 'view',
+  );
+
+  // Keep router ctx in sync so deep-link state is preserved across re-renders.
+  const switchTab = (next: SettingsTab): void => {
+    setTab(next);
+    setCtx({ ...ctx, settingsTab: next });
+  };
 
   if (tab === 'save') return <SaveConfirmPane />;
 
@@ -327,7 +331,7 @@ export function SettingsScreen({ ctx, setCtx }: ScreenProps): React.ReactElement
             key={t.id}
             type="button"
             className={`settings-tab${t.id === tab ? ' active' : ''}`}
-            onClick={() => setCtx({ ...ctx, settingsTab: t.id })}
+            onClick={() => switchTab(t.id)}
           >
             {t.label}
           </button>
@@ -335,11 +339,11 @@ export function SettingsScreen({ ctx, setCtx }: ScreenProps): React.ReactElement
       </nav>
 
       <div className="settings-body">
-        {tab === 'view'     && <CurrentConfigPane />}
-        {tab === 'ai'       && <AIConfigPane />}
-        {tab === 'rag'      && <RAGConfigPane />}
-        {tab === 'display'  && <DisplayConfigPane />}
-        {tab === 'paths'    && <PathsConfigPane />}
+        {tab === 'view' && <CurrentConfigPane />}
+        {tab === 'ai' && <AIConfigPane />}
+        {tab === 'rag' && <RAGConfigPane />}
+        {tab === 'display' && <DisplayConfigPane />}
+        {tab === 'paths' && <PathsConfigPane />}
         {tab === 'validate' && <ValidatePane />}
       </div>
     </div>
