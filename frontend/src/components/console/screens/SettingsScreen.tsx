@@ -287,57 +287,13 @@ function SaveConfirmPane(): React.ReactElement {
 
 type SettingsTab = 'view' | 'ai' | 'rag' | 'display' | 'paths' | 'validate' | 'save';
 
-const TABS: Array<{ id: SettingsTab; label: string }> = [
-  { id: 'view', label: 'Current' },
-  { id: 'ai', label: 'AI' },
-  { id: 'rag', label: 'RAG' },
-  { id: 'display', label: 'Display' },
-  { id: 'paths', label: 'Paths' },
-  { id: 'validate', label: 'Validate' },
-];
-
-export function SettingsScreen({ ctx, setCtx }: ScreenProps): React.ReactElement {
-  // Use local state so clicking a tab actually switches panes.
-  // Seed from ctx.settingsTab (set by the router from the menu item) so that
-  // navigating to e.g. "config/c-rag" opens the RAG pane directly.
-  const [tab, setTab] = React.useState<SettingsTab>(
-    (ctx.settingsTab as SettingsTab | undefined) ?? 'view',
-  );
-
-  // Keep router ctx in sync so deep-link state is preserved across re-renders.
-  const switchTab = (next: SettingsTab): void => {
-    setTab(next);
-    setCtx({ ...ctx, settingsTab: next });
-  };
+export function SettingsScreen({ ctx }: ScreenProps): React.ReactElement {
+  const tab = (ctx.settingsTab as SettingsTab | undefined) ?? 'view';
 
   if (tab === 'save') return <SaveConfirmPane />;
 
   return (
     <div className="screen-settings">
-      <header className="screen-head">
-        <div>
-          <span className="reader-eyebrow">Settings</span>
-          <h2>Configuration</h2>
-        </div>
-        <div className="screen-head-actions">
-          <button type="button" className="ghost-btn">Reset</button>
-          <button type="button" className="primary-btn">Save configuration</button>
-        </div>
-      </header>
-
-      <nav className="settings-tabs">
-        {TABS.map(t => (
-          <button
-            key={t.id}
-            type="button"
-            className={`settings-tab${t.id === tab ? ' active' : ''}`}
-            onClick={() => switchTab(t.id)}
-          >
-            {t.label}
-          </button>
-        ))}
-      </nav>
-
       <div className="settings-body">
         {tab === 'view' && <CurrentConfigPane />}
         {tab === 'ai' && <AIConfigPane />}
