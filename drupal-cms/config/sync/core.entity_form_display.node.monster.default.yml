@@ -9,8 +9,25 @@ dependencies:
     - field.field.node.monster.field_faction
     - field.field.node.monster.field_image
     - field.field.node.monster.field_maximum_hitpoints
+    - field.field.node.monster.field_monster_actions
+    - field.field.node.monster.field_monster_alignment
+    - field.field.node.monster.field_monster_bonus_actions
+    - field.field.node.monster.field_monster_damage_immunities
+    - field.field.node.monster.field_monster_damage_resistances
+    - field.field.node.monster.field_monster_hit_dice
+    - field.field.node.monster.field_monster_lair_actions
+    - field.field.node.monster.field_monster_languages
+    - field.field.node.monster.field_monster_legendary_actions
+    - field.field.node.monster.field_monster_reactions
+    - field.field.node.monster.field_monster_senses
+    - field.field.node.monster.field_monster_size
+    - field.field.node.monster.field_monster_skills
+    - field.field.node.monster.field_monster_speed
+    - field.field.node.monster.field_monster_traits
+    - field.field.node.monster.field_monster_xp
     - field.field.node.monster.field_movement_speed
     - field.field.node.monster.field_relationships
+    - field.field.node.monster.field_source
     - field.field.node.monster.field_specialized_abilities
     - field.field.node.monster.field_type
     - node.type.monster
@@ -56,7 +73,7 @@ content:
     third_party_settings: {  }
   field_challenge_rating:
     type: number
-    weight: 36
+    weight: 15
     region: content
     settings:
       placeholder: ''
@@ -88,16 +105,141 @@ content:
     settings:
       placeholder: '10'
     third_party_settings: {  }
+  field_monster_actions:
+    type: text_textarea
+    weight: 16
+    region: content
+    settings:
+      rows: 5
+      placeholder: ''
+    third_party_settings: {  }
+  field_monster_alignment:
+    type: string_textfield
+    weight: 19
+    region: content
+    settings:
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+  field_monster_bonus_actions:
+    type: text_textarea
+    weight: 17
+    region: content
+    settings:
+      rows: 5
+      placeholder: ''
+    third_party_settings: {  }
+  field_monster_damage_immunities:
+    type: string_textfield
+    weight: 20
+    region: content
+    settings:
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+  field_monster_damage_resistances:
+    type: string_textfield
+    weight: 21
+    region: content
+    settings:
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+  field_monster_hit_dice:
+    type: string_textfield
+    weight: 23
+    region: content
+    settings:
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+  field_monster_lair_actions:
+    type: text_textarea
+    weight: 24
+    region: content
+    settings:
+      rows: 5
+      placeholder: ''
+    third_party_settings: {  }
+  field_monster_languages:
+    type: string_textfield
+    weight: 22
+    region: content
+    settings:
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+  field_monster_legendary_actions:
+    type: text_textarea
+    weight: 25
+    region: content
+    settings:
+      rows: 5
+      placeholder: ''
+    third_party_settings: {  }
+  field_monster_reactions:
+    type: text_textarea
+    weight: 18
+    region: content
+    settings:
+      rows: 5
+      placeholder: ''
+    third_party_settings: {  }
+  field_monster_senses:
+    type: string_textfield
+    weight: 26
+    region: content
+    settings:
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+  field_monster_size:
+    type: options_select
+    weight: 27
+    region: content
+    settings: {  }
+    third_party_settings: {  }
+  field_monster_skills:
+    type: string_textfield
+    weight: 28
+    region: content
+    settings:
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+  field_monster_speed:
+    type: string_textfield
+    weight: 29
+    region: content
+    settings:
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+  field_monster_traits:
+    type: text_textarea
+    weight: 30
+    region: content
+    settings:
+      rows: 5
+      placeholder: ''
+    third_party_settings: {  }
+  field_monster_xp:
+    type: number
+    weight: 31
+    region: content
+    settings:
+      placeholder: ''
+    third_party_settings: {  }
   field_movement_speed:
     type: number
-    weight: 23
+    weight: 13
     region: content
     settings:
       placeholder: '30'
     third_party_settings: {  }
   field_relationships:
     type: paragraphs
-    weight: 11
+    weight: 12
     region: content
     settings:
       title: Relationship
@@ -113,9 +255,17 @@ content:
         collapse_edit_all: collapse_edit_all
         duplicate: duplicate
     third_party_settings: {  }
+  field_source:
+    type: string_textfield
+    weight: 32
+    region: content
+    settings:
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
   field_specialized_abilities:
     type: text_textarea
-    weight: 35
+    weight: 14
     region: content
     settings:
       rows: 5
@@ -123,7 +273,7 @@ content:
     third_party_settings: {  }
   field_type:
     type: entity_reference_autocomplete
-    weight: 10
+    weight: 11
     region: content
     settings:
       match_operator: CONTAINS
