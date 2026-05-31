@@ -90,10 +90,11 @@ export function ScreenRouter({ section, item, ctx, setCtx }: ScreenRouterProps):
   };
 
   /* ───── Characters ───── */
-  if (key === 'characters/list')    return <CharacterListScreen ctx={ictx} setCtx={set} />;
-  if (key === 'characters/view')    return <CharacterDetailScreen ctx={ictx} setCtx={set} />;
-  if (key === 'characters/consult') return <ConsultScreen ctx={ictx} setCtx={set} />;
-  if (key === 'characters/ascii')   return <DeprecatedScreen item={item} />;
+  if (key === 'characters/list')         return <CharacterListScreen ctx={ictx} setCtx={set} />;
+  if (key === 'characters/view')         return <CharacterDetailScreen ctx={ictx} setCtx={set} />;
+  if (key === 'characters/consult')      return <ConsultScreen ctx={ictx} setCtx={set} />;
+  if (key === 'characters/completeness') return <NpcValidatorScreen ctx={{ ...ictx, pcMode: true }} setCtx={set} />;
+  if (key === 'characters/ascii')        return <DeprecatedScreen item={item} />;
 
   /* ───── Stories ───── */
   if (key === 'stories/work-series') {

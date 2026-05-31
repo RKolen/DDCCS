@@ -19,12 +19,12 @@ import type { DrupalCharacter } from '../ConsoleContext';
    Colours
    ──────────────────────────────────────────────────────────── */
 
-const COLOR_WARN    = 'var(--color-warning)';
-const COLOR_PASS    = 'var(--color-success)';
+const COLOR_WARN = 'var(--color-warning)';
+const COLOR_PASS = 'var(--color-success)';
 const COLOR_PARTIAL = 'var(--color-partial)';
 
 type Completeness = 'full' | 'partial' | 'thin';
-type EntityFilter = 'npc' | 'pc' | 'all';
+type EntityFilter = 'npc' | 'pc';
 type StatusFilter = 'all' | 'full' | 'partial' | 'thin';
 
 /* ────────────────────────────────────────────────────────────
@@ -32,23 +32,27 @@ type StatusFilter = 'all' | 'full' | 'partial' | 'thin';
    ──────────────────────────────────────────────────────────── */
 
 interface Check {
-  label:    string;
-  present:  boolean;
-  note?:    string;
+  label: string;
+  present: boolean;
+  note?: string;
 }
 
 interface AuditResult {
-  status:   Completeness;
-  score:    number;
+  status: Completeness;
+  score: number;
   maxScore: number;
-  checks:   Check[];
+  checks: Check[];
 }
 
 interface AuditRecord {
-  char:   DrupalCharacter;
+  char: DrupalCharacter;
   entity: 'npc' | 'pc';
-  audit:  AuditResult;
+  audit: AuditResult;
 }
+
+/* ── API response shape ── */
+interface UpdateResult { id: string; title: string }
+interface ApiError { error: string }
 
 /* ────────────────────────────────────────────────────────────
    Completeness engine
@@ -62,60 +66,60 @@ function isEmpty(v: unknown): boolean {
 }
 
 const CHECKS: Array<{
-  label:  string;
+  label: string;
   weight: number;
-  get:    (c: DrupalCharacter) => boolean;
-  note:   string;
+  get: (c: DrupalCharacter) => boolean;
+  note: string;
 }> = [
-  {
-    label:  'Portrait image',
-    weight: 2,
-    get:    c => !isEmpty(c.imageUrl),
-    note:   'A portrait helps identify the character at the table.',
-  },
-  {
-    label:  'Pronouns',
-    weight: 1,
-    get:    c => !isEmpty(c.pronouns),
-    note:   'Used in AI narration and combat descriptions.',
-  },
-  {
-    label:  'Background',
-    weight: 1,
-    get:    c => !isEmpty(c.background),
-    note:   'Gives the AI context for roleplay and story suggestions.',
-  },
-  {
-    label:  'Personality traits',
-    weight: 2,
-    get:    c => !isEmpty(c.personalityTraits),
-    note:   'AI uses these for in-character dialogue.',
-  },
-  {
-    label:  'Ideals',
-    weight: 2,
-    get:    c => !isEmpty(c.ideals),
-    note:   'Drives motivation in story generation.',
-  },
-  {
-    label:  'Bonds',
-    weight: 2,
-    get:    c => !isEmpty(c.bonds),
-    note:   'Connects the character to the world; also powers cross-references.',
-  },
-  {
-    label:  'Flaws',
-    weight: 2,
-    get:    c => !isEmpty(c.flaws),
-    note:   'Makes generated stories more interesting and realistic.',
-  },
-  {
-    label:  'Referenced by others',
-    weight: 1,
-    get:    () => false, /* filled in by auditCharacter with referencedSet */
-    note:   'No other character mentions this name — may be orphaned.',
-  },
-];
+    {
+      label: 'Portrait image',
+      weight: 2,
+      get: c => !isEmpty(c.imageUrl),
+      note: 'A portrait helps identify the character at the table.',
+    },
+    {
+      label: 'Pronouns',
+      weight: 1,
+      get: c => !isEmpty(c.pronouns),
+      note: 'Used in AI narration and combat descriptions.',
+    },
+    {
+      label: 'Background',
+      weight: 1,
+      get: c => !isEmpty(c.background),
+      note: 'Gives the AI context for roleplay and story suggestions.',
+    },
+    {
+      label: 'Personality traits',
+      weight: 2,
+      get: c => !isEmpty(c.personalityTraits),
+      note: 'AI uses these for in-character dialogue.',
+    },
+    {
+      label: 'Ideals',
+      weight: 2,
+      get: c => !isEmpty(c.ideals),
+      note: 'Drives motivation in story generation.',
+    },
+    {
+      label: 'Bonds',
+      weight: 2,
+      get: c => !isEmpty(c.bonds),
+      note: 'Connects the character to the world; also powers cross-references.',
+    },
+    {
+      label: 'Flaws',
+      weight: 2,
+      get: c => !isEmpty(c.flaws),
+      note: 'Makes generated stories more interesting and realistic.',
+    },
+    {
+      label: 'Referenced by others',
+      weight: 1,
+      get: () => false, /* filled in by auditCharacter with referencedSet */
+      note: 'No other character mentions this name — may be orphaned.',
+    },
+  ];
 
 const MAX_SCORE = CHECKS.reduce((s, c) => s + c.weight, 0);
 
@@ -132,7 +136,7 @@ function auditCharacter(
     return { label: def.label, present, note: present ? undefined : def.note };
   });
 
-  const pct: number  = score / MAX_SCORE;
+  const pct: number = score / MAX_SCORE;
   const status: Completeness = pct >= 1 ? 'full' : pct >= 0.6 ? 'partial' : 'thin';
   return { status, score, maxScore: MAX_SCORE, checks };
 }
@@ -161,9 +165,9 @@ function buildReferencedSet(all: DrupalCharacter[]): Set<string> {
    ──────────────────────────────────────────────────────────── */
 
 const STATUS_META: Record<Completeness, { color: string; label: string }> = {
-  full:    { color: COLOR_PASS,    label: 'Full' },
+  full: { color: COLOR_PASS, label: 'Full' },
   partial: { color: COLOR_PARTIAL, label: 'Partial' },
-  thin:    { color: COLOR_WARN,    label: 'Thin' },
+  thin: { color: COLOR_WARN, label: 'Thin' },
 };
 
 function ScoreBar({ score, maxScore, color }: { score: number; maxScore: number; color: string }): React.ReactElement {
@@ -222,22 +226,163 @@ function SummaryTile({
   );
 }
 
+/* ── Inline edit panel (richness fields only) ── */
+function EditPanel({ char, onSaved }: { char: DrupalCharacter; onSaved: () => void }): React.ReactElement {
+  const [pronouns, setPronouns] = React.useState(char.pronouns ?? '');
+  const [background, setBackground] = React.useState(char.background ?? '');
+  const [traits, setTraits] = React.useState(char.personalityTraits.join('\n'));
+  const [ideals, setIdeals] = React.useState(char.ideals.join('\n'));
+  const [bonds, setBonds] = React.useState(char.bonds.join('\n'));
+  const [flaws, setFlaws] = React.useState(char.flaws.join('\n'));
+  const [saving, setSaving] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
+  const [saved, setSaved] = React.useState(false);
+
+  const splitLines = (v: string): string[] =>
+    v.split('\n').map(s => s.trim()).filter(Boolean);
+
+  const handleSave = async (): Promise<void> => {
+    setSaving(true);
+    setError(null);
+    try {
+      const res = await fetch('/api/update-character', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: char.id,
+          pronouns: pronouns.trim() || null,
+          background: background.trim() || null,
+          personalityTraits: splitLines(traits),
+          ideals: splitLines(ideals),
+          bonds: splitLines(bonds),
+          flaws: splitLines(flaws),
+        }),
+      });
+      if (!res.ok) {
+        const data = (await res.json()) as ApiError;
+        setError(data.error ?? `Error ${res.status}`);
+        return;
+      }
+      setSaved(true);
+      onSaved();
+    } catch {
+      setError('Network error — could not reach the server.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const fieldStyle: React.CSSProperties = {
+    width: '100%', background: 'var(--canvas)',
+    border: '1px solid var(--rule)', borderRadius: 4,
+    color: 'var(--ink)', fontFamily: 'var(--font-body)', fontSize: 13,
+    padding: '6px 10px', resize: 'vertical',
+  };
+  const labelStyle: React.CSSProperties = {
+    display: 'block', fontFamily: 'var(--font-display)', fontSize: 9, fontWeight: 700,
+    letterSpacing: '0.12em', textTransform: 'uppercase',
+    color: 'var(--brass-dim)', marginBottom: 4,
+  };
+
+  return (
+    <div style={{
+      marginTop: 16, padding: '16px 18px', borderRadius: 6,
+      background: 'rgba(0,0,0,.2)', border: '1px solid var(--rule)',
+    }}>
+      <div style={{
+        fontFamily: 'var(--font-display)', fontSize: 10, fontWeight: 700,
+        letterSpacing: '0.12em', color: 'var(--brass)', marginBottom: 14,
+        textTransform: 'uppercase',
+      }}>
+        Edit profile — {char.title}
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
+        <div>
+          <label style={labelStyle}>Pronouns</label>
+          <input
+            type="text"
+            value={pronouns}
+            onChange={e => setPronouns(e.target.value)}
+            placeholder="e.g. he/him"
+            style={{ ...fieldStyle, resize: 'none' }}
+          />
+        </div>
+        <div>
+          <label style={labelStyle}>Background</label>
+          <input
+            type="text"
+            value={background}
+            onChange={e => setBackground(e.target.value)}
+            placeholder="e.g. Soldier"
+            style={{ ...fieldStyle, resize: 'none' }}
+          />
+        </div>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+        {([
+          ['Personality traits', traits, setTraits],
+          ['Ideals', ideals, setIdeals],
+          ['Bonds', bonds, setBonds],
+          ['Flaws', flaws, setFlaws],
+        ] as const).map(([label, value, setter]) => (
+          <div key={label}>
+            <label style={labelStyle}>{label} <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>(one per line)</span></label>
+            <textarea
+              rows={3}
+              value={value}
+              onChange={e => setter(e.target.value)}
+              placeholder={`Enter ${label.toLowerCase()}, one per line`}
+              style={fieldStyle}
+            />
+          </div>
+        ))}
+      </div>
+
+      {error != null && (
+        <p style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--color-danger)', marginTop: 10 }}>
+          {error}
+        </p>
+      )}
+      {saved && (
+        <p style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--color-success)', marginTop: 10 }}>
+          Saved. Reload the page to see updated scores.
+        </p>
+      )}
+
+      <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
+        <button
+          type="button"
+          className="primary-btn"
+          disabled={saving || saved}
+          onClick={() => void handleSave()}
+        >
+          <Icon name="tools" size={11} />
+          {saving ? 'Saving...' : saved ? 'Saved' : 'Save changes'}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function ProfileRow({
   rec, expanded, onToggle, compact,
 }: {
   rec: AuditRecord; expanded: boolean; onToggle: () => void; compact: boolean;
 }): React.ReactElement {
   const { char, audit, entity } = rec;
-  const meta     = STATUS_META[audit.status];
-  const isNpc    = entity === 'npc';
-  const missing  = audit.checks.filter(c => !c.present);
+  const [editOpen, setEditOpen] = React.useState(false);
+  const meta = STATUS_META[audit.status];
+  const isNpc = entity === 'npc';
+  const missing = audit.checks.filter(c => !c.present);
   const initials = char.title.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
 
   const classLabel = isNpc
     ? (char.role ?? null)
     : (char.characterClass != null && char.level != null
-        ? `${char.characterClass} ${char.level}`
-        : char.characterClass ?? null);
+      ? `${char.characterClass} ${char.level}`
+      : char.characterClass ?? null);
 
   return (
     <div style={{
@@ -363,24 +508,18 @@ function ProfileRow({
               </div>
             ))}
           </div>
-          {char.path != null && char.path !== '' && (
-            <div style={{ marginTop: 14 }}>
-              <a
-                href={char.path}
-                target="_blank"
-                rel="noreferrer"
-                style={{
-                  display: 'inline-flex', alignItems: 'center', gap: 6,
-                  textDecoration: 'none', padding: '6px 12px', borderRadius: 4,
-                  background: 'rgba(0,0,0,.2)', border: '1px solid var(--rule)',
-                  fontFamily: 'var(--font-display)', fontSize: 9,
-                  color: 'var(--brass)', letterSpacing: '0.1em',
-                  textTransform: 'uppercase', fontWeight: 700,
-                }}
-              >
-                <Icon name="scroll" size={11} /> Edit in Drupal
-              </a>
-            </div>
+          <div style={{ marginTop: 14 }}>
+            <button
+              type="button"
+              className={`ghost-btn${editOpen ? ' ghost-active' : ''}`}
+              onClick={() => setEditOpen(p => !p)}
+            >
+              <Icon name="tools" size={11} />
+              {editOpen ? 'Close editor' : 'Edit profile'}
+            </button>
+          </div>
+          {editOpen && (
+            <EditPanel char={char} onSaved={() => setEditOpen(false)} />
           )}
         </div>
       )}
@@ -392,28 +531,30 @@ function ProfileRow({
    Main screen
    ──────────────────────────────────────────────────────────── */
 
-export function NpcValidatorScreen(_props: ScreenProps): React.ReactElement {
+export function NpcValidatorScreen({ ctx }: ScreenProps): React.ReactElement {
   const data = useConsoleData();
 
-  const [entityFilter, setEntityFilter] = React.useState<EntityFilter>('npc');
+  /* Entity mode is locked by the route: npcs/n-validate → npc, characters/completeness → pc */
+  const entityFilter: EntityFilter = ctx.pcMode === true ? 'pc' : 'npc';
+
   const [statusFilter, setStatusFilter] = React.useState<StatusFilter>('all');
-  const [query,        setQuery]        = React.useState('');
-  const [density,      setDensity]      = React.useState<'comfortable' | 'compact'>('comfortable');
-  const [expanded,     setExpanded]     = React.useState<Record<string, boolean>>({});
+  const [query, setQuery] = React.useState('');
+  const [density, setDensity] = React.useState<'comfortable' | 'compact'>('comfortable');
+  const [expanded, setExpanded] = React.useState<Record<string, boolean>>({});
 
   const audited = React.useMemo<AuditRecord[]>(() => {
-    const all        = data.characters;
+    const all = data.characters;
     const referenced = buildReferencedSet(all);
     return all.map(char => ({
       char,
       entity: char.characterType === false ? 'npc' : 'pc',
-      audit:  auditCharacter(char, referenced),
+      audit: auditCharacter(char, referenced),
     }));
   }, [data.characters]);
 
   const scoped = React.useMemo(() =>
-    audited.filter(r => entityFilter === 'all' || r.entity === entityFilter),
-  [audited, entityFilter]);
+    audited.filter(r => r.entity === entityFilter),
+    [audited, entityFilter]);
 
   const summary = React.useMemo(() => {
     const s = { total: scoped.length, full: 0, partial: 0, thin: 0 };
@@ -427,25 +568,17 @@ export function NpcValidatorScreen(_props: ScreenProps): React.ReactElement {
       if (query && !r.char.title.toLowerCase().includes(query.toLowerCase())) return false;
       return true;
     }).sort((a, b) => a.audit.score - b.audit.score),
-  [scoped, statusFilter, query]);
+    [scoped, statusFilter, query]);
 
   const compact = density === 'compact';
+  const isNpcMode = entityFilter === 'npc';
 
-  const toggle       = (id: string): void => setExpanded(p => ({ ...p, [id]: !p[id] }));
-  const setAllExp    = (val: boolean): void => {
+  const toggle = (id: string): void => setExpanded(p => ({ ...p, [id]: !p[id] }));
+  const setAllExp = (val: boolean): void => {
     const next: Record<string, boolean> = {};
     visible.forEach(r => { next[r.char.id] = val; });
     setExpanded(next);
   };
-
-  const segStyle = (active: boolean): React.CSSProperties => ({
-    fontFamily: 'var(--font-display)', fontSize: 10, fontWeight: 700,
-    letterSpacing: '0.08em', padding: '5px 12px', borderRadius: 4,
-    border: 'none', cursor: 'pointer',
-    background: active ? 'var(--canvas-raised)' : 'transparent',
-    color: active ? 'var(--brass-bright)' : 'var(--ink-dim)',
-    transition: '120ms ease',
-  });
 
   const linkBtnStyle: React.CSSProperties = {
     background: 'none', border: 'none', cursor: 'pointer',
@@ -454,35 +587,20 @@ export function NpcValidatorScreen(_props: ScreenProps): React.ReactElement {
   };
 
   const npcCount = npcCharacters(data).length;
-  const pcCount  = playerCharacters(data).length;
+  const pcCount = playerCharacters(data).length;
 
   return (
     <div style={{ minHeight: '100%' }}>
 
       <header className="screen-head">
         <div>
-          <span className="reader-eyebrow">NPCs · Profile completeness</span>
+          <span className="reader-eyebrow">{isNpcMode ? 'NPCs' : 'Characters'} · Profile completeness</span>
           <h2>Profile completeness</h2>
           <p className="screen-blurb">
             Drupal enforces required fields at save time. This audit checks the optional
             richness fields — bonds, ideals, portrait, relationships — that AI generation
             benefits from. Thin profiles produce thin stories.
           </p>
-        </div>
-        <div className="screen-head-actions">
-          <select
-            aria-label="Density"
-            value={density}
-            onChange={e => setDensity(e.target.value as 'comfortable' | 'compact')}
-            style={{
-              fontFamily: 'var(--font-display)', fontSize: 10, letterSpacing: '0.08em',
-              background: 'var(--canvas-raised)', color: 'var(--ink-dim)',
-              border: '1px solid var(--rule)', borderRadius: 4, padding: '6px 10px', cursor: 'pointer',
-            }}
-          >
-            <option value="comfortable">Comfortable</option>
-            <option value="compact">Compact</option>
-          </select>
         </div>
       </header>
 
@@ -491,7 +609,7 @@ export function NpcValidatorScreen(_props: ScreenProps): React.ReactElement {
         letterSpacing: '0.05em', marginBottom: 20,
       }}>
         {data.characters.length > 0
-          ? `${npcCount} NPCs · ${pcCount} PCs · scored out of ${MAX_SCORE} richness points`
+          ? `${isNpcMode ? npcCount : pcCount} ${isNpcMode ? 'NPCs' : 'PCs'} · scored out of ${MAX_SCORE} richness points`
           : 'No character data — check the Drupal connection.'
         }
       </div>
@@ -533,17 +651,6 @@ export function NpcValidatorScreen(_props: ScreenProps): React.ReactElement {
         display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap',
         marginBottom: 18, paddingBottom: 14, borderBottom: '1px solid var(--rule)',
       }}>
-        <div style={{
-          display: 'flex', gap: 2, background: 'rgba(0,0,0,.3)',
-          padding: 3, borderRadius: 6, border: '1px solid var(--rule)',
-        }}>
-          {(['npc', 'pc', 'all'] as const).map(val => (
-            <button key={val} type="button" onClick={() => setEntityFilter(val)} style={segStyle(entityFilter === val)}>
-              {val === 'npc' ? 'NPCs' : val === 'pc' ? 'PCs' : 'All'}
-            </button>
-          ))}
-        </div>
-
         <div className="search-field" style={{ flex: 1, minWidth: 200, maxWidth: 320 }}>
           <Icon name="search" size={13} />
           <input
@@ -571,7 +678,7 @@ export function NpcValidatorScreen(_props: ScreenProps): React.ReactElement {
         </select>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <button type="button" onClick={() => setAllExp(true)}  style={linkBtnStyle}>Expand all</button>
+          <button type="button" onClick={() => setAllExp(true)} style={linkBtnStyle}>Expand all</button>
           <span style={{ color: 'var(--ink-faint)' }}>·</span>
           <button type="button" onClick={() => setAllExp(false)} style={linkBtnStyle}>Collapse all</button>
         </div>
