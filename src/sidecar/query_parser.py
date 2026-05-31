@@ -2,10 +2,9 @@
 
 import json
 import logging
-import re
 from typing import Any, Dict, List, Optional
 
-from src.ai.ai_client import AIClient
+from src.ai.ai_client import AIClient, get_client_for_task
 from src.config.config_loader import load_config
 from src.sidecar.models import ParseQueryResponse
 
@@ -60,10 +59,7 @@ def reset_client_cache() -> None:
 
 
 def _build_parser_client() -> Optional[AIClient]:
-    """Build an AIClient configured for low-latency query parsing.
-
-    Prefers the 'fast' model profile when configured; falls back to the
-    default AI config.
+    """Build an AIClient for low-latency query parsing using the fast profile.
 
     Returns:
         Initialized AIClient, or None if AI is not configured.
@@ -71,48 +67,7 @@ def _build_parser_client() -> Optional[AIClient]:
     config = load_config()
     if not config.ai.is_configured():
         return None
-
-    fast_profile = config.model_registry.get_profile("fast")
-    if fast_profile and fast_profile.model:
-        return AIClient(
-            api_key=config.ai.api_key,
-            base_url=fast_profile.base_url or config.ai.base_url,
-            model=fast_profile.model,
-        )
-
-    return AIClient(ai_config=config.ai)
-
-
-def _extract_json(raw: str) -> Dict[str, Any]:
-    """Extract and parse a JSON object from a potentially noisy AI response.
-
-    Handles responses wrapped in markdown fences or with leading/trailing text.
-
-    Args:
-        raw: Raw string response from the AI model.
-
-    Returns:
-        Parsed JSON dict.
-
-    Raises:
-        ValueError: If no valid JSON object can be extracted.
-    """
-    cleaned = re.sub(r"```(?:json)?\s*|\s*```", "", raw).strip()
-
-    try:
-        parsed = json.loads(cleaned)
-        if isinstance(parsed, dict):
-            return dict(parsed)
-    except json.JSONDecodeError:
-        pass
-
-    match = re.search(r"\{[^{}]+\}", cleaned, re.DOTALL)
-    if match:
-        parsed = json.loads(match.group())
-        if isinstance(parsed, dict):
-            return dict(parsed)
-
-    raise ValueError(f"No JSON object found in AI response: {raw!r}")
+    return get_client_for_task("story_analysis")
 
 
 def _fallback(original: str) -> ParseQueryResponse:
@@ -156,14 +111,19 @@ def parse_query(query: str) -> ParseQueryResponse:
     ]
 
     try:
-        raw = client.chat_completion(messages, temperature=0.1, max_tokens=150)
+        raw = client.chat_completion(
+            messages, temperature=0.1, max_tokens=150, json_mode=True
+        )
     except RuntimeError as exc:
         _LOG.warning("AI client error during query parsing: %s", exc)
         return _fallback(query)
 
     try:
-        data = _extract_json(raw)
-    except (ValueError, json.JSONDecodeError) as exc:
+        parsed = json.loads(raw)
+        if not isinstance(parsed, dict):
+            raise ValueError(f"Expected JSON object, got: {type(parsed).__name__}")
+        data: Dict[str, Any] = parsed
+    except (json.JSONDecodeError, ValueError) as exc:
         _LOG.warning("Failed to parse AI response: %s", exc)
         return _fallback(query)
 

@@ -28,12 +28,14 @@ from tests import test_helpers
     CharacterAIConfig,
     AIRequestParams,
     load_ai_config_from_env,
+    build_client_for_character,
 ) = test_helpers.safe_from_import(
     "src.ai.ai_client",
     "AIClient",
     "CharacterAIConfig",
     "AIRequestParams",
     "load_ai_config_from_env",
+    "build_client_for_character",
 )
 
 
@@ -239,20 +241,20 @@ def test_character_ai_config_serialization():
     print("[PASS] CharacterAIConfig Serialization")
 
 
-def test_character_ai_config_create_client():
-    """Test CharacterAIConfig.create_client() method."""
-    print("\n[TEST] CharacterAIConfig create_client()")
+def test_build_client_for_character():
+    """Test build_client_for_character() free function."""
+    print("\n[TEST] build_client_for_character()")
 
     # Test 1: Disabled config with default client
     config1 = CharacterAIConfig(enabled=False)
     default_client = AIClient()
-    client1 = config1.create_client(default_client=default_client)
+    client1 = build_client_for_character(config1, default_client=default_client)
     assert client1 is default_client, "Should return default client when disabled"
     print("  [OK] Returns default client when disabled")
 
     # Test 2: Enabled config with no custom settings (uses env defaults)
     config2 = CharacterAIConfig(enabled=True)
-    client2 = config2.create_client()
+    client2 = build_client_for_character(config2)
     assert client2 is not None, "Should create client from env vars"
     assert client2.model is not None, "Client should have model from env"
     print("  [OK] Creates client from env vars when enabled with no custom settings")
@@ -263,7 +265,7 @@ def test_character_ai_config_create_client():
         model="custom-model",
         request_params=AIRequestParams(temperature=0.9, max_tokens=2000)
     )
-    client3 = config3.create_client()
+    client3 = build_client_for_character(config3)
     assert client3.model == "custom-model", "Custom model not used"
     assert client3.default_temperature == 0.9, "Custom temperature not used"
     assert client3.default_max_tokens == 2000, "Custom max_tokens not used"
@@ -272,13 +274,13 @@ def test_character_ai_config_create_client():
     # Test 4: Disabled config without default client (should raise error)
     config4 = CharacterAIConfig(enabled=False)
     try:
-        config4.create_client()
+        build_client_for_character(config4)
         assert False, "Should raise error when disabled and no default client"
     except RuntimeError as e:
         assert "not enabled" in str(e).lower(), "Error message should mention 'not enabled'"
         print("  [OK] Raises error when disabled and no default client")
 
-    print("[PASS] CharacterAIConfig create_client()")
+    print("[PASS] build_client_for_character()")
 
 
 def run_all_tests():
@@ -293,7 +295,7 @@ def run_all_tests():
     test_ai_request_params()
     test_character_ai_config()
     test_character_ai_config_serialization()
-    test_character_ai_config_create_client()
+    test_build_client_for_character()
 
     print("\n" + "=" * 70)
     print("[SUCCESS] ALL AI CLIENT TESTS PASSED")

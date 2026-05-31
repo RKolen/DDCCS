@@ -1,19 +1,26 @@
 """AI Client Module - Flexible OpenAI-compatible client for LLM integration."""
 
-import ast
 import functools
 import json
+import logging
 import os
-import re
-from typing import Any, Dict, List, Optional
+import time
 from dataclasses import dataclass, field
+from pathlib import Path
+from typing import (
+    Any,
+    Dict,
+    Generator,
+    List,
+    NamedTuple,
+    Optional,
+    Tuple,
+    Union,
+    overload,
+)
 
-try:
-    from openai import OpenAI
-    OPENAI_AVAILABLE = True
-except ImportError:
-    OpenAI = None
-    OPENAI_AVAILABLE = False
+import tenacity
+from openai import OpenAI
 
 try:
     from dotenv import load_dotenv
@@ -30,13 +37,53 @@ except ImportError:
 
 from src.ai.task_router import ModelRegistry
 
+logger = logging.getLogger(__name__)
+
+_RETRYABLE_ERROR_TYPES: frozenset = frozenset({
+    "RateLimitError",
+    "APIConnectionError",
+    "APITimeoutError",
+})
+
+
+class _TransientAIError(RuntimeError):
+    """Wraps transient API errors that should be retried by tenacity."""
+
+
+class _RetryConfig(NamedTuple):
+    """Groups retry, timeout, and per-request defaults for AIClient."""
+
+    timeout: float = 30.0
+    max_retries: int = 3
+    backoff_strategy: str = "exponential"
+    model_chain: Tuple[str, ...] = ()
+    log_path: Optional[Path] = None
+    default_temperature: float = 0.7
+    default_max_tokens: int = 1000
+
+
+def _build_openai_client(
+    api_key: Optional[str],
+    base_url: Optional[str],
+    timeout: float,
+) -> Any:
+    """Construct the underlying OpenAI client from credentials."""
+    client_kwargs: Dict[str, Any] = {}
+    if api_key and isinstance(api_key, str) and api_key.strip():
+        client_kwargs["api_key"] = api_key
+    if base_url and isinstance(base_url, str) and base_url.strip():
+        client_kwargs["base_url"] = base_url
+    allowed_keys = {"api_key", "base_url"}
+    filtered = {k: v for k, v in client_kwargs.items() if k in allowed_keys and v}
+    return OpenAI(timeout=timeout, **filtered)
+
 
 class AIClient:
     """Flexible AI client for any OpenAI-compatible API.
 
     Configuration is resolved via centralized config, then env vars.
     All provider details (base_url, model, api_key) must be set via
-    config or environment — no hardcoded defaults.
+    config or environment -- no hardcoded defaults.
     """
 
     def __init__(
@@ -46,8 +93,7 @@ class AIClient:
         model: Optional[str] = None,
         **config,
     ):
-        """
-        Initialize AI client with configuration.
+        """Initialize AI client.
 
         Args:
             api_key: API key for the provider.
@@ -57,40 +103,182 @@ class AIClient:
                 - default_temperature (float)
                 - default_max_tokens (int)
                 - embedding_model (str)
-                - ai_config: Optional AIConfig object from src.config (takes precedence)
+                - timeout (float): Request timeout in seconds (default 30.0).
+                - max_retries (int): Attempts on transient errors (default 3).
+                - backoff_strategy (str): "exponential" or "fixed" (default "exponential").
+                - model_chain (List[str]): Ordered fallback models after primary fails.
+                - ai_config: Optional AIConfig object (takes precedence).
         """
         ai_config = config.pop("ai_config", None)
         if ai_config is not None:
             self.api_key = api_key or ai_config.api_key
             self.base_url = base_url or ai_config.base_url
             self.model = model or ai_config.model
-            self.default_temperature = config.get("default_temperature", ai_config.temperature)
-            self.default_max_tokens = config.get("default_max_tokens", ai_config.max_tokens)
+            cfg_temp: float = config.get("default_temperature", ai_config.temperature)
+            cfg_tokens: int = config.get("default_max_tokens", ai_config.max_tokens)
         else:
             self.api_key = api_key or os.getenv("OPENAI_API_KEY", "")
             self.base_url = base_url or os.getenv("OPENAI_BASE_URL", None)
             self.model = model or os.getenv("OPENAI_MODEL", "")
-            self.default_temperature = config.get("default_temperature", 0.7)
-            self.default_max_tokens = config.get("default_max_tokens", 1000)
+            cfg_temp = config.get("default_temperature", 0.7)
+            cfg_tokens = config.get("default_max_tokens", 1000)
 
         self.embedding_model: str = str(
             config.get("embedding_model") or os.getenv("OPENAI_EMBEDDING_MODEL", "")
         )
 
-        self.client = None
-        if OPENAI_AVAILABLE:
-            client_kwargs = {}
-            if self.api_key and isinstance(self.api_key, str) and self.api_key.strip():
-                client_kwargs["api_key"] = self.api_key
-            if self.base_url and isinstance(self.base_url, str) and self.base_url.strip():
-                client_kwargs["base_url"] = self.base_url
+        timeout = float(config.pop("timeout", 30.0))
+        max_retries = int(config.pop("max_retries", 3))
+        backoff_strategy = str(config.pop("backoff_strategy", "exponential"))
+        model_chain = config.pop("model_chain", None)
+        log_path_raw = os.getenv("AI_CALL_LOG_PATH", "")
 
-            allowed_keys = {"api_key", "base_url"}
-            filtered_kwargs = {
-                k: v for k, v in client_kwargs.items() if k in allowed_keys and v
-            }
+        self._retry = _RetryConfig(
+            timeout=timeout,
+            max_retries=max_retries,
+            backoff_strategy=backoff_strategy,
+            model_chain=tuple(model_chain or []),
+            log_path=Path(log_path_raw) if log_path_raw else None,
+            default_temperature=float(cfg_temp),
+            default_max_tokens=int(cfg_tokens),
+        )
 
-            self.client = OpenAI(**filtered_kwargs)
+        self.client: Any = _build_openai_client(self.api_key, self.base_url, timeout)
+
+    # -- Backward-compatible properties for retry config fields --
+
+    @property
+    def default_temperature(self) -> float:
+        """Default temperature for chat completions."""
+        return self._retry.default_temperature
+
+    @property
+    def default_max_tokens(self) -> int:
+        """Default max_tokens for chat completions."""
+        return self._retry.default_max_tokens
+
+    @property
+    def timeout(self) -> float:
+        """Request timeout in seconds."""
+        return self._retry.timeout
+
+    @property
+    def max_retries(self) -> int:
+        """Number of retry attempts on transient errors."""
+        return self._retry.max_retries
+
+    @property
+    def backoff_strategy(self) -> str:
+        """Backoff strategy: 'exponential' or 'fixed'."""
+        return self._retry.backoff_strategy
+
+    @property
+    def model_chain(self) -> List[str]:
+        """Ordered list of fallback models."""
+        return list(self._retry.model_chain)
+
+    @property
+    def _is_ollama(self) -> bool:
+        """Return True when base_url targets an Ollama instance."""
+        if not self.base_url:
+            return False
+        url = self.base_url.lower()
+        return "ollama" in url or ":11434" in url
+
+    # -- Logging hook --
+
+    def _log_call(
+        self,
+        messages: List[Dict[str, str]],
+        response: str,
+        latency: float,
+        token_count: Optional[int],
+    ) -> None:
+        """Append one call record to the JSONL log file."""
+        log_path = self._retry.log_path
+        if log_path is None:
+            return
+        record: Dict[str, Any] = {
+            "ts": time.time(),
+            "model": self.model,
+            "latency": round(latency, 3),
+            "tokens": token_count,
+            "messages": messages,
+            "response": response,
+        }
+        try:
+            log_path.parent.mkdir(parents=True, exist_ok=True)
+            with open(log_path, "a", encoding="utf-8") as fh:
+                fh.write(json.dumps(record) + "\n")
+        except OSError as exc:
+            logger.debug("Call log write failed: %s", exc)
+
+    # -- Low-level completion helpers --
+
+    def _raw_chat(
+        self,
+        model: str,
+        messages: List[Dict[str, str]],
+        temperature: float,
+        max_tokens: int,
+        **kwargs,
+    ) -> Tuple[str, Optional[int]]:
+        """Single API call. Returns (content, token_count).
+
+        Raises _TransientAIError for retryable failures, RuntimeError otherwise.
+        """
+        try:
+            response = self.client.chat.completions.create(
+                model=model,
+                messages=messages,
+                temperature=temperature,
+                max_tokens=max_tokens,
+                **kwargs,
+            )
+            content = response.choices[0].message.content or ""
+            tokens: Optional[int] = (
+                response.usage.total_tokens if response.usage else None
+            )
+            return content, tokens
+        except Exception as exc:
+            error_type = type(exc).__name__
+            if error_type in _RETRYABLE_ERROR_TYPES:
+                raise _TransientAIError(
+                    f"AI completion failed (transient): {exc}"
+                ) from exc
+            if error_type == "AuthenticationError":
+                raise RuntimeError("AI completion failed: Invalid API key") from exc
+            if error_type == "BadRequestError":
+                raise RuntimeError(
+                    f"AI completion failed: Bad request: {exc}"
+                ) from exc
+            raise RuntimeError(f"AI completion failed: {exc}") from exc
+
+    def _attempt_model(
+        self,
+        model: str,
+        messages: List[Dict[str, str]],
+        temperature: float,
+        max_tokens: int,
+        **kwargs,
+    ) -> Tuple[str, Optional[int]]:
+        """Run completion with tenacity retry for transient errors."""
+        wait: Any = (
+            tenacity.wait_fixed(1.0)
+            if self._retry.backoff_strategy == "fixed"
+            else tenacity.wait_exponential(multiplier=1, min=1, max=10)
+        )
+        for attempt in tenacity.Retrying(
+            stop=tenacity.stop_after_attempt(self._retry.max_retries),
+            wait=wait,
+            retry=tenacity.retry_if_exception_type(_TransientAIError),
+            reraise=True,
+        ):
+            with attempt:
+                return self._raw_chat(model, messages, temperature, max_tokens, **kwargs)
+        raise RuntimeError("Retry loop exhausted without result")
+
+    # -- Public API --
 
     def chat_completion(
         self,
@@ -100,15 +288,15 @@ class AIClient:
         max_tokens: Optional[int] = None,
         **kwargs,
     ) -> str:
-        """
-        Get a chat completion from the LLM.
+        """Get a chat completion from the LLM.
 
         Args:
             messages: List of message dicts with 'role' and 'content'.
             model: Override default model for this request.
             temperature: Override default temperature.
             max_tokens: Override default max_tokens.
-            **kwargs: Additional parameters passed to the API.
+            **kwargs: Additional parameters. Pass json_mode=True to request
+                structured JSON output; all other kwargs are forwarded to the API.
 
         Returns:
             The assistant's response content as a string.
@@ -117,52 +305,115 @@ class AIClient:
             raise RuntimeError(
                 "AI client not available. Install openai package: pip install openai"
             )
+        json_mode: bool = kwargs.pop("json_mode", False)
+        if json_mode:
+            if self._is_ollama:
+                kwargs["extra_body"] = {"format": "json"}
+            else:
+                kwargs["response_format"] = {"type": "json_object"}
+
+        effective_temp = (
+            temperature if temperature is not None else self._retry.default_temperature
+        )
+        effective_tokens = (
+            max_tokens if max_tokens is not None else self._retry.default_max_tokens
+        )
+
+        last_exc: RuntimeError = RuntimeError("No models attempted")
+        t_start = time.monotonic()
+        for attempt_model in [model or self.model] + list(self._retry.model_chain):
+            try:
+                result, token_count = self._attempt_model(
+                    attempt_model, messages, effective_temp, effective_tokens, **kwargs
+                )
+                self._log_call(messages, result, time.monotonic() - t_start, token_count)
+                return result
+            except RuntimeError as exc:
+                last_exc = exc
+                if "Invalid API key" in str(exc) or "Bad request" in str(exc):
+                    raise
+        raise last_exc
+
+    def chat_completion_stream(
+        self,
+        messages: List[Dict[str, str]],
+        model: Optional[str] = None,
+        temperature: Optional[float] = None,
+        max_tokens: Optional[int] = None,
+        **kwargs,
+    ) -> Generator[str, None, None]:
+        """Stream chat completion chunks as a generator.
+
+        Args:
+            messages: List of message dicts with 'role' and 'content'.
+            model: Override default model.
+            temperature: Override default temperature.
+            max_tokens: Override default max_tokens.
+            **kwargs: Additional parameters passed to the API.
+
+        Yields:
+            Content delta strings as they arrive from the API.
+        """
+        if self.client is None:
+            raise RuntimeError(
+                "AI client not available. Install openai package: pip install openai"
+            )
         try:
-            response = self.client.chat.completions.create(
+            stream = self.client.chat.completions.create(
                 model=model or self.model,
                 messages=messages,
                 temperature=(
-                    temperature if temperature is not None else self.default_temperature
+                    temperature
+                    if temperature is not None
+                    else self._retry.default_temperature
                 ),
-                max_tokens=max_tokens if max_tokens is not None else self.default_max_tokens,
+                max_tokens=(
+                    max_tokens
+                    if max_tokens is not None
+                    else self._retry.default_max_tokens
+                ),
+                stream=True,
                 **kwargs,
             )
-            return response.choices[0].message.content or ""
-        except Exception as e:
-            error_type = type(e).__name__
-            if error_type == "AuthenticationError":
-                raise RuntimeError("AI completion failed: Invalid API key") from e
-            if error_type == "RateLimitError":
-                raise RuntimeError("AI completion failed: Rate limit exceeded") from e
-            if error_type == "APIConnectionError":
-                raise RuntimeError(
-                    f"AI completion failed: Cannot reach {self.base_url or 'provider'}"
-                ) from e
-            if error_type == "APITimeoutError":
-                raise RuntimeError("AI completion failed: Request timed out") from e
-            if error_type == "BadRequestError":
-                raise RuntimeError(f"AI completion failed: Bad request: {e}") from e
-            raise RuntimeError(f"AI completion failed: {e}") from e
+            for chunk in stream:
+                delta = chunk.choices[0].delta.content
+                if delta:
+                    yield delta
+        except Exception as exc:
+            raise RuntimeError(f"Stream completion failed: {exc}") from exc
 
-    def embed(self, text: str, model: str = "") -> List[float]:
-        """Generate an embedding vector for text.
+    @overload
+    def embed(self, text: str, model: str = "") -> List[float]: ...
+
+    @overload
+    def embed(self, text: List[str], model: str = "") -> List[List[float]]: ...
+
+    def embed(
+        self, text: Union[str, List[str]], model: str = ""
+    ) -> Union[List[float], List[List[float]]]:
+        """Generate embedding(s).
 
         Args:
-            text: Text to embed.
-            model: Embedding model name. Falls back to OPENAI_EMBEDDING_MODEL env var.
+            text: Single string or list of strings to embed.
+            model: Embedding model. Falls back to OPENAI_EMBEDDING_MODEL env var.
 
         Returns:
-            List of floats representing the embedding, or [] on failure.
+            List[float] for a single string; List[List[float]] for a list.
         """
         effective_model = model or self.embedding_model
         if not effective_model or self.client is None:
             return []
+        if isinstance(text, str):
+            text_batch: List[str] = [text]
+        else:
+            text_batch = list(text)
+        single = isinstance(text, str)
         try:
             response = self.client.embeddings.create(
-                input=text,
-                model=effective_model,
+                input=text_batch, model=effective_model
             )
-            return list(response.data[0].embedding)
+            vectors = [list(item.embedding) for item in response.data]
+            return vectors[0] if single else vectors
         except Exception as exc:
             raise RuntimeError(f"Embedding failed: {exc}") from exc
 
@@ -190,9 +441,9 @@ class AIRequestParams:
 
 @dataclass
 class CharacterAIConfig:
-    """
-    AI configuration specific to a character.
-    Allows each character to have unique AI behavior, model selection, etc.
+    """AI configuration specific to a character.
+
+    Holds data only -- use build_client_for_character() to create an AIClient.
     """
 
     enabled: bool = False
@@ -232,39 +483,6 @@ class CharacterAIConfig:
             request_params=request_params,
         )
 
-    def create_client(self, default_client: Optional[AIClient] = None) -> AIClient:
-        """
-        Create an AI client for this character.
-
-        Uses centralized .env configuration by default. Character-specific overrides
-        (model, base_url, api_key) are only used if explicitly set in character JSON.
-
-        Args:
-            default_client: Default client to use if character doesn't have custom config.
-
-        Returns:
-            AIClient configured for this character with .env defaults + character overrides.
-        """
-        if not self.enabled:
-            if default_client:
-                return default_client
-            raise RuntimeError(
-                "AI is not enabled for this character and no default client provided"
-            )
-
-        if not any([self.model, self.base_url, self.api_key]):
-            return default_client if default_client else AIClient()
-
-        env_config = load_ai_config_from_env()
-
-        return AIClient(
-            api_key=self.api_key or env_config["api_key"],
-            base_url=self.base_url or env_config["base_url"],
-            model=self.model or env_config["model"],
-            default_temperature=self.request_params.temperature,
-            default_max_tokens=self.request_params.max_tokens,
-        )
-
 
 def load_ai_config_from_env() -> Dict[str, Any]:
     """Load AI configuration from centralized config, then env var fallback.
@@ -288,10 +506,82 @@ def load_ai_config_from_env() -> Dict[str, Any]:
     }
 
 
+def _make_client(
+    api_key: Optional[str] = None,
+    base_url: Optional[str] = None,
+    model: Optional[str] = None,
+    default_temperature: Optional[float] = None,
+    default_max_tokens: Optional[int] = None,
+) -> AIClient:
+    """Create an AIClient by merging centralized config with caller overrides.
+
+    Args:
+        api_key: Override the configured API key.
+        base_url: Override the configured base URL.
+        model: Override the configured model name.
+        default_temperature: Override the configured temperature.
+        default_max_tokens: Override the configured max_tokens.
+
+    Returns:
+        A fully configured AIClient instance.
+    """
+    env = load_ai_config_from_env()
+    return AIClient(
+        api_key=api_key or env.get("api_key", ""),
+        base_url=base_url or env.get("base_url"),
+        model=model or env.get("model", ""),
+        default_temperature=(
+            default_temperature
+            if default_temperature is not None
+            else env.get("temperature", 0.7)
+        ),
+        default_max_tokens=(
+            default_max_tokens
+            if default_max_tokens is not None
+            else env.get("max_tokens", 1000)
+        ),
+    )
+
+
 @functools.lru_cache(maxsize=1)
 def _get_default_client() -> AIClient:
-    """Get or create the default AI client (lazy initialization)."""
-    return AIClient()
+    """Return the cached default AIClient."""
+    return _make_client()
+
+
+def build_client_for_character(
+    char_config: CharacterAIConfig,
+    default_client: Optional[AIClient] = None,
+) -> AIClient:
+    """Create an AIClient for a character, applying character-level overrides.
+
+    Args:
+        char_config: Character-specific AI configuration.
+        default_client: Fallback used when the character has no custom config.
+
+    Returns:
+        AIClient configured for the character.
+
+    Raises:
+        RuntimeError: If AI is disabled and no default client is provided.
+    """
+    if not char_config.enabled:
+        if default_client:
+            return default_client
+        raise RuntimeError(
+            "AI is not enabled for this character and no default client provided"
+        )
+
+    if not any([char_config.model, char_config.base_url, char_config.api_key]):
+        return default_client if default_client else _get_default_client()
+
+    return _make_client(
+        api_key=char_config.api_key,
+        base_url=char_config.base_url,
+        model=char_config.model,
+        default_temperature=char_config.request_params.temperature,
+        default_max_tokens=char_config.request_params.max_tokens,
+    )
 
 
 def get_client_for_task(
@@ -312,15 +602,19 @@ def get_client_for_task(
     """
     kwargs = ModelRegistry.get_router().get_client_kwargs(task_type, character_override)
     if kwargs:
-        return AIClient(**kwargs)
+        return _make_client(**kwargs)
     return _get_default_client()
 
 
 def call_ai_for_behavior_block(prompt: str) -> dict:
-    """
-    Calls the LLM to generate a CharacterBehavior block from a prompt.
-    Returns a dict with keys: preferred_strategies, typical_reactions,
-    speech_patterns, decision_making_style.
+    """Call the LLM to generate a CharacterBehavior block from a prompt.
+
+    Args:
+        prompt: The behavior generation prompt.
+
+    Returns:
+        Dict with keys: preferred_strategies, typical_reactions,
+        speech_patterns, decision_making_style.
     """
     client = get_client_for_task("npc_dialogue")
     messages: List[Dict[str, str]] = [
@@ -330,17 +624,10 @@ def call_ai_for_behavior_block(prompt: str) -> dict:
         ),
         client.create_user_message(prompt),
     ]
-    response = client.chat_completion(messages)
-    match = re.search(r"```json\n(.*?)```", response, re.DOTALL)
-    json_str = match.group(1) if match else response
-
+    response = client.chat_completion(messages, json_mode=True)
     try:
-        return json.loads(json_str)
-    except (json.JSONDecodeError, ValueError):
-        try:
-            return ast.literal_eval(json_str)
-        except (ValueError, SyntaxError) as e:
-            raise RuntimeError(
-                "Failed to parse AI response as JSON or Python literal. "
-                f"Original error: {e}. Response content: {response!r}"
-            ) from e
+        return json.loads(response)
+    except (json.JSONDecodeError, ValueError) as exc:
+        raise RuntimeError(
+            f"Failed to parse AI response as JSON. Response content: {response!r}"
+        ) from exc

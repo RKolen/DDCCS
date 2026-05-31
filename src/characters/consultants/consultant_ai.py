@@ -6,6 +6,7 @@ Provides AI-powered consultation features with graceful fallback to rule-based m
 
 from typing import Dict, Any, Optional
 
+from src.ai.ai_client import build_client_for_character
 from src.ai.availability import AI_AVAILABLE, CharacterAIConfig
 from src.ai.prompt_templates import LANGUAGE_INSTRUCTION
 from src.utils.errors import UserInputError
@@ -41,15 +42,16 @@ class AIConsultant:
         # Create character-specific client if configured and not yet created
         if self.profile.ai_config and not self._character_ai_client:
             if isinstance(self.profile.ai_config, CharacterAIConfig):
-                self._character_ai_client = self.profile.ai_config.create_client(
-                    self.ai_client
+                self._character_ai_client = build_client_for_character(
+                    self.profile.ai_config, self.ai_client
                 )
             elif isinstance(
                 self.profile.ai_config, dict
             ) and self.profile.ai_config.get("enabled"):
-                # Convert dict to CharacterAIConfig
                 config = CharacterAIConfig.from_dict(self.profile.ai_config)
-                self._character_ai_client = config.create_client(self.ai_client)
+                self._character_ai_client = build_client_for_character(
+                    config, self.ai_client
+                )
 
         # Return character-specific or global client
         return self._character_ai_client or self.ai_client

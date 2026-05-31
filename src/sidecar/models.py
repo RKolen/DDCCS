@@ -65,3 +65,10 @@ class SpotlightResponse(BaseModel):
 
     campaign_name: str
     entries: List[SpotlightCharacterScore]
+
+
+class ErrorResponse(BaseModel):
+    """Shared error envelope returned by all sidecar endpoints on failure."""
+
+    error: str
+    detail: str

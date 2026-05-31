@@ -13,6 +13,10 @@ The AI integration provides:
 - **Per-Character Configuration** - Each character can have unique AI settings
 - **Provider Flexibility** - Works with OpenAI, Ollama (local), OpenRouter, and any OpenAI-compatible API
 - **Graceful Fallback** - System works perfectly without AI (rule-based suggestions)
+- **Structured JSON Output** - json_mode=True requests structured responses natively
+- **Streaming** - chat_completion_stream() yields deltas for Gatsby/frontend display
+- **Retry with Fallback Models** - tenacity-backed retry and model_chain for resilience
+- **Call Logging** - JSONL audit log of every LLM call via AI_CALL_LOG_PATH
 
 ## Installation
 
@@ -22,9 +26,10 @@ The AI integration provides:
 pip install -r requirements.txt
 ```
 
-This installs:
+Key packages installed:
 
 - `openai` - OpenAI SDK (compatible with many providers)
+- `tenacity` - Retry logic with exponential backoff
 - `python-dotenv` - Environment variable management
 
 ### 2. Configure Environment
@@ -40,7 +45,7 @@ Edit `.env` with your configuration:
 ```env
 # For OpenAI (default)
 OPENAI_API_KEY=your-api-key-here
-OPENAI_MODEL=gpt-3.5-turbo
+OPENAI_MODEL=gpt-4o-mini
 
 # For Ollama (local LLMs)
 OPENAI_API_KEY=ollama
@@ -81,7 +86,7 @@ This will verify your configuration and test basic AI functionality.
 ```env
 OPENAI_API_KEY=sk-...your-key...
 # OPENAI_BASE_URL=  # Leave empty for default
-OPENAI_MODEL=gpt-3.5-turbo  # or gpt-4, gpt-4-turbo
+OPENAI_MODEL=gpt-4o-mini
 ```
 
 Get your API key from: <https://platform.openai.com/api-keys>
@@ -97,6 +102,9 @@ OPENAI_API_KEY=ollama
 OPENAI_BASE_URL=http://localhost:11434/v1
 OPENAI_MODEL=llama3.2  # or mistral, mixtral, etc.
 ```
+
+Structured output (json_mode=True) uses `format=json` in the Ollama API body
+automatically — no extra configuration needed.
 
 ### OpenRouter
 
@@ -131,7 +139,7 @@ Each character can have individual AI settings in their JSON file:
   "level": 20,
   "backstory": "An ancient wizard...",
   "personality_traits": ["Wise", "Patient", "Mysterious"],
-  
+
   "ai_config": {
     "enabled": true,
     "model": "gpt-4",
@@ -164,10 +172,30 @@ Create unique AI personalities for each character:
   "ai_config": {
     "enabled": true,
     "temperature": 0.7,
-    "system_prompt": "You are Aragorn, son of Arathorn, rightful heir to the throne of Gondor. You are a skilled ranger and warrior, humble yet noble. You speak with quiet confidence and lead by example. Your responses should reflect your duty to protect the innocent and restore the kingdom."
+    "system_prompt": "You are Aragorn, son of Arathorn, rightful heir to the throne of Gondor. You speak with quiet confidence and lead by example."
   }
 }
 ```
+
+### Building a Client for a Character
+
+Use `build_client_for_character()` to create a client with character-level overrides:
+
+```python
+from src.ai.ai_client import build_client_for_character
+from src.ai.ai_client import CharacterAIConfig, AIRequestParams
+
+char_config = CharacterAIConfig(
+    enabled=True,
+    model="gpt-4",
+    request_params=AIRequestParams(temperature=0.9, max_tokens=1500),
+)
+
+client = build_client_for_character(char_config, default_client=default_ai_client)
+```
+
+`CharacterAIConfig` is a pure data class — it holds configuration only. Client
+construction is handled by the free function.
 
 ## Usage Examples
 
@@ -184,49 +212,63 @@ Select **"3. Get Character Consultation"** - AI will be used automatically if av
 ### In Python Code
 
 ```python
-from src.ai.ai_client import AIClient
-from src.utils.character_profile_utils import load_character_profile
-from src.utils.path_utils import get_characters_dir
+from src.ai.ai_client import AIClient, get_client_for_task
 
-# Create AI client (reads from centralized config or env vars)
+# Task-specific client (uses 'creative' profile for story, 'fast' for analysis)
+ai_client = get_client_for_task("story_generation")
+
+# Direct client — reads from centralized config or env vars
 ai_client = AIClient()
 
-# Load character profile
-profile = load_character_profile("wizard")
+# Chat completion
+messages = [
+    ai_client.create_system_message("You are a D&D narrator."),
+    ai_client.create_user_message("Describe the party entering a dungeon."),
+]
+response = ai_client.chat_completion(messages)
 
-# Get AI-enhanced reaction via the story/consultant workflow
-# See src/characters/consultants/ for consultant classes
-situation = "A dragon appears on the horizon"
-reaction = consultant.suggest_reaction_ai(situation)
+# Structured JSON output (removes regex fallback parsing)
+json_response = ai_client.chat_completion(messages, json_mode=True)
 
-if reaction.get('ai_enhanced'):
-    print(f"AI Response: {reaction['ai_response']}")
-else:
-    print(f"Rule-based: {reaction['class_reaction']}")
-
-# Get AI-enhanced DC suggestion  
-action = "Convince the king to send reinforcements"
-dc_suggestion = consultant.suggest_dc_for_action_ai(action)
-
-print(f"Suggested DC: {dc_suggestion['suggested_dc']}")
-if dc_suggestion.get('ai_analysis'):
-    print(f"AI Analysis: {dc_suggestion['ai_analysis']}")
+# Streaming output (returns a generator of str chunks)
+for chunk in ai_client.chat_completion_stream(messages):
+    print(chunk, end="", flush=True)
 ```
 
-### Character-Specific AI Client
+### Batch Embeddings
 
-Per-character AI settings are defined in the character JSON file under the
-`ai_config` key (shown in the Per-Character AI Configuration section above).
-The centralized config system loads these via `src/config/config_types.py`.
+`embed()` accepts either a single string or a list of strings:
 
 ```python
-from src.config.config_loader import load_config
+# Single embedding
+vector: list[float] = ai_client.embed("fireball spell description")
 
-config = load_config()
-char_config = config.ai.get_character_config("Rogue")
+# Batch embedding (single API call, more efficient for Milvus reindexing)
+vectors: list[list[float]] = ai_client.embed([
+    "fireball spell description",
+    "cure wounds spell description",
+    "eldritch blast cantrip",
+])
 ```
 
 ## Advanced Configuration
+
+### Retry and Fallback
+
+`AIClient` uses tenacity to retry transient failures (rate limits, connection
+errors, timeouts). Configure via `**config` kwargs:
+
+```python
+client = AIClient(
+    timeout=60.0,              # request timeout in seconds
+    max_retries=5,             # attempts per model before giving up
+    backoff_strategy="exponential",  # or "fixed"
+    model_chain=["gpt-4o", "gpt-4o-mini"],  # fallback chain after primary
+)
+```
+
+When the primary model exhausts its retries, the next model in `model_chain`
+is tried automatically.
 
 ### Temperature Settings
 
@@ -258,14 +300,26 @@ Some providers support additional parameters:
 }
 ```
 
+## Call Logging
+
+Set `AI_CALL_LOG_PATH` to write a JSONL audit log of every `chat_completion`
+call. Each line contains: `ts`, `model`, `latency`, `tokens`, `messages`,
+`response`.
+
+```env
+AI_CALL_LOG_PATH=logs/ai_calls.jsonl
+```
+
+The log is appended to on every call. The parent directory is created
+automatically. Leave unset to disable logging.
+
 ## Fallback Behavior
 
 The system is designed to work without AI:
 
 1. **AI Available**: Uses AI-enhanced suggestions with rule-based backup
-2. **AI Configured but Fails**: Falls back to rule-based, logs error
+2. **AI Configured but Fails**: Falls back via tenacity retry, then rule-based
 3. **AI Not Configured**: Uses only rule-based suggestions
-4. **Dependencies Missing**: System works normally without AI features
 
 ## Security & Privacy
 
@@ -273,13 +327,9 @@ The system is designed to work without AI:
 - **API Keys**: Stored in `.env` (gitignored)
 - **Character Data**: Never sent to AI unless explicitly requested
 - **Story Content**: AI only processes what you explicitly ask
+- **Sidecar Auth**: Set SIDECAR_SECRET for header-based auth on all routes
 
 ## Cost Considerations
-
-### OpenAI Pricing (approximate)
-
-- **GPT-3.5-Turbo**: ~$0.002 per request
-- **GPT-4**: ~$0.03-0.06 per request
 
 ### Ollama (Local)
 
@@ -287,7 +337,7 @@ The system is designed to work without AI:
 - **Requires**: Decent GPU or CPU
 - **Models**: 7B-13B work on most systems
 
-### OpenRouter
+### OpenRouter Pricing
 
 - **Varies**: By model selected
 - **Llama models**: Often very cheap or free
@@ -309,27 +359,11 @@ MILVUS_EMBEDDING_MODEL=text-embedding-3-small
 ```
 
 `MILVUS_EMBEDDING_MODEL` must refer to a model your AI provider supports for
-embeddings calls (the `embed()` method on `AIClient`).
-
-### Verify the connection
-
-```bash
-python3 dnd_consultant.py --milvus-status
-```
-
-Expected output when healthy:
-
-```text
-[INFO] Milvus connected at localhost:19530
-[INFO]   dnd_characters: 42 entities
-[INFO]   dnd_npcs: 18 entities
-[INFO]   dnd_story_chunks: 310 entities
-[INFO]   dnd_wiki_pages: 0 entities
-```
+embeddings calls. `AIClient.embed()` accepts a list of strings for batch
+indexing — the full collection can be indexed in a fraction of the API calls
+compared to one-at-a-time.
 
 ### Build or rebuild the index
-
-From the project root:
 
 ```bash
 python3 dnd_consultant.py --reindex
@@ -341,20 +375,6 @@ Or via the DDEV convenience wrapper (from `drupal-cms/`):
 ddev milvus-reindex
 ```
 
-This reads every character JSON, NPC JSON, and story Markdown from
-`game_data/` and upserts embeddings into Milvus.
-
-### Inspect the data visually (Attu GUI)
-
-Attu is the official Milvus web UI. Run it with Docker:
-
-```bash
-docker run -p 8000:3000 -e MILVUS_URL=localhost:19530 zilliz/attu:latest
-```
-
-Then open `http://localhost:8000` in a browser. You can browse collections,
-run vector searches, and inspect individual records.
-
 ---
 
 ## Troubleshooting
@@ -365,7 +385,7 @@ pip install -r requirements.txt
 
 ### "AI completion failed: api_key"
 
-Check your `.env` file has `OPENAI_API_KEY` set correctly
+Check your `.env` file has `OPENAI_API_KEY` set correctly.
 
 ### "Connection failed"
 
@@ -379,25 +399,32 @@ Check your `.env` file has `OPENAI_API_KEY` set correctly
 - Add more detailed system prompts
 - Use character-specific configurations
 
-### Costs too high
-
-- Switch to Ollama for local, free inference
-- Use smaller OpenRouter models
-- Use GPT-3.5-Turbo instead of GPT-4
-
 ## API Reference
 
 ### AIClient
 
 ```python
 AIClient(
-    api_key=None,           # API key (default: env var)
+    api_key=None,           # API key (default: OPENAI_API_KEY env var)
     base_url=None,          # API endpoint (default: OpenAI)
-    model=None,             # Model name (default: gpt-3.5-turbo)
-    default_temperature=0.7, # Default temperature
-    default_max_tokens=1000  # Default max tokens
+    model=None,             # Model name (default: OPENAI_MODEL env var)
+    # The following are passed via **config kwargs:
+    default_temperature=0.7,     # Default temperature
+    default_max_tokens=1000,     # Default max tokens
+    timeout=30.0,                # Request timeout in seconds
+    max_retries=3,               # Tenacity retry attempts on transient errors
+    backoff_strategy="exponential",  # "exponential" or "fixed"
+    model_chain=[],              # Fallback models tried after primary
+    embedding_model="",          # Embedding model (OPENAI_EMBEDDING_MODEL env var)
 )
 ```
+
+Key methods:
+
+- **`chat_completion(messages, json_mode=False, **kwargs)`** - Blocking completion
+- **`chat_completion_stream(messages, **kwargs)`** - Generator of str chunks
+- **`embed(text)`** - Single str → List[float]; List[str] → List[List[float]]
+- **`create_system_message(prompt)`** / **`create_user_message(content)`**
 
 ### CharacterAIConfig
 
@@ -407,11 +434,29 @@ CharacterAIConfig(
     model=None,             # Character-specific model
     base_url=None,          # Character-specific endpoint
     api_key=None,           # Character-specific key
-    temperature=0.7,        # Character-specific temperature
-    max_tokens=1000,        # Character-specific max tokens
     system_prompt=None,     # Custom system prompt
-    custom_parameters={}    # Additional parameters
+    request_params=AIRequestParams(temperature=0.7, max_tokens=1000),
 )
+```
+
+Build a client from this config:
+
+```python
+from src.ai.ai_client import build_client_for_character
+
+client = build_client_for_character(char_config, default_client)
+```
+
+### Factory Functions
+
+```python
+from src.ai.ai_client import get_client_for_task, build_client_for_character
+
+# Task-routed client (uses model profiles from config)
+client = get_client_for_task("story_generation")
+
+# Character-specific client
+client = build_client_for_character(char_config, default_client)
 ```
 
 ### CharacterConsultant AI Methods
@@ -419,119 +464,52 @@ CharacterAIConfig(
 - **`suggest_reaction_ai(situation, context)`** - AI-enhanced character reaction
 - **`suggest_dc_for_action_ai(action, context)`** - AI-assisted DC suggestion
 - **`_get_ai_client()`** - Get appropriate AI client for character
-- **`_build_character_system_prompt()`** - Build character roleplay prompt
+- **`build_character_system_prompt()`** - Build character roleplay prompt
 
 ## RAG Integration: Spell and Ability Lookup
 
-The system includes Retrieval-Augmented Generation (RAG) integration for accurate D&D spell and ability descriptions from dnd5e.wikidot.com.
+The system includes Retrieval-Augmented Generation (RAG) integration for
+accurate D&D spell and ability descriptions.
 
 ### Shared Spell Lookup Helper
 
-Located in `src/utils/spell_lookup_helper.py`, this utility provides spell/ability lookup for both story and combat narratives:
+Located in `src/utils/spell_lookup_helper.py`, this utility provides
+spell/ability lookup for story and combat narratives:
 
 ```python
 from src.utils.spell_lookup_helper import lookup_spells_and_abilities
 
-# Look up spells/abilities mentioned in text
 prompt = "The wizard casts Fireball and the paladin uses Divine Smite"
 context = lookup_spells_and_abilities(prompt)
-
-# Returns formatted context with descriptions or empty string if none found
-# Example output:
-# "\n\nD&D Rules Context (for accurate portrayal):
-#  **Fireball**: 3rd-level evocation spell that creates an explosion...
-#  **Divine Smite**: Paladin ability allowing weapon attacks to be enhanced..."
+# Returns formatted rules context or empty string if RAG unavailable
 ```
 
-### Usage in Story Generation
-
-Story narratives (exploration, social, roleplay) automatically include RAG context:
-
-```python
-from src.stories.story_ai_generator import generate_story_from_prompt
-
-prompt = "A wizard casts magic missile at approaching skeletons"
-
-story_config = {
-    "party_characters": party_dict,
-    "campaign_context": "Dark cave dungeon",
-    "is_exploration": True,  # No combat, focus on roleplay
-}
-
-narrative = generate_story_from_prompt(ai_client, prompt, story_config)
-
-# RAG lookup happens automatically - spell descriptions included in AI context
-```
-
-### Usage in Combat Narration
-
-Combat narratives include spell lookup for tactical descriptions:
-
-```python
-from src.combat.combat_narrator import CombatNarrator
-
-narrator = CombatNarrator(consultants, ai_client)
-
-prompt = "Gandalf casts Thunderwave at the goblins. Aragorn attacks with his sword."
-narrative = narrator.narrate_combat_from_prompt(
-    combat_prompt=prompt,
-    style="cinematic"
-)
-
-# RAG context automatically enhances the narrative with spell descriptions
-```
-
-### Supported Spells and Abilities
-
-The lookup supports 18+ common D&D spells and abilities:
-
-- Vicious Mockery, Eldritch Blast
-- Fireball, Healing Word, Cure Wounds
-- Sacred Flame, Thunderwave, Magic Missile
-- Shield, Mage Armor, Wild Shape
-- Sneak Attack, Divine Smite, Lay on Hands
-- Bardic Inspiration, Rage, Action Surge
-- Second Wind
+Lookup is backed by `RAGSystem.get_rules_context_for_prompt()` — no hardcoded
+spell lists. Any spell or ability that appears in the configured rules wiki
+is supported.
 
 ### Graceful Fallback
 
 If RAG system is unavailable:
 
 - Stories and combat narratives still generate normally
-- No RAG context is added
-- System continues to function without errors
-- No changes to user experience
+- No RAG context is added, system continues without errors
 
 ### Configuration
 
-RAG uses `dnd5e.wikidot.com` as the knowledge source via `src/ai/rag_system.py`.
-
-To disable RAG (if desired):
-
-1. The system auto-detects RAG availability
-2. If import fails, RAG is gracefully disabled
-3. Stories/combat still work perfectly without RAG
+Point `RAG_RULES_BASE_URL` at any D&D 5e rules wiki (e.g., `https://5thsrd.org`).
 
 ## Best Practices
 
 1. **Start Small**: Test with one character first
 2. **Use Templates**: Create reusable system prompts
-3. **Monitor Costs**: Track API usage if using paid services
+3. **Monitor Costs**: Track API usage if using paid services; enable AI_CALL_LOG_PATH
 4. **Local First**: Use Ollama for development and testing
 5. **Fallback Always**: Don't rely solely on AI - rule-based works too
 6. **Character Voice**: Use system prompts to maintain consistent character voice
 7. **Privacy**: Use local models for sensitive campaign content
 
-## Future Enhancements
-
-Planned AI features:
-
-- **Story generation** - AI-assisted plot development
-- **NPC dialogue** - AI-powered NPC conversations
-- **World-building** - AI help with locations and lore
-- **Combat narration** - AI-enhanced combat descriptions
-- **Character development** - AI suggestions for character arcs
-
 ---
 
-For questions or issues, refer to the main [README.md](../README.md) or create an issue in the repository.
+For questions or issues, refer to the main [README.md](../README.md) or create
+an issue in the repository.

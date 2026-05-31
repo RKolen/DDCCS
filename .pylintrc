@@ -1,0 +1,4 @@
+[MASTER]
+# Ignore type stub files (stubs/ directory) — they are third-party type
+# annotations, not project code, and should not be linted.
+ignore-patterns = .*\.pyi$

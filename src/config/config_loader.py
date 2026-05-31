@@ -190,6 +190,9 @@ def _merge_config(base: DnDConfig, override: Dict[str, Any]) -> DnDConfig:
             port=sc.get("port", base.sidecar.port),
             timeout=sc.get("timeout", base.sidecar.timeout),
             min_confidence=sc.get("min_confidence", base.sidecar.min_confidence),
+            log_level=sc.get("log_level", base.sidecar.log_level),
+            secret=sc.get("secret", base.sidecar.secret),
+            reload=sc.get("reload", base.sidecar.reload),
         )
 
     return base
@@ -330,6 +333,7 @@ def _apply_env_milvus_overrides(
 def _apply_env_sidecar_overrides(
     config: DnDConfig,
     get_env: Any,
+    get_env_bool: Any,
     get_env_float: Any,
     get_env_int: Any,
 ) -> None:
@@ -338,6 +342,7 @@ def _apply_env_sidecar_overrides(
     Args:
         config: DnDConfig to update in-place.
         get_env: Callable to read a string env var.
+        get_env_bool: Callable to read a bool env var with default.
         get_env_float: Callable to read a float env var with default.
         get_env_int: Callable to read an int env var with default.
     """
@@ -350,6 +355,16 @@ def _apply_env_sidecar_overrides(
     config.sidecar.min_confidence = get_env_float(
         "SIDECAR_MIN_CONFIDENCE", config.sidecar.min_confidence
     )
+
+    log_level = get_env("SIDECAR_LOG_LEVEL")
+    if log_level:
+        config.sidecar.log_level = log_level.lower()
+
+    secret = get_env("SIDECAR_SECRET")
+    if secret:
+        config.sidecar.secret = secret
+
+    config.sidecar.reload = get_env_bool("SIDECAR_RELOAD", config.sidecar.reload)
 
 
 def _apply_env_overrides(config: DnDConfig, prefix: str = "") -> DnDConfig:
@@ -435,7 +450,7 @@ def _apply_env_overrides(config: DnDConfig, prefix: str = "") -> DnDConfig:
 
     _apply_env_milvus_overrides(config, get_env, get_env_bool, get_env_int, get_env_float)
     _apply_env_drupal_overrides(config, get_env)
-    _apply_env_sidecar_overrides(config, get_env, get_env_float, get_env_int)
+    _apply_env_sidecar_overrides(config, get_env, get_env_bool, get_env_float, get_env_int)
 
     return config
 

@@ -3,6 +3,7 @@
 # AI Integration
 openai>=1.0.0  # OpenAI SDK (works with Ollama, OpenRouter, and other compatible providers)
 python-dotenv>=1.0.0  # Environment variable management
+tenacity>=8.0.0  # Retry logic with exponential backoff for transient AI errors
 
 # Terminal UI & Formatting
 rich>=13.0.0  # Rich text and beautiful formatting for terminal output

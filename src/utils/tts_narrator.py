@@ -5,15 +5,17 @@ Provides offline voice narration for story files using pyttsx3.
 Supports Windows SAPI5, macOS NSSpeechSynthesizer, and Linux eSpeak.
 """
 
+import json
 import os
 import re
+import subprocess
 import sys
 import time
-import subprocess
-import json
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Optional, List, cast, Any
+from typing import Any, List, Optional, cast
+
+import pyttsx3
 
 # Import character and NPC utilities for voice loading
 from src.utils.character_profile_utils import list_character_names
@@ -27,13 +29,7 @@ from src.utils.audio_player import play_wav_bytes
 from src.utils.dialogue_detector import segment_story_for_tts
 from src.utils.dialogue_detector import get_speaker_voice_map
 
-try:
-    import pyttsx3
-
-    TTS_AVAILABLE = True
-except ImportError:
-    pyttsx3 = None
-    TTS_AVAILABLE = False
+TTS_AVAILABLE = True
 
 
 def _print_error(msg: str) -> None:

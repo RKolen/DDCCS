@@ -236,10 +236,13 @@ class DrupalConfig:
 class SidecarConfig:
     """Query-parser sidecar configuration."""
 
-    host: str = "localhost"
+    host: str = "0.0.0.0"
     port: int = 8765
     timeout: float = 5.0
     min_confidence: float = 0.6
+    log_level: str = "info"
+    secret: str = ""
+    reload: bool = False
 
 
 @dataclass

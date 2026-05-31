@@ -2,29 +2,65 @@
 
 ## Overview
 
-The D&D Character Consultant System now includes **RAG (Retrieval-Augmented Generation)** support, allowing AI to fetch and integrate accurate campaign setting lore from wiki sources when generating stories and handling character History checks.
+The D&D Character Consultant System includes RAG support, allowing AI to
+fetch and integrate accurate campaign-setting lore from wiki sources when
+generating stories and handling History checks.
+
+**Architecture:** Python = engine, Drupal = truth, Gatsby/React = looks.
+
+- Wiki pages are fetched by the Python engine and **cached in Drupal** as
+  `wiki_cache` nodes (JSON:API). No local SQLite or JSON files.
+- Taxonomy terms (locations, factions, creature types, lore tags) carry
+  `field_lore_context` (pre-written lore) and `field_source_url` (wiki URL for
+  auto-fetch). These are indexed by Milvus for semantic RAG injection.
 
 ## Features
 
-### 1. **Wiki Integration for Story Generation**
+### 1. Wiki Integration for Story Generation
 
 - AI automatically searches campaign wikis for relevant lore
 - Enriches narratives with accurate location descriptions, history, and context
 - Maintains consistency with official campaign settings
 
-### 2. **History Check Enhancement**
+### 2. History Check Enhancement
 
 - Characters who make successful History checks receive wiki-sourced information
 - Detail level scales with check result (10-14: basic, 15-19: detailed, 20+: comprehensive)
 - DMs can look up lore instantly
 
-### 3. **Smart Caching**
+### 3. Drupal-backed Wiki Cache
 
-- Wiki pages are cached locally in `.rag_cache/` directory (git-ignored)
-- Configurable TTL (time-to-live) prevents stale data
-- Reduces API calls and improves performance
+Wiki HTTP responses are cached as `wiki_cache` Drupal nodes via JSON:API.
+The cache degrades gracefully when Drupal is not reachable — the Python engine
+falls through to live HTTP fetches with no data loss.
 
-### 4. **Multiple Campaign Setting Support**
+Fields on `wiki_cache` nodes:
+
+| Field                   | Type      | Description                             |
+| ----------------------- | --------- | --------------------------------------- |
+| `title`                 | string    | MD5 hash of the URL (cache key)         |
+| `field_wiki_url`        | string    | Original source URL                     |
+| `field_wiki_fetched_at` | decimal   | Unix timestamp of last fetch            |
+| `field_wiki_content`    | text_long | Serialized JSON of parsed page sections |
+
+Cache TTL is enforced at read time via `field_wiki_fetched_at`. Expired entries
+are deleted and re-fetched on next access.
+
+### 4. Taxonomy Term Lore Fields
+
+Every taxonomy vocabulary used in RAG (locations, factions, creature_types,
+lore_tags) has two shared fields:
+
+| Field                 | Type      | Description                                |
+| --------------------- | --------- | ------------------------------------------ |
+| `field_lore_context`  | text_long | Pre-written lore injected into AI prompts  |
+| `field_source_url`    | string    | Wiki URL; triggers auto-fetch when set     |
+
+These fields are indexed by Milvus for semantic lore retrieval. The
+`field_lore_context` value is used directly when Milvus returns the term
+as a relevant result.
+
+### 5. Multiple Campaign Setting Support
 
 - **Critical Role (Exandria)**: `https://criticalrole.fandom.com/wiki`
 - **Forgotten Realms**: `https://forgottenrealms.fandom.com/wiki`
@@ -33,66 +69,73 @@ The D&D Character Consultant System now includes **RAG (Retrieval-Augmented Gene
 
 ## Requirements
 
-### Required Python Packages
+### Python Packages
 
 ```bash
-pip install requests beautifulsoup4
+pip install -r requirements.txt
 ```
 
-These packages enable web scraping and HTML parsing for wiki content.
+Required packages: `requests`, `beautifulsoup4` (web scraping and HTML parsing).
 
-### Optional but Recommended
+### Drupal CMS
 
-```bash
-pip install python-dotenv  # Already included in base requirements
-```
+Wiki cache requires the Drupal CMS component (`drupal-cms/`) running via DDEV.
+Configure `DRUPAL_BASE_URL`, `DRUPAL_USER`, and `DRUPAL_PASSWORD` in `.env`.
+
+When Drupal is not configured or not reachable, wiki pages are fetched live
+on every request (no caching — degrades gracefully).
 
 ## Configuration
 
 ### 1. Enable RAG in `.env`
-
-Copy from `.env.example` and configure:
 
 ```properties
 # Enable RAG system
 RAG_ENABLED=true
 
 # Wiki base URL for your campaign setting (lore: locations, NPCs, history)
-# Critical Role (Exandria)
 RAG_WIKI_BASE_URL=https://criticalrole.fandom.com/wiki
 
-# Rules wiki URL (game mechanics: items, spells, abilities)
-RAG_RULES_BASE_URL=https://dnd5e.wikidot.com
+# Rules wiki URL (game mechanics: spells, abilities, items)
+RAG_RULES_BASE_URL=https://5thsrd.org
 
-# Cache settings
-RAG_CACHE_TTL=604800  # 7 days in seconds
-RAG_MAX_CACHE_SIZE=100  # Maximum cached pages
-RAG_CACHE_BACKEND=sqlite  # json or sqlite
-RAG_VECTOR_DB_PATH=.rag_cache/rag_cache.sqlite3
+# Cache TTL in seconds (default: 7 days). Enforced in Drupal wiki_cache nodes.
+RAG_CACHE_TTL=604800
 
 # Search settings
-RAG_SEARCH_DEPTH=3  # How many wiki links to follow
-RAG_MIN_RELEVANCE=0.5  # Minimum relevance score (0.0-1.0)
+RAG_SEARCH_DEPTH=3       # How many wiki links to follow (1-5)
+RAG_MIN_RELEVANCE=0.5    # Minimum relevance score (0.0-1.0)
 ```
 
-### 2. Choose Your Campaign Setting
+### 2. Configure Drupal Wiki Cache
+
+```properties
+DRUPAL_BASE_URL=https://drupal-cms.ddev.site
+DRUPAL_USER=admin
+DRUPAL_PASSWORD=your-password
+```
+
+The `wiki_cache` content type and all required fields are shipped with the
+Drupal config in `drupal-cms/config/sync/`. Import with:
+
+```bash
+ddev drush config:import -y
+```
+
+### 3. Choose Your Campaign Setting
 
 The system uses **two separate wikis**:
 
 - **RAG_WIKI_BASE_URL**: Campaign lore (locations, NPCs, history)
-- **RAG_RULES_BASE_URL**: Game mechanics (items, spells, abilities, rules)
-
-#### Wiki
+- **RAG_RULES_BASE_URL**: Game mechanics (spells, abilities, rules)
 
 ```properties
 # Your custom lore wiki
 RAG_WIKI_BASE_URL=https://your-wiki.com/wiki
 
-# D&D 5e rules wiki (recommended)
-RAG_RULES_BASE_URL=https://dnd5e.wikidot.com
+# D&D 5e SRD rules wiki (recommended)
+RAG_RULES_BASE_URL=https://5thsrd.org
 ```
-
-> **Note:** The rules wiki is typically `https://dnd5e.wikidot.com` for all campaigns, as it contains official D&D 5e game mechanics. The lore wiki varies based on your campaign setting.
 
 ## Usage
 
@@ -104,11 +147,9 @@ RAG works automatically when generating stories:
 from src.dm.dungeon_master import DMConsultant
 from src.ai.ai_client import AIClient
 
-# Initialize DM with AI
 ai_client = AIClient()
 dm = DMConsultant(workspace_path=".", ai_client=ai_client)
 
-# Generate narrative - RAG automatically searches for locations
 narrative = dm.generate_narrative_content(
     story_prompt="The party arrives in Whitestone, seeking the de Rolo family.",
     characters_present=["Theron", "Mira", "Garrick"],
@@ -119,7 +160,7 @@ narrative = dm.generate_narrative_content(
 **What happens behind the scenes:**
 
 1. RAG extracts location names ("Whitestone", "de Rolo")
-2. Fetches wiki pages for these locations
+2. Fetches wiki pages (from Drupal cache, or live if cache miss)
 3. Includes relevant lore context in AI prompt
 4. AI generates narrative using accurate campaign lore
 
@@ -128,45 +169,21 @@ narrative = dm.generate_narrative_content(
 ```python
 from src.dm.history_check_helper import handle_history_check
 
-# Character makes a History check about Tal'Dorei
 result = handle_history_check(
     topic="Tal'Dorei",
-    check_result=18,  # d20 roll + Intelligence modifier
+    check_result=18,
     character_name="Elara"
 )
 
 if result['success']:
-    print(f"[COMPLETE] {result['information']}")
-    print(f"Source: {result['source']}")  # 'wiki' or 'fallback'
-else:
-    print(f" Check failed (needed DC {result['dc']})")
+    print(result['information'])
 ```
 
-**Output Example:**
-
-[COMPLETE] Elara recalls:
-
-=== LORE CONTEXT: Tal'Dorei ===
-
-Introduction:
-Tal'Dorei is a continent on the world of Exandria. It is home to the city
-of Emon, capital of the Tal'Dorei Republic, and is the primary setting of
-the first campaign of Critical Role...
-
-Geography:
-The continent is bordered by the Ozmit Sea to the west and the Lucidian
-Ocean to the east...
-
-=== END LORE CONTEXT ===
-
-Source: wiki
-
-### Direct Lore Lookup (for DMs)
+### Direct Lore Lookup
 
 ```python
 from src.dm.history_check_helper import search_lore
 
-# Search for information about Whitestone
 lore = search_lore("Whitestone", pages_to_search=["Whitestone", "Tal'Dorei"])
 print(lore)
 ```
@@ -179,102 +196,146 @@ python dnd_consultant.py
 
 1. Choose **"2. DM Consultation"**
 2. Select **"Generate Story Narrative"**
-3. Enter your prompt mentioning locations
-4. RAG automatically enriches the narrative
-
-For History checks:
-
-1. Choose **"1. Character Consultation"**
-2. Select a character
-3. When prompted, mention making a History check
-4. System will fetch relevant lore
+3. Enter your prompt mentioning locations — RAG enriches the narrative
 
 ## File Structure
 
-```
-D&D Campaign Workspace/
-|-- .env                          # RAG configuration
-|-- .rag_cache/                   # Wiki content cache (git-ignored)
-|   |-- index.json               # Cache index
-|   |-- abc123def456.json        # Cached page 1
-|   `-- 789ghi012jkl.json        # Cached page 2
+```text
+project/
+|-- .env                          # RAG + Drupal configuration
 |-- src/
 |   |-- ai/
-|   |   `-- rag_system.py        # Core RAG functionality
+|   |   `-- rag_system.py         # RAGSystem, WikiClient, DrupalWikiCache
+|   |-- integration/
+|   |   `-- drupal_sync.py        # DrupalSync: get/set/delete wiki_cache nodes
 |   `-- dm/
-|       |-- dungeon_master.py    # Story generation with RAG
-|       `-- history_check_helper.py  # History check integration
+|       |-- dungeon_master.py     # Story generation with RAG
+|       `-- history_check_helper.py
+|-- drupal-cms/config/sync/
+|   |-- node.type.wiki_cache.yml  # wiki_cache content type
+|   |-- field.storage.node.field_wiki_url.yml
+|   |-- field.storage.node.field_wiki_fetched_at.yml
+|   |-- field.storage.node.field_wiki_content.yml
+|   |-- field.storage.taxonomy_term.field_lore_context.yml
+|   `-- field.storage.taxonomy_term.field_source_url.yml
 `-- dnd_consultant.py             # CLI entry point
+```
+
+## Cache Management
+
+Wiki cache is stored in Drupal. Manage it via:
+
+### Inspect cache stats via DrupalSync
+
+```python
+from src.config.config_loader import load_config
+from src.integration.drupal_sync import DrupalSync
+
+config = load_config()
+sync = DrupalSync(config.drupal)
+count = sync.count_wiki_page_cache()
+print(f"Cached pages: {count}")
+```
+
+### Delete a single cached page
+
+```python
+import hashlib
+
+url = "https://criticalrole.fandom.com/wiki/Whitestone"
+url_hash = hashlib.md5(url.encode()).hexdigest()
+sync.delete_wiki_page_cache(url_hash)
+```
+
+### Force refresh a specific page
+
+Deleting the cache node for a URL causes the next fetch to hit the live wiki
+and re-cache the result. Alternatively, use `WikiClient.fetch_page()` with
+`force_refresh=True` when available via the RAG system singleton:
+
+```python
+from src.ai.rag_system import get_rag_system
+
+rag = get_rag_system()
+page = rag.wiki_client.fetch_page("Whitestone", force_refresh=True)
+```
+
+## Milvus Semantic Search
+
+When Milvus is enabled, taxonomy term `field_lore_context` values are indexed
+and injected into prompts via semantic similarity. This replaces keyword-only
+matching for RAG context selection.
+
+Taxonomy terms with `field_source_url` set will have their wiki content
+fetched, parsed, and indexed automatically during the reindex run.
+
+### Enable Milvus
+
+```env
+MILVUS_ENABLED=true
+MILVUS_HOST=localhost
+MILVUS_PORT=19530
+MILVUS_EMBEDDING_MODEL=text-embedding-3-small
+MILVUS_EMBEDDING_DIM=1536
+```
+
+### Build or rebuild the index
+
+```bash
+python3 dnd_consultant.py --reindex
+```
+
+Or via DDEV:
+
+```bash
+ddev milvus-reindex
 ```
 
 ## Advanced Configuration
 
-### Cache Management
-
-View cache statistics:
-
-```python
-from src.ai.rag_system import WikiCache
-
-cache = WikiCache()
-stats = cache.get_stats()
-print(f"Cached pages: {stats['entries']}")
-print(f"Cache size: {stats['size_mb']:.2f} MB")
-```
-
-Clear expired cache entries:
-
-```python
-cache.clear_expired()
-```
-
-Force refresh a specific page:
-
-```python
-from src.ai.rag_system import WikiClient
-
-client = WikiClient("https://criticalrole.fandom.com/wiki")
-page_data = client.fetch_page("Whitestone", force_refresh=True)
-```
-
 ### Custom Search Relevance
 
-Adjust relevance scoring in `rag_system.py`:
+Adjust relevance scoring weights in `src/ai/rag_system.py`:
 
 ```python
 # In WikiClient.search_sections()
-# Modify scoring weights:
 if query_lower in title:
-    score += 2.0  # Title match weight (default: 2.0)
+    score += 2.0   # Title match weight
 
 title_matches = len(query_words & title_words)
-score += title_matches * 0.5  # Title word weight (default: 0.5)
+score += title_matches * 0.5  # Title word weight
 
 content_matches = len(query_words & content_words)
-score += content_matches * 0.1  # Content word weight (default: 0.1)
+score += content_matches * 0.1  # Content word weight
 ```
 
-### Error Handling
+These magic numbers are candidates for extraction to module-level constants
+(deferred from the Step 1 review).
 
-RAG fails gracefully:
+### Taxonomy Term Lore
 
-- If `requests` or `beautifulsoup4` not installed → Warning message, continues without RAG
-- If wiki unreachable → Uses cached data or continues without lore
-- If page not found → Generates narrative without specific lore context
+Pre-written lore on taxonomy terms is the fastest path to accurate RAG context
+without live wiki fetches. In Drupal, edit a location, faction, or creature
+type term and fill in `field_lore_context`. That text is indexed by Milvus
+and injected into prompts when the term is relevant.
 
 ## Troubleshooting
 
-### "RAG System: requests or beautifulsoup4 not installed"
+### RAG enabled but no lore appearing
 
-**Solution:**
+Check:
 
-```bash
-pip install requests beautifulsoup4
-```
+1. `RAG_ENABLED=true` in `.env`
+2. `RAG_WIKI_BASE_URL` is set and reachable
+3. Drupal is running and credentials are correct (`DRUPAL_BASE_URL` etc.)
 
-### "RAG enabled but RAG_WIKI_BASE_URL not set in .env"
+### Cache not updating
 
-**Solution:**
+The cache TTL is set per entry. To force a refresh, delete the `wiki_cache`
+node in Drupal admin (`/admin/content`) for the URL you want refreshed.
+
+### "RAG enabled but RAG_WIKI_BASE_URL not set"
+
 Add to `.env`:
 
 ```properties
@@ -284,279 +345,44 @@ RAG_WIKI_BASE_URL=https://criticalrole.fandom.com/wiki
 
 ### Wiki pages not being found
 
-**Common issues:**
-
-1. **Page name spelling** - Wiki page titles are case-sensitive
-   - [COMPLETE] Correct: `Tal'Dorei`
-   - Wrong: `taldorei` or `Tal Dorei`
-
-2. **URL encoding** - Spaces become underscores
-   - Search for: "Tal'Dorei Council"
-   - Actual page: `Tal'Dorei_Council`
-
-3. **Network issues** - Check internet connection
-
-   ```python
-   import requests
-   response = requests.get("https://criticalrole.fandom.com/wiki/Exandria")
-   print(response.status_code)  # Should be 200
-   ```
-
-### Cache not working
-
-**Check cache directory:**
-
-```bash
-# Windows
-dir .rag_cache
-
-# Linux/Mac
-ls -la .rag_cache
-```
-
-**Verify .gitignore:**
-
-```bash
-# .rag_cache/ should be in .gitignore
-grep rag_cache .gitignore
-```
+1. **Page name spelling** — Wiki page titles are case-sensitive
+2. **URL encoding** — Spaces become underscores in wiki URLs
+3. **Network issues** — Check internet connectivity
 
 ### Slow performance
 
-**Solutions:**
-
-1. **Reduce search depth** in `.env`:
-
-   ```properties
-   RAG_SEARCH_DEPTH=2  # Lower is faster
-   ```
-
-2. **Increase cache TTL** (cache pages longer):
-
-   ```properties
-   RAG_CACHE_TTL=1209600  # 14 days
-   ```
-
-3. **Pre-cache important pages:**
-
-   ```python
-   from rag_system import WikiClient
-   
-   client = WikiClient("https://criticalrole.fandom.com/wiki")
-   important_pages = ["Tal'Dorei", "Emon", "Whitestone", "Vasselheim"]
-   
-   for page in important_pages:
-       print(f"Caching {page}...")
-       client.fetch_page(page)
-   ```
+- Increase `RAG_CACHE_TTL` to cache pages longer
+- Pre-write lore in `field_lore_context` on taxonomy terms (avoids live fetches)
+- Enable Milvus for semantic pre-selection (avoids scoring all fetched pages)
+- Reduce `RAG_SEARCH_DEPTH` to limit pages fetched per request
 
 ## Performance Considerations
 
-### Caching Strategy
-
-- **First fetch**: ~2-5 seconds (network request)
-- **Cached fetch**: <0.1 seconds (local read)
-- **Cache size**: ~10-50 KB per page
-
-### Rate Limiting
-
-Be respectful to wiki servers:
-
-- Don't fetch more than 5 pages per story generation
-- Use cache (default 7-day TTL)
-- Consider pre-caching frequently used pages
-
-### Memory Usage
-
-- Cache stored on disk (not in memory)
-- Each cached page: ~10-50 KB
-- 100 pages ≈ 1-5 MB total
+- **Cache hit** (Drupal): Negligible — JSON:API read from local DB
+- **Cache miss** (live fetch): 2-5 seconds per page
+- **Milvus lookup**: ~50ms per query for semantic context selection
+- **Batch embedding**: `AIClient.embed(list_of_texts)` indexes a full
+  collection in one API call instead of N calls
 
 ## Best Practices
 
-### 1. Pre-Cache Campaign Locations
-
-Before your session:
-
-```python
-from src.ai.rag_system import WikiClient
-
-client = WikiClient("https://criticalrole.fandom.com/wiki")
-
-# Cache all locations your party will visit
-session_locations = [
-    "Emon",
-    "Greyskull Keep",
-    "Kraghammer",
-    "Vasselheim"
-]
-
-for location in session_locations:
-    client.fetch_page(location)
-
-print("[COMPLETE] Session locations cached!")
-```
-
-### 2. Use Descriptive Location Names
-
-In story prompts, use full proper names:
-
-- [COMPLETE] "The party travels to Whitestone in Tal'Dorei"
-- "The party goes to the city"
-
-### 3. Verify Wiki Coverage
-
-Not all settings have comprehensive wikis. Check coverage before enabling:
-
-```python
-from src.ai.rag_system import WikiClient
-
-client = WikiClient("https://your-wiki.com/wiki")
-test_page = client.fetch_page("Main_Location")
-
-if test_page:
-    print(f"[COMPLETE] Wiki has {len(test_page['sections'])} sections")
-else:
-    print(" Wiki may not have good coverage")
-```
-
-### 4. Combine with Custom Lore
-
-For homebrew campaigns:
-
-1. Create a wiki (free options: Fandom.com, MediaWiki, Notion)
-2. Document key locations, NPCs, history
-3. Point RAG to your wiki
-4. Benefit from consistent lore across all AI generations
+1. **Pre-fill `field_lore_context`** on taxonomy terms — fastest, most reliable
+2. **Use `field_source_url`** for auto-fetch when pre-writing is impractical
+3. **Pre-cache session locations** before play with `--reindex`
+4. **Use full proper names** in story prompts ("Whitestone in Tal'Dorei")
+5. **Homebrew wikis** — Create a Fandom/MediaWiki, set `RAG_WIKI_BASE_URL`
 
 ## Privacy & Git
 
 ### What's Git-Ignored
 
-The `.gitignore` includes:
+- `.rag_cache/` (legacy local cache directory, no longer used)
+- `*.rag.json` and `rag_*.db`
 
-## Ignore RAG cache directory (wiki content)
-
-.rag_cache/
-*.rag.json
-rag_*.db
-
-### What's in Version Control
-
-Only configuration (not content):
-
-- `.env.example` (template)
-- `rag_system.py` (code)
-- `history_check_helper.py` (code)
-
-### Sharing Campaigns
-
-To share campaigns with RAG:
-
-1. Share `.env` settings (wiki URL)
-2. **Don't** share `.rag_cache/` directory
-3. Each user downloads their own wiki content
-
-## Examples
-
-### Example 1: Exandria Campaign
-
-```properties
-# .env
-RAG_ENABLED=true
-RAG_WIKI_BASE_URL=https://criticalrole.fandom.com/wiki
-RAG_CACHE_TTL=604800
-```
-
-```python
-# Generate story in Whitestone
-from src.dm.dungeon_master import DMConsultant
-from src.ai.ai_client import AIClient
-
-dm = DMConsultant(".", AIClient())
-narrative = dm.generate_narrative_content(
-    "The party investigates rumors of undead in Whitestone's Parchwood Timberlands",
-    characters_present=["Vex'ahlia", "Vax'ildan", "Pike"],
-    style="cinematic"
-)
-```
-
-Result: AI generates narrative with accurate Whitestone history, the de Rolo family, and local geography.
-
-### Example 2: Forgotten Realms Campaign
-
-```properties
-# .env
-RAG_ENABLED=true
-RAG_WIKI_BASE_URL=https://forgottenrealms.fandom.com/wiki
-```
-
-```python
-# History check about Waterdeep
-from src.dm.history_check_helper import handle_history_check
-
-result = handle_history_check("Waterdeep", check_result=22, character_name="Elara")
-# Returns comprehensive lore about the City of Splendors
-```
-
-### Example 3: Homebrew Campaign
-
-1. Create wiki at `https://your-campaign.fandom.com`
-2. Configure:
-
-   ```properties
-   RAG_ENABLED=true
-   RAG_WIKI_BASE_URL=https://your-campaign.fandom.com/wiki
-   ```
-
-3. Document your world's locations, history, factions
-4. AI automatically uses your lore!
-
-## Technical Details
-
-### How RAG Works
-
-1. **Extraction**: System extracts proper nouns (capitalized phrases) from prompts
-2. **Fetching**: Queries wiki for matching pages
-3. **Parsing**: Extracts page title, sections, content using BeautifulSoup
-4. **Caching**: Stores parsed content locally with timestamp
-5. **Relevance**: Scores sections based on keyword matches
-6. **Injection**: Adds relevant context to AI prompt
-7. **Generation**: AI uses lore to generate accurate narrative
-
-### Supported Wiki Types
-
-- **Fandom.com wikis** (primary target)
-- **MediaWiki sites** (partial support)
-- **Custom wikis** (if HTML structure is similar)
-
-### API Compatibility
-
-RAG system is compatible with:
-
-- OpenAI GPT models (gpt-3.5-turbo, gpt-4, etc.)
-- Ollama local models (llama3.1:8b, qwen2.5:14b, etc.)
-- OpenRouter models
-- Any OpenAI-compatible API
-
-## Future Enhancements
-
-Potential improvements:
-
-- [ ] Semantic search using embeddings
-- [ ] Multi-wiki search (search multiple settings at once)
-- [ ] Image extraction from wiki pages
-- [ ] Automatic relationship mapping
-- [ ] Timeline extraction
-- [ ] NPC database integration
-
-## References
-
-- [Critical Role Wiki](https://criticalrole.fandom.com/wiki/Exandria)
-- [Forgotten Realms Wiki](https://forgottenrealms.fandom.com/wiki/Main_Page)
-- [BeautifulSoup Documentation](https://www.crummy.com/software/BeautifulSoup/bs4/doc/)
-- [Requests Documentation](https://docs.python-requests.org/)
+Wiki cache content now lives in Drupal — it is not committed to the Python
+repository.
 
 ---
 
-**Questions or issues?** Create an issue on GitHub or check the troubleshooting section above.
+**Questions or issues?** Check the troubleshooting section above or file an
+issue in the repository.
