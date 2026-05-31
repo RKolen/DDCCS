@@ -58,6 +58,7 @@ interface ScreenRouterProps {
    ──────────────────────────────────────────────────────────── */
 
 import { CharacterListScreen }          from './screens/CharacterListScreen';
+import { CharacterEditScreen }          from './screens/CharacterEditScreen';
 import { CharacterDetailScreen }        from './screens/CharacterDetailScreen';
 import { CurrentPartyScreen }           from './screens/CurrentPartyScreen';
 import { ReadStoryFileScreen }          from './screens/ReadStoryFileScreen';
@@ -90,7 +91,8 @@ export function ScreenRouter({ section, item, ctx, setCtx }: ScreenRouterProps):
   };
 
   /* ───── Characters ───── */
-  if (key === 'characters/list')         return <CharacterListScreen ctx={ictx} setCtx={set} />;
+  if (key === 'characters/list')         return <CharacterListScreen  ctx={ictx} setCtx={set} />;
+  if (key === 'characters/edit')         return <CharacterEditScreen  ctx={ictx} setCtx={set} />;
   if (key === 'characters/view')         return <CharacterDetailScreen ctx={ictx} setCtx={set} />;
   if (key === 'characters/consult')      return <ConsultScreen ctx={ictx} setCtx={set} />;
   if (key === 'characters/completeness') return <NpcValidatorScreen ctx={{ ...ictx, pcMode: true }} setCtx={set} />;
