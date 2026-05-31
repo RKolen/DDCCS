@@ -36,6 +36,66 @@
   --color-gold-muted:  #8a6d3e;
   --color-gold-border: #c9a96e54;
 
+  /* Gold alpha steps (5% increments) — snap nearby values to nearest step */
+  --gold-a05: #c9a96e0d;   /* 5%  */
+  --gold-a10: #c9a96e1a;   /* 10% */
+  --gold-a15: #c9a96e26;   /* 15% */
+  --gold-a20: #c9a96e33;   /* 20% */
+  --gold-a25: #c9a96e40;   /* 25% */
+  --gold-a30: #c9a96e4d;   /* 30% */
+
+  /* Gold bright alpha */
+  --gold-bright-a05: #f0c0600d;   /* 5%  */
+  --gold-bright-a10: #f0c0601a;   /* 10% */
+  --gold-bright-a50: #f0c06080;   /* 50% */
+
+  /* AI accent (#d8b46e) alpha steps */
+  --ai-accent-a10: #d8b46e1a;   /* 10% */
+  --ai-accent-a30: #d8b46e4d;   /* 30% */
+  --ai-accent-a40: #d8b46e66;   /* 40% */
+  --ai-accent-a45: #d8b46e73;   /* 45% */
+  --ai-accent-a50: #d8b46e80;   /* 50% */
+  --ai-accent-a60: #d8b46e99;   /* 60% */
+
+  /* Warning (#e8a030) alpha steps */
+  --warning-a10: #e8a0301a;   /* 10% */
+  --warning-a50: #e8a03080;   /* 50% */
+
+  /* Success (#4caf6e) alpha steps */
+  --success-a05: #4caf6e0d;   /* 5%  */
+  --success-a10: #4caf6e1a;   /* 10% */
+  --success-a40: #4caf6e66;   /* 40% */
+  --success-a50: #4caf6e80;   /* 50% */
+
+  /* Info (#5b9bd5) alpha steps */
+  --info-a40: #5b9bd566;   /* 40% */
+  --info-a50: #5b9bd580;   /* 50% */
+
+  /* Danger additional alpha steps */
+  --danger-a50: #c0392b80;   /* 50% */
+
+  /* Cream / highlight */
+  --cream-a40: #ffe6aa66;   /* 40% */
+
+  /* Parchment shadow additional */
+  --parchment-a50:      #6b4a1f80;   /* 50% */
+  --parchment-grain-a10: #8c5a281a;  /* grain texture at 10% */
+
+  /* Black overlays (5% increments) */
+  --overlay-20: #00000033;   /* 20% */
+  --overlay-25: #00000040;   /* 25% */
+  --overlay-40: #00000066;   /* 40% */
+  --overlay-50: #00000080;   /* 50% */
+  --overlay-60: #00000099;   /* 60% */
+
+  /* Parchment overlays */
+  --parchment-a35: #6b4a1f59;       /* 35% */
+  --parchment-dark-a30: #3c1e0a4d;  /* 30% */
+  --parchment-dark-a35: #3c1e0a59;  /* 35% */
+
+  /* Danger alpha */
+  --danger-a40: #c0392b66;   /* 40% */
+
   /* ── Text ────────────────────────────────────────────────── */
   --color-text-primary:   #e8d5b0;
   --color-text-secondary: #b09070;
@@ -46,9 +106,15 @@
   --color-success: #5a9e6f;
   --color-warning: #e8a030;
   --color-partial: #c9a96e;
-  --color-danger:  #c0392b;
-  --color-info:    #5b9bd5;
-  --color-neutral: #7a6a58;
+  --color-danger:        #c0392b;
+  --color-danger-mid:    #b04a3a;  /* danger button gradient top  */
+  --color-danger-deep:   #832d23;  /* danger button gradient base */
+  --color-danger-border: #6b1f17;  /* danger button border        */
+  --color-danger-text:   #d68a7e;  /* muted danger for text on dark bg */
+  --color-on-danger:     #fff7e8;  /* text colour on a danger surface  */
+  --color-info:          #5b9bd5;
+  --color-info-text:     #92bce0;  /* muted info for text on dark bg   */
+  --color-neutral:       #7a6a58;
 
   /* ── Rarity (D&D 5e) ─────────────────────────────────────── */
   --color-rarity-common:    #b0b0b0;
@@ -123,10 +189,10 @@
   --radius-pill: 9999px;
 
   /* ── Shadows ─────────────────────────────────────────────── */
-  --shadow-sm:        0 1px 3px #00000080;
-  --shadow-md:        0 4px 12px #00000099;
+  --shadow-sm:        0 1px 3px var(--overlay-50);
+  --shadow-md:        0 4px 12px var(--overlay-60);
   --shadow-lg:        0 8px 24px #000000b3;
-  --shadow-glow-gold: 0 0 8px #c9a96e4d;
+  --shadow-glow-gold: 0 0 8px var(--gold-a30);
 
   /* ── Transitions ─────────────────────────────────────────── */
   --transition-fast:   120ms ease;

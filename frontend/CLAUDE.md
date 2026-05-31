@@ -179,6 +179,40 @@ export const query = graphql`
 
 ---
 
+## Colour Rules (enforced, non-negotiable)
+
+**Only `#RRGGBB` or `#RRGGBBAA` hex literals are permitted.** `rgba()`,
+`rgb()`, `hsl()`, and `hsla()` are banned everywhere — `.css`, `.module.css`,
+and inline styles in `.tsx`.
+
+**Always prefer a `var(--token)` from `tokens.css` over a bare hex literal.**
+Bare hex is only acceptable when no token exists *and* the value is truly
+one-off (e.g. a specific parchment grain colour in a single gradient). In that
+case add a comment explaining why no token was used.
+
+**Canonical token file:** `frontend/src/styles/tokens.css`
+
+| Need | Token to use |
+| ---- | ------------ |
+| Transparent gold border | `var(--color-gold-border)` = `#c9a96e54` |
+| Success green | `var(--color-success)` = `#5a9e6f` |
+| Warning amber | `var(--color-warning)` = `#e8a030` |
+| Partial / mid | `var(--color-partial)` = `#c9a96e` |
+| Danger red | `var(--color-danger)` = `#c0392b` |
+| Danger gradient top | `var(--color-danger-mid)` = `#b04a3a` |
+| Danger gradient base | `var(--color-danger-deep)` = `#832d23` |
+| Danger border | `var(--color-danger-border)` = `#6b1f17` |
+| Text on danger bg | `var(--color-on-danger)` = `#fff7e8` |
+| Muted danger text | `var(--color-danger-text)` = `#d68a7e` |
+| Info blue | `var(--color-info)` = `#5b9bd5` |
+| Muted info text | `var(--color-info-text)` = `#92bce0` |
+
+**Converting alpha:** multiply the alpha fraction by 255, round to nearest
+integer, format as two-digit hex and append. Examples:
+`0.12 × 255 = 31 = 0x1f` → `#c9a96e1f`; `0.5 × 255 = 128 = 0x80` → `#00000080`.
+
+---
+
 ## Commands
 
 ```bash

@@ -59,6 +59,8 @@ interface ScreenRouterProps {
 
 import { CharacterListScreen }          from './screens/CharacterListScreen';
 import { CharacterEditScreen }          from './screens/CharacterEditScreen';
+import { CharacterArcScreen }           from './screens/CharacterArcScreen';
+import { CharacterDevelopmentScreen }   from './screens/CharacterDevelopmentScreen';
 import { CharacterDetailScreen }        from './screens/CharacterDetailScreen';
 import { CurrentPartyScreen }           from './screens/CurrentPartyScreen';
 import { ReadStoryFileScreen }          from './screens/ReadStoryFileScreen';
@@ -98,6 +100,12 @@ export function ScreenRouter({ section, item, ctx, setCtx }: ScreenRouterProps):
   if (key === 'characters/completeness') return <NpcValidatorScreen ctx={{ ...ictx, pcMode: true }} setCtx={set} />;
   if (key === 'characters/ascii')        return <DeprecatedScreen item={item} />;
 
+  /* Arc hub + all four sub-actions — CharacterArcScreen dispatches internally via ctx.arcSubAction */
+  if (section.id === 'characters' && (item.id === 'arc' || item.id.startsWith('arc-'))) {
+    const arcSubAction = item.id === 'arc' ? undefined : item.id;
+    return <CharacterArcScreen ctx={{ ...ictx, arcSubAction }} setCtx={set} />;
+  }
+
   /* ───── Stories ───── */
   if (key === 'stories/work-series') {
     const actionId = ictx.workSeriesAction as string | undefined;
@@ -114,7 +122,7 @@ export function ScreenRouter({ section, item, ctx, setCtx }: ScreenRouterProps):
   if (key === 'read/r-story')   return <ReadStoryFileScreen ctx={ictx} setCtx={set} />;
   if (key === 'read/r-char')    return <CharacterDetailScreen ctx={ictx} setCtx={set} />;
   if (key === 'read/r-session') return <ReadStoryFileScreen ctx={ictx} setCtx={set} />;
-  if (key === 'read/r-dev')     return <PlaceholderScreen section={section} item={item} />;
+  if (key === 'read/r-dev')     return <CharacterDevelopmentScreen ctx={ictx} setCtx={set} />;
 
   /* ───── NPCs (character nodes with field_character_type=false) ───── */
   if (key === 'npcs/n-list')     return <CharacterListScreen ctx={{ ...ictx, npcMode: true }} setCtx={set} />;

@@ -9,6 +9,12 @@ import type { ScreenProps } from '../ScreenRouter';
 import { useConsoleData, playerCharacters } from '../ConsoleContext';
 import { Icon, AiTag } from '../atoms';
 
+function charLabel(c: ReturnType<typeof playerCharacters>[number]): string {
+  if (c.sourceCharacter === true)  return `${c.title} · Source`;
+  if (c.campaign != null)          return `${c.title} · ${c.campaign}`;
+  return c.title;
+}
+
 export function ConsultScreen({ ctx, setCtx }: ScreenProps): React.ReactElement {
   const data = useConsoleData();
   const pcs  = playerCharacters(data);
@@ -44,10 +50,11 @@ export function ConsultScreen({ ctx, setCtx }: ScreenProps): React.ReactElement 
         {pcs.length > 1 && (
           <div className="screen-head-actions">
             <select
+              className="console-select"
               value={idx}
               onChange={e => setCtx({ ...ctx, charIdx: Number(e.target.value) })}
             >
-              {pcs.map((c, i) => <option key={c.id} value={i}>{c.title}</option>)}
+              {pcs.map((c, i) => <option key={c.id} value={i}>{charLabel(c)}</option>)}
             </select>
           </div>
         )}
@@ -57,7 +64,7 @@ export function ConsultScreen({ ctx, setCtx }: ScreenProps): React.ReactElement 
         <div className="consult-pane">
           <div className="consult-thread">
             <div className="consult-bubble role-char">
-              <span className="bubble-tag">{char.title} <AiTag /></span>
+              <span className="bubble-tag">{charLabel(char)} <AiTag /></span>
               <p style={{ fontStyle: 'italic', color: 'var(--ink-dim)' }}>
                 Connect the Python AI backend to enable live character consultations.
               </p>

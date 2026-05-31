@@ -11,9 +11,9 @@
   height: 1px;
 }
 
-.lineLeft  { background: linear-gradient(to right, transparent, rgba(201, 169, 110, 0.25)); }
-.lineRight { background: linear-gradient(to left, transparent, rgba(201, 169, 110, 0.25)); }
-.lineFull  { background: linear-gradient(to right, transparent, rgba(201, 169, 110, 0.25), transparent); }
+.lineLeft  { background: linear-gradient(to right, transparent, var(--gold-a25)); }
+.lineRight { background: linear-gradient(to left, transparent, var(--gold-a25)); }
+.lineFull  { background: linear-gradient(to right, transparent, var(--gold-a25), transparent); }
 
 .iconEl {
   flex-shrink: 0;

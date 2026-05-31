@@ -22,7 +22,7 @@
   justify-content: space-between;
   padding: 0 16px;
   background: #2a1e0f;
-  border-bottom: 1px solid rgba(201, 169, 110, 0.33);
+  border-bottom: 1px solid var(--color-gold-border);
   gap: 16px;
 }
 
@@ -61,7 +61,7 @@
 }
 
 .topSep {
-  color: rgba(201, 169, 110, 0.5);
+  color: #c9a96e80;
   flex-shrink: 0;
 }
 
@@ -157,10 +157,10 @@
   -webkit-backface-visibility: hidden;
   overflow: hidden;
   background:
-    radial-gradient(ellipse at top left,    rgba(107,74,31,0.35), transparent 40%),
-    radial-gradient(ellipse at top right,   rgba(107,74,31,0.35), transparent 40%),
-    radial-gradient(ellipse at bottom left, rgba(107,74,31,0.35), transparent 40%),
-    radial-gradient(ellipse at bottom right,rgba(107,74,31,0.35), transparent 40%),
+    radial-gradient(ellipse at top left,    var(--parchment-a35), transparent 40%),
+    radial-gradient(ellipse at top right,   var(--parchment-a35), transparent 40%),
+    radial-gradient(ellipse at bottom left, var(--parchment-a35), transparent 40%),
+    radial-gradient(ellipse at bottom right,var(--parchment-a35), transparent 40%),
     linear-gradient(170deg, #efdcb0 0%, #e2c98c 70%, #b89758 100%);
   color: #2a1e0f !important;
 }
@@ -193,18 +193,18 @@
 
 /* Forward flip: front = old right page (shadow on left = spine edge) */
 .pageFlipperForward .flipFaceFront::after {
-  background: linear-gradient(to right, rgba(60,30,10,0.35), transparent 30%);
+  background: linear-gradient(to right, var(--parchment-dark-a35), transparent 30%);
 }
 /* Forward flip: back = new left page (shadow on right = spine edge) */
 .pageFlipperForward .flipFaceBack::after {
-  background: linear-gradient(to left, rgba(60,30,10,0.35), transparent 30%);
+  background: linear-gradient(to left, var(--parchment-dark-a35), transparent 30%);
 }
 /* Backward flip: shadows mirror */
 .pageFlipperBack .flipFaceFront::after {
-  background: linear-gradient(to left, rgba(60,30,10,0.35), transparent 30%);
+  background: linear-gradient(to left, var(--parchment-dark-a35), transparent 30%);
 }
 .pageFlipperBack .flipFaceBack::after {
-  background: linear-gradient(to right, rgba(60,30,10,0.35), transparent 30%);
+  background: linear-gradient(to right, var(--parchment-dark-a35), transparent 30%);
 }
 
 /* ── Individual page ──────────────────────────────────────────── */
@@ -213,10 +213,10 @@
   overflow: hidden;
   position: relative;
   background:
-    radial-gradient(ellipse at top left, rgba(107, 74, 31, 0.35), transparent 40%),
-    radial-gradient(ellipse at top right, rgba(107, 74, 31, 0.35), transparent 40%),
-    radial-gradient(ellipse at bottom left, rgba(107, 74, 31, 0.35), transparent 40%),
-    radial-gradient(ellipse at bottom right, rgba(107, 74, 31, 0.35), transparent 40%),
+    radial-gradient(ellipse at top left, var(--parchment-a35), transparent 40%),
+    radial-gradient(ellipse at top right, var(--parchment-a35), transparent 40%),
+    radial-gradient(ellipse at bottom left, var(--parchment-a35), transparent 40%),
+    radial-gradient(ellipse at bottom right, var(--parchment-a35), transparent 40%),
     linear-gradient(170deg, #efdcb0 0%, #e2c98c 70%, #b89758 100%);
   /* Override body's --color-text-primary (light) — parchment needs dark ink */
   color: #2a1e0f !important;
@@ -273,12 +273,12 @@
 
 /* Left page: shadow on right edge (spine side) */
 .pageLeft {
-  box-shadow: inset -12px 0 24px rgba(60, 30, 10, 0.3);
+  box-shadow: inset -12px 0 24px var(--parchment-dark-a30);
 }
 
 /* Right page: shadow on left edge (spine side) */
 .pageRight {
-  box-shadow: inset 12px 0 24px rgba(60, 30, 10, 0.3);
+  box-shadow: inset 12px 0 24px var(--parchment-dark-a30);
 }
 
 /* ── Spine ────────────────────────────────────────────────────── */
@@ -287,13 +287,13 @@
   flex-shrink: 0;
   background: linear-gradient(
     to right,
-    rgba(107, 74, 31, 0.6),
-    rgba(60, 30, 10, 0.8),
-    rgba(107, 74, 31, 0.6)
+    var(--parchment-a35),
+    #3c1e0acc,
+    var(--parchment-a35)
   );
   box-shadow:
-    -4px 0 12px rgba(0, 0, 0, 0.4),
-    4px 0 12px rgba(0, 0, 0, 0.4);
+    -4px 0 12px var(--overlay-40),
+    4px 0 12px var(--overlay-40);
 }
 
 /* ── Session chip ─────────────────────────────────────────────── */
@@ -302,11 +302,11 @@
   margin: 0 auto 14px;
   font-family: var(--font-mono);
   font-size: 11px;
-  background: rgba(107, 74, 31, 0.15);
-  border: 1px solid rgba(107, 74, 31, 0.35);
+  background: #6b4a1f26;
+  border: 1px solid var(--parchment-a35);
   padding: 2px 10px;
   border-radius: 3px;
-  color: rgba(42, 30, 15, 0.7);
+  color: #2a1e0fb3;
   text-align: center;
 }
 
@@ -327,7 +327,7 @@
   font-family: var(--font-mono);
   font-size: 13px;
   font-style: italic;
-  color: rgba(42, 30, 15, 0.6);
+  color: #2a1e0f99;
   margin: 0;
   text-align: center;
   width: 100%;
@@ -339,7 +339,7 @@
   background: linear-gradient(
     to right,
     transparent,
-    rgba(107, 74, 31, 0.5),
+    var(--parchment-a50),
     transparent
   );
   margin: 20px 0;
@@ -431,7 +431,7 @@
 }
 
 .body blockquote {
-  border-left: 3px solid rgba(107, 74, 31, 0.5);
+  border-left: 3px solid var(--parchment-a50);
   margin: 1em 0;
   padding: 0.5em 1em;
   font-style: italic;
@@ -447,7 +447,7 @@
 
 .body th,
 .body td {
-  border: 1px solid rgba(107, 74, 31, 0.35);
+  border: 1px solid var(--parchment-a35);
   padding: 6px 10px;
   text-align: left;
   color: #2a1e0f !important;
@@ -456,7 +456,7 @@
 .body th {
   font-family: var(--font-display);
   font-weight: 700;
-  background: rgba(107, 74, 31, 0.1);
+  background: #6b4a1f1a;
 }
 
 /* Clear floats after sections */
@@ -479,7 +479,7 @@
 .noBody {
   font-family: var(--font-body);
   font-style: italic;
-  color: rgba(42, 30, 15, 0.45);
+  color: #2a1e0f73;
   text-align: center;
   margin-top: 48px;
 }
@@ -499,14 +499,14 @@
 
 .endOrnamentLarge {
   font-size: 36px;
-  color: rgba(42, 30, 15, 0.35);
+  color: #2a1e0f59;
 }
 
 .endChronicleText {
   font-family: var(--font-display);
   font-size: 20px;
   font-style: italic;
-  color: rgba(42, 30, 15, 0.4);
+  color: #2a1e0f66;
   margin: 0;
   text-align: center;
 }
@@ -520,7 +520,7 @@
   justify-content: space-between;
   padding: 0 20px;
   background: #2a1e0f;
-  border-top: 1px solid rgba(201, 169, 110, 0.33);
+  border-top: 1px solid var(--color-gold-border);
   gap: 16px;
 }
 
@@ -570,7 +570,7 @@
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: rgba(201, 169, 110, 0.25);
+  background: var(--gold-a25);
   transition: background 200ms ease, transform 200ms ease;
 }
 

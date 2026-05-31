@@ -60,7 +60,7 @@
 
 .filterSearch:focus {
   border-color: var(--color-gold-mid);
-  box-shadow: 0 0 0 2px rgba(201, 169, 110, 0.15);
+  box-shadow: 0 0 0 2px var(--gold-a15);
 }
 
 .filterSearch::placeholder {
@@ -185,7 +185,7 @@
   letter-spacing: var(--tracking-widest);
   text-transform: uppercase;
   color: var(--color-info);
-  border: 1px solid rgba(91, 155, 213, 0.35);
+  border: 1px solid #5b9bd559;
   border-radius: var(--radius-pill);
   padding: 1px 6px;
 }

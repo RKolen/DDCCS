@@ -93,7 +93,7 @@ export function AddCharacterModal({
                     gap:             12,
                     width:           '100%',
                     padding:         '8px 10px',
-                    background:      isChecked ? 'rgba(201,169,110,.12)' : 'transparent',
+                    background:      isChecked ? '#c9a96e1f' : 'transparent',
                     border:          `1px solid ${isChecked ? 'var(--brass-dim)' : 'transparent'}`,
                     borderRadius:    4,
                     cursor:          'pointer',

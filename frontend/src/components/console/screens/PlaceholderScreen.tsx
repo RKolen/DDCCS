@@ -47,7 +47,7 @@ export function PlaceholderScreen({ section, item }: PlaceholderScreenProps): Re
         style={{
           marginTop: 24, padding: 24, borderRadius: 8,
           background: 'var(--canvas-raised, #3a2918)',
-          border: '1px dashed var(--rule, rgba(201,169,110,0.33))',
+          border: '1px dashed var(--rule)',
           textAlign: 'center',
         }}
       >

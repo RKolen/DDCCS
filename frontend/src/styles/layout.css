@@ -33,7 +33,7 @@
   padding: 0 20px;
   border-bottom: 1px solid var(--rule-strong);
   background: linear-gradient(180deg, var(--desk-wood-light), var(--desk-wood));
-  box-shadow: 0 2px 12px rgba(0, 0, 0, .4);
+  box-shadow: 0 2px 12px var(--overlay-40);
   position: sticky;
   top: 0;
   z-index: 20;
@@ -59,7 +59,7 @@
   font-weight: 700;
   font-size: 13px;
   letter-spacing: .04em;
-  box-shadow: inset 0 1px 0 rgba(255, 230, 170, .4), 0 2px 4px rgba(0, 0, 0, .4);
+  box-shadow: inset 0 1px 0 var(--cream-a40), 0 2px 4px var(--overlay-40);
   text-decoration: none;
   flex-shrink: 0;
 }
@@ -87,13 +87,13 @@
 }
 
 .topbar-nav-link:hover {
-  background: rgba(201, 169, 110, .08);
+  background: var(--gold-a10);
   color: var(--ink);
 }
 
 .topbar-nav-link--active {
   color: var(--brass-bright);
-  background: rgba(201, 169, 110, .12);
+  background: var(--gold-a10);
 }
 
 /* ── Centre: campaign chip ── */
@@ -116,7 +116,7 @@
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  background: rgba(201, 169, 110, .06);
+  background: var(--gold-a05);
   border: 1px solid var(--rule-strong);
   border-radius: 4px;
   padding: 6px 14px;
@@ -127,7 +127,7 @@
 
 .topbar-chip-btn:hover {
   border-color: var(--brass-dim);
-  background: rgba(201, 169, 110, .1);
+  background: var(--gold-a10);
 }
 
 .chip-dot {
@@ -182,7 +182,7 @@
   position: fixed;
   inset: 0;
   z-index: 200;
-  background: rgba(10, 7, 3, .72);
+  background: #0a0703b8;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -192,7 +192,7 @@
   background: var(--color-bg-surface);
   border: var(--border-mid);
   border-radius: var(--radius-lg);
-  box-shadow: 0 12px 48px rgba(0, 0, 0, .6);
+  box-shadow: 0 12px 48px var(--overlay-60);
   padding: 28px 32px 24px;
   width: 400px;
   max-width: calc(100vw - 40px);

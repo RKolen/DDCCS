@@ -54,7 +54,7 @@
 .filterBtnActive {
   background: var(--color-bg-overlay);
   color: var(--color-gold-bright);
-  border-color: rgba(240, 192, 96, 0.5);
+  border-color: var(--gold-bright-a50);
 }
 
 .list {

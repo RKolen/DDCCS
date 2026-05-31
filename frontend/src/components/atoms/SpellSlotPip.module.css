@@ -14,10 +14,10 @@
 .filled {
   background: var(--color-gold-mid);
   border-color: var(--color-gold-mid);
-  box-shadow: 0 0 4px rgba(201, 169, 110, 0.45);
+  box-shadow: 0 0 4px #c9a96e73;
 }
 
 .expended {
-  background: rgba(201, 169, 110, 0.12);
-  border-color: rgba(201, 169, 110, 0.2);
+  background: var(--gold-a10);
+  border-color: var(--gold-a20);
 }

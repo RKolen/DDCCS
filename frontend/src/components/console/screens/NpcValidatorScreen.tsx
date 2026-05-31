@@ -287,7 +287,7 @@ function EditPanel({ char, onSaved }: { char: DrupalCharacter; onSaved: () => vo
   return (
     <div style={{
       marginTop: 16, padding: '16px 18px', borderRadius: 6,
-      background: 'rgba(0,0,0,.2)', border: '1px solid var(--rule)',
+      background: '#00000033', border: '1px solid var(--rule)',
     }}>
       <div style={{
         fontFamily: 'var(--font-display)', fontSize: 10, fontWeight: 700,
@@ -663,13 +663,9 @@ export function NpcValidatorScreen({ ctx }: ScreenProps): React.ReactElement {
 
         <select
           aria-label="Completeness filter"
+          className="console-select"
           value={statusFilter}
           onChange={e => setStatusFilter(e.target.value as StatusFilter)}
-          style={{
-            fontFamily: 'var(--font-display)', fontSize: 10, letterSpacing: '0.08em',
-            background: 'var(--canvas-raised)', color: 'var(--ink-dim)',
-            border: '1px solid var(--rule)', borderRadius: 4, padding: '6px 10px', cursor: 'pointer',
-          }}
         >
           <option value="all">All profiles</option>
           <option value="thin">Thin only</option>

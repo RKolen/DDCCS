@@ -47,7 +47,7 @@
 .varGhost {
   background: transparent;
   color: var(--color-text-secondary);
-  border: 1px solid rgba(201, 169, 110, 0.15);
+  border: 1px solid var(--gold-a15);
 }
 .varGhost:hover:not(:disabled) {
   background: var(--color-bg-surface);
@@ -65,7 +65,7 @@
 .btn:disabled {
   background: var(--color-bg-surface);
   color: var(--color-text-disabled);
-  border: 1px solid rgba(201, 169, 110, 0.1);
+  border: 1px solid var(--gold-a10);
   cursor: not-allowed;
 }
 
