@@ -55,6 +55,14 @@ interface MonsterPageData {
       monsterLairActions:     { processed: string } | null;
       specializedAbilities:   Array<{ processed: string }> | null;
       relationships:          RelationshipParagraph[] | null;
+      abilityScores: {
+        strength:     { score: number } | null;
+        dexterity:    { score: number } | null;
+        constitution: { score: number } | null;
+        intelligence: { score: number } | null;
+        wisdom:       { score: number } | null;
+        charisma:     { score: number } | null;
+      } | null;
       type:                   { name: string } | null;
       faction:                { name: string } | null;
       path:                   string | null;
@@ -94,6 +102,49 @@ function RichPanel({ title, html, accent }: { title: string; html: string; accen
     >
       <h2 className={styles.panelTitle}>{title}</h2>
       <div className={styles.richText} dangerouslySetInnerHTML={{ __html: html }} />
+    </section>
+  );
+}
+
+function mod(score: number): string {
+  const m = Math.floor((score - 10) / 2);
+  return m >= 0 ? `+${m}` : `${m}`;
+}
+
+function AbilityScoreGrid({ scores }: {
+  scores: NonNullable<NonNullable<MonsterPageData['drupal']>['node']>['abilityScores'];
+}): React.ReactElement | null {
+  if (!scores) return null;
+  const entries: Array<{ key: string; score: number }> = [
+    { key: 'STR', score: scores.strength?.score ?? 10 },
+    { key: 'DEX', score: scores.dexterity?.score ?? 10 },
+    { key: 'CON', score: scores.constitution?.score ?? 10 },
+    { key: 'INT', score: scores.intelligence?.score ?? 10 },
+    { key: 'WIS', score: scores.wisdom?.score ?? 10 },
+    { key: 'CHA', score: scores.charisma?.score ?? 10 },
+  ];
+
+  return (
+    <section className={styles.panel}>
+      <h2 className={styles.panelTitle}>Ability Scores</h2>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 8 }}>
+        {entries.map(({ key, score }) => (
+          <div key={key} style={{
+            background: 'var(--color-bg-overlay)', border: '1px solid var(--color-gold-border)',
+            borderRadius: 6, padding: '8px 4px', textAlign: 'center',
+          }}>
+            <div style={{ fontFamily: 'var(--font-display)', fontSize: 9, color: 'var(--color-gold-muted)', letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: 4 }}>
+              {key}
+            </div>
+            <div style={{ fontFamily: 'var(--font-mono)', fontSize: 18, fontWeight: 700, color: 'var(--color-text-primary)', lineHeight: 1 }}>
+              {score}
+            </div>
+            <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--color-gold-mid)', marginTop: 2 }}>
+              {mod(score)}
+            </div>
+          </div>
+        ))}
+      </div>
     </section>
   );
 }
@@ -272,8 +323,9 @@ const MonsterPage: React.FC<MonsterPageProps> = ({ data, location }) => {
             )}
           </div>
 
-          {/* Right — defenses + special abilities + boss mechanics */}
+          {/* Right — ability scores + defenses + special abilities + boss mechanics */}
           <div className={styles.rightCol}>
+            <AbilityScoreGrid scores={m.abilityScores} />
             <DefensesPanel m={m} />
 
             {/* Special Abilities */}
@@ -325,6 +377,16 @@ export const query = graphql`
           monsterLegendaryActions { processed }
           monsterLairActions      { processed }
           specializedAbilities    { processed }
+          abilityScores {
+            ... on Drupal_ParagraphAbilityScore {
+              strength     { ... on Drupal_AbilityScoreItem { score } }
+              dexterity    { ... on Drupal_AbilityScoreItem { score } }
+              constitution { ... on Drupal_AbilityScoreItem { score } }
+              intelligence { ... on Drupal_AbilityScoreItem { score } }
+              wisdom       { ... on Drupal_AbilityScoreItem { score } }
+              charisma     { ... on Drupal_AbilityScoreItem { score } }
+            }
+          }
           relationships {
             ... on Drupal_ParagraphRelationship {
               relationshipDescription

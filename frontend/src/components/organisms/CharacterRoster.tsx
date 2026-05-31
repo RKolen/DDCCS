@@ -11,6 +11,7 @@ import React, { useState, useMemo } from 'react';
 import { Link } from 'gatsby';
 import { Divider } from '../atoms/Divider';
 import { Portrait } from '../atoms/Portrait';
+import { useTopbar } from '../layout/TopbarContext';
 import * as styles from '../../pages/characters.module.css';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -32,31 +33,26 @@ export interface RosterCharacter {
   image:            { mediaImage: { url: string; alt: string } | null } | null;
 }
 
-interface StoryNode {
-  campaign: {
-    id:           string;
-    name:         string;
-    currentParty: { id: string }[] | null;
-  } | null;
+interface CampaignTerm {
+  id:           string;
+  name:         string;
+  currentParty: { id: string }[] | null;
 }
 
 export interface RosterData {
   drupal: {
     nodeCharacters: { nodes: RosterCharacter[] };
-    nodeStories:    { nodes: StoryNode[] };
+    termCampaigns:  { nodes: CampaignTerm[] };
   } | null;
 }
 
 // ── Party IDs ─────────────────────────────────────────────────────────────────
 
-function buildPartyIds(stories: StoryNode[]): Set<string> {
-  const ids  = new Set<string>();
-  const seen = new Set<string>();
-  for (const s of stories) {
-    if (!s.campaign) continue;
-    if (seen.has(s.campaign.id)) continue;
-    seen.add(s.campaign.id);
-    for (const m of s.campaign.currentParty ?? []) ids.add(m.id);
+function buildPartyIds(campaigns: CampaignTerm[], activeCampaignName: string | null): Set<string> {
+  const ids = new Set<string>();
+  for (const c of campaigns) {
+    if (activeCampaignName != null && c.name !== activeCampaignName) continue;
+    for (const m of c.currentParty ?? []) ids.add(m.id);
   }
   return ids;
 }
@@ -198,6 +194,7 @@ interface CharacterRosterProps {
 }
 
 export function CharacterRoster({ data, isNpc }: CharacterRosterProps): React.ReactElement {
+  const { activeCampaignName } = useTopbar();
   const [search,    setSearch]    = useState('');
   const [partyOnly, setPartyOnly] = useState(false);
   const [canonOnly, setCanonOnly] = useState(false);
@@ -210,8 +207,8 @@ export function CharacterRoster({ data, isNpc }: CharacterRosterProps): React.Re
   );
 
   const partyIds = useMemo(
-    () => buildPartyIds(data?.drupal?.nodeStories.nodes ?? []),
-    [data],
+    () => buildPartyIds(data?.drupal?.termCampaigns.nodes ?? [], activeCampaignName),
+    [data, activeCampaignName],
   );
 
   const filtered = useMemo(() => {

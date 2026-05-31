@@ -23,14 +23,11 @@ export const query = graphql`
           image { ... on Drupal_MediaImage { mediaImage { url alt } } }
         }
       }
-      nodeStories(first: 100) {
+      termCampaigns(first: 50) {
         nodes {
-          campaign {
-            ... on Drupal_TermCampaign {
-              id name
-              currentParty { ... on Drupal_NodeCharacter { id } }
-            }
-          }
+          id
+          name
+          currentParty { ... on Drupal_NodeCharacter { id } }
         }
       }
     }
