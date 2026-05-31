@@ -61,6 +61,12 @@ interface CharacterNode {
   ideals:              TextValue[] | null;
   flaws:               TextValue[] | null;
   specializedAbilities: TextValue[] | null;
+  relationships: Array<{
+    relationshipDescription: string | null;
+    relationshipType:        string | null;
+    relationshipStrength:    number | null;
+    relatedCharacter:        { title: string; path: string | null } | null;
+  }> | null;
   abilityScores: AbilityScoresParagraph | null;
   backstory:     BackstoryParagraph[] | null;
   image: { mediaImage: { url: string; alt: string } | null } | null;
@@ -304,6 +310,45 @@ const CharacterPage: React.FC<PageProps<CharacterData>> = ({ data, location }) =
 
             {/* Backstory — parchment scroll */}
             {backstoryText && <BackstoryScroll html={cleanHtml(backstoryText)} />}
+
+            {/* Relationships */}
+            {char.relationships != null && char.relationships.length > 0 && (
+              <section className={styles.panel}>
+                <h2 className={styles.panelTitle}>Relationships</h2>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  {char.relationships.map((rel, i) => (
+                    <div key={i} style={{
+                      padding: '10px 14px', borderRadius: 8,
+                      background: 'var(--color-bg-overlay)', border: '1px solid var(--color-gold-border)',
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: 4 }}>
+                        {rel.relatedCharacter != null ? (
+                          <a
+                            href={rel.relatedCharacter.path ?? '#'}
+                            style={{ fontFamily: 'var(--font-display)', fontSize: 13, fontWeight: 700, color: 'var(--color-gold-bright)', textDecoration: 'none', letterSpacing: '0.04em' }}
+                          >
+                            {rel.relatedCharacter.title}
+                          </a>
+                        ) : null}
+                        {rel.relationshipType != null && (
+                          <span style={{
+                            fontFamily: 'var(--font-display)', fontSize: 8, fontWeight: 700,
+                            letterSpacing: '0.12em', textTransform: 'uppercase', padding: '2px 7px',
+                            borderRadius: 3, border: '1px solid var(--color-gold-border)',
+                            color: 'var(--color-gold-mid)',
+                          }}>{rel.relationshipType}</span>
+                        )}
+                      </div>
+                      {rel.relationshipDescription != null && (
+                        <p style={{ fontFamily: 'var(--font-body)', fontStyle: 'italic', fontSize: 13, color: 'var(--color-text-secondary)', margin: 0, lineHeight: 1.5 }}>
+                          {rel.relationshipDescription}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
           </div>
 
           {/* ── Right column — game abilities + items ── */}
@@ -476,6 +521,16 @@ export const query = graphql`
           ideals { value }
           flaws  { value }
           specializedAbilities { value }
+          relationships {
+            ... on Drupal_ParagraphRelationship {
+              relationshipDescription
+              relationshipType
+              relationshipStrength
+              relatedCharacter {
+                ... on Drupal_NodeCharacter { title path }
+              }
+            }
+          }
           abilityScores {
             ... on Drupal_ParagraphAbilityScore {
               strength     { ... on Drupal_AbilityScoreItem { score } }

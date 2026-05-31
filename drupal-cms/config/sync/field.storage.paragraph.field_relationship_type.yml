@@ -21,6 +21,9 @@ settings:
       value: friend
       label: Friend
     -
+      value: familiar
+      label: Familiar
+    -
       value: family
       label: Family
     -

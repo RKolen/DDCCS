@@ -6,9 +6,7 @@ interface BaseTemplateProps {
   children: React.ReactNode;
 }
 
-export function BaseTemplate({
-  children,
-}: BaseTemplateProps): React.ReactElement {
+export function BaseTemplate({ children }: BaseTemplateProps): React.ReactElement {
   return (
     <main style={{ flex: 1, overflowY: 'auto', background: 'var(--color-bg-base)' }}>
       {children}

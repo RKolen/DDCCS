@@ -9,7 +9,7 @@ dependencies:
 id: spell
 label: Spell
 type: 'canonical_entities:node'
-pattern: '/[node:content-type]/[current-page:title]'
+pattern: '/[node:content-type]/[node:title]'
 selection_criteria:
   b3d8f5d7-a986-446d-b5c6-7d5ccb192a7b:
     id: 'entity_bundle:node'

@@ -9,7 +9,7 @@ dependencies:
 id: session
 label: Session
 type: 'canonical_entities:node'
-pattern: '/[node:content-type]/[current-page:title]'
+pattern: '/[node:content-type]/[node:title]'
 selection_criteria:
   a5b17a5b-dc2b-4c28-91d6-6f906485d705:
     id: 'entity_bundle:node'

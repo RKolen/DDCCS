@@ -9,7 +9,7 @@ dependencies:
 id: ability
 label: Ability
 type: 'canonical_entities:node'
-pattern: '/[node:content-type]/[current-page:title]'
+pattern: '/[node:content-type]/[node:title]'
 selection_criteria:
   df879270-6455-4363-b8bd-1a6871e822e3:
     id: 'entity_bundle:node'

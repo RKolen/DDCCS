@@ -18,6 +18,25 @@ Key features:
 
 ## Critical Rules (Non-Negotiable)
 
+### 0. Drupal is the source of truth for field names and GraphQL types
+
+Before assuming any Drupal field name, GraphQL type name, or schema shape,
+**check the actual Drupal config or schema first.** Never guess.
+
+- Field names: check `drupal-cms/config/sync/field.field.node.<bundle>.<field>.yml`
+- GraphQL type names: introspect the live schema at `http://drupal-cms.ddev.site/graphql`
+  using `{ __type(name: "NodeMonster") { fields { name type { name } } } }` or
+  `{ __schema { types { name } } }`
+- Vocabulary exposure: check `graphql_compose.settings.graphql_compose_server.yml`
+  under `taxonomy_term:` — a vocab must be listed with `enabled: true` before its
+  term type appears in `TermUnion`
+- After changing `graphql_compose.settings.graphql_compose_server.yml`, always run:
+  `ddev drush config:import -y && ddev drush cache:rebuild`
+- After Drupal schema changes, run `npm run clean` in `frontend/` so Gatsby pulls
+  the updated schema on the next `npm run develop`
+
+This applies to ALL content types and all taxonomy vocabularies.
+
 ### 1. NO Emojis - NEVER
 
 Never use emojis in `.py` or `.md` files. This causes Windows cp1252 codec

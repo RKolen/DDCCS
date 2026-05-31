@@ -24,12 +24,13 @@ import { useTopbar } from '../layout/TopbarContext';
 
 const SECTION_DEFAULTS: Record<MenuSection['id'], string> = {
   characters: 'list',
-  stories: 'work-series',
-  read: 'r-story',
-  npcs: 'n-list',
-  config: 'c-view',
-  model: 'm-switch',
-  tools: 't-recent',
+  stories:    'work-series',
+  read:       'r-story',
+  npcs:       'n-list',
+  monsters:   'm-list',
+  config:     'c-view',
+  model:      'm-switch',
+  tools:      't-recent',
 };
 
 interface StatelyLedgerProps {
@@ -99,7 +100,7 @@ export function StatelyLedger({
   /* Enrich ctx with active campaign so screens can filter by it */
   const enrichedCtx: ScreenContext = { ...ctx, activeCampaignName };
 
-  const consoleData: ConsoleData = liveData ?? { campaigns: [], characters: [], stories: [] };
+  const consoleData: ConsoleData = liveData ?? { campaigns: [], characters: [], stories: [], monsters: [] };
 
   return (
     <ConsoleContext.Provider value={consoleData}>

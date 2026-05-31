@@ -52,7 +52,7 @@ export interface MenuItem {
 }
 
 export interface MenuSection {
-  id: 'characters' | 'stories' | 'read' | 'npcs' | 'config' | 'model' | 'tools';
+  id: 'characters' | 'stories' | 'read' | 'npcs' | 'monsters' | 'config' | 'model' | 'tools';
   label: string;
   glyph: string;
   icon: IconName;
@@ -223,6 +223,18 @@ export const MENU_DATA: MenuData = {
         { id: 'n-list', label: 'List Major NPCs' },
         { id: 'n-view', label: 'View Major NPC Details' },
         { id: 'n-validate', label: 'Profile Completeness' },
+      ],
+    },
+    {
+      id: 'monsters',
+      label: 'Monsters',
+      glyph: 'M',
+      icon: 'npc',
+      blurb: 'Bestiary, stat blocks, encounter tools',
+      items: [
+        { id: 'm-list',      label: 'Bestiary' },
+        { id: 'm-view',      label: 'Monster Stat Block' },
+        { id: 'm-encounter', label: 'Encounter Spotlight' },
       ],
     },
     {

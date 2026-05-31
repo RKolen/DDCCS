@@ -106,6 +106,12 @@ entity_config:
     backgrounds:
       enabled: true
       query_load_enabled: true
+    creature_types:
+      enabled: true
+      query_load_enabled: true
+    factions:
+      enabled: true
+      query_load_enabled: true
   media:
     image:
       enabled: true
@@ -450,6 +456,18 @@ field_config:
         enabled: true
     wysiwyg:
       field_text:
+        enabled: true
+    relationship:
+      created:
+        enabled: true
+      field_relationship_description:
+        enabled: true
+      field_relationship_type:
+        enabled: true
+      field_related_character:
+        enabled: true
+        name_sdl: relatedCharacter
+      field_relationship_strength:
         enabled: true
   taxonomy_term:
     campaign:

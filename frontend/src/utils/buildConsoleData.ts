@@ -7,7 +7,7 @@
  */
 
 import type {
-  ConsoleData, DrupalCampaign, DrupalCharacter, DrupalStory,
+  ConsoleData, DrupalCampaign, DrupalCharacter, DrupalStory, DrupalMonster,
 } from '../components/console/ConsoleContext';
 
 export interface RawCampaignOnCharacter {
@@ -56,6 +56,30 @@ export interface RawCharacter {
   majorPlotActions?:  Array<{ value: string }> | null;
 }
 
+export interface RawMonster {
+  id:                       string;
+  title:                    string;
+  challengeRating?:         number | null;
+  type?:                    { name: string } | null;
+  faction?:                 { name: string } | null;
+  monsterSize?:             string | null;
+  monsterAlignment?:        string | null;
+  monsterSpeed?:            string | null;
+  monsterHitDice?:          string | null;
+  monsterXp?:               number | null;
+  monsterDamageResistances?: string | null;
+  monsterDamageImmunities?: string | null;
+  monsterSenses?:           string | null;
+  monsterLanguages?:        string | null;
+  monsterSkills?:           string | null;
+  maximumHitpoints?:        number | null;
+  armorClass?:              number | null;
+  movementSpeed?:           number | null;
+  path?:                    string | null;
+  campaign?:                RawCampaignOnCharacter | null;
+  image?:                   { mediaImage: { url: string; alt: string } | null } | null;
+}
+
 export interface RawStory {
   id:          string;
   title:       string;
@@ -70,11 +94,17 @@ export interface ConsoleQueryData {
     nodeCharacters: { nodes: RawCharacter[] };
     nodeStories:    { nodes: RawStory[] };
     termCampaigns:  { nodes: RawCampaignTerm[] };
+    nodeMonsters?:  { nodes: RawMonster[] } | null;
   } | null;
 }
 
+function splitCsv(s: string | null | undefined): string[] {
+  if (!s) return [];
+  return s.split(',').map(v => v.trim()).filter(Boolean);
+}
+
 export function buildConsoleData(data: ConsoleQueryData | null | undefined): ConsoleData {
-  if (!data?.drupal) return { campaigns: [], characters: [], stories: [] };
+  if (!data?.drupal) return { campaigns: [], characters: [], stories: [], monsters: [] };
 
   const characters: DrupalCharacter[] = data.drupal.nodeCharacters.nodes.map(n => ({
     id:               n.id,
@@ -142,9 +172,57 @@ export function buildConsoleData(data: ConsoleQueryData | null | undefined): Con
     });
   }
 
+  const monsters: DrupalMonster[] = (data.drupal.nodeMonsters?.nodes ?? []).map(n => ({
+    id:          n.id,
+    title:       n.title,
+    nickname:    null,
+    cr:          n.challengeRating ?? null,
+    monsterType: n.type?.name ?? null,
+    size:        n.monsterSize ?? null,
+    alignment:   n.monsterAlignment ?? null,
+    faction:     n.faction?.name ?? null,
+    profileType: null,
+    tagline:     null,
+    role:        null,
+    recurring:   null,
+    hp:          n.maximumHitpoints ?? null,
+    maxHp:       n.maximumHitpoints ?? null,
+    hitDice:     n.monsterHitDice ?? null,
+    ac:          n.armorClass ?? null,
+    acNote:      null,
+    speed:       n.monsterSpeed ?? null,
+    profBonus:   null,
+    scores:      null,
+    saves:       null,
+    skills:      n.monsterSkills ? Object.fromEntries(
+      n.monsterSkills.split(',').map(s => s.trim()).filter(Boolean).map(s => {
+        const parts = s.split(':');
+        return [parts[0]?.trim() ?? s, parts[1]?.trim() ?? ''];
+      }),
+    ) : null,
+    resistances:         splitCsv(n.monsterDamageResistances),
+    immunities:          splitCsv(n.monsterDamageImmunities),
+    conditionImmunities: [],
+    senses:              splitCsv(n.monsterSenses),
+    languages:           splitCsv(n.monsterLanguages),
+    traits:               [],
+    actions:              [],
+    legendaryActions:     null,
+    lairActions:          null,
+    regionalEffects:      null,
+    encounterTactics:     [],
+    plotHooks:            [],
+    defeatConditions:     [],
+    campaign:    n.campaign?.name ?? null,
+    campaignId:  n.campaign?.id ?? null,
+    path:        n.path ?? null,
+    imageUrl:    n.image?.mediaImage?.url ?? null,
+  }));
+
   return {
     campaigns: Array.from(campaignMap.values()),
     characters,
     stories,
+    monsters,
   };
 }

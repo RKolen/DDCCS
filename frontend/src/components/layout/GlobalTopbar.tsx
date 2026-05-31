@@ -35,6 +35,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Console',    path: '/',             icon: 'drawer'   },
   { label: 'Characters', path: '/characters/',  icon: 'char'     },
   { label: 'NPCs',       path: '/npcs/',        icon: 'npc'      },
+  { label: 'Monsters',   path: '/monsters/',    icon: 'npc'      },
   { label: 'Stories',    path: '/stories/',     icon: 'story'    },
   { label: 'Party',      path: '/party/',       icon: 'flag'     },
   { label: 'Search',     path: '/search/',      icon: 'search'   },

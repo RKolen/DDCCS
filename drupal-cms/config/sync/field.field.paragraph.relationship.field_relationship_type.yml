@@ -5,6 +5,8 @@ dependencies:
   config:
     - field.storage.paragraph.field_relationship_type
     - paragraphs.paragraphs_type.relationship
+  module:
+    - options
 id: paragraph.relationship.field_relationship_type
 field_name: field_relationship_type
 entity_type: paragraph

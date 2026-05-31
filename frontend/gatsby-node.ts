@@ -20,12 +20,21 @@ interface DrupalStoryNode {
   storyNumber: number | null;
 }
 
+interface DrupalMonsterNode {
+  id:   string;
+  path: string | null;
+}
+
 interface CharactersQueryData {
   drupal: { nodeCharacters: { nodes: DrupalNode[] } };
 }
 
 interface StoriesQueryData {
   drupal: { nodeStories: { nodes: DrupalStoryNode[] } };
+}
+
+interface MonstersQueryData {
+  drupal: { nodeMonsters: { nodes: DrupalMonsterNode[] } };
 }
 
 export const createPages: GatsbyNode['createPages'] = async ({ graphql, actions }) => {
@@ -38,12 +47,23 @@ export const createPages: GatsbyNode['createPages'] = async ({ graphql, actions 
 
   const characterTemplate = nodePath.resolve('./src/templates/character.tsx');
   const storyTemplate     = nodePath.resolve('./src/templates/story.tsx');
+  const monsterTemplate   = nodePath.resolve('./src/templates/monster.tsx');
 
   const characterQuery = await graphql<CharactersQueryData>(`
     {
       drupal {
         nodeCharacters(first: 100) {
           nodes { id path characterType }
+        }
+      }
+    }
+  `);
+
+  const monsterQuery = await graphql<MonstersQueryData>(`
+    {
+      drupal {
+        nodeMonsters(first: 100) {
+          nodes { id path }
         }
       }
     }
@@ -67,6 +87,11 @@ export const createPages: GatsbyNode['createPages'] = async ({ graphql, actions 
       ? node.path
       : isNpc ? `/npcs/${node.id}` : `/characters/${node.id}`;
     createPage({ path: pagePath, component: characterTemplate, context: { id: node.id } });
+  });
+
+  monsterQuery.data?.drupal.nodeMonsters.nodes.forEach(node => {
+    const pagePath = node.path ?? `/monsters/${node.id}`;
+    createPage({ path: pagePath, component: monsterTemplate, context: { id: node.id } });
   });
 
   // Sort stories by storyNumber so prev/next are in session order.

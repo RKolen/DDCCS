@@ -1,0 +1,257 @@
+/* ── Page shell ──────────────────────────────────────────────── */
+.page {
+  padding: var(--space-8) var(--space-10);
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+/* ── Hero ─────────────────────────────────────────────────────── */
+.hero {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: var(--space-6);
+  align-items: flex-start;
+  margin-bottom: var(--space-8);
+}
+
+.heroPortrait {
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.heroBody {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.heroTop {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.name {
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  font-weight: var(--font-bold);
+  color: var(--color-gold-bright);
+  margin: 0;
+  letter-spacing: var(--tracking-wide);
+  line-height: 1.1;
+}
+
+.pronouns {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--color-text-disabled);
+  letter-spacing: var(--tracking-wide);
+  margin: 0;
+}
+
+.heroBadges {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  align-items: center;
+  margin-top: var(--space-2);
+}
+
+.typeBadge {
+  font-family: var(--font-display);
+  font-size: var(--text-xs);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--color-gold-bright);
+  background: color-mix(in srgb, var(--color-gold-mid) 12%, transparent);
+  border: 1px solid var(--color-gold-border);
+  border-radius: var(--radius-sm);
+  padding: 3px 10px;
+}
+
+.factionBadge {
+  font-family: var(--font-display);
+  font-size: var(--text-xs);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--color-gold-mid);
+  background: var(--color-bg-overlay);
+  border: 1px solid var(--color-gold-border);
+  border-radius: var(--radius-sm);
+  padding: 3px 10px;
+}
+
+/* ── Vitals strip ────────────────────────────────────────────── */
+.vitalsStrip {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  margin-top: var(--space-3);
+}
+
+.vital {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: var(--color-bg-overlay);
+  border: 1px solid var(--color-gold-border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-3);
+  min-width: 56px;
+}
+
+.vitalHp { border-color: var(--color-success); background: color-mix(in srgb, var(--color-success) 6%, transparent); }
+.vitalAc { border-color: var(--color-info);    background: color-mix(in srgb, var(--color-info) 6%, transparent); }
+.vitalCr { border-color: var(--color-warning); background: color-mix(in srgb, var(--color-warning) 6%, transparent); }
+
+.vitalLabel {
+  font-family: var(--font-display);
+  font-size: 9px;
+  letter-spacing: var(--tracking-widest);
+  text-transform: uppercase;
+  color: var(--color-gold-muted);
+}
+
+.vitalVal {
+  font-family: var(--font-mono);
+  font-size: var(--text-md);
+  font-weight: var(--font-bold);
+  color: var(--color-text-primary);
+  line-height: 1.1;
+}
+
+/* ── Back link ───────────────────────────────────────────────── */
+.backLink {
+  font-family: var(--font-display);
+  font-size: var(--text-xs);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--color-gold-muted);
+  text-decoration: none;
+  white-space: nowrap;
+  align-self: center;
+  transition: color var(--transition-fast);
+}
+
+.backLink:hover { color: var(--color-gold-bright); }
+
+/* ── Divider ─────────────────────────────────────────────────── */
+.divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--color-gold-border), transparent);
+  margin-bottom: var(--space-8);
+}
+
+/* ── Main two-column grid ────────────────────────────────────── */
+.mainGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-6);
+}
+
+@media (max-width: 760px) {
+  .mainGrid { grid-template-columns: 1fr; }
+  .hero    { grid-template-columns: auto 1fr; }
+  .backLink { display: none; }
+}
+
+.leftCol, .rightCol {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+/* ── Panel ───────────────────────────────────────────────────── */
+.panel {
+  background: var(--color-bg-surface);
+  border: var(--border-thin);
+  border-radius: var(--radius-md);
+  padding: var(--space-5);
+}
+
+.panelTitle {
+  font-family: var(--font-display);
+  font-size: var(--text-xs);
+  letter-spacing: var(--tracking-widest);
+  text-transform: uppercase;
+  color: var(--color-gold-mid);
+  margin: 0 0 var(--space-3);
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--color-gold-border);
+}
+
+.panelLegendary { border-color: var(--color-gold-bright);  background: color-mix(in srgb, var(--color-gold-bright) 5%, var(--color-bg-surface)); }
+.panelLair      { border-color: var(--color-warning);      background: color-mix(in srgb, var(--color-warning) 5%, var(--color-bg-surface)); }
+
+/* ── Relationship card ───────────────────────────────────────── */
+.relCard {
+  background: var(--color-bg-overlay);
+  border: 1px solid var(--color-gold-border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-3);
+  margin-bottom: var(--space-2);
+}
+
+.relName {
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: var(--font-bold);
+  color: var(--color-gold-bright);
+  text-decoration: none;
+  letter-spacing: 0.04em;
+}
+
+.relName:hover { color: var(--color-gold-mid); }
+
+.relType {
+  font-family: var(--font-display);
+  font-size: 8px;
+  font-weight: var(--font-bold);
+  letter-spacing: var(--tracking-widest);
+  text-transform: uppercase;
+  color: var(--color-gold-mid);
+  border: 1px solid var(--color-gold-border);
+  border-radius: var(--radius-pill);
+  padding: 2px 7px;
+  margin-left: var(--space-2);
+}
+
+.relDesc {
+  font-family: var(--font-body);
+  font-style: italic;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  margin: var(--space-1) 0 0;
+  line-height: 1.5;
+}
+
+/* ── Rich text from Drupal ───────────────────────────────────── */
+.richText p        { font-family: var(--font-body); font-size: 14px; color: var(--color-text-secondary); line-height: 1.6; margin-bottom: 8px; }
+.richText strong   { font-family: var(--font-display); font-size: 12px; color: var(--color-text-primary); font-style: normal; letter-spacing: 0.04em; }
+.richText em       { color: var(--color-text-secondary); }
+.richText ul       { padding-left: 16px; margin-bottom: 8px; }
+.richText li       { font-family: var(--font-body); font-size: 14px; color: var(--color-text-secondary); line-height: 1.6; margin-bottom: 4px; }
+
+/* ── Defenses prop rows ──────────────────────────────────────── */
+.propRow {
+  display: flex;
+  gap: var(--space-2);
+  margin-bottom: 5px;
+  font-size: 14px;
+}
+
+.propLabel {
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: var(--font-bold);
+  color: var(--color-gold-mid);
+  flex-shrink: 0;
+}
+
+.propVal {
+  font-family: var(--font-body);
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+}

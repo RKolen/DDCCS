@@ -65,10 +65,79 @@ export interface DrupalStory {
   campaignId: string | null;
 }
 
+/* ── Monster action shapes ───────────────────────────── */
+
+export interface MonsterAction {
+  name: string;
+  desc: string;
+  cost?: number;
+}
+
+export interface MonsterLegendaryActions {
+  available: number;
+  actions: MonsterAction[];
+}
+
+export interface MonsterLairActions {
+  enabled: boolean;
+  lairLocation: string | null;
+  actions: MonsterAction[];
+}
+
+export interface MonsterRegionalEffects {
+  enabled: boolean;
+  radius: string | null;
+  effects: MonsterAction[];
+}
+
+export interface DrupalMonster {
+  id: string;
+  title: string;
+  nickname: string | null;
+  monsterType: string | null;
+  size: string | null;
+  alignment: string | null;
+  faction: string | null;
+  cr: number | null;
+  /** 'simplified' | 'full' | 'major' */
+  profileType: string | null;
+  tagline: string | null;
+  role: string | null;
+  recurring: boolean | null;
+  hp: number | null;
+  maxHp: number | null;
+  hitDice: string | null;
+  ac: number | null;
+  acNote: string | null;
+  speed: string | null;
+  profBonus: number | null;
+  scores: Record<string, number> | null;
+  saves: Record<string, string> | null;
+  skills: Record<string, string> | null;
+  resistances: string[];
+  immunities: string[];
+  conditionImmunities: string[];
+  senses: string[];
+  languages: string[];
+  traits: MonsterAction[];
+  actions: MonsterAction[];
+  legendaryActions: MonsterLegendaryActions | null;
+  lairActions: MonsterLairActions | null;
+  regionalEffects: MonsterRegionalEffects | null;
+  encounterTactics: string[];
+  plotHooks: string[];
+  defeatConditions: string[];
+  campaign: string | null;
+  campaignId: string | null;
+  path: string | null;
+  imageUrl: string | null;
+}
+
 export interface ConsoleData {
   campaigns: DrupalCampaign[];
   characters: DrupalCharacter[];
   stories: DrupalStory[];
+  monsters: DrupalMonster[];
 }
 
 /* ────────────────────────────────────────────────────────────
@@ -99,6 +168,7 @@ const ConsoleContext = React.createContext<ConsoleData>({
   campaigns: [],
   characters: [],
   stories: [],
+  monsters: [],
 });
 
 ConsoleContext.displayName = 'ConsoleContext';

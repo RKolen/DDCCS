@@ -9,7 +9,7 @@ dependencies:
 id: monster
 label: Monster
 type: 'canonical_entities:node'
-pattern: '/[node:content-type]/[current-page:title]'
+pattern: '/[node:content-type]/[node:title]'
 selection_criteria:
   e7c9dbda-676e-41b7-9b78-9867fd332ef3:
     id: 'entity_bundle:node'

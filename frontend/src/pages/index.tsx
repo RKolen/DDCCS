@@ -100,6 +100,30 @@ export const query = graphql`
           currentParty { ... on Drupal_NodeCharacter { id title } }
         }
       }
+      nodeMonsters(first: 100) {
+        nodes {
+          id
+          title
+          challengeRating
+          monsterSize
+          monsterAlignment
+          monsterSpeed
+          monsterHitDice
+          monsterXp
+          monsterDamageResistances
+          monsterDamageImmunities
+          monsterSenses
+          monsterLanguages
+          monsterSkills
+          maximumHitpoints
+          armorClass
+          movementSpeed
+          path
+          type    { ... on Drupal_TermCreatureType { name } }
+          faction { ... on Drupal_TermFaction      { name } }
+          image   { ... on Drupal_MediaImage        { mediaImage { url alt } } }
+        }
+      }
     }
   }
 `;
