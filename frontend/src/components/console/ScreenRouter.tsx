@@ -72,6 +72,7 @@ import { NewSeriesScreen }              from './screens/NewSeriesScreen';
 import { SettingsScreen }               from './screens/SettingsScreen';
 import { ModelProfileScreen }           from './screens/ModelProfileScreen';
 import { ToolsScreen }                  from './screens/ToolsScreen';
+import { NpcValidatorScreen }           from './screens/NpcValidatorScreen';
 import { DeprecatedScreen }             from './screens/DeprecatedScreen';
 import { PlaceholderScreen }            from './screens/PlaceholderScreen';
 
@@ -115,7 +116,7 @@ export function ScreenRouter({ section, item, ctx, setCtx }: ScreenRouterProps):
   /* ───── NPCs (character nodes with field_character_type=false) ───── */
   if (key === 'npcs/n-list')     return <CharacterListScreen ctx={{ ...ictx, npcMode: true }} setCtx={set} />;
   if (key === 'npcs/n-view')     return <CharacterDetailScreen ctx={{ ...ictx, npcMode: true }} setCtx={set} />;
-  if (key === 'npcs/n-validate') return <PlaceholderScreen section={section} item={item} />;
+  if (key === 'npcs/n-validate') return <NpcValidatorScreen ctx={ictx} setCtx={set} />;
 
   /* ───── Settings (all config items → same screen, different tab) ───── */
   if (section.id === 'config') {

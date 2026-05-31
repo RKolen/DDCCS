@@ -222,7 +222,7 @@ export const MENU_DATA: MenuData = {
       items: [
         { id: 'n-list',     label: 'List Major NPCs' },
         { id: 'n-view',     label: 'View Major NPC Details' },
-        { id: 'n-validate', label: 'Validate NPC Files' },
+        { id: 'n-validate', label: 'Profile Completeness' },
       ],
     },
     {

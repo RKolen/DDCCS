@@ -34,7 +34,7 @@
   --color-gold-bright: #f0c060;
   --color-gold-mid:    #c9a96e;
   --color-gold-muted:  #8a6d3e;
-  --color-gold-border: rgba(201, 169, 110, 0.33);
+  --color-gold-border: #c9a96e54;
 
   /* ── Text ────────────────────────────────────────────────── */
   --color-text-primary:   #e8d5b0;
@@ -42,9 +42,10 @@
   --color-text-disabled:  #5a4a38;
   --color-text-inverse:   #1a1208;
 
-  /* ── Semantic / Status ───────────────────────────────────── */
-  --color-success: #4caf6e;
+  /* ── Semantic / Status ────────────────────────────── */
+  --color-success: #5a9e6f;
   --color-warning: #e8a030;
+  --color-partial: #c9a96e;
   --color-danger:  #c0392b;
   --color-info:    #5b9bd5;
   --color-neutral: #7a6a58;
@@ -67,7 +68,7 @@
   --parchment-wood-mid:   #8a6533;
   --parchment-wood-light: #a07a3e;
   --parchment-wood-dark:  #3d2810;
-  --parchment-highlight:  rgba(255, 200, 120, 0.25); /* dowel shine */
+  --parchment-highlight:  #ffc87840; /* dowel shine */
 
   /* ── Typography ──────────────────────────────────────────── */
   --font-display: 'Cinzel', 'Palatino Linotype', serif;
@@ -122,10 +123,10 @@
   --radius-pill: 9999px;
 
   /* ── Shadows ─────────────────────────────────────────────── */
-  --shadow-sm:        0 1px 3px rgba(0, 0, 0, 0.5);
-  --shadow-md:        0 4px 12px rgba(0, 0, 0, 0.6);
-  --shadow-lg:        0 8px 24px rgba(0, 0, 0, 0.7);
-  --shadow-glow-gold: 0 0 8px rgba(201, 169, 110, 0.3);
+  --shadow-sm:        0 1px 3px #00000080;
+  --shadow-md:        0 4px 12px #00000099;
+  --shadow-lg:        0 8px 24px #000000b3;
+  --shadow-glow-gold: 0 0 8px #c9a96e4d;
 
   /* ── Transitions ─────────────────────────────────────────── */
   --transition-fast:   120ms ease;
