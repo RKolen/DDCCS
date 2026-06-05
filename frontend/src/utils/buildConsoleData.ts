@@ -7,7 +7,7 @@
  */
 
 import type {
-  ConsoleData, DrupalCampaign, DrupalCharacter, DrupalStory, DrupalMonster,
+  ConsoleData, DrupalCampaign, DrupalCharacter, DrupalStory, DrupalMonster, DrupalItem,
 } from '../components/console/ConsoleContext';
 
 export interface RawCampaignOnCharacter {
@@ -56,6 +56,36 @@ export interface RawCharacter {
   majorPlotActions?:  Array<{ value: string }> | null;
 }
 
+export interface RawItem {
+  drupalId:               string;
+  title:                  string;
+  itemType?:              string | null;
+  isMagic?:               boolean | null;
+  itemRarity?:            string | null;
+  itemRequiresAttunement?: boolean | null;
+  source?:                string | null;
+  edition?:               { name: string } | null;
+  vestigeLevel?:          { name: string } | null;
+  damageTypes?:           Array<{ name: string }> | null;
+  weaponProperties?:      Array<{ name: string }> | null;
+  weaponMastery?:         Array<{ name: string }> | null;
+  weaponSubtype?:         Array<{ name: string }> | null;
+  itemProperties?:        Array<{ name: string; effectHtml: string | null }> | null;
+  damage?:                string | null;
+  itemBonus?:             number | null;
+  itemCost?:              string | null;
+  itemWeight?:            number | null;
+  nonidentifiedName?:     string | null;
+  armorCategory?:         string | null;
+  armorAcBase?:           number | null;
+  armorStrRequirement?:   number | null;
+  notes?:                 { value: string } | null;
+  notesHtml?:             string | null;
+  descriptionHtml?:       string | null;
+  path?:                  string | null;
+  image?:                 { mediaImage: { url: string; alt: string } | null } | null;
+}
+
 export interface RawMonster {
   id:                       string;
   title:                    string;
@@ -96,6 +126,8 @@ export interface ConsoleQueryData {
     termCampaigns:  { nodes: RawCampaignTerm[] };
     nodeMonsters?:  { nodes: RawMonster[] } | null;
   } | null;
+  /* Items come from Gatsby sourceNodes (all pages, no 100-item cap) */
+  allAllItem?: { nodes: RawItem[] } | null;
 }
 
 function splitCsv(s: string | null | undefined): string[] {
@@ -104,7 +136,7 @@ function splitCsv(s: string | null | undefined): string[] {
 }
 
 export function buildConsoleData(data: ConsoleQueryData | null | undefined): ConsoleData {
-  if (!data?.drupal) return { campaigns: [], characters: [], stories: [], monsters: [] };
+  if (!data?.drupal) return { campaigns: [], characters: [], stories: [], monsters: [], items: [] };
 
   const characters: DrupalCharacter[] = data.drupal.nodeCharacters.nodes.map(n => ({
     id:               n.id,
@@ -219,10 +251,43 @@ export function buildConsoleData(data: ConsoleQueryData | null | undefined): Con
     imageUrl:    n.image?.mediaImage?.url ?? null,
   }));
 
+  /* Items come from Gatsby's sourceNodes (all pages, no per-query limit).
+     edition taxonomy drives homebrew vs official classification:
+       null / "Homebrew" → homebrew  |  "D&D 5.5e (2024)" etc. → official */
+  const items: DrupalItem[] = (data.allAllItem?.nodes ?? []).map(n => ({
+    id:                     n.drupalId,
+    title:                  n.title,
+    itemType:               n.itemType ?? null,
+    isMagic:                n.isMagic ?? null,
+    itemRarity:             n.itemRarity ?? null,
+    itemRequiresAttunement: n.itemRequiresAttunement ?? null,
+    source:                 n.edition?.name ?? n.source ?? null,
+    damage:                 n.damage ?? null,
+    itemBonus:              n.itemBonus ?? null,
+    itemCost:               n.itemCost ?? null,
+    itemWeight:             n.itemWeight ?? null,
+    nonidentifiedName:      n.nonidentifiedName ?? null,
+    armorCategory:          n.armorCategory ?? null,
+    armorAcBase:            n.armorAcBase ?? null,
+    armorStrRequirement:    n.armorStrRequirement ?? null,
+    notes:                  n.notes?.value ?? null,
+    notesHtml:              n.notesHtml ?? null,
+    descriptionHtml:        n.descriptionHtml ?? null,
+    vestigeLevel:           n.vestigeLevel?.name ?? null,
+    damageTypes:            (n.damageTypes ?? []).map(t => t.name),
+    weaponProperties:       (n.weaponProperties ?? []).map(t => t.name),
+    weaponMastery:          (n.weaponMastery ?? []).map(t => t.name),
+    weaponSubtype:          (n.weaponSubtype ?? []).map(t => t.name),
+    itemProperties:         n.itemProperties ?? [],
+    path:                   n.path ?? null,
+    imageUrl:               n.image?.mediaImage?.url ?? null,
+  }));
+
   return {
     campaigns: Array.from(campaignMap.values()),
     characters,
     stories,
     monsters,
+    items,
   };
 }

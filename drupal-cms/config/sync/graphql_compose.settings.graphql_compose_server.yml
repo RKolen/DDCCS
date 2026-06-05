@@ -112,6 +112,27 @@ entity_config:
     factions:
       enabled: true
       query_load_enabled: true
+    game_edition:
+      enabled: true
+      query_load_enabled: true
+    magical_properties:
+      enabled: true
+      query_load_enabled: true
+    vestige_level:
+      enabled: true
+      query_load_enabled: true
+    damage_types:
+      enabled: true
+      query_load_enabled: true
+    weapon_mastery:
+      enabled: true
+      query_load_enabled: true
+    weapon_properties:
+      enabled: true
+      query_load_enabled: true
+    weapon_subtype:
+      enabled: true
+      query_load_enabled: true
   media:
     image:
       enabled: true
@@ -476,6 +497,11 @@ field_config:
       field_campaign_status:
         enabled: true
       field_current_party:
+        enabled: true
+    magical_properties:
+      field_effect:
+        enabled: true
+      field_edition:
         enabled: true
   media:
     image:

@@ -43,6 +43,14 @@
   line-height: 1.1;
 }
 
+.subtitle {
+  font-family: var(--font-body);
+  font-style: italic;
+  font-size: var(--text-base);
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+
 .pronouns {
   font-family: var(--font-mono);
   font-size: var(--text-xs);
@@ -102,10 +110,6 @@
   min-width: 56px;
 }
 
-.vitalHp { border-color: var(--color-success); background: color-mix(in srgb, var(--color-success) 6%, transparent); }
-.vitalAc { border-color: var(--color-info);    background: color-mix(in srgb, var(--color-info) 6%, transparent); }
-.vitalCr { border-color: var(--color-warning); background: color-mix(in srgb, var(--color-warning) 6%, transparent); }
-
 .vitalLabel {
   font-family: var(--font-display);
   font-size: 9px;
@@ -153,7 +157,7 @@
 
 @media (max-width: 760px) {
   .mainGrid { grid-template-columns: 1fr; }
-  .hero    { grid-template-columns: auto 1fr; }
+  .hero     { grid-template-columns: auto 1fr; }
   .backLink { display: none; }
 }
 
@@ -182,59 +186,7 @@
   border-bottom: 1px solid var(--color-gold-border);
 }
 
-.panelLegendary { border-color: var(--color-gold-bright);  background: color-mix(in srgb, var(--color-gold-bright) 5%, var(--color-bg-surface)); }
-.panelLair      { border-color: var(--color-warning);      background: color-mix(in srgb, var(--color-warning) 5%, var(--color-bg-surface)); }
-
-/* ── Relationship card ───────────────────────────────────────── */
-.relCard {
-  background: var(--color-bg-overlay);
-  border: 1px solid var(--color-gold-border);
-  border-radius: var(--radius-sm);
-  padding: var(--space-3);
-  margin-bottom: var(--space-2);
-}
-
-.relName {
-  font-family: var(--font-display);
-  font-size: 13px;
-  font-weight: var(--font-bold);
-  color: var(--color-gold-bright);
-  text-decoration: none;
-  letter-spacing: 0.04em;
-}
-
-.relName:hover { color: var(--color-gold-mid); }
-
-.relType {
-  font-family: var(--font-display);
-  font-size: 8px;
-  font-weight: var(--font-bold);
-  letter-spacing: var(--tracking-widest);
-  text-transform: uppercase;
-  color: var(--color-gold-mid);
-  border: 1px solid var(--color-gold-border);
-  border-radius: var(--radius-pill);
-  padding: 2px 7px;
-  margin-left: var(--space-2);
-}
-
-.relDesc {
-  font-family: var(--font-body);
-  font-style: italic;
-  font-size: 13px;
-  color: var(--color-text-secondary);
-  margin: var(--space-1) 0 0;
-  line-height: 1.5;
-}
-
-/* ── Rich text from Drupal ───────────────────────────────────── */
-.richText p        { font-family: var(--font-body); font-size: 14px; color: var(--color-text-secondary); line-height: 1.6; margin-bottom: 8px; }
-.richText strong   { font-family: var(--font-display); font-size: 12px; color: var(--color-text-primary); font-style: normal; letter-spacing: 0.04em; }
-.richText em       { color: var(--color-text-secondary); }
-.richText ul       { padding-left: 16px; margin-bottom: 8px; }
-.richText li       { font-family: var(--font-body); font-size: 14px; color: var(--color-text-secondary); line-height: 1.6; margin-bottom: 4px; }
-
-/* ── Defenses prop rows ──────────────────────────────────────── */
+/* ── Prop rows (key-value pairs) ─────────────────────────────── */
 .propRow {
   display: flex;
   gap: var(--space-2);
@@ -256,3 +208,11 @@
   color: var(--color-text-secondary);
   line-height: 1.5;
 }
+
+/* ── Rich text from Drupal ───────────────────────────────────── */
+.richText p      { font-family: var(--font-body); font-size: 14px; color: var(--color-text-secondary); line-height: 1.6; margin-bottom: 8px; }
+.richText strong { font-family: var(--font-display); font-size: 12px; color: var(--color-text-primary); font-style: normal; letter-spacing: 0.04em; }
+.richText em     { color: var(--color-text-secondary); }
+.richText ul     { padding-left: 16px; margin-bottom: 8px; }
+.richText li     { font-family: var(--font-body); font-size: 14px; color: var(--color-text-secondary); line-height: 1.6; margin-bottom: 4px; }
+.richText h3     { font-family: var(--font-display); font-size: 13px; color: var(--color-gold-mid); letter-spacing: var(--tracking-wide); text-transform: uppercase; margin: 16px 0 8px; }

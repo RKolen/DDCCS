@@ -61,6 +61,7 @@ import { CharacterListScreen }          from './screens/CharacterListScreen';
 import { CharacterEditScreen }          from './screens/CharacterEditScreen';
 import { CharacterArcScreen }           from './screens/CharacterArcScreen';
 import { CharacterDevelopmentScreen }   from './screens/CharacterDevelopmentScreen';
+import { ItemRegistryScreen }           from './screens/ItemRegistryScreen';
 import { BestiaryScreen }               from './screens/BestiaryScreen';
 import { MonsterStatBlockScreen }       from './screens/MonsterStatBlockScreen';
 import { EncounterSpotlightScreen }     from './screens/EncounterSpotlightScreen';
@@ -131,6 +132,9 @@ export function ScreenRouter({ section, item, ctx, setCtx }: ScreenRouterProps):
   if (key === 'npcs/n-list')     return <CharacterListScreen ctx={{ ...ictx, npcMode: true }} setCtx={set} />;
   if (key === 'npcs/n-view')     return <CharacterDetailScreen ctx={{ ...ictx, npcMode: true }} setCtx={set} />;
   if (key === 'npcs/n-validate') return <NpcValidatorScreen ctx={ictx} setCtx={set} />;
+
+  /* ───── Items ───── */
+  if (section.id === 'items') return <ItemRegistryScreen ctx={ictx} setCtx={set} />;
 
   /* ───── Monsters ───── */
   if (key === 'monsters/m-list')      return <BestiaryScreen           ctx={ictx} setCtx={set} />;

@@ -52,7 +52,7 @@ export interface MenuItem {
 }
 
 export interface MenuSection {
-  id: 'characters' | 'stories' | 'read' | 'npcs' | 'monsters' | 'config' | 'model' | 'tools';
+  id: 'characters' | 'stories' | 'read' | 'npcs' | 'monsters' | 'items' | 'config' | 'model' | 'tools';
   label: string;
   glyph: string;
   icon: IconName;
@@ -223,6 +223,17 @@ export const MENU_DATA: MenuData = {
         { id: 'n-list', label: 'List Major NPCs' },
         { id: 'n-view', label: 'View Major NPC Details' },
         { id: 'n-validate', label: 'Profile Completeness' },
+      ],
+    },
+    {
+      id: 'items',
+      label: 'Items',
+      glyph: 'I',
+      icon: 'spell',
+      blurb: 'Registry, validation, loot tracking',
+      items: [
+        { id: 'i-list',     label: 'Item Registry' },
+        { id: 'i-validate', label: 'Validate Registry' },
       ],
     },
     {

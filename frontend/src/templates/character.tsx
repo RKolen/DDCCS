@@ -84,7 +84,7 @@ function rarityClass(rarity: string | null | undefined): string {
   switch ((rarity ?? '').toLowerCase()) {
     case 'uncommon':  return styles.rarityUncommon;
     case 'rare':      return styles.rarityRare;
-    case 'very rare': return styles.rarityVeryRare;
+    case 'very_rare': return styles.rarityVeryRare;
     case 'legendary': return styles.rarityLegendary;
     case 'artifact':  return styles.rarityArtifact;
     case 'vestige':   return styles.rarityVestige;

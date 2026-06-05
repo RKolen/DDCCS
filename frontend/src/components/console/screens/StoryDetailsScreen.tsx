@@ -136,7 +136,7 @@ const RARITY_COLORS: Record<string, string> = {
   common: 'var(--color-rarity-common)',
   uncommon: 'var(--color-rarity-uncommon)',
   rare: 'var(--color-rarity-rare)',
-  'very-rare': 'var(--color-rarity-very-rare)',
+  very_rare: 'var(--color-rarity-very-rare)',
   legendary: 'var(--color-rarity-legendary)',
   artifact: 'var(--color-rarity-artifact)',
 };

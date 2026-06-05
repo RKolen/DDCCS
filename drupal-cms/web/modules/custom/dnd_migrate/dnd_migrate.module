@@ -30,6 +30,28 @@ function dnd_migrate_node_presave(NodeInterface $node): void {
 }
 
 /**
+ * Implements hook_node_insert().
+ *
+ * Generates a Pathauto alias whenever a new item, monster, or spell node is
+ * created so it gets a clean URL immediately rather than falling back to
+ * /node/{id}.
+ */
+function dnd_migrate_node_insert(NodeInterface $node): void {
+  $needs_alias = ['item', 'monster', 'spell'];
+  if (!in_array($node->bundle(), $needs_alias, TRUE)) {
+    return;
+  }
+
+  if (!\Drupal::hasService('pathauto.generator')) {
+    return;
+  }
+
+  /** @var \Drupal\pathauto\PathautoGeneratorInterface $generator */
+  $generator = \Drupal::service('pathauto.generator');
+  $generator->createEntityAlias($node, 'insert');
+}
+
+/**
  * Implements hook_entity_update().
  *
  * When an item node is updated, enqueue every character node that references

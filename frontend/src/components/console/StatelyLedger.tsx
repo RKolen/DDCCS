@@ -27,6 +27,7 @@ const SECTION_DEFAULTS: Record<MenuSection['id'], string> = {
   stories:    'work-series',
   read:       'r-story',
   npcs:       'n-list',
+  items:      'i-list',
   monsters:   'm-list',
   config:     'c-view',
   model:      'm-switch',
@@ -100,7 +101,7 @@ export function StatelyLedger({
   /* Enrich ctx with active campaign so screens can filter by it */
   const enrichedCtx: ScreenContext = { ...ctx, activeCampaignName };
 
-  const consoleData: ConsoleData = liveData ?? { campaigns: [], characters: [], stories: [], monsters: [] };
+  const consoleData: ConsoleData = liveData ?? { campaigns: [], characters: [], stories: [], monsters: [], items: [] };
 
   return (
     <ConsoleContext.Provider value={consoleData}>

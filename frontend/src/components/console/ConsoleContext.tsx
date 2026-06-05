@@ -133,11 +133,42 @@ export interface DrupalMonster {
   imageUrl: string | null;
 }
 
+export interface DrupalItem {
+  id:                     string;
+  title:                  string;
+  itemType:               string | null;
+  isMagic:                boolean | null;
+  itemRarity:             string | null;
+  itemRequiresAttunement: boolean | null;
+  /** edition.name from Drupal: null/"Homebrew" = custom, "D&D 5.5e (2024)" etc. = official */
+  source:                 string | null;
+  damage:                 string | null;
+  itemBonus:              number | null;
+  itemCost:               string | null;
+  itemWeight:             number | null;
+  nonidentifiedName:      string | null;
+  armorCategory:          string | null;
+  armorAcBase:            number | null;
+  armorStrRequirement:    number | null;
+  notes:                  string | null;
+  notesHtml:              string | null;
+  descriptionHtml:        string | null;
+  vestigeLevel:           string | null;
+  damageTypes:            string[];
+  weaponProperties:       string[];
+  weaponMastery:          string[];
+  weaponSubtype:          string[];
+  itemProperties:         Array<{ name: string; effectHtml: string | null }>;
+  path:                   string | null;
+  imageUrl:               string | null;
+}
+
 export interface ConsoleData {
   campaigns: DrupalCampaign[];
   characters: DrupalCharacter[];
   stories: DrupalStory[];
   monsters: DrupalMonster[];
+  items: DrupalItem[];
 }
 
 /* ────────────────────────────────────────────────────────────
@@ -169,6 +200,7 @@ const ConsoleContext = React.createContext<ConsoleData>({
   characters: [],
   stories: [],
   monsters: [],
+  items: [],
 });
 
 ConsoleContext.displayName = 'ConsoleContext';

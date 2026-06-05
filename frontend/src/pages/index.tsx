@@ -125,6 +125,24 @@ export const query = graphql`
         }
       }
     }
+    allAllItem {
+      nodes {
+        drupalId title path source
+        itemType isMagic itemRarity itemRequiresAttunement
+        damage itemBonus itemCost itemWeight
+        nonidentifiedName armorCategory armorAcBase armorStrRequirement
+        notesHtml descriptionHtml
+        notes         { value }
+        edition       { name }
+        vestigeLevel  { name }
+        damageTypes   { name }
+        weaponProperties { name }
+        weaponMastery    { name }
+        weaponSubtype    { name }
+        itemProperties   { name effectHtml }
+        image { mediaImage { url alt } }
+      }
+    }
   }
 `;
 
