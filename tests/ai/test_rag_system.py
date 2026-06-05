@@ -25,8 +25,23 @@ from tests import test_helpers
 from src.integration.drupal_sync import DrupalSyncError
 
 # Import RAG system components using centralized helper
-DrupalWikiCache, WikiClient = test_helpers.safe_from_import(
-    "src.ai.rag_system", "DrupalWikiCache", "WikiClient"
+(
+    DrupalWikiCache,
+    WikiClient,
+    WikiCacheProtocol,
+    RAGSystem,
+    _RELEVANCE_TITLE_MATCH,
+    _RELEVANCE_TITLE_WORD,
+    _RELEVANCE_CONTENT_WORD,
+) = test_helpers.safe_from_import(
+    "src.ai.rag_system",
+    "DrupalWikiCache",
+    "WikiClient",
+    "WikiCacheProtocol",
+    "RAGSystem",
+    "_RELEVANCE_TITLE_MATCH",
+    "_RELEVANCE_TITLE_WORD",
+    "_RELEVANCE_CONTENT_WORD",
 )
 
 
@@ -345,6 +360,89 @@ def test_drupal_wiki_cache_content_as_dict():
     print("[PASS] DrupalWikiCache Content Dict Format")
 
 
+def test_wiki_cache_protocol_satisfaction():
+    """DrupalWikiCache satisfies WikiCacheProtocol (runtime_checkable)."""
+    print("\n[TEST] WikiCacheProtocol Satisfaction")
+
+    cache = DrupalWikiCache(drupal_sync=None, ttl_seconds=3600)
+    assert isinstance(cache, WikiCacheProtocol), (
+        "DrupalWikiCache does not satisfy WikiCacheProtocol"
+    )
+    print("  [OK] DrupalWikiCache satisfies WikiCacheProtocol")
+
+    print("[PASS] WikiCacheProtocol Satisfaction")
+
+
+def test_wiki_client_max_fetches_per_call():
+    """WikiClient exposes max_fetches_per_call with correct default and override."""
+    print("\n[TEST] WikiClient max_fetches_per_call")
+
+    client_default = WikiClient(base_url="https://example.com/wiki")
+    assert client_default.max_fetches_per_call == 5, "Default should be 5"
+    print("  [OK] Default max_fetches_per_call is 5")
+
+    client_custom = WikiClient(
+        base_url="https://example.com/wiki",
+        max_fetches_per_call=2,
+    )
+    assert client_custom.max_fetches_per_call == 2, "Custom value not set"
+    print("  [OK] Custom max_fetches_per_call accepted")
+
+    print("[PASS] WikiClient max_fetches_per_call")
+
+
+def test_relevance_scoring_constants():
+    """Relevance-scoring weights are exported as module-level constants."""
+    print("\n[TEST] Relevance Scoring Constants")
+
+    assert _RELEVANCE_TITLE_MATCH == 2.0, "_RELEVANCE_TITLE_MATCH should be 2.0"
+    assert _RELEVANCE_TITLE_WORD == 0.5, "_RELEVANCE_TITLE_WORD should be 0.5"
+    assert _RELEVANCE_CONTENT_WORD == 0.1, "_RELEVANCE_CONTENT_WORD should be 0.1"
+    assert _RELEVANCE_TITLE_MATCH > _RELEVANCE_TITLE_WORD > _RELEVANCE_CONTENT_WORD, (
+        "Title match should outrank title word which outranks content word"
+    )
+    print("  [OK] _RELEVANCE_TITLE_MATCH = 2.0")
+    print("  [OK] _RELEVANCE_TITLE_WORD = 0.5")
+    print("  [OK] _RELEVANCE_CONTENT_WORD = 0.1")
+
+    print("[PASS] Relevance Scoring Constants")
+
+
+class _DisabledRAGConfig:
+    """Minimal RAGConfig stub that disables all RAG features."""
+
+    enabled = False
+    wiki_base_url = ""
+    rules_base_url = ""
+    cache_ttl = 3600
+
+    def is_configured(self) -> bool:
+        """Return False — RAG is disabled."""
+        return False
+
+    def to_dict(self) -> dict:
+        """Return minimal config dict."""
+        return {"enabled": False}
+
+
+def test_get_context_unified_method():
+    """RAGSystem.get_context() returns empty string when disabled."""
+    print("\n[TEST] get_context() Unified Method")
+
+    rag = RAGSystem(rag_config=_DisabledRAGConfig())
+    result = rag.get_context("The party enters Whitestone", campaign_name="test")
+    assert result == "", "Disabled RAGSystem should return empty string"
+    print("  [OK] Disabled RAGSystem returns empty string")
+
+    result_no_semantic = rag.get_context(
+        "Fireball strikes the goblins", prefer_semantic=False
+    )
+    assert result_no_semantic == "", "No wiki client gives empty string"
+    print("  [OK] prefer_semantic=False with no wiki client returns empty string")
+
+    print("[PASS] get_context() Unified Method")
+
+
 def run_all_tests():
     """Run all RAG system tests."""
     print("=" * 70)
@@ -361,6 +459,10 @@ def run_all_tests():
     test_wiki_client_initialization()
     test_wiki_client_custom_item_filtering()
     test_drupal_wiki_cache_content_as_dict()
+    test_wiki_cache_protocol_satisfaction()
+    test_wiki_client_max_fetches_per_call()
+    test_relevance_scoring_constants()
+    test_get_context_unified_method()
 
     print("\n" + "=" * 70)
     print("[SUCCESS] ALL RAG SYSTEM TESTS PASSED")

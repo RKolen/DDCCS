@@ -12,7 +12,7 @@ import logging
 import os
 import re
 import time
-from typing import Any, Dict, FrozenSet, List, Optional, Set
+from typing import Any, Dict, FrozenSet, List, Optional, Protocol, Set, runtime_checkable
 from urllib.parse import quote
 
 from src.utils.errors import DnDError, display_error
@@ -26,6 +26,9 @@ _NPC_MATCH_FIRST_WORDS: int = 8
 _NPC_MATCH_MIN_WORD_LEN: int = 5
 _RULES_CONTEXT_BUDGET: int = 1500
 _RULES_ENTITY_LIMIT: int = 10
+_RELEVANCE_TITLE_MATCH: float = 2.0
+_RELEVANCE_TITLE_WORD: float = 0.5
+_RELEVANCE_CONTENT_WORD: float = 0.1
 _RULES_STOP_WORDS: FrozenSet[str] = frozenset({
     "A", "An", "And", "Are", "As", "At", "Be", "But", "By", "Could",
     "For", "From", "Has", "Had", "Have", "Her", "His", "How", "In", "Is",
@@ -51,6 +54,26 @@ except ImportError:
         "RAG System: requests or beautifulsoup4 not installed. "
         "Install with: pip install requests beautifulsoup4"
     )
+
+
+@runtime_checkable
+class WikiCacheProtocol(Protocol):
+    """Interface for wiki page cache backends."""
+
+    def get(self, url: str) -> Optional[Dict[str, Any]]:
+        """Return cached content for url, or None if missing or expired."""
+
+    def set(self, url: str, content: Dict[str, Any]) -> None:
+        """Store content for url."""
+
+    def delete(self, url: str) -> None:
+        """Delete cached content for url."""
+
+    def clear_expired(self) -> None:
+        """Remove all entries past their TTL."""
+
+    def get_stats(self) -> Dict[str, Any]:
+        """Return cache statistics as a dict."""
 
 
 class DrupalWikiCache:
@@ -151,17 +174,23 @@ class WikiClient:
     """Fetches and parses wiki pages with caching and optional homebrew item filtering."""
 
     def __init__(
-        self, base_url: str, cache: Optional[DrupalWikiCache] = None, item_registry=None
+        self,
+        base_url: str,
+        cache: Optional[WikiCacheProtocol] = None,
+        item_registry=None,
+        max_fetches_per_call: int = 5,
     ):
         """
         Args:
             base_url: Base URL of the wiki (configured via RAG_WIKI_BASE_URL env var).
-            cache: DrupalWikiCache instance (creates unconfigured cache if not provided).
+            cache: Cache backend implementing WikiCacheProtocol (unconfigured if None).
             item_registry: ItemRegistry for homebrew filtering (optional).
+            max_fetches_per_call: Maximum live HTTP fetches per public method call.
         """
         self.base_url = base_url.rstrip("/")
         self.cache = cache or DrupalWikiCache(drupal_sync=None)
         self.item_registry = item_registry
+        self.max_fetches_per_call = max_fetches_per_call
         self.session = requests.Session() if SCRAPING_AVAILABLE else None
         if self.session:
             self.session.headers.update({"User-Agent": "DnD-Character-Consultant/1.0"})
@@ -307,13 +336,42 @@ class WikiClient:
             content = section["content"].lower()
             score = 0.0
             if query_lower in title:
-                score += 2.0
-            score += len(query_words & set(title.split())) * 0.5
-            score += len(query_words & set(content.split())) * 0.1
+                score += _RELEVANCE_TITLE_MATCH
+            score += len(query_words & set(title.split())) * _RELEVANCE_TITLE_WORD
+            score += len(query_words & set(content.split())) * _RELEVANCE_CONTENT_WORD
             if score > 0:
                 results.append({"section": section, "score": score})
         results.sort(key=lambda x: x["score"], reverse=True)
         return results[:max_results]
+
+
+def _extract_entity_candidates(prompt: str, limit: int = 10) -> List[str]:
+    """Extract capitalised phrase candidates from a prompt for wiki lookup.
+
+    Skips stop words and de-duplicates results.
+
+    Args:
+        prompt: Text to scan for entity names.
+        limit: Maximum candidates to return.
+
+    Returns:
+        Ordered list of unique candidate phrases.
+    """
+    raw: List[str] = re.findall(
+        r"\b([A-Z][a-z]+(?:\s+[A-Z][a-z]+){0,2})\b", prompt
+    )
+    seen: Set[str] = set()
+    result: List[str] = []
+    for candidate in raw:
+        if candidate in seen:
+            continue
+        if all(word in _RULES_STOP_WORDS for word in candidate.split()):
+            continue
+        seen.add(candidate)
+        result.append(candidate)
+        if len(result) >= limit:
+            break
+    return result
 
 
 class RAGSystem:
@@ -483,29 +541,67 @@ class RAGSystem:
     ) -> str:
         """Search multiple pages for relevant context.
 
+        Fetches at most WikiClient.max_fetches_per_call pages per call.
+
         Args:
             query: What to search for.
             pages_to_search: List of page titles to search.
-            max_results: Maximum results per page.
+            max_results: Maximum sections to return per page.
 
         Returns:
-            Formatted context string.
+            Formatted context string, or empty string if nothing was found.
         """
         if not self.enabled or not self.client:
             return ""
-        context = f"\n\n=== LORE CONTEXT FOR: {query} ===\n"
-        for page_title in pages_to_search:
+        pages = pages_to_search[:self.client.max_fetches_per_call]
+        parts: List[str] = []
+        for page_title in pages:
             page_data = self.client.fetch_page(page_title)
             if not page_data:
                 continue
             results = self.client.search_sections(page_data, query, max_results)
             if results:
-                context += f"\nFrom {page_data['title']}:\n"
+                section_text = f"\nFrom {page_data['title']}:\n"
                 for result in results:
                     section = result["section"]
-                    context += f"\n{section['title']}:\n{section['content']}\n"
+                    section_text += f"\n{section['title']}:\n{section['content']}\n"
+                parts.append(section_text)
+        if not parts:
+            return ""
+        context = f"\n\n=== LORE CONTEXT FOR: {query} ===\n"
+        context += "".join(parts)
         context += "\n=== END LORE CONTEXT ===\n\n"
         return context
+
+    def get_context(
+        self,
+        prompt: str,
+        campaign_name: str = "",
+        prefer_semantic: bool = True,
+    ) -> str:
+        """Return the best available lore context for a prompt.
+
+        Tries Milvus semantic search first when prefer_semantic=True and Milvus
+        is available. Falls back to wiki keyword search when semantic context
+        is empty or unavailable.
+
+        Args:
+            prompt: The AI prompt or story text.
+            campaign_name: Active campaign name (for Milvus story-chunk scoping).
+            prefer_semantic: Try Milvus semantic search before wiki (default True).
+
+        Returns:
+            Formatted context string, or empty string when nothing is found.
+        """
+        if prefer_semantic:
+            semantic = self.get_relevant_context(prompt, campaign_name)
+            if semantic:
+                return semantic
+        max_fetches = self.client.max_fetches_per_call if self.client else 5
+        candidates = _extract_entity_candidates(prompt, limit=max_fetches)
+        if not candidates:
+            return ""
+        return self.get_context_for_query(prompt, pages_to_search=candidates)
 
     def get_history_check_info(self, topic: str, dc_result: int) -> Optional[str]:
         """Return wiki information for a successful History check.
@@ -654,20 +750,7 @@ class RAGSystem:
         """
         if not self.enabled or not self.rules_client:
             return ""
-        raw_candidates: List[str] = re.findall(
-            r"\b([A-Z][a-z]+(?:\s+[A-Z][a-z]+){0,2})\b", prompt
-        )
-        seen: Set[str] = set()
-        entities: List[str] = []
-        for candidate in raw_candidates:
-            if candidate in seen:
-                continue
-            if all(word in _RULES_STOP_WORDS for word in candidate.split()):
-                continue
-            seen.add(candidate)
-            entities.append(candidate)
-            if len(entities) >= _RULES_ENTITY_LIMIT:
-                break
+        entities = _extract_entity_candidates(prompt, limit=_RULES_ENTITY_LIMIT)
         if not entities:
             return ""
         descriptions: List[str] = []
