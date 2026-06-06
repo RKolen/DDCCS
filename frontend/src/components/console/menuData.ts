@@ -232,7 +232,8 @@ export const MENU_DATA: MenuData = {
       icon: 'spell',
       blurb: 'Registry, validation, loot tracking',
       items: [
-        { id: 'i-list',     label: 'Item Registry' },
+        { id: 'i-list',     label: 'Loot Vault' },
+        { id: 'i-view',     label: 'Item Sheet' },
         { id: 'i-validate', label: 'Validate Registry' },
       ],
     },

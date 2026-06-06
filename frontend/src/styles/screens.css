@@ -542,6 +542,22 @@
 .char-pip-meta strong { font-family: var(--font-display); font-size: 13px; color: inherit; }
 .char-pip-meta span { font-size: 11px; color: var(--ink-faint); font-family: var(--font-mono); }
 
+/* Rarity-tinted picker pips for item lists */
+.char-pip[data-rarity="common"]    { background: linear-gradient(180deg, #b0b0b0, #707070); color: #1a1208; }
+.char-pip[data-rarity="uncommon"]  { background: linear-gradient(180deg, #5ec45e, #3a8a3a); color: #1a1208; }
+.char-pip[data-rarity="rare"]      { background: linear-gradient(180deg, #5ba8f5, #3a78c0); color: #1a1208; }
+.char-pip[data-rarity="very-rare"] { background: linear-gradient(180deg, #c084fc, #8040c0); color: #fff7e8; }
+.char-pip[data-rarity="legendary"] { background: linear-gradient(180deg, #ffa830, #cc7020); color: #1a1208; }
+.char-pip[data-rarity="artifact"]  { background: linear-gradient(180deg, #f06055, #c02040); color: #fff7e8; }
+.char-pip[data-rarity="vestige"]   { background: linear-gradient(180deg, #d4a6f0, #9060c0); color: #1a1208; }
+
+/* Item detail screen — same grid as screen-chardetails */
+.screen-itemdetails {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  gap: 24px;
+}
+
 .char-sheet {
   background: var(--canvas);
   border: 1px solid var(--rule);

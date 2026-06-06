@@ -27,6 +27,7 @@ import type { MenuSection, MenuItem } from './menuData';
 export interface ScreenContext {
   storyIdx?: number;
   charIdx?: number;
+  itemIdx?: number;
   activeCampaignName?: string | null;
   settingsTab?: 'view' | 'ai' | 'rag' | 'display' | 'paths' | 'validate' | 'save';
   modelId?: string;
@@ -61,6 +62,8 @@ import { CharacterListScreen }          from './screens/CharacterListScreen';
 import { CharacterEditScreen }          from './screens/CharacterEditScreen';
 import { CharacterArcScreen }           from './screens/CharacterArcScreen';
 import { CharacterDevelopmentScreen }   from './screens/CharacterDevelopmentScreen';
+import { ItemListScreen }               from './screens/ItemListScreen';
+import { ItemDetailScreen }             from './screens/ItemDetailScreen';
 import { ItemRegistryScreen }           from './screens/ItemRegistryScreen';
 import { BestiaryScreen }               from './screens/BestiaryScreen';
 import { MonsterStatBlockScreen }       from './screens/MonsterStatBlockScreen';
@@ -134,7 +137,9 @@ export function ScreenRouter({ section, item, ctx, setCtx }: ScreenRouterProps):
   if (key === 'npcs/n-validate') return <NpcValidatorScreen ctx={ictx} setCtx={set} />;
 
   /* ───── Items ───── */
-  if (section.id === 'items') return <ItemRegistryScreen ctx={ictx} setCtx={set} />;
+  if (key === 'items/i-list')     return <ItemListScreen     ctx={ictx} setCtx={set} />;
+  if (key === 'items/i-view')     return <ItemDetailScreen   ctx={ictx} setCtx={set} />;
+  if (key === 'items/i-validate') return <ItemRegistryScreen ctx={ictx} setCtx={set} />;
 
   /* ───── Monsters ───── */
   if (key === 'monsters/m-list')      return <BestiaryScreen           ctx={ictx} setCtx={set} />;

@@ -489,23 +489,6 @@ export function ItemRegistryScreen(_props: ScreenProps): React.ReactElement {
         </div>
       </header>
 
-      {/* Model explainer */}
-      <div style={{
-        display: 'flex', gap: 14, alignItems: 'flex-start',
-        marginBottom: 20, background: 'var(--canvas-raised)',
-        border: '1px solid var(--rule)', borderRadius: 10, padding: '14px 18px',
-      }}>
-        <Icon name="scroll" size={18} style={{ color: 'var(--brass-dim)', marginTop: 2, flexShrink: 0 }} />
-        <p style={{ fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--ink)', lineHeight: 1.55, maxWidth: '92ch' }}>
-          The registry holds{' '}
-          <strong style={{ color: 'var(--color-rarity-very-rare)', fontStyle: 'normal' }}>homebrew</strong>
-          {' '}items only — anything here is campaign-specific and is{' '}
-          <em>never</em> looked up on the wiki.{' '}
-          <strong style={{ color: 'var(--color-info-text)', fontStyle: 'normal' }}>Official</strong>
-          {' '}D&amp;D items are not registered; they are resolved from the SRD wiki on demand.
-        </p>
-      </div>
-
       {/* Summary tiles */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 20 }}>
         {[
