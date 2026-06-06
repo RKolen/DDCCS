@@ -61,6 +61,11 @@
   color: var(--color-rarity-artifact);
   border-color: #f4433680;
 }
+.varVestige {
+  background: #120d1a;
+  color: var(--color-rarity-vestige);
+  border-color: #b58cf252;
+}
 .varDanger {
   background: #1a0808;
   color: #d94f40;

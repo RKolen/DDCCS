@@ -1,0 +1,212 @@
+/* ItemRoster.module.css — the Loot Vault grid. */
+
+.page {
+  padding: var(--space-8) var(--space-10);
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* ── Header ───────��──────────────────────────────────────────────── */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 16px;
+  margin-bottom: var(--space-6);
+}
+
+.eyebrow {
+  display: block;
+  font-family: var(--font-display);
+  font-size: var(--text-xs);
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-widest);
+  margin-bottom: var(--space-2);
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  font-weight: var(--font-bold);
+  color: var(--color-gold-bright);
+  margin: 0;
+  letter-spacing: var(--tracking-wide);
+}
+
+.blurb {
+  margin: var(--space-2) 0 0;
+  font-family: var(--font-body);
+  font-style: italic;
+  font-size: var(--text-md);
+  color: var(--color-text-secondary);
+  max-width: 720px;
+}
+
+/* ── Rarity summary band ─���───────────────────────────────────────── */
+.summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: var(--space-3);
+  margin-bottom: var(--space-6);
+}
+
+.summaryCell {
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-gold-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-3) var(--space-4);
+}
+
+.summaryLabel {
+  font-family: var(--font-display);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-widest);
+  font-weight: var(--font-bold);
+  margin-bottom: var(--space-2);
+  color: var(--color-text-secondary);
+}
+
+.summaryCount {
+  font-family: var(--font-mono);
+  font-size: var(--text-xl);
+  font-weight: var(--font-medium);
+  color: var(--color-text-primary);
+  line-height: 1;
+}
+
+/* Rarity-tinted background for each summary cell (rgba converted to 8-digit hex). */
+.bg_common    { background: linear-gradient(180deg, #9e9e9e2e 0%, var(--color-bg-surface) 100%); border-color: #9e9e9e59; }
+.bg_common    .summaryLabel { color: var(--color-rarity-common); }
+.bg_uncommon  { background: linear-gradient(180deg, #5ec45e38 0%, var(--color-bg-surface) 100%); border-color: #5ec45e66; }
+.bg_uncommon  .summaryLabel { color: var(--color-rarity-uncommon); }
+.bg_rare      { background: linear-gradient(180deg, #5ba8f542 0%, var(--color-bg-surface) 100%); border-color: #5ba8f566; }
+.bg_rare      .summaryLabel { color: var(--color-rarity-rare); }
+.bg_very_rare { background: linear-gradient(180deg, #bf7fe047 0%, var(--color-bg-surface) 100%); border-color: #bf7fe066; }
+.bg_very_rare .summaryLabel { color: var(--color-rarity-very-rare); }
+.bg_legendary { background: linear-gradient(180deg, #ffa83057 0%, var(--color-bg-surface) 100%); border-color: #ffa83073; }
+.bg_legendary .summaryLabel { color: var(--color-rarity-legendary); }
+.bg_artifact  { background: linear-gradient(180deg, #f060556b 0%, var(--color-bg-surface) 100%); border-color: #f0605580; }
+.bg_artifact  .summaryLabel { color: var(--color-rarity-artifact); }
+.bg_vestige   { background: linear-gradient(180deg, #b58cf252 0%, var(--color-bg-surface) 100%); border-color: #b58cf266; }
+.bg_vestige   .summaryLabel { color: var(--color-rarity-vestige); }
+
+.summaryTotal {
+  border-color: var(--color-gold-mid);
+}
+.summaryTotal .summaryLabel { color: var(--color-gold-bright); }
+.summaryTotal .summaryCount { color: var(--color-gold-bright); }
+
+/* ── Filter bar ─────���────────────────────────────────────────────── */
+.filters {
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-gold-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin-bottom: var(--space-5);
+}
+
+.search {
+  background: var(--color-bg-overlay);
+  border: 1px solid var(--color-gold-border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-3);
+  color: var(--color-text-primary);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  width: 100%;
+  max-width: 360px;
+}
+.search:focus {
+  outline: none;
+  border-color: var(--color-gold-mid);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-gold-mid) 18%, transparent);
+}
+
+.chipRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.chipLabel {
+  font-family: var(--font-display);
+  font-size: 9px;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-widest);
+  font-weight: var(--font-bold);
+  margin-right: var(--space-1);
+}
+
+.chip {
+  background: var(--color-bg-surface);
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-gold-border);
+  border-radius: var(--radius-pill);
+  padding: 5px 11px;
+  font-family: var(--font-display);
+  font-size: 10px;
+  font-weight: var(--font-bold);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+.chip:hover {
+  background: var(--color-bg-overlay);
+  color: var(--color-text-primary);
+}
+.chipActive {
+  background: color-mix(in srgb, var(--color-gold-mid) 14%, transparent);
+  color: var(--color-gold-bright);
+  border-color: var(--color-gold-mid);
+}
+
+.chipClear {
+  background: transparent;
+  border: none;
+  font-family: var(--font-body);
+  font-style: italic;
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.flexSpace { flex: 1; }
+
+.resultCount {
+  font-family: var(--font-display);
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-widest);
+  color: var(--color-gold-mid);
+  margin-bottom: var(--space-4);
+}
+
+/* ── Grid ─────────────────────────────────────��──────────────────── */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: var(--space-3);
+}
+
+.empty {
+  padding: 60px 20px;
+  text-align: center;
+  background: var(--color-bg-surface);
+  border: 1px dashed var(--color-gold-border);
+  border-radius: var(--radius-md);
+}
+.empty p {
+  margin: 0;
+  font-family: var(--font-body);
+  font-style: italic;
+  color: var(--color-text-secondary);
+}

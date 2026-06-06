@@ -127,7 +127,7 @@ const ItemPage: React.FC<ItemPageProps> = ({ data, location }) => {
     item.weaponMastery?.length ? { label: 'Mastery', value: item.weaponMastery.map(t => t.name).join(', ') } : null,
     item.weaponProperties?.length ? { label: 'Properties', value: item.weaponProperties.map(t => t.name).join(', ') } : null,
     item.itemRequiresAttunement ? { label: 'Attunement', value: 'Required', accent: 'var(--color-warning)' } : null,
-    item.vestigeLevel != null ? { label: 'Vestige state', value: item.vestigeLevel.name } : null,
+    item.vestigeLevel != null && item.itemRarity?.toLowerCase() === 'vestige' ? { label: 'Vestige state', value: item.vestigeLevel.name } : null,
   ].filter((s): s is NonNullable<typeof s> => s !== null);
 
   return (

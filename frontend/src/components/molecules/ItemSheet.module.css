@@ -1,0 +1,522 @@
+/* ItemSheet.module.css — the Reliquary Plate layout.
+ *
+ * Tokens-first. Rarity-keyed colour comes from the .rarityX classes at
+ * the bottom which set --rarity-hue and --rarity-glow on the host.
+ *
+ * Breakpoints:
+ *   > 1080px  full 3-column body, hero side-by-side
+ *   <= 1080px body collapses to 1 column
+ *   <= 760px  hero stacks portrait above body, footer wraps
+ */
+
+.sheet {
+  background: var(--color-bg-base);
+  color: var(--color-text-primary);
+  font-family: var(--font-body);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-gold-border);
+  overflow: hidden;
+  position: relative;
+}
+
+/* ── HERO BAND ───────────────────────────────────────────────────── */
+
+.hero {
+  display: grid;
+  grid-template-columns: 360px 1fr;
+  gap: 36px;
+  align-items: center;
+  padding: 36px 44px 28px;
+  border-bottom: 1px solid var(--color-gold-border);
+  background: linear-gradient(180deg, var(--rarity-glow, transparent) 0%, transparent 100%);
+}
+
+.heroPortrait {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.heroBody {
+  min-width: 0;
+}
+
+.typeLine {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-display);
+  font-size: 11px;
+  color: var(--rarity-hue, var(--color-gold-mid));
+  letter-spacing: var(--tracking-widest);
+  text-transform: uppercase;
+  font-weight: var(--font-semibold);
+  margin-bottom: 6px;
+}
+
+.name {
+  font-family: var(--font-display);
+  font-size: 56px;
+  font-weight: var(--font-bold);
+  color: var(--color-gold-bright);
+  margin: 0 0 6px;
+  letter-spacing: var(--tracking-tight);
+  line-height: 1;
+  text-shadow: 0 0 18px var(--rarity-glow, transparent);
+}
+
+.epithet {
+  font-family: var(--font-body);
+  font-style: italic;
+  font-size: 20px;
+  color: var(--color-text-secondary);
+  margin: 0 0 18px;
+  letter-spacing: 0.01em;
+}
+
+.heroBadges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.short {
+  margin: 0;
+  font-family: var(--font-body);
+  font-style: italic;
+  font-size: 17px;
+  color: var(--color-text-primary);
+  line-height: var(--leading-normal);
+  text-wrap: pretty;
+  max-width: 620px;
+}
+
+/* ── BODY (3 columns) ────────────────────────────────────────────── */
+
+.body {
+  display: grid;
+  grid-template-columns: 1.25fr 1fr 1fr;
+  gap: 32px;
+  padding: 28px 44px 30px;
+}
+
+/* Column placeholders — the grid positions them automatically. */
+
+.sectionTitle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--color-gold-mid);
+  margin: 0 0 10px;
+}
+
+.sectionTitleGap {
+  margin-top: 24px;
+}
+
+.sectionTitle>span:first-of-type {
+  font-family: var(--font-display);
+  font-size: 10px;
+  color: var(--color-gold-mid);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-widest);
+  font-weight: var(--font-bold);
+}
+
+.sectionRule {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(to right, #c9a96e4d, transparent);
+}
+
+/* — Lore column — */
+
+.description {
+  margin: 0 0 16px;
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: var(--leading-loose);
+  color: var(--color-text-primary);
+  text-wrap: pretty;
+}
+
+.dropCap {
+  float: left;
+  font-family: var(--font-display);
+  font-size: 48px;
+  color: var(--rarity-hue, var(--color-gold-bright));
+  line-height: 0.9;
+  padding-right: 8px;
+  padding-top: 4px;
+  text-shadow: 0 0 12px var(--rarity-glow, transparent);
+}
+
+.benefits {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.benefit {
+  display: grid;
+  grid-template-columns: 12px 1fr;
+  gap: 10px;
+  align-items: start;
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: var(--leading-normal);
+  color: var(--color-text-primary);
+  text-wrap: pretty;
+}
+
+.benefitDot {
+  margin-top: 6px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--rarity-hue, var(--color-gold-bright));
+  box-shadow: 0 0 6px var(--rarity-glow, transparent);
+}
+
+/* — Mechanics column — */
+
+.mechanics {
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-gold-border);
+  border-radius: var(--radius-sm);
+  padding: 6px 16px 10px;
+}
+
+.vitals {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.miniStat {
+  background: var(--color-bg-overlay);
+  border: 1px solid var(--color-gold-border);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+}
+
+.miniStatLabel {
+  font-family: var(--font-display);
+  font-size: 9px;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-widest);
+  margin-bottom: 3px;
+}
+
+.miniStatValue {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  color: var(--color-text-primary);
+}
+
+.miniStatItalic {
+  font-family: var(--font-body);
+  font-style: italic;
+  font-size: 13px;
+}
+
+/* — Provenance column — */
+
+.timeline {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.provRow {
+  display: grid;
+  grid-template-columns: 14px 1fr;
+  gap: 12px;
+  position: relative;
+  padding-bottom: 14px;
+}
+
+.provRowLast {
+  padding-bottom: 0;
+}
+
+.provBullet {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 5px;
+}
+
+.provDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-gold-mid);
+  box-shadow:
+    0 0 0 3px var(--color-bg-base),
+    0 0 0 4px var(--color-gold-border);
+  flex-shrink: 0;
+}
+
+.provLine {
+  flex: 1;
+  width: 1px;
+  background: var(--color-gold-border);
+  margin-top: 4px;
+}
+
+.provEra {
+  font-family: var(--font-display);
+  font-size: 10px;
+  color: var(--color-gold-bright);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-widest);
+  font-weight: var(--font-bold);
+  margin-bottom: 2px;
+}
+
+.provNote {
+  font-family: var(--font-body);
+  font-style: italic;
+  font-size: 13px;
+  color: var(--color-text-primary);
+  line-height: var(--leading-normal);
+}
+
+.emptyNote {
+  font-family: var(--font-body);
+  font-style: italic;
+  font-size: 13px;
+  color: var(--color-text-disabled);
+}
+
+/* ── FOOTER BAND ─────────────────────────────────────────────────── */
+
+.footer {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr 1fr;
+  gap: 28px;
+  padding: 20px 44px 28px;
+  border-top: 1px solid var(--color-gold-border);
+  background: var(--color-bg-surface);
+}
+
+.footerCol {
+  min-width: 0;
+}
+
+.footerEyebrow {
+  font-family: var(--font-display);
+  font-size: 10px;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-widest);
+  margin-bottom: 8px;
+}
+
+.bearer {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  color: inherit;
+  font-family: inherit;
+  text-align: left;
+  text-decoration: none;
+}
+
+.bearer:not(:disabled):hover .bearerName {
+  color: var(--color-gold-bright);
+}
+
+.bearer:not(:disabled):focus-visible {
+  outline: 2px solid var(--color-gold-bright);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+.bearerSigil {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(135deg, var(--rarity-glow, transparent), var(--color-bg-overlay));
+  border: 1px solid var(--color-gold-border);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-gold-mid);
+  flex-shrink: 0;
+}
+
+.bearerInfo {
+  display: flex;
+  flex-direction: column;
+}
+
+.bearerName {
+  font-family: var(--font-display);
+  font-size: 16px;
+  color: var(--color-gold-mid);
+  font-weight: var(--font-semibold);
+  transition: color var(--transition-fast);
+}
+
+.bearerStatus {
+  font-family: var(--font-body);
+  font-style: italic;
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+
+.lastSeen {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--color-text-primary);
+}
+
+.related {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.relatedChip {
+  font-family: var(--font-display);
+  font-size: 10px;
+  font-weight: var(--font-semibold);
+  color: var(--color-gold-mid);
+  padding: 4px 10px;
+  background: var(--color-bg-overlay);
+  border: 1px solid var(--color-gold-border);
+  border-radius: var(--radius-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.relatedChip:hover {
+  background: var(--color-bg-hover);
+  color: var(--color-gold-bright);
+}
+
+.relatedChip:focus-visible {
+  outline: 2px solid var(--color-gold-bright);
+  outline-offset: 2px;
+}
+
+/* ── Responsive collapse ─────────────────────────────────────────── */
+
+@media (max-width: 1080px) {
+  .body {
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+
+  .footer {
+    grid-template-columns: 1fr 1fr;
+    row-gap: 18px;
+  }
+}
+
+@media (max-width: 760px) {
+  .hero {
+    grid-template-columns: 1fr;
+    padding: 28px 24px 24px;
+    gap: 24px;
+  }
+
+  .heroPortrait {
+    justify-content: center;
+  }
+
+  .name {
+    font-size: 42px;
+  }
+
+  .epithet {
+    font-size: 17px;
+  }
+
+  .body {
+    padding: 24px 24px 28px;
+  }
+
+  .footer {
+    padding: 18px 24px 24px;
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── Rarity classes — drive --rarity-hue and --rarity-glow ───────── */
+
+.rarityCommon {
+  --rarity-hue: var(--color-rarity-common);
+  --rarity-glow: #9e9e9e2e;
+}
+
+.rarityUncommon {
+  --rarity-hue: var(--color-rarity-uncommon);
+  --rarity-glow: #5ec45e38;
+}
+
+.rarityRare {
+  --rarity-hue: var(--color-rarity-rare);
+  --rarity-glow: #5ba8f542;
+}
+
+.rarityVeryRare {
+  --rarity-hue: var(--color-rarity-very-rare);
+  --rarity-glow: #bf7fe047;
+}
+
+.rarityLegendary {
+  --rarity-hue: var(--color-rarity-legendary);
+  --rarity-glow: #ffa83057;
+}
+
+.rarityArtifact {
+  --rarity-hue: var(--color-rarity-artifact);
+  --rarity-glow: #f060556b;
+}
+
+.rarityVestige {
+  --rarity-hue: var(--color-rarity-vestige, #b58cf2);
+  --rarity-glow: #b58cf252;
+}
+
+/* Slim body — for items with only base fields */
+.bodySlim {
+  padding: 28px 44px 30px;
+}
+
+.vitalsSlim {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 10px;
+  max-width: 760px;
+}
+
+/* HTML body content from Drupal */
+.description p {
+  margin: 0 0 1em;
+}
+
+.description p:last-child {
+  margin-bottom: 0;
+}
+
+.description strong {
+  color: var(--color-gold-bright);
+  font-weight: var(--font-semibold);
+}

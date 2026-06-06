@@ -35,4 +35,10 @@ export type GameIconName =
   | 'gem-pendant'
   | 'ring'
   | 'scroll-unfurled'
-  | 'potion-ball';
+  | 'potion-ball'
+  | 'dice-d4'
+  | 'dice-d6'
+  | 'dice-d8'
+  | 'dice-d10'
+  | 'dice-d12'
+  | 'dice-d20';

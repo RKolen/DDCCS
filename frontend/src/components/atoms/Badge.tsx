@@ -13,6 +13,7 @@ export type BadgeVariant =
   | 'very-rare'
   | 'legendary'
   | 'artifact'
+  | 'vestige'
   | 'danger'
   | 'success'
   | 'concentration'
@@ -37,6 +38,7 @@ const VARIANT_CLASS: Record<BadgeVariant, string> = {
   'very-rare':   styles.varVeryRare,
   legendary:     styles.varLegendary,
   artifact:      styles.varArtifact,
+  vestige:       styles.varVestige,
   danger:        styles.varDanger,
   success:       styles.varSuccess,
   concentration: styles.varConcentration,

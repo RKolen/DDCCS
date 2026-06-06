@@ -4,6 +4,8 @@ import type { HeadFC, PageProps } from 'gatsby';
 import { BaseTemplate } from '../components/templates/BaseTemplate';
 import { Portrait } from '../components/atoms/Portrait';
 import { ImageLightbox } from '../components/atoms/ImageLightbox';
+import { ItemCard } from '../components/molecules/ItemCard';
+import type { ItemNode } from '../types/item';
 import { cleanHtml } from '../utils/cleanHtml';
 import * as styles from './character.module.css';
 
@@ -28,15 +30,6 @@ interface ClassParagraph {
 
 interface BackstoryParagraph {
   text: TextValue[] | null;
-}
-
-interface ItemNode {
-  title:                  string;
-  path:                   string | null;
-  itemType:               string | null;
-  itemRarity:             string | null;
-  isMagic:                boolean | null;
-  itemRequiresAttunement: boolean | null;
 }
 
 interface TextValue { value: string; }
@@ -79,18 +72,6 @@ interface CharacterData {
 }
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
-
-function rarityClass(rarity: string | null | undefined): string {
-  switch ((rarity ?? '').toLowerCase()) {
-    case 'uncommon':  return styles.rarityUncommon;
-    case 'rare':      return styles.rarityRare;
-    case 'very_rare': return styles.rarityVeryRare;
-    case 'legendary': return styles.rarityLegendary;
-    case 'artifact':  return styles.rarityArtifact;
-    case 'vestige':   return styles.rarityVestige;
-    default:          return '';
-  }
-}
 
 function mod(score: number): string {
   const m = Math.floor((score - 10) / 2);
@@ -372,9 +353,9 @@ const CharacterPage: React.FC<PageProps<CharacterData>> = ({ data, location }) =
             {weapons.length > 0 && (
               <section className={styles.panel}>
                 <h2 className={styles.panelTitle}>Weapons</h2>
-                <ul className={styles.itemList}>
-                  {weapons.map((item, i) => <ItemRow key={i} item={item} />)}
-                </ul>
+                <div className={styles.equipmentStack}>
+                  {weapons.map(item => <ItemCard key={item.path ?? item.title} item={item} />)}
+                </div>
               </section>
             )}
 
@@ -382,9 +363,9 @@ const CharacterPage: React.FC<PageProps<CharacterData>> = ({ data, location }) =
             {magic.length > 0 && (
               <section className={styles.panel}>
                 <h2 className={styles.panelTitle}>Magic Items</h2>
-                <ul className={styles.itemList}>
-                  {magic.map((item, i) => <ItemRow key={i} item={item} />)}
-                </ul>
+                <div className={styles.equipmentStack}>
+                  {magic.map(item => <ItemCard key={item.path ?? item.title} item={item} />)}
+                </div>
               </section>
             )}
 
@@ -392,9 +373,9 @@ const CharacterPage: React.FC<PageProps<CharacterData>> = ({ data, location }) =
             {gear.length > 0 && (
               <section className={styles.panel}>
                 <h2 className={styles.panelTitle}>Gear</h2>
-                <ul className={styles.itemList}>
-                  {gear.map((item, i) => <ItemRow key={i} item={item} />)}
-                </ul>
+                <div className={styles.equipmentStack}>
+                  {gear.map(item => <ItemCard key={item.path ?? item.title} item={item} />)}
+                </div>
               </section>
             )}
           </div>
@@ -465,30 +446,6 @@ function BackstoryScroll({ html }: { html: string }): React.ReactElement {
   );
 }
 
-// ── Item row ──────────────────────────────────────────────────────────────────
-
-function ItemRow({ item }: { item: ItemNode }): React.ReactElement {
-  const nameEl = item.path
-    ? <Link to={item.path} className={styles.itemLink}>{item.title}</Link>
-    : <span>{item.title}</span>;
-
-  return (
-    <li className={styles.itemRow}>
-      {nameEl}
-      <span className={styles.itemMeta}>
-        {item.itemRequiresAttunement && (
-          <span className={styles.attuneChip}>Attune</span>
-        )}
-        {item.itemRarity && item.itemRarity !== 'common' && (
-          <span className={`${styles.rarityChip} ${rarityClass(item.itemRarity)}`}>
-            {item.itemRarity}
-          </span>
-        )}
-      </span>
-    </li>
-  );
-}
-
 // ── Query ─────────────────────────────────────────────────────────────────────
 
 export const query = graphql`
@@ -554,11 +511,13 @@ export const query = graphql`
           equipmentItems {
             ... on Drupal_NodeItem {
               title path itemType itemRarity isMagic itemRequiresAttunement
+              image { ... on Drupal_MediaImage { mediaImage { url alt } } }
             }
           }
           magicItemsRef {
             ... on Drupal_NodeItem {
               title path itemType itemRarity isMagic itemRequiresAttunement
+              image { ... on Drupal_MediaImage { mediaImage { url alt } } }
             }
           }
         }

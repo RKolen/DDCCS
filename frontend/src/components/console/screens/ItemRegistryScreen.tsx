@@ -24,25 +24,25 @@ import type { DrupalItem } from '../ConsoleContext';
    ──────────────────────────────────────────────────────────── */
 
 const ITEM_TYPE_ICON: Record<string, string> = {
-  weapon:     'scroll',
-  armor:      'npc',
-  gear:       'tools',
-  tool:       'tools',
+  weapon: 'scroll',
+  armor: 'npc',
+  gear: 'tools',
+  tool: 'tools',
   consumable: 'spell',
   magic_item: 'spell',
-  treasure:   'star',
+  treasure: 'star',
 };
 
 const ITEM_TYPE_ORDER = ['weapon', 'armor', 'magic_item', 'gear', 'tool', 'consumable', 'treasure'];
 
 const ITEM_TYPE_LABEL: Record<string, string> = {
-  weapon:     'Weapon',
-  armor:      'Armor',
-  gear:       'Gear',
-  tool:       'Tool',
+  weapon: 'Weapon',
+  armor: 'Armor',
+  gear: 'Gear',
+  tool: 'Tool',
   consumable: 'Consumable',
   magic_item: 'Magic Item',
-  treasure:   'Treasure',
+  treasure: 'Treasure',
 };
 
 /* ────────────────────────────────────────────────────────────
@@ -109,8 +109,8 @@ function validateItem(item: DrupalItem): ValidationResult {
 
 const STATUS_GLYPH: Record<Level, string> = { pass: '✓', warn: '!', error: '✗' };
 const STATUS_COLOR: Record<Level, string> = {
-  pass:  'var(--color-success)',
-  warn:  'var(--color-warning)',
+  pass: 'var(--color-success)',
+  warn: 'var(--color-warning)',
   error: 'var(--color-danger)',
 };
 
@@ -169,8 +169,8 @@ function RegistryRow({
   compact: boolean;
 }): React.ReactElement {
   const homebrew = isHomebrew(item);
-  const tint     = rarityColor(item.itemRarity);
-  const showVal  = showValidation && homebrew;
+  const tint = rarityColor(item.itemRarity);
+  const showVal = showValidation && homebrew;
   const typeLabel = ITEM_TYPE_LABEL[item.itemType?.toLowerCase() ?? ''] ?? item.itemType ?? '—';
 
   return (
@@ -178,7 +178,7 @@ function RegistryRow({
       background: 'var(--color-bg-surface)',
       border: `1px solid ${expanded ? 'var(--color-gold-muted)' : 'var(--color-gold-border)'}`,
       borderRadius: 8, overflow: 'hidden',
-      borderLeft: `3px solid ${homebrew ? '#bf7fe0' : '#5b9bd5'}`,
+      borderLeft: `3px solid ${homebrew ? 'var(--color-rarity-very-rare)' : 'var(--color-info)'}`,
     }}>
       <button
         type="button"
@@ -215,7 +215,7 @@ function RegistryRow({
             <span style={{ color: 'var(--color-text-disabled)' }}>·</span>
             <span style={{
               display: 'inline-flex', alignItems: 'center', gap: 4,
-              color: homebrew ? '#c98ad1' : '#7fb0e8',
+              color: homebrew ? 'var(--color-rarity-very-rare)' : 'var(--color-info-text)',
             }}>
               {homebrew ? 'custom registry' : 'wiki lookup'}
             </span>
@@ -245,9 +245,9 @@ function RegistryRow({
           fontFamily: 'var(--font-display)', fontSize: 8, fontWeight: 700,
           letterSpacing: '0.1em', textTransform: 'uppercase', padding: '3px 8px',
           borderRadius: 4,
-          border: `1px solid ${homebrew ? '#c98ad133' : '#5b9bd533'}`,
-          color: homebrew ? '#c98ad1' : '#7fb0e8',
-          background: homebrew ? '#c98ad10a' : '#5b9bd50a',
+          border: `1px solid ${homebrew ? 'color-mix(in srgb, var(--color-rarity-very-rare) 20%, transparent)' : 'color-mix(in srgb, var(--color-info) 20%, transparent)'}`,
+          color: homebrew ? 'var(--color-rarity-very-rare)' : 'var(--color-info-text)',
+          background: homebrew ? 'color-mix(in srgb, var(--color-rarity-very-rare) 4%, transparent)' : 'color-mix(in srgb, var(--color-info) 4%, transparent)',
           whiteSpace: 'nowrap',
         }}>
           {homebrew ? 'Homebrew' : 'Official'}
@@ -382,27 +382,27 @@ function ghostLink(): React.CSSProperties {
    ──────────────────────────────────────────────────────────── */
 
 export function ItemRegistryScreen(_props: ScreenProps): React.ReactElement {
-  const data   = useConsoleData();
-  const items  = data.items;
+  const data = useConsoleData();
+  const items = data.items;
 
-  const [sourceFilter, setSource]   = React.useState<'all' | 'homebrew' | 'official'>('all');
-  const [typeFilter,   setType]     = React.useState<string | null>(null);
-  const [magicOnly,    setMagicOnly] = React.useState(false);
-  const [query,        setQuery]    = React.useState('');
-  const [showVal,      setShowVal]  = React.useState(true);
-  const [expanded,     setExpanded] = React.useState<Record<string, boolean>>({});
+  const [sourceFilter, setSource] = React.useState<'all' | 'homebrew' | 'official'>('all');
+  const [typeFilter, setType] = React.useState<string | null>(null);
+  const [magicOnly, setMagicOnly] = React.useState(false);
+  const [query, setQuery] = React.useState('');
+  const [showVal, setShowVal] = React.useState(true);
+  const [expanded, setExpanded] = React.useState<Record<string, boolean>>({});
 
   /* Pre-validate once */
   const validated = React.useMemo(() =>
     items.map(it => ({ it, val: validateItem(it) })),
-  [items]);
+    [items]);
 
   /* Summary counts */
   const summary = React.useMemo(() => {
     const homebrew = validated.filter(v => isHomebrew(v.it)).length;
     const official = validated.filter(v => !isHomebrew(v.it)).length;
-    const magic    = items.filter(i => i.isMagic).length;
-    const flagged  = validated.filter(v => isHomebrew(v.it) && v.val.status !== 'pass').length;
+    const magic = items.filter(i => i.isMagic).length;
+    const flagged = validated.filter(v => isHomebrew(v.it) && v.val.status !== 'pass').length;
     return { homebrew, official, magic, flagged };
   }, [validated, items]);
 
@@ -415,7 +415,7 @@ export function ItemRegistryScreen(_props: ScreenProps): React.ReactElement {
   /* Filtered list */
   const visible = React.useMemo(() => validated.filter(({ it }) => {
     if (sourceFilter === 'homebrew' && !isHomebrew(it)) return false;
-    if (sourceFilter === 'official' && isHomebrew(it))  return false;
+    if (sourceFilter === 'official' && isHomebrew(it)) return false;
     if (typeFilter != null && it.itemType?.toLowerCase() !== typeFilter) return false;
     if (magicOnly && !it.isMagic) return false;
     if (query) {
@@ -425,8 +425,8 @@ export function ItemRegistryScreen(_props: ScreenProps): React.ReactElement {
     return true;
   }), [validated, sourceFilter, typeFilter, magicOnly, query]);
 
-  const toggle   = (id: string): void => setExpanded(p => ({ ...p, [id]: !p[id] }));
-  const setAll   = (v: boolean): void => {
+  const toggle = (id: string): void => setExpanded(p => ({ ...p, [id]: !p[id] }));
+  const setAll = (v: boolean): void => {
     const n: Record<string, boolean> = {};
     visible.forEach(x => { n[x.it.id] = v; });
     setExpanded(n);
@@ -477,10 +477,6 @@ export function ItemRegistryScreen(_props: ScreenProps): React.ReactElement {
         <div>
           <span className="reader-eyebrow">Items · Registry</span>
           <h2>The Item Registry</h2>
-          <p className="screen-blurb">
-            Homebrew items are stored here and never looked up on the wiki.
-            Official items are resolved from the SRD on demand.
-          </p>
         </div>
         <div className="screen-head-actions">
           <button
@@ -502,10 +498,10 @@ export function ItemRegistryScreen(_props: ScreenProps): React.ReactElement {
         <Icon name="scroll" size={18} style={{ color: 'var(--brass-dim)', marginTop: 2, flexShrink: 0 }} />
         <p style={{ fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--ink)', lineHeight: 1.55, maxWidth: '92ch' }}>
           The registry holds{' '}
-          <strong style={{ color: '#c98ad1', fontStyle: 'normal' }}>homebrew</strong>
+          <strong style={{ color: 'var(--color-rarity-very-rare)', fontStyle: 'normal' }}>homebrew</strong>
           {' '}items only — anything here is campaign-specific and is{' '}
           <em>never</em> looked up on the wiki.{' '}
-          <strong style={{ color: '#7fb0e8', fontStyle: 'normal' }}>Official</strong>
+          <strong style={{ color: 'var(--color-info-text)', fontStyle: 'normal' }}>Official</strong>
           {' '}D&amp;D items are not registered; they are resolved from the SRD wiki on demand.
         </p>
       </div>
@@ -513,9 +509,9 @@ export function ItemRegistryScreen(_props: ScreenProps): React.ReactElement {
       {/* Summary tiles */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 20 }}>
         {[
-          { label: 'In Registry', value: summary.homebrew, color: '#bf7fe0', sub: 'homebrew · no wiki lookup',  src: 'homebrew' as const },
-          { label: 'Official',    value: summary.official, color: '#5b9bd5', sub: 'resolved via wiki',         src: 'official' as const },
-          { label: 'Magic Items', value: summary.magic,    color: 'var(--color-gold-bright)', sub: 'is_magic = true', src: 'magic' as const },
+          { label: 'In Registry', value: summary.homebrew, color: 'var(--color-rarity-very-rare)', sub: 'homebrew · no wiki lookup', src: 'homebrew' as const },
+          { label: 'Official', value: summary.official, color: 'var(--color-info)', sub: 'resolved via wiki', src: 'official' as const },
+          { label: 'Magic Items', value: summary.magic, color: 'var(--color-gold-bright)', sub: 'is_magic = true', src: 'magic' as const },
           { label: 'Needs Attention', value: summary.flagged, color: summary.flagged ? 'var(--color-warning)' : 'var(--color-success)', sub: 'registry validation', src: 'flagged' as const },
         ].map(s => {
           const isActive = s.src === sourceFilter || (s.src === 'magic' && magicOnly);
@@ -553,7 +549,7 @@ export function ItemRegistryScreen(_props: ScreenProps): React.ReactElement {
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
           {/* Source toggle */}
-          <div style={{ display: 'flex', gap: 2, background: 'rgba(0,0,0,.3)', padding: 3, borderRadius: 6, border: '1px solid var(--rule)' }}>
+          <div style={{ display: 'flex', gap: 2, background: 'var(--overlay-30)', padding: 3, borderRadius: 6, border: '1px solid var(--rule)' }}>
             {(['all', 'homebrew', 'official'] as const).map(v => (
               <button key={v} type="button" onClick={() => setSource(v)} style={segStyle(sourceFilter === v)}>
                 {v === 'all' ? 'All' : v === 'homebrew' ? 'Homebrew' : 'Official'}

@@ -1,0 +1,63 @@
+/* RarityFrame.module.css — gilded picture frame around an item portrait. */
+
+.frame {
+  position: relative;
+  padding: 6px;
+  border-width: 1px;
+  border-style: solid;
+  /* border colour, background, and box-shadow are set inline by the
+     component because they are keyed to the rarity prop. */
+  flex-shrink: 0;
+  box-sizing: border-box;
+}
+
+.liner {
+  position: absolute;
+  inset: 3px;
+  border: 1px solid var(--color-gold-border);
+  pointer-events: none;
+}
+
+.slot {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: var(--color-bg-base);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.placeholder {
+  font-family: var(--font-body);
+  font-style: italic;
+  font-size: var(--text-sm);
+  color: var(--color-text-disabled);
+  padding: 0 12px;
+  text-align: center;
+}
+
+/* Corner brackets — gold accents in the rarity colour (set inline). */
+.bracket {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border-top-width: 2px;
+  border-left-width: 2px;
+  border-top-style: solid;
+  border-left-style: solid;
+  opacity: 0.9;
+  pointer-events: none;
+}
+
+.bracketTL { top: -2px;    left: -2px;    transform: rotate(0deg); }
+.bracketTR { top: -2px;    right: -2px;   transform: rotate(90deg); }
+.bracketBR { bottom: -2px; right: -2px;   transform: rotate(180deg); }
+.bracketBL { bottom: -2px; left: -2px;    transform: rotate(270deg); }
