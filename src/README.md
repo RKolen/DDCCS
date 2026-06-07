@@ -1,6 +1,23 @@
-﻿# D&D Character Consultant System - Source Code Structure
+﻿# D&D Character Consultant System - Python Engine
 
-This directory contains all source code organized into logical packages.
+This directory contains the **Python engine** — the backend that powers the
+whole system. It handles AI, RAG/semantic search, JSON validation, the calendar
+and timeline, spotlight scoring, and synchronisation into Drupal. It runs in two
+ways:
+
+- As an in-process library imported by the **FastAPI sidecar** (`src/sidecar/`),
+  which the [Gatsby frontend](../frontend/README.md) calls for search and
+  spotlight.
+- As batch/utility commands (indexing, Drupal sync) via `src/cli/`.
+
+For how the engine fits the three-tier architecture (engine, Drupal, frontend),
+see [docs/ARCHITECTURE.md](../docs/ARCHITECTURE.md).
+
+> The interactive consultant menu (`python -m src.cli.dnd_consultant`) is the
+> **legacy `v1.0.0` path** and is deprecated. The engine has changed enough that
+> it likely no longer runs end to end. Utility flags such as `--reindex`,
+> `--milvus-status`, and `--sync-drupal` are still used. New user-facing work
+> lives in the frontend.
 
 ## Package Organization
 
@@ -15,6 +32,13 @@ src/
 |   |-- character_sheet.py           # Character and NPC data models
 |   |-- character_consistency.py     # Character consistency checking
 |   `-- npc_constants.py             # NPC ability score constants
+|
+|-- character_arc/       # AI-powered character arc analysis
+|   |-- arc_analyzer.py      # Arc analysis engine
+|   |-- arc_criteria.py      # Criteria and metrics
+|   |-- arc_data.py          # Arc data structures
+|   |-- arc_reports.py       # Report generation
+|   `-- arc_storage.py       # Arc data persistence
 |
 |-- npcs/               # NPC management
 |   |-- npc_agents.py           # NPC AI agents
@@ -54,6 +78,25 @@ src/
 |-- items/              # Items and inventory
 |   `-- item_registry.py        # Custom items registry
 |
+|-- spells/             # Custom / homebrew spell system
+|   |-- spell_registry.py            # Homebrew spell registry
+|   |-- spell_import_export.py       # Import/export of custom spells
+|   `-- spell_item_integration.py    # Spell <-> magic item integration
+|
+|-- encounters/         # Encounter scaling
+|   `-- encounter_scaler.py     # Encounter difficulty scaling/calculation
+|
+|-- sessions/           # Session notes
+|   |-- session_notes.py         # Session notes data structures
+|   `-- session_notes_manager.py # Session notes manager
+|
+|-- timeline/           # Cross-campaign timeline tracking
+|   |-- event_schema.py          # Timeline event schema
+|   |-- event_extractor.py       # Extract events from story files
+|   |-- timeline_store.py        # Event storage/retrieval
+|   |-- timeline_display.py      # Timeline views/export
+|   `-- cross_campaign.py        # Cross-campaign event linking
+|
 |-- dm/                 # Dungeon Master tools
 |   |-- dungeon_master.py       # DM consultant
 |   `-- history_check_helper.py # History check helper
@@ -82,6 +125,11 @@ src/
 |
 |-- integration/        # External service integration
 |   `-- drupal_sync.py         # Push characters/stories/items/monsters to Drupal, trigger Gatsby builds
+|
+|-- sidecar/            # FastAPI microservice (search + spotlight) -- see sidecar/README.md
+|   |-- app.py                 # FastAPI app (/health, /search/parse-query, /eval/spotlight)
+|   |-- models.py              # Pydantic request/response models
+|   `-- query_parser.py        # AI query normalisation
 |
 |-- utils/              # Shared utilities (check AGENTS.md catalog first)
 |   |-- file_io.py                  # JSON and file I/O
@@ -113,8 +161,8 @@ src/
 |   |-- optional_imports.py         # Optional dependency helpers
 |   `-- display_file.py             # Standalone file viewer
 |
-`-- cli/                # Command-line interface
-    |-- dnd_consultant.py                  # Main interactive CLI
+`-- cli/                # Command-line interface (legacy menu + live utility flags)
+    |-- dnd_consultant.py                  # Main interactive CLI (legacy) + --reindex / --milvus-status / --sync-drupal flags
     |-- dnd_cli_helpers.py                 # CLI helper functions
     |-- drupal_commands.py                 # --sync-drupal handler
     |-- milvus_commands.py                 # --reindex and --milvus-status handlers
@@ -137,10 +185,26 @@ src/
 
 ## Running the System
 
-### Main CLI
+### Search/spotlight sidecar (used by the frontend)
 
 ```bash
-python -m src.cli.dnd_consultant
+python3 run_sidecar.py
+```
+
+See [sidecar/README.md](sidecar/README.md).
+
+### Index and Drupal utilities
+
+```bash
+python -m src.cli.dnd_consultant --reindex         # build/refresh the Milvus index
+python -m src.cli.dnd_consultant --milvus-status   # report index status
+python -m src.cli.dnd_consultant --sync-drupal     # push content into Drupal
+```
+
+### Legacy interactive CLI (deprecated)
+
+```bash
+python -m src.cli.dnd_consultant   # legacy menu; may not run end to end
 ```
 
 ### Validation

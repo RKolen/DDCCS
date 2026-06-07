@@ -11,7 +11,7 @@
 
 ### Phase 2: Infrastructure
 
-- [ ] **Gatsby Frontend** - Drupal API enablement, character/NPC/story/item pages, campaign dashboard **Plan:** [plans/gatsby_frontend_plan.md](plans/gatsby_frontend_plan.md)
+- [ ] **Gatsby Frontend** - Largely implemented: character/NPC/story/item/monster pages, campaign dashboard, console screens, and serverless write/AI functions are in place (docs: [frontend/README.md](frontend/README.md), [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)). Not done: some console routes still fall back to `PlaceholderScreen`; auth and TTS (below) remain. **Plan:** [plans/gatsby_frontend_plan.md](plans/gatsby_frontend_plan.md)
 - [ ] **Player Roles & Auth** - Drupal Player/DM roles, `field_player` on character, Simple OAuth PKCE, Gatsby auth context; players see only their assigned character **Plan:** [plans/player_roles_auth_plan.md](plans/player_roles_auth_plan.md)
 - [ ] **TTS Web Integration** - Pre-generated audio storage, audio sync to Drupal, React audio player components **Plan:** [plans/tts_web_integration.md](plans/tts_web_integration.md)
 - [ ] **Multi-voice TTS (Phase 3-4)** - Voice switching implementation, Piper TTS integration
@@ -69,7 +69,7 @@ All features below have detailed implementation plans in the `plans/` directory.
 
 ### User Experience
 
-- [ ] **Quick start guide** - Create a step-by-step tutorial for new users - [Plan](plans/quick_start_guide_plan.md)
+- [x] **Quick start guide** - Frontend quick start created: [docs/FRONTEND_QUICKSTART.md](docs/FRONTEND_QUICKSTART.md) (the old CLI-focused [Plan](plans/quick_start_guide_plan.md) is superseded)
 - [Coqui TTS Integration](plans/multi_voice_tts_design.md#15-alternative-tts-engine-coqui-ai-tts) - Add Coqui AI as alternative TTS engine for higher voice quality (low priority - requires powerful CPU or NVIDIA GPU)
 
 ## Known Issues to Fix
@@ -130,7 +130,7 @@ All Tier 3 items are complete.
 | 27 | [Export Functionality](plans/export_functionality_plan.md) | Useful but not blocking any DM workflow. Can leverage Drupal if that is in place. |
 | 28 | [Backup System](plans/backup_system_plan.md) | Safety net. Valuable but not urgent for a solo DM using git. |
 | 30 | [Campaign Templates](plans/campaign_templates_plan.md) | Content creation. Most useful as onboarding material once interactive setup is done. |
-| 31 | [Quick Start Guide](plans/quick_start_guide_plan.md) | Documentation. Best written last, once all major features are stable. |
+| 31 | [Quick Start Guide](plans/quick_start_guide_plan.md) | Initial version done: [docs/FRONTEND_QUICKSTART.md](docs/FRONTEND_QUICKSTART.md) (frontend path; the linked plan is CLI-era and superseded). Living doc -- revisit as the FE stabilizes (PlaceholderScreen routes, auth, TTS). |
 | 32 | [Startup Optimization](plans/startup_optimization_plan.md) | Largely done (lazy loading). Revisit only if startup regresses. |
 
 ### Tier 6 — Optional / Experimental

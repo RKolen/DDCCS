@@ -382,7 +382,7 @@ class StoryCLIManager:
             )
             print("[INFO] Edit the file manually to add your story content.")
             print(
-                "[INFO] See docs/AI_INTEGRATION.md to enable AI-powered story generation."
+                "[INFO] See .env.example to enable AI-powered story generation."
             )
             return StoryCreationOptions(
                 use_template=True,  # Use template as fallback

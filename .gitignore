@@ -23,6 +23,8 @@ docs_personal/
 
 # Ignore local AI agent skills
 skills/
+skills-lock.json
+*.claude
 
 # Ignore OS-specific files
 .DS_Store

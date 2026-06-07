@@ -102,18 +102,36 @@ variables. See `src/config/config_types.py` for the configuration schema.
 
 ### 5. Documentation Must Track Code
 
-When a code change alters any of the following, the corresponding
-documentation file must be updated in the same commit:
+**Whenever you add or change functionality, update the README that owns that
+area in the same commit.** Documentation is part of the change, not a follow-up.
+Every codebase has a README that must stay true to the code:
+
+| Area changed | README / doc that must be updated |
+|--------------|-----------------------------------|
+| Python engine (`src/`) — modules, behaviour, commands | `src/README.md` |
+| Sidecar (`src/sidecar/`) — endpoints, auth, run | `src/sidecar/README.md` |
+| Frontend (`frontend/`) — pages, `src/api/` functions, env, structure | `frontend/README.md` (+ `frontend/CLAUDE.md` for agent rules) |
+| Drupal (`drupal-cms/`) — content types, fields, GraphQL exposure | `docs/DRUPAL.md` |
+| Cross-tier flow / new service / data flow | `docs/ARCHITECTURE.md` |
+| Project entry points, doc map, quick start | `README.md`, `docs/FRONTEND_QUICKSTART.md` |
+
+The top-level [README.md](README.md) is the documentation hub; keep its doc map
+current when adding or moving a doc.
+
+In addition, these specific changes require their listed doc to be updated in the
+same commit:
 
 | Change Type | Documentation to Update |
 |-------------|------------------------|
 | New util function | AGENTS.md utils catalog |
-| New config key | `docs/AI_INTEGRATION.md` or `.env.example` |
+| New config key | `.env.example` (and `frontend/.env.example` if browser-exposed) |
 | New CLI argument | AGENTS.md quick reference + relevant `docs/` file |
 | New data field in JSON schema | `docs/JSON_Validation.md` |
 | New test category | `tests/README.md` |
 | New `src/` module | `src/README.md` |
-| Changed AI/RAG architecture | `docs/AI_INTEGRATION.md`, `docs/RAG_INTEGRATION.md` |
+| Changed AI/RAG architecture | `docs/ARCHITECTURE.md` (+ `docs/MILVUS_INTEGRATION.md`) |
+| Changed frontend <-> backend flow | `docs/ARCHITECTURE.md`, `frontend/README.md` |
+| Changed Drupal schema / GraphQL | `docs/DRUPAL.md` |
 
 ### 6. Type Safety: mypy + Pylance
 

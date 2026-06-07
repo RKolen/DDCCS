@@ -3,6 +3,10 @@
 Gatsby 5 + TypeScript 6 frontend that reads content from Drupal via
 `gatsby-source-graphql` pointing at a `drupal/graphql_compose` v3 endpoint.
 
+> Agent coding rules live here. For the human-facing overview (layout, pages,
+> serverless functions, env), see [README.md](README.md); for setup, see
+> [../docs/FRONTEND_QUICKSTART.md](../docs/FRONTEND_QUICKSTART.md).
+
 ---
 
 ## Stack
@@ -24,16 +28,23 @@ Each tier composes only from tiers below it.
 
 ```text
 src/
+|-- api/                # Gatsby serverless functions (writes + live AI)
 |-- components/
 |   |-- atoms/          # Smallest indivisible UI units
 |   |-- molecules/      # Atoms combined into a functional group
 |   |-- organisms/      # Molecules combined into a self-contained section
-|   `-- templates/      # Full page layout shells (no real data)
-|-- pages/              # Gatsby page components (use templates + real data)
-|-- hooks/              # Custom React hooks (data fetching, state)
+|   |-- templates/      # Full page layout shells (no real data)
+|   |-- console/        # Admin/console screens (create, edit, validate, forge)
+|   `-- layout/         # Global layout / chrome
+|-- pages/              # Gatsby page components (run GraphQL page queries)
+|-- templates/          # Per-node detail templates (built in gatsby-node.ts)
 |-- types/              # Shared TypeScript interfaces and type aliases
-`-- styles/             # Global CSS / CSS modules
+|-- utils/              # Helpers
+`-- styles/             # Global CSS / CSS modules (tokens.css)
 ```
+
+Writes and live AI go through `src/api/` serverless functions, never directly
+from components — see [README.md](README.md) for the function catalog.
 
 ### Atoms (`components/atoms/`)
 
@@ -110,7 +121,9 @@ pages/
 
 `gatsby-source-graphql` stitches the remote `drupal/graphql_compose` schema
 into Gatsby's data layer under the `drupal` field. All Drupal data is accessed
-via `{ drupal { ... } }` in page queries.
+via `{ drupal { ... } }` in page queries. The source endpoint is
+`${DRUPAL_BASE_URL}/graphql` (set in `gatsby-config.ts`) — **not** the Gatsby
+dev server at `localhost:$GATSBY_PORT`.
 
 Field names use **camelCase without the `field_` prefix** (e.g. `storyNumber`,
 not `fieldStoryNumber`). The `path` field is a plain `String` (not an object).
@@ -119,14 +132,20 @@ not `fieldStoryNumber`). The `path` field is a plain `String` (not an object).
 | ------------------- | ------------------ | ----------------- |
 | character | `drupal { nodeCharacters(first: N) { nodes { ... } } }` | `drupal { node(id: $id) { ... on Drupal_NodeCharacter { ... } } }` |
 | story | `drupal { nodeStories(first: N) { nodes { ... } } }` | `drupal { node(id: $id) { ... on Drupal_NodeStory { ... } } }` |
-| npc | `drupal { nodeNpcs(first: N) { nodes { ... } } }` | `drupal { node(id: $id) { ... on Drupal_NodeNpc { ... } } }` |
 | item | `drupal { nodeItems(first: N) { nodes { ... } } }` | `drupal { node(id: $id) { ... on Drupal_NodeItem { ... } } }` |
+| monster | `drupal { nodeMonsters(first: N) { nodes { ... } } }` | `drupal { node(id: $id) { ... on Drupal_NodeMonster { ... } } }` |
 | spell | `drupal { nodeSpells(first: N) { nodes { ... } } }` | `drupal { node(id: $id) { ... on Drupal_NodeSpell { ... } } }` |
+
+**NPCs are character nodes**, not a separate type. There is no `nodeNpcs` /
+`Drupal_NodeNpc` (deprecated). Query `nodeCharacters` and filter on
+`field_character_type` (exposed as `characterType`). See
+[../docs/DRUPAL.md](../docs/DRUPAL.md).
 
 Page context uses `id` (UUID string). Template variable is `$id: ID!`.
 
-Explore the full schema at `http://localhost:8000/___graphql` while the dev
-server is running.
+Explore the stitched schema at `http://localhost:``GATSBY_PORT``/___graphql` while the dev
+server is running, or introspect Drupal directly at
+```DRUPAL_URL``/graphql`.
 
 ### Query conventions
 
@@ -217,17 +236,17 @@ integer, format as two-digit hex and append. Examples:
 
 ```bash
 # Start dev server (requires frontend/.env.development)
-npm run develop          # http://localhost:8000
+npm run develop
 
 # GraphQL explorer
-open http://localhost:8000/___graphql
+open http://localhost:$GATSBY_PORT/___graphql
 
 # Type-check (no emit)
 npm run type-check
 
 # Production build
 npm run build
-npm run serve            # preview at http://localhost:9000
+npm run serve
 
 # Clear Gatsby cache (fixes most weird build errors)
 npm run clean
