@@ -14,20 +14,69 @@
  */
 
 import * as React from 'react';
+import { graphql, useStaticQuery } from 'gatsby';
 import type { ScreenProps } from '../ScreenRouter';
 import { useConsoleData } from '../ConsoleContext';
 
-const CLASS_OPTIONS = [
-  'Barbarian', 'Bard', 'Cleric', 'Druid', 'Fighter', 'Monk',
-  'Paladin', 'Ranger', 'Rogue', 'Sorcerer', 'Warlock', 'Wizard',
-] as const;
+interface TermNode { name: string }
 
-const SKILL_OPTIONS = [
-  'Acrobatics', 'Animal Handling', 'Arcana', 'Athletics', 'Deception',
-  'History', 'Insight', 'Intimidation', 'Investigation', 'Medicine',
-  'Nature', 'Perception', 'Performance', 'Persuasion', 'Religion',
-  'Sleight of Hand', 'Stealth', 'Survival',
-] as const;
+interface TaxonomyQuery {
+  drupal: {
+    termClasses:      { nodes: TermNode[] };
+    termSkills:       { nodes: TermNode[] };
+    termSpeciesItems: { nodes: TermNode[] };
+    termBackgrounds:  { nodes: TermNode[] };
+  };
+}
+
+const OTHER_OPTION = '__other__';
+
+/**
+ * A taxonomy-backed select with an "Other (not on the list)" escape that
+ * reveals a free-text input. New names are created on the backend at submit
+ * via the createCharacter data producer's findOrCreateTerm.
+ */
+function VocabSelect({
+  id, label, value, options, placeholder, onChange,
+}: {
+  id:          string;
+  label:       string;
+  value:       string;
+  options:     string[];
+  placeholder: string;
+  onChange:    (value: string) => void;
+}): React.ReactElement {
+  const inList = value !== '' && options.includes(value);
+  const [custom, setCustom] = React.useState(value !== '' && !inList);
+  const selectValue = custom ? OTHER_OPTION : (inList ? value : '');
+
+  const handleSelect = (next: string): void => {
+    if (next === OTHER_OPTION) {
+      setCustom(true);
+      onChange('');
+    } else {
+      setCustom(false);
+      onChange(next);
+    }
+  };
+
+  return (
+    <div className="modal-field">
+      <label className="modal-label" htmlFor={id}>{label}</label>
+      <select id={id} className="modal-select" value={selectValue}
+        onChange={e => handleSelect(e.target.value)}>
+        <option value="">Select…</option>
+        {options.map(o => <option key={o} value={o}>{o}</option>)}
+        <option value={OTHER_OPTION}>Other (not on the list)…</option>
+      </select>
+      {custom && (
+        <input id={`${id}-custom`} className="modal-input" style={{ marginTop: 8 }}
+          value={value} placeholder={placeholder}
+          onChange={e => onChange(e.target.value)} />
+      )}
+    </div>
+  );
+}
 
 const ABILITIES = [
   ['strength', 'Strength'],
@@ -108,6 +157,23 @@ function splitLines(value: string): string[] {
 }
 
 export function CreateCharacterScreen({ ctx }: ScreenProps): React.ReactElement {
+  const taxonomy = useStaticQuery<TaxonomyQuery>(graphql`
+    query CreateCharacterTaxonomy {
+      drupal {
+        termClasses(first: 50) { nodes { name } }
+        termSkills(first: 50) { nodes { name } }
+        termSpeciesItems(first: 100) { nodes { name } }
+        termBackgrounds(first: 100) { nodes { name } }
+      }
+    }
+  `);
+  const sortedNames = (nodes: TermNode[]): string[] =>
+    nodes.map(n => n.name).sort((a, b) => a.localeCompare(b));
+  const classOptions      = React.useMemo(() => sortedNames(taxonomy.drupal.termClasses.nodes), [taxonomy]);
+  const skillOptions      = React.useMemo(() => sortedNames(taxonomy.drupal.termSkills.nodes), [taxonomy]);
+  const speciesOptions    = React.useMemo(() => sortedNames(taxonomy.drupal.termSpeciesItems.nodes), [taxonomy]);
+  const backgroundOptions = React.useMemo(() => sortedNames(taxonomy.drupal.termBackgrounds.nodes), [taxonomy]);
+
   const { campaigns } = useConsoleData();
   const activeCampaign =
     campaigns.find(c => c.name === ctx.activeCampaignName) ?? campaigns[0] ?? null;
@@ -275,16 +341,12 @@ export function CreateCharacterScreen({ ctx }: ScreenProps): React.ReactElement 
               <input id="cc-name" className="modal-input" value={form.name} autoFocus
                 onChange={e => update('name', e.target.value)} placeholder="Character name" />
             </div>
-            <div className="modal-field">
-              <label className="modal-label" htmlFor="cc-species">Species</label>
-              <input id="cc-species" className="modal-input" value={form.species}
-                onChange={e => update('species', e.target.value)} placeholder="e.g. Human, Elf" />
-            </div>
-            <div className="modal-field">
-              <label className="modal-label" htmlFor="cc-bg">Background</label>
-              <input id="cc-bg" className="modal-input" value={form.background}
-                onChange={e => update('background', e.target.value)} placeholder="e.g. Soldier, Sage" />
-            </div>
+            <VocabSelect id="cc-species" label="Species" value={form.species}
+              options={speciesOptions} placeholder="New species name"
+              onChange={v => update('species', v)} />
+            <VocabSelect id="cc-bg" label="Background" value={form.background}
+              options={backgroundOptions} placeholder="New background name"
+              onChange={v => update('background', v)} />
           </>
         )}
 
@@ -294,7 +356,7 @@ export function CreateCharacterScreen({ ctx }: ScreenProps): React.ReactElement 
               <label className="modal-label" htmlFor="cc-class">Class</label>
               <select id="cc-class" className="modal-select" value={form.className}
                 onChange={e => update('className', e.target.value)}>
-                {CLASS_OPTIONS.map(c => <option key={c} value={c}>{c}</option>)}
+                {classOptions.map(c => <option key={c} value={c}>{c}</option>)}
               </select>
             </div>
             <div className="modal-field">
@@ -325,7 +387,7 @@ export function CreateCharacterScreen({ ctx }: ScreenProps): React.ReactElement 
 
         {STEPS[step] === 'Skills' && (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
-            {SKILL_OPTIONS.map(skill => (
+            {skillOptions.map(skill => (
               <label key={skill} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13 }}>
                 <input type="checkbox" checked={form.skills.includes(skill)} onChange={() => toggleSkill(skill)} />
                 {skill}

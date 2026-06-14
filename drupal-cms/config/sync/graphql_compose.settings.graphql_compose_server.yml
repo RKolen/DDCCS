@@ -97,15 +97,26 @@ entity_config:
     class:
       enabled: true
       query_load_enabled: true
+      edges_enabled: true
+      simple_queries: '1'
+    skills:
+      enabled: true
+      query_load_enabled: true
+      edges_enabled: true
+      simple_queries: '1'
     species:
       enabled: true
       query_load_enabled: true
+      edges_enabled: true
+      simple_queries: '1'
     lineage:
       enabled: true
       query_load_enabled: true
     backgrounds:
       enabled: true
       query_load_enabled: true
+      edges_enabled: true
+      simple_queries: '1'
     creature_types:
       enabled: true
       query_load_enabled: true
