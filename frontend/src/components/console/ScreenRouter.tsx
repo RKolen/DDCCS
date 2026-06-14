@@ -59,6 +59,7 @@ interface ScreenRouterProps {
    ──────────────────────────────────────────────────────────── */
 
 import { CharacterListScreen }          from './screens/CharacterListScreen';
+import { CreateCharacterScreen }        from './screens/CreateCharacterScreen';
 import { CharacterEditScreen }          from './screens/CharacterEditScreen';
 import { CharacterArcScreen }           from './screens/CharacterArcScreen';
 import { CharacterDevelopmentScreen }   from './screens/CharacterDevelopmentScreen';
@@ -101,6 +102,7 @@ export function ScreenRouter({ section, item, ctx, setCtx }: ScreenRouterProps):
 
   /* ───── Characters ───── */
   if (key === 'characters/list')         return <CharacterListScreen  ctx={ictx} setCtx={set} />;
+  if (key === 'characters/template')     return <CreateCharacterScreen ctx={ictx} setCtx={set} />;
   if (key === 'characters/edit')         return <CharacterEditScreen  ctx={ictx} setCtx={set} />;
   if (key === 'characters/view')         return <CharacterDetailScreen ctx={ictx} setCtx={set} />;
   if (key === 'characters/consult')      return <ConsultScreen ctx={ictx} setCtx={set} />;

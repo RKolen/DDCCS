@@ -106,6 +106,7 @@ Drupal credentials.
 | Function | Method | Talks to | Purpose |
 | -------- | ------ | -------- | ------- |
 | `campaigns.ts` | POST | Drupal (`createCampaign`) | Create a campaign |
+| `create-character.ts` | POST | Sidecar + Drupal (`createCharacter`, `addCharacterToCampaign`) | Derive a sheet, persist a source character, clone into the active campaign (`dryRun` for a preview) |
 | `campaign-party.ts` | POST | Drupal (`addCharacterToCampaign`) | Add a character to a campaign |
 | `create-story.ts` | POST | Drupal (`createStory`) | Persist a finished story |
 | `update-character.ts` | POST | Drupal (`updateCharacter`) | PATCH optional character fields |

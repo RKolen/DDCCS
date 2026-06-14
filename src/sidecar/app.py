@@ -5,11 +5,19 @@ import os
 from contextlib import asynccontextmanager
 from typing import Any, AsyncGenerator
 
-from fastapi import APIRouter, FastAPI, Request
+from fastapi import APIRouter, FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
 
+from src.ai.class_features_rag import get_class_features
+from src.characters.character_template import (
+    TemplateOptions,
+    build_character_data_from_template,
+    load_template,
+)
 from src.config.config_loader import load_config
 from src.sidecar.models import (
+    BuildCharacterRequest,
+    BuildCharacterResponse,
     ErrorResponse,
     HealthResponse,
     ParseQueryRequest,
@@ -71,6 +79,7 @@ async def _auth_middleware(request: Request, call_next: Any) -> Any:
 
 _search_router = APIRouter(prefix="/search", tags=["search"])
 _eval_router = APIRouter(prefix="/eval", tags=["eval"])
+_character_router = APIRouter(prefix="/character", tags=["character"])
 
 
 @app.exception_handler(Exception)
@@ -144,5 +153,45 @@ def spotlight_endpoint(req: SpotlightRequest) -> SpotlightResponse:
     return SpotlightResponse(campaign_name=req.campaign_name, entries=entries)
 
 
+@_character_router.post("/build-from-template", response_model=BuildCharacterResponse)
+def build_from_template_endpoint(req: BuildCharacterRequest) -> BuildCharacterResponse:
+    """Derive a full character sheet from a class template.
+
+    Reuses the template engine to compute hit points, proficiency bonus,
+    skills/saves, spell slots, and equipment, then enriches the class
+    features through the reusable RAG-backed feature service. The returned
+    payload is a source-character sheet ready to persist via the Drupal
+    createCharacter mutation.
+
+    Args:
+        req: BuildCharacterRequest with the user's class/level/score choices.
+
+    Returns:
+        BuildCharacterResponse wrapping the derived character dictionary.
+
+    Raises:
+        HTTPException: 404 when no template exists for the requested class.
+    """
+    template = load_template(req.class_name)
+    if template is None:
+        raise HTTPException(
+            status_code=404,
+            detail=f"No class template found for '{req.class_name}'",
+        )
+    options = TemplateOptions(
+        name=req.name,
+        race=req.race,
+        level=req.level,
+        background=req.background,
+        subclass=req.subclass,
+        ability_scores=req.ability_scores,
+        skills=req.skills,
+    )
+    character = build_character_data_from_template(template, options)
+    character["class_abilities"] = get_class_features(req.class_name, req.level)
+    return BuildCharacterResponse(character=character)
+
+
 app.include_router(_search_router)
 app.include_router(_eval_router)
+app.include_router(_character_router)

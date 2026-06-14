@@ -40,6 +40,13 @@ class ContentMutationsSchemaExtension extends SdlSchemaExtensionPluginBase {
 
     $registry->addFieldResolver(
       'Mutation',
+      'createCharacter',
+      $builder->produce('create_character')
+        ->map('payload', $builder->fromArgument('payload')),
+    );
+
+    $registry->addFieldResolver(
+      'Mutation',
       'createCampaign',
       $builder->produce('create_campaign')
         ->map('name', $builder->fromArgument('name'))
@@ -50,7 +57,7 @@ class ContentMutationsSchemaExtension extends SdlSchemaExtensionPluginBase {
       'Mutation',
       'addCharacterToCampaign',
       $builder->produce('add_character_to_campaign')
-        ->map('campaign_id',  $builder->fromArgument('campaignId'))
+        ->map('campaign_id', $builder->fromArgument('campaignId'))
         ->map('character_id', $builder->fromArgument('characterId')),
     );
 
@@ -58,9 +65,9 @@ class ContentMutationsSchemaExtension extends SdlSchemaExtensionPluginBase {
       'Mutation',
       'createStory',
       $builder->produce('create_story')
-        ->map('campaign_id',  $builder->fromArgument('campaignId'))
-        ->map('title',        $builder->fromArgument('title'))
-        ->map('body',         $builder->fromArgument('body'))
+        ->map('campaign_id', $builder->fromArgument('campaignId'))
+        ->map('title', $builder->fromArgument('title'))
+        ->map('body', $builder->fromArgument('body'))
         ->map('story_number', $builder->fromArgument('storyNumber'))
         ->map('session_date', $builder->fromArgument('sessionDate')),
     );

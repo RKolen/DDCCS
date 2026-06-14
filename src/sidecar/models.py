@@ -1,8 +1,8 @@
 """Pydantic request and response models for the query parser sidecar."""
 
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, Field, field_validator
 
 
 class ParseQueryRequest(BaseModel):
@@ -65,6 +65,49 @@ class SpotlightResponse(BaseModel):
 
     campaign_name: str
     entries: List[SpotlightCharacterScore]
+
+
+class BuildCharacterRequest(BaseModel):
+    """Request to derive a character sheet from a class template."""
+
+    name: str
+    class_name: str
+    level: int = Field(default=1, ge=1, le=20)
+    ability_scores: Optional[Dict[str, int]] = None
+    subclass: Optional[str] = None
+    background: str = ""
+    race: str = "Human"
+    skills: List[str] = Field(default_factory=list)
+
+    @field_validator("name", "class_name")
+    @classmethod
+    def strip_required(cls, value: str) -> str:
+        """Strip whitespace and reject blank required identifiers.
+
+        Args:
+            value: Raw field value.
+
+        Returns:
+            The stripped value.
+
+        Raises:
+            ValueError: If the value is empty after stripping.
+        """
+        stripped = value.strip()
+        if not stripped:
+            raise ValueError("must not be empty")
+        return stripped
+
+
+class BuildCharacterResponse(BaseModel):
+    """Derived character sheet ready for persistence.
+
+    The ``character`` payload follows the game_data character dictionary
+    shape produced by the template engine (ability scores, derived hit
+    points, proficiency bonus, class features, spell slots, equipment).
+    """
+
+    character: Dict[str, Any]
 
 
 class ErrorResponse(BaseModel):

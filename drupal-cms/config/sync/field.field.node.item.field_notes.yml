@@ -12,7 +12,7 @@ id: node.item.field_notes
 field_name: field_notes
 entity_type: node
 bundle: item
-label: Notes
+label: 'Item description'
 description: 'Additional notes for this item'
 required: false
 translatable: false

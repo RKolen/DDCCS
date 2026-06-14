@@ -146,7 +146,17 @@ Two routes still fall through to `PlaceholderScreen`:
 All other previously-stubbed routes now have real screens: `TimelineScreen`,
 `SpellRegistryScreen`, `StorySeriesWorkspaceScreen`, `NewSeriesScreen`,
 `SettingsScreen`, `ModelProfileScreen`, `ToolsScreen`, `CurrentPartyScreen`,
-`DeprecatedScreen` (for `characters/ascii`).
+`DeprecatedScreen` (for `characters/ascii`), and `CreateCharacterScreen` (for
+`characters/template`).
+
+### `characters/template` — Create Character from Template (Done)
+
+A derive-not-ask wizard (`CreateCharacterScreen`). The user supplies identity,
+class, level, ability scores, skill picks, and optional roleplay; the Python
+sidecar derives HP/proficiency/saves/class features/spell slots (shown on the
+Review step). Submitting persists a **source** character via the
+`createCharacter` GraphQL mutation and clones it into the active campaign via
+`addCharacterToCampaign`. All writes go through `src/api/create-character.ts`.
 
 ---
 

@@ -99,6 +99,7 @@ served by the dev server / build). They handle writes and live AI:
 | Function | Method | Talks to | Purpose |
 | -------- | ------ | -------- | ------- |
 | `campaigns.ts` | POST | Drupal (`createCampaign` mutation) | Create a campaign term |
+| `create-character.ts` | POST | Sidecar + Drupal (`createCharacter`, `addCharacterToCampaign`) | Derive a sheet (sidecar), persist a source character, clone into the active campaign |
 | `campaign-party.ts` | POST | Drupal (`addCharacterToCampaign`) | Add a character to a campaign |
 | `create-story.ts` | POST | Drupal (`createStory` mutation) | Persist a finished story |
 | `update-character.ts` | POST | Drupal (`updateCharacter` mutation) | PATCH optional character fields |
@@ -138,6 +139,7 @@ engine and Drupal.
 | ---------- | -------------- | ------- |
 | Browse characters / NPCs | `pages/characters.tsx`, `pages/npcs.tsx` | Drupal GraphQL |
 | Character sheet | `templates/character.tsx` | Drupal GraphQL |
+| Create a character (from template) | `CreateCharacterScreen` wizard | `api/create-character.ts` -> sidecar `/character/build-from-template` + Drupal (`createCharacter`, `addCharacterToCampaign`) |
 | Edit character (optional fields) | character edit screen | `api/update-character.ts` -> Drupal |
 | Create / AI-generate a story | story forge screens | `api/generate-story.ts` (AI), `api/create-story.ts` (save) |
 | Read stories | `pages/stories.tsx`, `templates/story.tsx`, `pages/campaign-reader.tsx` | Drupal GraphQL |

@@ -29,11 +29,15 @@ background (logs to `.sidecar.log`).
 | GET | `/health` | Readiness probe (no auth) |
 | POST | `/search/parse-query` | Normalise a natural-language search query for the Milvus index |
 | POST | `/eval/spotlight` | Compute spotlight scores for a campaign's characters |
+| POST | `/character/build-from-template` | Derive a full character sheet (HP, proficiency, saves, class features, spell slots) from class + level + ability scores |
 
 Request/response shapes are defined as Pydantic models in
 [models.py](models.py). Query normalisation logic is in
 [query_parser.py](query_parser.py); spotlight scoring delegates to
-`src.stories.spotlight_engine.SpotlightEngine`.
+`src.stories.spotlight_engine.SpotlightEngine`. The character build endpoint
+reuses `src.characters.character_template.build_character_data_from_template`
+and enriches class features via the reusable `src.ai.class_features_rag`
+service (RAG fallback to `RAG_RULES_BASE_URL` when templates are sparse).
 
 ### Authentication
 
@@ -47,6 +51,8 @@ allowed (local dev default).
 
 - `frontend/src/pages/search.tsx` — search, via `/search/parse-query`.
 - `frontend/src/api/spotlight.ts` — spotlight scoring, via the sidecar.
+- `frontend/src/api/create-character.ts` — character creation wizard, via
+  `/character/build-from-template`.
 
 ---
 

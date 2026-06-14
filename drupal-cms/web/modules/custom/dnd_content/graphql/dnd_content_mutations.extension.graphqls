@@ -1,5 +1,17 @@
 extend type Mutation {
   """
+  Create a new source character node from a derived character payload.
+  The payload is the JSON-encoded character dictionary produced by the
+  Python sidecar build-from-template endpoint. The new node is flagged as a
+  source character (no campaign); attach a campaign clone via
+  addCharacterToCampaign. Returns the created character node.
+  """
+  createCharacter(
+    "JSON-encoded derived character dictionary."
+    payload: String!
+  ): NodeCharacter
+
+  """
   Create a new campaign taxonomy term. Returns the created term on success,
   or null if creation fails validation.
   """
