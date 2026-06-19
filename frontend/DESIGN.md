@@ -151,12 +151,17 @@ All other previously-stubbed routes now have real screens: `TimelineScreen`,
 
 ### `characters/template` — Create Character from Template (Done)
 
-A derive-not-ask wizard (`CreateCharacterScreen`). The user supplies identity,
-class, level, ability scores, skill picks, and optional roleplay; the Python
-sidecar derives HP/proficiency/saves/class features/spell slots (shown on the
-Review step). Submitting persists a **source** character via the
-`createCharacter` GraphQL mutation and clones it into the active campaign via
-`addCharacterToCampaign`. All writes go through `src/api/create-character.ts`.
+A derive-not-ask wizard (`CreateCharacterScreen`), 5 steps (Identity, Class &
+Level, Ability Scores, Skills, Roleplay). The user supplies only what cannot be
+computed; the Python sidecar derives HP/proficiency/saves/class features/spell
+slots server-side at create time. Class, skills, species, and background are
+populated from the Drupal taxonomy (`termClasses`, `termSkills`,
+`termSpeciesItems`, `termBackgrounds`) via `useStaticQuery`, each with an
+"Other (not on the list)" option that creates the term on submit. Creating
+persists a **source** character via the `createCharacter` GraphQL mutation —
+with sensible AI/voice defaults applied server-side — and clones it into the
+active campaign via `addCharacterToCampaign`. All writes go through
+`src/api/create-character.ts`.
 
 ---
 
