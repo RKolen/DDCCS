@@ -58,6 +58,7 @@
         "drupal/jquery_ui": "^1.8",
         "drupal/klaro": "^3",
         "drupal/linkit": "^7",
+        "drupal/lock_entity": "1.0.x-dev@dev",
         "drupal/login_emailusername": "^3",
         "drupal/mailsystem": "^4",
         "drupal/media_file_delete": "^1",

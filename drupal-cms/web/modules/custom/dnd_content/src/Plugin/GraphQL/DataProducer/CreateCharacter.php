@@ -45,6 +45,14 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 final class CreateCharacter extends DataProducerPluginBase implements ContainerFactoryPluginInterface {
 
   /**
+   * Default Piper TTS voice applied to new characters.
+   *
+   * Matches the project's canonical default voice used by existing
+   * characters. Speed and pitch default to 1.0 and 0 respectively.
+   */
+  private const DEFAULT_VOICE_ID = 'en_US-ryan-low';
+
+  /**
    * The entity type manager.
    *
    * @var \Drupal\Core\Entity\EntityTypeManagerInterface
@@ -135,11 +143,22 @@ final class CreateCharacter extends DataProducerPluginBase implements ContainerF
       'field_ideals'           => $this->stringList($data['ideals'] ?? []),
       'field_bonds'            => $this->stringList($data['bonds'] ?? []),
       'field_flaws'            => $this->stringList($data['flaws'] ?? []),
+      // Sensible AI/voice defaults so a new character works out of the box.
+      // Model, temperature, and max_tokens are intentionally left unset so they
+      // inherit the global AI configuration rather than hardcoding values here.
+      'field_ai_enabled'       => TRUE,
+      'field_ai_system_prompt' => [
+        'value'  => $this->defaultSystemPrompt($data),
+        'format' => 'plain_text',
+      ],
+      'field_voice_speed'      => 1.0,
+      'field_voice_pitch'      => 0,
     ];
 
     $term_storage = $this->entityTypeManager->getStorage('taxonomy_term');
     $this->addTermReference($values, 'field_species', 'species', (string) ($data['species'] ?? ''), $term_storage);
     $this->addTermReference($values, 'field_background', 'backgrounds', (string) ($data['background'] ?? ''), $term_storage);
+    $this->addTermReference($values, 'field_voice_id_ref', 'voice_ids', self::DEFAULT_VOICE_ID, $term_storage);
 
     $values['field_skills'] = $this->skillReferences($data['skills'] ?? [], $term_storage);
 
@@ -197,6 +216,38 @@ final class CreateCharacter extends DataProducerPluginBase implements ContainerF
     }
     $equipment = is_array($data['equipment'] ?? NULL) ? $data['equipment'] : [];
     return isset($equipment['gold']) && is_numeric($equipment['gold']) ? (int) $equipment['gold'] : NULL;
+  }
+
+  /**
+   * Build a sensible default AI system prompt from the character payload.
+   *
+   * Derived from the character's own name, class, and level so it is useful
+   * immediately without hardcoding any model configuration.
+   *
+   * @param array<string, mixed> $data
+   *   Character payload.
+   *
+   * @return string
+   *   A plain-text system prompt.
+   */
+  private function defaultSystemPrompt(array $data): string {
+    $name = trim((string) $data['name']);
+    $class = trim((string) ($data['dnd_class'] ?? ''));
+    $level = $this->intOrNull($data['level'] ?? NULL);
+    if ($class !== '' && $level !== NULL) {
+      $descriptor = sprintf('a level %d %s', $level, $class);
+    }
+    elseif ($class !== '') {
+      $descriptor = 'a ' . $class;
+    }
+    else {
+      $descriptor = 'an adventurer';
+    }
+    return sprintf(
+      'You are %s, %s. Stay in character, speaking and acting as they would.',
+      $name,
+      $descriptor,
+    );
   }
 
   /**

@@ -89,7 +89,7 @@ const ABILITIES = [
 
 type AbilityKey = (typeof ABILITIES)[number][0];
 
-const STEPS = ['Identity', 'Class & Level', 'Ability Scores', 'Skills', 'Roleplay', 'Review'] as const;
+const STEPS = ['Identity', 'Class & Level', 'Ability Scores', 'Skills', 'Roleplay'] as const;
 
 interface AbilityScores {
   strength:     number;
@@ -114,14 +114,6 @@ interface FormState {
   ideals:        string;
   bonds:         string;
   flaws:         string;
-}
-
-interface DerivedPreview {
-  max_hit_points:    number;
-  proficiency_bonus: number;
-  class_abilities:   string[];
-  spell_slots:       Record<string, number>;
-  skills:            Record<string, unknown>;
 }
 
 interface CreateResult {
@@ -180,8 +172,6 @@ export function CreateCharacterScreen({ ctx }: ScreenProps): React.ReactElement 
 
   const [step,       setStep]       = React.useState(0);
   const [form,       setForm]       = React.useState<FormState>(DEFAULT_FORM);
-  const [preview,    setPreview]    = React.useState<DerivedPreview | null>(null);
-  const [loading,    setLoading]    = React.useState(false);
   const [submitting, setSubmitting] = React.useState(false);
   const [error,      setError]      = React.useState<string | null>(null);
   const [result,     setResult]     = React.useState<CreateResult | null>(null);
@@ -203,7 +193,7 @@ export function CreateCharacterScreen({ ctx }: ScreenProps): React.ReactElement 
     }));
   };
 
-  const requestBody = React.useCallback((dryRun: boolean) => ({
+  const requestBody = React.useCallback(() => ({
     name:              form.name.trim(),
     className:         form.className,
     level:             form.level,
@@ -217,36 +207,12 @@ export function CreateCharacterScreen({ ctx }: ScreenProps): React.ReactElement 
     ideals:            splitLines(form.ideals),
     bonds:             splitLines(form.bonds),
     flaws:             splitLines(form.flaws),
-    campaignId:        dryRun ? null : (activeCampaign?.id ?? null),
-    dryRun,
+    campaignId:        activeCampaign?.id ?? null,
+    dryRun:            false,
   }), [form, activeCampaign]);
 
-  const loadPreview = React.useCallback(async (): Promise<void> => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await fetch('/api/create-character', {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify(requestBody(true)),
-      });
-      const data = (await res.json()) as { character?: DerivedPreview; error?: string };
-      if (!res.ok || !data.character) {
-        setError(data.error ?? `Preview failed (${res.status})`);
-        return;
-      }
-      setPreview(data.character);
-    } catch {
-      setError('Could not reach the server for a preview.');
-    } finally {
-      setLoading(false);
-    }
-  }, [requestBody]);
-
   const goNext = (): void => {
-    const next = step + 1;
-    setStep(next);
-    if (STEPS[next] === 'Review') void loadPreview();
+    setStep(s => Math.min(STEPS.length - 1, s + 1));
   };
 
   const handleCreate = async (): Promise<void> => {
@@ -256,7 +222,7 @@ export function CreateCharacterScreen({ ctx }: ScreenProps): React.ReactElement 
       const res = await fetch('/api/create-character', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify(requestBody(false)),
+        body:    JSON.stringify(requestBody()),
       });
       const data = (await res.json()) as CreateResult & { error?: string };
       if (!res.ok && res.status !== 207) {
@@ -292,7 +258,7 @@ export function CreateCharacterScreen({ ctx }: ScreenProps): React.ReactElement 
             <button
               type="button"
               className="primary-btn"
-              onClick={() => { setResult(null); setPreview(null); setForm(DEFAULT_FORM); setStep(0); }}
+              onClick={() => { setResult(null); setForm(DEFAULT_FORM); setStep(0); }}
             >
               Create another
             </button>
@@ -413,22 +379,6 @@ export function CreateCharacterScreen({ ctx }: ScreenProps): React.ReactElement 
           </>
         )}
 
-        {STEPS[step] === 'Review' && (
-          <div className="wizard-review">
-            {loading && <p className="screen-blurb">Deriving sheet…</p>}
-            {preview && (
-              <dl style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '6px 16px', fontSize: 14 }}>
-                <dt><strong>Name</strong></dt><dd>{form.name} — {form.className} {form.level}</dd>
-                <dt><strong>Hit Points</strong></dt><dd>{preview.max_hit_points}</dd>
-                <dt><strong>Proficiency</strong></dt><dd>+{preview.proficiency_bonus}</dd>
-                <dt><strong>Skills</strong></dt><dd>{Object.keys(preview.skills).join(', ') || '—'}</dd>
-                <dt><strong>Class Features</strong></dt><dd>{preview.class_abilities.join(', ') || '—'}</dd>
-                <dt><strong>Spell Slots</strong></dt>
-                <dd>{Object.entries(preview.spell_slots).map(([lvl, n]) => `L${lvl}:${n}`).join('  ') || '—'}</dd>
-              </dl>
-            )}
-          </div>
-        )}
       </div>
 
       {error && <p className="modal-error" role="alert" style={{ marginTop: 12 }}>{error}</p>}
@@ -438,8 +388,8 @@ export function CreateCharacterScreen({ ctx }: ScreenProps): React.ReactElement 
           onClick={() => setStep(s => Math.max(0, s - 1))}>
           Back
         </button>
-        {STEPS[step] === 'Review' ? (
-          <button type="button" className="primary-btn" disabled={submitting || loading || !form.name.trim()}
+        {step === STEPS.length - 1 ? (
+          <button type="button" className="primary-btn" disabled={submitting || !form.name.trim()}
             onClick={() => void handleCreate()}>
             {submitting ? 'Creating…' : 'Create Character'}
           </button>

@@ -41,6 +41,7 @@ module:
   key: 0
   language: 0
   link: 0
+  lock_entity: 0
   media: 0
   menu_link_content: 0
   migrate: 0

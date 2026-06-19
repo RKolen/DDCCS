@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "c776a688c0a4b6226b7a8427a411ed14",
+    "content-hash": "bc2ce81fd999e22097ed2acdc24dbf60",
     "packages": [
         {
             "name": "asm89/stack-cors",
@@ -5494,6 +5494,51 @@
             "support": {
                 "source": "http://cgit.drupalcode.org/linkit",
                 "issues": "http://drupal.org/project/linkit"
+            }
+        },
+        {
+            "name": "drupal/lock_entity",
+            "version": "dev-1.0.x",
+            "source": {
+                "type": "git",
+                "url": "https://git.drupalcode.org/project/lock_entity.git",
+                "reference": "51a5b8f8d576ce82f1d32876eedd632cbdb131ad"
+            },
+            "require": {
+                "drupal/core": "^10 || ^11"
+            },
+            "require-dev": {
+                "drupal/core-dev": "^10 || ^11"
+            },
+            "type": "drupal-module",
+            "extra": {
+                "branch-alias": {
+                    "dev-1.0.x": "1.0.x-dev"
+                },
+                "drupal": {
+                    "version": "1.0.x-dev",
+                    "datestamp": "1781189313",
+                    "security-coverage": {
+                        "status": "not-covered",
+                        "message": "Project has not opted into security advisory coverage!"
+                    }
+                }
+            },
+            "notification-url": "https://packages.drupal.org/8/downloads",
+            "license": [
+                "GPL-2.0-or-later"
+            ],
+            "authors": [
+                {
+                    "name": "R Kolen",
+                    "homepage": "https://www.drupal.org/u/rkolen",
+                    "role": "Maintainer"
+                }
+            ],
+            "description": "Prevents deletion of any entity type by marking individual entities as locked.",
+            "homepage": "https://www.drupal.org/project/lock_entity",
+            "support": {
+                "source": "https://git.drupalcode.org/project/lock_entity"
             }
         },
         {
@@ -17208,6 +17253,7 @@
         "drupal/gatsby": 5,
         "drupal/graphql": 5,
         "drupal/graphql_compose": 15,
+        "drupal/lock_entity": 20,
         "drupal/next_custom_tags": 10,
         "drupal/project_browser": 10,
         "drupal/webform": 10
