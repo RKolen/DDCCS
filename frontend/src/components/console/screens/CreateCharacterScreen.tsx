@@ -17,16 +17,22 @@ import * as React from 'react';
 import { graphql, useStaticQuery } from 'gatsby';
 import type { ScreenProps } from '../ScreenRouter';
 import { useConsoleData } from '../ConsoleContext';
+import { CreateBackgroundModal } from './CreateBackgroundModal';
+import type { BackgroundDefinition } from './CreateBackgroundModal';
 
 interface TermNode { name: string }
+interface FeatNode { name: string; featType?: { name?: string } | null }
 
 interface TaxonomyQuery {
   drupal: {
-    termClasses:      { nodes: TermNode[] };
-    termSkills:       { nodes: TermNode[] };
-    termSpeciesItems: { nodes: TermNode[] };
-    termBackgrounds:  { nodes: TermNode[] };
-    termLineages:     { nodes: TermNode[] };
+    termClasses:        { nodes: TermNode[] };
+    termSkills:         { nodes: TermNode[] };
+    termSpeciesItems:   { nodes: TermNode[] };
+    termBackgrounds:    { nodes: TermNode[] };
+    termLineages:       { nodes: TermNode[] };
+    termAbilityScores:  { nodes: TermNode[] };
+    termToolProfiencies:{ nodes: TermNode[] };
+    termFeats:          { nodes: FeatNode[] };
   };
 }
 
@@ -102,7 +108,9 @@ interface AbilityScores {
 }
 
 interface FormState {
-  name:          string;
+  firstName:     string;
+  lastName:      string;
+  nickname:      string;
   className:     string;
   level:         number;
   abilityScores: AbilityScores;
@@ -126,7 +134,9 @@ interface CreateResult {
 }
 
 const DEFAULT_FORM: FormState = {
-  name:          '',
+  firstName:     '',
+  lastName:      '',
+  nickname:      '',
   className:     'Fighter',
   level:         1,
   abilityScores: { strength: 10, dexterity: 10, constitution: 10, intelligence: 10, wisdom: 10, charisma: 10 },
@@ -160,6 +170,9 @@ export function CreateCharacterScreen({ ctx }: ScreenProps): React.ReactElement 
         termSpeciesItems(first: 100) { nodes { name } }
         termBackgrounds(first: 100) { nodes { name } }
         termLineages(first: 100) { nodes { name } }
+        termAbilityScores(first: 10) { nodes { name } }
+        termToolProfiencies(first: 100) { nodes { name } }
+        termFeats(first: 100) { nodes { name featType { ... on Drupal_TermFeatType { name } } } }
       }
     }
   `);
@@ -170,6 +183,15 @@ export function CreateCharacterScreen({ ctx }: ScreenProps): React.ReactElement 
   const speciesOptions    = React.useMemo(() => sortedNames(taxonomy.drupal.termSpeciesItems.nodes), [taxonomy]);
   const backgroundOptions = React.useMemo(() => sortedNames(taxonomy.drupal.termBackgrounds.nodes), [taxonomy]);
   const lineageOptions    = React.useMemo(() => sortedNames(taxonomy.drupal.termLineages.nodes), [taxonomy]);
+  const abilityScoreOptions = React.useMemo(() => sortedNames(taxonomy.drupal.termAbilityScores.nodes), [taxonomy]);
+  const toolOptions       = React.useMemo(() => sortedNames(taxonomy.drupal.termToolProfiencies.nodes), [taxonomy]);
+  const originFeatOptions = React.useMemo(
+    () => taxonomy.drupal.termFeats.nodes
+      .filter(f => f.featType?.name === 'Origin')
+      .map(f => f.name)
+      .sort((a, b) => a.localeCompare(b)),
+    [taxonomy],
+  );
 
   const { campaigns } = useConsoleData();
   const activeCampaign =
@@ -180,6 +202,17 @@ export function CreateCharacterScreen({ ctx }: ScreenProps): React.ReactElement 
   const [submitting, setSubmitting] = React.useState(false);
   const [error,      setError]      = React.useState<string | null>(null);
   const [result,     setResult]     = React.useState<CreateResult | null>(null);
+  const [bgDefinition, setBgDefinition] = React.useState<BackgroundDefinition | null>(null);
+  const [showBgModal,  setShowBgModal]  = React.useState(false);
+
+  // A background not in the taxonomy is a homebrew background defined via modal.
+  const isHomebrewBackground =
+    form.background.trim() !== '' && !backgroundOptions.includes(form.background);
+
+  React.useEffect(() => {
+    if (isHomebrewBackground && bgDefinition === null) setShowBgModal(true);
+    if (!isHomebrewBackground && bgDefinition !== null) setBgDefinition(null);
+  }, [isHomebrewBackground, bgDefinition]);
 
   const update = <K extends keyof FormState>(key: K, value: FormState[K]): void => {
     setForm(prev => ({ ...prev, [key]: value }));
@@ -199,12 +232,16 @@ export function CreateCharacterScreen({ ctx }: ScreenProps): React.ReactElement 
   };
 
   const requestBody = React.useCallback(() => ({
-    name:              form.name.trim(),
+    name:              `${form.firstName.trim()} ${form.lastName.trim()}`.trim(),
+    firstName:         form.firstName.trim(),
+    lastName:          form.lastName.trim() || null,
+    nickname:          form.nickname.trim() || null,
     className:         form.className,
     level:             form.level,
     abilityScores:     form.abilityScores,
     skills:            form.skills,
     background:        form.background.trim(),
+    backgroundDefinition: isHomebrewBackground ? bgDefinition : null,
     species:           form.species.trim(),
     subspecies:        form.subspecies.trim() || null,
     subclass:          form.subclass.trim() || null,
@@ -215,7 +252,7 @@ export function CreateCharacterScreen({ ctx }: ScreenProps): React.ReactElement 
     flaws:             splitLines(form.flaws),
     campaignId:        activeCampaign?.id ?? null,
     dryRun:            false,
-  }), [form, activeCampaign]);
+  }), [form, activeCampaign, isHomebrewBackground, bgDefinition]);
 
   const goNext = (): void => {
     setStep(s => Math.min(STEPS.length - 1, s + 1));
@@ -243,7 +280,7 @@ export function CreateCharacterScreen({ ctx }: ScreenProps): React.ReactElement 
     }
   };
 
-  const canContinue = step !== 0 || form.name.trim().length > 0;
+  const canContinue = step !== 0 || form.firstName.trim().length > 0;
 
   if (result) {
     return (
@@ -309,9 +346,19 @@ export function CreateCharacterScreen({ ctx }: ScreenProps): React.ReactElement 
         {STEPS[step] === 'Identity' && (
           <>
             <div className="modal-field">
-              <label className="modal-label" htmlFor="cc-name">Name</label>
-              <input id="cc-name" className="modal-input" value={form.name} autoFocus
-                onChange={e => update('name', e.target.value)} placeholder="Character name" />
+              <label className="modal-label" htmlFor="cc-first">First name</label>
+              <input id="cc-first" className="modal-input" value={form.firstName} autoFocus
+                onChange={e => update('firstName', e.target.value)} placeholder="First name" />
+            </div>
+            <div className="modal-field">
+              <label className="modal-label" htmlFor="cc-last">Last name (optional)</label>
+              <input id="cc-last" className="modal-input" value={form.lastName}
+                onChange={e => update('lastName', e.target.value)} placeholder="Last name" />
+            </div>
+            <div className="modal-field">
+              <label className="modal-label" htmlFor="cc-nick">Nickname (optional)</label>
+              <input id="cc-nick" className="modal-input" value={form.nickname}
+                onChange={e => update('nickname', e.target.value)} placeholder="Nickname" />
             </div>
             <VocabSelect id="cc-species" label="Species" value={form.species}
               options={speciesOptions} placeholder="New species name"
@@ -322,6 +369,19 @@ export function CreateCharacterScreen({ ctx }: ScreenProps): React.ReactElement 
             <VocabSelect id="cc-bg" label="Background" value={form.background}
               options={backgroundOptions} placeholder="New background name"
               onChange={v => update('background', v)} />
+            {isHomebrewBackground && (
+              <div className="modal-field">
+                <button type="button" className="ghost-btn" onClick={() => setShowBgModal(true)}>
+                  {bgDefinition ? 'Edit homebrew background details' : 'Define homebrew background…'}
+                </button>
+                {bgDefinition && (
+                  <p className="screen-blurb" style={{ marginTop: 6 }}>
+                    {bgDefinition.abilities.length} abilities · {bgDefinition.skills.length} skills ·
+                    {' '}{bgDefinition.tools.length} tools · {bgDefinition.feat || 'no feat'}
+                  </p>
+                )}
+              </div>
+            )}
           </>
         )}
 
@@ -398,7 +458,7 @@ export function CreateCharacterScreen({ ctx }: ScreenProps): React.ReactElement 
           Back
         </button>
         {step === STEPS.length - 1 ? (
-          <button type="button" className="primary-btn" disabled={submitting || !form.name.trim()}
+          <button type="button" className="primary-btn" disabled={submitting || !form.firstName.trim()}
             onClick={() => void handleCreate()}>
             {submitting ? 'Creating…' : 'Create Character'}
           </button>
@@ -408,6 +468,19 @@ export function CreateCharacterScreen({ ctx }: ScreenProps): React.ReactElement 
           </button>
         )}
       </div>
+
+      {showBgModal && (
+        <CreateBackgroundModal
+          name={form.background.trim()}
+          abilityOptions={abilityScoreOptions}
+          skillOptions={skillOptions}
+          toolOptions={toolOptions}
+          featOptions={originFeatOptions}
+          initial={bgDefinition}
+          onSave={def => { setBgDefinition(def); setShowBgModal(false); }}
+          onClose={() => setShowBgModal(false)}
+        />
+      )}
     </div>
   );
 }

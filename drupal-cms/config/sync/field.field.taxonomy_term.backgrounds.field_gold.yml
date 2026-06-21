@@ -1,0 +1,23 @@
+uuid: 94fc6616-3867-44fa-8c6d-d3860843cb6a
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.taxonomy_term.field_gold
+    - taxonomy.vocabulary.backgrounds
+id: taxonomy_term.backgrounds.field_gold
+field_name: field_gold
+entity_type: taxonomy_term
+bundle: backgrounds
+label: Gold
+description: 'Starting gold alternative to the equipment package'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  min: 0
+  max: null
+  prefix: ''
+  suffix: ' GP'
+field_type: integer

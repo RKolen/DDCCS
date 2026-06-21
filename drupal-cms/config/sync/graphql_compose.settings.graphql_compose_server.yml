@@ -94,6 +94,24 @@ entity_config:
       query_load_enabled: true
       edges_enabled: true
       simple_queries: '1'
+    feats:
+      enabled: true
+      query_load_enabled: true
+      edges_enabled: true
+      simple_queries: '1'
+    feat_type:
+      enabled: true
+      query_load_enabled: true
+    ability_scores:
+      enabled: true
+      query_load_enabled: true
+      edges_enabled: true
+      simple_queries: '1'
+    tool_profiencies:
+      enabled: true
+      query_load_enabled: true
+      edges_enabled: true
+      simple_queries: '1'
     campaign:
       enabled: true
       query_load_enabled: true
@@ -517,6 +535,26 @@ field_config:
       field_ability_level:
         enabled: true
       field_edition:
+        enabled: true
+    backgrounds:
+      field_skills:
+        enabled: true
+      field_feat:
+        enabled: true
+      field_ability_options:
+        enabled: true
+      field_tools:
+        enabled: true
+      field_gold:
+        enabled: true
+      field_equipment_items:
+        enabled: true
+      field_edition:
+        enabled: true
+    feats:
+      field_feat_type:
+        enabled: true
+      field_feat_description:
         enabled: true
     campaign:
       field_campaign_start_date:

@@ -10,6 +10,12 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 FRONTEND_DIR="$SCRIPT_DIR/frontend"
 DRUPAL_DIR="$SCRIPT_DIR/drupal-cms"
 
+# Use the project virtualenv interpreter: the sidecar and CLI need openai,
+# tenacity, and beautifulsoup4, which are installed in .venv but not in the
+# system python. Falls back to python3 only when .venv is absent.
+PYTHON="$SCRIPT_DIR/.venv/bin/python"
+[[ -x "$PYTHON" ]] || PYTHON="python3"
+
 # Load .env so port/URL variables are available before use.
 if [[ -f "$SCRIPT_DIR/.env" ]]; then
   set -a
@@ -18,21 +24,25 @@ if [[ -f "$SCRIPT_DIR/.env" ]]; then
   set +a
 fi
 
-DRUPAL_URL="${DRUPAL_URL:-${DRUPAL_BASE_URL:-https://drupal-cms.ddev.site}}"
-GATSBY_HOST="${GATSBY_HOST:-localhost}"
-GATSBY_PORT="${GATSBY_PORT:-8000}"
-GATSBY_DEFAULT_PORT="${GATSBY_DEFAULT_PORT:-8000}"
+# Service hosts/ports are authoritative in .env. Fail loudly (set -u + :?) when
+# a required value is missing rather than masking it with a hardcoded default.
+DRUPAL_URL="${DRUPAL_URL:?set DRUPAL_URL (or DRUPAL_BASE_URL) in .env}"
+GATSBY_HOST="${GATSBY_HOST:?set GATSBY_HOST in .env}"
+GATSBY_PORT="${GATSBY_PORT:?set GATSBY_PORT in .env}"
+SIDECAR_HOST="${SIDECAR_HOST:?set SIDECAR_HOST in .env}"
+SIDECAR_PORT="${SIDECAR_PORT:?set SIDECAR_PORT in .env}"
+OLLAMA_HOST="${OLLAMA_HOST:?set OLLAMA_HOST in .env}"
+OLLAMA_PORT="${OLLAMA_PORT:?set OLLAMA_PORT in .env}"
+DDEV_OLLAMA_HOST="${DDEV_OLLAMA_HOST:?set DDEV_OLLAMA_HOST in .env}"
+MILVUS_HOST="${MILVUS_HOST:?set MILVUS_HOST in .env}"
+MILVUS_PORT="${MILVUS_PORT:?set MILVUS_PORT in .env}"
+
+# Operational knobs (local script behaviour, not service configuration).
+GATSBY_DEFAULT_PORT="${GATSBY_DEFAULT_PORT:-$GATSBY_PORT}"
 GATSBY_CLEAN_ON_START="${GATSBY_CLEAN_ON_START:-true}"
 GATSBY_KILL_STALE_LISTENERS="${GATSBY_KILL_STALE_LISTENERS:-true}"
 GATSBY_LOG_FILE="${GATSBY_LOG_FILE:-$SCRIPT_DIR/.gatsby.log}"
-SIDECAR_HOST="${SIDECAR_HOST:-localhost}"
-SIDECAR_PORT="${SIDECAR_PORT:-8765}"
 SIDECAR_LOG_FILE="${SIDECAR_LOG_FILE:-$SCRIPT_DIR/.sidecar.log}"
-OLLAMA_HOST="${OLLAMA_HOST:-localhost}"
-OLLAMA_PORT="${OLLAMA_PORT:-11434}"
-DDEV_OLLAMA_HOST="${DDEV_OLLAMA_HOST:-ddev-drupal-cms-ollama}"
-MILVUS_HOST="${MILVUS_HOST:-localhost}"
-MILVUS_PORT="${MILVUS_PORT:-19530}"
 MKCERT_CA="${MKCERT_CA:-$HOME/.local/share/mkcert/rootCA.pem}"
 
 NO_CLI=false
@@ -56,7 +66,7 @@ echo "    Milvus:  $MILVUS_HOST:$MILVUS_PORT"
 # ---------------------------------------------------------------------------
 echo ""
 echo "==> Starting search query parser sidecar (background)..."
-python3 run_sidecar.py > "$SIDECAR_LOG_FILE" 2>&1 &
+"$PYTHON" run_sidecar.py > "$SIDECAR_LOG_FILE" 2>&1 &
 SIDECAR_PID=$!
 echo "    Sidecar PID: $SIDECAR_PID (logs: $SIDECAR_LOG_FILE)"
 echo "    Sidecar:     http://$SIDECAR_HOST:$SIDECAR_PORT"
@@ -114,7 +124,7 @@ cd "$SCRIPT_DIR"
 
 if [[ "$NO_CLI" == true ]]; then
   echo ""
-  echo "All background services started. Run 'python3 dnd_consultant.py' to open the CLI."
+  echo "All background services started. Run '$PYTHON dnd_consultant.py' to open the CLI."
   exit 0
 fi
 
@@ -122,7 +132,7 @@ echo ""
 echo "==> Starting D&D Character Consultant..."
 echo "    Press Ctrl+C to exit (background services will keep running)."
 echo ""
-python3 dnd_consultant.py
+"$PYTHON" dnd_consultant.py
 
 # On CLI exit, offer to stop background services.
 echo ""

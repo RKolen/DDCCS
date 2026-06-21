@@ -160,7 +160,10 @@ background are populated from the Drupal taxonomy (`termClasses`, `termSkills`,
 `termSpeciesItems`, `termLineages`, `termBackgrounds`) via `useStaticQuery`,
 each with an "Other (not on the list)" option that creates the term on submit.
 Resolved abilities are upserted as `abilities` terms and linked to the
-character. Creating
+character. Choosing "Other" for background opens `CreateBackgroundModal` to
+define a homebrew background (3 ability options, skills, tools, an Origin-tagged
+feat, gold, equipment); on create it is saved as a Homebrew-edition background
+term with item nodes find-or-created for the equipment. Creating
 persists a **source** character via the `createCharacter` GraphQL mutation —
 with sensible AI/voice defaults applied server-side — and clones it into the
 active campaign via `addCharacterToCampaign`. All writes go through

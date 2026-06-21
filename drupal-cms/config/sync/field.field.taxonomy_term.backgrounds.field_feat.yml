@@ -1,0 +1,29 @@
+uuid: 3026d364-6595-4d9f-aa0d-5ef5702b2919
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.taxonomy_term.field_feat
+    - taxonomy.vocabulary.feats
+    - taxonomy.vocabulary.backgrounds
+id: taxonomy_term.backgrounds.field_feat
+field_name: field_feat
+entity_type: taxonomy_term
+bundle: backgrounds
+label: 'Origin Feat'
+description: 'Origin feat granted by this background'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:taxonomy_term'
+  handler_settings:
+    target_bundles:
+      feats: feats
+    sort:
+      field: name
+      direction: asc
+    auto_create: false
+    auto_create_bundle: ''
+field_type: entity_reference

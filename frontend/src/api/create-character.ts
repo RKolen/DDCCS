@@ -23,11 +23,22 @@ interface AbilityScores {
 
 interface CreateCharacterBody {
   name:           string;
+  firstName?:     string;
+  lastName?:      string | null;
+  nickname?:      string | null;
   className:      string;
   level:          number;
   abilityScores:  AbilityScores;
   skills?:        string[];
   background?:    string;
+  backgroundDefinition?: {
+    abilities: string[];
+    skills:    string[];
+    tools:     string[];
+    feat:      string;
+    gold:      number;
+    equipment: string[];
+  } | null;
   species?:       string;
   subspecies?:    string | null;
   subclass?:      string | null;
@@ -161,6 +172,10 @@ export default async function handler(
 
   // Merge user-supplied roleplay fields onto the derived sheet.
   const character: Record<string, unknown> = { ...built.character };
+  if (body.firstName) character.first_name = body.firstName;
+  if (body.lastName) character.last_name = body.lastName;
+  if (body.nickname) character.nickname = body.nickname;
+  if (body.backgroundDefinition) character.background_definition = body.backgroundDefinition;
   if (body.backstory) character.backstory = body.backstory;
   if (body.personalityTraits) character.personality_traits = body.personalityTraits;
   if (body.ideals) character.ideals = body.ideals;

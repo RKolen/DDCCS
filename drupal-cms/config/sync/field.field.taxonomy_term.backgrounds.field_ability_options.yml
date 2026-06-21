@@ -1,0 +1,29 @@
+uuid: 11006933-5514-47f6-85dd-473cdb6aa4c6
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.taxonomy_term.field_ability_options
+    - taxonomy.vocabulary.ability_scores
+    - taxonomy.vocabulary.backgrounds
+id: taxonomy_term.backgrounds.field_ability_options
+field_name: field_ability_options
+entity_type: taxonomy_term
+bundle: backgrounds
+label: 'Ability Score Options'
+description: 'Ability scores this background may increase'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:taxonomy_term'
+  handler_settings:
+    target_bundles:
+      ability_scores: ability_scores
+    sort:
+      field: name
+      direction: asc
+    auto_create: false
+    auto_create_bundle: ''
+field_type: entity_reference

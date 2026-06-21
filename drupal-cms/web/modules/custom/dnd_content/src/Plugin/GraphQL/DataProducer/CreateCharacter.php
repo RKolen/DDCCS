@@ -14,6 +14,7 @@ use Drupal\graphql\Attribute\DataProducer;
 use Drupal\graphql\GraphQL\Execution\FieldContext;
 use Drupal\graphql\Plugin\GraphQL\DataProducer\DataProducerPluginBase;
 use Drupal\node\NodeInterface;
+use Drupal\taxonomy\TermInterface;
 use GraphQL\Error\UserError;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -56,6 +57,11 @@ final class CreateCharacter extends DataProducerPluginBase implements ContainerF
    * Game edition stamped on abilities created during character creation.
    */
   private const ABILITY_EDITION = 'D&D 5.5e (2024)';
+
+  /**
+   * Game edition stamped on backgrounds defined via the homebrew modal.
+   */
+  private const HOMEBREW_EDITION = 'Homebrew';
 
   /**
    * The entity type manager.
@@ -160,9 +166,14 @@ final class CreateCharacter extends DataProducerPluginBase implements ContainerF
       'field_voice_pitch'      => 0,
     ];
 
+    $this->addStringValue($values, 'field_first_name', $data['first_name'] ?? NULL);
+    $this->addStringValue($values, 'field_last_name', $data['last_name'] ?? NULL);
+    $this->addStringValue($values, 'field_nickname', $data['nickname'] ?? NULL);
+
     $term_storage = $this->entityTypeManager->getStorage('taxonomy_term');
     $this->addTermReference($values, 'field_species', 'species', (string) ($data['species'] ?? ''), $term_storage);
-    $this->addTermReference($values, 'field_background', 'backgrounds', (string) ($data['background'] ?? ''), $term_storage);
+    $this->addTermReference($values, 'field_lineage', 'lineage', (string) ($data['subspecies'] ?? ''), $term_storage);
+    $this->addBackground($values, $data, $term_storage);
     $this->addTermReference($values, 'field_voice_id_ref', 'voice_ids', self::DEFAULT_VOICE_ID, $term_storage);
 
     $values['field_skills'] = $this->skillReferences($data['skills'] ?? [], $term_storage);
@@ -282,6 +293,23 @@ final class CreateCharacter extends DataProducerPluginBase implements ContainerF
       return [];
     }
     return array_values(array_filter($value, static fn ($item): bool => is_string($item) && $item !== ''));
+  }
+
+  /**
+   * Add a trimmed string value to the node values when non-empty.
+   *
+   * @param array<string, mixed> $values
+   *   Node values being assembled (modified by reference).
+   * @param string $field
+   *   Destination field name.
+   * @param mixed $value
+   *   Raw value; set only when it is a non-empty string after trimming.
+   */
+  private function addStringValue(array &$values, string $field, mixed $value): void {
+    $trimmed = trim((string) ($value ?? ''));
+    if ($trimmed !== '') {
+      $values[$field] = $trimmed;
+    }
   }
 
   /**
@@ -572,7 +600,7 @@ final class CreateCharacter extends DataProducerPluginBase implements ContainerF
       $values['field_ability_level'] = (int) $ability['level'];
     }
 
-    $editionTid = $this->editionTermId($storage);
+    $editionTid = $this->editionTermId($storage, self::ABILITY_EDITION);
     if ($editionTid !== NULL) {
       $values['field_edition'] = ['target_id' => $editionTid];
     }
@@ -583,20 +611,144 @@ final class CreateCharacter extends DataProducerPluginBase implements ContainerF
   }
 
   /**
-   * Resolve the game-edition term ID for new abilities.
+   * Resolve a game-edition term ID by name.
    *
    * @param \Drupal\Core\Entity\EntityStorageInterface $storage
    *   Taxonomy term storage.
+   * @param string $name
+   *   Edition term name (e.g. "D&D 5.5e (2024)" or "Homebrew").
    *
    * @return int|null
    *   The edition term ID, or NULL when the term is absent.
    */
-  private function editionTermId(EntityStorageInterface $storage): ?int {
-    $existing = $storage->loadByProperties([
-      'vid'  => 'game_edition',
-      'name' => self::ABILITY_EDITION,
-    ]);
+  private function editionTermId(EntityStorageInterface $storage, string $name): ?int {
+    $existing = $storage->loadByProperties(['vid' => 'game_edition', 'name' => $name]);
     return $existing === [] ? NULL : (int) reset($existing)->id();
+  }
+
+  /**
+   * Set the character's background, creating a homebrew term when defined.
+   *
+   * When the payload includes a background_definition (from the wizard's
+   * "not on the list" modal), a homebrew background term is created with its
+   * granted skills, tools, ability options, origin feat, gold, and equipment;
+   * otherwise an existing background term is referenced (created bare if new).
+   *
+   * @param array<string, mixed> $values
+   *   Node values being assembled (modified by reference).
+   * @param array<string, mixed> $data
+   *   Character payload.
+   * @param \Drupal\Core\Entity\EntityStorageInterface $term_storage
+   *   Taxonomy term storage.
+   */
+  private function addBackground(array &$values, array $data, EntityStorageInterface $term_storage): void {
+    $name = trim((string) ($data['background'] ?? ''));
+    if ($name === '') {
+      return;
+    }
+    $definition = $data['background_definition'] ?? NULL;
+    if (!is_array($definition)) {
+      $this->addTermReference($values, 'field_background', 'backgrounds', $name, $term_storage);
+      return;
+    }
+    $values['field_background'] = ['target_id' => $this->upsertHomebrewBackground($name, $definition, $term_storage)];
+  }
+
+  /**
+   * Create or update a homebrew background term from a definition.
+   *
+   * @param string $name
+   *   Background name.
+   * @param array<string, mixed> $definition
+   *   Definition with skills, tools, ability options, feat, gold, equipment.
+   * @param \Drupal\Core\Entity\EntityStorageInterface $term_storage
+   *   Taxonomy term storage.
+   *
+   * @return int
+   *   The background term ID.
+   */
+  private function upsertHomebrewBackground(string $name, array $definition, EntityStorageInterface $term_storage): int {
+    $existing = $term_storage->loadByProperties(['vid' => 'backgrounds', 'name' => $name]);
+    $term = $existing !== [] ? reset($existing) : $term_storage->create(['vid' => 'backgrounds', 'name' => $name]);
+    assert($term instanceof TermInterface);
+
+    $term->set('field_skills', $this->termRefList($definition['skills'] ?? [], 'skills', $term_storage));
+    $term->set('field_tools', $this->termRefList($definition['tools'] ?? [], 'tool_profiencies', $term_storage));
+    $term->set('field_ability_options', $this->termRefList($definition['abilities'] ?? [], 'ability_scores', $term_storage));
+
+    $feat = trim((string) ($definition['feat'] ?? ''));
+    $term->set('field_feat', $feat === '' ? NULL
+      : ['target_id' => $this->findOrCreateTerm($term_storage, 'feats', $feat)]);
+
+    $term->set('field_gold', $this->intOrNull($definition['gold'] ?? NULL));
+    $term->set('field_equipment_items', $this->itemNodeRefs($definition['equipment'] ?? []));
+
+    $editionTid = $this->editionTermId($term_storage, self::HOMEBREW_EDITION);
+    if ($editionTid !== NULL) {
+      $term->set('field_edition', ['target_id' => $editionTid]);
+    }
+
+    $term->save();
+    return (int) $term->id();
+  }
+
+  /**
+   * Resolve a list of term names to reference values within a vocabulary.
+   *
+   * @param mixed $names
+   *   List of term names.
+   * @param string $vocabulary
+   *   Vocabulary machine name.
+   * @param \Drupal\Core\Entity\EntityStorageInterface $term_storage
+   *   Taxonomy term storage.
+   *
+   * @return array<int, array{target_id: int}>
+   *   Entity reference values.
+   */
+  private function termRefList(mixed $names, string $vocabulary, EntityStorageInterface $term_storage): array {
+    if (!is_array($names)) {
+      return [];
+    }
+    $refs = [];
+    foreach ($names as $name) {
+      $clean = trim((string) $name);
+      if ($clean !== '') {
+        $refs[] = ['target_id' => $this->findOrCreateTerm($term_storage, $vocabulary, $clean)];
+      }
+    }
+    return $refs;
+  }
+
+  /**
+   * Resolve equipment names to item node references, creating bare nodes.
+   *
+   * @param mixed $names
+   *   List of item names.
+   *
+   * @return array<int, array{target_id: int}>
+   *   Entity reference values pointing at item nodes.
+   */
+  private function itemNodeRefs(mixed $names): array {
+    if (!is_array($names)) {
+      return [];
+    }
+    $node_storage = $this->entityTypeManager->getStorage('node');
+    $refs = [];
+    foreach ($names as $name) {
+      $clean = trim((string) $name);
+      if ($clean === '') {
+        continue;
+      }
+      $existing = $node_storage->loadByProperties(['type' => 'item', 'title' => $clean]);
+      if ($existing !== []) {
+        $refs[] = ['target_id' => (int) reset($existing)->id()];
+        continue;
+      }
+      $item = $node_storage->create(['type' => 'item', 'title' => $clean, 'status' => 1]);
+      $item->save();
+      $refs[] = ['target_id' => (int) $item->id()];
+    }
+    return $refs;
   }
 
   /**

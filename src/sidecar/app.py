@@ -188,6 +188,7 @@ def build_from_template_endpoint(req: BuildCharacterRequest) -> BuildCharacterRe
         skills=req.skills,
     )
     character = build_character_data_from_template(template, options)
+    character["subspecies"] = req.subspecies or ""
     character["abilities"] = _resolve_abilities(req)
     return BuildCharacterResponse(character=character)
 

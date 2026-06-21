@@ -1,0 +1,29 @@
+uuid: f37f7483-48e0-4c6b-9c29-9dcfde282714
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.taxonomy_term.field_tools
+    - taxonomy.vocabulary.backgrounds
+    - taxonomy.vocabulary.tool_profiencies
+id: taxonomy_term.backgrounds.field_tools
+field_name: field_tools
+entity_type: taxonomy_term
+bundle: backgrounds
+label: 'Tool Proficiencies'
+description: 'Tool proficiencies this background grants'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: 
+settings:
+  handler: 'default:taxonomy_term'
+  handler_settings:
+    target_bundles:
+      tool_profiencies: tool_profiencies
+    sort:
+      field: name
+      direction: asc
+    auto_create: false
+    auto_create_bundle: 
+field_type: entity_reference

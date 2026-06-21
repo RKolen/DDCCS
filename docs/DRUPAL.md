@@ -72,22 +72,43 @@ Exposure is configured in
 `session` (each with `query_load_enabled`, `edges_enabled`, `simple_queries`).
 
 **Exposed taxonomy vocabularies:** `abilities`, `campaign`, `class`, `skills`,
-`species`, `lineage`, `backgrounds`, `creature_types`, `factions`,
-`game_edition`, `magical_properties`. A vocabulary must be listed here with
-`enabled: true` before its term type appears in `TermUnion`.
+`species`, `lineage`, `backgrounds`, `feats`, `feat_type`, `ability_scores`,
+`tool_profiencies`, `creature_types`, `factions`, `game_edition`,
+`magical_properties`. A vocabulary must be listed here with `enabled: true`
+before its term type appears in `TermUnion`.
 
 **Term collection queries:** `abilities`, `class`, `skills`, `species`,
-`lineage`, and `backgrounds` set `edges_enabled` + `simple_queries`, generating
-collection queries (`termClasses`, `termSkills`, `termSpeciesItems`,
-`termLineages`, `termBackgrounds`) consumed by the character-creation wizard.
-Note the uncountable-noun quirk: the `species` collection is `termSpeciesItems`,
-not `termSpecies`.
+`lineage`, `backgrounds`, `feats`, `ability_scores`, and `tool_profiencies` set
+`edges_enabled` + `simple_queries`, generating collection queries (`termClasses`,
+`termSkills`, `termSpeciesItems`, `termLineages`, `termBackgrounds`, `termFeats`,
+`termAbilityScores`, `termToolProfiencies`) consumed by the character-creation
+wizard. Note the uncountable-noun quirk: the `species` collection is
+`termSpeciesItems`, not `termSpecies`.
 
 **Abilities (`TermAbility`)** carry the ability rules text and metadata:
 `field_ability_description` (text), `field_ability_source_type` (list:
 species/subspecies/class/background/feat), `field_ability_level` (int), and
 `field_edition` (-> `game_edition`). Terms are created on demand during
 character creation (see below).
+
+**Backgrounds (`TermBackground`)** carry what a 2024 background grants:
+`field_skills` (-> `skills`), `field_tools` (-> `tool_profiencies`), `field_feat`
+(origin feat -> `feats`), `field_ability_options` (-> `ability_scores`, the
+increase choices), `field_gold` (int) + `field_equipment_items` (-> `item` nodes;
+same shape as the character node so the data transfers directly), and
+`field_edition`. These term-level storages (`field_skills`, `field_tools`,
+`field_feat`, `field_ability_options`, `field_gold`, `field_equipment_items`) are
+shared across vocabularies — note that field storages are scoped per entity type,
+so these are distinct from the identically named `node.*` storages.
+
+When the creation wizard's background selector uses "Other (not on the list)", a
+modal collects a homebrew definition (3 ability options, skills, tools, an
+Origin-tagged feat, gold, equipment); `createCharacter` then upserts the
+background term with those fields, `field_edition = Homebrew`, and find-or-creates
+`item` nodes for the equipment package. The modal sources its options from
+`termAbilityScores`, `termSkills`, `termToolProfiencies`, and `termFeats`
+(filtered to `featType` = Origin) — `feats`, `feat_type`, `ability_scores`, and
+`tool_profiencies` are exposed as term collections for this.
 
 **Exposed paragraph types:** `ability_score`, `ability_scores`, `class`,
 `spell_reference`, `spell_slot`, `relationship`, `wysiwyg`.

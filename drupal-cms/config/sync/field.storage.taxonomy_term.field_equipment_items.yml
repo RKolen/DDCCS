@@ -1,0 +1,20 @@
+uuid: 4b6976fa-f26e-4057-81e3-6a05565c713b
+langcode: en
+status: true
+dependencies:
+  module:
+    - node
+    - taxonomy
+id: taxonomy_term.field_equipment_items
+field_name: field_equipment_items
+entity_type: taxonomy_term
+type: entity_reference
+settings:
+  target_type: node
+module: core
+locked: false
+cardinality: -1
+translatable: false
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

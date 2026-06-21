@@ -1,0 +1,20 @@
+uuid: e608c7c7-bae6-4c12-9c83-5093a602d9a0
+langcode: en
+status: true
+dependencies:
+  module:
+    - taxonomy
+id: taxonomy_term.field_gold
+field_name: field_gold
+entity_type: taxonomy_term
+type: integer
+settings:
+  unsigned: false
+  size: normal
+module: core
+locked: false
+cardinality: 1
+translatable: false
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

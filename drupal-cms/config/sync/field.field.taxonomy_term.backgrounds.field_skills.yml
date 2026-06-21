@@ -1,0 +1,29 @@
+uuid: aa6a35e7-af4b-4ee6-a3fc-6c85de55f756
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.taxonomy_term.field_skills
+    - taxonomy.vocabulary.skills
+    - taxonomy.vocabulary.backgrounds
+id: taxonomy_term.backgrounds.field_skills
+field_name: field_skills
+entity_type: taxonomy_term
+bundle: backgrounds
+label: 'Skill Proficiencies'
+description: 'Skill proficiencies this background grants'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:taxonomy_term'
+  handler_settings:
+    target_bundles:
+      skills: skills
+    sort:
+      field: name
+      direction: asc
+    auto_create: false
+    auto_create_bundle: ''
+field_type: entity_reference
