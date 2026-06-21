@@ -77,6 +77,7 @@ class BuildCharacterRequest(BaseModel):
     subclass: Optional[str] = None
     background: str = ""
     race: str = "Human"
+    subspecies: Optional[str] = None
     skills: List[str] = Field(default_factory=list)
 
     @field_validator("name", "class_name")

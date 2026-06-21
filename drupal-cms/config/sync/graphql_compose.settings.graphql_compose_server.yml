@@ -89,6 +89,11 @@ entity_config:
       enabled: true
       query_load_enabled: true
   taxonomy_term:
+    abilities:
+      enabled: true
+      query_load_enabled: true
+      edges_enabled: true
+      simple_queries: '1'
     campaign:
       enabled: true
       query_load_enabled: true
@@ -112,6 +117,8 @@ entity_config:
     lineage:
       enabled: true
       query_load_enabled: true
+      edges_enabled: true
+      simple_queries: '1'
     backgrounds:
       enabled: true
       query_load_enabled: true
@@ -502,6 +509,15 @@ field_config:
       field_relationship_strength:
         enabled: true
   taxonomy_term:
+    abilities:
+      field_ability_description:
+        enabled: true
+      field_ability_source_type:
+        enabled: true
+      field_ability_level:
+        enabled: true
+      field_edition:
+        enabled: true
     campaign:
       field_campaign_start_date:
         enabled: true

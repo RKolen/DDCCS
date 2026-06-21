@@ -188,7 +188,15 @@ export function storiesForCampaign(data: ConsoleData, campaignName: string): Dru
 }
 
 export function charactersForCampaign(data: ConsoleData, campaignName: string): DrupalCharacter[] {
-  return playerCharacters(data).filter(c => c.campaign === campaignName);
+  // A character belongs to a campaign either by its own field_campaign (clones)
+  // or by membership in the campaign term's current party (source characters
+  // added directly to a party). The party is the authoritative list, so union
+  // both signals.
+  const campaign = data.campaigns.find(c => c.name === campaignName);
+  const partyIds = new Set(campaign?.currentPartyIds ?? []);
+  return playerCharacters(data).filter(
+    c => c.campaign === campaignName || partyIds.has(c.id),
+  );
 }
 
 /* ────────────────────────────────────────────────────────────

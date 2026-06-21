@@ -1,0 +1,20 @@
+uuid: 8a1eea55-a9db-4fab-a126-3701dcfe6763
+langcode: en
+status: true
+dependencies:
+  module:
+    - taxonomy
+id: taxonomy_term.field_ability_level
+field_name: field_ability_level
+entity_type: taxonomy_term
+type: integer
+settings:
+  unsigned: false
+  size: normal
+module: core
+locked: false
+cardinality: 1
+translatable: false
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

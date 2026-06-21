@@ -71,16 +71,23 @@ Exposure is configured in
 **Exposed node bundles:** `character`, `story`, `item`, `spell`, `monster`,
 `session` (each with `query_load_enabled`, `edges_enabled`, `simple_queries`).
 
-**Exposed taxonomy vocabularies:** `campaign`, `class`, `skills`, `species`,
-`lineage`, `backgrounds`, `creature_types`, `factions`, `game_edition`,
-`magical_properties`. A vocabulary must be listed here with `enabled: true`
-before its term type appears in `TermUnion`.
+**Exposed taxonomy vocabularies:** `abilities`, `campaign`, `class`, `skills`,
+`species`, `lineage`, `backgrounds`, `creature_types`, `factions`,
+`game_edition`, `magical_properties`. A vocabulary must be listed here with
+`enabled: true` before its term type appears in `TermUnion`.
 
-**Term collection queries:** `class`, `skills`, `species`, and `backgrounds`
-also set `edges_enabled` + `simple_queries`, which generate collection queries
-(`termClasses`, `termSkills`, `termSpeciesItems`, `termBackgrounds`) consumed by
-the character-creation wizard. Note the uncountable-noun quirk: the `species`
-collection is `termSpeciesItems`, not `termSpecies`.
+**Term collection queries:** `abilities`, `class`, `skills`, `species`,
+`lineage`, and `backgrounds` set `edges_enabled` + `simple_queries`, generating
+collection queries (`termClasses`, `termSkills`, `termSpeciesItems`,
+`termLineages`, `termBackgrounds`) consumed by the character-creation wizard.
+Note the uncountable-noun quirk: the `species` collection is `termSpeciesItems`,
+not `termSpecies`.
+
+**Abilities (`TermAbility`)** carry the ability rules text and metadata:
+`field_ability_description` (text), `field_ability_source_type` (list:
+species/subspecies/class/background/feat), `field_ability_level` (int), and
+`field_edition` (-> `game_edition`). Terms are created on demand during
+character creation (see below).
 
 **Exposed paragraph types:** `ability_score`, `ability_scores`, `class`,
 `spell_reference`, `spell_slot`, `relationship`, `wysiwyg`.
@@ -129,7 +136,10 @@ Per-action user writes go through custom GraphQL mutations called from
 TRUE`, no campaign) from a sidecar-derived payload, building the
 `ability_scores`, `class`, `spell_slot`, `abilities_ref`, and `wysiwyg`
 paragraphs. Unknown `species`/`background` names are created on the fly
-(`findOrCreateTerm`). It also applies sensible AI/voice defaults
+(`findOrCreateTerm`). The payload's resolved `abilities` (class/species/
+subspecies features from the rules wiki) are upserted as `abilities` terms —
+created on first use with their rules text, `source_type`, `level`, and
+`edition` — and linked via `ability_reference` paragraphs. It also applies sensible AI/voice defaults
 (`field_ai_enabled = TRUE`, default Piper voice `en_US-ryan-low`, speed 1.0,
 pitch 0, and a character-derived system prompt); `field_ai_model`,
 `field_ai_temperature`, and `field_ai_max_tokens` are left empty so they inherit

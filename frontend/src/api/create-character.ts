@@ -29,6 +29,7 @@ interface CreateCharacterBody {
   skills?:        string[];
   background?:    string;
   species?:       string;
+  subspecies?:    string | null;
   subclass?:      string | null;
   campaignId?:    string | null;
   backstory?:          string;
@@ -141,6 +142,7 @@ export default async function handler(
         skills:         body.skills ?? [],
         background:     body.background ?? '',
         race:           body.species ?? 'Human',
+        subspecies:     body.subspecies ?? null,
         subclass:       body.subclass ?? null,
       }),
     });

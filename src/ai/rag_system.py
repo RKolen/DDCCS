@@ -74,6 +74,7 @@ class WikiCacheProtocol(Protocol):
 
     def get_stats(self) -> Dict[str, Any]:
         """Return cache statistics as a dict."""
+        raise NotImplementedError
 
 
 class DrupalWikiCache:
@@ -290,6 +291,9 @@ class WikiClient:
             content_elem = soup.find("div", class_="mw-parser-output")
             if not content_elem:
                 content_elem = soup.find("div", id="mw-content-text")
+            if not content_elem:
+                # Wikidot sites use #page-content rather than MediaWiki markup.
+                content_elem = soup.find("div", id="page-content")
             if content_elem:
                 sections = self._parse_sections(content_elem)
                 page_data = {

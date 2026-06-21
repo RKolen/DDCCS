@@ -53,6 +53,11 @@ final class CreateCharacter extends DataProducerPluginBase implements ContainerF
   private const DEFAULT_VOICE_ID = 'en_US-ryan-low';
 
   /**
+   * Game edition stamped on abilities created during character creation.
+   */
+  private const ABILITY_EDITION = 'D&D 5.5e (2024)';
+
+  /**
    * The entity type manager.
    *
    * @var \Drupal\Core\Entity\EntityTypeManagerInterface
@@ -178,8 +183,8 @@ final class CreateCharacter extends DataProducerPluginBase implements ContainerF
     }
 
     $values['field_spell_slots'] = $this->buildSpellSlots($data['spell_slots'] ?? []);
-    $values['field_abilities_ref'] = $this->buildTermReferenceParagraphs(
-      $data['class_abilities'] ?? [],
+    $values['field_abilities_ref'] = $this->buildAbilityParagraphs(
+      $data['abilities'] ?? [],
       $term_storage,
     );
 
@@ -489,27 +494,35 @@ final class CreateCharacter extends DataProducerPluginBase implements ContainerF
   }
 
   /**
-   * Build ability_reference paragraphs for class-feature names.
+   * Build ability_reference paragraphs from resolved abilities.
    *
-   * @param mixed $names
-   *   Class feature names.
+   * Each ability is a dict ({name, description, level, source_type}) resolved
+   * from the rules wiki. The ability term is created on first use with its
+   * rules text and metadata, then reused on subsequent characters.
+   *
+   * @param mixed $abilities
+   *   Resolved ability dicts.
    * @param \Drupal\Core\Entity\EntityStorageInterface $term_storage
    *   Taxonomy term storage.
    *
    * @return array<int, array{target_id: int, target_revision_id: int}>
    *   ERR values for field_abilities_ref.
    */
-  private function buildTermReferenceParagraphs(mixed $names, EntityStorageInterface $term_storage): array {
-    if (!is_array($names) || $names === []) {
+  private function buildAbilityParagraphs(mixed $abilities, EntityStorageInterface $term_storage): array {
+    if (!is_array($abilities) || $abilities === []) {
       return [];
     }
     $paragraph_storage = $this->entityTypeManager->getStorage('paragraph');
     $references = [];
-    foreach ($names as $name) {
-      if (!is_string($name) || $name === '') {
+    foreach ($abilities as $ability) {
+      if (!is_array($ability)) {
         continue;
       }
-      $tid = $this->findOrCreateTerm($term_storage, 'abilities', $name);
+      $name = trim((string) ($ability['name'] ?? ''));
+      if ($name === '') {
+        continue;
+      }
+      $tid = $this->upsertAbilityTerm($term_storage, $ability, $name);
       /** @var \Drupal\paragraphs\Entity\Paragraph $paragraph */
       $paragraph = $paragraph_storage->create([
         'type'          => 'ability_reference',
@@ -522,6 +535,68 @@ final class CreateCharacter extends DataProducerPluginBase implements ContainerF
       ];
     }
     return $references;
+  }
+
+  /**
+   * Find an ability term by name, creating it with metadata when absent.
+   *
+   * @param \Drupal\Core\Entity\EntityStorageInterface $storage
+   *   Taxonomy term storage.
+   * @param array<string, mixed> $ability
+   *   Resolved ability dict ({name, description, level, source_type}).
+   * @param string $name
+   *   Ability name (already trimmed and non-empty).
+   *
+   * @return int
+   *   The ability term ID.
+   */
+  private function upsertAbilityTerm(EntityStorageInterface $storage, array $ability, string $name): int {
+    $existing = $storage->loadByProperties(['vid' => 'abilities', 'name' => $name]);
+    if ($existing !== []) {
+      return (int) reset($existing)->id();
+    }
+
+    $values = ['vid' => 'abilities', 'name' => $name];
+
+    $description = trim((string) ($ability['description'] ?? ''));
+    if ($description !== '') {
+      $values['field_ability_description'] = ['value' => $description, 'format' => 'plain_text'];
+    }
+
+    $sourceType = trim((string) ($ability['source_type'] ?? ''));
+    if ($sourceType !== '') {
+      $values['field_ability_source_type'] = $sourceType;
+    }
+
+    if (isset($ability['level']) && is_numeric($ability['level'])) {
+      $values['field_ability_level'] = (int) $ability['level'];
+    }
+
+    $editionTid = $this->editionTermId($storage);
+    if ($editionTid !== NULL) {
+      $values['field_edition'] = ['target_id' => $editionTid];
+    }
+
+    $term = $storage->create($values);
+    $term->save();
+    return (int) $term->id();
+  }
+
+  /**
+   * Resolve the game-edition term ID for new abilities.
+   *
+   * @param \Drupal\Core\Entity\EntityStorageInterface $storage
+   *   Taxonomy term storage.
+   *
+   * @return int|null
+   *   The edition term ID, or NULL when the term is absent.
+   */
+  private function editionTermId(EntityStorageInterface $storage): ?int {
+    $existing = $storage->loadByProperties([
+      'vid'  => 'game_edition',
+      'name' => self::ABILITY_EDITION,
+    ]);
+    return $existing === [] ? NULL : (int) reset($existing)->id();
   }
 
   /**

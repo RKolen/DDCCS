@@ -2,6 +2,10 @@
 /recipes
 /vendor
 
+# One-off maintenance scripts for cleaning up previous architecture
+# (e.g. clearing taxonomies). Not part of the committed codebase.
+/scripts/
+
 # macOS
 .DS_Store
 .AppleDouble

@@ -36,8 +36,9 @@ Request/response shapes are defined as Pydantic models in
 [query_parser.py](query_parser.py); spotlight scoring delegates to
 `src.stories.spotlight_engine.SpotlightEngine`. The character build endpoint
 reuses `src.characters.character_template.build_character_data_from_template`
-and enriches class features via the reusable `src.ai.class_features_rag`
-service (RAG fallback to `RAG_RULES_BASE_URL` when templates are sparse).
+and resolves class, species, and subspecies abilities (name, rules text, level,
+source type) via the reusable `src.ai.abilities_rag` service, which scrapes the
+rules wiki at `RAG_RULES_BASE_URL`.
 
 ### Authentication
 

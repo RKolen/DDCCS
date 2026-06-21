@@ -26,6 +26,7 @@ interface TaxonomyQuery {
     termSkills:       { nodes: TermNode[] };
     termSpeciesItems: { nodes: TermNode[] };
     termBackgrounds:  { nodes: TermNode[] };
+    termLineages:     { nodes: TermNode[] };
   };
 }
 
@@ -106,6 +107,7 @@ interface FormState {
   level:         number;
   abilityScores: AbilityScores;
   species:       string;
+  subspecies:    string;
   background:    string;
   subclass:      string;
   skills:        string[];
@@ -129,6 +131,7 @@ const DEFAULT_FORM: FormState = {
   level:         1,
   abilityScores: { strength: 10, dexterity: 10, constitution: 10, intelligence: 10, wisdom: 10, charisma: 10 },
   species:       'Human',
+  subspecies:    '',
   background:    '',
   subclass:      '',
   skills:        [],
@@ -156,6 +159,7 @@ export function CreateCharacterScreen({ ctx }: ScreenProps): React.ReactElement 
         termSkills(first: 50) { nodes { name } }
         termSpeciesItems(first: 100) { nodes { name } }
         termBackgrounds(first: 100) { nodes { name } }
+        termLineages(first: 100) { nodes { name } }
       }
     }
   `);
@@ -165,6 +169,7 @@ export function CreateCharacterScreen({ ctx }: ScreenProps): React.ReactElement 
   const skillOptions      = React.useMemo(() => sortedNames(taxonomy.drupal.termSkills.nodes), [taxonomy]);
   const speciesOptions    = React.useMemo(() => sortedNames(taxonomy.drupal.termSpeciesItems.nodes), [taxonomy]);
   const backgroundOptions = React.useMemo(() => sortedNames(taxonomy.drupal.termBackgrounds.nodes), [taxonomy]);
+  const lineageOptions    = React.useMemo(() => sortedNames(taxonomy.drupal.termLineages.nodes), [taxonomy]);
 
   const { campaigns } = useConsoleData();
   const activeCampaign =
@@ -201,6 +206,7 @@ export function CreateCharacterScreen({ ctx }: ScreenProps): React.ReactElement 
     skills:            form.skills,
     background:        form.background.trim(),
     species:           form.species.trim(),
+    subspecies:        form.subspecies.trim() || null,
     subclass:          form.subclass.trim() || null,
     backstory:         form.backstory.trim(),
     personalityTraits: splitLines(form.traits),
@@ -310,6 +316,9 @@ export function CreateCharacterScreen({ ctx }: ScreenProps): React.ReactElement 
             <VocabSelect id="cc-species" label="Species" value={form.species}
               options={speciesOptions} placeholder="New species name"
               onChange={v => update('species', v)} />
+            <VocabSelect id="cc-subspecies" label="Subspecies (optional)" value={form.subspecies}
+              options={lineageOptions} placeholder="New subspecies name"
+              onChange={v => update('subspecies', v)} />
             <VocabSelect id="cc-bg" label="Background" value={form.background}
               options={backgroundOptions} placeholder="New background name"
               onChange={v => update('background', v)} />

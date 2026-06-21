@@ -1,0 +1,36 @@
+uuid: bf2d2e02-0938-40cc-989a-42b2f1955381
+langcode: en
+status: true
+dependencies:
+  module:
+    - options
+    - taxonomy
+id: taxonomy_term.field_ability_source_type
+field_name: field_ability_source_type
+entity_type: taxonomy_term
+type: list_string
+settings:
+  allowed_values:
+    -
+      value: species
+      label: Species
+    -
+      value: subspecies
+      label: Subspecies
+    -
+      value: class
+      label: Class
+    -
+      value: background
+      label: Background
+    -
+      value: feat
+      label: Feat
+  allowed_values_function: ''
+module: options
+locked: false
+cardinality: 1
+translatable: false
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

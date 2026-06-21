@@ -8,7 +8,7 @@ from typing import Any, AsyncGenerator
 from fastapi import APIRouter, FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
 
-from src.ai.class_features_rag import get_class_features
+from src.ai.abilities_rag import Ability, get_abilities
 from src.characters.character_template import (
     TemplateOptions,
     build_character_data_from_template,
@@ -188,8 +188,34 @@ def build_from_template_endpoint(req: BuildCharacterRequest) -> BuildCharacterRe
         skills=req.skills,
     )
     character = build_character_data_from_template(template, options)
-    character["class_abilities"] = get_class_features(req.class_name, req.level)
+    character["abilities"] = _resolve_abilities(req)
     return BuildCharacterResponse(character=character)
+
+
+def _resolve_abilities(req: BuildCharacterRequest) -> list[Ability]:
+    """Resolve class, species, and subspecies abilities from the rules wiki.
+
+    Args:
+        req: The build request with class/species/subspecies and level.
+
+    Returns:
+        De-duplicated abilities up to the requested level. Empty when RAG is
+        unavailable (the character is still created without ability terms).
+    """
+    resolved: list[Ability] = []
+    resolved.extend(get_abilities("class", req.class_name, req.level))
+    resolved.extend(get_abilities("species", req.race, req.level))
+    if req.subspecies:
+        resolved.extend(get_abilities("subspecies", req.subspecies, req.level))
+
+    seen: set[str] = set()
+    unique: list[Ability] = []
+    for ability in resolved:
+        key = ability["name"].lower()
+        if key and key not in seen:
+            seen.add(key)
+            unique.append(ability)
+    return unique
 
 
 app.include_router(_search_router)

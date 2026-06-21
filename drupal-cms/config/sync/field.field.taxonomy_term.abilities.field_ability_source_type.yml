@@ -1,0 +1,21 @@
+uuid: 6e3d658c-c3f7-42da-80d3-8cd7e95478d7
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.taxonomy_term.field_ability_source_type
+    - taxonomy.vocabulary.abilities
+  module:
+    - options
+id: taxonomy_term.abilities.field_ability_source_type
+field_name: field_ability_source_type
+entity_type: taxonomy_term
+bundle: abilities
+label: 'Source Type'
+description: 'Where this ability comes from (species, class, etc.)'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: list_string

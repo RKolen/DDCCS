@@ -283,7 +283,7 @@ function ArcHub({ ctx, setCtx, characters }: SubScreenProps): React.ReactElement
       <div className="arc-hub-grid">
         {characters.length === 0 ? (
           <p style={{ gridColumn: '1/-1', fontStyle: 'italic', color: 'var(--ink-dim)', padding: 24 }}>
-            No characters found for the active campaign. Sync from the Python CLI first.
+            No characters found for the active campaign. Add characters to the party first.
           </p>
         ) : (
           characters.map(char => (

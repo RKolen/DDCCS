@@ -111,7 +111,7 @@ src/
 |-- ai/                 # AI integration
 |   |-- ai_client.py           # AI client interface (includes embed() for vectors)
 |   |-- rag_system.py          # RAG (Retrieval Augmented Generation)
-|   |-- class_features_rag.py  # Reusable class-feature lookup (template + RAG fallback)
+|   |-- abilities_rag.py       # Reusable ability/feature resolver (class/species/subspecies via rules wiki)
 |   |-- availability.py        # AI availability detection
 |   |-- lazy_imports.py        # Lazy import helpers
 |   |-- milvus_client.py       # Milvus vector DB wrapper (connect/insert/search)

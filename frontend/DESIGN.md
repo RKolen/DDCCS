@@ -153,11 +153,14 @@ All other previously-stubbed routes now have real screens: `TimelineScreen`,
 
 A derive-not-ask wizard (`CreateCharacterScreen`), 5 steps (Identity, Class &
 Level, Ability Scores, Skills, Roleplay). The user supplies only what cannot be
-computed; the Python sidecar derives HP/proficiency/saves/class features/spell
-slots server-side at create time. Class, skills, species, and background are
-populated from the Drupal taxonomy (`termClasses`, `termSkills`,
-`termSpeciesItems`, `termBackgrounds`) via `useStaticQuery`, each with an
-"Other (not on the list)" option that creates the term on submit. Creating
+computed; the Python sidecar derives HP/proficiency/saves/spell slots and
+resolves class/species/subspecies abilities (rules text, source type, level)
+from the rules wiki at create time. Class, skills, species, subspecies, and
+background are populated from the Drupal taxonomy (`termClasses`, `termSkills`,
+`termSpeciesItems`, `termLineages`, `termBackgrounds`) via `useStaticQuery`,
+each with an "Other (not on the list)" option that creates the term on submit.
+Resolved abilities are upserted as `abilities` terms and linked to the
+character. Creating
 persists a **source** character via the `createCharacter` GraphQL mutation —
 with sensible AI/voice defaults applied server-side — and clones it into the
 active campaign via `addCharacterToCampaign`. All writes go through
