@@ -204,15 +204,22 @@ export function CreateCharacterScreen({ ctx }: ScreenProps): React.ReactElement 
   const [result,     setResult]     = React.useState<CreateResult | null>(null);
   const [bgDefinition, setBgDefinition] = React.useState<BackgroundDefinition | null>(null);
   const [showBgModal,  setShowBgModal]  = React.useState(false);
+  const [resolvingBg,  setResolvingBg]  = React.useState(false);
 
-  // A background not in the taxonomy is a homebrew background defined via modal.
+  // A background not in the taxonomy is a homebrew background defined via modal;
+  // one in the taxonomy is an official background resolved from the rules wiki.
   const isHomebrewBackground =
     form.background.trim() !== '' && !backgroundOptions.includes(form.background);
 
+  // Changing the background invalidates any prior definition; a homebrew choice
+  // opens the modal to define it.
+  const lastBgRef = React.useRef('');
   React.useEffect(() => {
-    if (isHomebrewBackground && bgDefinition === null) setShowBgModal(true);
-    if (!isHomebrewBackground && bgDefinition !== null) setBgDefinition(null);
-  }, [isHomebrewBackground, bgDefinition]);
+    if (form.background === lastBgRef.current) return;
+    lastBgRef.current = form.background;
+    setBgDefinition(null);
+    if (isHomebrewBackground) setShowBgModal(true);
+  }, [form.background, isHomebrewBackground]);
 
   const update = <K extends keyof FormState>(key: K, value: FormState[K]): void => {
     setForm(prev => ({ ...prev, [key]: value }));
@@ -241,7 +248,7 @@ export function CreateCharacterScreen({ ctx }: ScreenProps): React.ReactElement 
     abilityScores:     form.abilityScores,
     skills:            form.skills,
     background:        form.background.trim(),
-    backgroundDefinition: isHomebrewBackground ? bgDefinition : null,
+    backgroundDefinition: bgDefinition,
     species:           form.species.trim(),
     subspecies:        form.subspecies.trim() || null,
     subclass:          form.subclass.trim() || null,
@@ -254,7 +261,38 @@ export function CreateCharacterScreen({ ctx }: ScreenProps): React.ReactElement 
     dryRun:            false,
   }), [form, activeCampaign, isHomebrewBackground, bgDefinition]);
 
-  const goNext = (): void => {
+  // Resolve an official background's granted data from the rules wiki the first
+  // time the user advances past the Identity step (used to pre-select skills).
+  const resolveBackground = React.useCallback(async (): Promise<void> => {
+    const name = form.background.trim();
+    if (name === '' || isHomebrewBackground || bgDefinition !== null) return;
+    setResolvingBg(true);
+    try {
+      const res = await fetch('/api/resolve-background', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ name }),
+      });
+      const data = (await res.json()) as { background?: {
+        ability_options?: string[]; feat?: string; skills?: string[];
+        tools?: string[]; gold?: number; equipment?: string[];
+      } | null };
+      const b = data.background;
+      if (res.ok && b) {
+        setBgDefinition({
+          abilities: b.ability_options ?? [], skills: b.skills ?? [], tools: b.tools ?? [],
+          feat: b.feat ?? '', gold: b.gold ?? 0, equipment: b.equipment ?? [],
+        });
+      }
+    } catch {
+      /* Non-fatal: proceed without background grants. */
+    } finally {
+      setResolvingBg(false);
+    }
+  }, [form.background, isHomebrewBackground, bgDefinition]);
+
+  const goNext = async (): Promise<void> => {
+    if (STEPS[step] === 'Identity') await resolveBackground();
     setStep(s => Math.min(STEPS.length - 1, s + 1));
   };
 
@@ -463,8 +501,9 @@ export function CreateCharacterScreen({ ctx }: ScreenProps): React.ReactElement 
             {submitting ? 'Creating…' : 'Create Character'}
           </button>
         ) : (
-          <button type="button" className="primary-btn" disabled={!canContinue} onClick={goNext}>
-            Next
+          <button type="button" className="primary-btn" disabled={!canContinue || resolvingBg}
+            onClick={() => void goNext()}>
+            {resolvingBg ? 'Resolving background…' : 'Next'}
           </button>
         )}
       </div>

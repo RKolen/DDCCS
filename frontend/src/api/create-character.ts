@@ -1,4 +1,5 @@
 import type { GatsbyFunctionRequest, GatsbyFunctionResponse } from 'gatsby';
+import { sidecarBaseUrl } from '../utils/sidecar';
 
 /**
  * Create a source character and attach a campaign clone.
@@ -137,12 +138,15 @@ export default async function handler(
   }
 
   // 1. Derive the character sheet via the sidecar.
-  const host = process.env.SIDECAR_HOST ?? 'localhost';
-  const port = process.env.SIDECAR_PORT ?? '8765';
+  const sidecarUrl = sidecarBaseUrl();
+  if (!sidecarUrl) {
+    res.status(500).json({ error: 'Sidecar not configured (set SIDECAR_HOST and SIDECAR_PORT)' });
+    return;
+  }
 
   let builtRes: Response;
   try {
-    builtRes = await fetch(`http://${host}:${port}/character/build-from-template`, {
+    builtRes = await fetch(`${sidecarUrl}/character/build-from-template`, {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

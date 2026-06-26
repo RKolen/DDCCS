@@ -1,4 +1,5 @@
 import type { GatsbyFunctionRequest, GatsbyFunctionResponse } from 'gatsby';
+import { sidecarBaseUrl } from '../utils/sidecar';
 
 interface SpotlightRequestBody {
   campaignName: string;
@@ -35,9 +36,15 @@ export default async function handler(
     return;
   }
 
-  const port      = process.env.SIDECAR_PORT ?? '8765';
-  const host      = process.env.SIDECAR_HOST ?? 'localhost';
-  const sidecarUrl = `http://${host}:${port}`;
+  const sidecarUrl = sidecarBaseUrl();
+  if (!sidecarUrl) {
+    // Sidecar not configured — degrade to zero scores like an unreachable one.
+    res.status(200).json({
+      campaignName: body.campaignName,
+      scores: Object.fromEntries((body.characterNames ?? []).map(n => [n, 0])),
+    });
+    return;
+  }
 
   let sidecarRes: Response;
   try {

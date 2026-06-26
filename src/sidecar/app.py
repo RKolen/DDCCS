@@ -8,7 +8,7 @@ from typing import Any, AsyncGenerator
 from fastapi import APIRouter, FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
 
-from src.ai.abilities_rag import Ability, get_abilities
+from src.ai.abilities_rag import Ability, get_abilities, get_background
 from src.characters.character_template import (
     TemplateOptions,
     build_character_data_from_template,
@@ -22,6 +22,8 @@ from src.sidecar.models import (
     HealthResponse,
     ParseQueryRequest,
     ParseQueryResponse,
+    ResolveBackgroundRequest,
+    ResolveBackgroundResponse,
     SpotlightCharacterScore,
     SpotlightRequest,
     SpotlightResponse,
@@ -191,6 +193,24 @@ def build_from_template_endpoint(req: BuildCharacterRequest) -> BuildCharacterRe
     character["subspecies"] = req.subspecies or ""
     character["abilities"] = _resolve_abilities(req)
     return BuildCharacterResponse(character=character)
+
+
+@_character_router.post("/resolve-background", response_model=ResolveBackgroundResponse)
+def resolve_background_endpoint(req: ResolveBackgroundRequest) -> ResolveBackgroundResponse:
+    """Resolve a background's granted data (abilities, feat, skills, etc.).
+
+    Used to lazily populate an existing-but-empty background term from the
+    rules wiki when it is selected during character creation.
+
+    Args:
+        req: ResolveBackgroundRequest with the background name.
+
+    Returns:
+        ResolveBackgroundResponse with the structured data, or null background
+        when it cannot be resolved.
+    """
+    data = get_background(req.name)
+    return ResolveBackgroundResponse(background=dict(data) if data is not None else None)
 
 
 def _resolve_abilities(req: BuildCharacterRequest) -> list[Ability]:

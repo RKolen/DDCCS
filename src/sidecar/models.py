@@ -111,6 +111,41 @@ class BuildCharacterResponse(BaseModel):
     character: Dict[str, Any]
 
 
+class ResolveBackgroundRequest(BaseModel):
+    """Request to resolve a background's granted data from the rules wiki."""
+
+    name: str
+
+    @field_validator("name")
+    @classmethod
+    def strip_name(cls, value: str) -> str:
+        """Strip whitespace and reject a blank background name.
+
+        Args:
+            value: Raw background name.
+
+        Returns:
+            The stripped name.
+
+        Raises:
+            ValueError: If the name is empty after stripping.
+        """
+        stripped = value.strip()
+        if not stripped:
+            raise ValueError("name must not be empty")
+        return stripped
+
+
+class ResolveBackgroundResponse(BaseModel):
+    """Resolved background data, or null when it could not be resolved.
+
+    The ``background`` payload (when present) holds ability_options, feat,
+    skills, tools, gold, and equipment.
+    """
+
+    background: Optional[Dict[str, Any]] = None
+
+
 class ErrorResponse(BaseModel):
     """Shared error envelope returned by all sidecar endpoints on failure."""
 

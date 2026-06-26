@@ -627,12 +627,14 @@ final class CreateCharacter extends DataProducerPluginBase implements ContainerF
   }
 
   /**
-   * Set the character's background, creating a homebrew term when defined.
+   * Set the character's background, populating the term from a definition.
    *
-   * When the payload includes a background_definition (from the wizard's
-   * "not on the list" modal), a homebrew background term is created with its
-   * granted skills, tools, ability options, origin feat, gold, and equipment;
-   * otherwise an existing background term is referenced (created bare if new).
+   * When the payload includes a background_definition, the background term is
+   * upserted with its granted skills, tools, ability options, origin feat,
+   * gold, and equipment. A newly created term (the wizard's "not on the list"
+   * path) is stamped Homebrew; an existing-but-empty official term (resolved
+   * from the rules wiki) is stamped with the 2024 edition. Without a
+   * definition, an existing background term is simply referenced.
    *
    * @param array<string, mixed> $values
    *   Node values being assembled (modified by reference).
@@ -651,11 +653,11 @@ final class CreateCharacter extends DataProducerPluginBase implements ContainerF
       $this->addTermReference($values, 'field_background', 'backgrounds', $name, $term_storage);
       return;
     }
-    $values['field_background'] = ['target_id' => $this->upsertHomebrewBackground($name, $definition, $term_storage)];
+    $values['field_background'] = ['target_id' => $this->upsertBackground($name, $definition, $term_storage)];
   }
 
   /**
-   * Create or update a homebrew background term from a definition.
+   * Create or update a background term from a definition.
    *
    * @param string $name
    *   Background name.
@@ -667,10 +669,18 @@ final class CreateCharacter extends DataProducerPluginBase implements ContainerF
    * @return int
    *   The background term ID.
    */
-  private function upsertHomebrewBackground(string $name, array $definition, EntityStorageInterface $term_storage): int {
+  private function upsertBackground(string $name, array $definition, EntityStorageInterface $term_storage): int {
     $existing = $term_storage->loadByProperties(['vid' => 'backgrounds', 'name' => $name]);
-    $term = $existing !== [] ? reset($existing) : $term_storage->create(['vid' => 'backgrounds', 'name' => $name]);
+    $isNew = $existing === [];
+    $term = $isNew ? $term_storage->create(['vid' => 'backgrounds', 'name' => $name]) : reset($existing);
     assert($term instanceof TermInterface);
+
+    // A new term is homebrew. An existing-but-empty term is an official
+    // background being populated from the rules wiki (stamped 2024). An
+    // existing, already-populated term is reused untouched.
+    if (!$isNew && !$term->get('field_skills')->isEmpty()) {
+      return (int) $term->id();
+    }
 
     $term->set('field_skills', $this->termRefList($definition['skills'] ?? [], 'skills', $term_storage));
     $term->set('field_tools', $this->termRefList($definition['tools'] ?? [], 'tool_profiencies', $term_storage));
@@ -683,7 +693,8 @@ final class CreateCharacter extends DataProducerPluginBase implements ContainerF
     $term->set('field_gold', $this->intOrNull($definition['gold'] ?? NULL));
     $term->set('field_equipment_items', $this->itemNodeRefs($definition['equipment'] ?? []));
 
-    $editionTid = $this->editionTermId($term_storage, self::HOMEBREW_EDITION);
+    $edition = $isNew ? self::HOMEBREW_EDITION : self::ABILITY_EDITION;
+    $editionTid = $this->editionTermId($term_storage, $edition);
     if ($editionTid !== NULL) {
       $term->set('field_edition', ['target_id' => $editionTid]);
     }

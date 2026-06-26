@@ -66,10 +66,22 @@ echo "    Milvus:  $MILVUS_HOST:$MILVUS_PORT"
 # ---------------------------------------------------------------------------
 echo ""
 echo "==> Starting search query parser sidecar (background)..."
-"$PYTHON" run_sidecar.py > "$SIDECAR_LOG_FILE" 2>&1 &
+# Run from the project root so run_sidecar.py is found and .env / game_data
+# resolve correctly (ddev start left us in drupal-cms/).
+cd "$SCRIPT_DIR"
+"$PYTHON" "$SCRIPT_DIR/run_sidecar.py" > "$SIDECAR_LOG_FILE" 2>&1 &
 SIDECAR_PID=$!
 echo "    Sidecar PID: $SIDECAR_PID (logs: $SIDECAR_LOG_FILE)"
-echo "    Sidecar:     http://$SIDECAR_HOST:$SIDECAR_PORT"
+# Verify it actually bound; surface import/CWD/port errors instead of dying silently.
+sleep 2
+if curl -sf --max-time 2 "http://$SIDECAR_HOST:$SIDECAR_PORT/health" >/dev/null 2>&1; then
+  echo "    Sidecar:     http://$SIDECAR_HOST:$SIDECAR_PORT (healthy)"
+else
+  echo "    WARNING: sidecar did not come up (port $SIDECAR_PORT in use, or an error)."
+  echo "    Last log lines ($SIDECAR_LOG_FILE):"
+  tail -3 "$SIDECAR_LOG_FILE" 2>/dev/null | sed 's/^/      /'
+  echo "    If another project uses port $SIDECAR_PORT, set SIDECAR_PORT in .env to a free port."
+fi
 
 # ---------------------------------------------------------------------------
 # 3. Gatsby frontend (dev server in background)
