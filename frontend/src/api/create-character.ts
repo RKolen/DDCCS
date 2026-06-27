@@ -31,14 +31,16 @@ interface CreateCharacterBody {
   level:          number;
   abilityScores:  AbilityScores;
   skills?:        string[];
+  tools?:         string[];
   background?:    string;
   backgroundDefinition?: {
-    abilities: string[];
-    skills:    string[];
-    tools:     string[];
-    feat:      string;
-    gold:      number;
-    equipment: string[];
+    abilities:        string[];
+    skills:           string[];
+    tools:            string[];
+    feat:             string;
+    feat_description?: string;
+    gold:             number;
+    equipment:        string[];
   } | null;
   species?:       string;
   subspecies?:    string | null;
@@ -179,6 +181,7 @@ export default async function handler(
   if (body.firstName) character.first_name = body.firstName;
   if (body.lastName) character.last_name = body.lastName;
   if (body.nickname) character.nickname = body.nickname;
+  if (body.tools) character.tools = body.tools;
   if (body.backgroundDefinition) character.background_definition = body.backgroundDefinition;
   if (body.backstory) character.backstory = body.backstory;
   if (body.personalityTraits) character.personality_traits = body.personalityTraits;

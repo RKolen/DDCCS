@@ -30,6 +30,8 @@ background (logs to `.sidecar.log`).
 | POST | `/search/parse-query` | Normalise a natural-language search query for the Milvus index |
 | POST | `/eval/spotlight` | Compute spotlight scores for a campaign's characters |
 | POST | `/character/build-from-template` | Derive a full character sheet (HP, proficiency, saves, class features, spell slots) from class + level + ability scores |
+| POST | `/character/resolve-background` | Resolve a background's granted data (ability options, origin feat, skills, tools, gold, equipment) from the rules wiki (`RAG_RULES_BASE_URL`) |
+| POST | `/character/skill-plan` | Derive the class + species/subspecies skill/tool plan (granted skills & tools + choice groups, incl. class tool proficiencies like Bard instruments) for the rules-aware skills step |
 
 Request/response shapes are defined as Pydantic models in
 [models.py](models.py). Query normalisation logic is in

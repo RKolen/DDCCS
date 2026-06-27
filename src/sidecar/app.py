@@ -8,10 +8,11 @@ from typing import Any, AsyncGenerator
 from fastapi import APIRouter, FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
 
-from src.ai.abilities_rag import Ability, get_abilities, get_background
+from src.ai.abilities_rag import Ability, get_abilities, get_background, get_class_tools
 from src.characters.character_template import (
     TemplateOptions,
     build_character_data_from_template,
+    derive_skill_plan,
     load_template,
 )
 from src.config.config_loader import load_config
@@ -24,6 +25,8 @@ from src.sidecar.models import (
     ParseQueryResponse,
     ResolveBackgroundRequest,
     ResolveBackgroundResponse,
+    SkillPlanRequest,
+    SkillPlanResponse,
     SpotlightCharacterScore,
     SpotlightRequest,
     SpotlightResponse,
@@ -211,6 +214,37 @@ def resolve_background_endpoint(req: ResolveBackgroundRequest) -> ResolveBackgro
     """
     data = get_background(req.name)
     return ResolveBackgroundResponse(background=dict(data) if data is not None else None)
+
+
+@_character_router.post("/skill-plan", response_model=SkillPlanResponse)
+def skill_plan_endpoint(req: SkillPlanRequest) -> SkillPlanResponse:
+    """Derive the class + species/subspecies skill plan for a character.
+
+    Returns auto-granted skills and choice groups (class choice plus any
+    species/subspecies trait choices) so the wizard's skills step can present
+    restricted, rules-aware selections. Background grants are layered on by the
+    caller. Returns an empty plan when the class template is unknown.
+
+    Args:
+        req: SkillPlanRequest with class/level/species/subspecies.
+
+    Returns:
+        SkillPlanResponse with granted skills and choice groups.
+    """
+    template = load_template(req.class_name)
+    if template is None:
+        return SkillPlanResponse(granted=[], granted_tools=[], choices=[])
+    abilities = list(get_abilities("species", req.race, req.level))
+    if req.subspecies:
+        abilities.extend(get_abilities("subspecies", req.subspecies, req.level))
+    plan = derive_skill_plan(template, [dict(ability) for ability in abilities])
+    tools = get_class_tools(req.class_name)
+    choices = list(plan["choices"])
+    if tools["choice"] is not None:
+        choices.append(tools["choice"])
+    return SkillPlanResponse(
+        granted=plan["granted"], granted_tools=tools["granted"], choices=choices,
+    )
 
 
 def _resolve_abilities(req: BuildCharacterRequest) -> list[Ability]:

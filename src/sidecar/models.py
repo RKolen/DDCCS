@@ -146,6 +146,28 @@ class ResolveBackgroundResponse(BaseModel):
     background: Optional[Dict[str, Any]] = None
 
 
+class SkillPlanRequest(BaseModel):
+    """Request for a character's class + species/subspecies skill plan."""
+
+    class_name: str
+    level: int = Field(default=1, ge=1, le=20)
+    race: str = "Human"
+    subspecies: Optional[str] = None
+
+
+class SkillPlanResponse(BaseModel):
+    """A skill plan: auto-granted skills/tools plus choice groups.
+
+    ``granted``/``granted_tools`` are auto-proficient skill and tool names;
+    ``choices`` is a list of {id, label, count, from, kind} where ``kind`` is
+    one of skill/tool/skill_or_tool (an empty ``from`` means any of that kind).
+    """
+
+    granted: List[str]
+    granted_tools: List[str]
+    choices: List[Dict[str, Any]]
+
+
 class ErrorResponse(BaseModel):
     """Shared error envelope returned by all sidecar endpoints on failure."""
 

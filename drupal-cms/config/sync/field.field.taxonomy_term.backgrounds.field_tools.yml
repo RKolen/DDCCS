@@ -15,7 +15,7 @@ description: 'Tool proficiencies this background grants'
 required: false
 translatable: false
 default_value: {  }
-default_value_callback: 
+default_value_callback: null
 settings:
   handler: 'default:taxonomy_term'
   handler_settings:
@@ -25,5 +25,5 @@ settings:
       field: name
       direction: asc
     auto_create: false
-    auto_create_bundle: 
+    auto_create_bundle: null
 field_type: entity_reference

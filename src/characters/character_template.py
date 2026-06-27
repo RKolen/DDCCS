@@ -290,3 +290,84 @@ def build_character_data_from_template(
         "equipment": equipment_data,
         "magic_items": [],
     }
+
+
+# The 18 standard 5e skills, used to detect skill grants in trait descriptions.
+STANDARD_SKILLS: List[str] = [
+    "Acrobatics", "Animal Handling", "Arcana", "Athletics", "Deception",
+    "History", "Insight", "Intimidation", "Investigation", "Medicine",
+    "Nature", "Perception", "Performance", "Persuasion", "Religion",
+    "Sleight of Hand", "Stealth", "Survival",
+]
+
+_WORD_TO_COUNT: Dict[str, int] = {"one": 1, "two": 2, "three": 3}
+
+
+def derive_skill_plan(
+    template: Dict[str, Any], abilities: List[Dict[str, Any]]
+) -> Dict[str, Any]:
+    """Derive a character's skill plan from class options and species traits.
+
+    Combines the class skill choice (from the template) with any skill
+    proficiencies or choices granted by species/subspecies traits (parsed from
+    their resolved descriptions). Background grants are layered on by the
+    caller, since they are resolved separately.
+
+    Args:
+        template: Loaded class template (provides skill_options).
+        abilities: Resolved abilities, including species/subspecies traits with
+            descriptions.
+
+    Returns:
+        A plan dict: ``granted`` (auto-proficient skill names) and ``choices``
+        (each {id, label, count, from, kind}; an empty ``from`` means any skill).
+    """
+    plan: Dict[str, Any] = {"granted": [], "choices": []}
+
+    options = template.get("skill_options", {})
+    available = options.get("from", []) if isinstance(options, dict) else []
+    if available:
+        plan["choices"].append({
+            "id": "class",
+            "label": f"{template.get('class', 'Class')} skills",
+            "count": int(options.get("choose", 1)),
+            "from": list(available),
+            "kind": "skill",
+        })
+
+    for ability in abilities:
+        if ability.get("source_type") in ("species", "subspecies"):
+            _add_trait_skills(ability, plan)
+    return plan
+
+
+def _add_trait_skills(ability: Dict[str, Any], plan: Dict[str, Any]) -> None:
+    """Parse one trait's description and fold any skill grant/choice into a plan.
+
+    Args:
+        ability: A resolved ability with name and description.
+        plan: The skill plan being assembled (modified in place).
+    """
+    description = str(ability.get("description", ""))
+    lower = description.lower()
+    if "proficien" not in lower:
+        return
+
+    mentioned = [skill for skill in STANDARD_SKILLS if skill in description]
+    label = str(ability.get("name", "Trait"))
+
+    if "of your choice" in lower:
+        count = next(
+            (value for word, value in _WORD_TO_COUNT.items() if f"{word} skill" in lower), 1
+        )
+        plan["choices"].append({
+            "id": f"trait:{label}", "label": label, "count": count,
+            "from": mentioned, "kind": "skill",
+        })
+    elif len(mentioned) > 1 and " or " in lower:
+        plan["choices"].append({
+            "id": f"trait:{label}", "label": label, "count": 1,
+            "from": mentioned, "kind": "skill",
+        })
+    elif len(mentioned) == 1 and mentioned[0] not in plan["granted"]:
+        plan["granted"].append(mentioned[0])

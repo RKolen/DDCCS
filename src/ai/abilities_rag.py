@@ -20,7 +20,7 @@ from __future__ import annotations
 
 import logging
 import re
-from typing import List, Optional, TypedDict, cast
+from typing import Any, Dict, List, Optional, TypedDict, cast
 
 from src.ai.rag_system import RAGSystem, get_rag_system
 
@@ -61,6 +61,7 @@ class BackgroundData(TypedDict):
 
     ability_options: List[str]
     feat: str
+    feat_description: str
     skills: List[str]
     tools: List[str]
     gold: int
@@ -69,6 +70,18 @@ class BackgroundData(TypedDict):
 
 # Labels that segment the single background data paragraph on the rules wiki.
 _BG_LABELS = ("Ability Scores", "Feat", "Skill Proficiencies", "Tool Proficiency", "Equipment")
+
+# Labels that follow "Tool Proficiencies" in a class page's proficiency block.
+_CLASS_PROF_NEXT = (
+    "Weapon Proficiencies", "Weapon Proficiency", "Armor Training",
+    "Saving Throw", "Starting Equipment",
+)
+
+# Standard musical instruments (matching the tool_profiencies vocabulary), used
+# to scope a "Choose N Musical Instruments" class tool proficiency.
+MUSICAL_INSTRUMENTS = ["Bagpipes", "Concertina", "Horn", "Lute", "Lyre", "Pan Flute", "Viol"]
+
+_WORD_TO_INT = {"one": 1, "two": 2, "three": 3}
 
 
 def get_abilities(
@@ -124,7 +137,37 @@ def get_background(name: str, *, rag: Optional[RAGSystem] = None) -> Optional[Ba
     html = _fetch_html(client, f"{client.base_url}/{slug}")
     if html is None:
         return None
-    return _parse_background(html)
+    data = _parse_background(html)
+    if data is not None and data["feat"]:
+        data["feat_description"] = get_feat(data["feat"], rag=rag_system) or ""
+    return data
+
+
+def get_feat(name: str, *, rag: Optional[RAGSystem] = None) -> Optional[str]:
+    """Resolve a feat's rules description from the rules wiki.
+
+    Args:
+        name: Feat name (e.g. "Skilled" or "Magic Initiate (Cleric)").
+        rag: Optional RAG system; resolved from config when omitted.
+
+    Returns:
+        The feat's description text, or None when it cannot be resolved.
+    """
+    rag_system = rag if rag is not None else _safe_rag_system()
+    if rag_system is None or not getattr(rag_system, "enabled", False):
+        return None
+    client = getattr(rag_system, "rules_client", None)
+    if client is None or not _SCRAPING_AVAILABLE or getattr(client, "session", None) is None:
+        return None
+
+    # Feat pages key on the base feat name (drop any parenthetical specialisation).
+    base = re.sub(r"\s*\(.*?\)\s*", "", name).strip().lower().replace(" ", "-")
+    if base == "":
+        return None
+    html = _fetch_html(client, f"{client.base_url}/feat:{base}")
+    if html is None:
+        return None
+    return _parse_feat_description(html)
 
 
 def _safe_rag_system() -> Optional[RAGSystem]:
@@ -380,11 +423,114 @@ def _parse_background(html: str) -> Optional[BackgroundData]:
     return BackgroundData(
         ability_options=_split_names(segments.get("Ability Scores", "")),
         feat=segments.get("Feat", "").strip(),
+        feat_description="",
         skills=_split_names(segments.get("Skill Proficiencies", "")),
         tools=_split_names(segments.get("Tool Proficiency", "")),
         gold=_parse_gold(equipment_text),
         equipment=_parse_equipment(equipment_text),
     )
+
+
+def get_class_tools(class_name: str, *, rag: Optional[RAGSystem] = None) -> Dict[str, Any]:
+    """Resolve a class's tool proficiencies from the rules wiki.
+
+    Args:
+        class_name: Class name (e.g. "Bard").
+        rag: Optional RAG system; resolved from config when omitted.
+
+    Returns:
+        A dict ``{"granted": [tool names], "choice": {...} | None}``. ``granted``
+        holds fixed tool grants (e.g. Rogue's Thieves' Tools); ``choice`` is a
+        choice group (e.g. Bard's three Musical Instruments) or None.
+    """
+    result: Dict[str, Any] = {"granted": [], "choice": None}
+    rag_system = rag if rag is not None else _safe_rag_system()
+    if rag_system is None or not getattr(rag_system, "enabled", False):
+        return result
+    client = getattr(rag_system, "rules_client", None)
+    if client is None or not _SCRAPING_AVAILABLE or getattr(client, "session", None) is None:
+        return result
+
+    slug = class_name.strip().lower().replace(" ", "-")
+    if slug == "":
+        return result
+    html = _fetch_html(client, f"{client.base_url}/{slug}")
+    if html is None:
+        return result
+
+    segment = _class_tool_segment(html)
+    if segment == "" or segment.lower() == "none":
+        return result
+
+    match = re.match(r"choose\s+(\d+|one|two|three)\s+(.+)", segment, re.IGNORECASE)
+    if match is not None:
+        raw_count = match.group(1).lower()
+        count = int(raw_count) if raw_count.isdigit() else _WORD_TO_INT.get(raw_count, 1)
+        category = match.group(2).strip()
+        options = MUSICAL_INSTRUMENTS if "musical instrument" in category.lower() else []
+        result["choice"] = {
+            "id": "class-tools", "label": f"Tool: {category}",
+            "count": count, "from": options, "kind": "tool",
+        }
+    else:
+        result["granted"] = _split_names(segment)
+    return result
+
+
+def _class_tool_segment(html: str) -> str:
+    """Extract the "Tool Proficiencies" value from a class page.
+
+    Args:
+        html: Raw class page HTML.
+
+    Returns:
+        The text following "Tool Proficiencies" up to the next proficiency
+        label, or the empty string when absent.
+    """
+    if not _SCRAPING_AVAILABLE:
+        return ""
+    found = BeautifulSoup(html, "html.parser").find("div", id="page-content")
+    if not isinstance(found, Tag):
+        return ""
+    text = _clean(cast("Tag", found).get_text(" ", strip=True))
+    index = text.find("Tool Proficiencies")
+    if index == -1:
+        return ""
+    segment = text[index + len("Tool Proficiencies"):]
+    for label in _CLASS_PROF_NEXT:
+        cut = segment.find(label)
+        if cut != -1:
+            segment = segment[:cut]
+    return segment.strip()
+
+
+def _parse_feat_description(html: str) -> Optional[str]:
+    """Parse a feat page's description, skipping metadata lines.
+
+    Args:
+        html: Raw feat page HTML.
+
+    Returns:
+        The joined description paragraphs, or None when none are found.
+    """
+    if not _SCRAPING_AVAILABLE:
+        return None
+    found = BeautifulSoup(html, "html.parser").find("div", id="page-content")
+    if not isinstance(found, Tag):
+        return None
+    content = cast("Tag", found)
+
+    parts: List[str] = []
+    for paragraph in content.find_all("p"):
+        text = _clean(paragraph.get_text(" ", strip=True))
+        lower = text.lower()
+        if text == "" or lower.startswith(("source:", "prerequisite:", "repeatable")):
+            continue
+        parts.append(text)
+        if len(" ".join(parts)) >= _MAX_DESCRIPTION:
+            break
+    joined = " ".join(parts)[:_MAX_DESCRIPTION]
+    return joined if joined != "" else None
 
 
 def _split_labeled(text: str, labels: tuple) -> dict:

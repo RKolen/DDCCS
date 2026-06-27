@@ -176,7 +176,30 @@ final class CreateCharacter extends DataProducerPluginBase implements ContainerF
     $this->addBackground($values, $data, $term_storage);
     $this->addTermReference($values, 'field_voice_id_ref', 'voice_ids', self::DEFAULT_VOICE_ID, $term_storage);
 
-    $values['field_skills'] = $this->skillReferences($data['skills'] ?? [], $term_storage);
+    // Apply background grants: granted skills merge into the character's chosen
+    // skills, the origin feat becomes a feat reference, and the equipment
+    // package is attached as item nodes.
+    $bgGrants = is_array($data['background_definition'] ?? NULL) ? $data['background_definition'] : [];
+    $skillNames = array_keys(is_array($data['skills'] ?? NULL) ? $data['skills'] : []);
+    if (is_array($bgGrants['skills'] ?? NULL)) {
+      $skillNames = array_merge($skillNames, $bgGrants['skills']);
+    }
+    $values['field_skills'] = $this->skillReferences($skillNames, $term_storage);
+
+    $toolNames = is_array($data['tools'] ?? NULL) ? $data['tools'] : [];
+    if (is_array($bgGrants['tools'] ?? NULL)) {
+      $toolNames = array_merge($toolNames, $bgGrants['tools']);
+    }
+    $values['field_tools'] = $this->termRefList($toolNames, 'tool_profiencies', $term_storage);
+
+    $values['field_feats_ref'] = $this->buildFeatReferences(
+      (string) ($bgGrants['feat'] ?? ''),
+      (string) ($bgGrants['feat_description'] ?? ''),
+      $term_storage,
+    );
+    if (is_array($bgGrants['equipment'] ?? NULL) && $bgGrants['equipment'] !== []) {
+      $values['field_equipment_items'] = $this->itemNodeRefs($bgGrants['equipment']);
+    }
 
     $ability_scores = $this->buildAbilityScores($data['ability_scores'] ?? [], $term_storage);
     if ($ability_scores !== NULL) {
@@ -341,35 +364,110 @@ final class CreateCharacter extends DataProducerPluginBase implements ContainerF
   }
 
   /**
-   * Resolve proficient skill names to skills-vocabulary references.
+   * Resolve a flat list of skill names to skills-vocabulary references.
    *
-   * Saving-throw entries (keys ending in " Save") are derived, not skills,
-   * and are excluded.
+   * Saving-throw entries (ending in " Save") are derived, not skills, and are
+   * excluded. Duplicate and unknown names are dropped.
    *
-   * @param mixed $skills
-   *   Skills mapping (name => details) from the payload.
+   * @param array<int, mixed> $names
+   *   Skill names (e.g. the character's chosen skills plus background grants).
    * @param \Drupal\Core\Entity\EntityStorageInterface $term_storage
    *   Taxonomy term storage.
    *
    * @return array<int, array{target_id: int}>
    *   Entity reference values for field_skills.
    */
-  private function skillReferences(mixed $skills, EntityStorageInterface $term_storage): array {
-    if (!is_array($skills)) {
-      return [];
-    }
+  private function skillReferences(array $names, EntityStorageInterface $term_storage): array {
     $references = [];
-    foreach (array_keys($skills) as $skill_name) {
-      $name = (string) $skill_name;
-      if ($name === '' || str_ends_with($name, ' Save')) {
+    $seen = [];
+    foreach ($names as $candidate) {
+      $name = trim((string) $candidate);
+      if ($name === '' || str_ends_with($name, ' Save') || isset($seen[$name])) {
         continue;
       }
       $terms = $term_storage->loadByProperties(['vid' => 'skills', 'name' => $name]);
       if ($terms !== []) {
+        $seen[$name] = TRUE;
         $references[] = ['target_id' => (int) reset($terms)->id()];
       }
     }
     return $references;
+  }
+
+  /**
+   * Build a feat_reference paragraph for a feat (e.g. a background's feat).
+   *
+   * @param string $name
+   *   Feat name; empty yields no reference.
+   * @param string $description
+   *   Feat rules text, used to backfill the feat term when missing.
+   * @param \Drupal\Core\Entity\EntityStorageInterface $term_storage
+   *   Taxonomy term storage.
+   *
+   * @return array<int, array{target_id: int, target_revision_id: int}>
+   *   ERR values for field_feats_ref.
+   */
+  private function buildFeatReferences(string $name, string $description, EntityStorageInterface $term_storage): array {
+    $clean = trim($name);
+    if ($clean === '') {
+      return [];
+    }
+    $tid = $this->findOrCreateFeat($term_storage, $clean, $description);
+    /** @var \Drupal\paragraphs\Entity\Paragraph $paragraph */
+    $paragraph = $this->entityTypeManager->getStorage('paragraph')->create([
+      'type'       => 'feat_reference',
+      'field_feat' => ['target_id' => $tid],
+    ]);
+    $paragraph->save();
+    return [[
+      'target_id'          => (int) $paragraph->id(),
+      'target_revision_id' => (int) $paragraph->getRevisionId(),
+    ]];
+  }
+
+  /**
+   * Find a feat term by name, backfilling its description when empty.
+   *
+   * Updates existing feats (created bare by migrations) with their rules text
+   * resolved from the wiki, and stamps the 2024 edition.
+   *
+   * @param \Drupal\Core\Entity\EntityStorageInterface $storage
+   *   Taxonomy term storage.
+   * @param string $name
+   *   Feat name.
+   * @param string $description
+   *   Feat rules text; backfilled only when the term has none.
+   *
+   * @return int
+   *   The feat term ID.
+   */
+  private function findOrCreateFeat(EntityStorageInterface $storage, string $name, string $description): int {
+    $existing = $storage->loadByProperties(['vid' => 'feats', 'name' => $name]);
+    if ($existing !== []) {
+      $term = reset($existing);
+      assert($term instanceof TermInterface);
+      if ($description !== '' && $term->get('field_feat_description')->isEmpty()) {
+        $term->set('field_feat_description', ['value' => $description, 'format' => 'plain_text']);
+        $editionTid = $this->editionTermId($storage, self::ABILITY_EDITION);
+        if ($editionTid !== NULL && $term->get('field_edition')->isEmpty()) {
+          $term->set('field_edition', ['target_id' => $editionTid]);
+        }
+        $term->save();
+      }
+      return (int) $term->id();
+    }
+
+    $values = ['vid' => 'feats', 'name' => $name];
+    if ($description !== '') {
+      $values['field_feat_description'] = ['value' => $description, 'format' => 'plain_text'];
+    }
+    $editionTid = $this->editionTermId($storage, self::ABILITY_EDITION);
+    if ($editionTid !== NULL) {
+      $values['field_edition'] = ['target_id' => $editionTid];
+    }
+    $term = $storage->create($values);
+    $term->save();
+    return (int) $term->id();
   }
 
   /**
@@ -687,8 +785,9 @@ final class CreateCharacter extends DataProducerPluginBase implements ContainerF
     $term->set('field_ability_options', $this->termRefList($definition['abilities'] ?? [], 'ability_scores', $term_storage));
 
     $feat = trim((string) ($definition['feat'] ?? ''));
-    $term->set('field_feat', $feat === '' ? NULL
-      : ['target_id' => $this->findOrCreateTerm($term_storage, 'feats', $feat)]);
+    $term->set('field_feat', $feat === '' ? NULL : [
+      'target_id' => $this->findOrCreateFeat($term_storage, $feat, (string) ($definition['feat_description'] ?? '')),
+    ]);
 
     $term->set('field_gold', $this->intOrNull($definition['gold'] ?? NULL));
     $term->set('field_equipment_items', $this->itemNodeRefs($definition['equipment'] ?? []));
@@ -721,9 +820,11 @@ final class CreateCharacter extends DataProducerPluginBase implements ContainerF
       return [];
     }
     $refs = [];
+    $seen = [];
     foreach ($names as $name) {
       $clean = trim((string) $name);
-      if ($clean !== '') {
+      if ($clean !== '' && !isset($seen[$clean])) {
+        $seen[$clean] = TRUE;
         $refs[] = ['target_id' => $this->findOrCreateTerm($term_storage, $vocabulary, $clean)];
       }
     }

@@ -158,7 +158,7 @@ TRUE`, no campaign) from a sidecar-derived payload, building the
 `ability_scores`, `class`, `spell_slot`, `abilities_ref`, and `wysiwyg`
 paragraphs. Unknown `species`/`background` names are created on the fly
 (`findOrCreateTerm`). The payload's resolved `abilities` (class/species/
-subspecies features from the rules wiki) are upserted as `abilities` terms —
+subspecies features from the rules wiki at `RAG_RULES_BASE_URL`) are upserted as `abilities` terms —
 created on first use with their rules text, `source_type`, `level`, and
 `edition` — and linked via `ability_reference` paragraphs. It also applies sensible AI/voice defaults
 (`field_ai_enabled = TRUE`, default Piper voice `en_US-ryan-low`, speed 1.0,

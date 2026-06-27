@@ -107,6 +107,8 @@ Drupal credentials.
 | -------- | ------ | -------- | ------- |
 | `campaigns.ts` | POST | Drupal (`createCampaign`) | Create a campaign |
 | `create-character.ts` | POST | Sidecar + Drupal (`createCharacter`, `addCharacterToCampaign`) | Derive a sheet via the sidecar, persist a source character, clone into the active campaign |
+| `resolve-background.ts` | POST | Sidecar | Resolve a background's granted data (skills/feat/abilities/gold/equipment) from the rules wiki (`RAG_RULES_BASE_URL`) |
+| `skill-plan.ts` | POST | Sidecar | Class + species/subspecies skill plan (granted + choice groups) for the skills step |
 | `campaign-party.ts` | POST | Drupal (`addCharacterToCampaign`) | Add a character to a campaign |
 | `create-story.ts` | POST | Drupal (`createStory`) | Persist a finished story |
 | `update-character.ts` | POST | Drupal (`updateCharacter`) | PATCH optional character fields |

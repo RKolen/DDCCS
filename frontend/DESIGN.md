@@ -155,7 +155,7 @@ A derive-not-ask wizard (`CreateCharacterScreen`), 5 steps (Identity, Class &
 Level, Ability Scores, Skills, Roleplay). The user supplies only what cannot be
 computed; the Python sidecar derives HP/proficiency/saves/spell slots and
 resolves class/species/subspecies abilities (rules text, source type, level)
-from the rules wiki at create time. Class, skills, species, subspecies, and
+from the rules wiki (`RAG_RULES_BASE_URL`) at create time. Class, skills, species, subspecies, and
 background are populated from the Drupal taxonomy (`termClasses`, `termSkills`,
 `termSpeciesItems`, `termLineages`, `termBackgrounds`) via `useStaticQuery`,
 each with an "Other (not on the list)" option that creates the term on submit.
@@ -163,7 +163,17 @@ Resolved abilities are upserted as `abilities` terms and linked to the
 character. Choosing "Other" for background opens `CreateBackgroundModal` to
 define a homebrew background (3 ability options, skills, tools, an Origin-tagged
 feat, gold, equipment); on create it is saved as a Homebrew-edition background
-term with item nodes find-or-created for the equipment. Creating
+term with item nodes find-or-created for the equipment. Selecting an **official**
+background instead resolves it from the rules wiki (`RAG_RULES_BASE_URL`) on Identity-step confirm
+(`/api/resolve-background`, spinner) and, if its term is empty, populates it
+(2024 edition) on create; its granted skills/feat/equipment are applied to the
+character. The **Skills** step is rules-aware: on entry it loads a skill plan
+(`/api/skill-plan`) — class-restricted choices plus species/subspecies trait
+choices, plus class tool proficiencies (e.g. Bard's three Musical Instruments)
+— and layers on background grants (granted skills/tools pre-checked but
+editable; a Skilled origin feat adds a "choose 3 skills or tools" group). Tool
+selections persist to `field_tools`. Feat terms (e.g. the background's origin
+feat) are backfilled with their rules text from the wiki when empty. Creating
 persists a **source** character via the `createCharacter` GraphQL mutation —
 with sensible AI/voice defaults applied server-side — and clones it into the
 active campaign via `addCharacterToCampaign`. All writes go through

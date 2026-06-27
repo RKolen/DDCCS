@@ -8,12 +8,13 @@ import * as React from 'react';
  */
 
 export interface BackgroundDefinition {
-  abilities: string[];
-  skills:    string[];
-  tools:     string[];
-  feat:      string;
-  gold:      number;
-  equipment: string[];
+  abilities:        string[];
+  skills:           string[];
+  tools:            string[];
+  feat:             string;
+  feat_description?: string;
+  gold:             number;
+  equipment:        string[];
 }
 
 const ABILITY_CHOICE_LIMIT = 3;

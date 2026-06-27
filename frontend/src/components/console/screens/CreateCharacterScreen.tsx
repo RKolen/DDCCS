@@ -118,7 +118,6 @@ interface FormState {
   subspecies:    string;
   background:    string;
   subclass:      string;
-  skills:        string[];
   backstory:     string;
   traits:        string;
   ideals:        string;
@@ -133,6 +132,20 @@ interface CreateResult {
   warning?: string;
 }
 
+interface SkillChoice {
+  id:    string;
+  label: string;
+  count: number;
+  from:  string[];  // empty means any of this kind
+  kind:  string;    // 'skill' | 'tool' | 'skill_or_tool'
+}
+
+interface SkillPlanState {
+  granted:       string[];
+  granted_tools: string[];
+  choices:       SkillChoice[];
+}
+
 const DEFAULT_FORM: FormState = {
   firstName:     '',
   lastName:      '',
@@ -144,7 +157,6 @@ const DEFAULT_FORM: FormState = {
   subspecies:    '',
   background:    '',
   subclass:      '',
-  skills:        [],
   backstory:     '',
   traits:        '',
   ideals:        '',
@@ -229,13 +241,78 @@ export function CreateCharacterScreen({ ctx }: ScreenProps): React.ReactElement 
     setForm(prev => ({ ...prev, abilityScores: { ...prev.abilityScores, [key]: value } }));
   };
 
-  const toggleSkill = (skill: string): void => {
-    setForm(prev => ({
-      ...prev,
-      skills: prev.skills.includes(skill)
-        ? prev.skills.filter(s => s !== skill)
-        : [...prev.skills, skill],
-    }));
+  const [skillPlan,     setSkillPlan]     = React.useState<SkillPlanState | null>(null);
+  const [grantedSel,    setGrantedSel]    = React.useState<string[]>([]);
+  const [grantedToolSel, setGrantedToolSel] = React.useState<string[]>([]);
+  const [choiceSel,     setChoiceSel]     = React.useState<Record<string, string[]>>({});
+  const [loadingSkills, setLoadingSkills] = React.useState(false);
+
+  // Choice items can be skills or tools; split each into the right field by
+  // checking which vocabulary it belongs to.
+  const choiceItems = React.useMemo(() => Object.values(choiceSel).flat(), [choiceSel]);
+  const selectedSkills = React.useMemo(
+    () => Array.from(new Set([...grantedSel, ...choiceItems.filter(i => skillOptions.includes(i))])),
+    [grantedSel, choiceItems, skillOptions],
+  );
+  const selectedTools = React.useMemo(
+    () => Array.from(new Set([...grantedToolSel, ...choiceItems.filter(i => toolOptions.includes(i))])),
+    [grantedToolSel, choiceItems, toolOptions],
+  );
+
+  // Resolve the class + species/subspecies skill plan, then layer on background
+  // grants (fixed skills + the Skilled feat's three free picks).
+  const loadSkillPlan = React.useCallback(async (): Promise<void> => {
+    setLoadingSkills(true);
+    try {
+      const res = await fetch('/api/skill-plan', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          className: form.className, level: form.level,
+          species: form.species.trim(), subspecies: form.subspecies.trim() || null,
+        }),
+      });
+      const data = (await res.json()) as {
+        granted?: string[]; granted_tools?: string[]; choices?: SkillChoice[];
+      };
+      const granted = Array.from(new Set([...(data.granted ?? []), ...(bgDefinition?.skills ?? [])]));
+      const grantedTools = Array.from(new Set([...(data.granted_tools ?? []), ...(bgDefinition?.tools ?? [])]));
+      const choices = [...(data.choices ?? [])];
+      if (bgDefinition?.feat === 'Skilled') {
+        choices.push({ id: 'feat:Skilled', label: 'Skilled feat', count: 3, from: [], kind: 'skill_or_tool' });
+      }
+      setSkillPlan({ granted, granted_tools: grantedTools, choices });
+      setGrantedSel(granted);
+      setGrantedToolSel(grantedTools);
+      setChoiceSel({});
+    } catch {
+      const bgSkills = bgDefinition?.skills ?? [];
+      const bgTools = bgDefinition?.tools ?? [];
+      setSkillPlan({ granted: bgSkills, granted_tools: bgTools, choices: [] });
+      setGrantedSel(bgSkills);
+      setGrantedToolSel(bgTools);
+    } finally {
+      setLoadingSkills(false);
+    }
+  }, [form.className, form.level, form.species, form.subspecies, bgDefinition]);
+
+  const toggleGranted = (skill: string): void => {
+    setGrantedSel(prev => (prev.includes(skill) ? prev.filter(s => s !== skill) : [...prev, skill]));
+  };
+
+  const toggleGrantedTool = (tool: string): void => {
+    setGrantedToolSel(prev => (prev.includes(tool) ? prev.filter(t => t !== tool) : [...prev, tool]));
+  };
+
+  const toggleChoice = (choiceId: string, skill: string, count: number): void => {
+    setChoiceSel(prev => {
+      const current = prev[choiceId] ?? [];
+      if (current.includes(skill)) {
+        return { ...prev, [choiceId]: current.filter(s => s !== skill) };
+      }
+      if (current.length >= count) return prev;
+      return { ...prev, [choiceId]: [...current, skill] };
+    });
   };
 
   const requestBody = React.useCallback(() => ({
@@ -246,7 +323,8 @@ export function CreateCharacterScreen({ ctx }: ScreenProps): React.ReactElement 
     className:         form.className,
     level:             form.level,
     abilityScores:     form.abilityScores,
-    skills:            form.skills,
+    skills:            selectedSkills,
+    tools:             selectedTools,
     background:        form.background.trim(),
     backgroundDefinition: bgDefinition,
     species:           form.species.trim(),
@@ -259,7 +337,7 @@ export function CreateCharacterScreen({ ctx }: ScreenProps): React.ReactElement 
     flaws:             splitLines(form.flaws),
     campaignId:        activeCampaign?.id ?? null,
     dryRun:            false,
-  }), [form, activeCampaign, isHomebrewBackground, bgDefinition]);
+  }), [form, activeCampaign, isHomebrewBackground, bgDefinition, selectedSkills, selectedTools]);
 
   // Resolve an official background's granted data from the rules wiki the first
   // time the user advances past the Identity step (used to pre-select skills).
@@ -274,14 +352,15 @@ export function CreateCharacterScreen({ ctx }: ScreenProps): React.ReactElement 
         body:    JSON.stringify({ name }),
       });
       const data = (await res.json()) as { background?: {
-        ability_options?: string[]; feat?: string; skills?: string[];
+        ability_options?: string[]; feat?: string; feat_description?: string; skills?: string[];
         tools?: string[]; gold?: number; equipment?: string[];
       } | null };
       const b = data.background;
       if (res.ok && b) {
         setBgDefinition({
           abilities: b.ability_options ?? [], skills: b.skills ?? [], tools: b.tools ?? [],
-          feat: b.feat ?? '', gold: b.gold ?? 0, equipment: b.equipment ?? [],
+          feat: b.feat ?? '', feat_description: b.feat_description ?? '',
+          gold: b.gold ?? 0, equipment: b.equipment ?? [],
         });
       }
     } catch {
@@ -293,7 +372,9 @@ export function CreateCharacterScreen({ ctx }: ScreenProps): React.ReactElement 
 
   const goNext = async (): Promise<void> => {
     if (STEPS[step] === 'Identity') await resolveBackground();
-    setStep(s => Math.min(STEPS.length - 1, s + 1));
+    const next = Math.min(STEPS.length - 1, step + 1);
+    if (STEPS[next] === 'Skills' && skillPlan === null) await loadSkillPlan();
+    setStep(next);
   };
 
   const handleCreate = async (): Promise<void> => {
@@ -339,7 +420,11 @@ export function CreateCharacterScreen({ ctx }: ScreenProps): React.ReactElement 
             <button
               type="button"
               className="primary-btn"
-              onClick={() => { setResult(null); setForm(DEFAULT_FORM); setStep(0); }}
+              onClick={() => {
+                setResult(null); setForm(DEFAULT_FORM); setStep(0);
+                setBgDefinition(null); setSkillPlan(null);
+                setGrantedSel([]); setGrantedToolSel([]); setChoiceSel({});
+              }}
             >
               Create another
             </button>
@@ -459,14 +544,76 @@ export function CreateCharacterScreen({ ctx }: ScreenProps): React.ReactElement 
         )}
 
         {STEPS[step] === 'Skills' && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
-            {skillOptions.map(skill => (
-              <label key={skill} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13 }}>
-                <input type="checkbox" checked={form.skills.includes(skill)} onChange={() => toggleSkill(skill)} />
-                {skill}
-              </label>
-            ))}
-          </div>
+          loadingSkills ? (
+            <p className="screen-blurb">Resolving skill options…</p>
+          ) : (
+            <>
+              {skillPlan && skillPlan.granted.length > 0 && (
+                <div className="modal-field">
+                  <label className="modal-label">Granted (species &amp; background) — uncheck to drop</label>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6 }}>
+                    {skillPlan.granted.map(skill => (
+                      <label key={skill} style={{ display: 'flex', gap: 6, fontSize: 13 }}>
+                        <input type="checkbox" checked={grantedSel.includes(skill)} onChange={() => toggleGranted(skill)} />
+                        {skill}
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {skillPlan && skillPlan.granted_tools.length > 0 && (
+                <div className="modal-field">
+                  <label className="modal-label">Granted tools (class &amp; background) — uncheck to drop</label>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6 }}>
+                    {skillPlan.granted_tools.map(tool => (
+                      <label key={tool} style={{ display: 'flex', gap: 6, fontSize: 13 }}>
+                        <input type="checkbox" checked={grantedToolSel.includes(tool)} onChange={() => toggleGrantedTool(tool)} />
+                        {tool}
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {skillPlan?.choices.map(choice => {
+                const base = choice.kind === 'tool' ? toolOptions
+                  : choice.kind === 'skill_or_tool' ? [...skillOptions, ...toolOptions]
+                  : skillOptions;
+                const options = choice.from.length > 0 ? choice.from : base;
+                const picked = choiceSel[choice.id] ?? [];
+                return (
+                  <div className="modal-field" key={choice.id}>
+                    <label className="modal-label">
+                      {choice.label}: choose {choice.count} — {picked.length}/{choice.count}
+                    </label>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6 }}>
+                      {options.map(option => {
+                        const checked = picked.includes(option);
+                        const usedElsewhere = grantedSel.includes(option) || grantedToolSel.includes(option)
+                          || Object.entries(choiceSel).some(([id, list]) => id !== choice.id && list.includes(option));
+                        const atLimit = !checked && picked.length >= choice.count;
+                        const disabled = usedElsewhere || atLimit;
+                        return (
+                          <label key={option} style={{ display: 'flex', gap: 6, fontSize: 13, opacity: disabled ? 0.45 : 1 }}>
+                            <input type="checkbox" checked={checked} disabled={disabled}
+                              onChange={() => toggleChoice(choice.id, option, choice.count)} />
+                            {option}
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
+
+              {(!skillPlan
+                || (skillPlan.granted.length === 0 && skillPlan.granted_tools.length === 0
+                    && skillPlan.choices.length === 0)) && (
+                <p className="screen-blurb">No skill or tool grants/choices for this character.</p>
+              )}
+            </>
+          )
         )}
 
         {STEPS[step] === 'Roleplay' && (
@@ -501,9 +648,10 @@ export function CreateCharacterScreen({ ctx }: ScreenProps): React.ReactElement 
             {submitting ? 'Creating…' : 'Create Character'}
           </button>
         ) : (
-          <button type="button" className="primary-btn" disabled={!canContinue || resolvingBg}
+          <button type="button" className="primary-btn"
+            disabled={!canContinue || resolvingBg || loadingSkills}
             onClick={() => void goNext()}>
-            {resolvingBg ? 'Resolving background…' : 'Next'}
+            {resolvingBg ? 'Resolving background…' : loadingSkills ? 'Loading skills…' : 'Next'}
           </button>
         )}
       </div>
