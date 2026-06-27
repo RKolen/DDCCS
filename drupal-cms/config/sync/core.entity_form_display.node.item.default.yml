@@ -13,11 +13,15 @@ dependencies:
     - field.field.node.item.field_edition
     - field.field.node.item.field_image
     - field.field.node.item.field_is_magic
+    - field.field.node.item.field_item_bonus
+    - field.field.node.item.field_item_cost
     - field.field.node.item.field_item_properties
     - field.field.node.item.field_item_rarity
     - field.field.node.item.field_item_requires_attunement
     - field.field.node.item.field_item_type
-    - field.field.node.item.field_notes
+    - field.field.node.item.field_item_weight
+    - field.field.node.item.field_nonidentified_name
+    - field.field.node.item.field_source
     - field.field.node.item.field_vestige_level
     - field.field.node.item.field_weapon_mastery
     - field.field.node.item.field_weapon_properties
@@ -27,7 +31,6 @@ dependencies:
     - field_group
     - paragraphs
     - path
-    - text
 third_party_settings:
   field_group:
     group_properties:
@@ -276,14 +279,6 @@ content:
     region: content
     settings: {  }
     third_party_settings: {  }
-  field_notes:
-    type: text_textarea
-    weight: 7
-    region: content
-    settings:
-      rows: 4
-      placeholder: ''
-    third_party_settings: {  }
   field_vestige_level:
     type: entity_reference_autocomplete
     weight: 7
@@ -458,6 +453,11 @@ content:
     third_party_settings: {  }
 hidden:
   created: true
+  field_item_bonus: true
+  field_item_cost: true
+  field_item_weight: true
+  field_nonidentified_name: true
+  field_source: true
   langcode: true
   promote: true
   sticky: true

@@ -54,9 +54,12 @@ Full field sets live in
 - **story** — `field_body`, `field_story_number`, `field_campaign`,
   `field_session_date`, `field_session_results`, `field_story_hooks`,
   `field_locations`, `field_npcs`, `field_story_tags`.
-- **item** — `field_item_type`, `field_item_rarity`, `field_is_magic`,
+- **item** — `field_item_type` (weapon/armor/item), `field_description`
+  (a `wysiwyg` paragraph), `field_item_rarity`, `field_is_magic`,
   `field_item_properties`, `field_damage` / `field_damage_types`,
-  `field_armor_*`, `field_weapon_*`, `field_item_cost`, `field_source`.
+  `field_armor_*`, `field_weapon_*`, `field_item_cost`, `field_source`,
+  `field_edition`. (`field_notes` was removed from the item bundle — it is now
+  only on `character`.)
 - **monster** — `field_challenge_rating`, `field_ability_scores`,
   `field_armor_class`, `field_maximum_hitpoints`, `field_monster_*` (actions,
   traits, senses, languages, legendary/lair actions), `field_type`.
@@ -105,7 +108,11 @@ When the creation wizard's background selector uses "Other (not on the list)", a
 modal collects a homebrew definition (3 ability options, skills, tools, an
 Origin-tagged feat, gold, equipment); `createCharacter` then upserts the
 background term with those fields, `field_edition = Homebrew`, and find-or-creates
-`item` nodes for the equipment package. The modal sources its options from
+`item` nodes for the equipment package. New `item` nodes are typed
+(weapon/armor/item) and given a `field_description` (a `wysiwyg` paragraph) from
+the rules-wiki equipment catalogue when the payload carries an
+`equipment_descriptions` map (see the data flow below); existing items are
+reused untouched. The modal sources its options from
 `termAbilityScores`, `termSkills`, `termToolProfiencies`, and `termFeats`
 (filtered to `featType` = Origin) — `feats`, `feat_type`, `ability_scores`, and
 `tool_profiencies` are exposed as term collections for this.
@@ -164,7 +171,12 @@ created on first use with their rules text, `source_type`, `level`, and
 (`field_ai_enabled = TRUE`, default Piper voice `en_US-ryan-low`, speed 1.0,
 pitch 0, and a character-derived system prompt); `field_ai_model`,
 `field_ai_temperature`, and `field_ai_max_tokens` are left empty so they inherit
-the global AI config. The clone into the active campaign is a separate
+the global AI config. Equipment from the background package is created as `item`
+nodes typed weapon/armor/item and given a `field_description` paragraph: before
+calling the mutation, `create-character.ts` resolves the equipment names through
+the sidecar's `/character/equipment/describe` (rules-wiki equipment catalogue at
+`RAG_RULES_BASE_URL`) and passes the result as an `equipment_descriptions` map
+in the payload. The clone into the active campaign is a separate
 `addCharacterToCampaign` call.
 
 ### Writes — bulk/seed via the engine

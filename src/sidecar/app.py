@@ -8,7 +8,13 @@ from typing import Any, AsyncGenerator
 from fastapi import APIRouter, FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
 
-from src.ai.abilities_rag import Ability, get_abilities, get_background, get_class_tools
+from src.ai.abilities_rag import (
+    Ability,
+    get_abilities,
+    get_background,
+    get_class_tools,
+    get_equipment_descriptions,
+)
 from src.characters.character_template import (
     TemplateOptions,
     build_character_data_from_template,
@@ -19,6 +25,9 @@ from src.config.config_loader import load_config
 from src.sidecar.models import (
     BuildCharacterRequest,
     BuildCharacterResponse,
+    EquipmentDescribeRequest,
+    EquipmentDescribeResponse,
+    EquipmentItemInfo,
     ErrorResponse,
     HealthResponse,
     ParseQueryRequest,
@@ -245,6 +254,28 @@ def skill_plan_endpoint(req: SkillPlanRequest) -> SkillPlanResponse:
     return SkillPlanResponse(
         granted=plan["granted"], granted_tools=tools["granted"], choices=choices,
     )
+
+
+@_character_router.post("/equipment/describe", response_model=EquipmentDescribeResponse)
+def equipment_describe_endpoint(req: EquipmentDescribeRequest) -> EquipmentDescribeResponse:
+    """Resolve prose descriptions and item types for equipment names.
+
+    Looks each name up in the rules-wiki equipment catalogue so newly created
+    item nodes can be given an accurate ``field_description`` and type. Unmatched
+    names are omitted.
+
+    Args:
+        req: EquipmentDescribeRequest with the item names to resolve.
+
+    Returns:
+        EquipmentDescribeResponse mapping each matched name to its info.
+    """
+    resolved = get_equipment_descriptions(req.names)
+    items = {
+        name: EquipmentItemInfo(description=info["description"], item_type=info["item_type"])
+        for name, info in resolved.items()
+    }
+    return EquipmentDescribeResponse(items=items)
 
 
 def _resolve_abilities(req: BuildCharacterRequest) -> list[Ability]:

@@ -168,6 +168,28 @@ class SkillPlanResponse(BaseModel):
     choices: List[Dict[str, Any]]
 
 
+class EquipmentDescribeRequest(BaseModel):
+    """Request to resolve descriptions and types for a list of item names."""
+
+    names: List[str] = Field(default_factory=list)
+
+
+class EquipmentItemInfo(BaseModel):
+    """Resolved catalogue data for one item: prose description and type."""
+
+    description: str = ""
+    item_type: str = "item"
+
+
+class EquipmentDescribeResponse(BaseModel):
+    """Resolved equipment, keyed by the requested name.
+
+    Names with no catalogue match are omitted from ``items``.
+    """
+
+    items: Dict[str, EquipmentItemInfo] = Field(default_factory=dict)
+
+
 class ErrorResponse(BaseModel):
     """Shared error envelope returned by all sidecar endpoints on failure."""
 

@@ -163,7 +163,8 @@ Resolved abilities are upserted as `abilities` terms and linked to the
 character. Choosing "Other" for background opens `CreateBackgroundModal` to
 define a homebrew background (3 ability options, skills, tools, an Origin-tagged
 feat, gold, equipment); on create it is saved as a Homebrew-edition background
-term with item nodes find-or-created for the equipment. Selecting an **official**
+term with item nodes find-or-created for the equipment (typed weapon/armor/item
+and given a rules-wiki description where one exists). Selecting an **official**
 background instead resolves it from the rules wiki (`RAG_RULES_BASE_URL`) on Identity-step confirm
 (`/api/resolve-background`, spinner) and, if its term is empty, populates it
 (2024 edition) on create; its granted skills/feat/equipment are applied to the

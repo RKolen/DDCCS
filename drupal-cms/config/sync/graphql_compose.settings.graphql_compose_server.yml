@@ -355,8 +355,6 @@ field_config:
         enabled: true
       field_nonidentified_name:
         enabled: true
-      field_notes:
-        enabled: true
       field_source:
         enabled: true
       field_vestige_level:

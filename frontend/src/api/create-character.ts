@@ -118,6 +118,37 @@ async function drupalGraphQl<T>(
   return (await drupalRes.json()) as GraphQlResponse<T>;
 }
 
+interface EquipmentItemInfo {
+  description: string;
+  item_type:  string;
+}
+
+interface EquipmentDescribeResponse {
+  items: Record<string, EquipmentItemInfo>;
+}
+
+/**
+ * Resolve descriptions and item types for an equipment list via the sidecar.
+ * Returns an empty map on any failure so character creation still proceeds.
+ */
+async function describeEquipment(
+  sidecarUrl: string,
+  names: string[],
+): Promise<Record<string, EquipmentItemInfo>> {
+  try {
+    const describeRes = await fetch(`${sidecarUrl}/character/equipment/describe`, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ names }),
+    });
+    if (!describeRes.ok) return {};
+    const payload = (await describeRes.json()) as EquipmentDescribeResponse;
+    return payload.items ?? {};
+  } catch {
+    return {};
+  }
+}
+
 export default async function handler(
   req: GatsbyFunctionRequest,
   res: GatsbyFunctionResponse,
@@ -188,6 +219,16 @@ export default async function handler(
   if (body.ideals) character.ideals = body.ideals;
   if (body.bonds) character.bonds = body.bonds;
   if (body.flaws) character.flaws = body.flaws;
+
+  // Enrich the equipment package with rules-wiki descriptions and item types so
+  // newly created item nodes get an accurate field_description and field_item_type.
+  const equipment = body.backgroundDefinition?.equipment ?? [];
+  if (equipment.length > 0) {
+    const descriptions = await describeEquipment(sidecarUrl, equipment);
+    if (Object.keys(descriptions).length > 0) {
+      character.equipment_descriptions = descriptions;
+    }
+  }
 
   // Preview only: return the derived sheet without persisting.
   if (body.dryRun) {

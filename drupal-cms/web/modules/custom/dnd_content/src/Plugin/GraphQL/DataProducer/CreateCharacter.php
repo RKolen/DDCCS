@@ -198,7 +198,9 @@ final class CreateCharacter extends DataProducerPluginBase implements ContainerF
       $term_storage,
     );
     if (is_array($bgGrants['equipment'] ?? NULL) && $bgGrants['equipment'] !== []) {
-      $values['field_equipment_items'] = $this->itemNodeRefs($bgGrants['equipment']);
+      $values['field_equipment_items'] = $this->itemNodeRefs(
+        $bgGrants['equipment'], $term_storage, $this->equipmentDescriptions($data),
+      );
     }
 
     $ability_scores = $this->buildAbilityScores($data['ability_scores'] ?? [], $term_storage);
@@ -751,7 +753,11 @@ final class CreateCharacter extends DataProducerPluginBase implements ContainerF
       $this->addTermReference($values, 'field_background', 'backgrounds', $name, $term_storage);
       return;
     }
-    $values['field_background'] = ['target_id' => $this->upsertBackground($name, $definition, $term_storage)];
+    $values['field_background'] = [
+      'target_id' => $this->upsertBackground(
+        $name, $definition, $term_storage, $this->equipmentDescriptions($data),
+      ),
+    ];
   }
 
   /**
@@ -763,11 +769,13 @@ final class CreateCharacter extends DataProducerPluginBase implements ContainerF
    *   Definition with skills, tools, ability options, feat, gold, equipment.
    * @param \Drupal\Core\Entity\EntityStorageInterface $term_storage
    *   Taxonomy term storage.
+   * @param array<string, array{description?: string, item_type?: string}> $descriptions
+   *   Resolved catalogue data keyed by item name (description + type).
    *
    * @return int
    *   The background term ID.
    */
-  private function upsertBackground(string $name, array $definition, EntityStorageInterface $term_storage): int {
+  private function upsertBackground(string $name, array $definition, EntityStorageInterface $term_storage, array $descriptions = []): int {
     $existing = $term_storage->loadByProperties(['vid' => 'backgrounds', 'name' => $name]);
     $isNew = $existing === [];
     $term = $isNew ? $term_storage->create(['vid' => 'backgrounds', 'name' => $name]) : reset($existing);
@@ -790,7 +798,7 @@ final class CreateCharacter extends DataProducerPluginBase implements ContainerF
     ]);
 
     $term->set('field_gold', $this->intOrNull($definition['gold'] ?? NULL));
-    $term->set('field_equipment_items', $this->itemNodeRefs($definition['equipment'] ?? []));
+    $term->set('field_equipment_items', $this->itemNodeRefs($definition['equipment'] ?? [], $term_storage, $descriptions));
 
     $edition = $isNew ? self::HOMEBREW_EDITION : self::ABILITY_EDITION;
     $editionTid = $this->editionTermId($term_storage, $edition);
@@ -832,35 +840,116 @@ final class CreateCharacter extends DataProducerPluginBase implements ContainerF
   }
 
   /**
-   * Resolve equipment names to item node references, creating bare nodes.
+   * Resolve equipment names to item node references, creating items when new.
+   *
+   * New items are created with their type (taken from the resolved catalogue
+   * when available, otherwise inferred from the name), a rules-wiki description
+   * (when one was resolved), and the 2024 edition; existing items are reused
+   * untouched.
    *
    * @param mixed $names
    *   List of item names.
+   * @param \Drupal\Core\Entity\EntityStorageInterface $term_storage
+   *   Taxonomy term storage (used to resolve the edition term).
+   * @param array<string, array{description?: string, item_type?: string}> $descriptions
+   *   Resolved catalogue data keyed by item name (description + type).
    *
    * @return array<int, array{target_id: int}>
    *   Entity reference values pointing at item nodes.
    */
-  private function itemNodeRefs(mixed $names): array {
+  private function itemNodeRefs(mixed $names, EntityStorageInterface $term_storage, array $descriptions = []): array {
     if (!is_array($names)) {
       return [];
     }
     $node_storage = $this->entityTypeManager->getStorage('node');
+    $editionTid = $this->editionTermId($term_storage, self::ABILITY_EDITION);
     $refs = [];
+    $seen = [];
     foreach ($names as $name) {
       $clean = trim((string) $name);
-      if ($clean === '') {
+      if ($clean === '' || isset($seen[$clean])) {
         continue;
       }
+      $seen[$clean] = TRUE;
       $existing = $node_storage->loadByProperties(['type' => 'item', 'title' => $clean]);
       if ($existing !== []) {
         $refs[] = ['target_id' => (int) reset($existing)->id()];
         continue;
       }
-      $item = $node_storage->create(['type' => 'item', 'title' => $clean, 'status' => 1]);
+      $info = is_array($descriptions[$clean] ?? NULL) ? $descriptions[$clean] : [];
+      $catalogType = trim((string) ($info['item_type'] ?? ''));
+      $itemValues = [
+        'type'            => 'item',
+        'title'           => $clean,
+        'status'          => 1,
+        'field_item_type' => $catalogType !== '' ? $catalogType : $this->inferItemType($clean),
+      ];
+      $description = $this->buildWysiwyg((string) ($info['description'] ?? ''));
+      if ($description !== NULL) {
+        $itemValues['field_description'] = $description;
+      }
+      if ($editionTid !== NULL) {
+        $itemValues['field_edition'] = ['target_id' => $editionTid];
+      }
+      $item = $node_storage->create($itemValues);
       $item->save();
       $refs[] = ['target_id' => (int) $item->id()];
     }
     return $refs;
+  }
+
+  /**
+   * Extract the resolved equipment description map from the payload.
+   *
+   * @param array<string, mixed> $data
+   *   Character payload.
+   *
+   * @return array<string, array{description?: string, item_type?: string}>
+   *   Catalogue data keyed by item name, or an empty map when absent.
+   */
+  private function equipmentDescriptions(array $data): array {
+    $map = $data['equipment_descriptions'] ?? NULL;
+    if (!is_array($map)) {
+      return [];
+    }
+    $result = [];
+    foreach ($map as $name => $info) {
+      if (is_string($name) && is_array($info)) {
+        $result[$name] = $info;
+      }
+    }
+    return $result;
+  }
+
+  /**
+   * Infer an item's type (weapon/armor/item) from its name.
+   *
+   * @param string $name
+   *   Item name.
+   *
+   * @return string
+   *   One of "weapon", "armor", or "item" (the gear default).
+   */
+  private function inferItemType(string $name): string {
+    $lower = strtolower($name);
+    $weapons = [
+      'sword', 'dagger', 'axe', 'bow', 'crossbow', 'mace', 'spear', 'rapier',
+      'hammer', 'club', 'flail', 'glaive', 'halberd', 'javelin', 'lance', 'maul',
+      'pike', 'quarterstaff', 'scimitar', 'sickle', 'trident', 'whip', 'dart',
+      'sling', 'morningstar', 'war pick', 'blowgun', 'net',
+    ];
+    $armors = ['armor', 'armour', 'shield', 'mail', 'plate', 'breastplate', 'cuirass'];
+    foreach ($weapons as $weapon) {
+      if (str_contains($lower, $weapon)) {
+        return 'weapon';
+      }
+    }
+    foreach ($armors as $armor) {
+      if (str_contains($lower, $armor)) {
+        return 'armor';
+      }
+    }
+    return 'item';
   }
 
   /**

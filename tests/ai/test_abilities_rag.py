@@ -23,14 +23,67 @@ from tests import test_helpers
 
 (
     get_abilities,
+    get_equipment_descriptions,
     _parse_abilities,
     _dedupe,
 ) = test_helpers.safe_from_import(
     "src.ai.abilities_rag",
     "get_abilities",
+    "get_equipment_descriptions",
     "_parse_abilities",
     "_dedupe",
 )
+
+_GEAR_HTML = """
+<html><body><div id="page-content">
+  <h1>Adventuring Gear</h1>
+  <table>
+    <tr><th>Item</th><th>Weight</th><th>Cost</th><th>Function</th></tr>
+    <tr><td>Clothes, Fine</td><td>6 lb.</td><td>15 GP</td>
+        <td>Fine Clothes are made of expensive fabrics.</td></tr>
+    <tr><td>Caltrops</td><td>2 lb.</td><td>1 GP</td>
+        <td>You can spread Caltrops to cover a 5-foot square.</td></tr>
+  </table>
+</div></body></html>
+"""
+
+_WEAPON_HTML = """
+<html><body><div id="page-content">
+  <table>
+    <tr><th>Simple Melee Weapons</th></tr>
+    <tr><th>Name</th><th>Damage</th><th>Properties</th><th>Mastery</th><th>Weight</th></tr>
+    <tr><td>Dagger</td><td>1d4 Piercing</td><td>Finesse</td><td>Nick</td><td>1 lb.</td></tr>
+  </table>
+</div></body></html>
+"""
+
+_EMPTY_HTML = '<html><body><div id="page-content"></div></body></html>'
+
+
+def _fake_equipment_rag(enabled=True):
+    """Build a RAG stand-in serving per-page equipment HTML by URL.
+
+    Args:
+        enabled: RAG enabled flag.
+
+    Returns:
+        A SimpleNamespace exposing enabled + rules_client.
+    """
+
+    def _get(url, timeout=10):
+        _ = timeout
+        if "equipment:adventuring-gear" in url:
+            body = _GEAR_HTML
+        elif "equipment:weapon" in url:
+            body = _WEAPON_HTML
+        else:
+            body = _EMPTY_HTML
+        return SimpleNamespace(text=body, raise_for_status=lambda: None)
+
+    session = SimpleNamespace(get=_get)
+    cache = SimpleNamespace(get=lambda key: None, set=lambda key, content: None)
+    client = SimpleNamespace(base_url="http://rules.example", session=session, cache=cache)
+    return SimpleNamespace(enabled=enabled, rules_client=client)
 
 _CLASS_HTML = """
 <html><body><div id="page-content">
@@ -126,6 +179,47 @@ def test_dedupe_by_name():
     print("  [PASS] Duplicate names removed")
 
 
+def test_equipment_description_and_type():
+    """Gear items resolve a prose description and the item type."""
+    print("\n[TEST] Equipment - gear description + type")
+    result = get_equipment_descriptions(["Fine Clothes"], rag=_fake_equipment_rag())
+    info = result.get("Fine Clothes")
+    assert info is not None, result
+    assert info["item_type"] == "item", info
+    assert "expensive fabrics" in info["description"], info
+    print("  [PASS] Gear description and type resolved")
+
+
+def test_equipment_inverted_name_matches():
+    """A wiki "Group, Modifier" name matches its natural form."""
+    print("\n[TEST] Equipment - inverted name match")
+    result = get_equipment_descriptions(["Clothes, Fine"], rag=_fake_equipment_rag())
+    assert "Clothes, Fine" in result, result
+    assert "expensive fabrics" in result["Clothes, Fine"]["description"], result
+    print("  [PASS] Inverted name resolved")
+
+
+def test_equipment_weapon_typed_without_description():
+    """Weapon-page items are typed as weapons with no prose description."""
+    print("\n[TEST] Equipment - weapon typing")
+    result = get_equipment_descriptions(["Dagger"], rag=_fake_equipment_rag())
+    info = result.get("Dagger")
+    assert info is not None, result
+    assert info["item_type"] == "weapon", info
+    assert info["description"] == "", info
+    print("  [PASS] Weapon typed, description empty")
+
+
+def test_equipment_unmatched_and_disabled():
+    """Unknown names are omitted and a disabled RAG yields nothing."""
+    print("\n[TEST] Equipment - unmatched + disabled RAG")
+    matched = get_equipment_descriptions(["Nonexistent Widget"], rag=_fake_equipment_rag())
+    assert matched == {}, matched
+    disabled = get_equipment_descriptions(["Fine Clothes"], rag=_fake_equipment_rag(enabled=False))
+    assert disabled == {}, disabled
+    print("  [PASS] Unmatched omitted, disabled empty")
+
+
 def run_all_tests():
     """Run all abilities RAG resolver tests."""
     print("=" * 70)
@@ -137,6 +231,10 @@ def run_all_tests():
     test_get_abilities_filters_by_level()
     test_disabled_rag_returns_empty()
     test_dedupe_by_name()
+    test_equipment_description_and_type()
+    test_equipment_inverted_name_matches()
+    test_equipment_weapon_typed_without_description()
+    test_equipment_unmatched_and_disabled()
 
     print("\n" + "=" * 70)
     print("[SUCCESS] ALL ABILITIES RAG RESOLVER TESTS PASSED")
