@@ -1,0 +1,23 @@
+uuid: cc8a9900-ca2d-49d8-b43a-f5733365a977
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.paragraph.field_gold
+    - paragraphs.paragraphs_type.class_grant
+id: paragraph.class_grant.field_gold
+field_name: field_gold
+entity_type: paragraph
+bundle: class_grant
+label: 'Gold (option B)'
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  min: null
+  max: null
+  prefix: ''
+  suffix: ''
+field_type: integer

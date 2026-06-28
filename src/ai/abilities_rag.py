@@ -113,6 +113,79 @@ def get_abilities(
     return [ability for ability in all_abilities if ability["level"] <= level]
 
 
+def get_subclass_plan(
+    class_name: str, subclass_name: str, level: int, *, rag: Optional[RAGSystem] = None
+) -> List[Ability]:
+    """Resolve a subclass's per-level features from the rules wiki.
+
+    Subclass pages live at ``<class-slug>:<subclass-slug>`` (e.g.
+    ``bard:college-of-lore``) and use the same ``Level N: Feature`` headings as
+    class pages.
+
+    Args:
+        class_name: The parent class name (e.g. "Bard").
+        subclass_name: The subclass name (e.g. "College of Lore").
+        level: Highest character level to include.
+        rag: Optional RAG system; resolved from config when omitted.
+
+    Returns:
+        Ordered, de-duplicated subclass features at or below the level. Empty
+        when RAG is unavailable or the page cannot be resolved.
+    """
+    rag_system = rag if rag is not None else _safe_rag_system()
+    if rag_system is None or not getattr(rag_system, "enabled", False):
+        return []
+    client = getattr(rag_system, "rules_client", None)
+    if client is None or not _SCRAPING_AVAILABLE or getattr(client, "session", None) is None:
+        return []
+
+    class_slug = class_name.strip().lower().replace(" ", "-")
+    if class_slug == "":
+        return []
+    for sub_slug in _subclass_slugs(subclass_name):
+        html = _fetch_html(client, f"{client.base_url}/{class_slug}:{sub_slug}")
+        if html is None:
+            continue
+        abilities = [a for a in _parse_abilities(html, "subclass") if a["level"] <= level]
+        if abilities:
+            return abilities
+    return []
+
+
+# Prefixes the rules wiki sometimes drops from a subclass page slug. The full
+# slug is tried first; these yield fallback slugs (e.g. "The Archfey" -> archfey,
+# "Circle of Stars" -> stars).
+_SUBCLASS_PREFIXES = (
+    "the ", "circle of ", "oath of ", "path of ", "way of ", "school of ", "college of ",
+)
+
+
+def _subclass_slugs(subclass_name: str) -> List[str]:
+    """Build candidate page slugs for a subclass, full form first.
+
+    Args:
+        subclass_name: The subclass display name.
+
+    Returns:
+        Ordered, de-duplicated slug candidates.
+    """
+    base = subclass_name.strip().lower()
+    if base == "":
+        return []
+    candidates = [base]
+    for prefix in _SUBCLASS_PREFIXES:
+        if base.startswith(prefix):
+            candidates.append(base[len(prefix):])
+    seen: Dict[str, bool] = {}
+    slugs = []
+    for candidate in candidates:
+        slug = candidate.strip().replace(" ", "-")
+        if slug and slug not in seen:
+            seen[slug] = True
+            slugs.append(slug)
+    return slugs
+
+
 def get_background(name: str, *, rag: Optional[RAGSystem] = None) -> Optional[BackgroundData]:
     """Resolve a 2024 background's granted data from the rules wiki.
 

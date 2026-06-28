@@ -1,0 +1,21 @@
+uuid: 4e090b0b-2e00-40bf-afd1-62483dd3b1ca
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.paragraph.field_grant_kind
+    - paragraphs.paragraphs_type.class_grant
+  module:
+    - options
+id: paragraph.class_grant.field_grant_kind
+field_name: field_grant_kind
+entity_type: paragraph
+bundle: class_grant
+label: 'Grant kind'
+description: ''
+required: true
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: list_string

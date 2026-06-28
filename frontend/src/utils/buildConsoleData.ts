@@ -79,8 +79,6 @@ export interface RawItem {
   armorCategory?:         string | null;
   armorAcBase?:           number | null;
   armorStrRequirement?:   number | null;
-  notes?:                 { value: string } | null;
-  notesHtml?:             string | null;
   descriptionHtml?:       string | null;
   path?:                  string | null;
   image?:                 { mediaImage: { url: string; alt: string } | null } | null;
@@ -270,8 +268,6 @@ export function buildConsoleData(data: ConsoleQueryData | null | undefined): Con
     armorCategory:          n.armorCategory ?? null,
     armorAcBase:            n.armorAcBase ?? null,
     armorStrRequirement:    n.armorStrRequirement ?? null,
-    notes:                  n.notes?.value ?? null,
-    notesHtml:              n.notesHtml ?? null,
     descriptionHtml:        n.descriptionHtml ?? null,
     vestigeLevel:           n.vestigeLevel?.name ?? null,
     damageTypes:            (n.damageTypes ?? []).map(t => t.name),

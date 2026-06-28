@@ -150,8 +150,6 @@ export interface DrupalItem {
   armorCategory:          string | null;
   armorAcBase:            number | null;
   armorStrRequirement:    number | null;
-  notes:                  string | null;
-  notesHtml:              string | null;
   descriptionHtml:        string | null;
   vestigeLevel:           string | null;
   damageTypes:            string[];

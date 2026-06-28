@@ -118,7 +118,28 @@ reused untouched. The modal sources its options from
 `tool_profiencies` are exposed as term collections for this.
 
 **Exposed paragraph types:** `ability_score`, `ability_scores`, `class`,
-`spell_reference`, `spell_slot`, `relationship`, `wysiwyg`.
+`class_grant`, `spell_reference`, `spell_slot`, `relationship`, `wysiwyg`.
+
+### Class grants (`class_grant` paragraph)
+
+The `class` and `subclasses` taxonomies are the source of truth for what a class
+grants per level. Each carries `field_class_grants` (-> `class_grant`
+paragraphs); the `subclasses` vocab also carries `field_class` (-> `class`,
+its parent) so its term knows which class it belongs to. A `class_grant`
+paragraph has `field_level` (int), `field_grant_kind` (list: `skill_choice`,
+`tool_choice`, `equipment_choice`, `feature`, `fixed_skill`, `fixed_tool`,
+`subclass_choice`, `asi`, `expertise`), `field_choose_count` (int),
+`field_skills` (-> `skills`), `field_tools` (-> `tool_profiencies`),
+`field_equipment_items` (-> `item` nodes, option A), `field_gold` (int, option B),
+`field_ability` (-> `abilities`), `field_feat` (-> `feats`), and `field_text`
+(label / feature name). The `class`/`subclasses` collections are exposed
+(`termClasses`, `termSubclasses`).
+
+These terms are populated by gitignored seed scripts under `drupal-cms/scripts/`
+(`build_class_specs.py` gathers per-class data from the JSON templates + rules
+wiki; `seed_class_grants.php` and `seed_subclasses.php` materialise the grant
+paragraphs). The sidecar's class-plan resolver reads them (see
+[../src/sidecar/README.md](../src/sidecar/README.md)).
 
 After editing this config:
 

@@ -12,15 +12,15 @@ from src.ai.abilities_rag import (
     Ability,
     get_abilities,
     get_background,
-    get_class_tools,
     get_equipment_descriptions,
 )
 from src.characters.character_template import (
     TemplateOptions,
     build_character_data_from_template,
-    derive_skill_plan,
+    derive_trait_skills,
     load_template,
 )
+from src.characters.class_plan import get_class_plan
 from src.config.config_loader import load_config
 from src.sidecar.models import (
     BuildCharacterRequest,
@@ -227,32 +227,32 @@ def resolve_background_endpoint(req: ResolveBackgroundRequest) -> ResolveBackgro
 
 @_character_router.post("/skill-plan", response_model=SkillPlanResponse)
 def skill_plan_endpoint(req: SkillPlanRequest) -> SkillPlanResponse:
-    """Derive the class + species/subspecies skill plan for a character.
+    """Derive the class + species/subspecies plan for a character.
 
-    Returns auto-granted skills and choice groups (class choice plus any
-    species/subspecies trait choices) so the wizard's skills step can present
-    restricted, rules-aware selections. Background grants are layered on by the
-    caller. Returns an empty plan when the class template is unknown.
+    The class portion (skills, tools, equipment, subclass) comes from the class
+    taxonomy (the class plan), falling back to the JSON template + rules wiki.
+    The species/subspecies trait skill grants/choices are layered on from the
+    resolved abilities. Background grants are layered on by the caller.
 
     Args:
         req: SkillPlanRequest with class/level/species/subspecies.
 
     Returns:
-        SkillPlanResponse with granted skills and choice groups.
+        SkillPlanResponse with granted skills/tools, choice groups, the class
+        equipment choices, and the subclass choice.
     """
-    template = load_template(req.class_name)
-    if template is None:
-        return SkillPlanResponse(granted=[], granted_tools=[], choices=[])
+    class_plan = get_class_plan(req.class_name, req.level)
     abilities = list(get_abilities("species", req.race, req.level))
     if req.subspecies:
         abilities.extend(get_abilities("subspecies", req.subspecies, req.level))
-    plan = derive_skill_plan(template, [dict(ability) for ability in abilities])
-    tools = get_class_tools(req.class_name)
-    choices = list(plan["choices"])
-    if tools["choice"] is not None:
-        choices.append(tools["choice"])
+    traits = derive_trait_skills([dict(ability) for ability in abilities])
     return SkillPlanResponse(
-        granted=plan["granted"], granted_tools=tools["granted"], choices=choices,
+        granted=class_plan["granted_skills"] + traits["granted"],
+        granted_tools=class_plan["granted_tools"],
+        choices=class_plan["skill_choices"] + class_plan["tool_choices"] + traits["choices"],
+        equipment_choices=class_plan["equipment_choices"],
+        subclass=class_plan["subclass"],
+        source=class_plan["source"],
     )
 
 

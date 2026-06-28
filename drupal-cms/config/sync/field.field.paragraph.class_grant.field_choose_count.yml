@@ -1,0 +1,23 @@
+uuid: fb963104-95a6-4664-9f47-a18e9ad4e54a
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.paragraph.field_choose_count
+    - paragraphs.paragraphs_type.class_grant
+id: paragraph.class_grant.field_choose_count
+field_name: field_choose_count
+entity_type: paragraph
+bundle: class_grant
+label: 'Choose count'
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  min: null
+  max: null
+  prefix: ''
+  suffix: ''
+field_type: integer

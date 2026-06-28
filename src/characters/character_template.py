@@ -335,10 +335,37 @@ def derive_skill_plan(
             "kind": "skill",
         })
 
+    _merge_trait_skills(abilities, plan)
+    return plan
+
+
+def derive_trait_skills(abilities: List[Dict[str, Any]]) -> Dict[str, Any]:
+    """Derive only the species/subspecies trait skill grants and choices.
+
+    Used when class skills come from the taxonomy (the class plan) and only the
+    species/subspecies trait portion needs deriving from resolved abilities.
+
+    Args:
+        abilities: Resolved abilities, including species/subspecies traits.
+
+    Returns:
+        A plan dict with ``granted`` and ``choices`` from traits only.
+    """
+    plan: Dict[str, Any] = {"granted": [], "choices": []}
+    _merge_trait_skills(abilities, plan)
+    return plan
+
+
+def _merge_trait_skills(abilities: List[Dict[str, Any]], plan: Dict[str, Any]) -> None:
+    """Fold every species/subspecies trait's skill grant/choice into a plan.
+
+    Args:
+        abilities: Resolved abilities to scan.
+        plan: The skill plan being assembled (modified in place).
+    """
     for ability in abilities:
         if ability.get("source_type") in ("species", "subspecies"):
             _add_trait_skills(ability, plan)
-    return plan
 
 
 def _add_trait_skills(ability: Dict[str, Any], plan: Dict[str, Any]) -> None:

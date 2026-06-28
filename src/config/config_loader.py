@@ -288,6 +288,14 @@ def _apply_env_drupal_overrides(config: DnDConfig, get_env: Any) -> None:
     if gatsby_webhook_url:
         config.drupal.gatsby_webhook_url = gatsby_webhook_url
 
+    graphql_token = get_env("DRUPAL_GRAPHQL_TOKEN")
+    if graphql_token:
+        config.drupal.graphql_token = graphql_token
+
+    ca_bundle = get_env("MKCERT_CA")
+    if ca_bundle:
+        config.drupal.ca_bundle = ca_bundle
+
 
 def _apply_env_milvus_overrides(
     config: DnDConfig,

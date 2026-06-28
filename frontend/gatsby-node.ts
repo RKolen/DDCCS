@@ -18,7 +18,6 @@ const ITEM_FIELDS = `
   itemType isMagic itemRarity itemRequiresAttunement
   damage itemBonus itemCost itemWeight
   nonidentifiedName armorCategory armorAcBase armorStrRequirement
-  notes       { value processed }
   edition     { ... on TermGameEdition   { name } }
   vestigeLevel { ... on TermVestigeLevel { name } }
   damageTypes      { ... on TermDamageType    { name } }
@@ -59,7 +58,6 @@ interface RawItemNode {
   armorCategory:          string | null;
   armorAcBase:            number | null;
   armorStrRequirement:    number | null;
-  notes:                  { value: string; processed?: string } | null;
   edition:                { name: string } | null;
   vestigeLevel:           { name: string } | null;
   damageTypes:            Array<{ name: string }> | null;
@@ -87,9 +85,6 @@ export const createSchemaCustomization: GatsbyNode['createSchemaCustomization'] 
     type AllItemEdition {
       name: String
     }
-    type AllItemNotes {
-      value: String
-    }
     type AllItemTerm     { name: String }
     type AllItemProperty {
       name:      String
@@ -113,8 +108,6 @@ export const createSchemaCustomization: GatsbyNode['createSchemaCustomization'] 
       armorCategory:          String
       armorAcBase:            Int
       armorStrRequirement:    Int
-      notes:                  AllItemNotes
-      notesHtml:              String
       descriptionHtml:        String
       edition:                AllItemEdition
       vestigeLevel:           AllItemTerm
@@ -194,8 +187,6 @@ export const sourceNodes: GatsbyNode['sourceNodes'] = async ({
         .filter(Boolean)
         .join('') || null;
 
-      const notesHtml = item.notes?.processed ?? null;
-
       const itemProperties = (item.itemProperties ?? []).map(p => ({
         name:       p.name,
         effectHtml: (p.effect ?? [])
@@ -209,7 +200,6 @@ export const sourceNodes: GatsbyNode['sourceNodes'] = async ({
         ...item,
         id:              createNodeId(`AllItem-${item.id}`),
         drupalId:        item.id,
-        notesHtml,
         descriptionHtml,
         itemProperties,
         vestigeLevel:    item.vestigeLevel ?? null,

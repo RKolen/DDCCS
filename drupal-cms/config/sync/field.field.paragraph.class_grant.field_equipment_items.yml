@@ -1,0 +1,24 @@
+uuid: 8091e7f5-9b40-421a-bd9d-2bf95713b4dc
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.paragraph.field_equipment_items
+    - node.type.item
+    - paragraphs.paragraphs_type.class_grant
+id: paragraph.class_grant.field_equipment_items
+field_name: field_equipment_items
+entity_type: paragraph
+bundle: class_grant
+label: 'Equipment (option A)'
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:node'
+  handler_settings:
+    target_bundles:
+      item: item
+field_type: entity_reference

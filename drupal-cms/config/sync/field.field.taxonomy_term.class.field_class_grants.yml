@@ -1,0 +1,31 @@
+uuid: 2bcb8558-f79e-4bc1-b777-6c63b1281a4f
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.taxonomy_term.field_class_grants
+    - paragraphs.paragraphs_type.class_grant
+    - taxonomy.vocabulary.class
+  module:
+    - entity_reference_revisions
+id: taxonomy_term.class.field_class_grants
+field_name: field_class_grants
+entity_type: taxonomy_term
+bundle: class
+label: 'Class grants'
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:paragraph'
+  handler_settings:
+    target_bundles:
+      class_grant: class_grant
+    negate: 0
+    target_bundles_drag_drop:
+      class_grant:
+        weight: 0
+        enabled: true
+field_type: entity_reference_revisions

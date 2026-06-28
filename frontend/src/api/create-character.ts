@@ -42,6 +42,10 @@ interface CreateCharacterBody {
     gold:             number;
     equipment:        string[];
   } | null;
+  /** Final item names the character takes (resolved class + background A/B choices). */
+  equipment?:     string[];
+  /** Total gold from any A/B groups where the player took gold instead of items. */
+  gold?:          number;
   species?:       string;
   subspecies?:    string | null;
   subclass?:      string | null;
@@ -220,9 +224,13 @@ export default async function handler(
   if (body.bonds) character.bonds = body.bonds;
   if (body.flaws) character.flaws = body.flaws;
 
-  // Enrich the equipment package with rules-wiki descriptions and item types so
-  // newly created item nodes get an accurate field_description and field_item_type.
-  const equipment = body.backgroundDefinition?.equipment ?? [];
+  // The character's final equipment is the resolved A/B selections (class +
+  // background); fall back to the background package when no explicit selection
+  // was made. Enrich it with rules-wiki descriptions and item types so the
+  // created item nodes get an accurate field_description and field_item_type.
+  const equipment = body.equipment ?? body.backgroundDefinition?.equipment ?? [];
+  character.equipment = equipment;
+  character.gold = body.gold ?? 0;
   if (equipment.length > 0) {
     const descriptions = await describeEquipment(sidecarUrl, equipment);
     if (Object.keys(descriptions).length > 0) {

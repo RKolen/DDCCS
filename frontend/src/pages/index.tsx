@@ -131,8 +131,7 @@ export const query = graphql`
         itemType isMagic itemRarity itemRequiresAttunement
         damage itemBonus itemCost itemWeight
         nonidentifiedName armorCategory armorAcBase armorStrRequirement
-        notesHtml descriptionHtml
-        notes         { value }
+        descriptionHtml
         edition       { name }
         vestigeLevel  { name }
         damageTypes   { name }

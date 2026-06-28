@@ -1,0 +1,48 @@
+uuid: acab8207-7d71-4010-8f3b-7a1ff6829579
+langcode: en
+status: true
+dependencies:
+  module:
+    - options
+    - paragraphs
+id: paragraph.field_grant_kind
+field_name: field_grant_kind
+entity_type: paragraph
+type: list_string
+settings:
+  allowed_values:
+    -
+      value: skill_choice
+      label: 'Skill choice'
+    -
+      value: tool_choice
+      label: 'Tool choice'
+    -
+      value: equipment_choice
+      label: 'Equipment choice'
+    -
+      value: feature
+      label: Feature
+    -
+      value: fixed_skill
+      label: 'Fixed skill'
+    -
+      value: fixed_tool
+      label: 'Fixed tool'
+    -
+      value: subclass_choice
+      label: 'Subclass choice'
+    -
+      value: asi
+      label: 'Ability score improvement'
+    -
+      value: expertise
+      label: Expertise
+  allowed_values_function: ''
+module: options
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

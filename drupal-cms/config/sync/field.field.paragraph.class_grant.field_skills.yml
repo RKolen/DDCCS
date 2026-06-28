@@ -1,0 +1,24 @@
+uuid: 6cf5a6dc-692f-4fe5-a61c-b83cfcb18570
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.paragraph.field_skills
+    - paragraphs.paragraphs_type.class_grant
+    - taxonomy.vocabulary.skills
+id: paragraph.class_grant.field_skills
+field_name: field_skills
+entity_type: paragraph
+bundle: class_grant
+label: 'Skill options'
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:taxonomy_term'
+  handler_settings:
+    target_bundles:
+      skills: skills
+field_type: entity_reference

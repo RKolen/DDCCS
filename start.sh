@@ -69,7 +69,8 @@ echo "==> Starting search query parser sidecar (background)..."
 # Run from the project root so run_sidecar.py is found and .env / game_data
 # resolve correctly (ddev start left us in drupal-cms/).
 cd "$SCRIPT_DIR"
-"$PYTHON" "$SCRIPT_DIR/run_sidecar.py" > "$SIDECAR_LOG_FILE" 2>&1 &
+# MKCERT_CA lets the sidecar verify ddev's mkcert-signed TLS for Drupal reads.
+MKCERT_CA="$MKCERT_CA" "$PYTHON" "$SCRIPT_DIR/run_sidecar.py" > "$SIDECAR_LOG_FILE" 2>&1 &
 SIDECAR_PID=$!
 echo "    Sidecar PID: $SIDECAR_PID (logs: $SIDECAR_LOG_FILE)"
 # Verify it actually bound; surface import/CWD/port errors instead of dying silently.

@@ -140,10 +140,29 @@ interface SkillChoice {
   kind:  string;    // 'skill' | 'tool' | 'skill_or_tool'
 }
 
+interface EquipmentItem {
+  name:      string;
+  item_type: string;
+}
+
+interface EquipmentChoice {
+  id:    string;
+  label: string;
+  items: EquipmentItem[];
+  gold:  number;
+}
+
+interface SubclassChoice {
+  level:   number;
+  options: string[];
+}
+
 interface SkillPlanState {
-  granted:       string[];
-  granted_tools: string[];
-  choices:       SkillChoice[];
+  granted:           string[];
+  granted_tools:     string[];
+  choices:           SkillChoice[];
+  equipment_choices: EquipmentChoice[];
+  subclass:          SubclassChoice | null;
 }
 
 const DEFAULT_FORM: FormState = {
@@ -245,6 +264,7 @@ export function CreateCharacterScreen({ ctx }: ScreenProps): React.ReactElement 
   const [grantedSel,    setGrantedSel]    = React.useState<string[]>([]);
   const [grantedToolSel, setGrantedToolSel] = React.useState<string[]>([]);
   const [choiceSel,     setChoiceSel]     = React.useState<Record<string, string[]>>({});
+  const [equipMode,     setEquipMode]     = React.useState<Record<string, 'items' | 'gold'>>({});
   const [loadingSkills, setLoadingSkills] = React.useState(false);
 
   // Choice items can be skills or tools; split each into the right field by
@@ -257,6 +277,30 @@ export function CreateCharacterScreen({ ctx }: ScreenProps): React.ReactElement 
   const selectedTools = React.useMemo(
     () => Array.from(new Set([...grantedToolSel, ...choiceItems.filter(i => toolOptions.includes(i))])),
     [grantedToolSel, choiceItems, toolOptions],
+  );
+
+  // The background's own equipment package becomes an A/B (items vs gold) choice,
+  // mirroring the class starting-equipment choice from the class plan.
+  const backgroundEquipmentChoices = React.useCallback((): EquipmentChoice[] => {
+    if (!bgDefinition) return [];
+    const items = (bgDefinition.equipment ?? []).map(name => ({ name, item_type: 'item' }));
+    if (items.length === 0 && (bgDefinition.gold ?? 0) <= 0) return [];
+    return [{ id: 'background-equipment', label: 'Background equipment', items, gold: bgDefinition.gold ?? 0 }];
+  }, [bgDefinition]);
+
+  // Resolve each equipment A/B group into the final item names + total gold.
+  const equipmentGroups = skillPlan?.equipment_choices ?? [];
+  const finalEquipment = React.useMemo(
+    () => equipmentGroups
+      .filter(g => (equipMode[g.id] ?? 'items') === 'items')
+      .flatMap(g => g.items.map(it => it.name)),
+    [equipmentGroups, equipMode],
+  );
+  const finalGold = React.useMemo(
+    () => equipmentGroups
+      .filter(g => (equipMode[g.id] ?? 'items') === 'gold')
+      .reduce((sum, g) => sum + (g.gold || 0), 0),
+    [equipmentGroups, equipMode],
   );
 
   // Resolve the class + species/subspecies skill plan, then layer on background
@@ -274,6 +318,7 @@ export function CreateCharacterScreen({ ctx }: ScreenProps): React.ReactElement 
       });
       const data = (await res.json()) as {
         granted?: string[]; granted_tools?: string[]; choices?: SkillChoice[];
+        equipment_choices?: EquipmentChoice[]; subclass?: SubclassChoice | null;
       };
       const granted = Array.from(new Set([...(data.granted ?? []), ...(bgDefinition?.skills ?? [])]));
       const grantedTools = Array.from(new Set([...(data.granted_tools ?? []), ...(bgDefinition?.tools ?? [])]));
@@ -281,20 +326,28 @@ export function CreateCharacterScreen({ ctx }: ScreenProps): React.ReactElement 
       if (bgDefinition?.feat === 'Skilled') {
         choices.push({ id: 'feat:Skilled', label: 'Skilled feat', count: 3, from: [], kind: 'skill_or_tool' });
       }
-      setSkillPlan({ granted, granted_tools: grantedTools, choices });
+      const equipmentChoices = [...(data.equipment_choices ?? []), ...backgroundEquipmentChoices()];
+      setSkillPlan({
+        granted, granted_tools: grantedTools, choices,
+        equipment_choices: equipmentChoices, subclass: data.subclass ?? null,
+      });
       setGrantedSel(granted);
       setGrantedToolSel(grantedTools);
       setChoiceSel({});
+      setEquipMode(Object.fromEntries(equipmentChoices.map(g => [g.id, 'items' as const])));
     } catch {
       const bgSkills = bgDefinition?.skills ?? [];
       const bgTools = bgDefinition?.tools ?? [];
-      setSkillPlan({ granted: bgSkills, granted_tools: bgTools, choices: [] });
+      setSkillPlan({
+        granted: bgSkills, granted_tools: bgTools, choices: [],
+        equipment_choices: [], subclass: null,
+      });
       setGrantedSel(bgSkills);
       setGrantedToolSel(bgTools);
     } finally {
       setLoadingSkills(false);
     }
-  }, [form.className, form.level, form.species, form.subspecies, bgDefinition]);
+  }, [form.className, form.level, form.species, form.subspecies, bgDefinition, backgroundEquipmentChoices]);
 
   const toggleGranted = (skill: string): void => {
     setGrantedSel(prev => (prev.includes(skill) ? prev.filter(s => s !== skill) : [...prev, skill]));
@@ -327,6 +380,8 @@ export function CreateCharacterScreen({ ctx }: ScreenProps): React.ReactElement 
     tools:             selectedTools,
     background:        form.background.trim(),
     backgroundDefinition: bgDefinition,
+    equipment:         finalEquipment,
+    gold:              finalGold,
     species:           form.species.trim(),
     subspecies:        form.subspecies.trim() || null,
     subclass:          form.subclass.trim() || null,
@@ -337,7 +392,8 @@ export function CreateCharacterScreen({ ctx }: ScreenProps): React.ReactElement 
     flaws:             splitLines(form.flaws),
     campaignId:        activeCampaign?.id ?? null,
     dryRun:            false,
-  }), [form, activeCampaign, isHomebrewBackground, bgDefinition, selectedSkills, selectedTools]);
+  }), [form, activeCampaign, isHomebrewBackground, bgDefinition, selectedSkills, selectedTools,
+    finalEquipment, finalGold]);
 
   // Resolve an official background's granted data from the rules wiki the first
   // time the user advances past the Identity step (used to pre-select skills).
@@ -518,11 +574,6 @@ export function CreateCharacterScreen({ ctx }: ScreenProps): React.ReactElement 
               </select>
             </div>
             <div className="modal-field">
-              <label className="modal-label" htmlFor="cc-subclass">Subclass (optional)</label>
-              <input id="cc-subclass" className="modal-input" value={form.subclass}
-                onChange={e => update('subclass', e.target.value)} placeholder="e.g. College of Lore" />
-            </div>
-            <div className="modal-field">
               <label className="modal-label" htmlFor="cc-level">Level</label>
               <input id="cc-level" type="number" min={1} max={20} className="modal-input" value={form.level}
                 onChange={e => update('level', Math.min(20, Math.max(1, Number(e.target.value) || 1)))} />
@@ -607,10 +658,46 @@ export function CreateCharacterScreen({ ctx }: ScreenProps): React.ReactElement 
                 );
               })}
 
+              {equipmentGroups.map(group => {
+                const mode = equipMode[group.id] ?? 'items';
+                return (
+                  <div className="modal-field" key={group.id}>
+                    <label className="modal-label">{group.label} — take the items or the gold</label>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                      <label style={{ display: 'flex', gap: 6, fontSize: 13 }}>
+                        <input type="radio" name={group.id} checked={mode === 'items'}
+                          onChange={() => setEquipMode(prev => ({ ...prev, [group.id]: 'items' }))} />
+                        Items: {group.items.map(it => it.name).join(', ') || '(none)'}
+                      </label>
+                      <label style={{ display: 'flex', gap: 6, fontSize: 13, opacity: group.gold > 0 ? 1 : 0.45 }}>
+                        <input type="radio" name={group.id} checked={mode === 'gold'} disabled={group.gold <= 0}
+                          onChange={() => setEquipMode(prev => ({ ...prev, [group.id]: 'gold' }))} />
+                        Gold: {group.gold} gp
+                      </label>
+                    </div>
+                  </div>
+                );
+              })}
+
+              {skillPlan?.subclass && form.level >= skillPlan.subclass.level
+                && skillPlan.subclass.options.length > 0 && (
+                <div className="modal-field">
+                  <label className="modal-label" htmlFor="cc-subclass">
+                    Subclass (chosen at level {skillPlan.subclass.level})
+                  </label>
+                  <select id="cc-subclass" className="modal-select" value={form.subclass}
+                    onChange={e => update('subclass', e.target.value)}>
+                    <option value="">Choose a subclass…</option>
+                    {skillPlan.subclass.options.map(o => <option key={o} value={o}>{o}</option>)}
+                  </select>
+                </div>
+              )}
+
               {(!skillPlan
                 || (skillPlan.granted.length === 0 && skillPlan.granted_tools.length === 0
-                    && skillPlan.choices.length === 0)) && (
-                <p className="screen-blurb">No skill or tool grants/choices for this character.</p>
+                    && skillPlan.choices.length === 0 && skillPlan.equipment_choices.length === 0
+                    && !skillPlan.subclass)) && (
+                <p className="screen-blurb">No skill, tool, equipment, or subclass grants for this character.</p>
               )}
             </>
           )

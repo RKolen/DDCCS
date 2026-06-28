@@ -93,8 +93,8 @@ function validateItem(item: DrupalItem): ValidationResult {
     findings.push({ level: 'warn', msg: 'is_magic not set — assumed false' });
   }
 
-  if (!item.notes || item.notes.trim() === '') {
-    findings.push({ level: 'warn', msg: 'notes is empty — registry entries read thin without it' });
+  if (!item.descriptionHtml || item.descriptionHtml.trim() === '') {
+    findings.push({ level: 'warn', msg: 'description is empty — registry entries read thin without it' });
   }
 
   const counts: Record<Level, number> = { error: 0, warn: 0, pass: 0 };
@@ -263,20 +263,19 @@ function RegistryRow({
         }}>
           <div style={{ display: 'grid', gridTemplateColumns: '1.3fr 1fr', gap: 24, marginTop: 14 }}>
 
-            {/* Left — description + notes */}
+            {/* Left — description */}
             <div>
-              {item.notes != null && item.notes !== '' && (
+              {item.descriptionHtml != null && item.descriptionHtml !== '' && (
                 <div style={{
                   marginBottom: 12, padding: '10px 14px',
                   background: 'var(--color-bg-overlay)',
                   border: '1px solid var(--color-gold-border)', borderRadius: 6,
                 }}>
                   <div style={{ fontFamily: 'var(--font-display)', fontSize: 9, color: 'var(--color-gold-mid)', letterSpacing: '0.12em', textTransform: 'uppercase', fontWeight: 700, marginBottom: 4 }}>
-                    Notes
+                    Description
                   </div>
-                  <p style={{ fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--color-text-primary)', lineHeight: 1.55 }}>
-                    {item.notes}
-                  </p>
+                  <div style={{ fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--color-text-primary)', lineHeight: 1.55 }}
+                    dangerouslySetInnerHTML={{ __html: item.descriptionHtml }} />
                 </div>
               )}
 
@@ -420,7 +419,7 @@ export function ItemRegistryScreen(_props: ScreenProps): React.ReactElement {
     if (magicOnly && !it.isMagic) return false;
     if (query) {
       const q = query.toLowerCase();
-      if (!it.title.toLowerCase().includes(q) && !(it.notes ?? '').toLowerCase().includes(q)) return false;
+      if (!it.title.toLowerCase().includes(q) && !(it.descriptionHtml ?? '').toLowerCase().includes(q)) return false;
     }
     return true;
   }), [validated, sourceFilter, typeFilter, magicOnly, query]);

@@ -1,0 +1,24 @@
+uuid: 93d21070-84ed-4204-bc0c-3b692c6e8fe2
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.paragraph.field_ability
+    - paragraphs.paragraphs_type.class_grant
+    - taxonomy.vocabulary.abilities
+id: paragraph.class_grant.field_ability
+field_name: field_ability
+entity_type: paragraph
+bundle: class_grant
+label: 'Feature reference'
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:taxonomy_term'
+  handler_settings:
+    target_bundles:
+      abilities: abilities
+field_type: entity_reference

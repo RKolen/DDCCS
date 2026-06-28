@@ -168,12 +168,16 @@ and given a rules-wiki description where one exists). Selecting an **official**
 background instead resolves it from the rules wiki (`RAG_RULES_BASE_URL`) on Identity-step confirm
 (`/api/resolve-background`, spinner) and, if its term is empty, populates it
 (2024 edition) on create; its granted skills/feat/equipment are applied to the
-character. The **Skills** step is rules-aware: on entry it loads a skill plan
-(`/api/skill-plan`) — class-restricted choices plus species/subspecies trait
-choices, plus class tool proficiencies (e.g. Bard's three Musical Instruments)
-— and layers on background grants (granted skills/tools pre-checked but
-editable; a Skilled origin feat adds a "choose 3 skills or tools" group). Tool
-selections persist to `field_tools`. Feat terms (e.g. the background's origin
+character. The **Skills** step is rules-aware: on entry it loads a class plan
+(`/api/skill-plan`) sourced from the `class` taxonomy (`class_grant` paragraphs,
+template/RAG fallback) — class-restricted skill choices plus species/subspecies
+trait choices, class tool proficiencies (e.g. Bard's three Musical Instruments),
+**equipment A/B choices** (class and background: take the items or the gold), and
+a **subclass** dropdown (shown once the character reaches the subclass level,
+options from the `subclasses` vocab filtered by parent class) — and layers on
+background grants (granted skills/tools pre-checked but editable; a Skilled origin
+feat adds a "choose 3 skills or tools" group). Tool selections persist to
+`field_tools`; the resolved equipment list and gold total flow to the character. Feat terms (e.g. the background's origin
 feat) are backfilled with their rules text from the wiki when empty. Creating
 persists a **source** character via the `createCharacter` GraphQL mutation —
 with sensible AI/voice defaults applied server-side — and clones it into the

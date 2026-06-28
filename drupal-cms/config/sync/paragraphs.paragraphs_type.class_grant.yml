@@ -1,0 +1,10 @@
+uuid: caabe8ed-5225-4d46-93fb-4a04ddb3d0cf
+langcode: en
+status: true
+dependencies: {  }
+id: class_grant
+label: 'Class Grant'
+icon_uuid: null
+icon_default: null
+description: 'One per-level grant or choice a class or subclass provides.'
+behavior_plugins: {  }

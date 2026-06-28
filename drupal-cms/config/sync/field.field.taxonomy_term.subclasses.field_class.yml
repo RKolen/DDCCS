@@ -1,0 +1,24 @@
+uuid: 94ae6a51-786c-40f5-b5a9-2f5b7cf4c582
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.taxonomy_term.field_class
+    - taxonomy.vocabulary.class
+    - taxonomy.vocabulary.subclasses
+id: taxonomy_term.subclasses.field_class
+field_name: field_class
+entity_type: taxonomy_term
+bundle: subclasses
+label: 'Parent class'
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:taxonomy_term'
+  handler_settings:
+    target_bundles:
+      class: class
+field_type: entity_reference

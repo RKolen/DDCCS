@@ -1,0 +1,24 @@
+uuid: 750dffa4-f25a-4eff-b7ed-4680b63263e3
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.paragraph.field_feat
+    - paragraphs.paragraphs_type.class_grant
+    - taxonomy.vocabulary.feats
+id: paragraph.class_grant.field_feat
+field_name: field_feat
+entity_type: paragraph
+bundle: class_grant
+label: Feat
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:taxonomy_term'
+  handler_settings:
+    target_bundles:
+      feats: feats
+field_type: entity_reference

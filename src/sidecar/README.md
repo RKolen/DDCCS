@@ -31,7 +31,7 @@ background (logs to `.sidecar.log`).
 | POST | `/eval/spotlight` | Compute spotlight scores for a campaign's characters |
 | POST | `/character/build-from-template` | Derive a full character sheet (HP, proficiency, saves, class features, spell slots) from class + level + ability scores |
 | POST | `/character/resolve-background` | Resolve a background's granted data (ability options, origin feat, skills, tools, gold, equipment) from the rules wiki (`RAG_RULES_BASE_URL`) |
-| POST | `/character/skill-plan` | Derive the class + species/subspecies skill/tool plan (granted skills & tools + choice groups, incl. class tool proficiencies like Bard instruments) for the rules-aware skills step |
+| POST | `/character/skill-plan` | Derive the class + species/subspecies plan for the skills step: granted skills/tools + skill/tool choice groups, the class **equipment** A/B choices (items vs gold), and the **subclass** choice (level + options). The class portion comes from the `class` taxonomy (`class_grant` paragraphs) and falls back to the JSON template + rules wiki; `source` reports which was used |
 | POST | `/character/equipment/describe` | Resolve prose descriptions and item types (weapon/armor/item) for equipment names from the rules-wiki (`RAG_RULES_BASE_URL`) equipment catalogue, so created item nodes get an accurate description and type |
 
 Request/response shapes are defined as Pydantic models in

@@ -197,9 +197,14 @@ final class CreateCharacter extends DataProducerPluginBase implements ContainerF
       (string) ($bgGrants['feat_description'] ?? ''),
       $term_storage,
     );
-    if (is_array($bgGrants['equipment'] ?? NULL) && $bgGrants['equipment'] !== []) {
+    // Prefer the wizard's resolved equipment selection (class + background A/B
+    // choices); fall back to the background package for older callers.
+    $equipmentNames = is_array($data['equipment'] ?? NULL) && $data['equipment'] !== []
+      ? $data['equipment']
+      : ($bgGrants['equipment'] ?? NULL);
+    if (is_array($equipmentNames) && $equipmentNames !== []) {
       $values['field_equipment_items'] = $this->itemNodeRefs(
-        $bgGrants['equipment'], $term_storage, $this->equipmentDescriptions($data),
+        $equipmentNames, $term_storage, $this->equipmentDescriptions($data),
       );
     }
 

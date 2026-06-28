@@ -3,6 +3,7 @@ langcode: en
 status: true
 dependencies:
   config:
+    - field.field.taxonomy_term.class.field_class_grants
     - field.field.taxonomy_term.class.field_edition
     - field.field.taxonomy_term.class.field_hit_die
     - field.field.taxonomy_term.class.field_is_spellcaster
@@ -63,5 +64,6 @@ content:
     weight: 100
     region: content
 hidden:
+  field_class_grants: true
   langcode: true
   search_api_excerpt: true

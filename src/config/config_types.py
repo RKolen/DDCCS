@@ -230,6 +230,13 @@ class DrupalConfig:
     user: str = ""
     password: str = ""
     gatsby_webhook_url: str = ""
+    # Bearer token for authenticated GraphQL reads (same token Gatsby uses).
+    # Needed to resolve reference fields that are not exposed anonymously.
+    graphql_token: str = ""
+    # Optional CA bundle path for verifying Drupal's TLS certificate. Set to the
+    # mkcert root CA for local ddev; empty uses the default trust store. TLS is
+    # always verified.
+    ca_bundle: str = ""
 
 
 @dataclass

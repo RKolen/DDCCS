@@ -31,6 +31,7 @@ src/
 |   |-- consultants/     # Per-character consultant classes
 |   |-- character_sheet.py           # Character and NPC data models
 |   |-- character_consistency.py     # Character consistency checking
+|   |-- class_plan.py                # Class build plan from the class taxonomy (grants -> choices), with template/RAG fallback
 |   `-- npc_constants.py             # NPC ability score constants
 |
 |-- character_arc/       # AI-powered character arc analysis
@@ -111,7 +112,7 @@ src/
 |-- ai/                 # AI integration
 |   |-- ai_client.py           # AI client interface (includes embed() for vectors)
 |   |-- rag_system.py          # RAG (Retrieval Augmented Generation)
-|   |-- abilities_rag.py       # Reusable rules resolver: abilities/features, backgrounds, feats, class tools, and equipment descriptions/types (via RAG_RULES_BASE_URL wiki)
+|   |-- abilities_rag.py       # Reusable rules resolver: abilities/features, backgrounds, feats, class tools, subclass features, and equipment descriptions/types (via RAG_RULES_BASE_URL wiki)
 |   |-- availability.py        # AI availability detection
 |   |-- lazy_imports.py        # Lazy import helpers
 |   |-- milvus_client.py       # Milvus vector DB wrapper (connect/insert/search)
@@ -125,7 +126,8 @@ src/
 |   `-- config_loader.py       # Config loading from file/env
 |
 |-- integration/        # External service integration
-|   `-- drupal_sync.py         # Push characters/stories/items/monsters to Drupal, trigger Gatsby builds
+|   |-- drupal_sync.py         # Push characters/stories/items/monsters to Drupal, trigger Gatsby builds
+|   `-- drupal_graphql.py      # Minimal Drupal GraphQL read client (taxonomy/content reads for the class plan)
 |
 |-- sidecar/            # FastAPI microservice (search + spotlight) -- see sidecar/README.md
 |   |-- app.py                 # FastAPI app (/health, /search/parse-query, /eval/spotlight)

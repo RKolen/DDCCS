@@ -161,11 +161,19 @@ class SkillPlanResponse(BaseModel):
     ``granted``/``granted_tools`` are auto-proficient skill and tool names;
     ``choices`` is a list of {id, label, count, from, kind} where ``kind`` is
     one of skill/tool/skill_or_tool (an empty ``from`` means any of that kind).
+    ``equipment_choices`` are the class starting-equipment groups (each {id,
+    label, items:[{name, item_type}], gold} — take the items or the gold).
+    ``subclass`` is {level, options:[names]} when the class chooses a subclass.
+    ``source`` is "taxonomy" when the class plan came from the class taxonomy,
+    else "template".
     """
 
     granted: List[str]
     granted_tools: List[str]
     choices: List[Dict[str, Any]]
+    equipment_choices: List[Dict[str, Any]] = Field(default_factory=list)
+    subclass: Optional[Dict[str, Any]] = None
+    source: str = "template"
 
 
 class EquipmentDescribeRequest(BaseModel):

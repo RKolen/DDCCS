@@ -76,6 +76,9 @@ entity_config:
     class:
       enabled: true
       query_load_enabled: true
+    class_grant:
+      enabled: true
+      query_load_enabled: true
     spell_reference:
       enabled: true
       query_load_enabled: true
@@ -118,6 +121,11 @@ entity_config:
       edges_enabled: true
       simple_queries: '1'
     class:
+      enabled: true
+      query_load_enabled: true
+      edges_enabled: true
+      simple_queries: '1'
+    subclasses:
       enabled: true
       query_load_enabled: true
       edges_enabled: true
@@ -495,6 +503,27 @@ field_config:
         enabled: true
       field_subclass_ref:
         enabled: true
+    class_grant:
+      field_level:
+        enabled: true
+      field_grant_kind:
+        enabled: true
+      field_choose_count:
+        enabled: true
+      field_text:
+        enabled: true
+      field_skills:
+        enabled: true
+      field_tools:
+        enabled: true
+      field_equipment_items:
+        enabled: true
+      field_gold:
+        enabled: true
+      field_ability:
+        enabled: true
+      field_feat:
+        enabled: true
     spell_reference:
       created:
         enabled: true
@@ -525,6 +554,14 @@ field_config:
       field_relationship_strength:
         enabled: true
   taxonomy_term:
+    class:
+      field_class_grants:
+        enabled: true
+    subclasses:
+      field_class_grants:
+        enabled: true
+      field_class:
+        enabled: true
     abilities:
       field_ability_description:
         enabled: true

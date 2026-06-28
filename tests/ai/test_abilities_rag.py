@@ -24,14 +24,18 @@ from tests import test_helpers
 (
     get_abilities,
     get_equipment_descriptions,
+    get_subclass_plan,
     _parse_abilities,
     _dedupe,
+    _subclass_slugs,
 ) = test_helpers.safe_from_import(
     "src.ai.abilities_rag",
     "get_abilities",
     "get_equipment_descriptions",
+    "get_subclass_plan",
     "_parse_abilities",
     "_dedupe",
+    "_subclass_slugs",
 )
 
 _GEAR_HTML = """
@@ -220,6 +224,26 @@ def test_equipment_unmatched_and_disabled():
     print("  [PASS] Unmatched omitted, disabled empty")
 
 
+def test_subclass_plan_parses_level_features():
+    """Subclass pages parse leveled features filtered by character level."""
+    print("\n[TEST] Subclass - feature parsing + level filter")
+    feats = get_subclass_plan("Bard", "College of Lore", 3, rag=_fake_rag(_CLASS_HTML))
+    names = {f["name"]: f["level"] for f in feats}
+    assert names.get("Fighting Style") == 1, names
+    assert "Extra Attack" not in names, names
+    assert all(f["source_type"] == "subclass" for f in feats), feats
+    print("  [PASS] Subclass features parsed and filtered")
+
+
+def test_subclass_slug_fallbacks():
+    """Subclass slugs try the full name, then prefix-stripped fallbacks."""
+    print("\n[TEST] Subclass - slug fallbacks")
+    assert _subclass_slugs("College of Lore")[0] == "college-of-lore"
+    assert "archfey" in _subclass_slugs("The Archfey")
+    assert "stars" in _subclass_slugs("Circle of Stars")
+    print("  [PASS] Slug candidates include prefix-stripped fallbacks")
+
+
 def run_all_tests():
     """Run all abilities RAG resolver tests."""
     print("=" * 70)
@@ -235,6 +259,8 @@ def run_all_tests():
     test_equipment_inverted_name_matches()
     test_equipment_weapon_typed_without_description()
     test_equipment_unmatched_and_disabled()
+    test_subclass_plan_parses_level_features()
+    test_subclass_slug_fallbacks()
 
     print("\n" + "=" * 70)
     print("[SUCCESS] ALL ABILITIES RAG RESOLVER TESTS PASSED")

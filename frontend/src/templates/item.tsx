@@ -40,7 +40,6 @@ interface ItemPageData {
       armorCategory: string | null;
       armorAcBase: number | null;
       armorStrRequirement: number | null;
-      notes: { processed: string } | null;
       description: Array<{ text: Array<{ processed: string }> }> | null;
       edition: ItemTerm | null;
       vestigeLevel: ItemTerm | null;
@@ -103,8 +102,6 @@ const ItemPage: React.FC<ItemPageProps> = ({ data, location }) => {
     .map(t => t.processed ?? '')
     .filter(Boolean)
     .join('') || null;
-
-  const notesHtml = item.notes?.processed ?? null;
 
   /* Magical property effects — each itemProperty has a name + HTML effect block */
   const magicalProps = (item.itemProperties ?? []).map(p => ({
@@ -209,7 +206,7 @@ const ItemPage: React.FC<ItemPageProps> = ({ data, location }) => {
         {/* Body — lore left, mechanics right */}
         <div className={styles.mainGrid}>
 
-          {/* Left — lore: description + notes */}
+          {/* Left — lore: description */}
           <div className={styles.leftCol}>
             {descriptionHtml != null && (
               <section className={styles.panel}>
@@ -218,14 +215,7 @@ const ItemPage: React.FC<ItemPageProps> = ({ data, location }) => {
               </section>
             )}
 
-            {notesHtml != null && (
-              <section className={styles.panel}>
-                <h2 className={styles.panelTitle}>Item Description</h2>
-                <div className={styles.richText} dangerouslySetInnerHTML={{ __html: notesHtml }} />
-              </section>
-            )}
-
-            {descriptionHtml == null && notesHtml == null && (
+            {descriptionHtml == null && (
               <section className={styles.panel}>
                 <p style={{ fontFamily: 'var(--font-body)', fontStyle: 'italic', fontSize: 14, color: 'var(--color-text-disabled)', margin: 0 }}>
                   No lore or description added yet.
@@ -275,7 +265,6 @@ export const query = graphql`
           itemType isMagic itemRarity itemRequiresAttunement
           damage itemBonus itemCost itemWeight
           nonidentifiedName armorCategory armorAcBase armorStrRequirement
-          notes        { processed }
           description  { ... on Drupal_ParagraphWysiwyg { text { processed } } }
           edition      { ... on Drupal_TermGameEdition     { name } }
           vestigeLevel { ... on Drupal_TermVestigeLevel    { name } }
