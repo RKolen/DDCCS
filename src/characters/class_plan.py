@@ -29,6 +29,7 @@ class ClassPlan(TypedDict):
 
     granted_skills: List[str]
     granted_tools: List[str]
+    granted_languages: List[str]
     skill_choices: List[Dict[str, Any]]
     tool_choices: List[Dict[str, Any]]
     equipment_choices: List[Dict[str, Any]]
@@ -67,6 +68,8 @@ _SUBCLASS_QUERY = """
 }
 """
 
+_LANGUAGES_QUERY = "{ termLanguages(first: 100) { nodes { name } } }"
+
 
 def get_class_plan(
     class_name: str, level: int, *, rag: Optional[RAGSystem] = None
@@ -86,8 +89,40 @@ def get_class_plan(
     if grants:
         plan = _plan_from_grants(grants, level)
         plan["subclass"] = _merge_subclass_options(plan["subclass"], class_name)
-        return plan
-    return _plan_from_template(class_name, level, rag=rag)
+    else:
+        plan = _plan_from_template(class_name, level, rag=rag)
+    plan["granted_languages"] = feature_languages(plan["features"])
+    return plan
+
+
+def language_names() -> set:
+    """Return the set of language term names from the languages taxonomy."""
+    data = query_drupal(_LANGUAGES_QUERY)
+    nodes = data.get("termLanguages", {}).get("nodes", []) if data else []
+    return {str(node["name"]) for node in nodes if isinstance(node, dict) and node.get("name")}
+
+
+def feature_languages(features: List[Dict[str, Any]]) -> List[str]:
+    """List features whose name is a language (e.g. Druidic, Thieves' Cant).
+
+    A class or subclass feature named after a language grants that language, so
+    cross-reference feature names against the languages taxonomy.
+
+    Args:
+        features: Feature dicts with a ``name`` key.
+
+    Returns:
+        The de-duplicated language names granted by the features.
+    """
+    languages = language_names()
+    if not languages:
+        return []
+    granted = []
+    for feature in features:
+        name = str(feature.get("name", ""))
+        if name in languages and name not in granted:
+            granted.append(name)
+    return granted
 
 
 def _fetch_grants(class_name: str) -> List[Dict[str, Any]]:
@@ -104,8 +139,8 @@ def _fetch_grants(class_name: str) -> List[Dict[str, Any]]:
 def _empty_plan(source: str) -> ClassPlan:
     """Return an empty plan stamped with its source."""
     return ClassPlan(
-        granted_skills=[], granted_tools=[], skill_choices=[], tool_choices=[],
-        equipment_choices=[], subclass=None, features=[], source=source,
+        granted_skills=[], granted_tools=[], granted_languages=[], skill_choices=[],
+        tool_choices=[], equipment_choices=[], subclass=None, features=[], source=source,
     )
 
 

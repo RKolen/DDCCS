@@ -1,0 +1,21 @@
+uuid: d5d1ef07-7704-4d8a-9f91-e6447fbeae1a
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.taxonomy_term.field_tool_category
+    - taxonomy.vocabulary.tool_profiencies
+  module:
+    - options
+id: taxonomy_term.tool_profiencies.field_tool_category
+field_name: field_tool_category
+entity_type: taxonomy_term
+bundle: tool_profiencies
+label: 'Tool category'
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: list_string

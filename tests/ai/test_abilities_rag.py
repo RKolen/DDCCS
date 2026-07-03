@@ -23,20 +23,49 @@ from tests import test_helpers
 
 (
     get_abilities,
-    get_equipment_descriptions,
     get_subclass_plan,
     _parse_abilities,
     _dedupe,
     _subclass_slugs,
+    _tool_category_key,
+    _split_background_tools,
 ) = test_helpers.safe_from_import(
     "src.ai.abilities_rag",
     "get_abilities",
-    "get_equipment_descriptions",
     "get_subclass_plan",
     "_parse_abilities",
     "_dedupe",
     "_subclass_slugs",
+    "_tool_category_key",
+    "_split_background_tools",
 )
+
+(
+    get_equipment_descriptions,
+    _parse_tool_categories,
+) = test_helpers.safe_from_import(
+    "src.ai.equipment_rag",
+    "get_equipment_descriptions",
+    "_parse_tool_categories",
+)
+
+_TOOL_HTML = """
+<html><body><div id="page-content">
+  <table>
+    <tr><th>Artisan Tool</th><th>Ability</th></tr>
+    <tr><td>Alchemist's Supplies</td><td>Int</td></tr>
+    <tr><td>Smith's Tools</td><td>Str</td></tr>
+  </table>
+  <table>
+    <tr><th>Gaming Set</th><th>Ability</th></tr>
+    <tr><td>Dice</td><td>Wis</td></tr>
+  </table>
+  <table>
+    <tr><th>Musical Instrument</th><th>Ability</th></tr>
+    <tr><td>Lute</td><td>Cha</td></tr>
+  </table>
+</div></body></html>
+"""
 
 _GEAR_HTML = """
 <html><body><div id="page-content">
@@ -244,6 +273,39 @@ def test_subclass_slug_fallbacks():
     print("  [PASS] Slug candidates include prefix-stripped fallbacks")
 
 
+def test_tool_categories_parsed():
+    """The tool page's category tables parse into category -> names."""
+    print("\n[TEST] Tools - category parsing")
+    cats = _parse_tool_categories(_TOOL_HTML)
+    assert cats.get("artisan") == ["Alchemist's Supplies", "Smith's Tools"], cats
+    assert cats.get("gaming_set") == ["Dice"], cats
+    assert cats.get("musical_instrument") == ["Lute"], cats
+    print("  [PASS] Tool categories parsed")
+
+
+def test_tool_category_key_mapping():
+    """Choice labels map to the right tool_category key."""
+    print("\n[TEST] Tools - category key mapping")
+    assert _tool_category_key("Musical Instruments") == "musical_instrument"
+    assert _tool_category_key("one Gaming Set") == "gaming_set"
+    assert _tool_category_key("Artisan's Tools") == "artisan"
+    assert _tool_category_key("a Vehicle") is None
+    print("  [PASS] Category keys mapped")
+
+
+def test_background_tools_split_category_choice():
+    """A background category tool phrase becomes a choice, not a fixed tool."""
+    print("\n[TEST] Background tools - category choice vs fixed")
+    fixed, choices = _split_background_tools("Choose one kind of Musical Instrument")
+    assert fixed == [], fixed
+    assert len(choices) == 1 and choices[0]["kind"] == "tool", choices
+    assert "musical_instrument" in choices[0]["id"], choices
+    fixed2, choices2 = _split_background_tools("Thieves' Tools")
+    assert fixed2 == ["Thieves' Tools"], fixed2
+    assert choices2 == [], choices2
+    print("  [PASS] Category phrase -> choice; specific tool -> fixed")
+
+
 def run_all_tests():
     """Run all abilities RAG resolver tests."""
     print("=" * 70)
@@ -261,6 +323,9 @@ def run_all_tests():
     test_equipment_unmatched_and_disabled()
     test_subclass_plan_parses_level_features()
     test_subclass_slug_fallbacks()
+    test_tool_categories_parsed()
+    test_tool_category_key_mapping()
+    test_background_tools_split_category_choice()
 
     print("\n" + "=" * 70)
     print("[SUCCESS] ALL ABILITIES RAG RESOLVER TESTS PASSED")

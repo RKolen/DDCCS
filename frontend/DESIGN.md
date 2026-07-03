@@ -176,8 +176,12 @@ trait choices, class tool proficiencies (e.g. Bard's three Musical Instruments),
 a **subclass** dropdown (shown once the character reaches the subclass level,
 options from the `subclasses` vocab filtered by parent class) — and layers on
 background grants (granted skills/tools pre-checked but editable; a Skilled origin
-feat adds a "choose 3 skills or tools" group). Tool selections persist to
-`field_tools`; the resolved equipment list and gold total flow to the character. Feat terms (e.g. the background's origin
+feat adds a "choose 3 skills or tools" group). It also grants **Common** (plus
+any class/subclass feature named after a language, e.g. Druid's Druidic or
+Rogue's Thieves' Cant) and a "choose 2 languages" selection from the `languages`
+vocab. Tool selections persist
+to `field_tools`, languages to `field_languages`; the resolved equipment list and
+gold total flow to the character. Feat terms (e.g. the background's origin
 feat) are backfilled with their rules text from the wiki when empty. Creating
 persists a **source** character via the `createCharacter` GraphQL mutation —
 with sensible AI/voice defaults applied server-side — and clones it into the

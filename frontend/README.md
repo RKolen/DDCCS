@@ -113,6 +113,9 @@ Drupal credentials.
 | `create-story.ts` | POST | Drupal (`createStory`) | Persist a finished story |
 | `update-character.ts` | POST | Drupal (`updateCharacter`) | PATCH optional character fields |
 | `generate-story.ts` | POST | Ollama-compatible LLM | Stream an AI-generated story (SSE) |
+| `consult.ts` | POST | Ollama-compatible LLM | Stream an in-character chat reply for the character consultation (SSE) |
+| `tts.ts` | POST | Sidecar (`/tts/speak`) | Synthesise a reply to speech (Piper, using the character's voice + speed), returns `audio/wav` |
+| `update-voice.ts` | POST | Drupal (`updateCharacter`) | Save a character's voice id / pitch / speed (consultation voice mini-wizard) |
 | `spotlight.ts` | POST | Sidecar (`localhost:$SIDECAR_PORT`) | Spotlight scores for a party |
 
 `generate-story.ts` streams Server-Sent Events from

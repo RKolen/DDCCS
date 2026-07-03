@@ -6,6 +6,8 @@ namespace Drupal\dnd_content\Plugin\GraphQL\DataProducer;
 
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Entity\FieldableEntityInterface;
+use Drupal\Core\Field\EntityReferenceFieldItemListInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Plugin\Context\ContextDefinition;
 use Drupal\Core\Session\AccountInterface;
@@ -192,19 +194,28 @@ final class CreateCharacter extends DataProducerPluginBase implements ContainerF
     }
     $values['field_tools'] = $this->termRefList($toolNames, 'tool_profiencies', $term_storage);
 
+    // Languages: the chosen ones plus any granted by a class/subclass feature
+    // named after a language (e.g. Druid's Druidic, Rogue's Thieves' Cant).
+    $languageNames = is_array($data['languages'] ?? NULL) ? $data['languages'] : [];
+    $languageNames = array_merge($languageNames, $this->featureLanguages($data, $term_storage));
+    $values['field_languages'] = $this->termRefList($languageNames, 'languages', $term_storage);
+
     $values['field_feats_ref'] = $this->buildFeatReferences(
       (string) ($bgGrants['feat'] ?? ''),
       (string) ($bgGrants['feat_description'] ?? ''),
       $term_storage,
     );
     // Prefer the wizard's resolved equipment selection (class + background A/B
-    // choices); fall back to the background package for older callers.
+    // choices); fall back to the background package for older callers. A
+    // character proficient with a physical tool also owns that tool, so each
+    // tool proficiency adds its matching item (deduplicated against equipment).
     $equipmentNames = is_array($data['equipment'] ?? NULL) && $data['equipment'] !== []
       ? $data['equipment']
-      : ($bgGrants['equipment'] ?? NULL);
-    if (is_array($equipmentNames) && $equipmentNames !== []) {
+      : (is_array($bgGrants['equipment'] ?? NULL) ? $bgGrants['equipment'] : []);
+    $itemNames = array_merge($equipmentNames, $this->toolsAsItems($toolNames, $equipmentNames));
+    if ($itemNames !== []) {
       $values['field_equipment_items'] = $this->itemNodeRefs(
-        $equipmentNames, $term_storage, $this->equipmentDescriptions($data),
+        $itemNames, $term_storage, $this->equipmentDescriptions($data),
       );
     }
 
@@ -847,20 +858,23 @@ final class CreateCharacter extends DataProducerPluginBase implements ContainerF
   /**
    * Resolve equipment names to item node references, creating items when new.
    *
-   * New items are created with their type (taken from the resolved catalogue
-   * when available, otherwise inferred from the name), a rules-wiki description
-   * (when one was resolved), and the 2024 edition; existing items are reused
-   * untouched.
+   * A leading quantity is parsed off ("2 Daggers" -> 2x "Dagger") and the item
+   * is referenced that many times. Names are matched to existing items
+   * fuzzily - ignoring quantity, plural/singular, "Group, Modifier" inversion,
+   * apostrophe style and trailing "(...)" - so "Traveler's Clothes" reuses
+   * "Clothes, Traveler's" rather than creating a duplicate. New items get their
+   * type (from the catalogue or inferred), a rules-wiki description (when
+   * resolved), and the 2024 edition; existing items are reused untouched.
    *
    * @param mixed $names
-   *   List of item names.
+   *   List of item names (each optionally quantity-prefixed).
    * @param \Drupal\Core\Entity\EntityStorageInterface $term_storage
    *   Taxonomy term storage (used to resolve the edition term).
    * @param array<string, array{description?: string, item_type?: string}> $descriptions
    *   Resolved catalogue data keyed by item name (description + type).
    *
    * @return array<int, array{target_id: int}>
-   *   Entity reference values pointing at item nodes.
+   *   Entity reference values pointing at item nodes (repeated per quantity).
    */
   private function itemNodeRefs(mixed $names, EntityStorageInterface $term_storage, array $descriptions = []): array {
     if (!is_array($names)) {
@@ -868,39 +882,266 @@ final class CreateCharacter extends DataProducerPluginBase implements ContainerF
     }
     $node_storage = $this->entityTypeManager->getStorage('node');
     $editionTid = $this->editionTermId($term_storage, self::ABILITY_EDITION);
+    $index = $this->buildItemIndex($node_storage);
     $refs = [];
-    $seen = [];
     foreach ($names as $name) {
-      $clean = trim((string) $name);
-      if ($clean === '' || isset($seen[$clean])) {
+      [$quantity, $clean] = $this->parseItemQuantity(trim((string) $name));
+      if ($clean === '') {
         continue;
       }
-      $seen[$clean] = TRUE;
-      $existing = $node_storage->loadByProperties(['type' => 'item', 'title' => $clean]);
-      if ($existing !== []) {
-        $refs[] = ['target_id' => (int) reset($existing)->id()];
-        continue;
+      $key = $this->itemKey($clean);
+      if (isset($index[$key])) {
+        $nid = $index[$key];
       }
-      $info = is_array($descriptions[$clean] ?? NULL) ? $descriptions[$clean] : [];
-      $catalogType = trim((string) ($info['item_type'] ?? ''));
-      $itemValues = [
-        'type'            => 'item',
-        'title'           => $clean,
-        'status'          => 1,
-        'field_item_type' => $catalogType !== '' ? $catalogType : $this->inferItemType($clean),
-      ];
-      $description = $this->buildWysiwyg((string) ($info['description'] ?? ''));
-      if ($description !== NULL) {
-        $itemValues['field_description'] = $description;
+      else {
+        $info = is_array($descriptions[(string) $name] ?? NULL) ? $descriptions[(string) $name]
+          : (is_array($descriptions[$clean] ?? NULL) ? $descriptions[$clean] : []);
+        $nid = $this->createItemNode($node_storage, $clean, $info, $editionTid);
+        $index[$key] = $nid;
       }
-      if ($editionTid !== NULL) {
-        $itemValues['field_edition'] = ['target_id' => $editionTid];
+      for ($i = 0; $i < $quantity; $i++) {
+        $refs[] = ['target_id' => $nid];
       }
-      $item = $node_storage->create($itemValues);
-      $item->save();
-      $refs[] = ['target_id' => (int) $item->id()];
     }
     return $refs;
+  }
+
+  /**
+   * Collect languages granted by class/subclass features named as a language.
+   *
+   * A feature such as the Druid's "Druidic" or the Rogue's "Thieves' Cant" is a
+   * language grant, so cross-reference the character's resolved abilities and
+   * chosen subclass features against the languages vocabulary.
+   *
+   * @param array<string, mixed> $data
+   *   Character payload.
+   * @param \Drupal\Core\Entity\EntityStorageInterface $term_storage
+   *   Taxonomy term storage.
+   *
+   * @return array<int, string>
+   *   Language names granted by features.
+   */
+  private function featureLanguages(array $data, EntityStorageInterface $term_storage): array {
+    $languages = [];
+    foreach ($term_storage->loadByProperties(['vid' => 'languages']) as $term) {
+      $languages[strtolower((string) $term->label())] = (string) $term->label();
+    }
+    if ($languages === []) {
+      return [];
+    }
+    $names = [];
+    foreach (is_array($data['abilities'] ?? NULL) ? $data['abilities'] : [] as $ability) {
+      $names[] = is_array($ability) ? (string) ($ability['name'] ?? '') : (string) $ability;
+    }
+    $names = array_merge($names, $this->subclassFeatureNames($data, $term_storage));
+
+    $found = [];
+    foreach ($names as $name) {
+      $key = strtolower(trim($name));
+      if (isset($languages[$key])) {
+        $found[$languages[$key]] = TRUE;
+      }
+    }
+    return array_keys($found);
+  }
+
+  /**
+   * List the feature names granted by the character's chosen subclass term.
+   *
+   * @param array<string, mixed> $data
+   *   Character payload.
+   * @param \Drupal\Core\Entity\EntityStorageInterface $term_storage
+   *   Taxonomy term storage.
+   *
+   * @return array<int, string>
+   *   Subclass feature names.
+   */
+  private function subclassFeatureNames(array $data, EntityStorageInterface $term_storage): array {
+    $name = trim((string) ($data['subclass'] ?? ''));
+    if ($name === '') {
+      return [];
+    }
+    $terms = $term_storage->loadByProperties(['vid' => 'subclasses', 'name' => $name]);
+    if ($terms === []) {
+      return [];
+    }
+    $term = reset($terms);
+    if (!$term instanceof FieldableEntityInterface) {
+      return [];
+    }
+    $grants = $term->get('field_class_grants');
+    if (!$grants instanceof EntityReferenceFieldItemListInterface) {
+      return [];
+    }
+    $names = [];
+    foreach ($grants->referencedEntities() as $paragraph) {
+      if ($paragraph instanceof FieldableEntityInterface
+        && $paragraph->get('field_grant_kind')->value === 'feature') {
+        $names[] = (string) $paragraph->get('field_text')->value;
+      }
+    }
+    return $names;
+  }
+
+  /**
+   * Select tool names to add as items, skipping those already in equipment.
+   *
+   * @param mixed $toolNames
+   *   The character's tool proficiency names.
+   * @param array<int, mixed> $equipmentNames
+   *   Equipment names already being added as items.
+   *
+   * @return array<int, string>
+   *   Tool names whose item is not already covered by the equipment.
+   */
+  private function toolsAsItems(mixed $toolNames, array $equipmentNames): array {
+    if (!is_array($toolNames)) {
+      return [];
+    }
+    $present = [];
+    foreach ($equipmentNames as $name) {
+      [, $clean] = $this->parseItemQuantity(trim((string) $name));
+      $present[$this->itemKey($clean)] = TRUE;
+    }
+    $result = [];
+    foreach ($toolNames as $tool) {
+      $clean = trim((string) $tool);
+      if ($clean === '') {
+        continue;
+      }
+      $key = $this->itemKey($clean);
+      if (!isset($present[$key])) {
+        $present[$key] = TRUE;
+        $result[] = $clean;
+      }
+    }
+    return $result;
+  }
+
+  /**
+   * Build a lookup of every item node keyed by its normalised match key.
+   *
+   * @param \Drupal\Core\Entity\EntityStorageInterface $node_storage
+   *   Node storage.
+   *
+   * @return array<string, int>
+   *   Map of normalised key to item node id.
+   */
+  private function buildItemIndex(EntityStorageInterface $node_storage): array {
+    $ids = $node_storage->getQuery()->condition('type', 'item')->accessCheck(FALSE)->execute();
+    $index = [];
+    foreach ($node_storage->loadMultiple($ids) as $node) {
+      $index[$this->itemKey((string) $node->label())] = (int) $node->id();
+    }
+    return $index;
+  }
+
+  /**
+   * Split a leading quantity off a name (e.g. "2 Daggers" -> [2, "Dagger"]).
+   *
+   * @param string $name
+   *   Raw item name.
+   *
+   * @return array{0: int, 1: string}
+   *   The quantity (at least 1) and the singular base name.
+   */
+  private function parseItemQuantity(string $name): array {
+    $name = trim((string) preg_replace('/\s*\([^)]*\)\s*$/', '', $name));
+    if (preg_match('/^(\d+)\s+(.+)$/', $name, $matches) === 1) {
+      return [max(1, (int) $matches[1]), $this->singularizeWords(trim($matches[2]))];
+    }
+    return [1, $name];
+  }
+
+  /**
+   * Normalise an item name into an order/plural/apostrophe-invariant key.
+   *
+   * @param string $name
+   *   Item name.
+   *
+   * @return string
+   *   Normalised key (stemmed words, sorted).
+   */
+  private function itemKey(string $name): string {
+    $lower = strtolower(str_replace("’", "'", $name));
+    $lower = (string) preg_replace('/\s*\([^)]*\)\s*$/', '', $lower);
+    $lower = str_replace(',', ' ', $lower);
+    $words = preg_split('/\s+/', trim($lower), -1, PREG_SPLIT_NO_EMPTY) ?: [];
+    $stems = array_map([$this, 'stemWord'], $words);
+    sort($stems);
+    return implode(' ', $stems);
+  }
+
+  /**
+   * Singularise each word of a phrase ("Gaming Sets" -> "Gaming Set").
+   *
+   * @param string $phrase
+   *   Phrase to singularise.
+   *
+   * @return string
+   *   The singularised phrase.
+   */
+  private function singularizeWords(string $phrase): string {
+    $words = preg_split('/\s+/', trim($phrase), -1, PREG_SPLIT_NO_EMPTY) ?: [];
+    $singular = array_map(function (string $word): string {
+      $stem = $this->stemWord(strtolower($word));
+      return $stem === strtolower($word) ? $word : ucfirst($stem);
+    }, $words);
+    return implode(' ', $singular);
+  }
+
+  /**
+   * Reduce a single lowercased word to a naive singular stem.
+   *
+   * @param string $word
+   *   Lowercased word.
+   *
+   * @return string
+   *   The stemmed word.
+   */
+  private function stemWord(string $word): string {
+    if (str_ends_with($word, 'ss') || !str_ends_with($word, 's')) {
+      return $word;
+    }
+    if (str_ends_with($word, 'es')) {
+      return substr($word, 0, -2);
+    }
+    return substr($word, 0, -1);
+  }
+
+  /**
+   * Create an item node from a name and optional catalogue info.
+   *
+   * @param \Drupal\Core\Entity\EntityStorageInterface $node_storage
+   *   Node storage.
+   * @param string $title
+   *   Item title.
+   * @param array{description?: string, item_type?: string} $info
+   *   Resolved catalogue info (description + type).
+   * @param int|null $editionTid
+   *   Edition term id, or NULL.
+   *
+   * @return int
+   *   The created item node id.
+   */
+  private function createItemNode(EntityStorageInterface $node_storage, string $title, array $info, ?int $editionTid): int {
+    $catalogType = trim((string) ($info['item_type'] ?? ''));
+    $values = [
+      'type'            => 'item',
+      'title'           => $title,
+      'status'          => 1,
+      'field_item_type' => $catalogType !== '' ? $catalogType : $this->inferItemType($title),
+    ];
+    $description = $this->buildWysiwyg((string) ($info['description'] ?? ''));
+    if ($description !== NULL) {
+      $values['field_description'] = $description;
+    }
+    if ($editionTid !== NULL) {
+      $values['field_edition'] = ['target_id' => $editionTid];
+    }
+    $item = $node_storage->create($values);
+    $item->save();
+    return (int) $item->id();
   }
 
   /**

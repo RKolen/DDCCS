@@ -170,6 +170,7 @@ class SkillPlanResponse(BaseModel):
 
     granted: List[str]
     granted_tools: List[str]
+    granted_languages: List[str] = Field(default_factory=list)
     choices: List[Dict[str, Any]]
     equipment_choices: List[Dict[str, Any]] = Field(default_factory=list)
     subclass: Optional[Dict[str, Any]] = None
@@ -196,6 +197,16 @@ class EquipmentDescribeResponse(BaseModel):
     """
 
     items: Dict[str, EquipmentItemInfo] = Field(default_factory=dict)
+
+
+class TtsRequest(BaseModel):
+    """Request to synthesise speech from text with a Piper voice."""
+
+    text: str
+    voice_id: str = ""
+    speed: float = Field(default=1.0, ge=0.5, le=2.0)
+    # Pitch shift in semitones, applied as a post-process (Piper has no pitch).
+    pitch: float = Field(default=0.0, ge=-12.0, le=12.0)
 
 
 class ErrorResponse(BaseModel):

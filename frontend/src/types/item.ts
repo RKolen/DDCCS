@@ -5,7 +5,7 @@
  *   - title                  string
  *   - path                   string | null
  *   - itemType               string  (lowercase: 'weapon', 'armor', 'ring', …)
- *   - itemRarity             string  ('common' | 'uncommon' | 'rare' | 'very_rake'
+ *   - itemRarity             string  ('common' | 'uncommon' | 'rare' | 'very_rare'
  *                                    | 'legendary' | 'artifact' | 'vestige')
  *   - isMagic                boolean
  *   - itemRequiresAttunement boolean
@@ -16,10 +16,10 @@
 /* ── Wire types — mirror Drupal exactly ──────────────────────────────── */
 
 /** Raw rarity string as it lands from Drupal. Use `normalizeRarity` to map
- *  to the dash-form used by CSS classes. Our Drupal uses 'very_rake'
+ *  to the dash-form used by CSS classes. Our Drupal uses 'very_rare'
  *  (underscore) — this type accepts both the underscore and space variants. */
 export type DrupalRarity =
-  | 'common' | 'uncommon' | 'rare' | 'very_rake' | 'very rare'
+  | 'common' | 'uncommon' | 'rare' | 'very_rare' | 'very rare'
   | 'legendary' | 'artifact' | 'vestige';
 
 /** CSS-class friendly rarity. Drives the .rarityX modifiers and the
@@ -135,7 +135,7 @@ const RARITY_LABEL_MAP: Record<string, ItemRarity> = {
   rare:        'rare',
   'very rare': 'very-rare',
   'very-rare': 'very-rare',
-  very_rake:   'very-rare',
+  very_rare:   'very-rare',
   legendary:   'legendary',
   artifact:    'artifact',
   vestige:     'vestige',

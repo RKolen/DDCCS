@@ -2,18 +2,21 @@
 
 import logging
 import os
+import shutil
+import subprocess
+import sys
+import tempfile
 from contextlib import asynccontextmanager
+from functools import lru_cache
 from typing import Any, AsyncGenerator
 
-from fastapi import APIRouter, FastAPI, HTTPException, Request
+from fastapi import APIRouter, FastAPI, HTTPException, Request, Response
 from fastapi.responses import JSONResponse
 
-from src.ai.abilities_rag import (
-    Ability,
-    get_abilities,
-    get_background,
-    get_equipment_descriptions,
-)
+from src.utils.piper_tts_client import PiperTTSClient, get_narrator_voice_id
+
+from src.ai.abilities_rag import Ability, get_abilities, get_background
+from src.ai.equipment_rag import get_equipment_descriptions
 from src.characters.character_template import (
     TemplateOptions,
     build_character_data_from_template,
@@ -39,6 +42,7 @@ from src.sidecar.models import (
     SpotlightCharacterScore,
     SpotlightRequest,
     SpotlightResponse,
+    TtsRequest,
 )
 from src.sidecar.query_parser import parse_query
 from src.stories.spotlight_engine import SpotlightEngine
@@ -94,6 +98,50 @@ async def _auth_middleware(request: Request, call_next: Any) -> Any:
 _search_router = APIRouter(prefix="/search", tags=["search"])
 _eval_router = APIRouter(prefix="/eval", tags=["eval"])
 _character_router = APIRouter(prefix="/character", tags=["character"])
+_tts_router = APIRouter(prefix="/tts", tags=["tts"])
+
+# 2024 base languages: every character knows Common plus two of their choice.
+_BASE_LANGUAGE = "Common"
+_LANGUAGE_CHOICE_COUNT = 2
+
+@lru_cache(maxsize=1)
+def _get_piper() -> PiperTTSClient:
+    """Return a cached Piper client, resolving the binary next to the venv."""
+    candidate = os.path.join(os.path.dirname(sys.executable), "piper")
+    executable = candidate if os.path.exists(candidate) else "piper"
+    return PiperTTSClient(executable_path=executable)
+
+
+def _apply_pitch(wav: bytes, semitones: float) -> bytes:
+    """Pitch-shift WAV audio by semitones using sox (Piper has no pitch control).
+
+    Returns the input unchanged when the shift is negligible or sox is missing.
+    """
+    if abs(semitones) < 0.1 or shutil.which("sox") is None:
+        return wav
+    in_path = out_path = ""
+    try:
+        with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as handle:
+            handle.write(wav)
+            in_path = handle.name
+        out_path = f"{in_path}.pitch.wav"
+        result = subprocess.run(
+            ["sox", in_path, out_path, "pitch", str(semitones * 100)],
+            capture_output=True, timeout=30, check=False,
+        )
+        if result.returncode != 0 or not os.path.exists(out_path):
+            return wav
+        with open(out_path, "rb") as handle:
+            return handle.read() or wav
+    except (OSError, subprocess.TimeoutExpired):
+        return wav
+    finally:
+        for path in (in_path, out_path):
+            if path and os.path.exists(path):
+                try:
+                    os.unlink(path)
+                except OSError:
+                    pass
 
 
 @app.exception_handler(Exception)
@@ -246,10 +294,16 @@ def skill_plan_endpoint(req: SkillPlanRequest) -> SkillPlanResponse:
     if req.subspecies:
         abilities.extend(get_abilities("subspecies", req.subspecies, req.level))
     traits = derive_trait_skills([dict(ability) for ability in abilities])
+    language_choice = {
+        "id": "languages", "label": "Languages", "count": _LANGUAGE_CHOICE_COUNT,
+        "from": [], "kind": "language",
+    }
     return SkillPlanResponse(
         granted=class_plan["granted_skills"] + traits["granted"],
         granted_tools=class_plan["granted_tools"],
-        choices=class_plan["skill_choices"] + class_plan["tool_choices"] + traits["choices"],
+        granted_languages=[_BASE_LANGUAGE] + class_plan["granted_languages"],
+        choices=class_plan["skill_choices"] + class_plan["tool_choices"]
+        + traits["choices"] + [language_choice],
         equipment_choices=class_plan["equipment_choices"],
         subclass=class_plan["subclass"],
         source=class_plan["source"],
@@ -304,6 +358,37 @@ def _resolve_abilities(req: BuildCharacterRequest) -> list[Ability]:
     return unique
 
 
+@_tts_router.post("/speak")
+def tts_speak_endpoint(req: TtsRequest) -> Response:
+    """Synthesise speech from text with a Piper voice, returning WAV audio.
+
+    Args:
+        req: TtsRequest with the text, optional voice id, and speed.
+
+    Returns:
+        A ``audio/wav`` response with the synthesised audio.
+
+    Raises:
+        HTTPException: 503 when Piper is unavailable, 400 for empty text, or
+            500 when synthesis fails.
+    """
+    text = req.text.strip()
+    if text == "":
+        raise HTTPException(status_code=400, detail="text must not be empty")
+    piper = _get_piper()
+    if not piper.is_available():
+        raise HTTPException(status_code=503, detail="Piper TTS is not installed")
+    voice = req.voice_id.strip() or get_narrator_voice_id()
+    if not piper.is_voice_available(voice):
+        voice = get_narrator_voice_id()
+    audio = piper.synthesize(text, voice, speed=req.speed)
+    if audio is None:
+        raise HTTPException(status_code=500, detail="Speech synthesis failed")
+    audio = _apply_pitch(audio, req.pitch)
+    return Response(content=audio, media_type="audio/wav")
+
+
 app.include_router(_search_router)
 app.include_router(_eval_router)
 app.include_router(_character_router)
+app.include_router(_tts_router)

@@ -52,6 +52,9 @@ export interface DrupalCharacter {
   flaws: string[];
   personalityTraits: string[];
   majorPlotActions: string[];
+  voiceId: string | null;
+  voicePitch: number | null;
+  voiceSpeed: number | null;
 }
 
 export interface DrupalStory {

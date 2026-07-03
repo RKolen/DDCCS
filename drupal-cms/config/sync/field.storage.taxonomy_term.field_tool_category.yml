@@ -1,0 +1,33 @@
+uuid: 2ce09015-bb5e-463d-a2af-c268de16983d
+langcode: en
+status: true
+dependencies:
+  module:
+    - options
+    - taxonomy
+id: taxonomy_term.field_tool_category
+field_name: field_tool_category
+entity_type: taxonomy_term
+type: list_string
+settings:
+  allowed_values:
+    -
+      value: artisan
+      label: "Artisan's Tools"
+    -
+      value: other
+      label: 'Other Tool'
+    -
+      value: gaming_set
+      label: 'Gaming Set'
+    -
+      value: musical_instrument
+      label: 'Musical Instrument'
+  allowed_values_function: ''
+module: options
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

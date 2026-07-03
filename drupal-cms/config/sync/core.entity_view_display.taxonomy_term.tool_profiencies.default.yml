@@ -4,6 +4,7 @@ status: true
 dependencies:
   config:
     - field.field.taxonomy_term.tool_profiencies.field_edition
+    - field.field.taxonomy_term.tool_profiencies.field_tool_category
     - taxonomy.vocabulary.tool_profiencies
   module:
     - text
@@ -28,5 +29,6 @@ content:
     weight: 1
     region: content
 hidden:
+  field_tool_category: true
   langcode: true
   search_api_excerpt: true

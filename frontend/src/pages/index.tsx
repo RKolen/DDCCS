@@ -79,6 +79,9 @@ export const query = graphql`
           ideals            { value }
           flaws             { value }
           majorPlotActions  { value }
+          voiceIdRef { ... on Drupal_TermVoiceId { name } }
+          voicePitch
+          voiceSpeed
         }
       }
       nodeStories(first: 100) {

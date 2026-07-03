@@ -45,7 +45,8 @@ Full field sets live in
 
 - **character** — `field_first_name`, `field_last_name`, `field_class`,
   `field_level`, `field_lineage`, `field_species`, `field_background`,
-  `field_ability_scores`, `field_skills`, `field_spells_ref`, `field_campaign`,
+  `field_ability_scores`, `field_skills`, `field_tools`, `field_languages`
+  (-> `languages`), `field_spells_ref`, `field_campaign`,
   `field_character_type`, `field_ai_enabled` / `field_ai_model` /
   `field_ai_temperature` / `field_ai_max_tokens` / `field_ai_system_prompt`,
   `field_voice_id_ref` / `field_voice_pitch` / `field_voice_speed`,
@@ -73,6 +74,20 @@ Exposure is configured in
 
 **Exposed node bundles:** `character`, `story`, `item`, `spell`, `monster`,
 `session` (each with `query_load_enabled`, `edges_enabled`, `simple_queries`).
+
+**Tools (`TermToolProfiency`)** carry `field_tool_category` (list:
+`artisan`/`other`/`gaming_set`/`musical_instrument`), seeded from the rules wiki.
+A "choose any Musical Instrument / Gaming Set / Artisan's Tools" proficiency
+resolves to a choice from that category's members (read from the taxonomy, not a
+hardcoded list). A character proficient with a physical tool also **owns** it:
+`createCharacter` adds the matching `item` node to `field_equipment_items` (one
+per proficiency, deduplicated against the equipment package). The item's
+description is resolved from the tool's rules-wiki entry — gaming sets and
+musical instruments share their category's "(Varies)" description; artisan and
+other tools have individual ones. A background whose tool proficiency is "choose
+one kind of Musical Instrument / Gaming Set / Artisan's Tools" surfaces it as a
+wizard tool **choice** from that category (not a literal "Choose one kind of…"
+term).
 
 **Exposed taxonomy vocabularies:** `abilities`, `campaign`, `class`, `skills`,
 `species`, `lineage`, `backgrounds`, `feats`, `feat_type`, `ability_scores`,
@@ -179,7 +194,7 @@ Per-action user writes go through custom GraphQL mutations called from
 | `addCharacterToCampaign` | `frontend/src/api/campaign-party.ts` |
 | `createStory` | `frontend/src/api/create-story.ts` |
 | `createCharacter` | `frontend/src/api/create-character.ts` |
-| `updateCharacter` | `frontend/src/api/update-character.ts` |
+| `updateCharacter` | `frontend/src/api/update-voice.ts` (voice id / pitch / speed) |
 
 `createCharacter` persists a **source** character (`field_source_character =
 TRUE`, no campaign) from a sidecar-derived payload, building the

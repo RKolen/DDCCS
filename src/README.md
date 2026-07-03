@@ -112,7 +112,8 @@ src/
 |-- ai/                 # AI integration
 |   |-- ai_client.py           # AI client interface (includes embed() for vectors)
 |   |-- rag_system.py          # RAG (Retrieval Augmented Generation)
-|   |-- abilities_rag.py       # Reusable rules resolver: abilities/features, backgrounds, feats, class tools, subclass features, and equipment descriptions/types (via RAG_RULES_BASE_URL wiki)
+|   |-- abilities_rag.py       # Reusable rules resolver: abilities/features, backgrounds, feats, class tools, subclass features (via RAG_RULES_BASE_URL wiki)
+|   |-- equipment_rag.py       # Equipment + tool item catalogue: descriptions/types + tool proficiency categories (via RAG_RULES_BASE_URL wiki)
 |   |-- availability.py        # AI availability detection
 |   |-- lazy_imports.py        # Lazy import helpers
 |   |-- milvus_client.py       # Milvus vector DB wrapper (connect/insert/search)

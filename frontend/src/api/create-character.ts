@@ -32,11 +32,13 @@ interface CreateCharacterBody {
   abilityScores:  AbilityScores;
   skills?:        string[];
   tools?:         string[];
+  languages?:     string[];
   background?:    string;
   backgroundDefinition?: {
     abilities:        string[];
     skills:           string[];
     tools:            string[];
+    tool_choices?:    Array<{ id: string; label: string; count: number; from: string[]; kind: string }>;
     feat:             string;
     feat_description?: string;
     gold:             number;
@@ -217,6 +219,7 @@ export default async function handler(
   if (body.lastName) character.last_name = body.lastName;
   if (body.nickname) character.nickname = body.nickname;
   if (body.tools) character.tools = body.tools;
+  if (body.languages) character.languages = body.languages;
   if (body.backgroundDefinition) character.background_definition = body.backgroundDefinition;
   if (body.backstory) character.backstory = body.backstory;
   if (body.personalityTraits) character.personality_traits = body.personalityTraits;
@@ -226,13 +229,14 @@ export default async function handler(
 
   // The character's final equipment is the resolved A/B selections (class +
   // background); fall back to the background package when no explicit selection
-  // was made. Enrich it with rules-wiki descriptions and item types so the
-  // created item nodes get an accurate field_description and field_item_type.
+  // was made. Tool proficiencies also become owned items, so enrich both with
+  // rules-wiki descriptions and item types for accurate item nodes.
   const equipment = body.equipment ?? body.backgroundDefinition?.equipment ?? [];
   character.equipment = equipment;
   character.gold = body.gold ?? 0;
-  if (equipment.length > 0) {
-    const descriptions = await describeEquipment(sidecarUrl, equipment);
+  const describeNames = Array.from(new Set([...equipment, ...(body.tools ?? [])]));
+  if (describeNames.length > 0) {
+    const descriptions = await describeEquipment(sidecarUrl, describeNames);
     if (Object.keys(descriptions).length > 0) {
       character.equipment_descriptions = descriptions;
     }

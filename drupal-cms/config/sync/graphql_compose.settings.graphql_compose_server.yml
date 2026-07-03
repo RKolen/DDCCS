@@ -130,6 +130,16 @@ entity_config:
       query_load_enabled: true
       edges_enabled: true
       simple_queries: '1'
+    languages:
+      enabled: true
+      query_load_enabled: true
+      edges_enabled: true
+      simple_queries: '1'
+    voice_ids:
+      enabled: true
+      query_load_enabled: true
+      edges_enabled: true
+      simple_queries: '1'
     skills:
       enabled: true
       query_load_enabled: true
@@ -554,6 +564,9 @@ field_config:
       field_relationship_strength:
         enabled: true
   taxonomy_term:
+    tool_profiencies:
+      field_tool_category:
+        enabled: true
     class:
       field_class_grants:
         enabled: true

@@ -3,8 +3,8 @@ langcode: en
 status: true
 dependencies:
   config:
-    - node.type.character
     - node.type.ability
+    - node.type.character
     - node.type.item
     - node.type.monster
     - node.type.session
@@ -97,4 +97,5 @@ permissions:
   - 'create terms in weapon_mastery'
   - 'create terms in weapon_properties'
   - 'create terms in weapon_subtype'
+  - 'edit any character content'
   - 'edit terms in campaign'

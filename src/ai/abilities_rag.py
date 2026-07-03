@@ -20,9 +20,10 @@ from __future__ import annotations
 
 import logging
 import re
-from typing import Any, Dict, List, Optional, TypedDict, cast
+from typing import Any, Dict, List, Optional, Tuple, TypedDict, cast
 
 from src.ai.rag_system import RAGSystem, get_rag_system
+from src.integration.drupal_graphql import query_drupal
 
 try:
     from bs4 import BeautifulSoup
@@ -64,6 +65,7 @@ class BackgroundData(TypedDict):
     feat_description: str
     skills: List[str]
     tools: List[str]
+    tool_choices: List[Dict[str, Any]]
     gold: int
     equipment: List[str]
 
@@ -77,11 +79,15 @@ _CLASS_PROF_NEXT = (
     "Saving Throw", "Starting Equipment",
 )
 
-# Standard musical instruments (matching the tool_profiencies vocabulary), used
-# to scope a "Choose N Musical Instruments" class tool proficiency.
-MUSICAL_INSTRUMENTS = ["Bagpipes", "Concertina", "Horn", "Lute", "Lyre", "Pan Flute", "Viol"]
-
 _WORD_TO_INT = {"one": 1, "two": 2, "three": 3}
+
+# Phrases in a "Choose N <category>" tool proficiency mapped to the
+# tool_profiencies field_tool_category they scope the choice to.
+_TOOL_CATEGORY_LABELS = (
+    ("musical instrument", "musical_instrument"),
+    ("gaming set", "gaming_set"),
+    ("artisan", "artisan"),
+)
 
 
 def get_abilities(
@@ -493,15 +499,47 @@ def _parse_background(html: str) -> Optional[BackgroundData]:
 
     segments = _split_labeled(data_text, _BG_LABELS)
     equipment_text = segments.get("Equipment", "")
+    fixed_tools, tool_choices = _split_background_tools(segments.get("Tool Proficiency", ""))
     return BackgroundData(
         ability_options=_split_names(segments.get("Ability Scores", "")),
         feat=segments.get("Feat", "").strip(),
         feat_description="",
         skills=_split_names(segments.get("Skill Proficiencies", "")),
-        tools=_split_names(segments.get("Tool Proficiency", "")),
+        tools=fixed_tools,
+        tool_choices=tool_choices,
         gold=_parse_gold(equipment_text),
         equipment=_parse_equipment(equipment_text),
     )
+
+
+def _split_background_tools(segment: str) -> Tuple[List[str], List[Dict[str, Any]]]:
+    """Split a background tool proficiency into fixed tools and category choices.
+
+    A "choose one kind of Musical Instrument / Gaming Set / Artisan's Tools"
+    entry becomes a choice from that category's members (like a class tool
+    choice) rather than a literal tool proficiency.
+
+    Args:
+        segment: The raw "Tool Proficiency" text.
+
+    Returns:
+        A tuple of (fixed tool names, tool choice groups).
+    """
+    fixed: List[str] = []
+    choices: List[Dict[str, Any]] = []
+    for entry in _split_names(segment):
+        category_key = _tool_category_key(entry)
+        if category_key is None:
+            fixed.append(entry)
+            continue
+        choices.append({
+            "id": f"background-tools:{category_key}",
+            "label": entry,
+            "count": 1,
+            "from": get_tools_in_category(category_key),
+            "kind": "tool",
+        })
+    return fixed, choices
 
 
 def get_class_tools(class_name: str, *, rag: Optional[RAGSystem] = None) -> Dict[str, Any]:
@@ -540,7 +578,8 @@ def get_class_tools(class_name: str, *, rag: Optional[RAGSystem] = None) -> Dict
         raw_count = match.group(1).lower()
         count = int(raw_count) if raw_count.isdigit() else _WORD_TO_INT.get(raw_count, 1)
         category = match.group(2).strip()
-        options = MUSICAL_INSTRUMENTS if "musical instrument" in category.lower() else []
+        category_key = _tool_category_key(category)
+        options = get_tools_in_category(category_key) if category_key is not None else []
         result["choice"] = {
             "id": "class-tools", "label": f"Tool: {category}",
             "count": count, "from": options, "kind": "tool",
@@ -550,205 +589,40 @@ def get_class_tools(class_name: str, *, rag: Optional[RAGSystem] = None) -> Dict
     return result
 
 
-class EquipmentInfo(TypedDict):
-    """Resolved catalogue data for a piece of equipment."""
-
-    description: str
-    item_type: str
-
-
-# Equipment category pages on the rules wiki and the item type each grants.
-# Only the gear-style pages carry a prose description column; the weapon and
-# armor pages are stat tables, but still let us type their items authoritatively.
-_EQUIPMENT_PAGES: Dict[str, str] = {
-    "adventuring-gear": "item",
-    "tool": "item",
-    "trinket": "item",
-    "crafting": "item",
-    "poison": "item",
-    "mounts-and-vehicles": "item",
-    "weapon": "weapon",
-    "armor": "armor",
-}
-
-# Header cell labels that mark a table's prose description column.
-_DESC_HEADERS = ("function", "description", "effect")
-
-# Cell labels identifying a table header row (rather than a data row).
-_HEADER_LABELS = frozenset({
-    "item", "name", "armor", "tool", "artisan tool", "other tool", "gaming set",
-    "mount", "vehicle", "weight", "cost", "damage", "properties", "mastery",
-    "ability", "function", "description", "effect", "strength", "stealth",
-    "speed", "armor class (ac)", "carrying capacity",
-})
-
-
-def get_equipment_descriptions(
-    names: List[str], *, rag: Optional[RAGSystem] = None
-) -> Dict[str, EquipmentInfo]:
-    """Resolve equipment descriptions and types from the rules wiki.
-
-    Scrapes the 2024 equipment category pages and returns, for each requested
-    name that matches a catalogued item, its prose description (where the page
-    provides one, e.g. gear) and item type (weapon/armor/item) inferred from the
-    page it appears on. Wiki names in "Group, Modifier" form (e.g. "Clothes,
-    Fine") also match their natural form ("Fine Clothes").
+def _tool_category_key(label: str) -> Optional[str]:
+    """Map a "Choose N <category>" label to a tool_category key, or None.
 
     Args:
-        names: Item names to resolve (display form, e.g. "Fine Clothes").
-        rag: Optional RAG system; resolved from config when omitted.
+        label: The category text from a class tool proficiency.
 
     Returns:
-        A map of each requested name to its resolved info. Unmatched names are
-        omitted. Empty when RAG is unavailable or no page can be fetched.
+        The matching tool_category key, or None when unrecognised.
     """
-    wanted = [name.strip() for name in names if name and name.strip()]
-    if wanted == []:
-        return {}
-    rag_system = rag if rag is not None else _safe_rag_system()
-    if rag_system is None or not getattr(rag_system, "enabled", False):
-        return {}
-    client = getattr(rag_system, "rules_client", None)
-    if client is None or not _SCRAPING_AVAILABLE or getattr(client, "session", None) is None:
-        return {}
-
-    catalog = _equipment_catalog(client)
-    result: Dict[str, EquipmentInfo] = {}
-    for name in wanted:
-        info = catalog.get(_equip_key(name))
-        if info is not None:
-            result[name] = info
-    return result
-
-
-def _equip_key(name: str) -> str:
-    """Normalise an item name into a catalogue lookup key.
-
-    Args:
-        name: Item name in any case/spacing.
-
-    Returns:
-        A lowercase, whitespace-collapsed, apostrophe-normalised key.
-    """
-    text = name.strip().lower().replace("’", "'")
-    return re.sub(r"\s+", " ", text)
-
-
-def _equipment_catalog(client: object) -> Dict[str, EquipmentInfo]:
-    """Build (or load from cache) the full equipment catalogue.
-
-    Args:
-        client: The rules WikiClient (provides the session, cache and base URL).
-
-    Returns:
-        A map from normalised item key to its resolved info.
-    """
-    cache_key = f"{getattr(client, 'base_url', '')}/equipment{_CACHE_SUFFIX}"
-    cache = getattr(client, "cache", None)
-    cached = cache.get(cache_key) if cache is not None else None
-    if isinstance(cached, dict) and isinstance(cached.get("items"), dict):
-        return {
-            key: _coerce_equipment(value)
-            for key, value in cached["items"].items()
-            if isinstance(value, dict)
-        }
-
-    catalog: Dict[str, EquipmentInfo] = {}
-    for slug, item_type in _EQUIPMENT_PAGES.items():
-        html = _fetch_html(client, f"{getattr(client, 'base_url', '')}/equipment:{slug}")
-        if html is not None:
-            _parse_equipment_page(html, item_type, catalog)
-    if cache is not None:
-        cache.set(cache_key, {"items": {key: dict(value) for key, value in catalog.items()}})
-    return catalog
-
-
-def _parse_equipment_page(
-    html: str, item_type: str, catalog: Dict[str, EquipmentInfo]
-) -> None:
-    """Parse one equipment page's tables into the catalogue, in place.
-
-    Args:
-        html: Raw equipment page HTML.
-        item_type: The item type all rows on this page receive.
-        catalog: Catalogue to populate (mutated in place).
-    """
-    if not _SCRAPING_AVAILABLE:
-        return
-    found = BeautifulSoup(html, "html.parser").find("div", id="page-content")
-    if not isinstance(found, Tag):
-        return
-    content = cast("Tag", found)
-    for table in content.find_all("table"):
-        desc_index: Optional[int] = None
-        for row in table.find_all("tr"):
-            cells = [_clean(cell.get_text(" ", strip=True)) for cell in row.find_all(["td", "th"])]
-            if len(cells) < 2:
-                continue
-            if any(cell.lower() in _HEADER_LABELS for cell in cells):
-                desc_index = _description_column(cells)
-                continue
-            name = cells[0]
-            if name == "":
-                continue
-            description = ""
-            if desc_index is not None and desc_index < len(cells):
-                description = cells[desc_index][:_MAX_DESCRIPTION]
-            _register_equipment(catalog, name, EquipmentInfo(
-                description=description, item_type=item_type,
-            ))
-
-
-def _description_column(header_cells: List[str]) -> Optional[int]:
-    """Find the index of a table's prose description column.
-
-    Args:
-        header_cells: Cleaned header row cell texts.
-
-    Returns:
-        The column index of a description header, or None when absent.
-    """
-    for index, cell in enumerate(header_cells):
-        if cell.lower() in _DESC_HEADERS:
-            return index
+    lowered = label.lower()
+    for phrase, key in _TOOL_CATEGORY_LABELS:
+        if phrase in lowered:
+            return key
     return None
 
 
-def _register_equipment(
-    catalog: Dict[str, EquipmentInfo], name: str, info: EquipmentInfo
-) -> None:
-    """Register an item under its own key and its inverted ("X, Y") key.
+def get_tools_in_category(category: str) -> List[str]:
+    """List the tool names in a tool_profiencies category, read from Drupal.
 
     Args:
-        catalog: Catalogue to populate.
-        name: Item name as printed on the wiki (may be "Group, Modifier").
-        info: Resolved info to store.
-    """
-    keys = [_equip_key(name)]
-    if "," in name:
-        group, modifier = name.split(",", 1)
-        keys.append(_equip_key(f"{modifier.strip()} {group.strip()}"))
-    for key in keys:
-        existing = catalog.get(key)
-        if existing is None:
-            catalog[key] = info
-        elif existing["description"] == "" and info["description"] != "":
-            catalog[key] = info
-
-
-def _coerce_equipment(item: dict) -> EquipmentInfo:
-    """Coerce a cached dict into an EquipmentInfo with safe defaults.
-
-    Args:
-        item: Cached equipment dict.
+        category: A field_tool_category key (e.g. "musical_instrument").
 
     Returns:
-        A well-formed EquipmentInfo.
+        Tool names in that category; empty when Drupal is unreachable.
     """
-    return EquipmentInfo(
-        description=str(item.get("description", "")),
-        item_type=str(item.get("item_type", "item")),
+    data = query_drupal(
+        "{ termToolProfiencies(first: 100) { nodes { name toolCategory } } }"
     )
+    nodes = data.get("termToolProfiencies", {}).get("nodes", []) if data else []
+    return [
+        str(node["name"])
+        for node in nodes
+        if isinstance(node, dict) and node.get("toolCategory") == category and node.get("name")
+    ]
 
 
 def _class_tool_segment(html: str) -> str:

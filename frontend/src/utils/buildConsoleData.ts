@@ -54,6 +54,9 @@ export interface RawCharacter {
   flaws?:            Array<{ value: string }> | null;
   personalityTraits?: Array<{ value: string }> | null;
   majorPlotActions?:  Array<{ value: string }> | null;
+  voiceIdRef?:       { name: string } | null;
+  voicePitch?:       number | null;
+  voiceSpeed?:       number | null;
 }
 
 export interface RawItem {
@@ -162,6 +165,9 @@ export function buildConsoleData(data: ConsoleQueryData | null | undefined): Con
     flaws:            (n.flaws ?? []).map(b => b.value),
     personalityTraits: (n.personalityTraits ?? []).map(b => b.value),
     majorPlotActions:  (n.majorPlotActions ?? []).map(b => b.value),
+    voiceId:          n.voiceIdRef?.name ?? null,
+    voicePitch:       n.voicePitch ?? null,
+    voiceSpeed:       n.voiceSpeed ?? null,
   }));
 
   const stories: DrupalStory[] = data.drupal.nodeStories.nodes

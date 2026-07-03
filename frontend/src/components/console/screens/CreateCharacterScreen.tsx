@@ -32,6 +32,7 @@ interface TaxonomyQuery {
     termLineages:       { nodes: TermNode[] };
     termAbilityScores:  { nodes: TermNode[] };
     termToolProfiencies:{ nodes: TermNode[] };
+    termLanguages:      { nodes: TermNode[] };
     termFeats:          { nodes: FeatNode[] };
   };
 }
@@ -160,6 +161,7 @@ interface SubclassChoice {
 interface SkillPlanState {
   granted:           string[];
   granted_tools:     string[];
+  granted_languages: string[];
   choices:           SkillChoice[];
   equipment_choices: EquipmentChoice[];
   subclass:          SubclassChoice | null;
@@ -203,6 +205,7 @@ export function CreateCharacterScreen({ ctx }: ScreenProps): React.ReactElement 
         termLineages(first: 100) { nodes { name } }
         termAbilityScores(first: 10) { nodes { name } }
         termToolProfiencies(first: 100) { nodes { name } }
+        termLanguages(first: 100) { nodes { name } }
         termFeats(first: 100) { nodes { name featType { ... on Drupal_TermFeatType { name } } } }
       }
     }
@@ -216,6 +219,7 @@ export function CreateCharacterScreen({ ctx }: ScreenProps): React.ReactElement 
   const lineageOptions    = React.useMemo(() => sortedNames(taxonomy.drupal.termLineages.nodes), [taxonomy]);
   const abilityScoreOptions = React.useMemo(() => sortedNames(taxonomy.drupal.termAbilityScores.nodes), [taxonomy]);
   const toolOptions       = React.useMemo(() => sortedNames(taxonomy.drupal.termToolProfiencies.nodes), [taxonomy]);
+  const languageOptions   = React.useMemo(() => sortedNames(taxonomy.drupal.termLanguages.nodes), [taxonomy]);
   const originFeatOptions = React.useMemo(
     () => taxonomy.drupal.termFeats.nodes
       .filter(f => f.featType?.name === 'Origin')
@@ -263,12 +267,13 @@ export function CreateCharacterScreen({ ctx }: ScreenProps): React.ReactElement 
   const [skillPlan,     setSkillPlan]     = React.useState<SkillPlanState | null>(null);
   const [grantedSel,    setGrantedSel]    = React.useState<string[]>([]);
   const [grantedToolSel, setGrantedToolSel] = React.useState<string[]>([]);
+  const [grantedLangSel, setGrantedLangSel] = React.useState<string[]>([]);
   const [choiceSel,     setChoiceSel]     = React.useState<Record<string, string[]>>({});
   const [equipMode,     setEquipMode]     = React.useState<Record<string, 'items' | 'gold'>>({});
   const [loadingSkills, setLoadingSkills] = React.useState(false);
 
-  // Choice items can be skills or tools; split each into the right field by
-  // checking which vocabulary it belongs to.
+  // Choice items can be skills, tools, or languages; split each into the right
+  // field by checking which vocabulary it belongs to.
   const choiceItems = React.useMemo(() => Object.values(choiceSel).flat(), [choiceSel]);
   const selectedSkills = React.useMemo(
     () => Array.from(new Set([...grantedSel, ...choiceItems.filter(i => skillOptions.includes(i))])),
@@ -277,6 +282,10 @@ export function CreateCharacterScreen({ ctx }: ScreenProps): React.ReactElement 
   const selectedTools = React.useMemo(
     () => Array.from(new Set([...grantedToolSel, ...choiceItems.filter(i => toolOptions.includes(i))])),
     [grantedToolSel, choiceItems, toolOptions],
+  );
+  const selectedLanguages = React.useMemo(
+    () => Array.from(new Set([...grantedLangSel, ...choiceItems.filter(i => languageOptions.includes(i))])),
+    [grantedLangSel, choiceItems, languageOptions],
   );
 
   // The background's own equipment package becomes an A/B (items vs gold) choice,
@@ -317,33 +326,37 @@ export function CreateCharacterScreen({ ctx }: ScreenProps): React.ReactElement 
         }),
       });
       const data = (await res.json()) as {
-        granted?: string[]; granted_tools?: string[]; choices?: SkillChoice[];
-        equipment_choices?: EquipmentChoice[]; subclass?: SubclassChoice | null;
+        granted?: string[]; granted_tools?: string[]; granted_languages?: string[];
+        choices?: SkillChoice[]; equipment_choices?: EquipmentChoice[];
+        subclass?: SubclassChoice | null;
       };
       const granted = Array.from(new Set([...(data.granted ?? []), ...(bgDefinition?.skills ?? [])]));
       const grantedTools = Array.from(new Set([...(data.granted_tools ?? []), ...(bgDefinition?.tools ?? [])]));
-      const choices = [...(data.choices ?? [])];
+      const grantedLanguages = Array.from(new Set(data.granted_languages ?? []));
+      const choices = [...(data.choices ?? []), ...(bgDefinition?.tool_choices ?? [])];
       if (bgDefinition?.feat === 'Skilled') {
         choices.push({ id: 'feat:Skilled', label: 'Skilled feat', count: 3, from: [], kind: 'skill_or_tool' });
       }
       const equipmentChoices = [...(data.equipment_choices ?? []), ...backgroundEquipmentChoices()];
       setSkillPlan({
-        granted, granted_tools: grantedTools, choices,
+        granted, granted_tools: grantedTools, granted_languages: grantedLanguages, choices,
         equipment_choices: equipmentChoices, subclass: data.subclass ?? null,
       });
       setGrantedSel(granted);
       setGrantedToolSel(grantedTools);
+      setGrantedLangSel(grantedLanguages);
       setChoiceSel({});
       setEquipMode(Object.fromEntries(equipmentChoices.map(g => [g.id, 'items' as const])));
     } catch {
       const bgSkills = bgDefinition?.skills ?? [];
       const bgTools = bgDefinition?.tools ?? [];
       setSkillPlan({
-        granted: bgSkills, granted_tools: bgTools, choices: [],
+        granted: bgSkills, granted_tools: bgTools, granted_languages: [], choices: [],
         equipment_choices: [], subclass: null,
       });
       setGrantedSel(bgSkills);
       setGrantedToolSel(bgTools);
+      setGrantedLangSel([]);
     } finally {
       setLoadingSkills(false);
     }
@@ -355,6 +368,10 @@ export function CreateCharacterScreen({ ctx }: ScreenProps): React.ReactElement 
 
   const toggleGrantedTool = (tool: string): void => {
     setGrantedToolSel(prev => (prev.includes(tool) ? prev.filter(t => t !== tool) : [...prev, tool]));
+  };
+
+  const toggleGrantedLang = (lang: string): void => {
+    setGrantedLangSel(prev => (prev.includes(lang) ? prev.filter(l => l !== lang) : [...prev, lang]));
   };
 
   const toggleChoice = (choiceId: string, skill: string, count: number): void => {
@@ -378,6 +395,7 @@ export function CreateCharacterScreen({ ctx }: ScreenProps): React.ReactElement 
     abilityScores:     form.abilityScores,
     skills:            selectedSkills,
     tools:             selectedTools,
+    languages:         selectedLanguages,
     background:        form.background.trim(),
     backgroundDefinition: bgDefinition,
     equipment:         finalEquipment,
@@ -393,7 +411,7 @@ export function CreateCharacterScreen({ ctx }: ScreenProps): React.ReactElement 
     campaignId:        activeCampaign?.id ?? null,
     dryRun:            false,
   }), [form, activeCampaign, isHomebrewBackground, bgDefinition, selectedSkills, selectedTools,
-    finalEquipment, finalGold]);
+    selectedLanguages, finalEquipment, finalGold]);
 
   // Resolve an official background's granted data from the rules wiki the first
   // time the user advances past the Identity step (used to pre-select skills).
@@ -409,12 +427,13 @@ export function CreateCharacterScreen({ ctx }: ScreenProps): React.ReactElement 
       });
       const data = (await res.json()) as { background?: {
         ability_options?: string[]; feat?: string; feat_description?: string; skills?: string[];
-        tools?: string[]; gold?: number; equipment?: string[];
+        tools?: string[]; tool_choices?: SkillChoice[]; gold?: number; equipment?: string[];
       } | null };
       const b = data.background;
       if (res.ok && b) {
         setBgDefinition({
           abilities: b.ability_options ?? [], skills: b.skills ?? [], tools: b.tools ?? [],
+          tool_choices: b.tool_choices ?? [],
           feat: b.feat ?? '', feat_description: b.feat_description ?? '',
           gold: b.gold ?? 0, equipment: b.equipment ?? [],
         });
@@ -627,9 +646,24 @@ export function CreateCharacterScreen({ ctx }: ScreenProps): React.ReactElement 
                 </div>
               )}
 
+              {skillPlan && skillPlan.granted_languages.length > 0 && (
+                <div className="modal-field">
+                  <label className="modal-label">Known languages — Common is always known</label>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6 }}>
+                    {skillPlan.granted_languages.map(lang => (
+                      <label key={lang} style={{ display: 'flex', gap: 6, fontSize: 13 }}>
+                        <input type="checkbox" checked={grantedLangSel.includes(lang)} onChange={() => toggleGrantedLang(lang)} />
+                        {lang}
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {skillPlan?.choices.map(choice => {
                 const base = choice.kind === 'tool' ? toolOptions
                   : choice.kind === 'skill_or_tool' ? [...skillOptions, ...toolOptions]
+                  : choice.kind === 'language' ? languageOptions
                   : skillOptions;
                 const options = choice.from.length > 0 ? choice.from : base;
                 const picked = choiceSel[choice.id] ?? [];
@@ -642,6 +676,7 @@ export function CreateCharacterScreen({ ctx }: ScreenProps): React.ReactElement 
                       {options.map(option => {
                         const checked = picked.includes(option);
                         const usedElsewhere = grantedSel.includes(option) || grantedToolSel.includes(option)
+                          || grantedLangSel.includes(option)
                           || Object.entries(choiceSel).some(([id, list]) => id !== choice.id && list.includes(option));
                         const atLimit = !checked && picked.length >= choice.count;
                         const disabled = usedElsewhere || atLimit;

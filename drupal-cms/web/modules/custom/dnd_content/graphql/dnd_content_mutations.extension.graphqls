@@ -12,6 +12,21 @@ extend type Mutation {
   ): NodeCharacter
 
   """
+  Update a character node's voice settings. Only the supplied arguments are
+  changed. Returns the updated character node.
+  """
+  updateCharacter(
+    "UUID of the character node."
+    id: ID!
+    "Voice id — a voice_ids taxonomy term name (e.g. en_US-ryan-low)."
+    voiceId: String
+    "Voice pitch."
+    voicePitch: Float
+    "Voice speed."
+    voiceSpeed: Float
+  ): NodeCharacter
+
+  """
   Create a new campaign taxonomy term. Returns the created term on success,
   or null if creation fails validation.
   """

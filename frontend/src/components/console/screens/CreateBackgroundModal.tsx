@@ -11,6 +11,8 @@ export interface BackgroundDefinition {
   abilities:        string[];
   skills:           string[];
   tools:            string[];
+  /** Category tool choices (e.g. "choose one Musical Instrument"), from the rules wiki. */
+  tool_choices?:    Array<{ id: string; label: string; count: number; from: string[]; kind: string }>;
   feat:             string;
   feat_description?: string;
   gold:             number;
