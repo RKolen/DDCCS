@@ -1,0 +1,31 @@
+uuid: a58bc9cc-fabb-4556-ae11-6d01a9167988
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.taxonomy_term.field_session_summaries
+    - paragraphs.paragraphs_type.session_summary
+    - taxonomy.vocabulary.campaign
+  module:
+    - entity_reference_revisions
+id: taxonomy_term.campaign.field_session_summaries
+field_name: field_session_summaries
+entity_type: taxonomy_term
+bundle: campaign
+label: 'Session summaries'
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:paragraph'
+  handler_settings:
+    target_bundles:
+      session_summary: session_summary
+    negate: 0
+    target_bundles_drag_drop:
+      session_summary:
+        weight: 0
+        enabled: true
+field_type: entity_reference_revisions

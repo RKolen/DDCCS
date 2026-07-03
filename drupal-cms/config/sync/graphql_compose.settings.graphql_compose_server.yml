@@ -79,6 +79,9 @@ entity_config:
     class_grant:
       enabled: true
       query_load_enabled: true
+    session_summary:
+      enabled: true
+      query_load_enabled: true
     spell_reference:
       enabled: true
       query_load_enabled: true
@@ -534,6 +537,11 @@ field_config:
         enabled: true
       field_feat:
         enabled: true
+    session_summary:
+      field_story_number:
+        enabled: true
+      field_text:
+        enabled: true
     spell_reference:
       created:
         enabled: true
@@ -610,6 +618,10 @@ field_config:
       field_campaign_status:
         enabled: true
       field_current_party:
+        enabled: true
+      field_session_summaries:
+        enabled: true
+      field_campaign_overview:
         enabled: true
     magical_properties:
       field_effect:

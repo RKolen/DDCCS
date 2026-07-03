@@ -17,3 +17,6 @@ public/
 # OS
 .DS_Store
 Thumbs.db
+
+# One-off, local-only maintenance scripts
+scripts/

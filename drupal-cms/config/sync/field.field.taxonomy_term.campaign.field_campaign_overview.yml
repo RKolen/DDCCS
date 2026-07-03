@@ -1,0 +1,31 @@
+uuid: 545b6050-dc97-4c40-893d-fafc98a842b6
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.taxonomy_term.field_campaign_overview
+    - paragraphs.paragraphs_type.wysiwyg
+    - taxonomy.vocabulary.campaign
+  module:
+    - entity_reference_revisions
+id: taxonomy_term.campaign.field_campaign_overview
+field_name: field_campaign_overview
+entity_type: taxonomy_term
+bundle: campaign
+label: 'Campaign overview'
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:paragraph'
+  handler_settings:
+    target_bundles:
+      wysiwyg: wysiwyg
+    negate: 0
+    target_bundles_drag_drop:
+      wysiwyg:
+        weight: 0
+        enabled: true
+field_type: entity_reference_revisions

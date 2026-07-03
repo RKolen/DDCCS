@@ -1,0 +1,10 @@
+uuid: d1a9f4ba-51d5-48ee-ba09-63dbb05c4f92
+langcode: en
+status: true
+dependencies: {  }
+id: session_summary
+label: 'Session Summary'
+icon_uuid: null
+icon_default: null
+description: 'A per-session recap: story number + summary text.'
+behavior_plugins: {  }

@@ -110,7 +110,9 @@ Drupal credentials.
 | `resolve-background.ts` | POST | Sidecar | Resolve a background's granted data (skills/feat/abilities/gold/equipment) from the rules wiki (`RAG_RULES_BASE_URL`) |
 | `skill-plan.ts` | POST | Sidecar | Class + species/subspecies plan for the skills step: granted + skill/tool choice groups, class equipment A/B choices (items vs gold), and the subclass choice (from the `class`/`subclasses` taxonomy, template/RAG fallback) |
 | `campaign-party.ts` | POST | Drupal (`addCharacterToCampaign`) | Add a character to a campaign |
-| `create-story.ts` | POST | Drupal (`createStory`) | Persist a finished story |
+| `create-story.ts` | POST | Drupal (`createStory`, `setSessionSummary`) + LLM | Persist a finished story, then (best-effort) summarise the session and refresh the campaign overview |
+| `summarize-session.ts` | POST | Ollama-compatible LLM (fast model) | Summarise one story body into a concise recap (`{ storyBody }` -> `{ summary }`) |
+| `campaign-overview.ts` | POST | Ollama-compatible LLM (fast model) | Synthesize per-session recaps into one "story so far" (`{ summaries }` -> `{ overview }`) |
 | `update-character.ts` | POST | Drupal (`updateCharacter`) | PATCH optional character fields |
 | `generate-story.ts` | POST | Ollama-compatible LLM | Stream an AI-generated story (SSE) |
 | `consult.ts` | POST | Ollama-compatible LLM | Stream an in-character chat reply for the character consultation (SSE) |
@@ -121,6 +123,12 @@ Drupal credentials.
 `generate-story.ts` streams Server-Sent Events from
 `AI_CREATIVE_BASE_URL/chat/completions`. `spotlight.ts` calls the Python sidecar
 (see [src/sidecar/README.md](../src/sidecar/README.md)).
+
+Session-summary prompt logic (fast-model, non-streaming) lives in the
+server-only helper `src/utils/aiSummary.ts`, shared by `summarize-session.ts`,
+`campaign-overview.ts`, and `create-story.ts`. A gitignored one-off,
+`scripts/backfill-summaries.mjs`, backfills summaries + overviews for existing
+campaigns by reusing those endpoints (requires the dev server running).
 
 ---
 

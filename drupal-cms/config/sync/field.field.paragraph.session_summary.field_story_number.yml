@@ -1,0 +1,23 @@
+uuid: bda4ab46-2c83-4471-be2d-58f834d2cfa0
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.paragraph.field_story_number
+    - paragraphs.paragraphs_type.session_summary
+id: paragraph.session_summary.field_story_number
+field_name: field_story_number
+entity_type: paragraph
+bundle: session_summary
+label: 'Story number'
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  min: null
+  max: null
+  prefix: ''
+  suffix: ''
+field_type: integer

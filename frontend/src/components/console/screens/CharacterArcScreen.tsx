@@ -161,17 +161,30 @@ function ArcSpark({
 function ArcPortrait({
   name,
   size = 'md',
+  imageUrl,
 }: {
   name: string;
   size?: 'xs' | 'sm' | 'md' | 'lg';
+  imageUrl?: string | null;
 }): React.ReactElement {
+  const cls = `arc-portrait${size !== 'md' ? ` ${size}` : ''}`;
+  if (imageUrl) {
+    return (
+      <div className={cls}>
+        <img
+          src={imageUrl}
+          alt={name}
+          style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 'inherit' }}
+        />
+      </div>
+    );
+  }
   const initials = name
     .split(' ')
     .map(w => w[0] ?? '')
     .join('')
     .slice(0, 2)
     .toUpperCase();
-  const cls = `arc-portrait${size !== 'md' ? ` ${size}` : ''}`;
   return <div className={cls}>{initials}</div>;
 }
 
@@ -293,7 +306,7 @@ function ArcHub({ ctx, setCtx, characters }: SubScreenProps): React.ReactElement
               className="arc-hub-card stale"
               onClick={() => setCtx({ ...ctx, arcSubAction: 'arc-summary', arcCharId: char.id })}
             >
-              <ArcPortrait name={char.title} />
+              <ArcPortrait name={char.title} imageUrl={char.imageUrl} />
               <div className="arc-hub-card-body">
                 <div className="name-row">
                   <span className="name">{char.title}</span>
@@ -345,7 +358,7 @@ function ArcSummary({ ctx, setCtx, characters }: SubScreenProps): React.ReactEle
   return (
     <div className="arc-action">
       <div className="arc-sum-head">
-        {char ? <ArcPortrait name={char.title} size="lg" /> : <div className="arc-portrait lg" />}
+        {char ? <ArcPortrait name={char.title} size="lg" imageUrl={char.imageUrl} /> : <div className="arc-portrait lg" />}
 
         <div className="identity">
           <span className="arc-eyebrow">Character Arc</span>
@@ -763,6 +776,13 @@ function ArcAnalyze({ ctx, setCtx, characters, stories }: SubScreenProps): React
    ──────────────────────────────────────────────────────────── */
 
 function ArcOverview({ ctx, setCtx, characters }: SubScreenProps): React.ReactElement {
+  const data         = useConsoleData();
+  const campaignName = (ctx.activeCampaignName as string | null | undefined) ?? null;
+  const campaign     = campaignName
+    ? data.campaigns.find(c => c.name === campaignName) ?? null
+    : null;
+  const overview     = campaign?.campaignOverview ?? null;
+
   return (
     <div className="arc-action">
       <div className="arc-hub-head">
@@ -783,6 +803,19 @@ function ArcOverview({ ctx, setCtx, characters }: SubScreenProps): React.ReactEl
             Back to hub
           </button>
         </div>
+      </div>
+
+      <div className="arc-story-so-far">
+        <span className="arc-eyebrow">The story so far</span>
+        {overview ? (
+          <div className="arc-overview-prose" dangerouslySetInnerHTML={{ __html: overview }} />
+        ) : (
+          <p className="blurb">
+            {campaignName
+              ? 'No campaign overview yet. It is generated automatically as sessions are created, or run the summary backfill to build it from existing sessions.'
+              : 'Select a campaign to see its synthesized story so far.'}
+          </p>
+        )}
       </div>
 
       <div className="arc-hub-toolbar">

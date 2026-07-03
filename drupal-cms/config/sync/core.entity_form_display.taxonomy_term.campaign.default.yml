@@ -3,12 +3,13 @@ langcode: en
 status: true
 dependencies:
   config:
+    - field.field.taxonomy_term.campaign.field_campaign_overview
     - field.field.taxonomy_term.campaign.field_campaign_start_date
     - field.field.taxonomy_term.campaign.field_campaign_status
     - field.field.taxonomy_term.campaign.field_current_party
+    - field.field.taxonomy_term.campaign.field_session_summaries
     - taxonomy.vocabulary.campaign
   module:
-    - options
     - path
     - text
 id: taxonomy_term.campaign.default
@@ -76,4 +77,6 @@ content:
     settings:
       display_label: true
     third_party_settings: {  }
-hidden: {  }
+hidden:
+  field_campaign_overview: true
+  field_session_summaries: true

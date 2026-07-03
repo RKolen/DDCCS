@@ -133,7 +133,20 @@ reused untouched. The modal sources its options from
 `tool_profiencies` are exposed as term collections for this.
 
 **Exposed paragraph types:** `ability_score`, `ability_scores`, `class`,
-`class_grant`, `spell_reference`, `spell_slot`, `relationship`, `wysiwyg`.
+`class_grant`, `session_summary`, `spell_reference`, `spell_slot`,
+`relationship`, `wysiwyg`.
+
+### Campaign summaries (`session_summary` paragraph)
+
+The `campaign` vocab carries `field_session_summaries` (-> `session_summary`
+paragraphs, one per session) and `field_campaign_overview` (-> a single
+`wysiwyg` paragraph holding the synthesized "story so far"). A `session_summary`
+paragraph has `field_story_number` (int) + `field_text` (the recap). Exposed as
+`sessionSummaries` (`ParagraphSessionSummary` with `storyNumber` + `text`) and
+`campaignOverview` on `TermCampaign`. Both are written by the
+`setSessionSummary` mutation (see below): `create-story.ts` summarises each new
+session with the fast LLM and refreshes the overview; the gitignored
+`frontend/scripts/backfill-summaries.mjs` backfills existing campaigns.
 
 ### Class grants (`class_grant` paragraph)
 
@@ -193,6 +206,7 @@ Per-action user writes go through custom GraphQL mutations called from
 | `createCampaign` | `frontend/src/api/campaigns.ts` |
 | `addCharacterToCampaign` | `frontend/src/api/campaign-party.ts` |
 | `createStory` | `frontend/src/api/create-story.ts` |
+| `setSessionSummary` | `frontend/src/api/create-story.ts` + `scripts/backfill-summaries.mjs` |
 | `createCharacter` | `frontend/src/api/create-character.ts` |
 | `updateCharacter` | `frontend/src/api/update-voice.ts` (voice id / pitch / speed) |
 
@@ -214,6 +228,15 @@ the sidecar's `/character/equipment/describe` (rules-wiki equipment catalogue at
 `RAG_RULES_BASE_URL`) and passes the result as an `equipment_descriptions` map
 in the payload. The clone into the active campaign is a separate
 `addCharacterToCampaign` call.
+
+`setSessionSummary(campaignId, storyNumber, summary, overview)` upserts the
+`session_summary` paragraph for that story number on the campaign's
+`field_session_summaries` (updating in place when the story number already
+exists), and — when `overview` is supplied — replaces
+`field_campaign_overview` with a `wysiwyg` paragraph. It returns the campaign's
+`sessionSummaries`
+so the caller can synthesize the overview from every recap. Requires the
+`gatsby_user` role's `edit terms in campaign` permission.
 
 ### Writes — bulk/seed via the engine
 

@@ -38,6 +38,22 @@ extend type Mutation {
   ): TermCampaign
 
   """
+  Store a session summary + synthesized overview on a campaign term. Upserts the
+  session_summary paragraph by story number and replaces the campaign overview.
+  Returns the updated campaign term.
+  """
+  setSessionSummary(
+    "UUID of the campaign taxonomy term."
+    campaignId: ID!
+    "Story number the summary belongs to."
+    storyNumber: Int!
+    "The session summary text."
+    summary: String!
+    "The synthesized campaign overview (optional)."
+    overview: String
+  ): TermCampaign
+
+  """
   Add an existing character node to a campaign's current party.
   Returns the updated campaign term. No-op if already a member.
   """

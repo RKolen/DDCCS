@@ -16,10 +16,11 @@ export interface RawCampaignOnCharacter {
 }
 
 export interface RawCampaignTerm {
-  id:             string;
-  name:           string;
-  campaignStatus: string | null;
-  currentParty:   Array<{ id: string; title: string }> | null;
+  id:               string;
+  name:             string;
+  campaignStatus:   string | null;
+  currentParty:     Array<{ id: string; title: string }> | null;
+  campaignOverview: { text: Array<{ processed: string }> | null } | null;
 }
 
 export interface RawCampaignOnStory {
@@ -189,10 +190,11 @@ export function buildConsoleData(data: ConsoleQueryData | null | undefined): Con
 
   for (const c of data.drupal.termCampaigns.nodes) {
     campaignMap.set(c.name, {
-      id:              c.id,
-      name:            c.name,
-      campaignStatus:  c.campaignStatus,
-      currentPartyIds: (c.currentParty ?? []).map(m => m.id),
+      id:               c.id,
+      name:             c.name,
+      campaignStatus:   c.campaignStatus,
+      currentPartyIds:  (c.currentParty ?? []).map(m => m.id),
+      campaignOverview: c.campaignOverview?.text?.[0]?.processed ?? null,
     });
   }
 

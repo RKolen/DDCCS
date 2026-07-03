@@ -20,6 +20,8 @@ export interface DrupalCampaign {
   campaignStatus: string | null;
   /** IDs of characters in field_current_party on the campaign term */
   currentPartyIds?: string[];
+  /** Synthesized "story so far" HTML from field_campaign_overview, if any */
+  campaignOverview?: string | null;
 }
 
 export interface DrupalCharacter {

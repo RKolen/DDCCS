@@ -101,6 +101,9 @@ export const query = graphql`
           name
           campaignStatus
           currentParty { ... on Drupal_NodeCharacter { id title } }
+          campaignOverview {
+            ... on Drupal_ParagraphWysiwyg { text { processed } }
+          }
         }
       }
       nodeMonsters(first: 100) {
