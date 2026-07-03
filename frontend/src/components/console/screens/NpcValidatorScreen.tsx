@@ -114,24 +114,19 @@ const CHECKS: Array<{
       note: 'Makes generated stories more interesting and realistic.',
     },
     {
-      label: 'Referenced by others',
+      label: 'Ancestry',
       weight: 1,
-      get: () => false, /* filled in by auditCharacter with referencedSet */
-      note: 'No other character mentions this name — may be orphaned.',
+      get: c => !isEmpty(c.species) || !isEmpty(c.lineage),
+      note: 'A species or lineage grounds the character in the world.',
     },
   ];
 
 const MAX_SCORE = CHECKS.reduce((s, c) => s + c.weight, 0);
 
-function auditCharacter(
-  char: DrupalCharacter,
-  referencedIds: Set<string>,
-): AuditResult {
+function auditCharacter(char: DrupalCharacter): AuditResult {
   let score = 0;
   const checks: Check[] = CHECKS.map(def => {
-    const present = def.label === 'Referenced by others'
-      ? referencedIds.has(char.id)
-      : def.get(char);
+    const present = def.get(char);
     if (present) score += def.weight;
     return { label: def.label, present, note: present ? undefined : def.note };
   });
@@ -139,25 +134,6 @@ function auditCharacter(
   const pct: number = score / MAX_SCORE;
   const status: Completeness = pct >= 1 ? 'full' : pct >= 0.6 ? 'partial' : 'thin';
   return { status, score, maxScore: MAX_SCORE, checks };
-}
-
-function buildReferencedSet(all: DrupalCharacter[]): Set<string> {
-  const referenced = new Set<string>();
-  all.forEach(source => {
-    const text = [
-      ...source.bonds,
-      ...source.ideals,
-      ...source.flaws,
-      ...source.personalityTraits,
-      ...source.majorPlotActions,
-    ].join(' ').toLowerCase();
-    all.forEach(target => {
-      if (target.id === source.id) return;
-      const title = (target.title ?? '').toLowerCase();
-      if (title && text.includes(title)) referenced.add(target.id);
-    });
-  });
-  return referenced;
 }
 
 /* ────────────────────────────────────────────────────────────
@@ -543,12 +519,10 @@ export function NpcValidatorScreen({ ctx }: ScreenProps): React.ReactElement {
   const [expanded, setExpanded] = React.useState<Record<string, boolean>>({});
 
   const audited = React.useMemo<AuditRecord[]>(() => {
-    const all = data.characters;
-    const referenced = buildReferencedSet(all);
-    return all.map(char => ({
+    return data.characters.map(char => ({
       char,
       entity: char.characterType === false ? 'npc' : 'pc',
-      audit: auditCharacter(char, referenced),
+      audit: auditCharacter(char),
     }));
   }, [data.characters]);
 

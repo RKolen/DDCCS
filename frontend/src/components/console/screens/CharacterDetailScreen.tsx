@@ -20,10 +20,10 @@ function partyIdsForCampaign(campaigns: DrupalCampaign[], name: string): Set<str
 }
 
 export function CharacterDetailScreen({ ctx, setCtx }: ScreenProps): React.ReactElement {
-  const data       = useConsoleData();
-  const isNpc      = Boolean(ctx.npcMode);
+  const data = useConsoleData();
+  const isNpc = Boolean(ctx.npcMode);
   const [lightboxOpen, setLightboxOpen] = React.useState(false);
-  const allInType  = isNpc ? npcCharacters(data) : playerCharacters(data);
+  const allInType = isNpc ? npcCharacters(data) : playerCharacters(data);
   // PCs: filter by the campaign's currentPartyIds.
   // NPCs: show all (their campaign link isn't via currentParty).
   const partyIds = (!isNpc && ctx.activeCampaignName)
@@ -32,14 +32,14 @@ export function CharacterDetailScreen({ ctx, setCtx }: ScreenProps): React.React
   const roster = (partyIds && partyIds.size > 0)
     ? allInType.filter(c => partyIds.has(c.id))
     : allInType;
-  const idx     = ctx.charIdx ?? 0;
-  const char    = roster[idx] ?? null;
+  const idx = ctx.charIdx ?? 0;
+  const char = roster[idx] ?? null;
   const eyebrow = isNpc ? 'NPC Profile' : 'Character Sheet';
 
   const stats: Array<{ label: string; value: string | number }> = [];
   if (char?.maximumHitpoints !== null && char?.maximumHitpoints !== undefined) stats.push({ label: 'HP', value: char.maximumHitpoints });
-  if (char?.armorClass !== null && char?.armorClass !== undefined)             stats.push({ label: 'AC', value: char.armorClass });
-  if (char?.level !== null && char?.level !== undefined)                       stats.push({ label: 'Level', value: char.level });
+  if (char?.armorClass !== null && char?.armorClass !== undefined) stats.push({ label: 'AC', value: char.armorClass });
+  if (char?.level !== null && char?.level !== undefined) stats.push({ label: 'Level', value: char.level });
 
   return (
     <div className="screen-chardetails">
@@ -78,8 +78,8 @@ export function CharacterDetailScreen({ ctx, setCtx }: ScreenProps): React.React
           <div style={{ padding: 32, fontFamily: 'var(--font-body)', color: 'var(--ink-dim)', fontStyle: 'italic' }}>
             {roster.length === 0
               ? (isNpc
-                  ? 'No NPCs in Drupal. Create a Character node with Character Type set to off.'
-                  : 'No player characters in Drupal. Create a Character node with Character Type set to on.')
+                ? 'No NPCs in Drupal. Create a Character node with Character Type set to off.'
+                : 'No player characters in Drupal. Create a Character node with Character Type set to on.')
               : 'Select a character from the list.'}
           </div>
         ) : (
@@ -93,8 +93,8 @@ export function CharacterDetailScreen({ ctx, setCtx }: ScreenProps): React.React
                 {char.imageUrl
                   ? <img src={char.imageUrl} alt={char.title} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 2 }} />
                   : <span className="portrait-placeholder">
-                      {char.title.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()}
-                    </span>
+                    {char.title.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()}
+                  </span>
                 }
               </div>
               {lightboxOpen && char.imageUrl && (
@@ -119,15 +119,6 @@ export function CharacterDetailScreen({ ctx, setCtx }: ScreenProps): React.React
                     <Icon name="scroll" size={11} /> Full sheet
                   </Link>
                 )}
-                <a
-                  href={drupalAdminUrl(`/node/${char.id}/edit`)}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="ghost-btn"
-                  style={{ textDecoration: 'none' }}
-                >
-                  <Icon name="tools" size={11} /> Edit in Drupal
-                </a>
               </div>
             </div>
 

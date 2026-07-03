@@ -23,16 +23,16 @@ import {
 /* ── Types ──────────────────────────────────────────────────────────── */
 
 interface AllItemDetailNode {
-  drupalId:               string;
-  title:                  string;
-  path:                   string | null;
-  itemType:               string | null;
-  itemRarity:             string | null;
-  isMagic:                boolean | null;
+  drupalId: string;
+  title: string;
+  path: string | null;
+  itemType: string | null;
+  itemRarity: string | null;
+  isMagic: boolean | null;
   itemRequiresAttunement: boolean | null;
-  descriptionHtml:        string | null;
-  weaponSubtype:          Array<{ name: string }> | null;
-  image:                  { mediaImage: { url: string; alt: string } | null } | null;
+  descriptionHtml: string | null;
+  weaponSubtype: Array<{ name: string }> | null;
+  image: { mediaImage: { url: string; alt: string } | null } | null;
 }
 
 interface DetailQueryResult {
@@ -41,16 +41,16 @@ interface DetailQueryResult {
 
 function toItemNode(n: AllItemDetailNode): ItemNode {
   return {
-    id:                     n.drupalId,
-    title:                  n.title,
-    path:                   n.path,
-    itemType:               n.itemType,
-    itemRarity:             n.itemRarity,
-    isMagic:                n.isMagic,
+    id: n.drupalId,
+    title: n.title,
+    path: n.path,
+    itemType: n.itemType,
+    itemRarity: n.itemRarity,
+    isMagic: n.isMagic,
     itemRequiresAttunement: n.itemRequiresAttunement,
-    body:                   n.descriptionHtml ? { value: n.descriptionHtml } : null,
-    weaponSubtype:          n.weaponSubtype,
-    image:                  n.image,
+    body: n.descriptionHtml ? { value: n.descriptionHtml } : null,
+    weaponSubtype: n.weaponSubtype,
+    image: n.image,
   };
 }
 
@@ -70,9 +70,9 @@ export function ItemDetailScreen({ ctx, setCtx }: ScreenProps): React.ReactEleme
     }
   `);
 
-  const all      = data?.allAllItem?.nodes ?? [];
-  const idx      = (ctx.itemIdx as number | undefined) ?? 0;
-  const rawNode  = all[idx] ?? null;
+  const all = data?.allAllItem?.nodes ?? [];
+  const idx = (ctx.itemIdx as number | undefined) ?? 0;
+  const rawNode = all[idx] ?? null;
   const item: ItemNode | null = rawNode ? toItemNode(rawNode) : null;
 
   return (
@@ -83,7 +83,7 @@ export function ItemDetailScreen({ ctx, setCtx }: ScreenProps): React.ReactEleme
         <aside className="char-picker">
           <ul className="char-picker-list">
             {all.map((n, i) => {
-              const rarity   = normalizeRarity(n.itemRarity);
+              const rarity = normalizeRarity(n.itemRarity);
               const initials = n.title.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
               return (
                 <li key={n.drupalId}>
@@ -122,17 +122,6 @@ export function ItemDetailScreen({ ctx, setCtx }: ScreenProps): React.ReactEleme
                   <Link to={item.path} className="ghost-btn" style={{ textDecoration: 'none' }}>
                     <Icon name="scroll" size={11} /> Full sheet
                   </Link>
-                )}
-                {item.id != null && (
-                  <a
-                    href={drupalAdminUrl(`/node/${item.id}/edit`)}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="ghost-btn"
-                    style={{ textDecoration: 'none' }}
-                  >
-                    <Icon name="tools" size={11} /> Edit in Drupal
-                  </a>
                 )}
               </div>
             </div>
