@@ -653,26 +653,50 @@ async function runArcAnalysis(
   const dataPoints: unknown[] = [];
   for (let i = 0; i < storyIds.length; i += 1) {
     onProgress({ done: i, total: storyIds.length });
-    // Sequential by design: one model call at a time keeps the sidecar sane.
-    const res = await fetch('/api/arc-analyze-story', {
-      method:  'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ characterName, storyId: storyIds[i], pronouns }),
-    });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || `Story analysis failed (${res.status})`);
-    dataPoints.push(data.dataPoint);
+    // One story per request, sequential. Retry once, then SKIP the story so a
+    // single failed/slow story can never abort the whole run.
+    let got = false;
+    for (let attempt = 0; attempt < 2 && !got; attempt += 1) {
+      try {
+        const res = await fetch('/api/arc-analyze-story', {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ characterName, storyId: storyIds[i], pronouns }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || `Story analysis failed (${res.status})`);
+        dataPoints.push(data.dataPoint);
+        got = true;
+      } catch {
+        // Swallow: the inner loop retries, and an unrecovered story is skipped.
+      }
+    }
   }
   onProgress({ done: storyIds.length, total: storyIds.length });
 
-  const aggRes = await fetch('/api/arc-aggregate', {
-    method:  'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ characterName, campaignName, pronouns, dataPoints }),
-  });
-  const agg = await aggRes.json();
-  if (!aggRes.ok) throw new Error(agg.error || `Aggregation failed (${aggRes.status})`);
-  return agg as CharacterArcData;
+  if (dataPoints.length === 0) {
+    throw new Error('Every story failed to analyse — is the sidecar running?');
+  }
+
+  // Aggregate the stories that succeeded; retry once on a transient failure.
+  let agg: CharacterArcData | null = null;
+  let aggError = 'Aggregation failed';
+  for (let attempt = 0; attempt < 2 && agg === null; attempt += 1) {
+    try {
+      const aggRes = await fetch('/api/arc-aggregate', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ characterName, campaignName, pronouns, dataPoints }),
+      });
+      const data = await aggRes.json();
+      if (!aggRes.ok) throw new Error(data.error || `Aggregation failed (${aggRes.status})`);
+      agg = data as CharacterArcData;
+    } catch (err) {
+      aggError = err instanceof Error ? err.message : String(err);
+    }
+  }
+  if (agg === null) throw new Error(aggError);
+  return agg;
 }
 
 /* ────────────────────────────────────────────────────────────

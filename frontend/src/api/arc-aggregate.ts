@@ -1,5 +1,6 @@
 import type { GatsbyFunctionRequest, GatsbyFunctionResponse } from 'gatsby';
 import { sidecarBaseUrl } from '../utils/sidecar';
+import { sidecarFetch } from '../utils/sidecarFetch';
 
 /**
  * Aggregate per-story arc data points into the full character arc.
@@ -53,9 +54,9 @@ export default async function handler(
     return;
   }
 
-  let sidecarRes: Response;
+  let sidecarRes: Awaited<ReturnType<typeof sidecarFetch>>;
   try {
-    sidecarRes = await fetch(`${sidecarUrl}/character/arc/aggregate`, {
+    sidecarRes = await sidecarFetch(`${sidecarUrl}/character/arc/aggregate`, {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
