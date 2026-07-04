@@ -1,0 +1,19 @@
+uuid: 4e1cd285-f586-4b6e-87b1-81f9463d0878
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.paragraph.field_rel_note
+    - paragraphs.paragraphs_type.arc_relationship
+id: paragraph.arc_relationship.field_rel_note
+field_name: field_rel_note
+entity_type: paragraph
+bundle: arc_relationship
+label: Note
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string_long

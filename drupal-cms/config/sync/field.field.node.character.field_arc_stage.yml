@@ -1,0 +1,19 @@
+uuid: 1524b4d0-0089-467a-b16f-40e3b45b31c5
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_arc_stage
+    - node.type.character
+id: node.character.field_arc_stage
+field_name: field_arc_stage
+entity_type: node
+bundle: character
+label: 'Arc stage'
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string

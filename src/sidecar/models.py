@@ -209,6 +209,93 @@ class TtsRequest(BaseModel):
     pitch: float = Field(default=0.0, ge=-12.0, le=12.0)
 
 
+class ArcStoryInput(BaseModel):
+    """One story's text for character arc analysis, in campaign order."""
+
+    content: str
+    title: str = ""
+    story_number: Optional[int] = None
+
+
+class ArcAnalysisRequest(BaseModel):
+    """Request to analyze a character's arc across their campaign's stories."""
+
+    character_name: str
+    campaign_name: str = ""
+    stories: List[ArcStoryInput] = Field(default_factory=list)
+
+
+class ArcMetricModel(BaseModel):
+    """A single development metric's progression across stories."""
+
+    label: str
+    series: List[float] = Field(default_factory=list)
+    direction: str = "stasis"
+    obs: str = ""
+
+
+class ArcRelationshipModel(BaseModel):
+    """A character relationship arc."""
+
+    target: str
+    type: str = "neutral"
+    strength: int = 5
+    trust: int = 5
+    note: str = ""
+
+
+class ArcGoalModel(BaseModel):
+    """A character goal and its progress."""
+
+    description: str
+    status: str = "active"
+    progress: int = 0
+
+
+class ArcStoryRequest(BaseModel):
+    """Request to analyze a single story into one arc data point."""
+
+    character_name: str
+    content: str
+    title: str = ""
+    story_number: Optional[int] = None
+    pronouns: str = ""
+
+
+class ArcDataPointModel(BaseModel):
+    """One story's arc data point (matches ArcDataPoint.to_dict)."""
+
+    story_file: str = ""
+    session_id: str = ""
+    timestamp: str = ""
+    metric_values: Dict[str, Any] = Field(default_factory=dict)
+    observations: List[str] = Field(default_factory=list)
+    key_events: List[str] = Field(default_factory=list)
+    ai_analysis: str = ""
+
+
+class ArcAggregateRequest(BaseModel):
+    """Request to aggregate stored per-story data points into a full arc."""
+
+    character_name: str
+    campaign_name: str = ""
+    pronouns: str = ""
+    data_points: List[ArcDataPointModel] = Field(default_factory=list)
+
+
+class ArcAnalysisResponse(BaseModel):
+    """Structured character arc analysis result."""
+
+    direction: str
+    stage: str
+    summary: str
+    stories_analyzed: int
+    updated_at: str
+    metrics: Dict[str, ArcMetricModel] = Field(default_factory=dict)
+    relationships: List[ArcRelationshipModel] = Field(default_factory=list)
+    goals: List[ArcGoalModel] = Field(default_factory=list)
+
+
 class ErrorResponse(BaseModel):
     """Shared error envelope returned by all sidecar endpoints on failure."""
 

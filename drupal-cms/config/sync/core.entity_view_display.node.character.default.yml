@@ -11,6 +11,14 @@ dependencies:
     - field.field.node.character.field_ai_model
     - field.field.node.character.field_ai_system_prompt
     - field.field.node.character.field_ai_temperature
+    - field.field.node.character.field_arc_direction
+    - field.field.node.character.field_arc_goals
+    - field.field.node.character.field_arc_metrics
+    - field.field.node.character.field_arc_relationships
+    - field.field.node.character.field_arc_stage
+    - field.field.node.character.field_arc_stories
+    - field.field.node.character.field_arc_summary
+    - field.field.node.character.field_arc_updated
     - field.field.node.character.field_armor_class
     - field.field.node.character.field_background
     - field.field.node.character.field_backstory
@@ -282,6 +290,14 @@ hidden:
   field_ai_model: true
   field_ai_system_prompt: true
   field_ai_temperature: true
+  field_arc_direction: true
+  field_arc_goals: true
+  field_arc_metrics: true
+  field_arc_relationships: true
+  field_arc_stage: true
+  field_arc_stories: true
+  field_arc_summary: true
+  field_arc_updated: true
   field_defeat_conditions: true
   field_encounter_tactics: true
   field_equipment_items: true
@@ -309,5 +325,6 @@ hidden:
   field_voice_id_ref: true
   field_voice_pitch: true
   field_voice_speed: true
+  gatsby_iframe_preview: true
   langcode: true
   search_api_excerpt: true

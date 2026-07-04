@@ -1,0 +1,31 @@
+uuid: 03067f19-33f5-4fb1-a256-2c52865e3369
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_arc_relationships
+    - node.type.character
+    - paragraphs.paragraphs_type.arc_relationship
+  module:
+    - entity_reference_revisions
+id: node.character.field_arc_relationships
+field_name: field_arc_relationships
+entity_type: node
+bundle: character
+label: 'Arc relationships'
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:paragraph'
+  handler_settings:
+    target_bundles:
+      arc_relationship: arc_relationship
+    negate: 0
+    target_bundles_drag_drop:
+      arc_relationship:
+        weight: 0
+        enabled: true
+field_type: entity_reference_revisions

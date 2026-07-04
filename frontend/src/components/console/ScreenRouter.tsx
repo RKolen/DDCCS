@@ -109,10 +109,12 @@ export function ScreenRouter({ section, item, ctx, setCtx }: ScreenRouterProps):
   if (key === 'characters/completeness') return <NpcValidatorScreen ctx={{ ...ictx, pcMode: true }} setCtx={set} />;
   if (key === 'characters/ascii')        return <DeprecatedScreen item={item} />;
 
-  /* Arc hub + all four sub-actions — CharacterArcScreen dispatches internally via ctx.arcSubAction */
+  /* Arc hub + all four sub-actions — CharacterArcScreen dispatches internally
+     via ctx.arcSubAction, set by its own buttons. The sidebar only surfaces the
+     top-level 'arc' item, so we must NOT override arcSubAction from item.id
+     (that would pin the screen to the hub and swallow in-screen navigation). */
   if (section.id === 'characters' && (item.id === 'arc' || item.id.startsWith('arc-'))) {
-    const arcSubAction = item.id === 'arc' ? undefined : item.id;
-    return <CharacterArcScreen ctx={{ ...ictx, arcSubAction }} setCtx={set} />;
+    return <CharacterArcScreen ctx={ictx} setCtx={set} />;
   }
 
   /* ───── Stories ───── */

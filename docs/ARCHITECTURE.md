@@ -103,6 +103,9 @@ served by the dev server / build). They handle writes and live AI:
 | `campaign-party.ts` | POST | Drupal (`addCharacterToCampaign`) | Add a character to a campaign |
 | `create-story.ts` | POST | Drupal (`createStory` mutation) | Persist a finished story |
 | `update-character.ts` | POST | Drupal (`updateCharacter` mutation) | PATCH optional character fields |
+| `arc-analyze-story.ts` | POST | Drupal (read) + Sidecar (`/character/arc/story`) | Analyse one story into a data point (looped per story with progress) |
+| `arc-aggregate.ts` | POST | Sidecar (`/character/arc/aggregate`) | Aggregate the per-story data points into the full arc |
+| `save-arc.ts` | POST | Drupal (`saveCharacterArc` mutation) | Persist an accepted arc analysis |
 | `generate-story.ts` | POST | Ollama-compatible endpoint | Stream an AI-generated story (SSE) |
 | `spotlight.ts` | POST | Sidecar | Get spotlight scores for a party |
 
@@ -118,6 +121,10 @@ queries and computes spotlight scores. Routes:
 - `GET /health`
 - `POST /search/parse-query` — natural-language query normalisation
 - `POST /eval/spotlight` — spotlight scoring via `SpotlightEngine`
+- `POST /character/arc/story` + `/character/arc/aggregate` — two-step character
+  arc analysis (per-story data point, then aggregate); `/character/arc` is the
+  single-shot equivalent
+- (plus the `/character/*` build/skill/equipment and `/tts/speak` routes)
 
 See [src/sidecar/README.md](../src/sidecar/README.md).
 
@@ -147,6 +154,7 @@ engine and Drupal.
 | Manage party / campaigns | `pages/party.tsx` | `api/campaigns.ts`, `api/campaign-party.ts` -> Drupal |
 | Search | `pages/search.tsx` | sidecar `/search/parse-query` + Milvus |
 | Spotlight scoring | console screens | `api/spotlight.ts` -> sidecar `/eval/spotlight` |
+| Character arc analysis | `CharacterArcScreen` (Characters tab) | `api/arc-analyze-story.ts` (per story) + `api/arc-aggregate.ts` -> sidecar `/character/arc/*`; `api/save-arc.ts` -> Drupal (`saveCharacterArc`) |
 | NPC profile validation | NPC validator screen | Drupal GraphQL + engine |
 | RAG / semantic retrieval | implicit in AI flows | `src/ai/` + Milvus |
 

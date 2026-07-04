@@ -57,6 +57,44 @@ export interface DrupalCharacter {
   voiceId: string | null;
   voicePitch: number | null;
   voiceSpeed: number | null;
+  /** Saved arc analysis, or null when never analysed. */
+  arc: DrupalCharacterArc | null;
+}
+
+/** A saved arc metric's progression (series parsed from Drupal's CSV string). */
+export interface DrupalArcMetric {
+  label: string;
+  series: number[];
+  direction: string;
+  obs: string;
+}
+
+/** A saved arc relationship. */
+export interface DrupalArcRelationship {
+  target: string;
+  type: string;
+  strength: number;
+  trust: number;
+  note: string;
+}
+
+/** A saved arc goal. */
+export interface DrupalArcGoal {
+  description: string;
+  status: string;
+  progress: number;
+}
+
+/** A character's saved arc analysis, mapped from the Drupal arc fields. */
+export interface DrupalCharacterArc {
+  direction: string;
+  stage: string;
+  summary: string;
+  storiesAnalyzed: number;
+  lastAnalyzed: string;
+  metrics: Record<string, DrupalArcMetric>;
+  relationships: DrupalArcRelationship[];
+  goals: DrupalArcGoal[];
 }
 
 export interface DrupalStory {

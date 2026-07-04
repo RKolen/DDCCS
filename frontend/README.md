@@ -114,6 +114,9 @@ Drupal credentials.
 | `summarize-session.ts` | POST | Ollama-compatible LLM (fast model) | Summarise one story body into a concise recap (`{ storyBody }` -> `{ summary }`) |
 | `campaign-overview.ts` | POST | Ollama-compatible LLM (fast model) | Synthesize per-session recaps into one "story so far" (`{ summaries }` -> `{ overview }`) |
 | `update-character.ts` | POST | Drupal (`updateCharacter`) | PATCH optional character fields |
+| `arc-analyze-story.ts` | POST | Drupal (read one story) + Sidecar (`/character/arc/story`) | Analyse a single story into one arc data point (one model call). The console loops this per story with a progress counter |
+| `arc-aggregate.ts` | POST | Sidecar (`/character/arc/aggregate`) | Aggregate the collected per-story data points into the full arc for review |
+| `save-arc.ts` | POST | Drupal (`saveCharacterArc`) | Persist an accepted arc (direction/stage/summary + metric/relationship/goal paragraphs) |
 | `generate-story.ts` | POST | Ollama-compatible LLM | Stream an AI-generated story (SSE) |
 | `consult.ts` | POST | Ollama-compatible LLM | Stream an in-character chat reply for the character consultation (SSE) |
 | `tts.ts` | POST | Sidecar (`/tts/speak`) | Synthesise a reply to speech (Piper, using the character's voice + speed), returns `audio/wav` |

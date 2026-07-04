@@ -16,7 +16,15 @@ from fastapi.responses import JSONResponse
 from src.utils.piper_tts_client import PiperTTSClient, get_narrator_voice_id
 
 from src.ai.abilities_rag import Ability, get_abilities, get_background
+from src.ai.ai_client import AIClient
 from src.ai.equipment_rag import get_equipment_descriptions
+from src.character_arc.arc_analyzer import (
+    ArcAnalyzer,
+    aggregate_arc,
+    analyze_character_arc,
+    analyze_story_datapoint,
+)
+from src.character_arc.arc_data import ArcDataPoint
 from src.characters.character_template import (
     TemplateOptions,
     build_character_data_from_template,
@@ -26,6 +34,14 @@ from src.characters.character_template import (
 from src.characters.class_plan import get_class_plan
 from src.config.config_loader import load_config
 from src.sidecar.models import (
+    ArcAggregateRequest,
+    ArcAnalysisRequest,
+    ArcAnalysisResponse,
+    ArcDataPointModel,
+    ArcGoalModel,
+    ArcMetricModel,
+    ArcRelationshipModel,
+    ArcStoryRequest,
     BuildCharacterRequest,
     BuildCharacterResponse,
     EquipmentDescribeRequest,
@@ -142,6 +158,30 @@ def _apply_pitch(wav: bytes, semitones: float) -> bytes:
                     os.unlink(path)
                 except OSError:
                     pass
+
+
+@lru_cache(maxsize=1)
+def _get_arc_ai_client() -> AIClient | None:
+    """Return a cached AIClient on the fast profile for arc analysis.
+
+    Prefers the ``fast`` model profile (quick, cheap; arc analysis fans out over
+    many stories) and falls back to the active profile. Returns None when no
+    profile is configured, in which case the analyzer uses pattern matching.
+    """
+    config = load_config()
+    profile = (
+        config.model_registry.get_profile("fast")
+        or config.model_registry.get_active_profile()
+    )
+    if profile is None or not profile.base_url or not profile.model:
+        return None
+    return AIClient(
+        api_key=os.getenv("OLLAMA_API_KEY", "") or config.ai.api_key,
+        base_url=profile.base_url,
+        model=profile.model,
+        default_temperature=profile.temperature,
+        default_max_tokens=max(profile.max_tokens, 2000),
+    )
 
 
 @app.exception_handler(Exception)
@@ -330,6 +370,127 @@ def equipment_describe_endpoint(req: EquipmentDescribeRequest) -> EquipmentDescr
         for name, info in resolved.items()
     }
     return EquipmentDescribeResponse(items=items)
+
+
+def _safe_int(value: Any, default: int) -> int:
+    """Coerce an AI-supplied value to int, falling back on non-numeric input."""
+    try:
+        return int(float(value))
+    except (TypeError, ValueError):
+        return default
+
+
+def _build_arc_response(result: dict[str, Any]) -> ArcAnalysisResponse:
+    """Map an arc result dict into the ArcAnalysisResponse model."""
+    metrics = {
+        key: ArcMetricModel(
+            label=str(metric.get("label", key)),
+            series=[float(v) for v in metric.get("series", [])],
+            direction=str(metric.get("direction", "stasis")),
+            obs=str(metric.get("obs", "")),
+        )
+        for key, metric in result["metrics"].items()
+    }
+    relationships = [
+        ArcRelationshipModel(
+            target=str(rel.get("target", "")),
+            type=str(rel.get("type", "neutral")),
+            strength=_safe_int(rel.get("strength", 5), 5),
+            trust=_safe_int(rel.get("trust", 5), 5),
+            note=str(rel.get("note", "")),
+        )
+        for rel in result["relationships"]
+        if str(rel.get("target", "")).strip()
+    ]
+    goals = [
+        ArcGoalModel(
+            description=str(goal.get("description", "")),
+            status=str(goal.get("status", "active")),
+            progress=_safe_int(goal.get("progress", 0), 0),
+        )
+        for goal in result["goals"]
+        if str(goal.get("description", "")).strip()
+    ]
+    return ArcAnalysisResponse(
+        direction=result["direction"],
+        stage=result["stage"],
+        summary=result["summary"],
+        stories_analyzed=result["stories_analyzed"],
+        updated_at=result["updated_at"],
+        metrics=metrics,
+        relationships=relationships,
+        goals=goals,
+    )
+
+
+@_character_router.post("/arc", response_model=ArcAnalysisResponse)
+def character_arc_endpoint(req: ArcAnalysisRequest) -> ArcAnalysisResponse:
+    """Analyze a character's arc across stories in one request (small campaigns).
+
+    Runs every story then aggregates. For many stories prefer the two-step
+    ``/character/arc/story`` + ``/character/arc/aggregate`` path so each request
+    is a single model call and progress can be shown.
+
+    Args:
+        req: ArcAnalysisRequest with the character name and ordered story texts.
+
+    Returns:
+        An ArcAnalysisResponse with the structured arc.
+    """
+    stories = [
+        {"content": s.content, "title": s.title, "story_number": s.story_number}
+        for s in req.stories
+    ]
+    result = analyze_character_arc(
+        stories,
+        req.character_name,
+        campaign_name=req.campaign_name,
+        ai_client=_get_arc_ai_client(),
+    )
+    return _build_arc_response(result)
+
+
+@_character_router.post("/arc/story", response_model=ArcDataPointModel)
+def character_arc_story_endpoint(req: ArcStoryRequest) -> ArcDataPointModel:
+    """Analyze a single story into one arc data point (one model call).
+
+    Args:
+        req: ArcStoryRequest with the character name and one story's text.
+
+    Returns:
+        The story's ArcDataPointModel, to be collected and posted to
+        ``/character/arc/aggregate``.
+    """
+    analyzer = ArcAnalyzer(ai_client=_get_arc_ai_client(), pronouns=req.pronouns)
+    data_point = analyze_story_datapoint(
+        analyzer,
+        req.content,
+        req.character_name,
+        title=req.title,
+        story_number=req.story_number,
+    )
+    return ArcDataPointModel(**data_point.to_dict())
+
+
+@_character_router.post("/arc/aggregate", response_model=ArcAnalysisResponse)
+def character_arc_aggregate_endpoint(req: ArcAggregateRequest) -> ArcAnalysisResponse:
+    """Aggregate stored per-story data points into the full character arc.
+
+    Args:
+        req: ArcAggregateRequest with the character name and per-story points.
+
+    Returns:
+        An ArcAnalysisResponse with the structured arc.
+    """
+    data_points = [ArcDataPoint.from_dict(dp.model_dump()) for dp in req.data_points]
+    result = aggregate_arc(
+        data_points,
+        req.character_name,
+        campaign_name=req.campaign_name,
+        ai_client=_get_arc_ai_client(),
+        pronouns=req.pronouns,
+    )
+    return _build_arc_response(result)
 
 
 def _resolve_abilities(req: BuildCharacterRequest) -> list[Ability]:

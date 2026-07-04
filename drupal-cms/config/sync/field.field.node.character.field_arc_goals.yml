@@ -1,0 +1,31 @@
+uuid: 23cdcdff-4a37-48a8-a6d4-0ac4e1add493
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_arc_goals
+    - node.type.character
+    - paragraphs.paragraphs_type.arc_goal
+  module:
+    - entity_reference_revisions
+id: node.character.field_arc_goals
+field_name: field_arc_goals
+entity_type: node
+bundle: character
+label: 'Arc goals'
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:paragraph'
+  handler_settings:
+    target_bundles:
+      arc_goal: arc_goal
+    negate: 0
+    target_bundles_drag_drop:
+      arc_goal:
+        weight: 0
+        enabled: true
+field_type: entity_reference_revisions

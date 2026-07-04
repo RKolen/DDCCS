@@ -1,0 +1,19 @@
+uuid: ddcdb5c8-27f6-47e5-bdfb-2bf57421b19a
+langcode: en
+status: true
+dependencies:
+  module:
+    - paragraphs
+id: paragraph.field_rel_note
+field_name: field_rel_note
+entity_type: paragraph
+type: string_long
+settings:
+  case_sensitive: false
+module: core
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

@@ -296,7 +296,10 @@ class AIClient:
             temperature: Override default temperature.
             max_tokens: Override default max_tokens.
             **kwargs: Additional parameters. Pass json_mode=True to request
-                structured JSON output; all other kwargs are forwarded to the API.
+                structured JSON output. Pass disable_thinking=True to suppress
+                extended reasoning on Ollama "thinking" models (e.g. qwen3), which
+                otherwise leave the ``content`` field empty. All other kwargs are
+                forwarded to the API.
 
         Returns:
             The assistant's response content as a string.
@@ -305,12 +308,7 @@ class AIClient:
             raise RuntimeError(
                 "AI client not available. Install openai package: pip install openai"
             )
-        json_mode: bool = kwargs.pop("json_mode", False)
-        if json_mode:
-            if self._is_ollama:
-                kwargs["extra_body"] = {"format": "json"}
-            else:
-                kwargs["response_format"] = {"type": "json_object"}
+        self._apply_mode_kwargs(kwargs)
 
         effective_temp = (
             temperature if temperature is not None else self._retry.default_temperature
@@ -333,6 +331,32 @@ class AIClient:
                 if "Invalid API key" in str(exc) or "Bad request" in str(exc):
                     raise
         raise last_exc
+
+    def _apply_mode_kwargs(self, kwargs: Dict[str, Any]) -> None:
+        """Translate json_mode / disable_thinking / num_ctx into API kwargs.
+
+        Args:
+            kwargs: The chat_completion keyword args; ``json_mode``,
+                ``disable_thinking`` and ``num_ctx`` are popped and mapped to
+                ``response_format`` or an Ollama ``extra_body`` (``format`` /
+                ``think`` / ``num_ctx``). ``num_ctx`` widens the context window
+                so long inputs are not silently truncated by Ollama's default.
+        """
+        json_mode: bool = kwargs.pop("json_mode", False)
+        disable_thinking: bool = kwargs.pop("disable_thinking", False)
+        num_ctx = kwargs.pop("num_ctx", None)
+        extra_body: Dict[str, Any] = {}
+        if json_mode:
+            if self._is_ollama:
+                extra_body["format"] = "json"
+            else:
+                kwargs["response_format"] = {"type": "json_object"}
+        if disable_thinking and self._is_ollama:
+            extra_body["think"] = False
+        if num_ctx and self._is_ollama:
+            extra_body["num_ctx"] = int(num_ctx)
+        if extra_body:
+            kwargs["extra_body"] = extra_body
 
     def chat_completion_stream(
         self,

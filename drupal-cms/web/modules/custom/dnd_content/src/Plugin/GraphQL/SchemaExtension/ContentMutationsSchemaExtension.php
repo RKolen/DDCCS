@@ -47,6 +47,14 @@ class ContentMutationsSchemaExtension extends SdlSchemaExtensionPluginBase {
 
     $registry->addFieldResolver(
       'Mutation',
+      'saveCharacterArc',
+      $builder->produce('save_character_arc')
+        ->map('id', $builder->fromArgument('id'))
+        ->map('payload', $builder->fromArgument('payload')),
+    );
+
+    $registry->addFieldResolver(
+      'Mutation',
       'updateCharacter',
       $builder->produce('update_character')
         ->map('id', $builder->fromArgument('id'))

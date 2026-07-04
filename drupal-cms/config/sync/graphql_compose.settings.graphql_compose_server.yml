@@ -82,6 +82,15 @@ entity_config:
     session_summary:
       enabled: true
       query_load_enabled: true
+    arc_metric:
+      enabled: true
+      query_load_enabled: true
+    arc_relationship:
+      enabled: true
+      query_load_enabled: true
+    arc_goal:
+      enabled: true
+      query_load_enabled: true
     spell_reference:
       enabled: true
       query_load_enabled: true
@@ -204,6 +213,22 @@ field_config:
       field_abilities_ref:
         enabled: true
       field_ability_scores:
+        enabled: true
+      field_arc_direction:
+        enabled: true
+      field_arc_stage:
+        enabled: true
+      field_arc_summary:
+        enabled: true
+      field_arc_stories:
+        enabled: true
+      field_arc_updated:
+        enabled: true
+      field_arc_metrics:
+        enabled: true
+      field_arc_relationships:
+        enabled: true
+      field_arc_goals:
         enabled: true
       field_ai_enabled:
         enabled: true
@@ -541,6 +566,35 @@ field_config:
       field_story_number:
         enabled: true
       field_text:
+        enabled: true
+    arc_metric:
+      field_metric_key:
+        enabled: true
+      field_metric_label:
+        enabled: true
+      field_metric_direction:
+        enabled: true
+      field_metric_series:
+        enabled: true
+      field_metric_obs:
+        enabled: true
+    arc_relationship:
+      field_rel_target:
+        enabled: true
+      field_rel_type:
+        enabled: true
+      field_rel_strength:
+        enabled: true
+      field_rel_trust:
+        enabled: true
+      field_rel_note:
+        enabled: true
+    arc_goal:
+      field_goal_description:
+        enabled: true
+      field_goal_status:
+        enabled: true
+      field_goal_progress:
         enabled: true
     spell_reference:
       created:

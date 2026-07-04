@@ -1,0 +1,10 @@
+uuid: 5467c19b-f37a-4a80-b88d-1ce32b0ca62f
+langcode: en
+status: true
+dependencies: {  }
+id: arc_metric
+label: 'Arc Metric'
+icon_uuid: null
+icon_default: null
+description: null
+behavior_plugins: {  }

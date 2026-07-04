@@ -1,0 +1,19 @@
+uuid: 64d5e7ea-04b3-485c-8044-d076ef661c5d
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.paragraph.field_goal_description
+    - paragraphs.paragraphs_type.arc_goal
+id: paragraph.arc_goal.field_goal_description
+field_name: field_goal_description
+entity_type: paragraph
+bundle: arc_goal
+label: Description
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string_long

@@ -1,0 +1,23 @@
+uuid: 8ebb64f5-36b1-4dad-8df5-9efa2d5dfe04
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.paragraph.field_rel_trust
+    - paragraphs.paragraphs_type.arc_relationship
+id: paragraph.arc_relationship.field_rel_trust
+field_name: field_rel_trust
+entity_type: paragraph
+bundle: arc_relationship
+label: Trust
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  min: null
+  max: null
+  prefix: ''
+  suffix: ''
+field_type: integer

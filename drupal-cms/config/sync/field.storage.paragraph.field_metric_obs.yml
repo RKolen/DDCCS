@@ -1,0 +1,19 @@
+uuid: f6d5cfd0-8fb5-42dc-ab5d-8f9387b2105e
+langcode: en
+status: true
+dependencies:
+  module:
+    - paragraphs
+id: paragraph.field_metric_obs
+field_name: field_metric_obs
+entity_type: paragraph
+type: string_long
+settings:
+  case_sensitive: false
+module: core
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

@@ -14,6 +14,15 @@ from src.character_arc.arc_criteria import (
 )
 from src.character_arc.arc_data import ArcDataPoint, CharacterArc
 
+# Long session stories are split into chunks of this many characters and each
+# chunk is analysed with its own small model call, then merged. This keeps every
+# call's context small (bounded memory — a wide context window OOM'd Ollama)
+# while still covering the whole story instead of just the opening scene.
+_CHUNK_CHARS = 4000
+# Cap chunks per story so a pathologically long story cannot spawn unbounded
+# calls; 40 chunks * 4000 chars covers 160k characters.
+_MAX_CHUNKS = 40
+
 
 @dataclass
 class AnalysisResult:
@@ -33,15 +42,25 @@ class ArcAnalyzer:
         self,
         ai_client: Optional[Any] = None,
         criteria: Optional[ArcCriteria] = None,
+        pronouns: str = "",
     ):
         """Initialize the arc analyzer.
 
         Args:
             ai_client: Optional AIClient for enhanced analysis.
             criteria: Arc analysis criteria (uses defaults if omitted).
+            pronouns: The character's pronouns (e.g. "she/her"), included in AI
+                prompts so the model does not guess the character's gender.
         """
         self.ai_client = ai_client
         self.criteria = criteria or ArcCriteria()
+        self.pronouns = pronouns.strip()
+
+    def _pronoun_hint(self, character_name: str) -> str:
+        """A prompt clause pinning the character's pronouns, or empty."""
+        if not self.pronouns:
+            return ""
+        return f" Use {self.pronouns} pronouns for {character_name}."
 
     def analyze_story(
         self,
@@ -80,17 +99,38 @@ class ArcAnalyzer:
 
         return data_point
 
-    def _ai_analyze_story(
-        self,
-        story_content: str,
-        character_name: str,
-    ) -> Dict[str, Any]:
-        """Use AI to analyze a story for character development."""
+    def _ai_json(self, system_prompt: str, user_prompt: str) -> Dict[str, Any]:
+        """Call the AI for a JSON object response, returning ``{}`` on failure.
+
+        Args:
+            system_prompt: The system role instruction.
+            user_prompt: The user role prompt.
+
+        Returns:
+            The parsed JSON object, or an empty dict when unavailable or invalid.
+        """
         if self.ai_client is None:
-            return {"metrics": {}, "observations": [], "key_events": [], "summary": ""}
+            return {}
+        try:
+            messages = [
+                self.ai_client.create_system_message(system_prompt),
+                self.ai_client.create_user_message(user_prompt),
+            ]
+            # A large budget plus disabled thinking keeps qwen3 from leaving the
+            # content empty; the JSON object is then parsed out of the reply.
+            response = self.ai_client.chat_completion(
+                messages, max_tokens=4000, disable_thinking=True
+            )
+            return self._parse_ai_response(response)
+        except (RuntimeError, OSError, ValueError):
+            return {}
+
+    def _analyze_chunk(self, chunk: str, character_name: str) -> Dict[str, Any]:
+        """Analyze one story chunk (small, memory-safe model call)."""
         prompt = (
-            f"Analyze the following story for character development of {character_name}.\n\n"
-            f"Story:\n{story_content[:4000]}\n\n"
+            f"Analyze this excerpt for character development of "
+            f"{character_name}.{self._pronoun_hint(character_name)}\n\n"
+            f"Excerpt:\n{chunk}\n\n"
             "Provide analysis in the following JSON format:\n"
             "{\n"
             '    "metrics": {\n'
@@ -98,8 +138,7 @@ class ArcAnalyzer:
             '        "trust_level": <1-10>,\n'
             '        "combat_effectiveness": <1-10>,\n'
             '        "confidence": <1-10>,\n'
-            '        "trauma_level": <0-10>,\n'
-            '        "goal_progress": <0-100>\n'
+            '        "trauma_level": <0-10>\n'
             "    },\n"
             '    "observations": [\n'
             '        "Observation 1 about character development"\n'
@@ -107,8 +146,9 @@ class ArcAnalyzer:
             '    "key_events": [\n'
             '        "Event that affected the character"\n'
             "    ],\n"
-            '    "summary": "Brief summary of character development in this story"\n'
+            '    "summary": "Brief summary of character development in this excerpt"\n'
             "}\n\n"
+            "For trauma_level, higher means MORE trauma (0 = none, 10 = severe).\n"
             "Focus on:\n"
             "1. How the character changed or grew\n"
             "2. Relationship developments\n"
@@ -116,18 +156,88 @@ class ArcAnalyzer:
             "4. Emotional or psychological changes\n"
             "5. Progress toward goals"
         )
+        return self._ai_json(
+            "You are a narrative analyst. Return only valid JSON.", prompt
+        )
 
-        try:
-            messages = [
-                self.ai_client.create_system_message(
-                    "You are a narrative analyst. Return only valid JSON."
-                ),
-                self.ai_client.create_user_message(prompt),
-            ]
-            response = self.ai_client.chat_completion(messages)
-            return self._parse_ai_response(response)
-        except (RuntimeError, OSError, ValueError):
+    def _ai_analyze_story(
+        self,
+        story_content: str,
+        character_name: str,
+    ) -> Dict[str, Any]:
+        """Analyze a full story by chunking it and merging per-chunk results.
+
+        Long stories are split into small chunks so each model call has a small,
+        memory-safe context; the per-chunk analyses are then merged into one.
+        """
+        chunks = _chunk_text(story_content, _CHUNK_CHARS)[:_MAX_CHUNKS]
+        if not chunks:
             return {"metrics": {}, "observations": [], "key_events": [], "summary": ""}
+        if len(chunks) == 1:
+            return self._analyze_chunk(chunks[0], character_name)
+        partials = [self._analyze_chunk(chunk, character_name) for chunk in chunks]
+        return _merge_chunk_analyses(partials)
+
+    def analyze_relationships(
+        self,
+        story_content: str,
+        character_name: str,
+    ) -> List[Dict[str, Any]]:
+        """AI-extract the character's relationship arcs from narrative text.
+
+        Args:
+            story_content: Combined narrative text across the character's stories.
+            character_name: The character whose relationships to extract.
+
+        Returns:
+            A list of relationship dicts (target, type, strength, trust, note);
+            empty when AI is unavailable.
+        """
+        prompt = (
+            f"Identify the key relationships {character_name} has with other "
+            "characters across the following narrative, and how each has "
+            f"developed.{self._pronoun_hint(character_name)}\n\n"
+            f"Narrative:\n{story_content[:6000]}\n\n"
+            "Return only JSON in this format:\n"
+            '{ "relationships": [ { "target": "<name>", '
+            '"type": "<ally|rival|mentor|friend|enemy|family|neutral>", '
+            '"strength": <1-10>, "trust": <1-10>, '
+            '"note": "<one sentence on this relationship\'s arc>" } ] }'
+        )
+        result = self._ai_json(
+            "You are a narrative analyst. Return only valid JSON.", prompt
+        )
+        relationships = result.get("relationships", [])
+        return relationships if isinstance(relationships, list) else []
+
+    def analyze_goals(
+        self,
+        story_content: str,
+        character_name: str,
+    ) -> List[Dict[str, Any]]:
+        """AI-extract the character's goals and their progress from narrative.
+
+        Args:
+            story_content: Combined narrative text across the character's stories.
+            character_name: The character whose goals to extract.
+
+        Returns:
+            A list of goal dicts (description, status, progress); empty when AI
+            is unavailable.
+        """
+        prompt = (
+            f"Identify {character_name}'s goals and their progress across the "
+            f"following narrative.{self._pronoun_hint(character_name)}\n\n"
+            f"Narrative:\n{story_content[:6000]}\n\n"
+            "Return only JSON in this format:\n"
+            '{ "goals": [ { "description": "<goal>", '
+            '"status": "<active|dormant|completed>", "progress": <0-100> } ] }'
+        )
+        result = self._ai_json(
+            "You are a narrative analyst. Return only valid JSON.", prompt
+        )
+        goals = result.get("goals", [])
+        return goals if isinstance(goals, list) else []
 
     def _parse_ai_response(self, response: str) -> Dict[str, Any]:
         """Parse AI JSON response into structured data."""
@@ -135,10 +245,11 @@ class ArcAnalyzer:
             start = response.find("{")
             end = response.rfind("}") + 1
             if 0 <= start < end:
-                return json.loads(response[start:end])
+                parsed = json.loads(response[start:end])
+                return parsed if isinstance(parsed, dict) else {}
         except json.JSONDecodeError:
             pass
-        return {"metrics": {}, "observations": [], "key_events": [], "summary": ""}
+        return {}
 
     def _pattern_analyze_story(
         self,
@@ -349,25 +460,305 @@ class ArcAnalyzer:
         arc: CharacterArc,
         analyses: List[AnalysisResult],
     ) -> str:
-        """Use AI to generate an arc summary."""
+        """Use AI to generate an arc summary grounded in the measured metrics."""
         if self.ai_client is None:
             return f"{arc.character_name}'s arc spans {len(arc.data_points)} stories."
+        metric_text = "\n".join(
+            f"- {m['label']}: {m['series'][0]:.0f} -> {m['series'][-1]:.0f} ({m['direction']})"
+            for m in _build_metric_series(arc).values()
+            if len(m["series"]) >= 2
+        )
         analysis_text = "\n".join(
             f"- {a.dimension.value}: {a.direction.value} (confidence: {a.confidence:.0%})"
             for a in analyses
         )
 
         prompt = (
-            f"Summarize the character arc for {arc.character_name} based on:\n\n"
-            f"{analysis_text}\n\n"
-            f"Number of story appearances: {len(arc.data_points)}\n\n"
-            "Provide a 2-3 sentence summary of the character's development journey."
+            f"Summarize the character arc for {arc.character_name}."
+            f"{self._pronoun_hint(arc.character_name)}\n\n"
+            f"Measured metric changes across {len(arc.data_points)} stories "
+            f"(first -> last value):\n{metric_text or '(none)'}\n\n"
+            f"Dimension trends:\n{analysis_text}\n\n"
+            "Write a 2-3 sentence summary of the character's development. Stay "
+            "consistent with the measured directions above: a RISING trauma "
+            "value means MORE trauma (not healing); a FALLING confidence value "
+            "means LESS confidence. Do not contradict the numbers."
         )
 
         try:
             messages = [
                 self.ai_client.create_user_message(prompt),
             ]
-            return self.ai_client.chat_completion(messages)
+            return self.ai_client.chat_completion(
+                messages, max_tokens=1200, disable_thinking=True
+            )
         except (RuntimeError, OSError, ValueError):
             return f"{arc.character_name}'s arc spans {len(arc.data_points)} stories."
+
+
+def _chunk_text(text: str, size: int) -> List[str]:
+    """Split text into chunks of at most ``size`` characters on paragraph
+    boundaries, hard-splitting any single paragraph that is itself too long."""
+    text = text.strip()
+    if not text:
+        return []
+    if len(text) <= size:
+        return [text]
+
+    chunks: List[str] = []
+    current = ""
+    for paragraph in text.split("\n\n"):
+        while len(paragraph) > size:
+            if current:
+                chunks.append(current)
+                current = ""
+            chunks.append(paragraph[:size])
+            paragraph = paragraph[size:]
+        if not paragraph:
+            continue
+        if current and len(current) + len(paragraph) + 2 > size:
+            chunks.append(current)
+            current = paragraph
+        else:
+            current = f"{current}\n\n{paragraph}" if current else paragraph
+    if current:
+        chunks.append(current)
+    return chunks
+
+
+def _merge_chunk_analyses(partials: List[Dict[str, Any]]) -> Dict[str, Any]:
+    """Merge per-chunk analyses into one: metrics averaged, text collected."""
+    metric_totals: Dict[str, float] = {}
+    metric_counts: Dict[str, int] = {}
+    observations: List[str] = []
+    key_events: List[str] = []
+    summaries: List[str] = []
+
+    for partial in partials:
+        metrics = partial.get("metrics")
+        if isinstance(metrics, dict):
+            for key, value in metrics.items():
+                if isinstance(value, (int, float)):
+                    metric_totals[key] = metric_totals.get(key, 0.0) + float(value)
+                    metric_counts[key] = metric_counts.get(key, 0) + 1
+        observations.extend(partial.get("observations", []))
+        key_events.extend(partial.get("key_events", []))
+        summary = partial.get("summary")
+        if summary:
+            summaries.append(str(summary))
+
+    metrics = {
+        key: round(total / metric_counts[key], 1)
+        for key, total in metric_totals.items()
+    }
+    return {
+        "metrics": metrics,
+        "observations": observations[:8],
+        "key_events": key_events[:8],
+        "summary": " ".join(summaries),
+    }
+
+
+_METRIC_LABELS: Dict[str, str] = {
+    "relationship_strength": "Relationship Strength",
+    "trust_level": "Trust",
+    "combat_effectiveness": "Combat Effectiveness",
+    "confidence": "Confidence",
+    "trauma_level": "Trauma",
+    "goal_progress": "Goal Progress",
+    "engagement": "Engagement",
+    "combat_involvement": "Combat Involvement",
+    "social_involvement": "Social Involvement",
+}
+
+
+def _metric_direction(series: List[float]) -> str:
+    """Classify a metric's direction from first-to-last change."""
+    if len(series) < 2:
+        return ArcDirection.STASIS.value
+    delta = series[-1] - series[0]
+    threshold = max(abs(series[0]) * 0.1, 0.5)
+    if delta > threshold:
+        return ArcDirection.GROWTH.value
+    if delta < -threshold:
+        return ArcDirection.DECLINE.value
+    return ArcDirection.STASIS.value
+
+
+def _metric_obs(label: str, series: List[float]) -> str:
+    """A short factual note describing this metric's own trend across the arc."""
+    if not series:
+        return ""
+    if len(series) < 2:
+        return f"{label} observed once at {series[0]:.0f}."
+    first, last = series[0], series[-1]
+    if last > first:
+        return f"{label} rose from {first:.0f} to {last:.0f} across the arc."
+    if last < first:
+        return f"{label} fell from {first:.0f} to {last:.0f} across the arc."
+    return f"{label} held steady at {first:.0f} across the arc."
+
+
+# Surfaced as its own richer section (the Goals list), so it is not also shown
+# as a raw metric — the two were independent estimates that could contradict.
+_EXCLUDED_METRICS = {"goal_progress"}
+
+
+def _build_metric_series(arc: CharacterArc) -> Dict[str, Dict[str, Any]]:
+    """Build per-metric series (label, values, direction, observation)."""
+    ordered_keys: List[str] = []
+    for data_point in arc.data_points:
+        for key in data_point.metric_values:
+            if key not in ordered_keys and key not in _EXCLUDED_METRICS:
+                ordered_keys.append(key)
+
+    metrics: Dict[str, Dict[str, Any]] = {}
+    for key in ordered_keys:
+        series = [
+            float(dp.metric_values[key])
+            for dp in arc.data_points
+            if isinstance(dp.metric_values.get(key), (int, float))
+        ]
+        if not series:
+            continue
+        label = _METRIC_LABELS.get(key, key.replace("_", " ").title())
+        metrics[key] = {
+            "label": label,
+            "series": series,
+            "direction": _metric_direction(series),
+            "obs": _metric_obs(label, series),
+        }
+    return metrics
+
+
+def analyze_story_datapoint(
+    analyzer: ArcAnalyzer,
+    content: str,
+    character_name: str,
+    title: str = "",
+    story_number: Optional[int] = None,
+) -> ArcDataPoint:
+    """Analyze a single story into one arc data point.
+
+    The per-story step of arc analysis, exposed separately so a caller can run
+    stories one request at a time (each a single model call) and aggregate the
+    stored data points afterwards — avoiding one long multi-call request.
+
+    Args:
+        analyzer: An :class:`ArcAnalyzer` configured with the AI client and the
+            character's pronouns.
+        content: The story text.
+        character_name: The character to analyze.
+        title: The story title (stored as the data point's ``story_file``).
+        story_number: The story number (stored as ``session_id``).
+
+    Returns:
+        The story's :class:`ArcDataPoint`.
+    """
+    return analyzer.analyze_story(
+        content,
+        character_name,
+        story_file=title,
+        session_id="" if story_number is None else str(story_number),
+    )
+
+
+def _narrative_from_points(data_points: List[ArcDataPoint]) -> str:
+    """Build a compact narrative (per-story summaries + observations) for arc
+    relationship/goal extraction, so aggregation runs on distilled text."""
+    parts: List[str] = []
+    for data_point in data_points:
+        if data_point.ai_analysis:
+            parts.append(data_point.ai_analysis)
+        parts.extend(data_point.observations)
+    return "\n".join(parts)
+
+
+def aggregate_arc(
+    data_points: List[ArcDataPoint],
+    character_name: str,
+    campaign_name: str = "",
+    ai_client: Optional[Any] = None,
+    pronouns: str = "",
+) -> Dict[str, Any]:
+    """Aggregate per-story data points into a full character arc.
+
+    Runs the progression (direction/stage/summary), builds the metric series,
+    and extracts relationships and goals from the distilled per-story summaries.
+
+    Args:
+        data_points: The stored per-story :class:`ArcDataPoint` list.
+        character_name: The character being analyzed.
+        campaign_name: The campaign the character belongs to.
+        ai_client: Optional AIClient for relationship/goal extraction.
+        pronouns: The character's pronouns for the AI prompts.
+
+    Returns:
+        A dict with direction, stage, summary, stories_analyzed, updated_at,
+        metrics, relationships, and goals.
+    """
+    analyzer = ArcAnalyzer(ai_client=ai_client, pronouns=pronouns)
+    arc = CharacterArc(character_name=character_name, campaign_name=campaign_name)
+    for data_point in data_points:
+        arc.add_data_point(data_point)
+
+    progression = analyzer.analyze_arc_progression(arc)
+    narrative = _narrative_from_points(data_points)
+
+    return {
+        "direction": progression["direction"],
+        "stage": progression["stage"],
+        "summary": progression["summary"],
+        "stories_analyzed": len(arc.data_points),
+        "updated_at": arc.state.updated_at,
+        "metrics": _build_metric_series(arc),
+        "relationships": analyzer.analyze_relationships(narrative, character_name),
+        "goals": analyzer.analyze_goals(narrative, character_name),
+    }
+
+
+def analyze_character_arc(
+    stories: List[Dict[str, Any]],
+    character_name: str,
+    campaign_name: str = "",
+    ai_client: Optional[Any] = None,
+    pronouns: str = "",
+) -> Dict[str, Any]:
+    """Analyze a full character arc from ordered story texts (single-shot).
+
+    Convenience wrapper that runs every story then aggregates. Prefer the
+    two-step ``analyze_story_datapoint`` + ``aggregate_arc`` path for many
+    stories so each request stays a single model call.
+
+    Args:
+        stories: Ordered story dicts, each with ``content`` and optional
+            ``title`` / ``story_number``.
+        character_name: The character to analyze.
+        campaign_name: The campaign the character belongs to.
+        ai_client: Optional AIClient; without it, pattern analysis is used and
+            relationships/goals are empty.
+        pronouns: The character's pronouns for the AI prompts.
+
+    Returns:
+        A dict with direction, stage, summary, stories_analyzed, updated_at,
+        metrics, relationships, and goals.
+    """
+    analyzer = ArcAnalyzer(ai_client=ai_client, pronouns=pronouns)
+    data_points: List[ArcDataPoint] = []
+    for story in stories:
+        content = str(story.get("content", ""))
+        if not content.strip():
+            continue
+        number = story.get("story_number")
+        data_points.append(
+            analyze_story_datapoint(
+                analyzer,
+                content,
+                character_name,
+                title=str(story.get("title", "")),
+                story_number=number if isinstance(number, int) else None,
+            )
+        )
+    return aggregate_arc(
+        data_points, character_name, campaign_name, ai_client, pronouns=pronouns
+    )

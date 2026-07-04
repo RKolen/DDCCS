@@ -1,0 +1,19 @@
+uuid: 483115c4-320e-4b63-9b64-99361f0cb236
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_arc_direction
+    - node.type.character
+id: node.character.field_arc_direction
+field_name: field_arc_direction
+entity_type: node
+bundle: character
+label: 'Arc direction'
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string

@@ -1,0 +1,10 @@
+uuid: ee0e53af-4510-41e5-ab99-2ed5c2eb1ffe
+langcode: en
+status: true
+dependencies: {  }
+id: arc_relationship
+label: 'Arc Relationship'
+icon_uuid: null
+icon_default: null
+description: null
+behavior_plugins: {  }

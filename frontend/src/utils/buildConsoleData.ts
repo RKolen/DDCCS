@@ -8,7 +8,64 @@
 
 import type {
   ConsoleData, DrupalCampaign, DrupalCharacter, DrupalStory, DrupalMonster, DrupalItem,
+  DrupalCharacterArc, DrupalArcMetric,
 } from '../components/console/ConsoleContext';
+
+/** Parse Drupal's comma-separated metric series string into numbers. */
+function parseSeries(csv: string | null | undefined): number[] {
+  if (!csv) {
+    return [];
+  }
+  return csv
+    .split(',')
+    .map(s => Number(s.trim()))
+    .filter(n => !Number.isNaN(n));
+}
+
+/** Map a character's raw Drupal arc fields into DrupalCharacterArc, or null. */
+function buildCharacterArc(n: RawCharacter): DrupalCharacterArc | null {
+  const hasArc = Boolean(n.arcDirection || n.arcSummary || (n.arcMetrics?.length ?? 0) > 0);
+  if (!hasArc) {
+    return null;
+  }
+  const metrics: Record<string, DrupalArcMetric> = {};
+  for (const m of n.arcMetrics ?? []) {
+    const key = m.metricKey ?? m.metricLabel ?? '';
+    if (!key) {
+      continue;
+    }
+    metrics[key] = {
+      label:     m.metricLabel ?? key,
+      series:    parseSeries(m.metricSeries),
+      direction: m.metricDirection ?? 'stasis',
+      obs:       m.metricObs ?? '',
+    };
+  }
+  return {
+    direction:       n.arcDirection ?? 'stasis',
+    stage:           n.arcStage ?? 'introduction',
+    summary:         n.arcSummary ?? '',
+    storiesAnalyzed: n.arcStories ?? 0,
+    lastAnalyzed:    n.arcUpdated ?? '',
+    metrics,
+    relationships: (n.arcRelationships ?? [])
+      .filter(r => (r.relTarget ?? '').trim() !== '')
+      .map(r => ({
+        target:   r.relTarget ?? '',
+        type:     r.relType ?? 'neutral',
+        strength: r.relStrength ?? 5,
+        trust:    r.relTrust ?? 5,
+        note:     r.relNote ?? '',
+      })),
+    goals: (n.arcGoals ?? [])
+      .filter(g => (g.goalDescription ?? '').trim() !== '')
+      .map(g => ({
+        description: g.goalDescription ?? '',
+        status:      g.goalStatus ?? 'active',
+        progress:    g.goalProgress ?? 0,
+      })),
+  };
+}
 
 export interface RawCampaignOnCharacter {
   id: string;
@@ -58,6 +115,30 @@ export interface RawCharacter {
   voiceIdRef?:       { name: string } | null;
   voicePitch?:       number | null;
   voiceSpeed?:       number | null;
+  arcDirection?:     string | null;
+  arcStage?:         string | null;
+  arcSummary?:       string | null;
+  arcStories?:       number | null;
+  arcUpdated?:       string | null;
+  arcMetrics?:       Array<{
+    metricKey?:       string | null;
+    metricLabel?:     string | null;
+    metricDirection?: string | null;
+    metricSeries?:    string | null;
+    metricObs?:       string | null;
+  }> | null;
+  arcRelationships?: Array<{
+    relTarget?:   string | null;
+    relType?:     string | null;
+    relStrength?: number | null;
+    relTrust?:    number | null;
+    relNote?:     string | null;
+  }> | null;
+  arcGoals?: Array<{
+    goalDescription?: string | null;
+    goalStatus?:      string | null;
+    goalProgress?:    number | null;
+  }> | null;
 }
 
 export interface RawItem {
@@ -169,6 +250,7 @@ export function buildConsoleData(data: ConsoleQueryData | null | undefined): Con
     voiceId:          n.voiceIdRef?.name ?? null,
     voicePitch:       n.voicePitch ?? null,
     voiceSpeed:       n.voiceSpeed ?? null,
+    arc:              buildCharacterArc(n),
   }));
 
   const stories: DrupalStory[] = data.drupal.nodeStories.nodes

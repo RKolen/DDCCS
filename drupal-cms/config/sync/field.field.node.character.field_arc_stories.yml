@@ -1,0 +1,23 @@
+uuid: 800b463b-125a-4c26-9ba2-0d74300e3884
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_arc_stories
+    - node.type.character
+id: node.character.field_arc_stories
+field_name: field_arc_stories
+entity_type: node
+bundle: character
+label: 'Stories analysed'
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  min: null
+  max: null
+  prefix: ''
+  suffix: ''
+field_type: integer

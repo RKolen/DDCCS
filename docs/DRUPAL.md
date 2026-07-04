@@ -133,8 +133,21 @@ reused untouched. The modal sources its options from
 `tool_profiencies` are exposed as term collections for this.
 
 **Exposed paragraph types:** `ability_score`, `ability_scores`, `class`,
-`class_grant`, `session_summary`, `spell_reference`, `spell_slot`,
-`relationship`, `wysiwyg`.
+`class_grant`, `session_summary`, `arc_metric`, `arc_relationship`, `arc_goal`,
+`spell_reference`, `spell_slot`, `relationship`, `wysiwyg`.
+
+### Character arc analysis
+
+The character node carries scalar arc fields `field_arc_direction`,
+`field_arc_stage`, `field_arc_summary`, `field_arc_stories`,
+`field_arc_updated`, plus three paragraph collections: `field_arc_metrics`
+(-> `arc_metric`: `field_metric_key`/`field_metric_label`/
+`field_metric_direction`/`field_metric_series` [comma-separated] /
+`field_metric_obs`), `field_arc_relationships` (-> `arc_relationship`:
+target/type/strength/trust/note), and `field_arc_goals` (-> `arc_goal`:
+description/status/progress). Written by the `saveCharacterArc` mutation from a
+JSON payload produced by the sidecar `/character/arc` endpoint; read back via
+the camelCase `arcDirection`/`arcMetrics`/... fields on `NodeCharacter`.
 
 ### Campaign summaries (`session_summary` paragraph)
 
@@ -207,6 +220,7 @@ Per-action user writes go through custom GraphQL mutations called from
 | `addCharacterToCampaign` | `frontend/src/api/campaign-party.ts` |
 | `createStory` | `frontend/src/api/create-story.ts` |
 | `setSessionSummary` | `frontend/src/api/create-story.ts` + `scripts/backfill-summaries.mjs` |
+| `saveCharacterArc` | `frontend/src/api/save-arc.ts` |
 | `createCharacter` | `frontend/src/api/create-character.ts` |
 | `updateCharacter` | `frontend/src/api/update-voice.ts` (voice id / pitch / speed) |
 
@@ -237,6 +251,14 @@ exists), and — when `overview` is supplied — replaces
 `sessionSummaries`
 so the caller can synthesize the overview from every recap. Requires the
 `gatsby_user` role's `edit terms in campaign` permission.
+
+`saveCharacterArc(id, payload)` takes the JSON arc result, sets the scalar arc
+fields, and rebuilds the `arc_metric` / `arc_relationship` / `arc_goal`
+paragraph collections on the character (requires `edit any character content`).
+Note: a GraphQL DataProducer returning an entity must declare its `produces`
+context as `data_type: "any"` (a plain `ContextDefinition`), never
+`"entity:node"` — the latter trips an `EntityContextDefinition` assertion that
+breaks the whole schema build.
 
 ### Writes — bulk/seed via the engine
 

@@ -1,0 +1,19 @@
+uuid: e4899f81-813c-4726-b4a0-568af96908d3
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_arc_summary
+    - node.type.character
+id: node.character.field_arc_summary
+field_name: field_arc_summary
+entity_type: node
+bundle: character
+label: 'Arc summary'
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string_long

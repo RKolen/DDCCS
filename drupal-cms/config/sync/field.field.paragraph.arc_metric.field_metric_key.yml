@@ -1,0 +1,19 @@
+uuid: 18218644-52f4-4049-87e0-3ff91556b7cb
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.paragraph.field_metric_key
+    - paragraphs.paragraphs_type.arc_metric
+id: paragraph.arc_metric.field_metric_key
+field_name: field_metric_key
+entity_type: paragraph
+bundle: arc_metric
+label: 'Metric key'
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string

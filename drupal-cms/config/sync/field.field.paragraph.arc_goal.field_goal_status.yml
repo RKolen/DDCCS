@@ -1,0 +1,19 @@
+uuid: d73ff3af-f28c-43eb-b7a2-9fe867f38dd6
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.paragraph.field_goal_status
+    - paragraphs.paragraphs_type.arc_goal
+id: paragraph.arc_goal.field_goal_status
+field_name: field_goal_status
+entity_type: paragraph
+bundle: arc_goal
+label: Status
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string

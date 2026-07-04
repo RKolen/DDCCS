@@ -82,6 +82,26 @@ export const query = graphql`
           voiceIdRef { ... on Drupal_TermVoiceId { name } }
           voicePitch
           voiceSpeed
+          arcDirection
+          arcStage
+          arcSummary
+          arcStories
+          arcUpdated
+          arcMetrics {
+            ... on Drupal_ParagraphArcMetric {
+              metricKey metricLabel metricDirection metricSeries metricObs
+            }
+          }
+          arcRelationships {
+            ... on Drupal_ParagraphArcRelationship {
+              relTarget relType relStrength relTrust relNote
+            }
+          }
+          arcGoals {
+            ... on Drupal_ParagraphArcGoal {
+              goalDescription goalStatus goalProgress
+            }
+          }
         }
       }
       nodeStories(first: 100) {

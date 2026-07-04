@@ -1,0 +1,31 @@
+uuid: cf84f362-9242-4888-a52f-2c1952a4633b
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_arc_metrics
+    - node.type.character
+    - paragraphs.paragraphs_type.arc_metric
+  module:
+    - entity_reference_revisions
+id: node.character.field_arc_metrics
+field_name: field_arc_metrics
+entity_type: node
+bundle: character
+label: 'Arc metrics'
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:paragraph'
+  handler_settings:
+    target_bundles:
+      arc_metric: arc_metric
+    negate: 0
+    target_bundles_drag_drop:
+      arc_metric:
+        weight: 0
+        enabled: true
+field_type: entity_reference_revisions

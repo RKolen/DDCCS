@@ -1,0 +1,19 @@
+uuid: d736788e-9aa0-47cb-b1f4-4cafe51a7c91
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_arc_updated
+    - node.type.character
+id: node.character.field_arc_updated
+field_name: field_arc_updated
+entity_type: node
+bundle: character
+label: 'Arc updated'
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string

@@ -1,0 +1,19 @@
+uuid: 889a8997-d776-4d53-964c-29f971e5fbf8
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.paragraph.field_metric_series
+    - paragraphs.paragraphs_type.arc_metric
+id: paragraph.arc_metric.field_metric_series
+field_name: field_metric_series
+entity_type: paragraph
+bundle: arc_metric
+label: 'Series (comma-separated)'
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string

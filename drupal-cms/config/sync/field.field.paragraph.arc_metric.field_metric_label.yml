@@ -1,0 +1,19 @@
+uuid: 301d384e-ade3-4de2-9b58-dce79009818b
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.paragraph.field_metric_label
+    - paragraphs.paragraphs_type.arc_metric
+id: paragraph.arc_metric.field_metric_label
+field_name: field_metric_label
+entity_type: paragraph
+bundle: arc_metric
+label: 'Metric label'
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string

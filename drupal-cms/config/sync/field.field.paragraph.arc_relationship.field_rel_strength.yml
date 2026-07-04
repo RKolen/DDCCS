@@ -1,0 +1,23 @@
+uuid: 2da1853a-40d1-4adf-b040-dcc467d225b2
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.paragraph.field_rel_strength
+    - paragraphs.paragraphs_type.arc_relationship
+id: paragraph.arc_relationship.field_rel_strength
+field_name: field_rel_strength
+entity_type: paragraph
+bundle: arc_relationship
+label: Strength
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  min: null
+  max: null
+  prefix: ''
+  suffix: ''
+field_type: integer

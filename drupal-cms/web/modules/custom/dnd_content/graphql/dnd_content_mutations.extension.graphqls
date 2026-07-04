@@ -12,6 +12,19 @@ extend type Mutation {
   ): NodeCharacter
 
   """
+  Save character arc analysis results onto a character node. The payload is the
+  JSON-encoded arc result (direction, stage, summary, storiesAnalyzed,
+  updatedAt, metrics, relationships, goals) from the sidecar /character/arc
+  endpoint. Replaces any existing arc data. Returns the updated character node.
+  """
+  saveCharacterArc(
+    "UUID of the character node."
+    id: ID!
+    "JSON-encoded arc analysis result."
+    payload: String!
+  ): NodeCharacter
+
+  """
   Update a character node's voice settings. Only the supplied arguments are
   changed. Returns the updated character node.
   """

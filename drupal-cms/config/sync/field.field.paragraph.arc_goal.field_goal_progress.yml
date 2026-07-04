@@ -1,0 +1,23 @@
+uuid: ac70ad32-5421-40cc-b10e-cd0be347ff7d
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.paragraph.field_goal_progress
+    - paragraphs.paragraphs_type.arc_goal
+id: paragraph.arc_goal.field_goal_progress
+field_name: field_goal_progress
+entity_type: paragraph
+bundle: arc_goal
+label: Progress
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  min: null
+  max: null
+  prefix: ''
+  suffix: ''
+field_type: integer

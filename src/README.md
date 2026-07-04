@@ -35,7 +35,7 @@ src/
 |   `-- npc_constants.py             # NPC ability score constants
 |
 |-- character_arc/       # AI-powered character arc analysis
-|   |-- arc_analyzer.py      # Arc analysis engine
+|   |-- arc_analyzer.py      # Arc engine + analyze_character_arc (sidecar entry)
 |   |-- arc_criteria.py      # Criteria and metrics
 |   |-- arc_data.py          # Arc data structures
 |   |-- arc_reports.py       # Report generation
