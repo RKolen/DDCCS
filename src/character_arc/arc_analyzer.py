@@ -28,6 +28,11 @@ _MAX_CHUNKS = 40
 # must outlast the reasoning or the answer is truncated to empty. This is a
 # ceiling: fast per-story calls still stop early. Tunable for larger models.
 _SYNTHESIS_MAX_TOKENS = int(os.getenv("ARC_SYNTHESIS_MAX_TOKENS", "8000"))
+# Total character budget for the narrative fed to synthesis. It is split evenly
+# across all stories so every story (and its characters/events) is represented,
+# rather than the model only seeing the opening stories before truncation. Later
+# party members and late-arc turning points are lost if this is front-loaded.
+_NARRATIVE_BUDGET_CHARS = int(os.getenv("ARC_NARRATIVE_CHARS", "16000"))
 
 
 @dataclass
@@ -209,7 +214,7 @@ class ArcAnalyzer:
             "companions, rivals, and even brief or one-sided bonds. Do not return "
             f"an empty list unless no other character is named."
             f"{self._pronoun_hint(character_name)}\n\n"
-            f"Narrative:\n{story_content[:12000]}\n\n"
+            f"Narrative:\n{story_content[:_NARRATIVE_BUDGET_CHARS]}\n\n"
             'Return only JSON. "target" is the other character\'s name:\n'
             '{ "relationships": [ { "target": "<other character name>", '
             '"type": "<ally|rival|mentor|friend|enemy|family|neutral>", '
@@ -240,7 +245,7 @@ class ArcAnalyzer:
         prompt = (
             f"Identify {character_name}'s goals and their progress across the "
             f"following narrative.{self._pronoun_hint(character_name)}\n\n"
-            f"Narrative:\n{story_content[:12000]}\n\n"
+            f"Narrative:\n{story_content[:_NARRATIVE_BUDGET_CHARS]}\n\n"
             "Return only JSON in this format:\n"
             '{ "goals": [ { "description": "<goal>", '
             '"status": "<active|dormant|completed>", "progress": <0-100> } ] }'
@@ -274,14 +279,17 @@ class ArcAnalyzer:
         if self.ai_client is None:
             return f"{character_name}'s arc spans the campaign."
         prompt = (
-            f"Write a vivid 3 to 5 sentence character arc summary for "
+            f"Write a vivid 4 to 6 sentence character arc summary for "
             f"{character_name}.{self._pronoun_hint(character_name)}\n\n"
-            f"Key events and observations across the campaign:\n"
-            f"{narrative[:8000]}\n\n"
+            f"Key events and observations across the campaign, in order and "
+            f"labelled [Part i/N] from earliest to latest:\n"
+            f"{narrative[:_NARRATIVE_BUDGET_CHARS]}\n\n"
             f"{facts}\n\n"
             "Narrate the actual journey: name the people, places, and turning "
             "points from the events above, and describe how the character "
-            "changed. Do not just restate numbers — tell the story of the arc."
+            "changed. Cover the WHOLE arc from the earliest Part to the LATEST "
+            "Part - do not stop at the beginning; the final sentences must reflect "
+            "the most recent Parts. Do not just restate numbers - tell the story."
         )
         try:
             messages = [self.ai_client.create_user_message(prompt)]
@@ -334,7 +342,7 @@ class ArcAnalyzer:
         )
         user_prompt = (
             f"Character: {character_name}.{self._pronoun_hint(character_name)}\n\n"
-            f"Key events across the campaign:\n{narrative[:12000]}\n\n"
+            f"Key events across the campaign:\n{narrative[:_NARRATIVE_BUDGET_CHARS]}\n\n"
             f"Metric trends (key: start -> end):\n" + "\n".join(trend_lines) + "\n\n"
             "Return a JSON object mapping each metric key above to its "
             'one-sentence insight, e.g. {"confidence": "Rain grew surer after '
@@ -814,16 +822,28 @@ def facts_block(
 
 
 def _narrative_from_points(data_points: List[ArcDataPoint]) -> str:
-    """Build a narrative for relationship/goal extraction from the concrete
-    per-story facts (key events + observations first, then summaries), so the
-    extractor sees named characters and events rather than vague blurbs."""
-    parts: List[str] = []
-    for data_point in data_points:
-        parts.extend(data_point.key_events)
-        parts.extend(data_point.observations)
+    """Build a balanced narrative that represents EVERY story in campaign order.
+
+    Each story gets an equal share of a fixed character budget (concrete key
+    events and observations first, then a trimmed analysis) and is labelled by
+    its position, so later stories - and the characters and turning points they
+    introduce - are not lost to truncation the way a single front-loaded blob is.
+    """
+    if not data_points:
+        return ""
+    per_story = max(400, _NARRATIVE_BUDGET_CHARS // len(data_points))
+    total = len(data_points)
+    sections: List[str] = []
+    for index, data_point in enumerate(data_points, start=1):
+        pieces = list(data_point.key_events)
+        pieces.extend(data_point.observations)
         if data_point.ai_analysis:
-            parts.append(data_point.ai_analysis)
-    return "\n".join(parts)
+            pieces.append(data_point.ai_analysis)
+        body = " ".join(piece.strip() for piece in pieces if piece.strip())
+        if len(body) > per_story:
+            body = body[:per_story].rsplit(" ", 1)[0] + "..."
+        sections.append(f"[Part {index}/{total}] {body}")
+    return "\n\n".join(sections)
 
 
 def aggregate_arc(
