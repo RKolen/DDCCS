@@ -3,6 +3,7 @@ import {
   summarizeSession,
   synthesizeOverview,
   htmlToText,
+  readProcessed,
   type SessionSummary,
 } from '../utils/aiSummary';
 
@@ -61,15 +62,6 @@ const SET_SESSION_SUMMARY_MUTATION = `
 `;
 
 /** Read the first `processed` value regardless of list/single field shape. */
-function readProcessed(
-  text?: Array<{ processed: string }> | { processed: string } | null,
-): string {
-  if (Array.isArray(text)) {
-    return text[0]?.processed ?? '';
-  }
-  return text?.processed ?? '';
-}
-
 async function setSessionSummary(
   drupalUrl: string,
   token: string,

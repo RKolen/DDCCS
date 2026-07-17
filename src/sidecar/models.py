@@ -283,6 +283,22 @@ class ArcAggregateRequest(BaseModel):
     data_points: List[ArcDataPointModel] = Field(default_factory=list)
 
 
+class ArcSynthesisRequest(BaseModel):
+    """Request to synthesize an arc from stored per-story analysis texts."""
+
+    character_name: str
+    pronouns: str = ""
+    story_texts: List[str] = Field(default_factory=list)
+
+
+class ArcSynthesisResponse(BaseModel):
+    """Arc synthesis from stored analyses: summary + relationships + goals."""
+
+    summary: str = ""
+    relationships: List[ArcRelationshipModel] = Field(default_factory=list)
+    goals: List[ArcGoalModel] = Field(default_factory=list)
+
+
 class ArcAnalysisResponse(BaseModel):
     """Structured character arc analysis result."""
 

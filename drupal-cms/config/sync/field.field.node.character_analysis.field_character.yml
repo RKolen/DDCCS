@@ -1,0 +1,24 @@
+uuid: aa5fba1d-34b2-4f78-9e29-8cc6767651bc
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_character
+    - node.type.character
+    - node.type.character_analysis
+id: node.character_analysis.field_character
+field_name: field_character
+entity_type: node
+bundle: character_analysis
+label: Character
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:node'
+  handler_settings:
+    target_bundles:
+      character: character
+field_type: entity_reference

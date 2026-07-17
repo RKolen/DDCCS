@@ -375,6 +375,30 @@ def _apply_env_sidecar_overrides(
     config.sidecar.reload = get_env_bool("SIDECAR_RELOAD", config.sidecar.reload)
 
 
+def _apply_env_comfyui_overrides(
+    config: DnDConfig,
+    get_env: Any,
+    get_env_float: Any,
+    get_env_int: Any,
+) -> None:
+    """Apply ComfyUI portrait-service overrides from environment variables.
+
+    Args:
+        config: DnDConfig to update in-place.
+        get_env: Callable to read a string env var.
+        get_env_float: Callable to read a float env var with default.
+        get_env_int: Callable to read an int env var with default.
+    """
+    host = get_env("COMFYUI_HOST")
+    if host:
+        config.comfyui.host = host
+    config.comfyui.port = get_env_int("COMFYUI_PORT", config.comfyui.port)
+    base_url = get_env("COMFYUI_BASE_URL")
+    if base_url:
+        config.comfyui.base_url = base_url
+    config.comfyui.timeout = get_env_float("COMFYUI_TIMEOUT", config.comfyui.timeout)
+
+
 def _apply_env_overrides(config: DnDConfig, prefix: str = "") -> DnDConfig:
     """Apply environment variable overrides.
 
@@ -459,6 +483,7 @@ def _apply_env_overrides(config: DnDConfig, prefix: str = "") -> DnDConfig:
     _apply_env_milvus_overrides(config, get_env, get_env_bool, get_env_int, get_env_float)
     _apply_env_drupal_overrides(config, get_env)
     _apply_env_sidecar_overrides(config, get_env, get_env_bool, get_env_float, get_env_int)
+    _apply_env_comfyui_overrides(config, get_env, get_env_float, get_env_int)
 
     return config
 

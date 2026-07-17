@@ -1,0 +1,11 @@
+uuid: fc9f8f7c-b1ca-4ccf-9577-76694e99e328
+langcode: en
+status: true
+dependencies: {  }
+name: 'Character Analysis'
+type: character_analysis
+description: 'AI character arc analysis: per-story analyses + summary.'
+help: null
+new_revision: true
+preview_mode: 1
+display_submitted: true

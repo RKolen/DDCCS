@@ -40,6 +40,26 @@ class ContentMutationsSchemaExtension extends SdlSchemaExtensionPluginBase {
 
     $registry->addFieldResolver(
       'Mutation',
+      'upsertCharacterAnalysis',
+      $builder->produce('upsert_character_analysis')
+        ->map('campaign_id', $builder->fromArgument('campaignId'))
+        ->map('character_id', $builder->fromArgument('characterId'))
+        ->map('story_number', $builder->fromArgument('storyNumber'))
+        ->map('story_text', $builder->fromArgument('storyText'))
+        ->map('datapoint', $builder->fromArgument('datapoint'))
+        ->map('summary', $builder->fromArgument('summary')),
+    );
+
+    $registry->addFieldResolver(
+      'Mutation',
+      'deleteCharacterAnalysis',
+      $builder->produce('delete_character_analysis')
+        ->map('campaign_id', $builder->fromArgument('campaignId'))
+        ->map('character_id', $builder->fromArgument('characterId')),
+    );
+
+    $registry->addFieldResolver(
+      'Mutation',
       'createCharacter',
       $builder->produce('create_character')
         ->map('payload', $builder->fromArgument('payload')),

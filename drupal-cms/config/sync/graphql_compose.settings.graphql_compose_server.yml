@@ -37,6 +37,11 @@ entity_config:
       query_load_enabled: true
       edges_enabled: true
       simple_queries: '1'
+    character_analysis:
+      enabled: true
+      query_load_enabled: true
+      edges_enabled: true
+      simple_queries: '1'
     story:
       enabled: true
       query_load_enabled: true
@@ -341,6 +346,15 @@ field_config:
         enabled: true
       field_voice_speed:
         enabled: true
+    character_analysis:
+      field_campaign:
+        enabled: true
+      field_character:
+        enabled: true
+      field_story_analyses:
+        enabled: true
+      field_analysis_summary:
+        enabled: true
     story:
       path:
         enabled: true
@@ -566,6 +580,8 @@ field_config:
       field_story_number:
         enabled: true
       field_text:
+        enabled: true
+      field_datapoint:
         enabled: true
     arc_metric:
       field_metric_key:

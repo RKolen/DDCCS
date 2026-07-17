@@ -23,6 +23,7 @@ from src.character_arc.arc_analyzer import (
     aggregate_arc,
     analyze_character_arc,
     analyze_story_datapoint,
+    facts_block,
 )
 from src.character_arc.arc_data import ArcDataPoint
 from src.characters.character_template import (
@@ -42,6 +43,8 @@ from src.sidecar.models import (
     ArcMetricModel,
     ArcRelationshipModel,
     ArcStoryRequest,
+    ArcSynthesisRequest,
+    ArcSynthesisResponse,
     BuildCharacterRequest,
     BuildCharacterResponse,
     EquipmentDescribeRequest,
@@ -160,28 +163,55 @@ def _apply_pitch(wav: bytes, semitones: float) -> bytes:
                     pass
 
 
-@lru_cache(maxsize=1)
-def _get_arc_ai_client() -> AIClient | None:
-    """Return a cached AIClient on the fast profile for arc analysis.
+def _build_arc_client(profile_name: str) -> AIClient | None:
+    """Build an AIClient for a named model profile, or None if unconfigured.
 
-    Prefers the ``fast`` model profile (quick, cheap; arc analysis fans out over
-    many stories) and falls back to the active profile. Returns None when no
-    profile is configured, in which case the analyzer uses pattern matching.
+    Args:
+        profile_name: The model registry profile to use ("fast" / "creative").
+
+    Returns:
+        A configured AIClient, or None when no usable profile is available.
     """
     config = load_config()
     profile = (
-        config.model_registry.get_profile("fast")
+        config.model_registry.get_profile(profile_name)
         or config.model_registry.get_active_profile()
     )
     if profile is None or not profile.base_url or not profile.model:
         return None
+    # Local CPU inference of a large model takes minutes per call; the default
+    # 30s AIClient timeout would abort every arc call. Allow a generous, tunable
+    # timeout (ARC_AI_TIMEOUT seconds) so synthesis actually completes.
     return AIClient(
         api_key=os.getenv("OLLAMA_API_KEY", "") or config.ai.api_key,
         base_url=profile.base_url,
         model=profile.model,
         default_temperature=profile.temperature,
         default_max_tokens=max(profile.max_tokens, 2000),
+        timeout=float(os.getenv("ARC_AI_TIMEOUT", "1800")),
     )
+
+
+@lru_cache(maxsize=1)
+def _get_arc_ai_client() -> AIClient | None:
+    """Fast profile for the per-passage fan-out (quick, cheap, runs 100+ times)."""
+    return _build_arc_client("fast")
+
+
+@lru_cache(maxsize=1)
+def _get_arc_aggregate_client() -> AIClient | None:
+    """Profile for the final synthesis (relationships, goals, summary).
+
+    Defaults to the ``creative`` (larger) profile for quality. Local qwen3
+    "thinking" models always reason first (think:false is ignored over the
+    OpenAI endpoint), so the token budget must outlast the reasoning
+    (ARC_SYNTHESIS_MAX_TOKENS) and the timeout must allow a slow CPU model to
+    finish (ARC_AI_TIMEOUT). Override with ``ARC_AGGREGATE_PROFILE=fast`` to
+    trade quality for speed. Falls back to the fast client when the chosen
+    profile is unconfigured.
+    """
+    profile = os.getenv("ARC_AGGREGATE_PROFILE", "creative")
+    return _build_arc_client(profile) or _get_arc_ai_client()
 
 
 @app.exception_handler(Exception)
@@ -487,10 +517,57 @@ def character_arc_aggregate_endpoint(req: ArcAggregateRequest) -> ArcAnalysisRes
         data_points,
         req.character_name,
         campaign_name=req.campaign_name,
-        ai_client=_get_arc_ai_client(),
+        ai_client=_get_arc_aggregate_client(),
         pronouns=req.pronouns,
     )
     return _build_arc_response(result)
+
+
+@_character_router.post("/arc/synthesize", response_model=ArcSynthesisResponse)
+def character_arc_synthesize_endpoint(req: ArcSynthesisRequest) -> ArcSynthesisResponse:
+    """Synthesize an arc from stored per-story analysis texts.
+
+    Reads the persisted per-story analyses (rather than re-analysing raw stories)
+    to extract relationships and goals and narrate the summary. This is what lets
+    a run resume and keeps the synthesis reading stored text instead of holding
+    every story in memory.
+
+    Args:
+        req: ArcSynthesisRequest with the character name and stored story texts.
+
+    Returns:
+        An ArcSynthesisResponse with summary, relationships, and goals.
+    """
+    analyzer = ArcAnalyzer(ai_client=_get_arc_aggregate_client(), pronouns=req.pronouns)
+    narrative = "\n\n".join(text for text in req.story_texts if text)
+    relationships_raw = analyzer.analyze_relationships(narrative, req.character_name)
+    goals_raw = analyzer.analyze_goals(narrative, req.character_name)
+    summary = analyzer.narrate_arc(
+        req.character_name, narrative, facts_block({}, relationships_raw, goals_raw)
+    )
+    relationships = [
+        ArcRelationshipModel(
+            target=str(rel.get("target", "")),
+            type=str(rel.get("type", "neutral")),
+            strength=_safe_int(rel.get("strength", 5), 5),
+            trust=_safe_int(rel.get("trust", 5), 5),
+            note=str(rel.get("note", "")),
+        )
+        for rel in relationships_raw
+        if str(rel.get("target", "")).strip()
+    ]
+    goals = [
+        ArcGoalModel(
+            description=str(goal.get("description", "")),
+            status=str(goal.get("status", "active")),
+            progress=_safe_int(goal.get("progress", 0), 0),
+        )
+        for goal in goals_raw
+        if str(goal.get("description", "")).strip()
+    ]
+    return ArcSynthesisResponse(
+        summary=summary, relationships=relationships, goals=goals
+    )
 
 
 def _resolve_abilities(req: BuildCharacterRequest) -> list[Ability]:

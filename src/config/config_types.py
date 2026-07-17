@@ -253,6 +253,28 @@ class SidecarConfig:
 
 
 @dataclass
+class ComfyUIConfig:
+    """Local ComfyUI (Stable Diffusion) portrait-generation service.
+
+    ComfyUI runs on the host (like Ollama), never in DDEV. The sidecar reaches it
+    over its HTTP workflow API. ``base_url`` is derived from host/port when empty.
+    """
+
+    host: str = ""
+    port: int = 8188
+    base_url: str = ""
+    timeout: float = 600.0
+
+    def get_base_url(self) -> str:
+        """Return the configured base URL, or one built from host/port."""
+        if self.base_url:
+            return self.base_url.rstrip("/")
+        if self.host:
+            return f"http://{self.host}:{self.port}"
+        return ""
+
+
+@dataclass
 class ServiceConfig:
     """Grouped service configuration (model registry, vector database, spotlighting)."""
 
@@ -261,6 +283,7 @@ class ServiceConfig:
     spotlight: SpotlightConfig = field(default_factory=SpotlightConfig)
     drupal: DrupalConfig = field(default_factory=DrupalConfig)
     sidecar: SidecarConfig = field(default_factory=SidecarConfig)
+    comfyui: ComfyUIConfig = field(default_factory=ComfyUIConfig)
 
 
 @dataclass
@@ -330,6 +353,16 @@ class DnDConfig:
     def sidecar(self, value: "SidecarConfig") -> None:
         """Replace the query-parser sidecar config."""
         self.services.sidecar = value
+
+    @property
+    def comfyui(self) -> "ComfyUIConfig":
+        """Return the ComfyUI portrait service config."""
+        return self.services.comfyui
+
+    @comfyui.setter
+    def comfyui(self, value: "ComfyUIConfig") -> None:
+        """Replace the ComfyUI portrait service config."""
+        self.services.comfyui = value
 
     def is_dirty(self) -> bool:
         """Check if configuration has unsaved changes."""

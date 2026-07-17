@@ -42,6 +42,7 @@ GATSBY_DEFAULT_PORT="${GATSBY_DEFAULT_PORT:-$GATSBY_PORT}"
 GATSBY_CLEAN_ON_START="${GATSBY_CLEAN_ON_START:-true}"
 GATSBY_KILL_STALE_LISTENERS="${GATSBY_KILL_STALE_LISTENERS:-true}"
 GATSBY_LOG_FILE="${GATSBY_LOG_FILE:-$SCRIPT_DIR/.gatsby.log}"
+SIDECAR_KILL_STALE_LISTENERS="${SIDECAR_KILL_STALE_LISTENERS:-true}"
 SIDECAR_LOG_FILE="${SIDECAR_LOG_FILE:-$SCRIPT_DIR/.sidecar.log}"
 MKCERT_CA="${MKCERT_CA:-$HOME/.local/share/mkcert/rootCA.pem}"
 
@@ -69,6 +70,17 @@ echo "==> Starting search query parser sidecar (background)..."
 # Run from the project root so run_sidecar.py is found and .env / game_data
 # resolve correctly (ddev start left us in drupal-cms/).
 cd "$SCRIPT_DIR"
+# Stop any stale sidecar still holding the port. Without this a new sidecar
+# fails to bind ("address already in use") and dies, leaving the OLD process
+# serving outdated code - so restarts silently have no effect. LISTEN-only so
+# connected clients are never killed (same guard as the Gatsby block).
+if [[ "$SIDECAR_KILL_STALE_LISTENERS" == "true" ]]; then
+  OLD_SIDECAR=$(lsof -tiTCP:"$SIDECAR_PORT" -sTCP:LISTEN 2>/dev/null || true)
+  if [[ -n "$OLD_SIDECAR" ]]; then
+    kill $OLD_SIDECAR 2>/dev/null && echo "    Stopped stale sidecar on :$SIDECAR_PORT - PIDs: $OLD_SIDECAR"
+    sleep 1
+  fi
+fi
 # MKCERT_CA lets the sidecar verify ddev's mkcert-signed TLS for Drupal reads.
 MKCERT_CA="$MKCERT_CA" "$PYTHON" "$SCRIPT_DIR/run_sidecar.py" > "$SIDECAR_LOG_FILE" 2>&1 &
 SIDECAR_PID=$!

@@ -1,0 +1,19 @@
+uuid: 555021a1-0935-442f-ac75-769b8afefaca
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.paragraph.field_datapoint
+    - paragraphs.paragraphs_type.session_summary
+id: paragraph.session_summary.field_datapoint
+field_name: field_datapoint
+entity_type: paragraph
+bundle: session_summary
+label: 'Data point (JSON)'
+description: 'Structured per-story arc data point (metric values, events) as JSON, for re-aggregation.'
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string_long

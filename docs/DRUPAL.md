@@ -26,6 +26,7 @@ Defined in `drupal-cms/config/sync/node.type.*.yml`:
 | `monster` | Statblocks | Yes |
 | `spell` | Spells (incl. homebrew) | Yes |
 | `session` | Session records | Yes |
+| `character_analysis` | Per-(campaign, character) arc analysis record: stored per-story analysis prose + a synthesized summary | Yes |
 | `ability` | Ability/feature reference entries | No |
 | `wiki_cache` | Cached RAG wiki content | No |
 | `basic_page` | Static site pages | No |
@@ -148,6 +149,32 @@ target/type/strength/trust/note), and `field_arc_goals` (-> `arc_goal`:
 description/status/progress). Written by the `saveCharacterArc` mutation from a
 JSON payload produced by the sidecar `/character/arc` endpoint; read back via
 the camelCase `arcDirection`/`arcMetrics`/... fields on `NodeCharacter`.
+
+### Character analysis record (`character_analysis` node)
+
+A `character_analysis` node is a persistent, crash-safe analysis record **keyed
+by character** — one record per character. The campaign is optional metadata (a
+character may have no campaign of its own, so keying on campaign would be
+fragile); it is stored when known and kept current. Title is
+`"<character> · <campaign>"` when a campaign is known, else just `"<character>"`.
+Fields: `field_campaign` (-> `campaign` term, optional), `field_character` (->
+`character` node, the key), `field_story_analyses` (-> `session_summary`
+paragraphs, one per story: `field_story_number` + `field_text` [prose,
+`plain_text`] + `field_datapoint` [the structured per-story data point as a JSON
+string, `string_long`]), and `field_analysis_summary` (`plain_text` text_long).
+Exposed on `NodeCharacterAnalysi` (graphql_compose singularises "analysis") as
+`campaign`, `character`, `storyAnalyses` (`ParagraphSessionSummary` with
+`storyNumber` + `text` + `datapoint`), and `analysisSummary`. The `datapoint`
+JSON is what lets synthesis recompute real metric trend lines (via
+`aggregate_arc`) instead of only re-reading prose.
+
+The console persists each story's analysis prose as it completes (via
+`upsertCharacterAnalysis`), so a crashed arc run **resumes**: `get-analysis.ts`
+reads back the stored `storyNumbers` to skip already-analysed stories, and
+`synthesize-analysis.ts` reads the stored per-story prose to narrate the whole-arc
+summary server-side (sidecar `/character/arc/synthesize`) instead of holding every
+story in memory. `deleteCharacterAnalysis` discards the record (the arc screen's
+Discard action).
 
 ### Campaign summaries (`session_summary` paragraph)
 

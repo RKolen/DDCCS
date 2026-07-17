@@ -1,5 +1,37 @@
 extend type Mutation {
   """
+  Find-or-create a character's analysis node (keyed by campaign + character) and
+  store either one story's analysis (storyNumber + storyText) or the synthesized
+  summary. Persists each story as it completes so a long run is crash-safe.
+  Returns the analysis node.
+  """
+  upsertCharacterAnalysis(
+    "UUID of the campaign taxonomy term."
+    campaignId: ID!
+    "UUID of the character node."
+    characterId: ID!
+    "Story number this analysis belongs to (with storyText)."
+    storyNumber: Int
+    "The story's analysis text (with storyNumber)."
+    storyText: String
+    "The story's structured data point as a JSON string (with storyNumber)."
+    datapoint: String
+    "The synthesized arc summary."
+    summary: String
+  ): NodeCharacterAnalysi
+
+  """
+  Delete a character's analysis node for a campaign (discard). Returns true when
+  removed (or nothing existed), false when permission is denied.
+  """
+  deleteCharacterAnalysis(
+    "UUID of the campaign taxonomy term."
+    campaignId: ID!
+    "UUID of the character node."
+    characterId: ID!
+  ): Boolean
+
+  """
   Create a new source character node from a derived character payload.
   The payload is the JSON-encoded character dictionary produced by the
   Python sidecar build-from-template endpoint. The new node is flagged as a

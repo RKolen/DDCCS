@@ -1,6 +1,7 @@
 """AI-powered character arc analysis."""
 
 import json
+import os
 import re
 from dataclasses import dataclass
 from datetime import datetime
@@ -22,6 +23,11 @@ _CHUNK_CHARS = 4000
 # Cap chunks per story so a pathologically long story cannot spawn unbounded
 # calls; 40 chunks * 4000 chars covers 160k characters.
 _MAX_CHUNKS = 40
+# Token ceiling for model calls. Local qwen3 models always "think" first (~2k+
+# tokens, more on the larger model) even with disable_thinking, so the budget
+# must outlast the reasoning or the answer is truncated to empty. This is a
+# ceiling: fast per-story calls still stop early. Tunable for larger models.
+_SYNTHESIS_MAX_TOKENS = int(os.getenv("ARC_SYNTHESIS_MAX_TOKENS", "8000"))
 
 
 @dataclass
@@ -119,13 +125,13 @@ class ArcAnalyzer:
             # A large budget plus disabled thinking keeps qwen3 from leaving the
             # content empty; the JSON object is then parsed out of the reply.
             response = self.ai_client.chat_completion(
-                messages, max_tokens=4000, disable_thinking=True
+                messages, max_tokens=_SYNTHESIS_MAX_TOKENS, disable_thinking=True
             )
             return self._parse_ai_response(response)
         except (RuntimeError, OSError, ValueError):
             return {}
 
-    def _analyze_chunk(self, chunk: str, character_name: str) -> Dict[str, Any]:
+    def analyze_chunk(self, chunk: str, character_name: str) -> Dict[str, Any]:
         """Analyze one story chunk (small, memory-safe model call)."""
         prompt = (
             f"Analyze this excerpt for character development of "
@@ -141,20 +147,23 @@ class ArcAnalyzer:
             '        "trauma_level": <0-10>\n'
             "    },\n"
             '    "observations": [\n'
-            '        "Observation 1 about character development"\n'
+            f'        "A concrete note naming who {character_name} interacted '
+            'with and how the relationship shifted"\n'
             "    ],\n"
             '    "key_events": [\n'
-            '        "Event that affected the character"\n'
+            f'        "A concrete event: who was involved (name them) and what '
+            f'{character_name} did or what happened to them"\n'
             "    ],\n"
             '    "summary": "Brief summary of character development in this excerpt"\n'
             "}\n\n"
             "For trauma_level, higher means MORE trauma (0 = none, 10 = severe).\n"
-            "Focus on:\n"
+            "Be specific and name other characters, goals, and events — do not "
+            "write vague development statements. Focus on:\n"
             "1. How the character changed or grew\n"
-            "2. Relationship developments\n"
+            "2. Relationships (name the other characters and how bonds shifted)\n"
             "3. Skills or abilities used or gained\n"
             "4. Emotional or psychological changes\n"
-            "5. Progress toward goals"
+            "5. Goals pursued or progressed"
         )
         return self._ai_json(
             "You are a narrative analyst. Return only valid JSON.", prompt
@@ -174,8 +183,8 @@ class ArcAnalyzer:
         if not chunks:
             return {"metrics": {}, "observations": [], "key_events": [], "summary": ""}
         if len(chunks) == 1:
-            return self._analyze_chunk(chunks[0], character_name)
-        partials = [self._analyze_chunk(chunk, character_name) for chunk in chunks]
+            return self.analyze_chunk(chunks[0], character_name)
+        partials = [self.analyze_chunk(chunk, character_name) for chunk in chunks]
         return _merge_chunk_analyses(partials)
 
     def analyze_relationships(
@@ -194,12 +203,15 @@ class ArcAnalyzer:
             empty when AI is unavailable.
         """
         prompt = (
-            f"Identify the key relationships {character_name} has with other "
-            "characters across the following narrative, and how each has "
-            f"developed.{self._pronoun_hint(character_name)}\n\n"
-            f"Narrative:\n{story_content[:6000]}\n\n"
-            "Return only JSON in this format:\n"
-            '{ "relationships": [ { "target": "<name>", '
+            f"List EVERY other named character who appears alongside "
+            f"{character_name} in the following narrative, and characterise "
+            f"{character_name}'s relationship with each — include allies, "
+            "companions, rivals, and even brief or one-sided bonds. Do not return "
+            f"an empty list unless no other character is named."
+            f"{self._pronoun_hint(character_name)}\n\n"
+            f"Narrative:\n{story_content[:12000]}\n\n"
+            'Return only JSON. "target" is the other character\'s name:\n'
+            '{ "relationships": [ { "target": "<other character name>", '
             '"type": "<ally|rival|mentor|friend|enemy|family|neutral>", '
             '"strength": <1-10>, "trust": <1-10>, '
             '"note": "<one sentence on this relationship\'s arc>" } ] }'
@@ -228,7 +240,7 @@ class ArcAnalyzer:
         prompt = (
             f"Identify {character_name}'s goals and their progress across the "
             f"following narrative.{self._pronoun_hint(character_name)}\n\n"
-            f"Narrative:\n{story_content[:6000]}\n\n"
+            f"Narrative:\n{story_content[:12000]}\n\n"
             "Return only JSON in this format:\n"
             '{ "goals": [ { "description": "<goal>", '
             '"status": "<active|dormant|completed>", "progress": <0-100> } ] }'
@@ -238,6 +250,102 @@ class ArcAnalyzer:
         )
         goals = result.get("goals", [])
         return goals if isinstance(goals, list) else []
+
+    def narrate_arc(
+        self,
+        character_name: str,
+        narrative: str,
+        facts: str,
+    ) -> str:
+        """Write a vivid, fact-grounded arc summary from collected material.
+
+        Unlike a metric-only summary, this names the actual people, places, and
+        turning points from the collected key events so the summary reads like a
+        story rather than a list of number changes.
+
+        Args:
+            character_name: The character being summarized.
+            narrative: Concatenated concrete key events / observations.
+            facts: A pre-formatted block of relationships / goals / metric trends.
+
+        Returns:
+            A prose arc summary, or a short fallback when AI is unavailable.
+        """
+        if self.ai_client is None:
+            return f"{character_name}'s arc spans the campaign."
+        prompt = (
+            f"Write a vivid 3 to 5 sentence character arc summary for "
+            f"{character_name}.{self._pronoun_hint(character_name)}\n\n"
+            f"Key events and observations across the campaign:\n"
+            f"{narrative[:8000]}\n\n"
+            f"{facts}\n\n"
+            "Narrate the actual journey: name the people, places, and turning "
+            "points from the events above, and describe how the character "
+            "changed. Do not just restate numbers — tell the story of the arc."
+        )
+        try:
+            messages = [self.ai_client.create_user_message(prompt)]
+            # Local qwen3 models always "think" (~2k tokens) even with
+            # disable_thinking; the budget must outlast the reasoning or the
+            # answer is truncated to empty. Keep it generous.
+            summary = self.ai_client.chat_completion(
+                messages, max_tokens=_SYNTHESIS_MAX_TOKENS, disable_thinking=True
+            ).strip()
+            return summary or f"{character_name}'s arc spans the campaign."
+        except (RuntimeError, OSError, ValueError):
+            return f"{character_name}'s arc spans the campaign."
+
+    def narrate_metrics(
+        self,
+        character_name: str,
+        metrics: Dict[str, Dict[str, Any]],
+        narrative: str,
+    ) -> Dict[str, str]:
+        """Write a one-sentence, event-grounded insight for each metric's trend.
+
+        Replaces the templated "X rose from A to B" note with a sentence that
+        explains what in the story drove the change. One model call covers every
+        metric; a missing or malformed reply simply leaves the templated note.
+
+        Args:
+            character_name: The character being analyzed.
+            metrics: The built metric series, keyed by metric key.
+            narrative: The concatenated key events / observations.
+
+        Returns:
+            A mapping of metric key to a one-sentence insight (only keys the
+            model answered for and left non-empty).
+        """
+        if self.ai_client is None or not metrics:
+            return {}
+        trend_lines = []
+        for key, metric in metrics.items():
+            series = metric.get("series", [])
+            if not series:
+                continue
+            trend_lines.append(
+                f'- {key} ("{metric.get("label", key)}"): '
+                f"{series[0]:.0f} -> {series[-1]:.0f}"
+            )
+        system_prompt = (
+            "You are a D&D character arc analyst. For each metric, write ONE "
+            "concise sentence explaining what in the story drove its change. "
+            "Name the people and events involved; do not just restate the numbers."
+        )
+        user_prompt = (
+            f"Character: {character_name}.{self._pronoun_hint(character_name)}\n\n"
+            f"Key events across the campaign:\n{narrative[:12000]}\n\n"
+            f"Metric trends (key: start -> end):\n" + "\n".join(trend_lines) + "\n\n"
+            "Return a JSON object mapping each metric key above to its "
+            'one-sentence insight, e.g. {"confidence": "Rain grew surer after '
+            'facing Ruthen."}. Use only the listed metric keys.'
+        )
+        result = self._ai_json(system_prompt, user_prompt)
+        return {
+            key: str(value).strip()
+            for key, value in result.items()
+            if key in metrics and isinstance(value, str) and str(value).strip()
+        }
 
     def _parse_ai_response(self, response: str) -> Dict[str, Any]:
         """Parse AI JSON response into structured data."""
@@ -631,6 +739,21 @@ def _build_metric_series(arc: CharacterArc) -> Dict[str, Dict[str, Any]]:
     return metrics
 
 
+def _enrich_metric_obs(
+    analyzer: ArcAnalyzer,
+    character_name: str,
+    metrics: Dict[str, Dict[str, Any]],
+    narrative: str,
+) -> None:
+    """Replace templated metric notes with model-written, event-grounded ones.
+
+    Mutates ``metrics`` in place; a missing or malformed reply leaves the
+    templated note untouched.
+    """
+    for key, obs in analyzer.narrate_metrics(character_name, metrics, narrative).items():
+        metrics[key]["obs"] = obs
+
+
 def analyze_story_datapoint(
     analyzer: ArcAnalyzer,
     content: str,
@@ -663,14 +786,43 @@ def analyze_story_datapoint(
     )
 
 
+def facts_block(
+    metrics: Dict[str, Dict[str, Any]],
+    relationships: List[Dict[str, Any]],
+    goals: List[Dict[str, Any]],
+) -> str:
+    """Format the extracted relationships/goals/metric trends for the summary."""
+    rel_text = "; ".join(
+        f"{rel.get('target', '')} ({rel.get('type', '')})"
+        for rel in relationships
+        if rel.get("target")
+    ) or "none noted"
+    goal_text = "; ".join(
+        str(goal.get("description", ""))
+        for goal in goals
+        if goal.get("description")
+    ) or "none noted"
+    metric_text = "; ".join(
+        f"{metric['label']} {metric['direction']}"
+        for metric in metrics.values()
+    ) or "no clear trend"
+    return (
+        f"Relationships: {rel_text}\n"
+        f"Goals: {goal_text}\n"
+        f"Metric trends: {metric_text}"
+    )
+
+
 def _narrative_from_points(data_points: List[ArcDataPoint]) -> str:
-    """Build a compact narrative (per-story summaries + observations) for arc
-    relationship/goal extraction, so aggregation runs on distilled text."""
+    """Build a narrative for relationship/goal extraction from the concrete
+    per-story facts (key events + observations first, then summaries), so the
+    extractor sees named characters and events rather than vague blurbs."""
     parts: List[str] = []
     for data_point in data_points:
+        parts.extend(data_point.key_events)
+        parts.extend(data_point.observations)
         if data_point.ai_analysis:
             parts.append(data_point.ai_analysis)
-        parts.extend(data_point.observations)
     return "\n".join(parts)
 
 
@@ -704,16 +856,23 @@ def aggregate_arc(
 
     progression = analyzer.analyze_arc_progression(arc)
     narrative = _narrative_from_points(data_points)
+    metrics = _build_metric_series(arc)
+    _enrich_metric_obs(analyzer, character_name, metrics, narrative)
+    relationships = analyzer.analyze_relationships(narrative, character_name)
+    goals = analyzer.analyze_goals(narrative, character_name)
+    summary = analyzer.narrate_arc(
+        character_name, narrative, facts_block(metrics, relationships, goals)
+    )
 
     return {
         "direction": progression["direction"],
         "stage": progression["stage"],
-        "summary": progression["summary"],
+        "summary": summary,
         "stories_analyzed": len(arc.data_points),
         "updated_at": arc.state.updated_at,
-        "metrics": _build_metric_series(arc),
-        "relationships": analyzer.analyze_relationships(narrative, character_name),
-        "goals": analyzer.analyze_goals(narrative, character_name),
+        "metrics": metrics,
+        "relationships": relationships,
+        "goals": goals,
     }
 
 

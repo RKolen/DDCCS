@@ -1,0 +1,30 @@
+uuid: 02264003-32ec-4eb0-af92-f03f1c77e7a6
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_story_analyses
+    - node.type.character_analysis
+    - paragraphs.paragraphs_type.session_summary
+  module:
+    - entity_reference_revisions
+id: node.character_analysis.field_story_analyses
+field_name: field_story_analyses
+entity_type: node
+bundle: character_analysis
+label: 'Story analyses'
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:paragraph'
+  handler_settings:
+    target_bundles:
+      session_summary: session_summary
+    target_bundles_drag_drop:
+      session_summary:
+        weight: 0
+        enabled: true
+field_type: entity_reference_revisions

@@ -1,0 +1,22 @@
+uuid: 5b3cb0c1-9824-47c4-9ec8-fb64f47fea6b
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_analysis_summary
+    - node.type.character_analysis
+  module:
+    - text
+id: node.character_analysis.field_analysis_summary
+field_name: field_analysis_summary
+entity_type: node
+bundle: character_analysis
+label: 'Analysis summary'
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  allowed_formats: {  }
+field_type: text_long

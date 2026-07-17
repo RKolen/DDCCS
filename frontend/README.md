@@ -114,8 +114,14 @@ Drupal credentials.
 | `summarize-session.ts` | POST | Ollama-compatible LLM (fast model) | Summarise one story body into a concise recap (`{ storyBody }` -> `{ summary }`) |
 | `campaign-overview.ts` | POST | Ollama-compatible LLM (fast model) | Synthesize per-session recaps into one "story so far" (`{ summaries }` -> `{ overview }`) |
 | `update-character.ts` | POST | Drupal (`updateCharacter`) | PATCH optional character fields |
-| `arc-analyze-story.ts` | POST | Drupal (read one story) + Sidecar (`/character/arc/story`) | Analyse a single story into one arc data point (one model call). The console loops this per story with a progress counter |
-| `arc-aggregate.ts` | POST | Sidecar (`/character/arc/aggregate`) | Aggregate the collected per-story data points into the full arc for review |
+| `arc-story-chunks.ts` | POST | Drupal (read one story) | Split one story's body into small analysis chunks (`{ storyId }` -> `{ title, storyNumber, chunks }`); no AI. The console analyses each chunk separately so no request runs long |
+| `arc-analyze-story.ts` | POST | Sidecar (`/character/arc/story`) | Analyse one story chunk into one arc data point (one model call). The console loops this per chunk with a progress counter |
+| `arc-aggregate.ts` | POST | Sidecar (`/character/arc/aggregate`) | Aggregate the collected per-story data points into the full arc (fallback path when there is no `character_analysis` node to persist to) |
+| `upsert-analysis.ts` | POST | Drupal (`upsertCharacterAnalysis`) | Persist one story's analysis prose and/or the synthesized summary onto the `character_analysis` node (crash-safe, per story as each completes) |
+| `get-analysis.ts` | POST | Drupal (read `character_analysis`) | Read one character's stored record (`{ storyNumbers, storyAnalyses, summary }`): `storyNumbers` is the resume signal (skip already-analysed stories); the rest backs the arc screen's stored-analysis display |
+| `list-analyses.ts` | POST | Drupal (read `character_analysis`) | List every stored record (`{ analyses: [{ characterId, storyCount, hasSummary }] }`) in one call so the arc hub can show a "Synthesize summary" affordance per character card |
+| `synthesize-analysis.ts` | POST | Drupal (read node) + Sidecar (`/character/arc/aggregate`) + Drupal (`saveCharacterArc` + `upsertCharacterAnalysis`) | Read the node's stored per-story **data points**, aggregate them into a full arc (real metric trend lines, direction, relationships, goals, summary), save it onto the character so the sparkline display renders, and return it — the resume-safe finish for a run |
+| `delete-analysis.ts` | POST | Drupal (`deleteCharacterAnalysis`) | Discard a character's `character_analysis` node (the arc screen's Discard action) |
 | `save-arc.ts` | POST | Drupal (`saveCharacterArc`) | Persist an accepted arc (direction/stage/summary + metric/relationship/goal paragraphs) |
 | `generate-story.ts` | POST | Ollama-compatible LLM | Stream an AI-generated story (SSE) |
 | `consult.ts` | POST | Ollama-compatible LLM | Stream an in-character chat reply for the character consultation (SSE) |

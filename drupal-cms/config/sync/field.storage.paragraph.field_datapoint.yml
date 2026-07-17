@@ -1,0 +1,18 @@
+uuid: c6a50108-8103-444d-9d88-88cd7811d50a
+langcode: en
+status: true
+dependencies:
+  module:
+    - paragraphs
+id: paragraph.field_datapoint
+field_name: field_datapoint
+entity_type: paragraph
+type: string_long
+settings: {  }
+module: core
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

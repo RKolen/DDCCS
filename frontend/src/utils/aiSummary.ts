@@ -34,6 +34,22 @@ export function htmlToText(html: string): string {
     .trim();
 }
 
+/**
+ * Read a Drupal text field's `processed` HTML, tolerating both shapes.
+ *
+ * graphql_compose exposes a cardinality-1 text field as a single object and a
+ * cardinality > 1 field (e.g. the paragraph `field_text`, cardinality -1) as a
+ * list. This returns the first item's `processed` either way.
+ */
+export function readProcessed(
+  text?: Array<{ processed: string }> | { processed: string } | null,
+): string {
+  if (Array.isArray(text)) {
+    return text[0]?.processed ?? '';
+  }
+  return text?.processed ?? '';
+}
+
 /** Remove any `<think>...</think>` block a thinking model may still emit. */
 function stripThink(text: string): string {
   return text.replace(/<think>[\s\S]*?<\/think>/g, '').trim();

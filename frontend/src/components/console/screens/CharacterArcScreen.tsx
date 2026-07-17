@@ -299,8 +299,55 @@ interface SubScreenProps extends ScreenProps {
   stories:    DrupalStory[];
 }
 
+/** Stored character_analysis presence for a character, keyed by character id. */
+interface StoredInfo {
+  storyCount: number;
+  hasSummary: boolean;
+}
+
 function ArcHub({ ctx, setCtx, characters }: SubScreenProps): React.ReactElement {
-  const analysedCount = characters.filter(c => arcForChar(ctx, c)).length;
+  const [stored, setStored]       = React.useState<Map<string, StoredInfo>>(new Map());
+  const [synthId, setSynthId]     = React.useState<string | null>(null);
+  const [synthErr, setSynthErr]   = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    let active = true;
+    fetch('/api/list-analyses', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    '{}',
+    })
+      .then(res => res.json())
+      .then((data: { analyses?: Array<{ characterId: string } & StoredInfo> }) => {
+        if (!active) return;
+        const map = new Map<string, StoredInfo>();
+        for (const a of data.analyses ?? []) {
+          map.set(a.characterId, { storyCount: a.storyCount, hasSummary: a.hasSummary });
+        }
+        setStored(map);
+      })
+      .catch(() => { /* hub still works without stored-analysis hints */ });
+    return () => { active = false; };
+  }, []);
+
+  const synthesize = async (char: SubScreenProps['characters'][number]): Promise<void> => {
+    setSynthId(char.id);
+    setSynthErr(null);
+    try {
+      const arc = await synthesizeFromStored('', char.id, char.title, char.pronouns ?? '');
+      // Carry the freshly synthesized arc into the summary screen so its sparkline
+      // detail shows immediately (before the next Gatsby rebuild refreshes ctx).
+      setCtx({ ...ctx, arcSubAction: 'arc-summary', arcCharId: char.id, arcSynth: { charId: char.id, arc } });
+    } catch (err) {
+      setSynthErr(err instanceof Error ? err.message : String(err));
+    } finally {
+      setSynthId(null);
+    }
+  };
+
+  const analysedCount = characters.filter(
+    c => arcForChar(ctx, c) || stored.has(c.id),
+  ).length;
   return (
     <div className="arc-action">
       <div className="arc-hub-head">
@@ -363,6 +410,10 @@ function ArcHub({ ctx, setCtx, characters }: SubScreenProps): React.ReactElement
         </button>
       </div>
 
+      {synthErr && (
+        <div className="arc-error" style={{ margin: '0 24px' }}>{synthErr}</div>
+      )}
+
       <div className="arc-hub-grid">
         {characters.length === 0 ? (
           <p style={{ gridColumn: '1/-1', fontStyle: 'italic', color: 'var(--ink-dim)', padding: 24 }}>
@@ -371,12 +422,13 @@ function ArcHub({ ctx, setCtx, characters }: SubScreenProps): React.ReactElement
         ) : (
           characters.map(char => {
             const cardArc = arcForChar(ctx, char);
+            const info    = stored.get(char.id);
             return (
             <div
               key={char.id}
               role="button"
               tabIndex={0}
-              className={`arc-hub-card${cardArc ? '' : ' stale'}`}
+              className={`arc-hub-card${cardArc || info ? '' : ' stale'}`}
               onClick={() => setCtx({ ...ctx, arcSubAction: 'arc-summary', arcCharId: char.id })}
               onKeyDown={e => {
                 if (e.key === 'Enter' || e.key === ' ') {
@@ -403,10 +455,29 @@ function ArcHub({ ctx, setCtx, characters }: SubScreenProps): React.ReactElement
                       <ArcDirBadge direction={cardArc.direction} />
                       {cardArc.storiesAnalyzed} stories
                     </span>
+                  ) : info ? (
+                    <span className="stories">{info.storyCount} stories analysed</span>
                   ) : (
                     <span className="stories">Not yet analysed</span>
                   )}
                   <span className="grow" />
+                  {info && (
+                    <button
+                      type="button"
+                      className="arc-btn small"
+                      disabled={synthId === char.id}
+                      onClick={e => {
+                        e.stopPropagation();
+                        void synthesize(char);
+                      }}
+                    >
+                      {synthId === char.id
+                        ? 'Synthesizing…'
+                        : info.hasSummary ? 'Re-synthesize' : 'Synthesize'}
+                      {' '}
+                      <AiTag />
+                    </button>
+                  )}
                   <button
                     type="button"
                     className="arc-btn small primary"
@@ -545,9 +616,210 @@ function ArcDetailBody({ arc }: { arc: CharacterArcData }): React.ReactElement {
    2. ArcSummary — one character's arc detail
    ──────────────────────────────────────────────────────────── */
 
+/** One stored per-story analysis (plain prose, as returned by get-analysis). */
+interface StoredAnalysis {
+  storyNumber: number | null;
+  text:        string;
+}
+
+/**
+ * The character_analysis node's stored record: the synthesized summary plus each
+ * story's analysis prose, read live from Drupal, with a Discard action that
+ * deletes the node. This mirrors on the console what is stored in the CMS.
+ */
+function StoredAnalysisPanel({
+  campaignId,
+  characterId,
+  characterName,
+  pronouns,
+  initialArc,
+}: {
+  campaignId:    string;
+  characterId:   string;
+  characterName: string;
+  pronouns:      string;
+  initialArc:    CharacterArcData | null;
+}): React.ReactElement | null {
+  const [analyses, setAnalyses]       = React.useState<StoredAnalysis[]>([]);
+  const [summary, setSummary]         = React.useState(initialArc?.summary ?? '');
+  const [loading, setLoading]         = React.useState(true);
+  const [error, setError]             = React.useState<string | null>(null);
+  const [discarding, setDiscarding]   = React.useState(false);
+  const [discarded, setDiscarded]     = React.useState(false);
+  const [synthesizing, setSynthesizing] = React.useState(false);
+  const [arc, setArc]                 = React.useState<CharacterArcData | null>(initialArc);
+
+  React.useEffect(() => {
+    let active = true;
+    if (!characterId) {
+      setLoading(false);
+      return () => { active = false; };
+    }
+    setLoading(true);
+    setError(null);
+    setDiscarded(false);
+    fetch('/api/get-analysis', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ campaignId, characterId }),
+    })
+      .then(async res => {
+        const data = await res.json();
+        if (!active) return;
+        if (!res.ok) throw new Error(data.error || 'Failed to load analysis');
+        setAnalyses(Array.isArray(data.storyAnalyses) ? data.storyAnalyses : []);
+        setSummary(typeof data.summary === 'string' ? data.summary : '');
+      })
+      .catch((err: unknown) => {
+        if (active) setError(err instanceof Error ? err.message : String(err));
+      })
+      .finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
+  }, [campaignId, characterId]);
+
+  const discard = async (): Promise<void> => {
+    if (!characterId) return;
+    setDiscarding(true);
+    setError(null);
+    try {
+      const res = await fetch('/api/delete-analysis', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ campaignId, characterId }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to discard analysis');
+      setAnalyses([]);
+      setSummary('');
+      setDiscarded(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setDiscarding(false);
+    }
+  };
+
+  // Re-narrate the summary from the already-stored per-story prose, without
+  // re-analysing the stories. Handy whenever a record already exists.
+  const synthesize = async (): Promise<void> => {
+    if (!characterId) return;
+    setSynthesizing(true);
+    setError(null);
+    try {
+      const result = await synthesizeFromStored(campaignId, characterId, characterName, pronouns);
+      setArc(result);
+      setSummary(result.summary);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setSynthesizing(false);
+    }
+  };
+
+  if (!characterId) return null;
+  if (loading) {
+    return (
+      <div className="arc-card" style={{ margin: 24 }}>
+        <p className="obs" style={{ fontStyle: 'italic' }}>Loading stored analysis…</p>
+      </div>
+    );
+  }
+  if (discarded) {
+    return (
+      <div className="arc-card" style={{ margin: 24 }}>
+        <p className="obs" style={{ fontStyle: 'italic' }}>Analysis record discarded.</p>
+      </div>
+    );
+  }
+  if (!summary && analyses.length === 0) {
+    return error ? (
+      <div className="arc-card" style={{ margin: 24 }}>
+        <div className="arc-error">{error}</div>
+      </div>
+    ) : null;
+  }
+
+  return (
+    <div className="arc-card" style={{ margin: 24 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <h4 style={{ margin: 0 }}>Stored analysis record</h4>
+        <div style={{ display: 'flex', gap: 8 }}>
+          {analyses.length > 0 && (
+            <button
+              type="button"
+              className="arc-btn small"
+              onClick={synthesize}
+              disabled={synthesizing || discarding}
+            >
+              {synthesizing
+                ? 'Synthesizing…'
+                : summary ? 'Re-synthesize summary' : 'Synthesize summary'}
+            </button>
+          )}
+          <button
+            type="button"
+            className="arc-btn danger small"
+            onClick={discard}
+            disabled={discarding || synthesizing}
+          >
+            {discarding ? 'Discarding…' : 'Discard analysis'}
+          </button>
+        </div>
+      </div>
+      {error && <div className="arc-error" style={{ marginTop: 8 }}>{error}</div>}
+      {arc ? (
+        <div style={{ marginTop: 12 }}>
+          <div className="arc-state" style={{ marginBottom: 8 }}>
+            <ArcDirBadge direction={arc.direction} />
+            <ArcStageTrack stage={arc.stage} />
+          </div>
+          <ArcDetailBody arc={arc} />
+        </div>
+      ) : summary ? (
+        <div style={{ marginTop: 12 }}>
+          <span className="arc-eyebrow" style={{ display: 'block', marginBottom: 6 }}>Summary</span>
+          <p style={{ fontFamily: 'var(--font-body)', fontSize: 13, lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>
+            {summary}
+          </p>
+        </div>
+      ) : null}
+      {analyses.length > 0 && (
+        <div style={{ marginTop: 16 }}>
+          <span className="arc-eyebrow" style={{ display: 'block', marginBottom: 6 }}>
+            Per-story analyses ({analyses.length})
+          </span>
+          {analyses.map((a, i) => (
+            <details key={a.storyNumber ?? `idx-${i}`} style={{ marginBottom: 8 }}>
+              <summary style={{ cursor: 'pointer', fontWeight: 600 }}>
+                {a.storyNumber !== null
+                  ? `Story ${String(a.storyNumber).padStart(3, '0')}`
+                  : 'Story'}
+              </summary>
+              <p style={{ fontFamily: 'var(--font-body)', fontSize: 13, lineHeight: 1.6, whiteSpace: 'pre-wrap', marginTop: 6 }}>
+                {a.text}
+              </p>
+            </details>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function ArcSummary({ ctx, setCtx, characters }: SubScreenProps): React.ReactElement {
   const charId = ctx.arcCharId as string | undefined;
   const char   = characters.find(c => c.id === charId) ?? characters[0] ?? null;
+
+  const data = useConsoleData();
+  const activeCampaign = (ctx.activeCampaignName as string | null | undefined) ?? null;
+  const campaignId =
+    data.campaigns.find(c => c.name === (activeCampaign ?? char?.campaign))?.id
+    ?? char?.campaignId ?? '';
+
+  // An arc freshly synthesized from the hub is carried in via ctx so its detail
+  // (sparklines, direction) shows immediately, before the next Gatsby rebuild.
+  const synthCarry = ctx.arcSynth as { charId: string; arc: CharacterArcData } | undefined;
+  const initialArc = synthCarry && synthCarry.charId === char?.id ? synthCarry.arc : null;
 
   const arcData = arcForChar(ctx, char);
 
@@ -596,6 +868,16 @@ function ArcSummary({ ctx, setCtx, characters }: SubScreenProps): React.ReactEle
         </div>
       </div>
 
+      {char && (
+        <StoredAnalysisPanel
+          campaignId={campaignId}
+          characterId={char.id}
+          characterName={char.title}
+          pronouns={char.pronouns ?? ''}
+          initialArc={initialArc}
+        />
+      )}
+
       {arcData ? (
         <ArcDetailBody arc={arcData} />
       ) : (
@@ -637,48 +919,297 @@ interface ArcProgress {
   total: number;
 }
 
+interface StoryChunks {
+  title:       string;
+  storyNumber: number | null;
+  chunks:      string[];
+}
+
+/** One story's arc data point (the shape the sidecar returns per chunk). */
+interface ArcDataPointDict {
+  story_file:    string;
+  session_id:    string;
+  timestamp:     string;
+  metric_values: Record<string, number>;
+  observations:  string[];
+  key_events:    string[];
+  ai_analysis:   string;
+}
+
 /**
- * Run a character's arc analysis one story at a time, then aggregate.
+ * Merge a story's per-chunk data points into one story-level data point:
+ * metrics averaged, observations/events/summaries collected. Keeps the aggregate
+ * payload small (per-story, not per-chunk) so it stays under the request limit.
+ */
+function mergeStoryChunks(
+  parts: ArcDataPointDict[],
+  title: string,
+  storyNumber: number | null,
+): ArcDataPointDict {
+  const totals: Record<string, number> = {};
+  const counts: Record<string, number> = {};
+  const observations: string[] = [];
+  const keyEvents: string[] = [];
+  const summaries: string[] = [];
+  for (const part of parts) {
+    for (const [key, value] of Object.entries(part.metric_values ?? {})) {
+      if (typeof value === 'number') {
+        totals[key] = (totals[key] ?? 0) + value;
+        counts[key] = (counts[key] ?? 0) + 1;
+      }
+    }
+    observations.push(...(part.observations ?? []));
+    keyEvents.push(...(part.key_events ?? []));
+    if (part.ai_analysis) {
+      summaries.push(part.ai_analysis);
+    }
+  }
+  const metricValues: Record<string, number> = {};
+  for (const key of Object.keys(totals)) {
+    metricValues[key] = Math.round((totals[key] / counts[key]) * 10) / 10;
+  }
+  return {
+    story_file:    title,
+    session_id:    storyNumber != null ? String(storyNumber) : '',
+    timestamp:     new Date().toISOString(),
+    metric_values: metricValues,
+    observations:  observations.slice(0, 8),
+    key_events:    keyEvents.slice(0, 8),
+    ai_analysis:   summaries.join(' '),
+  };
+}
+
+/** Fetch every story's text split into small analysis chunks (light, no AI). */
+async function fetchStoryChunks(storyIds: string[]): Promise<StoryChunks[]> {
+  const stories: StoryChunks[] = [];
+  for (const storyId of storyIds) {
+    try {
+      const res = await fetch('/api/arc-story-chunks', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ storyId }),
+      });
+      const data = await res.json();
+      if (res.ok && Array.isArray(data.chunks) && data.chunks.length > 0) {
+        stories.push({ title: data.title, storyNumber: data.storyNumber, chunks: data.chunks });
+      }
+    } catch {
+      // Skip a story whose chunks can't be fetched; the rest still run.
+    }
+  }
+  return stories;
+}
+
+/** Format a merged story data point into readable prose for the wysiwyg node. */
+function formatStoryAnalysis(part: ArcDataPointDict): string {
+  const sections: string[] = [];
+  if (part.ai_analysis) {
+    sections.push(part.ai_analysis);
+  }
+  if (part.key_events?.length) {
+    sections.push(`Key events: ${part.key_events.join('; ')}`);
+  }
+  if (part.observations?.length) {
+    sections.push(`Observations: ${part.observations.join('; ')}`);
+  }
+  return sections.join('\n\n');
+}
+
+/** Persist a story analysis / summary to the character_analysis node (best-effort). */
+async function persistAnalysis(
+  campaignId: string,
+  characterId: string,
+  fields: {
+    storyNumber?: number | null;
+    storyText?:   string;
+    datapoint?:   string;
+    summary?:     string;
+  },
+): Promise<void> {
+  if (!characterId) {
+    return;
+  }
+  try {
+    await fetch('/api/upsert-analysis', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ campaignId, characterId, ...fields }),
+    });
+  } catch {
+    // Persistence is best-effort; a failure never aborts the analysis.
+  }
+}
+
+/** Story numbers already stored on the node — the resume signal. */
+async function fetchDoneStoryNumbers(
+  campaignId: string,
+  characterId: string,
+): Promise<Set<number>> {
+  if (!characterId) {
+    return new Set<number>();
+  }
+  try {
+    const res = await fetch('/api/get-analysis', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ campaignId, characterId }),
+    });
+    const data = await res.json();
+    if (res.ok && Array.isArray(data.storyNumbers)) {
+      return new Set<number>(
+        (data.storyNumbers as unknown[]).filter((n): n is number => typeof n === 'number'),
+      );
+    }
+  } catch {
+    // No resume data available; every story is analysed.
+  }
+  return new Set<number>();
+}
+
+/**
+ * Synthesize the arc from the analyses stored on the node.
  *
- * Each story is a single model call (its own request), so no request runs long
- * enough to trip the fetch timeout, and `onProgress` drives a live counter.
+ * Reads every persisted per-story analysis (server-side) rather than the
+ * in-memory data points, so a resumed run still produces a whole-arc summary
+ * from the stories analysed across earlier attempts.
+ */
+async function synthesizeFromStored(
+  campaignId: string,
+  characterId: string,
+  characterName: string,
+  pronouns: string,
+): Promise<CharacterArcData> {
+  const res = await fetch('/api/synthesize-analysis', {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ campaignId, characterId, characterName, pronouns }),
+  });
+  const raw = await res.text();
+  let data: { error?: string } & Partial<CharacterArcData> = {};
+  try {
+    data = raw ? JSON.parse(raw) : {};
+  } catch {
+    throw new Error(raw.slice(0, 200) || `Synthesis failed (${res.status})`);
+  }
+  if (!res.ok) {
+    throw new Error(data.error || `Synthesis failed (${res.status})`);
+  }
+  // The endpoint aggregates the stored data points into a full arc: real metric
+  // trend lines, direction, and stage, plus relationships, goals, and summary.
+  return {
+    direction:       asDirection(data.direction ?? 'stasis'),
+    stage:           asStage(data.stage ?? 'introduction'),
+    summary:         data.summary ?? '',
+    storiesAnalyzed: data.storiesAnalyzed ?? 0,
+    lastAnalyzed:    data.lastAnalyzed ?? new Date().toISOString(),
+    metrics:         data.metrics ?? {},
+    relationships:   data.relationships ?? [],
+    goals:           data.goals ?? [],
+  };
+}
+
+/**
+ * Run a character's arc analysis one CHUNK at a time, then aggregate.
+ *
+ * Every request is a single small chunk (a bounded ~30s model pass), so a large
+ * story can never hang in one multi-minute request, and `onProgress` ticks per
+ * chunk so the UI always shows movement. A failed chunk is retried once then
+ * skipped — one bad passage never aborts the run. Each story's analysis is
+ * persisted to a character_analysis node as it completes, and a story already
+ * stored there is skipped — so a crashed run resumes where it left off and the
+ * final summary is synthesized from every stored story, not just this attempt.
  */
 async function runArcAnalysis(
   characterName: string,
   campaignName: string,
+  campaignId: string,
+  characterId: string,
   pronouns: string,
   storyIds: string[],
   onProgress: (p: ArcProgress) => void,
 ): Promise<CharacterArcData> {
-  const dataPoints: unknown[] = [];
-  for (let i = 0; i < storyIds.length; i += 1) {
-    onProgress({ done: i, total: storyIds.length });
-    // One story per request, sequential. Retry once, then SKIP the story so a
-    // single failed/slow story can never abort the whole run.
-    let got = false;
-    for (let attempt = 0; attempt < 2 && !got; attempt += 1) {
-      try {
-        const res = await fetch('/api/arc-analyze-story', {
-          method:  'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ characterName, storyId: storyIds[i], pronouns }),
+  const stories = await fetchStoryChunks(storyIds);
+  const total = stories.reduce((sum, story) => sum + story.chunks.length, 0);
+  if (total === 0) {
+    throw new Error('No story text found to analyse.');
+  }
+
+  // The character is the key for the analysis record; the campaign is optional
+  // metadata, so persistence/resume only need a character id.
+  const persisting = Boolean(characterId);
+  const doneStoryNumbers = persisting
+    ? await fetchDoneStoryNumbers(campaignId, characterId)
+    : new Set<number>();
+
+  const dataPoints: ArcDataPointDict[] = [];
+  let done = 0;
+  onProgress({ done, total });
+  for (const story of stories) {
+    // Resume: a story already stored on the node is skipped. Its prose is
+    // persisted and will be read back during synthesis.
+    if (story.storyNumber !== null && doneStoryNumbers.has(story.storyNumber)) {
+      done += story.chunks.length;
+      onProgress({ done, total });
+      continue;
+    }
+    const storyParts: ArcDataPointDict[] = [];
+    for (const chunk of story.chunks) {
+      let got = false;
+      for (let attempt = 0; attempt < 2 && !got; attempt += 1) {
+        try {
+          const res = await fetch('/api/arc-analyze-story', {
+            method:  'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              characterName,
+              content:     chunk,
+              title:       story.title,
+              storyNumber: story.storyNumber,
+              pronouns,
+            }),
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || `Passage analysis failed (${res.status})`);
+          storyParts.push(data.dataPoint as ArcDataPointDict);
+          got = true;
+        } catch {
+          // Swallow: the inner loop retries, and an unrecovered passage is skipped.
+        }
+      }
+      done += 1;
+      onProgress({ done, total });
+    }
+    // Collapse this story's passages into one data point and persist a readable
+    // analysis to the character_analysis node so the run is crash-safe.
+    if (storyParts.length > 0) {
+      const merged = mergeStoryChunks(storyParts, story.title, story.storyNumber);
+      dataPoints.push(merged);
+      if (persisting) {
+        await persistAnalysis(campaignId, characterId, {
+          storyNumber: story.storyNumber,
+          storyText:   formatStoryAnalysis(merged),
+          // Persist the structured data point so synthesis can recompute real
+          // metric trends (numbers), not just re-read prose.
+          datapoint:   JSON.stringify(merged),
         });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || `Story analysis failed (${res.status})`);
-        dataPoints.push(data.dataPoint);
-        got = true;
-      } catch {
-        // Swallow: the inner loop retries, and an unrecovered story is skipped.
       }
     }
   }
-  onProgress({ done: storyIds.length, total: storyIds.length });
 
-  if (dataPoints.length === 0) {
-    throw new Error('Every story failed to analyse — is the sidecar running?');
+  // Node-backed path: synthesize the arc from every story stored on the node
+  // (this attempt plus any prior resumed ones). Reading the persisted prose is
+  // what lets a crashed run pick up where it left off.
+  if (persisting) {
+    if (dataPoints.length === 0 && doneStoryNumbers.size === 0) {
+      throw new Error('Every passage failed to analyse — is the sidecar running?');
+    }
+    return synthesizeFromStored(campaignId, characterId, characterName, pronouns);
   }
 
-  // Aggregate the stories that succeeded; retry once on a transient failure.
+  // Fallback (no node to persist to): aggregate the in-memory data points.
+  if (dataPoints.length === 0) {
+    throw new Error('Every passage failed to analyse — is the sidecar running?');
+  }
   let agg: CharacterArcData | null = null;
   let aggError = 'Aggregation failed';
   for (let attempt = 0; attempt < 2 && agg === null; attempt += 1) {
@@ -688,7 +1219,15 @@ async function runArcAnalysis(
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ characterName, campaignName, pronouns, dataPoints }),
       });
-      const data = await aggRes.json();
+      // Read as text first so a non-JSON error page yields a useful message
+      // instead of a raw "JSON.parse: unexpected character".
+      const raw = await aggRes.text();
+      let data: { error?: string } & Partial<CharacterArcData> = {};
+      try {
+        data = raw ? JSON.parse(raw) : {};
+      } catch {
+        throw new Error(raw.slice(0, 200) || `Aggregation failed (${aggRes.status})`);
+      }
       if (!aggRes.ok) throw new Error(data.error || `Aggregation failed (${aggRes.status})`);
       agg = data as CharacterArcData;
     } catch (err) {
@@ -696,7 +1235,7 @@ async function runArcAnalysis(
     }
   }
   if (agg === null) throw new Error(aggError);
-  return agg;
+  return { ...agg, storiesAnalyzed: stories.length };
 }
 
 /* ────────────────────────────────────────────────────────────
@@ -716,11 +1255,15 @@ function ArcAnalyze({ ctx, setCtx, characters, stories }: SubScreenProps): React
   const [saved, setSaved]     = React.useState(false);
   const [progress, setProgress] = React.useState<ArcProgress>({ done: 0, total: 0 });
 
+  const data = useConsoleData();
   const activeChar = characters.find(c => c.id === selectedChar) ?? null;
   // When a campaign is active the `stories` prop is already scoped to it, so use
   // it directly — a party member may be a source character whose own `campaign`
   // field is null, which would otherwise filter every story out.
   const activeCampaign = (ctx.activeCampaignName as string | null | undefined) ?? null;
+  const campaignId =
+    data.campaigns.find(c => c.name === (activeCampaign ?? activeChar?.campaign))?.id
+    ?? activeChar?.campaignId ?? '';
   const campaignStories = activeCampaign
     ? stories
     : stories.filter(s => s.campaign === (activeChar?.campaign ?? null));
@@ -741,6 +1284,8 @@ function ArcAnalyze({ ctx, setCtx, characters, stories }: SubScreenProps): React
       const arc = await runArcAnalysis(
         activeChar.title,
         activeCampaign ?? activeChar.campaign ?? '',
+        campaignId,
+        activeChar.id,
         activeChar.pronouns ?? '',
         storyIds,
         setProgress,
@@ -805,12 +1350,12 @@ function ArcAnalyze({ ctx, setCtx, characters, stories }: SubScreenProps): React
                   {' / '}
                   {progress.total}
                 </span>
-                <span className="sub">stories</span>
+                <span className="sub">passages</span>
               </div>
               <div className="arc-meter-cell">
                 <span className="label">Status</span>
                 <span className="value" style={{ fontSize: 13, color: 'var(--color-gold-mid)' }}>
-                  {progress.done >= progress.total ? 'Aggregating' : 'Analysing'}
+                  {progress.total > 0 && progress.done >= progress.total ? 'Aggregating' : 'Analysing'}
                 </span>
               </div>
             </div>
@@ -818,9 +1363,9 @@ function ArcAnalyze({ ctx, setCtx, characters, stories }: SubScreenProps): React
               <i style={{ width: `${progress.total ? (progress.done / progress.total) * 100 : 0}%` }} />
             </div>
             <p>
-              {progress.done >= progress.total
-                ? 'Aggregating the per-story analyses into the character arc…'
-                : `Analysing story ${progress.done + 1} of ${progress.total} — each story is a separate model pass, so this can take a while.`}
+              {progress.total > 0 && progress.done >= progress.total
+                ? 'Aggregating the passage analyses into the character arc…'
+                : `Analysing passage ${progress.done + 1} of ${progress.total || '…'} — each passage is a short, separate model pass.`}
               {' '}
               <span className="arc-an-cursor" />
             </p>
@@ -828,8 +1373,8 @@ function ArcAnalyze({ ctx, setCtx, characters, stories }: SubScreenProps): React
           <div className="arc-card">
             <h4>Working</h4>
             <ul className="arc-an-events">
-              <li>{progress.done} of {progress.total} stories analysed</li>
-              <li>{progress.done >= progress.total ? 'Aggregating arc, relationships, and goals…' : 'One model call per story on the sidecar…'}</li>
+              <li>{progress.done} of {progress.total} passages analysed</li>
+              <li>{progress.total > 0 && progress.done >= progress.total ? 'Aggregating arc, relationships, and goals…' : 'One short model call per passage — bounded and resumable.'}</li>
             </ul>
           </div>
         </div>
@@ -1004,6 +1549,7 @@ function ArcAnalyze({ ctx, setCtx, characters, stories }: SubScreenProps): React
 type BatchStatus = 'pending' | 'running' | 'done' | 'error' | 'skipped';
 
 function ArcBatch({ ctx, setCtx, characters, stories }: SubScreenProps): React.ReactElement {
+  const data = useConsoleData();
   const [status, setStatus] = React.useState<Record<string, BatchStatus>>({});
   const [progress, setProgress] = React.useState<Record<string, ArcProgress>>({});
   const [running, setRunning] = React.useState(false);
@@ -1019,9 +1565,14 @@ function ArcBatch({ ctx, setCtx, characters, stories }: SubScreenProps): React.R
     if (storyIds.length === 0) {
       return null;
     }
+    const campaignId =
+      data.campaigns.find(c => c.name === (activeCampaign ?? char.campaign))?.id
+      ?? char.campaignId ?? '';
     const arc = await runArcAnalysis(
       char.title,
       activeCampaign ?? char.campaign ?? '',
+      campaignId,
+      char.id,
       char.pronouns ?? '',
       storyIds,
       p => setProgress(prev => ({ ...prev, [char.id]: p })),
@@ -1123,7 +1674,7 @@ function ArcBatch({ ctx, setCtx, characters, stories }: SubScreenProps): React.R
           const st = status[c.id] ?? 'pending';
           const p  = progress[c.id];
           const runningLabel = p && p.total > 0
-            ? (p.done >= p.total ? 'Aggregating…' : `Story ${p.done + 1}/${p.total}`)
+            ? (p.done >= p.total ? 'Aggregating…' : `Passage ${p.done + 1}/${p.total}`)
             : label.running;
           return (
             <div key={c.id} className="arc-rel-row" style={{ alignItems: 'center' }}>
