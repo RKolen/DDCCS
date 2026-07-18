@@ -323,7 +323,11 @@ New write path via a DataProducer (the CLI JSON:API sync script is dropped).
    `free`, `generate`), `src/ai/comfyui_workflows.py` (`txt2img_workflow`),
    `src/ai/portrait_prompt.py`. Unit tests for all three under `tests/ai/`,
    registered in the `test_all_ai.py` aggregator.
-3. `POST /character/portrait` in `app.py` + Pydantic models.
+3. **[DONE]** `POST /character/portrait` in `app.py` on the existing
+   `_character_router`, with `PortraitRequest` / `PortraitResponse` in
+   `models.py` and a cached `_get_comfyui_client()`. Returns the base64 PNG,
+   seed, prompt, and `alt`; 503/500 per section 6. Endpoint tests in
+   `tests/sidecar/test_portrait_endpoint.py`.
 4. Drupal `setCharacterPortrait` mutation + resolver + `SetCharacterPortrait.php`
    (file + media + `field_image`); perms; config export.
 5. `generate-portrait.ts` + the **Generate image** button.

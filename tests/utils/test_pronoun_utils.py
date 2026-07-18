@@ -177,7 +177,7 @@ def test_validate_whitespace_only_is_invalid():
     print("[PASS] validate whitespace-only is invalid")
 
 
-def test_validate_non_string_is_invalid():
+def test_validate_non_string_is_invalid() -> None:
     """Non-string (e.g. integer) fails validation."""
     print("\n[TEST] validate non-string is invalid")
     # Deliberately non-string input: this test exercises the runtime guard, so

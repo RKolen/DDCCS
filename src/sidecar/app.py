@@ -1,7 +1,9 @@
 """FastAPI application for the D&D search query parser sidecar."""
 
+import base64
 import logging
 import os
+import random
 import shutil
 import subprocess
 import sys
@@ -17,7 +19,10 @@ from src.utils.piper_tts_client import PiperTTSClient, get_narrator_voice_id
 
 from src.ai.abilities_rag import Ability, get_abilities, get_background
 from src.ai.ai_client import AIClient
+from src.ai.comfyui_client import ComfyUIClient
+from src.ai.comfyui_workflows import RenderSettings, Txt2ImgParams, txt2img_workflow
 from src.ai.equipment_rag import get_equipment_descriptions
+from src.ai.portrait_prompt import build_portrait_prompt
 from src.character_arc.arc_analyzer import (
     ArcAnalyzer,
     aggregate_arc,
@@ -54,6 +59,8 @@ from src.sidecar.models import (
     HealthResponse,
     ParseQueryRequest,
     ParseQueryResponse,
+    PortraitRequest,
+    PortraitResponse,
     ResolveBackgroundRequest,
     ResolveBackgroundResponse,
     SkillPlanRequest,
@@ -212,6 +219,45 @@ def _get_arc_aggregate_client() -> AIClient | None:
     """
     profile = os.getenv("ARC_AGGREGATE_PROFILE", "creative")
     return _build_arc_client(profile) or _get_arc_ai_client()
+
+
+@lru_cache(maxsize=1)
+def _get_comfyui_client() -> ComfyUIClient | None:
+    """Build the ComfyUI portrait client, or None when it is not configured.
+
+    ComfyUI runs on the host (never in DDEV). Returns None when the feature is
+    disabled or no base URL resolves, so the endpoint can answer 503 rather
+    than raise.
+
+    Returns:
+        A configured ComfyUIClient, or None when unavailable.
+    """
+    comfyui = load_config().comfyui
+    if not comfyui.is_configured():
+        return None
+    return ComfyUIClient(comfyui.get_base_url(), timeout=comfyui.timeout)
+
+
+def _portrait_alt(profile: dict[str, Any]) -> str:
+    """Build alt text for a generated portrait.
+
+    Drupal's media image field sets ``alt_field_required: true``, so this must
+    never return an empty string.
+
+    Args:
+        profile: The character profile used to build the portrait.
+
+    Returns:
+        Human-readable alt text describing the portrait.
+    """
+    name = str(profile.get("name") or "").strip() or "Character"
+    descriptor = " ".join(
+        str(profile.get(key) or "").strip()
+        for key in ("lineage", "species", "character_class")
+    ).split()
+    if descriptor:
+        return f"Portrait of {name}, a {' '.join(descriptor)}"
+    return f"Portrait of {name}"
 
 
 @app.exception_handler(Exception)
@@ -594,6 +640,86 @@ def _resolve_abilities(req: BuildCharacterRequest) -> list[Ability]:
             seen.add(key)
             unique.append(ability)
     return unique
+
+
+@_character_router.post("/portrait", response_model=PortraitResponse)
+def character_portrait_endpoint(req: PortraitRequest) -> PortraitResponse:
+    """Generate a character portrait with local ComfyUI, returned as base64 PNG.
+
+    Phase A is text-to-image only: the prompt is built from the character
+    profile. Models are unloaded afterwards so the SD checkpoint does not stay
+    resident alongside other local AI services.
+
+    Args:
+        req: PortraitRequest with the character profile and optional seed/size.
+
+    Returns:
+        PortraitResponse with the base64 PNG, the seed used, prompt, and alt text.
+
+    Raises:
+        HTTPException: 503 when ComfyUI is disabled, unconfigured, or
+            unreachable; 500 when generation fails or times out.
+    """
+    comfyui = load_config().comfyui
+    if not comfyui.enabled:
+        raise HTTPException(
+            status_code=503,
+            detail="ComfyUI portrait generation is disabled (set COMFYUI_ENABLED=true)",
+        )
+
+    client = _get_comfyui_client()
+    if client is None:
+        raise HTTPException(
+            status_code=503,
+            detail="ComfyUI has no reachable base URL (set COMFYUI_HOST/COMFYUI_PORT)",
+        )
+    if not comfyui.assets.checkpoint:
+        raise HTTPException(
+            status_code=503,
+            detail="No Stable Diffusion checkpoint configured (set COMFYUI_CHECKPOINT)",
+        )
+    if not client.is_available():
+        raise HTTPException(
+            status_code=503, detail="ComfyUI is not reachable on the host"
+        )
+
+    positive, negative = build_portrait_prompt(req.profile)
+    seed = req.seed if req.seed is not None else random.randrange(2**31)
+
+    render = RenderSettings()
+    if req.width is not None:
+        render.width = req.width
+    if req.height is not None:
+        render.height = req.height
+
+    workflow = txt2img_workflow(
+        Txt2ImgParams(
+            checkpoint=comfyui.assets.checkpoint,
+            positive=positive,
+            negative=negative,
+            seed=seed,
+            render=render,
+        )
+    )
+
+    try:
+        png = client.generate(workflow)
+    finally:
+        # Unload models between runs: this box is CPU-only and an SD checkpoint
+        # left resident alongside Ollama/DDEV is the top OOM risk.
+        client.free()
+
+    if png is None:
+        raise HTTPException(
+            status_code=500, detail="ComfyUI generation failed or timed out"
+        )
+
+    return PortraitResponse(
+        image_base64=base64.b64encode(png).decode("ascii"),
+        seed=seed,
+        prompt=positive,
+        alt=_portrait_alt(req.profile),
+    )
 
 
 @_tts_router.post("/speak")

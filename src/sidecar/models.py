@@ -209,6 +209,51 @@ class TtsRequest(BaseModel):
     pitch: float = Field(default=0.0, ge=-12.0, le=12.0)
 
 
+class PortraitRequest(BaseModel):
+    """Request to generate a character portrait via local ComfyUI.
+
+    ``profile`` carries the character fields the prompt builder understands
+    (species, lineage, character_class, pronouns, background,
+    personality_traits) plus optional ``appearance`` / ``arc_summary`` /
+    ``backstory`` flavour keys.
+    """
+
+    profile: Dict[str, Any]
+    # Omit to get a random seed; pass a value to reproduce a previous render.
+    seed: Optional[int] = None
+    # SD 1.5-class checkpoints need smaller dimensions than the SDXL defaults.
+    width: Optional[int] = Field(default=None, ge=256, le=2048)
+    height: Optional[int] = Field(default=None, ge=256, le=2048)
+
+    @field_validator("profile")
+    @classmethod
+    def reject_empty_profile(cls, value: Dict[str, Any]) -> Dict[str, Any]:
+        """Reject an empty profile, which would yield a generic prompt.
+
+        Args:
+            value: The submitted character profile mapping.
+
+        Returns:
+            The unchanged profile mapping.
+
+        Raises:
+            ValueError: If the profile has no fields.
+        """
+        if not value:
+            raise ValueError("profile must not be empty")
+        return value
+
+
+class PortraitResponse(BaseModel):
+    """A generated portrait, base64-encoded for transport to Drupal."""
+
+    image_base64: str
+    # Echoed so a pleasing render can be reproduced or stored alongside the image.
+    seed: int
+    prompt: str
+    alt: str
+
+
 class ArcStoryInput(BaseModel):
     """One story's text for character arc analysis, in campaign order."""
 
