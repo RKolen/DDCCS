@@ -311,6 +311,7 @@ def test_update_existing_character():
 
         # Get original profile
         original_profile = loader.get_character_profile("Aragorn")
+        assert original_profile is not None
         assert original_profile.identity.level == 5
 
         # Update profile via JSON
@@ -355,6 +356,7 @@ def test_update_existing_character():
 
         # Verify update
         new_profile = loader.get_character_profile("Aragorn")
+        assert new_profile is not None
         assert new_profile.identity.level == 10
         assert new_profile.identity.character_class == DnDClass.RANGER
         assert "Anduril" in new_profile.possessions.equipment.get("weapons", [])

@@ -51,8 +51,8 @@ class NPCAgent:
         }
 
         # Add full character profile information if available
-        if self.profile.is_full_profile():
-            stats = self.profile.combat_stats
+        stats = self.profile.combat_stats
+        if self.profile.is_full_profile() and stats is not None:
             status.update(
                 {
                     "class": stats.dnd_class,
@@ -70,8 +70,8 @@ class NPCAgent:
             )
 
         # Add major NPC fields if this is a major profile
-        if self.profile.is_major_profile():
-            major = self.profile.major_stats
+        major = self.profile.major_stats
+        if self.profile.is_major_profile() and major is not None:
             status.update(
                 {
                     "legendary_actions": major.legendary_actions,

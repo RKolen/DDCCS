@@ -55,6 +55,26 @@ class ComfyUIClient:
         except (requests.RequestException, ValueError):
             return None
 
+    def free(self) -> bool:
+        """Ask ComfyUI to unload models and free memory (POST /free).
+
+        Called between the vision step and generation (and after generation) so
+        the vision model and the SD checkpoint are never resident at once - the
+        top OOM risk on this CPU-only, 32 GB box.
+
+        Returns:
+            True if ComfyUI accepted the free request, False otherwise.
+        """
+        try:
+            resp = requests.post(
+                f"{self.base_url}/free",
+                json={"unload_models": True, "free_memory": True},
+                timeout=30,
+            )
+            return resp.status_code == 200
+        except requests.RequestException:
+            return False
+
     def generate(self, workflow: Dict[str, Any]) -> Optional[bytes]:
         """Queue a workflow, wait for it, and return the first output image.
 

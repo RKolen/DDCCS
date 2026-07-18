@@ -174,7 +174,7 @@ def highlight_spells_in_text(text: str, known_spells: Optional[Set[str]] = None)
             )
 
             def _make_replacer(matched_spell: str):
-                def _replace(match: re.Match) -> str:  # type: ignore[type-arg]
+                def _replace(match: re.Match[str]) -> str:
                     return f"**{match.group(0)}**"
                 _ = matched_spell  # captured for clarity
                 return _replace
@@ -187,7 +187,7 @@ def highlight_spells_in_text(text: str, known_spells: Optional[Set[str]] = None)
             return result_text
 
     # Pass 2: Pattern-based detection for remaining spell contexts
-    def replace_spell_context(match: re.Match) -> str:  # type: ignore[type-arg]
+    def replace_spell_context(match: re.Match[str]) -> str:
         context = match.group("context")
         spell_full = match.group("spell")
         words = spell_full.split()
@@ -222,7 +222,7 @@ def highlight_spells_in_text(text: str, known_spells: Optional[Set[str]] = None)
     result_text = SPELL_PATTERN.sub(replace_spell_context, result_text)
 
     # Pass 3: Parenthetical spells
-    def replace_parenthetical_spell(match: re.Match) -> str:  # type: ignore[type-arg]
+    def replace_parenthetical_spell(match: re.Match[str]) -> str:
         spell = match.group(1)
         if spell in FALSE_POSITIVES:
             return match.group(0)

@@ -76,6 +76,18 @@ Duplicate code goes in `tests/test_helpers.py` as a shared fixture helper.
 
 VsCode Pylance must also be happy with the code.
 
+**Check it from the terminal — do not rely on having the file open in the IDE:**
+
+```bash
+.venv/bin/python -m pyright
+```
+
+`pyright` is the same engine Pylance runs, so a clean run means a clean Pylance.
+It reads `pyrightconfig.json`, which sets `stubPath: "stubs"` to match mypy's
+`mypy_path = stubs` in `mypy.ini`. **Those two settings must stay in sync** — if
+they diverge, the two checkers read different type information and Pylance-only
+errors pile up invisibly to anyone who is not looking at that exact file.
+
 For 3 never use the excuse these are pre existing issues, they must be fixed.
 
 ### 4. No Hardcoded Configuration Values
@@ -141,7 +153,14 @@ The Python code is enforced by three complementary tools:
 - **Pylance** (existing) - VS Code real-time type checking
 - **mypy** - static type checking at CI/pre-commit level
 
-All three must pass with zero errors before committing.
+All three must pass with zero errors before committing. **Run every gate at once
+with `./check.sh`** (add `--fast` to skip the test suite):
+
+```bash
+./check.sh
+```
+
+Or individually:
 
 ```bash
 # Run mypy on source
@@ -149,15 +168,32 @@ python3 -m mypy src/
 
 # Run mypy on tests
 python3 -m mypy tests/
+
+# Run pyright (the engine behind Pylance - see rule 3.1)
+.venv/bin/python -m pyright
 ```
 
-mypy configuration is in `pyproject.toml` (do not modify). Key rules:
+The checkers are pinned in `requirements-dev.txt` so every machine's gate
+matches. Install with:
+
+```bash
+.venv/bin/pip install -r requirements.txt -r requirements-dev.txt
+```
+
+mypy configuration is in `mypy.ini`; pyright/Pylance configuration is in
+`pyrightconfig.json`. Both point at the local `stubs/` directory and must stay
+in sync (see rule 3.1). Key rules:
 
 - Every function parameter and return value must have a type annotation.
 - Use `Optional[X]` (or `X | None` for Python 3.10+) for nullable values.
 - Do not use `# type: ignore` comments - fix the underlying type issue.
-- For third-party libraries without stubs, add `ignore_missing_imports = true`
-  in the `[mypy-<package>.*]` section of config.
+- A predicate method (`is_full_profile()`) does **not** narrow an `Optional` for
+  a type checker. Narrow the value itself (`if x is not None`), or the guard is
+  invisible to mypy/Pylance and the access is a real crash risk.
+- For a third-party library without stubs, add a minimal stub under `stubs/<pkg>/`
+  rather than silencing the import - both checkers then share one source of
+  truth. Keep the stub accurate; a wrong stub causes false positives (a stub
+  that omitted `MilvusException` hid a real unhandled-exception bug).
 
 ## Before Writing Code - MANDATORY CHECK
 
@@ -556,6 +592,13 @@ python3 -m pylint tests/
 # Run mypy type checking
 python3 -m mypy src/
 python3 -m mypy tests/
+
+# Run pyright (the engine behind Pylance - rule 3.1)
+.venv/bin/python -m pyright
+
+# Run every quality gate at once (pylint + mypy + pyright + tests)
+./check.sh
+./check.sh --fast   # gates only, skip the test suite
 
 # Validate all game data
 python3 -m src.validation.validate_all

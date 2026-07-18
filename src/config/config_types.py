@@ -253,17 +253,36 @@ class SidecarConfig:
 
 
 @dataclass
+class ComfyUIAssets:
+    """ComfyUI workflow templates and model names used for generation.
+
+    Workflow paths are relative to ``src/sidecar/comfyui_workflows/``. The vision
+    model is an Ollama model that describes an existing portrait; the checkpoint
+    is the Stable Diffusion model file name inside ComfyUI's ``models/`` dir.
+    """
+
+    txt2img_workflow: str = ""
+    ipadapter_workflow: str = ""
+    vision_model: str = ""
+    checkpoint: str = ""
+
+
+@dataclass
 class ComfyUIConfig:
     """Local ComfyUI (Stable Diffusion) portrait-generation service.
 
     ComfyUI runs on the host (like Ollama), never in DDEV. The sidecar reaches it
     over its HTTP workflow API. ``base_url`` is derived from host/port when empty.
+    Disabled by default; opt in via ``COMFYUI_ENABLED`` (AGENTS.md rule 4 - no
+    hardcoded values).
     """
 
+    enabled: bool = False
     host: str = ""
     port: int = 8188
     base_url: str = ""
-    timeout: float = 600.0
+    timeout: float = 900.0  # CPU generation is slow (minutes/image)
+    assets: ComfyUIAssets = field(default_factory=ComfyUIAssets)
 
     def get_base_url(self) -> str:
         """Return the configured base URL, or one built from host/port."""
@@ -272,6 +291,10 @@ class ComfyUIConfig:
         if self.host:
             return f"http://{self.host}:{self.port}"
         return ""
+
+    def is_configured(self) -> bool:
+        """Check if ComfyUI is enabled and has a reachable base URL."""
+        return self.enabled and bool(self.get_base_url())
 
 
 @dataclass
@@ -484,5 +507,6 @@ __all__ = [
     "PathConfig",
     "DrupalConfig",
     "SidecarConfig",
+    "ComfyUIConfig",
     "DnDConfig",
 ]

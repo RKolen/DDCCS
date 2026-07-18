@@ -73,7 +73,7 @@ class ItemRegistry:
         if os.path.exists(self.registry_path):
             try:
                 data = load_json_file(self.registry_path)
-                for item_name, item_data in data.items():
+                for item_name, item_data in (data or {}).items():
                     self.items[item_name] = Item.from_dict(item_data)
             except (ValueError, OSError) as e:
                 print(f"[WARNING] Could not load item registry: {e}")
@@ -87,7 +87,7 @@ class ItemRegistry:
             if os.path.exists(fallback):
                 try:
                     fallback_data = load_json_file(fallback)
-                    for item_name, item_data in fallback_data.items():
+                    for item_name, item_data in (fallback_data or {}).items():
                         if item_name not in self.items:
                             self.items[item_name] = Item.from_dict(item_data)
                 except (ValueError, OSError) as e:

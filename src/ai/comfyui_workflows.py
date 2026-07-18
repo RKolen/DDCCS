@@ -5,30 +5,41 @@ programmatically so the prompt, seed, checkpoint, and size can be patched at
 call time. The node ids/shape match ComfyUI's default text-to-image graph.
 """
 
+from dataclasses import dataclass, field
 from typing import Any, Dict
 
 
-def txt2img_workflow(
-    checkpoint: str,
-    positive: str,
-    negative: str,
-    seed: int,
-    width: int = 832,
-    height: int = 1216,
-    steps: int = 30,
-    cfg: float = 7.0,
-) -> Dict[str, Any]:
+@dataclass
+class RenderSettings:
+    """Size and sampler settings for a portrait render.
+
+    Defaults target an SDXL portrait; for an SD 1.5-class checkpoint on CPU,
+    lower ``width``/``height`` (e.g. 512x768) to keep generation bounded.
+    """
+
+    width: int = 832
+    height: int = 1216
+    steps: int = 30
+    cfg: float = 7.0
+
+
+@dataclass
+class Txt2ImgParams:
+    """Per-request parameters for a text-to-image portrait workflow."""
+
+    checkpoint: str
+    positive: str
+    negative: str
+    seed: int
+    render: RenderSettings = field(default_factory=RenderSettings)
+
+
+def txt2img_workflow(params: Txt2ImgParams) -> Dict[str, Any]:
     """Build a standard SDXL text-to-image workflow in ComfyUI API-JSON form.
 
     Args:
-        checkpoint: The SDXL checkpoint filename as ComfyUI sees it.
-        positive: The positive prompt.
-        negative: The negative prompt.
-        seed: The sampler seed.
-        width: Output width (SDXL portrait default).
-        height: Output height (SDXL portrait default).
-        steps: Sampler steps.
-        cfg: Classifier-free guidance scale.
+        params: The checkpoint, prompts, seed, and sampler settings to patch
+            into the graph.
 
     Returns:
         The workflow as a node-id -> node dict, ready to POST to /prompt.
@@ -36,26 +47,30 @@ def txt2img_workflow(
     return {
         "4": {
             "class_type": "CheckpointLoaderSimple",
-            "inputs": {"ckpt_name": checkpoint},
+            "inputs": {"ckpt_name": params.checkpoint},
         },
         "5": {
             "class_type": "EmptyLatentImage",
-            "inputs": {"width": width, "height": height, "batch_size": 1},
+            "inputs": {
+                "width": params.render.width,
+                "height": params.render.height,
+                "batch_size": 1,
+            },
         },
         "6": {
             "class_type": "CLIPTextEncode",
-            "inputs": {"text": positive, "clip": ["4", 1]},
+            "inputs": {"text": params.positive, "clip": ["4", 1]},
         },
         "7": {
             "class_type": "CLIPTextEncode",
-            "inputs": {"text": negative, "clip": ["4", 1]},
+            "inputs": {"text": params.negative, "clip": ["4", 1]},
         },
         "3": {
             "class_type": "KSampler",
             "inputs": {
-                "seed": seed,
-                "steps": steps,
-                "cfg": cfg,
+                "seed": params.seed,
+                "steps": params.render.steps,
+                "cfg": params.render.cfg,
                 "sampler_name": "euler",
                 "scheduler": "normal",
                 "denoise": 1.0,

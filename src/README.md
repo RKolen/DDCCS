@@ -120,10 +120,13 @@ src/
 |   |-- milvus_collections.py  # Collection schema definitions (characters/npcs/stories/wiki)
 |   |-- embedding_pipeline.py  # Chunking + embedding for all D&D data types
 |   |-- semantic_retriever.py  # Semantic RAG via Milvus with keyword fallback
-|   `-- index_sync.py          # Incremental sync called after JSON file saves
+|   |-- index_sync.py          # Incremental sync called after JSON file saves
+|   |-- comfyui_client.py      # HTTP client for the local ComfyUI workflow API (portraits)
+|   |-- comfyui_workflows.py   # ComfyUI API-JSON workflow builders (txt2img portrait graph)
+|   `-- portrait_prompt.py     # Builds SD positive/negative prompts from a character profile
 |
 |-- config/             # Centralized configuration
-|   |-- config_types.py        # AIConfig, RAGConfig, DisplayConfig, PathConfig, DrupalConfig
+|   |-- config_types.py        # AIConfig, RAGConfig, DisplayConfig, PathConfig, DrupalConfig, ComfyUIConfig
 |   `-- config_loader.py       # Config loading from file/env
 |
 |-- integration/        # External service integration

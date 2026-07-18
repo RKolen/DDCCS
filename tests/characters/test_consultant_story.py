@@ -205,6 +205,7 @@ def test_suggest_relationship_update_new():
         "Mysterious Stranger", "dark alley"
     )
 
+    assert rogue_suggestion is not None
     assert "cautious" in rogue_suggestion.lower() or (
         "suspicious" in rogue_suggestion.lower()
     ), "Rogue should be suspicious"

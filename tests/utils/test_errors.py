@@ -85,6 +85,7 @@ class TestUserInputErrors:
         """MissingDataError provides helpful guidance."""
         error = MissingDataError("characters", "creating a story")
         assert "characters" in error.message
+        assert error.user_guidance is not None
         assert "creating a story" in error.user_guidance
         assert error.recoverable is True
 
@@ -104,6 +105,7 @@ class TestFileSystemErrors:
         error = FileParseError("file.json", "Invalid JSON", "JSON")
         assert "file.json" in error.message
         assert "Invalid JSON" in error.message
+        assert error.user_guidance is not None
         assert "JSON" in error.user_guidance
         assert error.recoverable is True
 
@@ -137,6 +139,7 @@ class TestConfigurationErrors:
         """MissingConfigError provides fix guidance."""
         error = MissingConfigError("API key", "Add it to config.json")
         assert "API key" in error.message
+        assert error.user_guidance is not None
         assert "config.json" in error.user_guidance
         assert error.recoverable is True
 
@@ -155,6 +158,7 @@ class TestValidationErrors:
         errors = ["Field 'name' is required", "Field 'level' must be int"]
         error = SchemaValidationError("character", errors)
         assert "character" in error.message
+        assert error.user_guidance is not None
         assert "name" in error.user_guidance
         assert "level" in error.user_guidance
         assert error.recoverable is True

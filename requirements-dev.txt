@@ -1,0 +1,15 @@
+# D&D Character Consultant System - Development / Quality Gate Dependencies
+#
+# Install alongside requirements.txt:
+#     .venv/bin/pip install -r requirements.txt -r requirements-dev.txt
+#
+# All three checkers are mandatory gates (see AGENTS.md rules 2, 3.1, and 6) and
+# must report zero issues before committing. Run them with ./check.sh.
+#
+# Versions are pinned so every contributor's gate matches CI and the IDE; an
+# unpinned checker silently changes what "clean" means between machines.
+
+pylint==4.0.5    # Style/logic gate - must score 10.00/10
+mypy==2.1.0      # Static type gate - config in mypy.ini (mypy_path = stubs)
+pyright==1.1.410 # Same engine as the VS Code Pylance extension (rule 3.1);
+                 # config in pyrightconfig.json (stubPath = stubs)

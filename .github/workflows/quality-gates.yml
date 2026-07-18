@@ -1,0 +1,37 @@
+name: Quality Gates
+
+# Runs the same gates as ./check.sh, so CI and local development cannot drift.
+#
+# This exists because AGENTS.md documented the rules (10.00/10 pylint, zero
+# mypy/Pylance errors, no checker suppressions) but nothing enforced them, and
+# violations accumulated silently. A rule nothing enforces is not a rule.
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  python-gates:
+    name: Python quality gates
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Create venv and install dependencies
+        run: |
+          python -m venv .venv
+          .venv/bin/pip install --upgrade pip
+          .venv/bin/pip install -r requirements.txt -r requirements-dev.txt
+
+      - name: Run all quality gates
+        # check.sh runs: no-suppressions, pylint, mypy (src+tests), pyright,
+        # and the full test suite. It exits non-zero if any gate fails.
+        run: ./check.sh

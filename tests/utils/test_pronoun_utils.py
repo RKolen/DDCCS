@@ -1,5 +1,7 @@
 """Unit tests for src.utils.pronoun_utils."""
 
+from typing import Any
+
 from tests.test_helpers import setup_test_environment, import_module
 
 
@@ -178,7 +180,10 @@ def test_validate_whitespace_only_is_invalid():
 def test_validate_non_string_is_invalid():
     """Non-string (e.g. integer) fails validation."""
     print("\n[TEST] validate non-string is invalid")
-    is_valid, error = validate_pronouns(42)  # type: ignore[arg-type]
+    # Deliberately non-string input: this test exercises the runtime guard, so
+    # the value is typed Any rather than silenced with a checker suppression.
+    non_string_input: Any = 42
+    is_valid, error = validate_pronouns(non_string_input)
     assert not is_valid
     assert "string" in error.lower()
     print("[PASS] validate non-string is invalid")

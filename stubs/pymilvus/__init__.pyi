@@ -1,5 +1,12 @@
 from typing import Any, Dict, List, Optional
 
+class MilvusException(Exception):
+    code: int
+    message: str
+    def __init__(
+        self, code: int = ..., message: str = ..., *args: Any
+    ) -> None: ...
+
 class DataType:
     NONE: int
     BOOL: int

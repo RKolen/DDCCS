@@ -380,7 +380,7 @@ def run_tests_safely(tests: list, success_message: str = "[OK] All tests passed!
         sys.exit(1)
 
 
-def safe_from_import(module_name: str, *names):
+def safe_from_import(module_name: str, *names: str) -> Any:
     """Safely import attributes from a module for tests.
 
     This helper ensures the test environment is configured, imports the
@@ -573,6 +573,28 @@ def run_test_suite(test_suite_name, test_functions):
     return 0 if failed == 0 else 1
 
 
+def _format_messages_preview(msgs: Any) -> str:
+    """Return a short preview of a mock AI ``messages`` kwarg.
+
+    Args:
+        msgs: The value passed as the ``messages`` keyword argument.
+
+    Returns:
+        A preview string, or an empty string when there is nothing to preview.
+    """
+    if msgs is None:
+        return "messages=" + str(msgs)
+    try:
+        first = msgs[0]
+    except (IndexError, TypeError, KeyError, AttributeError):
+        return "messages=" + str(msgs)
+
+    if isinstance(first, dict):
+        content = first.get("content") or first.get("message")
+        return "msg_preview:" + str(content)[:40] if content else ""
+    return "msg_preview:" + str(first)[:40]
+
+
 class FakeAIClient:
     """Reusable fake AI client for tests.
 
@@ -598,17 +620,9 @@ class FakeAIClient:
 
         if kwargs:
             if "messages" in kwargs:
-                msgs = kwargs.get("messages")
-                try:
-                    first = msgs[0]
-                    if isinstance(first, dict):
-                        content = first.get("content") or first.get("message")
-                        if content:
-                            parts.append("msg_preview:" + str(content)[:40])
-                    else:
-                        parts.append("msg_preview:" + str(first)[:40])
-                except (IndexError, TypeError, KeyError, AttributeError):
-                    parts.append("messages=" + str(msgs))
+                preview = _format_messages_preview(kwargs.get("messages"))
+                if preview:
+                    parts.append(preview)
             else:
                 parts.append(
                     "kwargs:" + ",".join(f"{k}={v}" for k, v in kwargs.items())

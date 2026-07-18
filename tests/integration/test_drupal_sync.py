@@ -12,6 +12,7 @@ Usage (with live Drupal via DDEV):
     python3 tests/integration/test_drupal_sync.py
 """
 
+import email.message
 import json
 import os
 import unittest.mock
@@ -162,7 +163,7 @@ def test_push_character_raises_on_http_error() -> None:
         url="https://drupal-cms.ddev.site/jsonapi/node/character",
         code=422,
         msg="Unprocessable Entity",
-        hdrs=unittest.mock.MagicMock(),  # type: ignore[arg-type]
+        hdrs=email.message.Message(),
         fp=BytesIO(b'{"errors":[{"detail":"Validation failed"}]}'),
     )
 
@@ -281,7 +282,10 @@ def test_push_character_posts_when_lookup_returns_empty() -> None:
 
     call_count = 0
 
-    def side_effect(_req, timeout=30):  # pylint: disable=unused-argument
+    def side_effect(_req, timeout=30):
+        # `timeout` must keep its name: drupal_sync calls urlopen(req, timeout=N)
+        # by keyword. Consumed here because the mock does not honour it.
+        _ = timeout
         nonlocal call_count
         call_count += 1
         if call_count == 1:
@@ -308,7 +312,10 @@ def test_push_character_patches_when_lookup_returns_node() -> None:
 
     call_count = 0
 
-    def side_effect(_req, timeout=30):  # pylint: disable=unused-argument
+    def side_effect(_req, timeout=30):
+        # `timeout` must keep its name: drupal_sync calls urlopen(req, timeout=N)
+        # by keyword. Consumed here because the mock does not honour it.
+        _ = timeout
         nonlocal call_count
         call_count += 1
         if call_count == 1:

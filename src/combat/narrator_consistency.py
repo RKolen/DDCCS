@@ -15,9 +15,11 @@ class ConsultantProtocol(Protocol):
         self, situation: str, context: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
         """Return a reaction dict to a given situation."""
+        raise NotImplementedError
 
     def get_character_name(self) -> str:
         """Return the character name for this consultant."""
+        raise NotImplementedError
 
 
 class ConsistencyChecker:

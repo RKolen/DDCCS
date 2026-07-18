@@ -30,6 +30,9 @@ def run_all_ai_tests():
         ("test_embedding_pipeline", "Embedding Pipeline Tests"),
         ("test_semantic_retriever", "Semantic Retriever Tests"),
         ("test_prompt_templates", "Prompt Templates Tests"),
+        ("test_comfyui_client", "ComfyUI Client Tests"),
+        ("test_comfyui_workflows", "ComfyUI Workflow Builder Tests"),
+        ("test_portrait_prompt", "Portrait Prompt Builder Tests"),
     ]
 
 

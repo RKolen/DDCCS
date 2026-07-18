@@ -378,6 +378,7 @@ def _apply_env_sidecar_overrides(
 def _apply_env_comfyui_overrides(
     config: DnDConfig,
     get_env: Any,
+    get_env_bool: Any,
     get_env_float: Any,
     get_env_int: Any,
 ) -> None:
@@ -386,9 +387,11 @@ def _apply_env_comfyui_overrides(
     Args:
         config: DnDConfig to update in-place.
         get_env: Callable to read a string env var.
+        get_env_bool: Callable to read a bool env var with default.
         get_env_float: Callable to read a float env var with default.
         get_env_int: Callable to read an int env var with default.
     """
+    config.comfyui.enabled = get_env_bool("COMFYUI_ENABLED", config.comfyui.enabled)
     host = get_env("COMFYUI_HOST")
     if host:
         config.comfyui.host = host
@@ -397,6 +400,19 @@ def _apply_env_comfyui_overrides(
     if base_url:
         config.comfyui.base_url = base_url
     config.comfyui.timeout = get_env_float("COMFYUI_TIMEOUT", config.comfyui.timeout)
+
+    txt2img_workflow = get_env("COMFYUI_TXT2IMG_WORKFLOW")
+    if txt2img_workflow:
+        config.comfyui.assets.txt2img_workflow = txt2img_workflow
+    ipadapter_workflow = get_env("COMFYUI_IPADAPTER_WORKFLOW")
+    if ipadapter_workflow:
+        config.comfyui.assets.ipadapter_workflow = ipadapter_workflow
+    vision_model = get_env("COMFYUI_VISION_MODEL")
+    if vision_model:
+        config.comfyui.assets.vision_model = vision_model
+    checkpoint = get_env("COMFYUI_CHECKPOINT")
+    if checkpoint:
+        config.comfyui.assets.checkpoint = checkpoint
 
 
 def _apply_env_overrides(config: DnDConfig, prefix: str = "") -> DnDConfig:
@@ -483,7 +499,9 @@ def _apply_env_overrides(config: DnDConfig, prefix: str = "") -> DnDConfig:
     _apply_env_milvus_overrides(config, get_env, get_env_bool, get_env_int, get_env_float)
     _apply_env_drupal_overrides(config, get_env)
     _apply_env_sidecar_overrides(config, get_env, get_env_bool, get_env_float, get_env_int)
-    _apply_env_comfyui_overrides(config, get_env, get_env_float, get_env_int)
+    _apply_env_comfyui_overrides(
+        config, get_env, get_env_bool, get_env_float, get_env_int
+    )
 
     return config
 

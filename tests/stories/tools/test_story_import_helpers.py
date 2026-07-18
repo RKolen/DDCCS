@@ -58,6 +58,7 @@ def test_import_from_markdown_increments_numbering():
         helper = StoryImportHelper(tmp)
         result = helper.import_from_markdown(source, options)
         assert result.success
+        assert result.story_path is not None
         assert "002_" in os.path.basename(result.story_path)
 
 
@@ -69,6 +70,7 @@ def test_import_from_text_wraps_in_markdown():
         helper = StoryImportHelper(tmp)
         result = helper.import_from_text(source, options)
         assert result.success
+        assert result.story_path is not None
         with open(result.story_path, encoding="utf-8") as fh:
             content = fh.read()
         assert "## Story Content" in content
@@ -86,6 +88,7 @@ def test_import_from_json_reads_content_field():
         helper = StoryImportHelper(tmp)
         result = helper.import_from_json(source, options)
         assert result.success
+        assert result.story_path is not None
         with open(result.story_path, encoding="utf-8") as fh:
             content = fh.read()
         assert "Once upon a time" in content

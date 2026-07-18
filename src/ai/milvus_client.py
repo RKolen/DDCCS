@@ -6,11 +6,16 @@ bootstrap. All callers should check is_healthy() before using
 insert/search/delete operations.
 """
 
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple, Type
 
 from src.ai.milvus_collections import COLLECTIONS
 from src.config.config_loader import load_config
 from src.utils.terminal_display import print_info, print_warning
+
+# Exceptions treated as "Milvus unavailable" (connection refused, server down,
+# or a transport-level failure). pymilvus raises MilvusException when a
+# configured server cannot be reached, so callers fall back gracefully.
+_connect_errors: Tuple[Type[BaseException], ...] = (OSError, RuntimeError)
 
 try:
     from pymilvus import (
@@ -18,11 +23,13 @@ try:
         CollectionSchema,
         DataType,
         FieldSchema,
+        MilvusException,
         connections,
         utility,
     )
 
     PYMILVUS_AVAILABLE = True
+    _connect_errors = (OSError, RuntimeError, MilvusException)
 except ImportError:
     print_warning("pymilvus not installed. Milvus integration disabled.")
     print("  Install with: pip install pymilvus")
@@ -68,7 +75,7 @@ class MilvusClient:
             )
             self.connected = True
             return True
-        except (OSError, RuntimeError):
+        except _connect_errors:
             self.connected = False
             return False
 

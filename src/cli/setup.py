@@ -120,7 +120,7 @@ def setup_workspace():
         # Read the class from the JSON file
         try:
             data = load_json_file(str(char_file))
-            class_name = data.get("dnd_class", "Unknown")
+            class_name = (data or {}).get("dnd_class", "Unknown")
             print(f"   • {char_file.stem}.json ({class_name.title()})")
         except (OSError, ValueError):
             print(f"   • {char_file.name}")
