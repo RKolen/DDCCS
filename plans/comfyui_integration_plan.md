@@ -328,8 +328,12 @@ New write path via a DataProducer (the CLI JSON:API sync script is dropped).
    `models.py` and a cached `_get_comfyui_client()`. Returns the base64 PNG,
    seed, prompt, and `alt`; 503/500 per section 6. Endpoint tests in
    `tests/sidecar/test_portrait_endpoint.py`.
-4. Drupal `setCharacterPortrait` mutation + resolver + `SetCharacterPortrait.php`
-   (file + media + `field_image`); perms; config export.
+4. **[DONE]** Drupal `setCharacterPortrait` mutation + resolver +
+   `SetCharacterPortrait.php` (file + media + `field_image`). Granted
+   `gatsby_user` the `create media` / `create image media` / `view media`
+   permissions and exported config. Verified end-to-end against the live schema:
+   file written to `public://portraits/`, media created, `field_image` set, and
+   `image { mediaImage { url alt } }` returns the new URL.
 5. `generate-portrait.ts` + the **Generate image** button.
 
 ### Phase B - existing image -> vision prompt + IPAdapter consistency

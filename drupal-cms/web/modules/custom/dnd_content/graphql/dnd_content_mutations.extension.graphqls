@@ -57,6 +57,22 @@ extend type Mutation {
   ): NodeCharacter
 
   """
+  Attach a generated portrait image to a character node. The image is a
+  base64-encoded PNG from the sidecar /character/portrait (ComfyUI) endpoint.
+  Creates a file + image media entity and points the character's field_image at
+  it, replacing any previous portrait reference. Returns the updated character
+  node.
+  """
+  setCharacterPortrait(
+    "UUID of the character node."
+    id: ID!
+    "Base64-encoded PNG image data."
+    imageBase64: String!
+    "Alt text for the image. Required by the media image field."
+    alt: String!
+  ): NodeCharacter
+
+  """
   Update a character node's voice settings. Only the supplied arguments are
   changed. Returns the updated character node.
   """

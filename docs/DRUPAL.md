@@ -250,6 +250,7 @@ Per-action user writes go through custom GraphQL mutations called from
 | `saveCharacterArc` | `frontend/src/api/save-arc.ts` |
 | `createCharacter` | `frontend/src/api/create-character.ts` |
 | `updateCharacter` | `frontend/src/api/update-voice.ts` (voice id / pitch / speed) |
+| `setCharacterPortrait` | `frontend/src/api/generate-portrait.ts` (ComfyUI portrait) |
 
 `createCharacter` persists a **source** character (`field_source_character =
 TRUE`, no campaign) from a sidecar-derived payload, building the
@@ -286,6 +287,21 @@ Note: a GraphQL DataProducer returning an entity must declare its `produces`
 context as `data_type: "any"` (a plain `ContextDefinition`), never
 `"entity:node"` — the latter trips an `EntityContextDefinition` assertion that
 breaks the whole schema build.
+
+`setCharacterPortrait(id, imageBase64, alt)` attaches a generated portrait to a
+character. It is the only write path that creates **file and media** entities:
+it decodes the base64 PNG from the sidecar's `/character/portrait` (ComfyUI)
+endpoint, writes it via `file.repository->writeData()` into
+`public://portraits/portrait-<uuid>-<timestamp>.png`, wraps that file in an
+`image` media entity, and points the character's `field_image` at it. Because
+the filename is timestamped, regenerating never overwrites a file an older
+revision still references.
+
+`alt` is required and rejected when blank — `field_media_image` sets
+`alt_field_required: true`, so a media entity saved without it would fail
+validation. Beyond `edit any character content`, this mutation needs the
+`gatsby_user` role's `create media`, `create image media`, and `view media`
+permissions (added for this feature).
 
 ### Writes — bulk/seed via the engine
 

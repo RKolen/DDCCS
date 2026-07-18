@@ -75,6 +75,15 @@ class ContentMutationsSchemaExtension extends SdlSchemaExtensionPluginBase {
 
     $registry->addFieldResolver(
       'Mutation',
+      'setCharacterPortrait',
+      $builder->produce('set_character_portrait')
+        ->map('id', $builder->fromArgument('id'))
+        ->map('image_base64', $builder->fromArgument('imageBase64'))
+        ->map('alt', $builder->fromArgument('alt')),
+    );
+
+    $registry->addFieldResolver(
+      'Mutation',
       'updateCharacter',
       $builder->produce('update_character')
         ->map('id', $builder->fromArgument('id'))
