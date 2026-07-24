@@ -9,6 +9,7 @@ Usage:
     python tests/run_all_tests.py validation         # Run validation tests only
     python tests/run_all_tests.py validation ai      # Run multiple categories
 """
+from typing import Any, List, Optional
 
 import os
 import sys
@@ -38,7 +39,7 @@ TEST_CATEGORIES = [
 ]
 
 
-def find_test_files(categories=None):
+def find_test_files(categories: Optional[List[str]] = None):
     """
     Find all test files in specified categories.
 
@@ -74,7 +75,7 @@ def find_test_files(categories=None):
     return sorted(test_files)
 
 
-def _print_error_details(errors):
+def _print_error_details(errors: List[Any]):
     """Print detailed error information for failed tests."""
     print()
     print("[FAILED] FAILED TESTS:")
@@ -90,7 +91,7 @@ def _print_error_details(errors):
     print("=" * 70)
 
 
-def _run_single_test(test_file):
+def _run_single_test(test_file: Path):
     """
     Run a single test file.
 
@@ -130,7 +131,7 @@ def _run_single_test(test_file):
     return False, test_name, result.stdout, result.stderr
 
 
-def run_tests(categories=None):
+def run_tests(categories: Optional[List[str]] = None):
     """
     Run tests and report results.
 
