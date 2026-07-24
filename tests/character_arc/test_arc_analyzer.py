@@ -106,7 +106,7 @@ def test_arc_stage_progression_via_public_api():
 
     analyzer = ArcAnalyzer()
 
-    def arc_stage_for(count):
+    def arc_stage_for(count: int):
         """Return the arc stage for an arc with count data points."""
         arc = CharacterArc(character_name="Elara", campaign_name="Test_Campaign")
         for i in range(count):

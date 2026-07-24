@@ -93,7 +93,7 @@ _WEAPON_HTML = """
 _EMPTY_HTML = '<html><body><div id="page-content"></div></body></html>'
 
 
-def _fake_equipment_rag(enabled=True):
+def _fake_equipment_rag(enabled: bool = True):
     """Build a RAG stand-in serving per-page equipment HTML by URL.
 
     Args:
@@ -103,7 +103,7 @@ def _fake_equipment_rag(enabled=True):
         A SimpleNamespace exposing enabled + rules_client.
     """
 
-    def _get(url, timeout=10):
+    def _get(url: str, timeout: int = 10):
         _ = timeout
         if "equipment:adventuring-gear" in url:
             body = _GEAR_HTML
@@ -137,7 +137,7 @@ _SPECIES_HTML = """
 """
 
 
-def _fake_rag(html, enabled=True):
+def _fake_rag(html: str, enabled: bool = True):
     """Build a RAG stand-in whose rules client returns canned HTML.
 
     Args:

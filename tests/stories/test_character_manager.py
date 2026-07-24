@@ -3,6 +3,7 @@ Character Manager Tests
 
 Tests for character loading, profiles, consultants, and spell highlighting.
 """
+from typing import Any, List, Optional
 
 import os
 import tempfile
@@ -10,7 +11,12 @@ import json
 from src.stories.character_manager import CharacterManager
 
 
-def create_test_character_file(directory, name, dnd_class="fighter", spells=None):
+def create_test_character_file(
+    directory: str,
+    name: str,
+    dnd_class: Any = "fighter",
+    spells: Optional[List[str]] = None,
+):
     """Helper to create a test character JSON file."""
     character_data = {
         "name": name,

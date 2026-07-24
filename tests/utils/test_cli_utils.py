@@ -3,6 +3,7 @@
 These tests monkeypatch `input()` to simulate user responses and verify
 selection and confirmation helpers behave as expected.
 """
+from typing import Any
 
 from tests.test_helpers import setup_test_environment, import_module
 
@@ -11,7 +12,7 @@ setup_test_environment()
 cli_utils = import_module("src.utils.cli_utils")
 
 
-def test_select_from_list_and_select_character(monkeypatch):
+def test_select_from_list_and_select_character(monkeypatch: Any):
     """Selecting valid and invalid choices yields expected indices or None."""
     items = ["one", "two", "three"]
 
@@ -34,7 +35,7 @@ def test_select_from_list_and_select_character(monkeypatch):
     assert isinstance(res, tuple) and res[0] == 1 and res[1] == "Bob"
 
 
-def test_confirm_and_non_empty_input(monkeypatch):
+def test_confirm_and_non_empty_input(monkeypatch: Any):
     """confirm_action and get_non_empty_input handle default and empty values."""
     # Confirm yes
     monkeypatch.setattr("builtins.input", lambda prompt="": "y")

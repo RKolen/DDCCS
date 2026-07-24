@@ -35,7 +35,7 @@ def make_event(
     title: str = "Test Event",
     event_type_val: str = "combat",
     campaign_name: str = "Test_Campaign",
-    **kwargs,
+    **kwargs: Any,
 ) -> Any:
     """Create a TimelineEvent for use in tests.
 

@@ -3,6 +3,7 @@
 Focuses on selection and validation methods that are safe to run in unit tests.
 Tests validate series/story selection logic and roll data validation.
 """
+from typing import Any, Dict, List
 
 from tests import test_helpers
 from tests.test_helpers import setup_test_environment, import_module
@@ -37,7 +38,7 @@ def test_validate_roll_data_valid():
     fake_manager = _FakeStoryManager("")
 
     class _TestableSessionCLIManager(SessionCLIManager):
-        def validate_roll_data_public(self, roll_data):
+        def validate_roll_data_public(self, roll_data: Dict[str, Any]):
             """Public wrapper for testing."""
             return self._validate_roll_data(roll_data)
 
@@ -64,7 +65,7 @@ def test_validate_roll_data_invalid_roll_type():
     fake_manager = _FakeStoryManager("")
 
     class _TestableSessionCLIManager(SessionCLIManager):
-        def validate_roll_data_public(self, roll_data):
+        def validate_roll_data_public(self, roll_data: Dict[str, Any]):
             """Public wrapper for testing."""
             return self._validate_roll_data(roll_data)
 
@@ -91,7 +92,7 @@ def test_validate_roll_data_invalid_outcome():
     fake_manager = _FakeStoryManager("")
 
     class _TestableSessionCLIManager(SessionCLIManager):
-        def validate_roll_data_public(self, roll_data):
+        def validate_roll_data_public(self, roll_data: Dict[str, Any]):
             """Public wrapper for testing."""
             return self._validate_roll_data(roll_data)
 
@@ -116,7 +117,7 @@ def test_validate_roll_data_invalid_outcome():
 def test_select_series_from_list_valid_choice():
     """_select_series_from_list should return selected series for valid input."""
     class _TestableSessionCLIManager(SessionCLIManager):
-        def select_series_from_list_public(self, series_list):
+        def select_series_from_list_public(self, series_list: List[str]):
             """Public wrapper for testing."""
             return self._select_series_from_list(series_list)
 
@@ -135,7 +136,7 @@ def test_select_story_from_series_no_stories():
     fake_manager = _FakeStoryManager("")
 
     class _TestableSessionCLIManager(SessionCLIManager):
-        def select_story_from_series_public(self, series_name):
+        def select_story_from_series_public(self, series_name: str):
             """Public wrapper for testing."""
             return self._select_story_from_series(series_name)
 

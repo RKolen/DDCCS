@@ -3,6 +3,8 @@
 These tests use small fakes and monkeypatching to avoid interactive I/O and
 heavy dependencies (AI, real CombatNarrator).
 """
+from pathlib import Path
+from typing import Any, Dict, Optional
 
 import shutil
 from tests.test_helpers import setup_test_environment, import_module
@@ -40,7 +42,7 @@ class _FakeManagerWithConsultants:
         """Return an empty list of series for callers that expect it."""
         return []
 
-    def get_story_files_in_series(self, series_name):
+    def get_story_files_in_series(self, series_name: str):
         """Return story files for a specific series."""
         _ = series_name
         return []
@@ -58,11 +60,11 @@ class _FakeManagerWithSeriesStories:
         """Return root-level story files."""
         return []
 
-    def get_story_files_in_series(self, series_name):
+    def get_story_files_in_series(self, series_name: str):
         """Return stories in specified series."""
         return self.series_stories.get(series_name, [])
 
-    def analyze_story_file(self, filepath):
+    def analyze_story_file(self, filepath: str):
         """Return a fake analysis for any story file."""
         return {
             "story_file": filepath,
@@ -80,7 +82,7 @@ def test_analyze_story_no_files():
     assert cli.analyze_story() is None
 
 
-def test_analyze_story_with_series_context(monkeypatch, tmp_path):
+def test_analyze_story_with_series_context(monkeypatch: Any, tmp_path: Path):
     """analyze_story with series_name should use get_story_files_in_series."""
     fake_manager = _FakeManagerWithSeriesStories()
     cli = StoryAnalysisCLI(fake_manager, str(tmp_path))
@@ -90,7 +92,7 @@ def test_analyze_story_with_series_context(monkeypatch, tmp_path):
 
     original_method = fake_manager.get_story_files_in_series
 
-    def tracked_get_story_files_in_series(series_name):
+    def tracked_get_story_files_in_series(series_name: str):
         calls["get_story_files_in_series"] += 1
         return original_method(series_name)
 
@@ -107,7 +109,7 @@ def test_analyze_story_with_series_context(monkeypatch, tmp_path):
     assert calls["get_story_files_in_series"] == 1
 
 
-def test_analyze_story_without_series_context(monkeypatch):
+def test_analyze_story_without_series_context(monkeypatch: Any):
     """analyze_story without series_name should use get_story_files."""
     fake_manager = _FakeManagerWithConsultants()
     cli = StoryAnalysisCLI(fake_manager, workspace_path=None)
@@ -129,7 +131,7 @@ def test_analyze_story_without_series_context(monkeypatch):
     assert calls["get_story_files"] == 1
 
 
-def test_analyze_story_series_context_uses_campaign_path(monkeypatch, tmp_path):
+def test_analyze_story_series_context_uses_campaign_path(monkeypatch: Any, tmp_path: Path):
     """analyze_story with series should construct path using get_campaign_path."""
     fake_manager = _FakeManagerWithSeriesStories()
     cli = StoryAnalysisCLI(fake_manager, str(tmp_path))
@@ -137,7 +139,7 @@ def test_analyze_story_series_context_uses_campaign_path(monkeypatch, tmp_path):
     # Mock to track the filepath passed to analyze_story_file
     analyzed_paths = []
 
-    def fake_analyze(filepath):
+    def fake_analyze(filepath: str):
         analyzed_paths.append(filepath)
         return {
             "story_file": filepath,
@@ -156,7 +158,7 @@ def test_analyze_story_series_context_uses_campaign_path(monkeypatch, tmp_path):
     assert "game_data" in analyzed_paths[0] or "campaigns" in analyzed_paths[0]
 
 
-def test_save_analysis_to_session_results_creates_file(tmp_path):
+def test_save_analysis_to_session_results_creates_file(tmp_path: Path):
     """save_analysis_to_session_results should create session results file."""
     fake_manager = _FakeManagerWithSeriesStories()
     cli = StoryAnalysisCLI(fake_manager, str(tmp_path))
@@ -181,7 +183,7 @@ def test_save_analysis_to_session_results_creates_file(tmp_path):
         "Session file should include story name"
 
 
-def test_save_analysis_appends_to_existing_session_file(tmp_path):
+def test_save_analysis_appends_to_existing_session_file(tmp_path: Path):
     """save_analysis_to_session_results should append to existing file on same day."""
     fake_manager = _FakeManagerWithSeriesStories()
     cli = StoryAnalysisCLI(fake_manager, str(tmp_path))
@@ -219,7 +221,7 @@ def test_save_analysis_appends_to_existing_session_file(tmp_path):
     assert "Second" in content, "Second analysis should be present"
 
 
-def test_convert_combat_uses_combat_narrator(monkeypatch, tmp_path):
+def test_convert_combat_uses_combat_narrator(monkeypatch: Any, tmp_path: Path):
     """convert_combat should initialize the combat narrator and call its methods."""
     fake_manager = _FakeManagerWithConsultants()
 
@@ -233,19 +235,19 @@ def test_convert_combat_uses_combat_narrator(monkeypatch, tmp_path):
     class FakeCombatNarrator:
         """Simple fake that records calls made by StoryAnalysisCLI."""
 
-        def __init__(self, consultants, ai_client=None):
+        def __init__(self, consultants: Any, ai_client: Optional[Any] = None):
             self.consultants = consultants
             self.ai_client = ai_client
             self.title_generated = False
             self.narrated = False
 
-        def generate_combat_title(self, combat_prompt, story_context):
+        def generate_combat_title(self, combat_prompt: str, story_context: str):
             """Generate a short title for the supplied combat prompt and context."""
             _ = (combat_prompt, story_context)
             self.title_generated = True
             return "Generated Title"
 
-        def narrate_combat_from_prompt(self, combat_prompt, story_context, style):
+        def narrate_combat_from_prompt(self, combat_prompt: str, story_context: str, style: str):
             """Return a short generated narrative for the combat prompt."""
             _ = (combat_prompt, story_context, style)
             self.narrated = True
@@ -268,7 +270,7 @@ def test_convert_combat_uses_combat_narrator(monkeypatch, tmp_path):
     assert cli.combat_narrator.narrated is True
 
 
-def test_analyze_character_development_series(monkeypatch, tmp_path):
+def test_analyze_character_development_series(monkeypatch: Any, tmp_path: Path):
     """analyze_character_development_series should generate a report using real data."""
     fake_manager = _FakeManagerWithSeriesStories()
     cli = StoryAnalysisCLI(fake_manager, str(tmp_path))
@@ -290,14 +292,19 @@ def test_analyze_character_development_series(monkeypatch, tmp_path):
     monkeypatch.setattr(cli_mod, "get_campaign_path", lambda name, ws: str(tmp_campaign_dir))
 
     # Use real story content
-    def real_read_text_file(path):
+    def real_read_text_file(path: str):
         with open(path, 'r', encoding='utf-8') as f:
             return f.read()
     monkeypatch.setattr(cli_mod, "read_text_file", real_read_text_file)
 
     # Mock extract_character_actions to return some data (still mocking this as it's complex logic)
     # But we verify it receives the real profiles
-    def fake_extract(_content, _party, _truncate, character_profiles=None):
+    def fake_extract(
+        _content: str,
+        _party: str,
+        _truncate: Any,
+        character_profiles: Optional[Dict[str, Any]] = None,
+    ):
         assert character_profiles is not None
         assert "Aragorn" in character_profiles
         assert "Frodo Baggins" in character_profiles
@@ -316,7 +323,7 @@ def test_analyze_character_development_series(monkeypatch, tmp_path):
     # Mock write_text_file to verify output
     written_files = {}
 
-    def fake_write(path, content):
+    def fake_write(path: str, content: str):
         written_files[path] = content
     monkeypatch.setattr(cli_mod, "write_text_file", fake_write)
 

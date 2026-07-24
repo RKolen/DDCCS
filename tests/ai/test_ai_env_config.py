@@ -1,6 +1,7 @@
 """
 Test: Verify AI configuration is loaded from .env and uses Ollama local settings
 """
+from pathlib import Path
 
 import os
 import requests
@@ -9,7 +10,7 @@ from tests import test_helpers
 # Configure test environment (returns project root Path)
 project_root = test_helpers.setup_test_environment()
 
-def load_env(env_path):
+def load_env(env_path: Path):
     """Load environment variables from .env file into a dictionary."""
     env_vars = {}
     with open(env_path, "r", encoding="utf-8") as f:

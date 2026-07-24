@@ -4,6 +4,7 @@ interactive flows.
 Focuses on `list_characters` and `_display_character_details` using minimal
 fakes to avoid user input blocking.
 """
+from typing import Any
 
 from tests.test_helpers import setup_test_environment, import_module
 from tests import test_helpers
@@ -112,7 +113,7 @@ class _SimpleProfile:
 class _FakeStoryManager:
     """Minimal fake story manager implementing methods used by CharacterCLIManager."""
 
-    def __init__(self, profile):
+    def __init__(self, profile: Any):
         self._profile = profile
 
     def get_character_list(self):
@@ -126,7 +127,7 @@ class _FakeStoryManager:
         return None
 
 
-def test_list_and_display_character_details(monkeypatch):
+def test_list_and_display_character_details(monkeypatch: Any):
     """list_characters and _display_character_details run without error and
     render expected profile fields.
     """

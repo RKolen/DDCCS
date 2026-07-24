@@ -3,6 +3,7 @@
 These tests exercise the next-filename logic and numbered-file detection
 using an isolated temporary directory.
 """
+from pathlib import Path
 from tests.test_helpers import setup_test_environment, import_module
 
 
@@ -14,7 +15,7 @@ has_numbered_story_files = sfh.has_numbered_story_files
 next_filename_for_dir = sfh.next_filename_for_dir
 
 
-def test_list_and_detect_numbered_files(tmp_path):
+def test_list_and_detect_numbered_files(tmp_path: Path):
     """Listing returns only numbered story markdown files and detection is True."""
     d = tmp_path / "series"
     d.mkdir()
@@ -29,7 +30,7 @@ def test_list_and_detect_numbered_files(tmp_path):
     assert has_numbered_story_files(str(d)) is True
 
 
-def test_next_filename_for_empty_and_nonempty(tmp_path):
+def test_next_filename_for_empty_and_nonempty(tmp_path: Path):
     """next_filename_for_dir returns 001_ for empty dir and increments after files exist."""
     d = tmp_path / "series2"
     d.mkdir()

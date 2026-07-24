@@ -29,7 +29,7 @@ import sys
 import types
 import unittest.mock
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any, Callable, Dict, List, Optional
 from unittest.mock import patch as mock_patch
 
 from src.npcs.npc_auto_detection import DEFAULT_NPC_AI_CONFIG
@@ -121,7 +121,7 @@ def import_module(module_name: str):
     return importlib.import_module(module_name)
 
 
-def _build_possessions(possessions_cls, kw):
+def _build_possessions(possessions_cls: Any, kw: Any):
     """Module-level helper to build CharacterPossessions from kwargs."""
     equipment = {
         "weapons": kw.get("weapons") or [],
@@ -132,17 +132,17 @@ def _build_possessions(possessions_cls, kw):
     return possessions_cls(equipment=equipment, magic_items=magic_items_local)
 
 
-def _build_behavior(behavior_cls, kw):
+def _build_behavior(behavior_cls: Any, kw: Any):
     """Module-level helper to build CharacterBehavior from kwargs."""
     return behavior_cls(speech_patterns=kw.get("speech_patterns") or [])
 
 
-def _build_personality(personality_cls, kw):
+def _build_personality(personality_cls: Any, kw: Any):
     """Module-level helper to build CharacterPersonality from kwargs."""
     return personality_cls(relationships=kw.get("relationships") or {})
 
 
-def _build_story(story_cls, kw):
+def _build_story(story_cls: Any, kw: Any):
     """Module-level helper to build CharacterStory from kwargs."""
     return story_cls(
         story_hooks=kw.get("story_hooks") or [],
@@ -151,7 +151,7 @@ def _build_story(story_cls, kw):
     )
 
 
-def _build_mechanics(mechanics_cls, stats_cls, abilities_cls, kw):
+def _build_mechanics(mechanics_cls: Any, stats_cls: Any, abilities_cls: Any, kw: Any):
     """Module-level helper to build CharacterMechanics from kwargs."""
     stats = stats_cls(
         ability_scores=kw.get("ability_scores") or {},
@@ -351,7 +351,7 @@ def make_fake_input(inputs: list):
     fake-input implementations used across CLI tests.
     """
 
-    def _fake_input(prompt=""):
+    def _fake_input(prompt: str = ""):
         _ = prompt
         try:
             return inputs.pop(0)
@@ -419,7 +419,7 @@ def safe_from_import(module_name: str, *names: str) -> Any:
     return tuple(results)
 
 
-def make_identity(name: str = "TestChar", dnd_class=None, level: int = 1):
+def make_identity(name: str = "TestChar", dnd_class: Optional[Any] = None, level: int = 1):
     """Create a CharacterIdentity instance for tests.
 
     dnd_class may be either a `src.characters.character_sheet.DnDClass`
@@ -473,7 +473,12 @@ def _get_character_classes():
 
 
 
-def make_profile(name: str = "TestChar", dnd_class=None, level: int = 1, **kwargs):
+def make_profile(
+    name: str = "TestChar",
+    dnd_class: Optional[Any] = None,
+    level: int = 1,
+    **kwargs: Any,
+):
     """Create a minimal CharacterProfile instance for tests.
 
     This helper constructs the nested dataclasses (Identity, Personality,
@@ -516,7 +521,7 @@ except ImportError:
     DM_DUNGEON_MASTER = None
 
 
-def assert_system_prompt_contains(mock_ai, *keywords):
+def assert_system_prompt_contains(mock_ai: Any, *keywords: str):
     """Helper to verify system prompt contains specific keywords.
 
     Args:
@@ -537,7 +542,7 @@ def assert_system_prompt_contains(mock_ai, *keywords):
         ), f"System prompt should contain '{keyword}'"
 
 
-def run_test_suite(test_suite_name, test_functions):
+def run_test_suite(test_suite_name: str, test_functions: List[Any]):
     """Run a suite of tests with consistent output formatting.
 
     Args:
@@ -608,7 +613,7 @@ class FakeAIClient:
     structured response for testing.
     """
 
-    def chat_completion(self, *args, **kwargs):
+    def chat_completion(self, *args: Any, **kwargs: Any):
         """Return a canned narrative; accepts arbitrary args/kwargs.
 
         When `messages` is provided in kwargs, a short preview is appended
@@ -675,7 +680,7 @@ class FakeConsultant:
         """Create the fake with a preset reaction dict."""
         self._reaction = reaction
 
-    def suggest_reaction(self, situation: str, context=None):
+    def suggest_reaction(self, situation: str, context: Optional[Dict[str, Any]] = None):
         """Return the preset reaction dict; accepts situation and optional context."""
         _ = situation  # Acknowledge parameter
         _ = context
@@ -718,8 +723,12 @@ class FakeStoryManager:
     Implements the small subset of StoryManager API used by CLI modules.
     """
 
-    def __init__(self, characters=None, existing_stories=None):
-        self.consultants = {}
+    def __init__(
+        self,
+        characters: Optional[List[str]] = None,
+        existing_stories: Optional[List[str]] = None,
+    ):
+        self.consultants: Dict[str, Any] = {}
         self._characters = characters or []
         self._existing = existing_stories or []
 
@@ -735,7 +744,7 @@ class FakeStoryManager:
 class FakeDMConsultant:
     """Minimal fake DM consultant exposing the small API used by ConsultationsCLI."""
 
-    def __init__(self, characters=None, npcs=None):
+    def __init__(self, characters: Optional[List[str]] = None, npcs: Optional[List[str]] = None):
         self._characters = characters or []
         self._npcs = npcs or []
 
@@ -747,7 +756,12 @@ class FakeDMConsultant:
         """Return available NPC names."""
         return list(self._npcs)
 
-    def suggest_narrative(self, prompt, characters_present=None, npcs_present=None):
+    def suggest_narrative(
+        self,
+        prompt: str,
+        characters_present: Optional[List[str]] = None,
+        npcs_present: Optional[List[str]] = None,
+    ):
         """Return a deterministic suggestion structure for tests."""
         _ = (prompt, characters_present, npcs_present)
         return {
@@ -815,7 +829,7 @@ def sample_major_npc_data(
     return base
 
 
-def make_major_npc_profile(name: str = "Arch Villain", **kwargs):
+def make_major_npc_profile(name: str = "Arch Villain", **kwargs: Any):
     """Create a major NPCProfile instance for tests.
 
     Provides sensible BBEG defaults (level-17 Wizard, standard ability scores).
@@ -937,7 +951,7 @@ def make_mock_urlopen(status: int, body: bytes = b"") -> unittest.mock.MagicMock
     return mock
 
 
-def run_test_functions(tests: list, cleanup=None) -> None:
+def run_test_functions(tests: list, cleanup: Optional[Callable[..., Any]] = None) -> None:
     """Run a list of test callables and print a pass/fail summary.
 
     Args:

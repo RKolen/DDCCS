@@ -19,7 +19,7 @@ ArcDataPoint = test_helpers.safe_from_import(
 )
 
 
-def _make_storage(campaign_name="Test_Campaign"):
+def _make_storage(campaign_name: str = "Test_Campaign"):
     """Helper: create an ArcStorage backed by a temp directory."""
     tmp_dir = tempfile.mkdtemp()
     storage = ArcStorage(campaign_name=campaign_name, workspace_path=tmp_dir)

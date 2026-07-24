@@ -20,7 +20,7 @@ Why we test this:
 import json
 import tempfile
 from pathlib import Path
-from typing import Optional
+from typing import Any, Optional
 from unittest.mock import MagicMock
 
 from src.characters.relationship_types import (
@@ -37,7 +37,7 @@ from src.characters.relationship_visualizer import RelationshipVisualizer
 # Helpers
 # ─────────────────────────────────────────────────────────────────────────────
 
-def _make_graph(edges=None):
+def _make_graph(edges: Optional[Any] = None):
     """Build a minimal RelationshipGraph for visualizer tests."""
     if edges is None:
         rel = Relationship(
@@ -50,7 +50,7 @@ def _make_graph(edges=None):
     return RelationshipGraph(nodes=nodes, edges=edges)
 
 
-def _make_visualizer(graph=None):
+def _make_visualizer(graph: Optional[Any] = None):
     """Build a RelationshipVisualizer backed by a mock manager."""
     if graph is None:
         graph = _make_graph()
@@ -59,12 +59,12 @@ def _make_visualizer(graph=None):
     return RelationshipVisualizer(manager=manager)
 
 
-def _write_json(path, data):
+def _write_json(path: Path, data: Any):
     """Write data as JSON to path."""
     path.write_text(json.dumps(data, indent=2), encoding="utf-8")
 
 
-def _read_json(path):
+def _read_json(path: Path):
     """Read and return JSON from path."""
     return json.loads(path.read_text(encoding="utf-8"))
 

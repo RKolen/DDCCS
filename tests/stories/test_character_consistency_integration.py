@@ -5,6 +5,7 @@ temporary story files with explicit CHARACTER/ACTION/REASONING blocks. They
 verify that the story analysis pipeline (StoryManager -> StoryAnalyzer ->
 consultant) detects in-character vs out-of-character actions.
 """
+from typing import Any
 
 import os
 import tempfile
@@ -15,7 +16,7 @@ from src.stories.story_manager import StoryManager
 project_root = test_helpers.setup_test_environment()
 
 
-def _get_consultant_analysis_for(manager, story_path, character_name):
+def _get_consultant_analysis_for(manager: Any, story_path: str, character_name: str):
     result = manager.analyze_story_file(story_path)
     assert isinstance(result, dict)
     ca = result.get("consultant_analyses", {})

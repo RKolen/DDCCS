@@ -282,7 +282,7 @@ def test_push_character_posts_when_lookup_returns_empty() -> None:
 
     call_count = 0
 
-    def side_effect(_req, timeout=30):
+    def side_effect(_req: Any, timeout: int = 30):
         # `timeout` must keep its name: drupal_sync calls urlopen(req, timeout=N)
         # by keyword. Consumed here because the mock does not honour it.
         _ = timeout
@@ -312,7 +312,7 @@ def test_push_character_patches_when_lookup_returns_node() -> None:
 
     call_count = 0
 
-    def side_effect(_req, timeout=30):
+    def side_effect(_req: Any, timeout: int = 30):
         # `timeout` must keep its name: drupal_sync calls urlopen(req, timeout=N)
         # by keyword. Consumed here because the mock does not honour it.
         _ = timeout

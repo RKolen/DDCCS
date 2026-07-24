@@ -3,6 +3,7 @@
 This test uses `FakeDMConsultant` from `tests.test_helpers` and monkeypatches
 `input()` to simulate user prompts for the narrative request.
 """
+from typing import Any
 
 from tests.test_helpers import (
     setup_test_environment,
@@ -17,7 +18,7 @@ cli_mod = import_module("src.cli.cli_consultations")
 ConsultationsCLI = cli_mod.ConsultationsCLI
 
 
-def test_get_dm_narrative_suggestions_with_fake_dm(monkeypatch):
+def test_get_dm_narrative_suggestions_with_fake_dm(monkeypatch: Any):
     """get_dm_narrative_suggestions should call into the DM consultant and print suggestions."""
     fake_dm = FakeDMConsultant(characters=["Frodo"], npcs=["Bilbo"])
 

@@ -4,6 +4,7 @@ Tests for the error handling system.
 Tests the DnDError exception classes, handle_errors decorator,
 and error wrapping functions from src.utils.errors.
 """
+from typing import Any
 
 from src.utils.errors import (
     DnDError,
@@ -192,7 +193,7 @@ class TestHandleErrorsDecorator:
     def test_handles_multiple_error_types(self):
         """Decorator handles multiple error types."""
         @handle_errors(ValueError, KeyError, default_return="default")
-        def multi_fail(error_type):
+        def multi_fail(error_type: str):
             if error_type == "value":
                 raise ValueError("test")
             raise KeyError("test")
@@ -216,7 +217,7 @@ class TestHandleErrorsDecorator:
     def test_passes_args_through(self):
         """Arguments are passed through to function."""
         @handle_errors()
-        def func_with_args(a, b):
+        def func_with_args(a: Any, b: Any):
             return a + b
 
         assert func_with_args(1, 2) == 3
@@ -224,7 +225,7 @@ class TestHandleErrorsDecorator:
     def test_passes_kwargs_through(self):
         """Keyword arguments are passed through."""
         @handle_errors()
-        def func_with_kwargs(a, b=0):
+        def func_with_kwargs(a: Any, b: Any = 0):
             return a + b
 
         assert func_with_kwargs(1, b=2) == 3

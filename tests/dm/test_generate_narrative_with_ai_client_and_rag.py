@@ -1,5 +1,6 @@
 """Test AI branch of `DMConsultant.generate_narrative_content`
 with a fake AI client and mocked RAG."""
+from typing import Any, List
 
 from tests import test_helpers
 
@@ -36,7 +37,7 @@ class SimpleFakeAI:
         """Create a simple user message dictionary with the given content."""
         return {"content": content}
 
-    def chat_completion(self, *args, **kwargs):
+    def chat_completion(self, *args: Any, **kwargs: Any):
         # Delegate to base fake which will include a msg_preview for messages
         """Proxy chat completion calls to the wrapped fake AI client.
 
@@ -66,7 +67,7 @@ def test_generate_narrative_with_ai_client_and_rag():
 
         enabled = True
 
-        def get_context_for_query(self, prompt, locations, max_results=2):
+        def get_context_for_query(self, prompt: str, locations: List[str], max_results: int = 2):
             """Return a short context string for the provided prompt.
 
             The arguments are accepted only to match the production API; the

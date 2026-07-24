@@ -3,6 +3,7 @@
 Focuses on selection and validation methods that are safe to run in unit tests.
 Tests validate series/story selection logic and character action validation.
 """
+from typing import Any, Dict
 
 from tests import test_helpers
 from tests.test_helpers import setup_test_environment, import_module
@@ -37,7 +38,7 @@ def test_validate_action_data_valid():
     fake_manager = _FakeStoryManager("")
 
     class _TestableCDCLIManager(CharacterDevelopmentCLIManager):
-        def validate_action_data_public(self, action_data):
+        def validate_action_data_public(self, action_data: Dict[str, Any]):
             """Public wrapper for testing."""
             return self._validate_action_data(action_data)
 
@@ -63,7 +64,7 @@ def test_validate_action_data_missing_character():
     fake_manager = _FakeStoryManager("")
 
     class _TestableCDCLIManager(CharacterDevelopmentCLIManager):
-        def validate_action_data_public(self, action_data):
+        def validate_action_data_public(self, action_data: Dict[str, Any]):
             """Public wrapper for testing."""
             return self._validate_action_data(action_data)
 
@@ -87,7 +88,7 @@ def test_validate_action_data_missing_action():
     fake_manager = _FakeStoryManager("")
 
     class _TestableCDCLIManager(CharacterDevelopmentCLIManager):
-        def validate_action_data_public(self, action_data):
+        def validate_action_data_public(self, action_data: Dict[str, Any]):
             """Public wrapper for testing."""
             return self._validate_action_data(action_data)
 
@@ -111,7 +112,7 @@ def test_validate_action_data_missing_reasoning():
     fake_manager = _FakeStoryManager("")
 
     class _TestableCDCLIManager(CharacterDevelopmentCLIManager):
-        def validate_action_data_public(self, action_data):
+        def validate_action_data_public(self, action_data: Dict[str, Any]):
             """Public wrapper for testing."""
             return self._validate_action_data(action_data)
 
@@ -135,7 +136,7 @@ def test_select_story_from_series_no_stories():
     fake_manager = _FakeStoryManager("")
 
     class _TestableCDCLIManager(CharacterDevelopmentCLIManager):
-        def select_story_from_series_public(self, series_name):
+        def select_story_from_series_public(self, series_name: str):
             """Public wrapper for testing."""
             return self._select_story_from_series(series_name)
 

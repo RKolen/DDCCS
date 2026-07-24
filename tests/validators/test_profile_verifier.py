@@ -4,6 +4,7 @@ Tests for profile_verifier.py and verification_rules.py.
 Covers unit-level tests for individual rules, the ProfileVerifier orchestration,
 VerificationReport helpers, auto-fix logic, and CLI utilities.
 """
+from typing import Any
 
 from tests import test_helpers
 from src.validation.verification_rules import (
@@ -48,7 +49,7 @@ test_helpers.setup_test_environment()
 # Fixtures / helpers
 # ---------------------------------------------------------------------------
 
-def _make_char(**kwargs):
+def _make_char(**kwargs: Any):
     """Return a minimal valid character dict, optionally overriding fields."""
     base = test_helpers.sample_character_data(
         name="Test Hero",

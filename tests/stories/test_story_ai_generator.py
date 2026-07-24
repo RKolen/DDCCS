@@ -4,14 +4,15 @@ Story AI Generator Tests
 Tests for the story_ai_generator module which handles AI-powered narrative
 generation, story descriptions, and narrative enhancement features.
 """
-
 import os
 import sys
 import tempfile
 from pathlib import Path
+from typing import cast
 from unittest.mock import Mock
 
 from tests import test_helpers
+from src.ai.ai_client import AIClient
 from src.stories.story_ai_generator import (
     generate_story_hooks_from_content,
     generate_story_from_prompt,
@@ -359,7 +360,7 @@ def test_generate_story_hooks_with_ai():
         "Kael": {"dnd_class": "rogue", "level": 3},
         "Lira": {"dnd_class": "wizard", "level": 4},
     }
-    mock_ai = test_helpers.FakeAIClient()
+    mock_ai = cast(AIClient, test_helpers.FakeAIClient())
     hooks = generate_story_hooks_from_content(mock_ai, story_content, character_context)
     assert isinstance(
         hooks, (list, dict, type(None))
@@ -534,7 +535,7 @@ def test_generate_session_results_with_ai():
         "Combat lasted 3 rounds with 5 enemies defeated."
     )
 
-    mock_ai = test_helpers.FakeAIClient()
+    mock_ai = cast(AIClient, test_helpers.FakeAIClient())
 
     results = generate_session_results_from_story(mock_ai, story, ["Kael", "Lira"])
 
@@ -572,7 +573,7 @@ def test_generate_session_results_identifies_actions():
         "Aragorn made a Persuasion check to negotiate with the merchant."
     )
 
-    mock_ai = test_helpers.FakeAIClient()
+    mock_ai = cast(AIClient, test_helpers.FakeAIClient())
 
     results = generate_session_results_from_story(
         mock_ai, story, ["Kael", "Lira", "Aragorn"]

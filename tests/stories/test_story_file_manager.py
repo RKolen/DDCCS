@@ -4,6 +4,7 @@ These are filesystem-driven unit tests that use a temporary workspace so the
 repository is not modified. They exercise deterministic behavior: series
 creation, story numbering, and file content writing.
 """
+from typing import List
 
 import os
 import re
@@ -22,7 +23,7 @@ from src.stories.story_file_manager import (
 )
 
 
-def _find_numbered_file(files, number: int):
+def _find_numbered_file(files: List[str], number: int):
     pattern = re.compile(rf"^{number:03d}_.*\.md$")
     for f in files:
         if pattern.match(f):

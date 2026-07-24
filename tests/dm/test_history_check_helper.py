@@ -3,6 +3,7 @@
 These tests verify DC estimation, detail level mapping, fallback behavior when
 RAG is not available, and behavior when a mocked RAG system is provided.
 """
+from typing import Any, Optional
 
 from tests.test_helpers import setup_test_environment, import_module, DM_HISTORY_HELPER
 
@@ -59,7 +60,7 @@ def test_search_lore_no_rag():
     assert "RAG" in msg or "not available" in msg
 
 
-def test_handle_history_with_mocked_rag(monkeypatch):
+def test_handle_history_with_mocked_rag(monkeypatch: Any):
     """When RAG provides info, handle_history_check should return wiki-sourced details."""
     # Create a fake rag_system with enabled=True and a predictable response
     class FakeRag:
@@ -67,11 +68,11 @@ def test_handle_history_with_mocked_rag(monkeypatch):
 
         enabled = True
 
-        def get_history_check_info(self, topic, check_result=None):
+        def get_history_check_info(self, topic: str, check_result: Optional[Any] = None):
             """Return a predictable lore string for the given topic and check."""
             return f"Lore about {topic} for check {check_result}"
 
-        def get_context_for_location(self, q):
+        def get_context_for_location(self, q: str):
             """Return a short context string for a queried location."""
             return f"Context for {q}"
 

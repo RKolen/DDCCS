@@ -1,4 +1,5 @@
 """Tests for EventExtractor (pattern-based, no AI required)."""
+from typing import Dict, List
 
 from tests import test_helpers
 from tests.timeline.timeline_test_helpers import EventType
@@ -117,15 +118,15 @@ def test_ai_extractor_parse_valid_json():
     print("\n[TEST] AIEventExtractor.parse_ai_response - valid JSON")
 
     class _FakeAI:
-        def create_system_message(self, msg):
+        def create_system_message(self, msg: str):
             """Return a system message dict."""
             return {"role": "system", "content": msg}
 
-        def create_user_message(self, msg):
+        def create_user_message(self, msg: str):
             """Return a user message dict."""
             return {"role": "user", "content": msg}
 
-        def chat_completion(self, messages):
+        def chat_completion(self, messages: List[Dict[str, str]]):
             """Return messages unchanged."""
             return messages
 

@@ -1,4 +1,5 @@
 """Tests for src.cli.batch_operations: BatchProcessor and operation factories."""
+from typing import Any
 
 import tempfile
 from pathlib import Path
@@ -111,7 +112,7 @@ def test_batch_add_item_replaces_non_list_equipment():
 def test_process_characters_missing_file_returns_failure():
     """process_characters should return a failure for a non-existent character."""
 
-    def no_op(name, _data):
+    def no_op(name: str, _data: Any):
         return BatchResult(item=name, success=True)
 
     processor = BatchProcessor()
@@ -124,7 +125,7 @@ def test_process_characters_missing_file_returns_failure():
 def test_process_characters_success_with_real_character():
     """process_characters should succeed for an existing character file."""
 
-    def read_only(name, _data):
+    def read_only(name: str, _data: Any):
         return BatchResult(item=name, success=True, message="ok")
 
     processor = BatchProcessor()
@@ -137,10 +138,10 @@ def test_process_characters_progress_callback_invoked():
     """process_characters should invoke the progress_callback for each item."""
     calls = []
 
-    def callback(name, current, total):
+    def callback(name: str, current: int, total: int):
         calls.append((name, current, total))
 
-    def no_op(name, _data):
+    def no_op(name: str, _data: Any):
         return BatchResult(item=name, success=True)
 
     processor = BatchProcessor()
@@ -156,7 +157,7 @@ def test_process_characters_progress_callback_invoked():
 def test_process_campaigns_missing_returns_failure():
     """process_campaigns should return a failure for a non-existent campaign."""
 
-    def no_op(name, _path):
+    def no_op(name: str, _path: Path):
         return BatchResult(item=name, success=True)
 
     processor = BatchProcessor()
@@ -168,7 +169,7 @@ def test_process_campaigns_missing_returns_failure():
 def test_process_campaigns_known_campaign_succeeds():
     """process_campaigns should succeed for Example_Campaign."""
 
-    def read_only(name, path):
+    def read_only(name: str, path: Path):
         return BatchResult(item=name, success=True, message=str(path))
 
     processor = BatchProcessor()
@@ -185,7 +186,7 @@ def test_process_campaigns_known_campaign_succeeds():
 def test_process_stories_missing_campaign_returns_failure():
     """process_stories should return a failure when the campaign does not exist."""
 
-    def no_op(filename, _path):
+    def no_op(filename: str, _path: str):
         return BatchResult(item=filename, success=True)
 
     processor = BatchProcessor()
@@ -198,7 +199,7 @@ def test_process_stories_known_campaign_processes_md_files():
     """process_stories should process all .md files in Example_Campaign."""
     processed = []
 
-    def record(filename, _path):
+    def record(filename: str, _path: str):
         processed.append(filename)
         return BatchResult(item=filename, success=True)
 
@@ -220,7 +221,7 @@ def test_level_up_does_not_persist_without_data():
         char_path = Path(tmp) / "test_char.json"
         char_path.write_text('{"name": "test", "level": 3}', encoding="utf-8")
 
-        def read_only(name, _data):
+        def read_only(name: str, _data: Any):
             return BatchResult(item=name, success=True)
 
         processor = BatchProcessor()

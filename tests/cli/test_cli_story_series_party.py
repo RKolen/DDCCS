@@ -4,14 +4,15 @@ This test simulates user input to `StoryCLIManager._create_new_story_series`
 and verifies that a `current_party.json` file is written into the newly
 created campaign folder even when the party input is left blank.
 """
-
 import os
 import tempfile
 import json
+from typing import Any, cast
 
 from tests.test_helpers import setup_test_environment
 
 # Import directly to avoid tuple unpacking issues with safe_from_import
+from src.stories.story_manager import StoryManager
 from src.stories.story_file_manager import create_new_story_series, StoryFileContext
 from src.cli.cli_story_manager import StoryCLIManager
 
@@ -24,13 +25,13 @@ class _FakeStoryManager:
     Keeps a minimal API surface required by `StoryCLIManager`.
     """
 
-    def __init__(self, campaigns_dir, workspace_path):
+    def __init__(self, campaigns_dir: str, workspace_path: str):
         """Initialize with campaign and workspace paths."""
         self.stories_path = campaigns_dir
         self._campaigns_dir = campaigns_dir
         self._workspace = workspace_path
 
-    def create_new_story_series(self, series_name, first_story_name, description):
+    def create_new_story_series(self, series_name: str, first_story_name: str, description: str):
         """Delegate to the real create_new_story_series file-op helper."""
         ctx = StoryFileContext(
             stories_path=self._campaigns_dir,
@@ -52,7 +53,7 @@ class _FakeStoryManager:
         return []
 
 
-def test_cli_create_series_writes_current_party_json(monkeypatch):
+def test_cli_create_series_writes_current_party_json(monkeypatch: Any):
     """Integration test: CLI series creation writes a current_party.json file.
 
     This test exercises the interactive prompt flow using monkeypatched
@@ -76,7 +77,7 @@ def test_cli_create_series_writes_current_party_json(monkeypatch):
                 """Small public helper to increase public-method count for pylint."""
                 return True
 
-        cli = _TestableStoryCLIManager(fake_manager, tmp)
+        cli = _TestableStoryCLIManager(cast(StoryManager, fake_manager), tmp)
 
         # Simulate user inputs: series name, first story name, description, blank party input
         inputs = iter(

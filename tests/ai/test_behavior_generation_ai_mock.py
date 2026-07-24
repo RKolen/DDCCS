@@ -7,6 +7,7 @@ coerces values into the expected types for `CharacterBehavior`.
 
 The test is written so it can be run with pytest or executed directly.
 """
+from typing import Any
 
 from tests import test_helpers
 from src.characters.consultants.character_profile import CharacterBehavior
@@ -30,7 +31,7 @@ def test_ai_malformed_output_coercion():
         # Enable AI path and provide malformed output
         setattr(bg, "AI_AVAILABLE", True)
 
-        def fake_ai(*_args, **_kwargs):
+        def fake_ai(*_args: Any, **_kwargs: Any):
             # Malformed: preferred as string, reactions as list, speech as string,
             # decision as None
             return {

@@ -14,6 +14,7 @@ Why we test this:
 - Recruitment system needs accurate character filtering
 - File generation must create valid markdown
 """
+from typing import Any
 
 import tempfile
 import os
@@ -177,7 +178,7 @@ def test_get_available_recruits_basic():
     print("\n[TEST] Get Available Recruits - Basic")
 
     # Create mock consultants using simple objects
-    def create_mock_consultant(name, char_class, level):
+    def create_mock_consultant(name: str, char_class: Any, level: int):
         """Create a mock consultant for testing."""
         profile = type(
             "MockProfile",
@@ -222,7 +223,7 @@ def test_get_available_recruits_with_exclusions():
     print("\n[TEST] Get Available Recruits - With Exclusions")
 
     # Create mock consultants using factory function
-    def create_mock_consultant(name, char_class, level):
+    def create_mock_consultant(name: str, char_class: Any, level: int):
         """Create a mock consultant for testing using test_helpers.make_profile."""
         profile = test_helpers.make_profile(
             name=name, dnd_class=char_class, level=level
@@ -272,7 +273,7 @@ def test_get_available_recruits_all_excluded():
     print("\n[TEST] Get Available Recruits - All Excluded")
 
     # Create mock consultants using factory function
-    def create_mock_consultant(name, char_class, level):
+    def create_mock_consultant(name: str, char_class: Any, level: int):
         """Create a mock consultant for testing."""
         identity = CharacterIdentity(name=name, character_class=char_class, level=level)
         return type(

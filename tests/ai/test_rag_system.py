@@ -51,14 +51,14 @@ class MockDrupalSync:
     def __init__(self):
         self._store = {}
 
-    def _key(self, url_hash):
+    def _key(self, url_hash: str):
         return url_hash
 
-    def get_wiki_page_cache(self, url_hash):
+    def get_wiki_page_cache(self, url_hash: str):
         """Return stored entry or None."""
         return self._store.get(self._key(url_hash))
 
-    def set_wiki_page_cache(self, url_hash, url, fetched_at, content_json):
+    def set_wiki_page_cache(self, url_hash: str, url: str, fetched_at: float, content_json: str):
         """Store a cache entry and return a fake UUID."""
         self._store[self._key(url_hash)] = {
             "field_wiki_url": url,
@@ -67,7 +67,7 @@ class MockDrupalSync:
         }
         return "mock-uuid"
 
-    def delete_wiki_page_cache(self, url_hash):
+    def delete_wiki_page_cache(self, url_hash: str):
         """Remove entry if present."""
         self._store.pop(self._key(url_hash), None)
 
@@ -75,19 +75,19 @@ class MockDrupalSync:
         """Return number of stored entries."""
         return len(self._store)
 
-    def backdate_entry(self, url, age_seconds):
+    def backdate_entry(self, url: str, age_seconds: int):
         """Move field_wiki_fetched_at backward to simulate an aged entry."""
         key = hashlib.md5(url.encode("utf-8")).hexdigest()
         if key in self._store:
             self._store[key]["field_wiki_fetched_at"] = time.time() - age_seconds
 
-    def corrupt_entry(self, url, bad_json):
+    def corrupt_entry(self, url: str, bad_json: str):
         """Replace content with bad JSON to simulate corruption."""
         key = hashlib.md5(url.encode("utf-8")).hexdigest()
         if key in self._store:
             self._store[key]["field_wiki_content"] = bad_json
 
-    def wrap_content_as_dict(self, url):
+    def wrap_content_as_dict(self, url: str):
         """Wrap field_wiki_content in Drupal text_long dict format."""
         key = hashlib.md5(url.encode("utf-8")).hexdigest()
         if key in self._store:
@@ -98,15 +98,15 @@ class MockDrupalSync:
 class ErrorDrupalSync:
     """DrupalSync stub that raises DrupalSyncError on every call."""
 
-    def get_wiki_page_cache(self, url_hash):
+    def get_wiki_page_cache(self, url_hash: str):
         """Always raise DrupalSyncError."""
         raise DrupalSyncError("connection refused")
 
-    def set_wiki_page_cache(self, url_hash, url, fetched_at, content_json):
+    def set_wiki_page_cache(self, url_hash: str, url: str, fetched_at: float, content_json: str):
         """Always raise DrupalSyncError."""
         raise DrupalSyncError("connection refused")
 
-    def delete_wiki_page_cache(self, url_hash):
+    def delete_wiki_page_cache(self, url_hash: str):
         """Always raise DrupalSyncError."""
         raise DrupalSyncError("connection refused")
 
@@ -313,7 +313,7 @@ def test_wiki_client_custom_item_filtering():
         def __init__(self):
             self.custom_items = {"Sword of Testing", "Magic Test Shield"}
 
-        def is_custom(self, item_name):
+        def is_custom(self, item_name: str):
             """Return True if item is in the custom set."""
             return item_name in self.custom_items
 

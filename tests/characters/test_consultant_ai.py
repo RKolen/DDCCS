@@ -5,7 +5,10 @@ This module tests the AIConsultant component that provides AI-powered
 consultation features with graceful fallback to rule-based methods.
 """
 
+from typing import cast
+
 from tests import test_helpers
+from src.ai.ai_client import AIClientProtocol
 from src.characters.consultants.consultant_ai import AIConsultant, AI_AVAILABLE
 from src.characters.character_sheet import DnDClass
 from src.utils.errors import UserInputError
@@ -41,7 +44,7 @@ def test_ai_consultant_initialization_with_client():
     # Create mock AI client
     mock_client = type("MockAIClient", (), {})()
 
-    consultant = AIConsultant(profile, {}, ai_client=mock_client)
+    consultant = AIConsultant(profile, {}, ai_client=cast(AIClientProtocol, mock_client))
 
     assert consultant.ai_client == mock_client, "AI client not set correctly"
     print("  [OK] AI consultant initialized with client")
@@ -78,7 +81,7 @@ def test_get_ai_client_with_global():
     )
 
     mock_global_client = type("MockGlobalClient", (), {})()
-    consultant = AIConsultant(profile, {}, ai_client=mock_global_client)
+    consultant = AIConsultant(profile, {}, ai_client=cast(AIClientProtocol, mock_global_client))
 
     client = consultant.get_ai_client()
 
@@ -304,7 +307,7 @@ def test_ai_consultant_error_handling():
         },
     )()
 
-    consultant = AIConsultant(profile, {}, ai_client=mock_client)
+    consultant = AIConsultant(profile, {}, ai_client=cast(AIClientProtocol, mock_client))
 
     base_suggestion = {"reaction": "Test"}
 

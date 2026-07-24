@@ -1,4 +1,5 @@
 """Test DMConsultant consistency notes when NPC relationships exist."""
+from typing import Any, Dict, Optional
 
 from tests.test_helpers import setup_test_environment, DM_DUNGEON_MASTER, import_module
 
@@ -12,7 +13,13 @@ DMConsultant = dm_module.DMConsultant
 class SimpleProfile:
     """Minimal profile object used for fake agents and consultants."""
 
-    def __init__(self, name, personality_summary=None, role=None, relationships=None):
+    def __init__(
+        self,
+        name: str,
+        personality_summary: Optional[str] = None,
+        role: Optional[str] = None,
+        relationships: Optional[Dict[str, Any]] = None,
+    ):
         self.name = name
         self.personality_summary = personality_summary or "quiet and thoughtful"
         self.role = role or "civilian"
@@ -35,7 +42,7 @@ class SimpleProfile:
 class FakeAgent:
     """Minimal NPC agent with a profile attribute."""
 
-    def __init__(self, profile):
+    def __init__(self, profile: Any):
         self.profile = profile
 
     def get_profile(self):
@@ -54,10 +61,10 @@ class FakeAgent:
 class FakeConsultantWithProfile:
     """Minimal consultant with profile required by DMConsultant consistency checks."""
 
-    def __init__(self, profile):
+    def __init__(self, profile: Any):
         self.profile = profile
 
-    def suggest_reaction(self, prompt, extra=None):
+    def suggest_reaction(self, prompt: str, extra: Optional[Any] = None):
         """Return a deterministic suggested reaction used by the tests.
 
         Keep this method minimal.

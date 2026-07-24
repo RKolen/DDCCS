@@ -5,14 +5,21 @@ verifying the method reads and prints file metadata without raising.
 
 Tests also cover the orchestration integration for story creation workflows.
 """
-
+from pathlib import Path
+from typing import TYPE_CHECKING, Any, Dict, List, cast
 from unittest.mock import MagicMock
 from tests.test_helpers import setup_test_environment, import_module, FakeAIClient
+from src.stories.story_manager import StoryManager
 
 setup_test_environment()
 
-cli_mod = import_module("src.cli.cli_story_manager")
-StoryCLIManager = cli_mod.StoryCLIManager
+if TYPE_CHECKING:
+    # Give the type checkers the real class so it is a valid base class; at
+    # runtime the dynamic import below runs after setup_test_environment().
+    from src.cli.cli_story_manager import StoryCLIManager
+else:
+    cli_mod = import_module("src.cli.cli_story_manager")
+    StoryCLIManager = cli_mod.StoryCLIManager
 
 class _FakeStoryManager:
     """Minimal fake story manager to satisfy constructor requirements."""
@@ -29,7 +36,7 @@ class _FakeStoryManager:
         return []
 
 
-def test_display_story_info_reads_file(tmp_path):
+def test_display_story_info_reads_file(tmp_path: Path):
     """_display_story_info should read and print basic file metadata."""
     # Create a small temporary story file
     story_file = tmp_path / "001_test_story.md"
@@ -50,11 +57,11 @@ def test_display_story_info_reads_file(tmp_path):
             """Small public helper to satisfy pylint too-few-public-methods."""
             return True
 
-    cli = _TestableStoryCLIManager(fake_manager, str(tmp_path))
+    cli = _TestableStoryCLIManager(cast(StoryManager, fake_manager), str(tmp_path))
     cli.display_story_info_public(str(story_file), "001_test_story.md")
 
 
-def test_orchestrate_story_creation_missing_file(tmp_path):
+def test_orchestrate_story_creation_missing_file(tmp_path: Path):
     """_orchestrate_story_creation should handle missing story file gracefully."""
 
     class _FakeStoryManagerWithAI(_FakeStoryManager):
@@ -66,7 +73,7 @@ def test_orchestrate_story_creation_missing_file(tmp_path):
 
     class _TestableStoryCLIManager(StoryCLIManager):
         def orchestrate_story_creation_public(
-            self, story_path: str, series_path: str, party_names
+            self, story_path: str, series_path: str, party_names: List[str]
         ):
             """Public wrapper for testing."""
             return self._orchestrate_story_creation(story_path, series_path, party_names)
@@ -75,14 +82,14 @@ def test_orchestrate_story_creation_missing_file(tmp_path):
             """Satisfy too-few-public-methods."""
             return True
 
-    cli = _TestableStoryCLIManager(fake_manager, str(tmp_path))
+    cli = _TestableStoryCLIManager(cast(StoryManager, fake_manager), str(tmp_path))
 
     # Should not raise, should handle missing file gracefully
     missing_file = str(tmp_path / "missing_story.md")
     cli.orchestrate_story_creation_public(missing_file, str(tmp_path), ["Hero"])
 
 
-def test_orchestrate_story_creation_valid_file(tmp_path):
+def test_orchestrate_story_creation_valid_file(tmp_path: Path):
     """_orchestrate_story_creation should process a valid story file."""
 
     class _FakeStoryManagerWithAI(_FakeStoryManager):
@@ -98,7 +105,7 @@ def test_orchestrate_story_creation_valid_file(tmp_path):
 
     class _TestableStoryCLIManager(StoryCLIManager):
         def orchestrate_story_creation_public(
-            self, story_path: str, series_path: str, party_names
+            self, story_path: str, series_path: str, party_names: List[str]
         ):
             """Public wrapper for testing."""
             return self._orchestrate_story_creation(story_path, series_path, party_names)
@@ -107,13 +114,13 @@ def test_orchestrate_story_creation_valid_file(tmp_path):
             """Satisfy too-few-public-methods."""
             return True
 
-    cli = _TestableStoryCLIManager(fake_manager, str(tmp_path))
+    cli = _TestableStoryCLIManager(cast(StoryManager, fake_manager), str(tmp_path))
 
     # Should not raise when processing valid file
     cli.orchestrate_story_creation_public(str(story_file), str(tmp_path), ["Hero"])
 
 
-def test_collect_story_creation_options_template_only(tmp_path, monkeypatch):
+def test_collect_story_creation_options_template_only(tmp_path: Path, monkeypatch: Any):
     """_collect_story_creation_options should handle template request."""
     class _FakeStoryManagerNoAI(_FakeStoryManager):
         def __init__(self, stories_path: str):
@@ -125,13 +132,13 @@ def test_collect_story_creation_options_template_only(tmp_path, monkeypatch):
     class _TestableStoryCLIManager(StoryCLIManager):
         def collect_options_public(self):
             """Public wrapper for testing."""
-            return self._collect_story_creation_options(story_type="initial")
+            return self._collect_story_creation_options()
 
         def noop(self):
             """Satisfy too-few-public-methods."""
             return True
 
-    cli = _TestableStoryCLIManager(fake_manager, str(tmp_path))
+    cli = _TestableStoryCLIManager(cast(StoryManager, fake_manager), str(tmp_path))
 
     # Mock user input: template yes, no AI (client is None anyway)
     monkeypatch.setattr("builtins.input", lambda _: "y")
@@ -142,7 +149,7 @@ def test_collect_story_creation_options_template_only(tmp_path, monkeypatch):
     assert options.ai_generated_content == ""
 
 
-def test_collect_story_creation_options_no_selections(tmp_path, monkeypatch):
+def test_collect_story_creation_options_no_selections(tmp_path: Path, monkeypatch: Any):
     """_collect_story_creation_options should handle user declining both options."""
     class _FakeStoryManagerNoAI(_FakeStoryManager):
         def __init__(self, stories_path: str):
@@ -154,13 +161,13 @@ def test_collect_story_creation_options_no_selections(tmp_path, monkeypatch):
     class _TestableStoryCLIManager(StoryCLIManager):
         def collect_options_public(self):
             """Public wrapper for testing."""
-            return self._collect_story_creation_options(story_type="initial")
+            return self._collect_story_creation_options()
 
         def noop(self):
             """Satisfy too-few-public-methods."""
             return True
 
-    cli = _TestableStoryCLIManager(fake_manager, str(tmp_path))
+    cli = _TestableStoryCLIManager(cast(StoryManager, fake_manager), str(tmp_path))
 
     # Mock user input: both no
     monkeypatch.setattr("builtins.input", lambda _: "n")
@@ -171,7 +178,7 @@ def test_collect_story_creation_options_no_selections(tmp_path, monkeypatch):
     assert options.ai_generated_content == ""
 
 
-def test_populate_session_with_ai_analysis_dict_structure(tmp_path):
+def test_populate_session_with_ai_analysis_dict_structure(tmp_path: Path):
     """_populate_session_with_ai_analysis should handle dict structure correctly.
 
     Tests that party_characters is treated as a dict, not a list.
@@ -209,7 +216,7 @@ def test_populate_session_with_ai_analysis_dict_structure(tmp_path):
 
     class _TestableStoryCLIManager(StoryCLIManager):
         def populate_session_public(
-            self, session, story_content: str, party_characters
+            self, session: Any, story_content: str, party_characters: Dict[str, Any]
         ):
             """Public wrapper for testing."""
             return self._populate_session_with_ai_analysis(
@@ -224,7 +231,7 @@ def test_populate_session_with_ai_analysis_dict_structure(tmp_path):
             """Satisfy too-few-public-methods with second method."""
             return True
 
-    cli = _TestableStoryCLIManager(fake_manager, str(tmp_path))
+    cli = _TestableStoryCLIManager(cast(StoryManager, fake_manager), str(tmp_path))
 
     # Create session
     session = story_session_class("test_story")
