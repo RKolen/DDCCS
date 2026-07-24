@@ -6,6 +6,7 @@ Refactored to use composition pattern with specialized manager classes.
 
 import os
 from typing import Dict, List, Any, Optional
+from src.ai.ai_client import AIClient
 from src.characters.consultants.character_profile import CharacterProfile
 from src.utils.path_utils import (
     get_campaigns_dir,
@@ -24,30 +25,26 @@ from src.npcs.npc_auto_detection import (
 )
 from src.stories.story_file_manager import (
     StoryFileContext,
-    get_existing_stories,
-    get_story_series,
-    get_story_files_in_series,
-    create_new_story_series,
-    create_story_in_series,
-    create_new_story,
     create_pure_narrative_story,
     create_pure_story_file,
 )
 from src.stories.hooks_and_analysis import create_story_hooks_file
+from src.stories.story_analysis import StoryAnalyzer
+from src.stories.story_file_operations import StoryFileOperationsMixin
 from src.characters.character_consistency import (
     create_character_development_file,
     get_available_recruits,
 )
 
 
-class EnhancedStoryManager:
+class EnhancedStoryManager(StoryFileOperationsMixin):
     """Enhanced story manager using composition pattern.
 
     Coordinates specialized managers for party, characters, stories, NPCs, and sessions.
     Each manager handles a specific aspect of the story management system.
     """
 
-    def __init__(self, workspace_path: str, **kwargs):
+    def __init__(self, workspace_path: str, **kwargs: Any):
         """Initialize enhanced story manager with specialized managers.
 
         Args:
@@ -75,10 +72,10 @@ class EnhancedStoryManager:
         self.stories_path = get_campaigns_dir(workspace_path)
         self.characters_path = get_characters_dir(workspace_path)
 
-    def _init_managers(self, workspace_path: str, **kwargs) -> None:
+    def _init_managers(self, workspace_path: str, **kwargs: Any) -> None:
         """Initialize specialized managers."""
         campaign_name = kwargs.get("campaign_name")
-        ai_client = kwargs.get("ai_client")
+        ai_client: Optional[AIClient] = kwargs.get("ai_client")
         lazy_load = kwargs.get("lazy_load", False)
 
         self.ai_client = ai_client
@@ -145,6 +142,49 @@ class EnhancedStoryManager:
         """Get a specific character's profile."""
         return self.character_manager.get_character_profile(character_name)
 
+    def save_character_profile(self, profile: CharacterProfile) -> None:
+        """Save a character profile to disk and refresh its consultant.
+
+        Part of the shared story-manager contract (see ``StoryManagerLike``).
+        """
+        self.character_manager.save_character_profile(profile)
+
+    def reload_character_from_disk(self, character_name: str) -> bool:
+        """Reload a character from disk, discarding in-memory edits.
+
+        Public counterpart of the shared contract; delegates to the
+        character manager.
+
+        Args:
+            character_name: Name of the character to reload.
+
+        Returns:
+            True if the reload succeeded, False if the file was not found.
+        """
+        return self.character_manager.reload_character_from_disk(character_name)
+
+    def suggest_character_reaction(
+        self,
+        character_name: str,
+        situation: str,
+        context: Optional[Dict[str, Any]] = None,
+    ) -> Dict[str, Any]:
+        """Get a character's reaction suggestion for a situation.
+
+        Args:
+            character_name: Name of the character.
+            situation: Situation description.
+            context: Optional context dictionary.
+
+        Returns:
+            Reaction suggestion dictionary, or an error dictionary.
+        """
+        self.ensure_characters_loaded()
+        consultant = self.character_manager.consultants.get(character_name)
+        if consultant is None:
+            return {"error": f"Character {character_name} not found"}
+        return consultant.suggest_reaction(situation, context or {})
+
     @property
     def consultants(self):
         """Access to character consultants."""
@@ -190,55 +230,25 @@ class EnhancedStoryManager:
         """Apply spell name highlighting to narrative text (internal use)."""
         return self.character_manager.apply_spell_highlighting(text)
 
-    # ===== Story File Management (delegates to story_file_manager module) =====
+    # ===== Story File Management =====
+    # Listing/creation come from StoryFileOperationsMixin; the campaign-scoped
+    # stories_path makes them operate on this manager's campaign directory.
 
-    def get_existing_stories(self) -> List[str]:
-        """Get existing story files in the root directory (legacy stories)."""
-        return get_existing_stories(self.stories_path)
+    def analyze_story_file(self, filepath: str) -> Dict[str, Any]:
+        """Analyze a story file for character actions and consistency.
 
-    def get_story_series(self) -> List[str]:
-        """Get available story series (folders with numbered stories)."""
-        return get_story_series(self.stories_path)
+        Builds a :class:`StoryAnalyzer` over the loaded consultants on demand,
+        matching the classic manager's behaviour.
 
-    def get_story_files_in_series(self, series_name: str) -> List[str]:
-        """Get story files within a specific series folder."""
-        return get_story_files_in_series(self.stories_path, series_name)
+        Args:
+            filepath: Path to the story file.
 
-    def create_new_story_series(
-        self, series_name: str, first_story_name: str, description: str = ""
-    ) -> str:
-        """Create a new story series in its own folder."""
-        ctx = StoryFileContext(
-            stories_path=self.stories_path,
-            workspace_path=self.workspace_path,
-        )
-        return create_new_story_series(
-            ctx, series_name, first_story_name, description=description
-        )
-
-    def create_story_in_series(
-        self, series_name: str, story_name: str, description: str = ""
-    ) -> str:
-        """Create a new story in an existing series."""
-        ctx = StoryFileContext(
-            stories_path=self.stories_path,
-            workspace_path=self.workspace_path,
-        )
-        return create_story_in_series(
-            ctx, series_name, story_name, description=description
-        )
-
-    def create_new_story(self, story_name: str, description: str = "") -> str:
-        """Create new story file with next sequence number (legacy)."""
-        ctx = StoryFileContext(
-            stories_path=self.stories_path,
-            workspace_path=self.workspace_path,
-        )
-        return create_new_story(ctx, story_name, description=description)
-
-    def _get_story_files(self) -> List[str]:
-        """Get all story files in sequence order (internal - legacy method)."""
-        return self.get_existing_stories()
+        Returns:
+            Dictionary containing the analysis results.
+        """
+        self.ensure_characters_loaded()
+        analyzer = StoryAnalyzer(self.character_manager.consultants)
+        return analyzer.analyze_story_file(filepath)
 
     def _create_pure_narrative_story(
         self, series_name: str, story_name: str, description: str = ""
@@ -265,7 +275,7 @@ class EnhancedStoryManager:
         return create_session_results_file(series_path, session)
 
     def create_story_hooks_file(
-        self, series_path: str, story_name: str, hooks: List[str], **kwargs
+        self, series_path: str, story_name: str, hooks: List[str], **kwargs: Any
     ) -> str:
         """Create a separate file for future story hooks and session suggestions."""
         story_content = kwargs.get("story_content")

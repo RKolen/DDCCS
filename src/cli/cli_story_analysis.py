@@ -26,6 +26,7 @@ from src.utils.string_utils import truncate_at_sentence, get_session_date, get_t
 from src.utils.character_profile_utils import load_character_profiles
 from src.utils.cli_utils import display_selection_menu
 from src.cli.cli_story_config_helper import extract_context_from_stories
+from src.stories.story_manager_types import StoryManagerLike
 
 # Optional AI client import
 AI_CLIENT_AVAILABLE = True
@@ -34,7 +35,7 @@ AI_CLIENT_AVAILABLE = True
 class StoryAnalysisCLI:
     """Manages story analysis and combat conversion operations."""
 
-    def __init__(self, story_manager, workspace_path):
+    def __init__(self, story_manager: StoryManagerLike, workspace_path: str):
         """
         Initialize story analysis CLI manager.
 

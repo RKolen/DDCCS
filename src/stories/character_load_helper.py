@@ -11,6 +11,7 @@ from src.characters.consultants.character_profile import CharacterProfile
 from src.characters.consultants.consultant_core import CharacterConsultant
 
 from src.utils.optional_imports import import_validator
+from src.ai.ai_client import AIClientProtocol
 
 # Optional validator import (centralized)
 VALIDATOR_AVAILABLE, _validator_module = import_validator()
@@ -22,7 +23,7 @@ validate_character_file = (
 
 
 def load_character_consultant(
-    filepath: str, ai_client=None, verbose: bool = False
+    filepath: str, ai_client: Optional[AIClientProtocol] = None, verbose: bool = False
 ) -> Optional[CharacterConsultant]:
     """Validate and load a character file and return a CharacterConsultant.
 

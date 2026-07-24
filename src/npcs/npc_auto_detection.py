@@ -13,6 +13,7 @@ from src.utils.file_io import save_json_file
 from src.utils.path_utils import get_npcs_dir, get_npc_file_path
 from src.utils.terminal_display import print_warning
 from src.characters.npc_constants import DEFAULT_ABILITY_SCORES, DEFAULT_EQUIPMENT
+from src.ai.ai_client import AIClientProtocol
 
 # Default AI config for NPCs
 DEFAULT_NPC_AI_CONFIG = {
@@ -171,7 +172,7 @@ def generate_npc_from_story(
     npc_name: str,
     context: str,
     role: Optional[str] = None,
-    ai_client=None,
+    ai_client: Optional[AIClientProtocol] = None,
     profile_type: str = "simplified",
 ) -> Dict[str, Any]:
     """

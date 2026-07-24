@@ -3,7 +3,7 @@
 import json
 import re
 from dataclasses import dataclass
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from src.timeline.event_schema import (
     EventContext,
@@ -14,6 +14,7 @@ from src.timeline.event_schema import (
     TimelineEvent,
 )
 from src.utils.file_io import read_text_file
+from src.ai.ai_client import AIClientProtocol
 
 
 @dataclass
@@ -283,7 +284,7 @@ class EventExtractor:
 class AIEventExtractor:
     """Use AI to extract events with higher accuracy."""
 
-    def __init__(self, ai_client):
+    def __init__(self, ai_client: Optional[AIClientProtocol]):
         """Initialize with AI client."""
         self.ai_client = ai_client
 
@@ -294,6 +295,8 @@ class AIEventExtractor:
         story_file: str = "",
     ) -> List[TimelineEvent]:
         """Extract events using AI analysis."""
+        if self.ai_client is None:
+            return []
         system_msg = self.ai_client.create_system_message(
             "You are a story analyst. Extract key events from D&D story text."
         )

@@ -12,13 +12,27 @@ import logging
 import os
 import re
 import time
-from typing import Any, Dict, FrozenSet, List, Optional, Protocol, Set, runtime_checkable
+from typing import (
+    Any,
+    Dict,
+    FrozenSet,
+    List,
+    Optional,
+    Protocol,
+    Set,
+    TYPE_CHECKING,
+    runtime_checkable,
+)
 from urllib.parse import quote
 
 from src.utils.errors import DnDError, display_error
 from src.config.config_loader import load_config
 from src.items.item_registry import ItemRegistry
 from src.integration.drupal_sync import DrupalSync, DrupalSyncError
+
+if TYPE_CHECKING:
+    from src.config.config_types import RAGConfig
+
 
 logger = logging.getLogger(__name__)
 
@@ -45,7 +59,7 @@ except ImportError:
 
 try:
     import requests
-    from bs4 import BeautifulSoup
+    from bs4 import BeautifulSoup, Tag
 
     SCRAPING_AVAILABLE = True
 except ImportError:
@@ -178,7 +192,7 @@ class WikiClient:
         self,
         base_url: str,
         cache: Optional[WikiCacheProtocol] = None,
-        item_registry=None,
+        item_registry: Optional["ItemRegistry"] = None,
         max_fetches_per_call: int = 5,
     ):
         """
@@ -203,7 +217,7 @@ class WikiClient:
         text = re.sub(r"\n\n+", "\n\n", text)
         return text.strip()
 
-    def _extract_elem_content(self, elem) -> str:
+    def _extract_elem_content(self, elem: "Tag") -> str:
         """Extract plain text from a p, ul, table, or aside element."""
         if elem.name == "p":
             return elem.get_text(strip=True)
@@ -229,7 +243,7 @@ class WikiClient:
             return "\n".join(items) if items else ""
         return ""
 
-    def _parse_sections(self, content_elem) -> List[Dict[str, str]]:
+    def _parse_sections(self, content_elem: "Tag") -> List[Dict[str, str]]:
         """Parse sections from wiki content element."""
         sections = []
         current_section: Dict[str, str] = {"title": "Introduction", "content": ""}
@@ -423,7 +437,11 @@ class RAGSystem:
             logger.debug("Drupal wiki cache init skipped: %s", exc)
         return DrupalWikiCache(drupal_sync=None, ttl_seconds=cache_ttl)
 
-    def __init__(self, item_registry=None, rag_config=None):
+    def __init__(
+        self,
+        item_registry: Optional["ItemRegistry"] = None,
+        rag_config: Optional["RAGConfig"] = None,
+    ):
         """
         Initialize RAG system from configuration.
 

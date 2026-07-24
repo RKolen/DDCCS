@@ -9,9 +9,10 @@ import os
 from typing import Dict, List, Optional
 from src.characters.consultants.character_profile import CharacterProfile
 from src.characters.consultants.consultant_core import CharacterConsultant
-from src.utils.path_utils import get_characters_dir, get_character_file_path
+from src.utils.path_utils import get_characters_dir
 from src.stories.character_loader import load_all_character_consultants
 from src.stories.character_loading_base import CharacterLoadingMixin
+from src.ai.ai_client import AIClientProtocol
 
 USE_CHARACTER_VALIDATION = False
 
@@ -19,7 +20,12 @@ USE_CHARACTER_VALIDATION = False
 class CharacterLoader(CharacterLoadingMixin):
     """Loads character profiles and creates consultants for story management."""
 
-    def __init__(self, workspace_path: str, ai_client=None, lazy_load: bool = False):
+    def __init__(
+        self,
+        workspace_path: str,
+        ai_client: Optional[AIClientProtocol] = None,
+        lazy_load: bool = False,
+    ):
         """
         Initialize character loader.
 
@@ -50,22 +56,6 @@ class CharacterLoader(CharacterLoadingMixin):
             verbose=USE_CHARACTER_VALIDATION,
         )
         self._characters_loaded = True
-
-    def save_character_profile(self, profile: CharacterProfile):
-        """
-        Save a character profile and update consultant.
-
-        Args:
-            profile: Character profile to save
-        """
-        filepath = get_character_file_path(profile.name, self.workspace_path)
-        profile.save_to_file(filepath)
-
-        # Update consultant with AI client
-        self.consultants[profile.name] = CharacterConsultant(
-            profile, ai_client=self.ai_client
-        )
-        print(f"[SUCCESS] Saved character profile: {profile.name}")
 
     def get_character_list(self) -> List[str]:
         """

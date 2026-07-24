@@ -29,7 +29,7 @@ import sys
 import types
 import unittest.mock
 from pathlib import Path
-from typing import Any
+from typing import Any, Dict
 from unittest.mock import patch as mock_patch
 
 from src.npcs.npc_auto_detection import DEFAULT_NPC_AI_CONFIG
@@ -598,7 +598,9 @@ def _format_messages_preview(msgs: Any) -> str:
 class FakeAIClient:
     """Reusable fake AI client for tests.
 
-    Provides a minimal `chat_completion`, `send_prompt`, and `ping` interface
+    Satisfies `src.ai.ai_client.AIClientProtocol` (`chat_completion`,
+    `create_system_message`, `create_user_message`) plus `send_prompt` and
+    `ping`.
     compatible with the production ai_client. `chat_completion` accepts
     arbitrary positional and keyword arguments (e.g., `messages=`,
     `temperature=`) and returns a canned narrative with an optional preview
@@ -646,6 +648,14 @@ class FakeAIClient:
             "EVENTS:\n"
             "- A narrative event occurred\n"
         )
+
+    def create_system_message(self, system_prompt: str) -> Dict[str, str]:
+        """Return a system message dict, mirroring the real AI client."""
+        return {"role": "system", "content": system_prompt}
+
+    def create_user_message(self, content: str) -> Dict[str, str]:
+        """Return a user message dict, mirroring the real AI client."""
+        return {"role": "user", "content": content}
 
     def ping(self) -> bool:
         """Simple health-check returning True to indicate availability."""

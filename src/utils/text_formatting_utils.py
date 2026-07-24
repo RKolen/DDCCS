@@ -41,12 +41,12 @@ def _wrap_preserving_markdown(text: str, width: int = 80) -> str:
     return "\n\n".join(wrapped_paragraphs)
 
 
-def _wrap_single_paragraph(para: str, pattern, width: int) -> str:
+def _wrap_single_paragraph(para: str, pattern: "re.Pattern[str]", width: int) -> str:
     """Wrap single paragraph while preserving markdown."""
     placeholders = {}
     counter = [0]
 
-    def replace_with_placeholder(match):
+    def replace_with_placeholder(match: "re.Match[str]"):
         placeholder = f"__MARKDOWN_{counter[0]}__"
         placeholders[placeholder] = match.group(0)
         counter[0] += 1

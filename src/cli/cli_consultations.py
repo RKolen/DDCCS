@@ -4,7 +4,7 @@ Consultations CLI Module
 Handles character consultations, DC suggestions, and DM narrative suggestions.
 """
 
-from typing import Dict, Any, Optional
+from typing import Any, Dict, List, Optional, TYPE_CHECKING
 from src.utils.cli_utils import (
     select_character_from_list,
     get_non_empty_input,
@@ -12,18 +12,28 @@ from src.utils.cli_utils import (
 )
 from src.cli.party_config_manager import load_current_party
 from src.utils.errors import display_error, DnDError
+from src.stories.story_manager_types import StoryManagerLike
+
+if TYPE_CHECKING:
+    from src.dm.dungeon_master import DMConsultant
+
 
 
 class ConsultationsCLI:
     """Manages consultation-related CLI operations."""
 
-    def __init__(self, story_manager, dm_consultant):
+    def __init__(
+        self,
+        story_manager: StoryManagerLike,
+        dm_consultant: Optional["DMConsultant"] = None,
+    ):
         """
         Initialize consultations CLI manager.
 
         Args:
             story_manager: StoryManager instance
-            dm_consultant: DMConsultant instance
+            dm_consultant: DMConsultant instance, or None when the DM consultant
+                is unavailable (narrative suggestions are then disabled).
         """
         self.story_manager = story_manager
         self.dm_consultant = dm_consultant
@@ -149,6 +159,10 @@ class ConsultationsCLI:
         print("\n DM NARRATIVE SUGGESTIONS")
         print("-" * 40)
 
+        if self.dm_consultant is None:
+            print("DM consultant is unavailable; narrative suggestions disabled.")
+            return
+
         # Get user prompt
         prompt = input("Describe the situation you need narrative help with: ").strip()
         if not prompt:
@@ -184,7 +198,7 @@ class ConsultationsCLI:
 
         return characters
 
-    def _select_characters(self, characters):
+    def _select_characters(self, characters: List[str]):
         """Prompt user to select party members (numbered list)."""
         characters_present = []
         if characters:
@@ -207,7 +221,7 @@ class ConsultationsCLI:
 
         return characters_present
 
-    def _select_npcs(self, npcs):
+    def _select_npcs(self, npcs: List[str]):
         """Prompt user to select NPCs (numbered list)."""
         npcs_present = []
         if npcs:

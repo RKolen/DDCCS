@@ -31,6 +31,9 @@ skills-lock.json
 Thumbs.db
 desktop.ini
 *.ini
+# mypy.ini is the shared type-checking gate config and must be committed, or
+# CI and fresh clones lose `mypy_path = stubs` and fail on unstubbed imports.
+!mypy.ini
 
 # Ignore user-generated data and logs
 *.log

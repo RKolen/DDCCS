@@ -23,11 +23,11 @@
   "reportOptionalCall": true,
   "reportOptionalIterable": true,
   "reportOptionalContextManager": true,
-  "reportOptionalArgumentType": true,
-  "reportOptionalParameterType": true,
-  "reportOptionalReturnType": true,
-  "reportOptionalAssignment": true,
   "reportPrivateImportUsage": true,
   "reportIncompatibleMethodOverride": true,
-  "reportIncompatibleVariableOverride": true
+  "reportIncompatibleVariableOverride": true,
+  "reportArgumentType": true,
+  "reportAssignmentType": true,
+  "reportReturnType": true,
+  "reportMissingParameterType": true
 }

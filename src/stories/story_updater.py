@@ -40,6 +40,7 @@ from src.stories.story_ai_generator import (
 from src.cli.party_config_manager import load_party_with_profiles, load_current_party
 from src.characters.character_consistency import create_character_development_file
 from src.stories.character_action_analyzer import extract_character_actions
+from src.ai.ai_client import AIClientProtocol
 
 
 class ContinuationConfig:
@@ -84,7 +85,7 @@ class ContinuationConfig:
         self.continuation = continuation
         return self
 
-    def set_ai_client(self, ai_client) -> "ContinuationConfig":
+    def set_ai_client(self, ai_client: Optional[AIClientProtocol]) -> "ContinuationConfig":
         """Set optional AI client.
 
         Args:
@@ -425,7 +426,11 @@ class StoryUpdater:
 
         return result
 
-    def extract_narrative_title(self, text: str, ai_client=None) -> str:
+    def extract_narrative_title(
+        self,
+        text: str,
+        ai_client: Optional[AIClientProtocol] = None,
+    ) -> str:
         """Extract an inventive narrative title from story content.
 
         Attempts to identify key entities (locations, actions, NPCs) and uses
@@ -451,7 +456,7 @@ class StoryUpdater:
         # Fallback: Use pattern-based extraction
         return self._extract_pattern_based_title(text)
 
-    def _generate_ai_narrative_title(self, text: str, ai_client) -> str:
+    def _generate_ai_narrative_title(self, text: str, ai_client: Optional[AIClientProtocol]) -> str:
         """Generate a narrative title using AI.
 
         Args:
@@ -855,7 +860,7 @@ class StoryUpdater:
         filepath: str,
         campaign_dir: str,
         workspace_path: str,
-        ai_client=None,
+        ai_client: Optional[AIClientProtocol] = None,
     ) -> None:
         """Generate story_hooks and session_results files.
 

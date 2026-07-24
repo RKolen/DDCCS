@@ -9,6 +9,7 @@ from src.timeline.event_extractor import EventExtractor
 from src.timeline.timeline_display import TimelineDisplay
 from src.timeline.timeline_store import TimelineStore
 from src.utils.cli_utils import print_section_header
+from src.stories.story_manager_types import StoryManagerLike
 
 
 class TimelineCLIManager:
@@ -208,7 +209,7 @@ class TimelineCLIManager:
 
 
 def get_or_prompt_campaign(
-    story_manager, workspace_path: str
+    story_manager: StoryManagerLike, workspace_path: str
 ) -> Optional[str]:
     """Return the current campaign name or prompt the user to enter one.
 

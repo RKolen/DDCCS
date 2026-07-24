@@ -37,6 +37,7 @@ from src.utils.string_utils import truncate_at_sentence
 from src.stories.suggestion_engine import SuggestionEngine, SuggestionConfig
 from src.stories.suggestion_storage import save_suggestions
 from src.utils.npc_lookup_helper import load_major_npcs
+from src.ai.ai_client import AIClientProtocol
 
 
 @dataclass
@@ -369,7 +370,10 @@ def _extract_story_hooks(story_content: str) -> List[str]:
     return unique_hooks if unique_hooks else ["Future adventure awaits..."]
 
 
-def should_offer_ai_generation(ai_client, has_context: bool = True) -> bool:
+def should_offer_ai_generation(
+    ai_client: Optional[AIClientProtocol],
+    has_context: bool = True,
+) -> bool:
     """
     Determine if AI story generation should be offered to user.
 

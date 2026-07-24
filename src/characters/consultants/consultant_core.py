@@ -16,6 +16,7 @@ from src.characters.consultants.consultant_dc import DCCalculator
 from src.characters.consultants.consultant_story import StoryAnalyzer
 from src.characters.consultants.consultant_ai import AIConsultant
 from src.ai.availability import RAG_AVAILABLE, get_rag_system
+from src.ai.ai_client import AIClientProtocol
 
 
 class CharacterConsultant:
@@ -28,7 +29,7 @@ class CharacterConsultant:
     - AIConsultant: AI-enhanced suggestions (optional)
     """
 
-    def __init__(self, profile: CharacterProfile, ai_client=None):
+    def __init__(self, profile: CharacterProfile, ai_client: Optional[AIClientProtocol] = None):
         """
         Initialize character consultant with profile and optional AI client.
 
@@ -505,7 +506,7 @@ class CharacterConsultant:
     # ============================================================================
 
     @classmethod
-    def load_from_file(cls, filepath: str, ai_client=None):
+    def load_from_file(cls, filepath: str, ai_client: Optional[AIClientProtocol] = None):
         """
         Load character consultant from JSON file.
 

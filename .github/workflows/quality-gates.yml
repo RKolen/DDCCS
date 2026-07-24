@@ -18,10 +18,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: '3.12'
 
@@ -31,7 +31,12 @@ jobs:
           .venv/bin/pip install --upgrade pip
           .venv/bin/pip install -r requirements.txt -r requirements-dev.txt
 
-      - name: Run all quality gates
-        # check.sh runs: no-suppressions, pylint, mypy (src+tests), pyright,
-        # and the full test suite. It exits non-zero if any gate fails.
-        run: ./check.sh
+      - name: Run static quality gates
+        # --fast runs the static gates only: shell exec bits, no-suppressions,
+        # pylint, mypy (src + tests), and pyright. Exits non-zero on any failure.
+        #
+        # The test suite is deliberately excluded. Parts of it are integration
+        # tests that need a live Ollama and a .env file (which is gitignored),
+        # so it cannot run deterministically on a clean runner. Run the full
+        # suite locally with ./check.sh before pushing.
+        run: ./check.sh --fast

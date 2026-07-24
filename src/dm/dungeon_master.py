@@ -5,7 +5,7 @@ Enhanced with RAG (Retrieval-Augmented Generation) for campaign wiki integration
 """
 
 import re
-from typing import Dict, List, Any, Optional
+from typing import Any, Dict, List, Optional, TYPE_CHECKING
 from pathlib import Path
 from src.calendar.date_tracker import DateTracker
 from src.characters.consultants.consultant_core import CharacterConsultant
@@ -13,6 +13,10 @@ from src.npcs.npc_agents import NPCAgent, create_npc_agents
 from src.stories.character_loader import load_all_character_consultants
 from src.ai.availability import RAG_AVAILABLE, get_rag_system
 from src.ai.prompt_templates import LANGUAGE_INSTRUCTION
+
+if TYPE_CHECKING:
+    from src.characters.character_sheet import NPCProfile
+
 
 
 class DMConsultant:
@@ -136,7 +140,7 @@ class DMConsultant:
             ),
         }
 
-    def _suggest_npc_behavior(self, npc_profile, _situation: str) -> str:
+    def _suggest_npc_behavior(self, npc_profile: "NPCProfile", _situation: str) -> str:
         """Suggest how an NPC would behave in the given situation."""
         personality = npc_profile.personality.lower()
 

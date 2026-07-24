@@ -4,18 +4,28 @@ AI Integration Component for Character Consultant
 Provides AI-powered consultation features with graceful fallback to rule-based methods.
 """
 
-from typing import Dict, Any, Optional
+from typing import Any, Dict, Optional, TYPE_CHECKING
 
 from src.ai.ai_client import build_client_for_character
 from src.ai.availability import AI_AVAILABLE, CharacterAIConfig
 from src.ai.prompt_templates import LANGUAGE_INSTRUCTION
 from src.utils.errors import UserInputError
+from src.ai.ai_client import AIClientProtocol
+
+if TYPE_CHECKING:
+    from src.characters.consultants.character_profile import CharacterProfile
+
 
 
 class AIConsultant:
     """Handles AI-powered character consultations."""
 
-    def __init__(self, profile, class_knowledge, ai_client=None):
+    def __init__(
+        self,
+        profile: "CharacterProfile",
+        class_knowledge: Dict[str, Any],
+        ai_client: Optional[AIClientProtocol] = None,
+    ):
         """
         Initialize AI consultant.
 
@@ -151,11 +161,13 @@ class AIConsultant:
                 custom_prompt = self.profile.ai_config.get("system_prompt")
                 if custom_prompt:
                     system_prompt = custom_prompt
-            elif self.profile.ai_config and hasattr(
-                self.profile.ai_config, "system_prompt"
-            ):
-                if self.profile.ai_config.system_prompt:
-                    system_prompt = self.profile.ai_config.system_prompt
+            else:
+                # ai_config may hold a CharacterAIConfig object rather than a
+                # dict; its annotation is dict-only, so access dynamically
+                # (mirrors CharacterProfile.to_dict()'s Any cast).
+                ai_config_obj: Any = self.profile.ai_config
+                if ai_config_obj and getattr(ai_config_obj, "system_prompt", ""):
+                    system_prompt = ai_config_obj.system_prompt
 
             # Create context string
             context_str = ""

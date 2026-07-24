@@ -13,6 +13,7 @@ from src.ai.availability import AI_AVAILABLE
 from src.ai.prompt_templates import LANGUAGE_INSTRUCTION
 from src.utils.errors import display_error, wrap_exception
 from src.utils.spell_lookup_helper import lookup_spells_and_abilities
+from src.ai.ai_client import AIClient
 
 
 def _build_story_context(
@@ -131,7 +132,7 @@ def _extract_spell_names(story_prompt: str) -> str:
 
 
 def generate_story_from_prompt(
-    ai_client,
+    ai_client: Optional[AIClient],
     story_prompt: str,
     story_config: Optional[Dict[str, Any]] = None,
 ) -> Optional[str]:
@@ -331,7 +332,7 @@ def build_story_prompt_with_session_context(
 
 
 def generate_story_description(
-    ai_client,
+    ai_client: Optional[AIClient],
     story_title: str,
     party_characters: Optional[Dict[str, Any]] = None,
 ) -> Optional[str]:
@@ -392,7 +393,7 @@ def generate_story_description(
 
 
 def enhance_story_narrative(
-    ai_client,
+    ai_client: Optional[AIClient],
     narrative_text: str,
     enhancement_type: str = "expand",
     max_tokens: int = 1500,
@@ -474,7 +475,7 @@ def enhance_story_narrative(
 
 
 def generate_session_results_from_story(
-    ai_client,
+    ai_client: Optional[AIClient],
     story_content: str,
     party_names: list,
 ) -> Optional[Dict[str, Any]]:
@@ -595,7 +596,7 @@ def _parse_session_analysis(analysis: str, party_names: list) -> Dict[str, Any]:
 
 
 def generate_story_hooks_from_content(
-    ai_client,
+    ai_client: Optional[AIClient],
     story_content: str,
     party_characters: Optional[Dict[str, Any]] = None,
     party_names: Optional[list] = None,

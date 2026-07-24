@@ -59,7 +59,7 @@ def create_character_portrait(
     *,
     custom_art: Optional[str] = None,
     backstory: Optional[str] = None,
-    **options,
+    **options: Any,
 ) -> str:
     """Create ASCII portrait for character.
 
@@ -152,7 +152,7 @@ def display_character_portrait(
     level: int,
     *,
     custom_art: Optional[str] = None,
-    **options,
+    **options: Any,
 ) -> None:
     """Display character portrait in terminal.
 

@@ -9,23 +9,25 @@ from typing import Dict, List, Any, Optional
 from src.ai.ai_client import get_client_for_task
 from src.characters.consultants.character_profile import CharacterProfile
 from src.stories.story_character_loader import CharacterLoader
-from src.stories.story_file_manager import (
-    StoryFileContext,
-    get_existing_stories,
-    get_story_series,
-    get_story_files_in_series,
-    create_new_story_series,
-    create_story_in_series,
-    create_new_story,
-)
 from src.stories.story_analysis import StoryAnalyzer
 from src.stories.story_updater import StoryUpdater
+from src.stories.party_manager import PartyManager
+from src.stories.story_file_operations import StoryFileOperationsMixin
+from src.ai.ai_client import AIClient
+from src.utils.cache_utils import (
+    reload_character_from_disk as reload_character_cache,
+)
 
 
-class StoryManager:
+class StoryManager(StoryFileOperationsMixin):
     """Manages the story sequence system using specialized components."""
 
-    def __init__(self, workspace_path: str, ai_client=None, lazy_load: bool = False):
+    def __init__(
+        self,
+        workspace_path: str,
+        ai_client: Optional[AIClient] = None,
+        lazy_load: bool = False,
+    ):
         """
         Initialize story manager with specialized components.
 
@@ -37,12 +39,8 @@ class StoryManager:
         """
         self.workspace_path = workspace_path
         self.ai_client = ai_client or get_client_for_task("story_generation")
+        # Legacy stories live at the workspace root for the classic manager.
         self.stories_path = workspace_path
-
-        # Initialize context for story file operations
-        self.story_context = StoryFileContext(
-            stories_path=workspace_path, workspace_path=workspace_path
-        )
 
         # Initialize components using composition
         self.character_loader = CharacterLoader(
@@ -52,6 +50,10 @@ class StoryManager:
 
         # Create analyzer with loaded or empty consultants
         self.analyzer = StoryAnalyzer(self.character_loader.consultants)
+
+        # Party manager with no campaign scope: party operations return an
+        # empty list rather than raising, keeping the shared contract valid.
+        self.party_manager = PartyManager(None, workspace_path)
 
     @property
     def consultants(self) -> Dict:
@@ -100,6 +102,28 @@ class StoryManager:
         # Update analyzer with new consultants
         self.analyzer = StoryAnalyzer(self.character_loader.consultants)
 
+    def reload_character_from_disk(self, character_name: str) -> bool:
+        """Reload a character from disk, discarding in-memory edits.
+
+        Part of the shared story-manager contract (see ``StoryManagerLike``).
+
+        Args:
+            character_name: Name of the character to reload.
+
+        Returns:
+            True if the reload succeeded, False if the file was not found.
+        """
+        return reload_character_cache(
+            self.character_loader.consultants,
+            self.character_loader.characters_path,
+            character_name,
+            self.ai_client,
+        )
+
+    def get_current_party(self) -> List[str]:
+        """Get current party members (empty when no campaign is active)."""
+        return self.party_manager.get_current_party()
+
     def get_character_list(self) -> List[str]:
         """
         Get list of all character names.
@@ -144,100 +168,7 @@ class StoryManager:
 
         return consultant.suggest_reaction(situation, context or {})
 
-    # Story File Operations Methods
-    def get_existing_stories(self) -> List[str]:
-        """
-        Get existing story files in the root directory (legacy stories).
-
-        Returns:
-            Sorted list of story filenames
-        """
-        return get_existing_stories(self.workspace_path)
-
-    def get_story_series(self) -> List[str]:
-        """
-        Get available story series (folders with numbered stories).
-
-        Returns:
-            Sorted list of series folder names
-        """
-        return get_story_series(self.workspace_path)
-
-    def get_story_files_in_series(self, series_name: str) -> List[str]:
-        """
-        Get story files within a specific series folder.
-
-        Args:
-            series_name: Name of the series folder
-
-        Returns:
-            Sorted list of story filenames in the series
-        """
-        return get_story_files_in_series(self.stories_path, series_name)
-
-    def get_story_files(self) -> List[str]:
-        """
-        Get all story files (legacy method for backward compatibility).
-
-        Returns:
-            Sorted list of story filenames
-        """
-        return self.get_existing_stories()
-
-    def create_new_story_series(
-        self, series_name: str, first_story_name: str, description: str = ""
-    ) -> str:
-        """
-        Create a new story series in its own folder.
-
-        Args:
-            series_name: Series name (must end with valid suffix)
-            first_story_name: Name of the first story
-            description: Optional story description
-
-        Returns:
-            Path to the created story file
-
-        Raises:
-            ValueError: If series name is invalid
-        """
-        return create_new_story_series(
-            self.story_context, series_name, first_story_name, description=description
-        )
-
-    def create_story_in_series(
-        self, series_name: str, story_name: str, description: str = ""
-    ) -> str:
-        """
-        Create a new story in an existing series.
-
-        Args:
-            series_name: Name of the existing series
-            story_name: Name of the new story
-            description: Optional story description
-
-        Returns:
-            Path to the created story file
-
-        Raises:
-            ValueError: If series does not exist
-        """
-        return create_story_in_series(
-            self.story_context, series_name, story_name, description=description
-        )
-
-    def create_new_story(self, story_name: str, description: str = "") -> str:
-        """
-        Create a new story file with the next sequence number in root directory.
-
-        Args:
-            story_name: Name of the story
-            description: Optional story description
-
-        Returns:
-            Path to the created story file
-        """
-        return create_new_story(self.story_context, story_name, description=description)
+    # Story file listing and creation are provided by StoryFileOperationsMixin.
 
     # Story Analysis Methods
     def analyze_story_file(self, filepath: str) -> Dict[str, Any]:

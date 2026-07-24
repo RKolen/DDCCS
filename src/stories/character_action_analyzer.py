@@ -10,7 +10,7 @@ analysis when AI is not configured.
 """
 
 import re
-from typing import Dict, List, Optional, Any
+from typing import Any, Callable, Dict, List, Optional
 
 from src.ai.ai_client import get_client_for_task
 from src.ai.prompt_templates import LANGUAGE_INSTRUCTION
@@ -683,7 +683,7 @@ def _search_character_in_lines(
 def extract_character_actions(
     story_content: str,
     party_names: List[str],
-    truncate_func,
+    truncate_func: Callable[..., Any],
     character_profiles: Optional[Dict[str, Dict[str, Any]]] = None,
     previous_actions_map: Optional[Dict[str, List[str]]] = None,
 ) -> List[Dict[str, str]]:

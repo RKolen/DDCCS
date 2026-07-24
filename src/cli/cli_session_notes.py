@@ -126,7 +126,7 @@ def _view_plot_threads(manager: SessionNotesManager) -> None:
             print(f"  Recent notes: {', '.join(recent_notes)}")
 
 
-def _collect_event(notes) -> None:
+def _collect_event(notes: "SessionNotes") -> None:
     """Prompt the user to enter an event and add it to the notes.
 
     Args:
@@ -154,7 +154,7 @@ def _collect_event(notes) -> None:
     print("[OK] Event recorded.")
 
 
-def _collect_plot_thread(notes) -> None:
+def _collect_plot_thread(notes: "SessionNotes") -> None:
     """Prompt the user to enter a plot thread and add it to the notes.
 
     Args:
@@ -178,7 +178,7 @@ def _collect_plot_thread(notes) -> None:
     print("[OK] Plot thread recorded.")
 
 
-def _collect_npc(notes) -> None:
+def _collect_npc(notes: "SessionNotes") -> None:
     """Prompt the user to enter an NPC introduction and add it to the notes.
 
     Args:
@@ -197,7 +197,7 @@ def _collect_npc(notes) -> None:
     print("[OK] NPC introduction recorded.")
 
 
-def _collect_decision(notes) -> None:
+def _collect_decision(notes: "SessionNotes") -> None:
     """Prompt the user to enter a player decision and add it to the notes.
 
     Args:

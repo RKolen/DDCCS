@@ -14,6 +14,7 @@ from typing import (
     List,
     NamedTuple,
     Optional,
+    Protocol,
     Tuple,
     Union,
     overload,
@@ -44,6 +45,34 @@ _RETRYABLE_ERROR_TYPES: frozenset = frozenset({
     "APIConnectionError",
     "APITimeoutError",
 })
+
+
+class AIClientProtocol(Protocol):
+    """The AI client surface consumers across ``src/`` actually depend on.
+
+    Typed as a Protocol rather than the concrete :class:`AIClient` because test
+    doubles (``tests.test_helpers.FakeAIClient``) are injected into these same
+    parameters. Any object providing these three methods is acceptable.
+    """
+
+    def chat_completion(
+        self,
+        messages: List[Dict[str, str]],
+        model: Optional[str] = None,
+        temperature: Optional[float] = None,
+        max_tokens: Optional[int] = None,
+        **kwargs: Any,
+    ) -> str:
+        """Return a chat completion for the given messages."""
+        raise NotImplementedError
+
+    def create_system_message(self, system_prompt: str) -> Dict[str, str]:
+        """Return a system message dict."""
+        raise NotImplementedError
+
+    def create_user_message(self, content: str) -> Dict[str, str]:
+        """Return a user message dict."""
+        raise NotImplementedError
 
 
 class _TransientAIError(RuntimeError):
@@ -91,7 +120,7 @@ class AIClient:
         api_key: Optional[str] = None,
         base_url: Optional[str] = None,
         model: Optional[str] = None,
-        **config,
+        **config: Any,
     ):
         """Initialize AI client.
 
@@ -221,7 +250,7 @@ class AIClient:
         messages: List[Dict[str, str]],
         temperature: float,
         max_tokens: int,
-        **kwargs,
+        **kwargs: Any,
     ) -> Tuple[str, Optional[int]]:
         """Single API call. Returns (content, token_count).
 
@@ -260,7 +289,7 @@ class AIClient:
         messages: List[Dict[str, str]],
         temperature: float,
         max_tokens: int,
-        **kwargs,
+        **kwargs: Any,
     ) -> Tuple[str, Optional[int]]:
         """Run completion with tenacity retry for transient errors."""
         wait: Any = (
@@ -286,7 +315,7 @@ class AIClient:
         model: Optional[str] = None,
         temperature: Optional[float] = None,
         max_tokens: Optional[int] = None,
-        **kwargs,
+        **kwargs: Any,
     ) -> str:
         """Get a chat completion from the LLM.
 
@@ -364,7 +393,7 @@ class AIClient:
         model: Optional[str] = None,
         temperature: Optional[float] = None,
         max_tokens: Optional[int] = None,
-        **kwargs,
+        **kwargs: Any,
     ) -> Generator[str, None, None]:
         """Stream chat completion chunks as a generator.
 
@@ -575,8 +604,8 @@ def _get_default_client() -> AIClient:
 
 def build_client_for_character(
     char_config: CharacterAIConfig,
-    default_client: Optional[AIClient] = None,
-) -> AIClient:
+    default_client: Optional[AIClientProtocol] = None,
+) -> AIClientProtocol:
     """Create an AIClient for a character, applying character-level overrides.
 
     Args:

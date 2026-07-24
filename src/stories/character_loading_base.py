@@ -4,11 +4,14 @@ Shared base class for lazy character loading functionality.
 Extracted to avoid code duplication between CharacterLoader and CharacterManager.
 """
 
+import os
 from typing import TYPE_CHECKING, Dict, List, Any, Optional
 from src.stories.character_loader import load_single_character_consultant
+from src.characters.consultants.consultant_core import CharacterConsultant
+from src.utils.string_utils import sanitize_filename
 
 if TYPE_CHECKING:
-    from src.characters.consultants.consultant_core import CharacterConsultant
+    from src.characters.consultants.character_profile import CharacterProfile
 
 
 class CharacterLoadingMixin:
@@ -39,6 +42,24 @@ class CharacterLoadingMixin:
     def is_characters_loaded(self) -> bool:
         """Check if characters have been loaded."""
         return self._characters_loaded
+
+    def save_character_profile(self, profile: "CharacterProfile") -> None:
+        """Save a character profile to disk and refresh its consultant.
+
+        Shared by ``CharacterLoader`` and ``CharacterManager`` so the save path
+        exists once rather than being duplicated in each.
+
+        Args:
+            profile: Character profile to save.
+        """
+        filepath = os.path.join(
+            self.characters_path, f"{sanitize_filename(profile.name)}.json"
+        )
+        profile.save_to_file(filepath)
+        self.consultants[profile.name] = CharacterConsultant(
+            profile, ai_client=self.ai_client
+        )
+        print(f"[SUCCESS] Saved character profile: {profile.name}")
 
     def _load_party_characters_into_dict(
         self, party_members: List[str]

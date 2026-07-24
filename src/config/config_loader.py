@@ -11,7 +11,7 @@ Loads configuration from multiple sources with precedence:
 import json
 import os
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Callable, Dict, Optional
 
 from src.config.config_types import (
     AIConfig,
@@ -226,9 +226,9 @@ def _parse_model_registry(data: Dict[str, Any]) -> ModelRegistryConfig:
 
 def _apply_env_model_profiles(
     config: DnDConfig,
-    get_env,
-    get_env_float,
-    get_env_int,
+    get_env: Callable[..., Any],
+    get_env_float: Callable[..., Any],
+    get_env_int: Callable[..., Any],
 ) -> None:
     """Apply model registry profile overrides from environment variables.
 

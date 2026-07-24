@@ -69,6 +69,25 @@ check_no_suppressions() {
     return 0
 }
 
+check_script_exec_bits() {
+    # This repo sets core.fileMode=false, so `chmod +x` is invisible to git and
+    # a shell script can be committed as 100644. CI then fails with exit 126
+    # ("Permission denied") - which is what happened to check.sh itself.
+    # Fix a hit with: git update-index --chmod=+x <file>
+    local bad
+    bad=$(git ls-files -s -- '*.sh' 2>/dev/null | awk '$1 != "100755" {print $4}')
+
+    if [ -n "$bad" ]; then
+        echo "Shell scripts committed without the executable bit:"
+        echo "$bad"
+        echo "Fix with: git update-index --chmod=+x <file>"
+        return 1
+    fi
+    echo "All committed shell scripts are executable."
+    return 0
+}
+
+run_gate "shell scripts executable in git" check_script_exec_bits
 run_gate "no checker suppressions" check_no_suppressions
 run_gate "pylint (src/ tests/)" "$PYTHON" -m pylint src/ tests/
 run_gate "mypy (src/)" "$PYTHON" -m mypy src/

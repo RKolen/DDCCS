@@ -6,7 +6,7 @@ Handles all character-related menu interactions and operations.
 import json
 import os
 from pathlib import Path
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, Optional, TYPE_CHECKING, Union
 
 from src.character_arc.arc_analyzer import ArcAnalyzer
 from src.character_arc.arc_reports import ArcReporter
@@ -49,12 +49,24 @@ from src.utils.errors import (
     DnDFileNotFoundError,
 )
 from src.utils.error_templates import get_error_template
+from src.stories.story_manager_types import StoryManagerLike
+
+if TYPE_CHECKING:
+    from src.dm.dungeon_master import DMConsultant
+    from src.combat.combat_narrator import CombatNarrator
+    from src.character_arc.arc_data import ArcDataPoint
+
 
 
 class CharacterCLIManager:
     """Manages character-related CLI operations."""
 
-    def __init__(self, story_manager, combat_narrator, dm_consultant=None):
+    def __init__(
+        self,
+        story_manager: StoryManagerLike,
+        combat_narrator: Optional["CombatNarrator"],
+        dm_consultant: Optional["DMConsultant"] = None,
+    ):
         """
         Initialize character CLI manager.
 
@@ -447,7 +459,7 @@ class CharacterCLIManager:
             custom_art: ASCII art to save (None for default)
         """
         char_file = (
-            Path(self.story_manager.base_path)
+            Path(self.story_manager.workspace_path)
             / "game_data"
             / "characters"
             / f"{sanitize_filename(character_name)}.json"
@@ -677,7 +689,7 @@ class CharacterCLIManager:
         self._print_arc_analysis_results(data_point)
 
     @staticmethod
-    def _print_arc_analysis_results(data_point) -> None:
+    def _print_arc_analysis_results(data_point: "ArcDataPoint") -> None:
         """Print observations and key events from an arc analysis data point."""
         if data_point.observations:
             print("\nObservations:")

@@ -6,7 +6,7 @@ and narrative patterns across multiple files.
 """
 
 import os
-from typing import List
+from typing import Any, Callable, List, Optional
 from datetime import datetime
 
 from src.utils.path_utils import get_campaign_path
@@ -18,12 +18,13 @@ from src.stories.series_analyzer import (
     CharacterAnalysisContext,
     SeriesAnalysisContext,
 )
+from src.stories.story_manager_types import StoryManagerLike
 
 
 class SeriesAnalysisCLI:
     """Manages series-wide analysis CLI operations."""
 
-    def __init__(self, story_manager, workspace_path):
+    def __init__(self, story_manager: StoryManagerLike, workspace_path: str):
         """Initialize series analysis CLI manager.
 
         Args:
@@ -48,7 +49,11 @@ class SeriesAnalysisCLI:
         return os.path.join(campaign_path, filename)
 
     def generate_character_development_for_series(
-        self, series_name: str, stories: List[str], truncate_func, load_profiles_func
+        self,
+        series_name: str,
+        stories: List[str],
+        truncate_func: Callable[..., Any],
+        load_profiles_func: Callable[..., Any],
     ) -> None:
         """Generate character development for entire story series.
 
@@ -120,8 +125,8 @@ class SeriesAnalysisCLI:
         self,
         series_name: str,
         stories: List[str],
-        truncate_func=None,
-        load_profiles_func=None,
+        truncate_func: Optional[Callable[..., Any]] = None,
+        load_profiles_func: Optional[Callable[..., Any]] = None,
     ) -> None:
         """Analyze entire story series for narrative patterns.
 

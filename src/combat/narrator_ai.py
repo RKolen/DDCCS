@@ -7,17 +7,24 @@ post-processing.
 """
 
 import re
-from typing import Dict
+from typing import Dict, Optional, TYPE_CHECKING
 from src.characters.consultants.consultant_core import CharacterConsultant
 from src.ai.prompt_templates import LANGUAGE_INSTRUCTION
 from src.utils.text_formatting_utils import wrap_narrative_text
+from src.ai.ai_client import AIClientProtocol
+
+if TYPE_CHECKING:
+    from src.characters.consultants.character_profile import CharacterProfile
+
 
 
 class AIEnhancedNarrator:
     """Handles AI-enhanced combat narration with RAG integration."""
 
     def __init__(
-        self, character_consultants: Dict[str, CharacterConsultant], ai_client=None
+        self,
+        character_consultants: Dict[str, CharacterConsultant],
+        ai_client: Optional[AIClientProtocol] = None,
     ):
         self.consultants = character_consultants
         self.ai_client = ai_client
@@ -338,7 +345,7 @@ use "Fireball" explicitly in the narrative)
             )
         return ""
 
-    def _get_fighting_style(self, profile) -> str:
+    def _get_fighting_style(self, profile: "CharacterProfile") -> str:
         """Determine character's fighting style from their class."""
         class_name = profile.character_class.value
 

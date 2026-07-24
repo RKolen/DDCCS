@@ -9,6 +9,7 @@ from typing import List, Dict, Any, Optional
 from src.stories.spotlight_types import SpotlightReport
 from src.utils.file_io import write_text_file
 from src.utils.string_utils import sanitize_filename, get_session_date, get_time_only
+from src.stories.story_manager_types import StoryManagerLike
 
 
 class StorySession:
@@ -56,7 +57,7 @@ class StorySession:
                 "reasons": [s.description for s in entry.signals],
             })
 
-    def add_roll_result(self, roll_data: Optional[Dict[str, Any]] = None, **kwargs):
+    def add_roll_result(self, roll_data: Optional[Dict[str, Any]] = None, **kwargs: Any):
         """
         Add a roll result to this session.
 
@@ -85,7 +86,7 @@ class StorySession:
         )
 
     def suggest_recruits_from_agents(
-        self, story_manager, exclude_names: List[str]
+        self, story_manager: StoryManagerLike, exclude_names: List[str]
     ) -> List[Dict[str, Any]]:
         """
         Suggest recruit characters from existing character agents.

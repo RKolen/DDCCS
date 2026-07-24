@@ -5,7 +5,7 @@ Handles the interactive character action amendment workflow.
 """
 
 import os
-from typing import List, Dict, Any, Optional
+from typing import Any, Callable, Dict, List, Optional
 from src.utils.file_io import read_text_file
 from src.utils.errors import display_error, DnDError
 from src.utils.cli_utils import require_story_with_content, require_party
@@ -15,7 +15,7 @@ from src.stories import story_amender
 class StoryAmenderCLIHandler:
     """Handles story amendment CLI interactions."""
 
-    def __init__(self, workspace_path: str, load_profiles_fn):
+    def __init__(self, workspace_path: str, load_profiles_fn: Callable[..., Any]):
         self.workspace_path = workspace_path
         self.load_profiles_fn = load_profiles_fn
 
@@ -60,7 +60,12 @@ class StoryAmenderCLIHandler:
             return None
         return suggestions
 
-    def handle_amendment(self, series_name: str, stories: List[str], select_story_fn):
+    def handle_amendment(
+        self,
+        series_name: str,
+        stories: List[str],
+        select_story_fn: Callable[..., Any],
+    ):
         """Interactive story character action amendment."""
         try:
             selected = select_story_fn(stories, series_name)

@@ -25,6 +25,7 @@ from src.stories.equipment_checker import (
     check_weapon_usage_consistency,
     format_equipment_issue,
 )
+from src.ai.ai_client import AIClientProtocol
 
 
 class ConsistencyIssue(NamedTuple):
@@ -356,7 +357,7 @@ class PersonalityAnalyzer:
 class AIAnalyzer:
     """AI-enhanced analysis of character actions."""
 
-    def __init__(self, ai_client=None):
+    def __init__(self, ai_client: Optional[AIClientProtocol] = None):
         """Initialize AI analyzer.
 
         Args:
@@ -390,8 +391,10 @@ class AIAnalyzer:
         prompt = self._build_prompt(ctx.character_name, ctx.profile, ctx.action_text)
 
         try:
-            response = self.ai_client.generate_text(
-                prompt=prompt, temperature=0.3, max_tokens=500
+            response = self.ai_client.chat_completion(
+                [self.ai_client.create_user_message(prompt)],
+                temperature=0.3,
+                max_tokens=500,
             )
 
             return self._parse_response(response, ctx)
@@ -489,7 +492,7 @@ class AIAnalyzer:
 class StoryConsistencyAnalyzer:
     """Analyzes story consistency across a series."""
 
-    def __init__(self, workspace_path: str, ai_client=None):
+    def __init__(self, workspace_path: str, ai_client: Optional[AIClientProtocol] = None):
         """Initialize analyzer.
 
         Args:

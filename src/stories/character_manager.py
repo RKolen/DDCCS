@@ -15,12 +15,18 @@ from src.utils.cache_utils import (
     reload_character_from_disk,
     get_character_profile_from_cache,
 )
+from src.ai.ai_client import AIClientProtocol
 
 
 class CharacterManager(CharacterLoadingMixin):
     """Manages character loading, profiles, consultants, and spell highlighting."""
 
-    def __init__(self, characters_path: str, ai_client=None, lazy_load: bool = False):
+    def __init__(
+        self,
+        characters_path: str,
+        ai_client: Optional[AIClientProtocol] = None,
+        lazy_load: bool = False,
+    ):
         """Initialize character manager.
 
         Args:

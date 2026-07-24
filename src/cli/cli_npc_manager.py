@@ -3,6 +3,7 @@
 Handles major NPC management menu: listing, viewing details, and validating
 major NPC profiles (BBEGs, recurring antagonists, key allies).
 """
+from typing import Any, List, Optional, TYPE_CHECKING
 
 from pathlib import Path
 from src.utils.path_utils import get_major_npc_files
@@ -10,15 +11,20 @@ from src.npcs.npc_agents import load_npc_from_json
 from src.validation.npc_validator import validate_npc_file
 from src.utils.cli_utils import display_selection_menu
 
+if TYPE_CHECKING:
+    from src.characters.character_sheet import NPCProfile
+    from src.characters.character_sheet import MajorNPCStats
 
-def _cr_label(challenge_rating) -> str:
+
+
+def _cr_label(challenge_rating: Any) -> str:
     """Format a challenge rating value for display."""
     if challenge_rating is None:
         return "?"
     return str(challenge_rating)
 
 
-def _print_section(title: str, items) -> None:
+def _print_section(title: str, items: Optional[List[Any]]) -> None:
     """Print a labelled list section, skipping it when items is empty/None."""
     if not items:
         return
@@ -33,7 +39,7 @@ def _print_section(title: str, items) -> None:
         print(f"    {items}")
 
 
-def _display_boss_mechanics(major) -> None:
+def _display_boss_mechanics(major: "MajorNPCStats") -> None:
     """Print legendary actions, lair actions, and regional effects."""
     if major.legendary_actions:
         avail = major.legendary_actions.get("available", "?")
@@ -59,7 +65,7 @@ def _display_boss_mechanics(major) -> None:
             print(f"    - {effect.get('name', '?')}")
 
 
-def _display_major_npc_details(profile) -> None:
+def _display_major_npc_details(profile: "NPCProfile") -> None:
     """Print a formatted summary of a major NPC profile."""
     stats = profile.combat_stats
     major = profile.major_stats

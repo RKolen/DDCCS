@@ -13,7 +13,7 @@ import sys
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, List, Optional, cast
+from typing import Any, List, Optional, TYPE_CHECKING, cast
 
 import pyttsx3
 
@@ -28,6 +28,10 @@ from src.utils.audio_player import AudioPlayer
 from src.utils.audio_player import play_wav_bytes
 from src.utils.dialogue_detector import segment_story_for_tts
 from src.utils.dialogue_detector import get_speaker_voice_map
+
+if TYPE_CHECKING:
+    from src.utils.dialogue_detector import SpeechSegment
+
 
 TTS_AVAILABLE = True
 
@@ -526,7 +530,7 @@ class MultiVoiceNarrator:
     # Pronouns that should be resolved to last known speaker
     PRONOUNS = frozenset({"he", "she", "they", "him", "her", "them"})
 
-    def __init__(self, config: Optional[MultiVoiceConfig] = None, **kwargs):
+    def __init__(self, config: Optional[MultiVoiceConfig] = None, **kwargs: Any):
         """Initialize multi-voice narrator.
 
         Args:
@@ -615,7 +619,13 @@ class MultiVoiceNarrator:
             print("\n[INFO] Narration stopped by user")
             return False
 
-    def _process_segment(self, segment, index: int, total: int, show_progress: bool) -> None:
+    def _process_segment(
+        self,
+        segment: "SpeechSegment",
+        index: int,
+        total: int,
+        show_progress: bool,
+    ) -> None:
         """Process and speak a single segment."""
         if show_progress:
             speaker = getattr(segment, 'speaker', 'narrator')
@@ -629,7 +639,7 @@ class MultiVoiceNarrator:
         if not success:
             _print_warning(f"Failed to speak segment: {segment.text[:50]}...")
 
-    def _get_segment_voice(self, segment) -> str:
+    def _get_segment_voice(self, segment: "SpeechSegment") -> str:
         """Get voice ID for a segment with fuzzy speaker matching and pronoun resolution."""
         # First check if segment already has a voice assigned
         if hasattr(segment, 'voice_id') and segment.voice_id:
@@ -670,7 +680,11 @@ class MultiVoiceNarrator:
             return self._last_speaker
         return speaker
 
-    def _calculate_pause(self, current_segment, next_segment) -> float:
+    def _calculate_pause(
+        self,
+        current_segment: "SpeechSegment",
+        next_segment: "SpeechSegment",
+    ) -> float:
         """Calculate pause duration between segments."""
         current = getattr(current_segment, 'speaker', None)
         nxt = getattr(next_segment, 'speaker', None)
@@ -716,7 +730,7 @@ class MultiVoiceNarrator:
 def narrate_file_piper(
     filepath: str,
     config: Optional[MultiVoiceConfig] = None,
-    **kwargs,
+    **kwargs: Any,
 ) -> bool:
     """Narrate a file using Piper multi-voice TTS."""
     if config is None:

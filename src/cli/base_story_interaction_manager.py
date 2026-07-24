@@ -8,12 +8,13 @@ import os
 from typing import Optional, Tuple
 
 from src.cli.dnd_cli_helpers import get_series_and_story_from_manager
+from src.stories.story_manager_types import StoryManagerLike
 
 
 class BaseStoryInteractionManager:
     """Base class for managers that interact with story series/files."""
 
-    def __init__(self, story_manager, workspace_path: str):
+    def __init__(self, story_manager: StoryManagerLike, workspace_path: str):
         """Initialize base story interaction manager.
 
         Args:

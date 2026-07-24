@@ -5,7 +5,7 @@ Handles all story-related menu interactions and operations.
 """
 
 import os
-from typing import List, Optional
+from typing import List, Optional, TYPE_CHECKING
 
 from src.cli.party_config_manager import (
     save_current_party,
@@ -56,12 +56,22 @@ from src.cli.cli_story_helpers import (
     StoryContinuationHelper,
 )
 from src.cli.cli_timeline import TimelineCLIManager, get_or_prompt_campaign
+from src.stories.story_manager_types import StoryManagerLike
+
+if TYPE_CHECKING:
+    from src.dm.dungeon_master import DMConsultant
+
 
 
 class StoryCLIManager:
     """Manages story-related CLI operations."""
 
-    def __init__(self, story_manager, workspace_path, dm_consultant=None):
+    def __init__(
+        self,
+        story_manager: StoryManagerLike,
+        workspace_path: str,
+        dm_consultant: Optional["DMConsultant"] = None,
+    ):
         """Initialize story CLI manager."""
         self.story_manager = story_manager
         self.workspace_path = workspace_path
@@ -79,9 +89,7 @@ class StoryCLIManager:
         """Return names of available characters from game_data/characters."""
         return self.char_helper.list_available_characters()
 
-    def _select_party_members(
-        self, available: List[str], series_name: str
-    ) -> List[str]:
+    def _select_party_members(self, available: List[str], series_name: str) -> List[str]:
         """Prompt user to select party members from available list."""
         return self.char_helper.select_party_members(available, series_name)
 
@@ -737,9 +745,11 @@ class StoryCLIManager:
             campaign_dir = os.path.dirname(story_path)
 
             if is_combat:
-                self._handle_combat_continuation(story_path, display_name, story_prompt)
+                self.cont_helper.handle_combat_continuation(
+                    story_path, display_name, story_prompt
+                )
             else:
-                self._handle_exploration_continuation(
+                self.cont_helper.handle_exploration_continuation(
                     story_path, display_name, story_prompt, campaign_dir
                 )
 
@@ -749,26 +759,6 @@ class StoryCLIManager:
                 user_guidance="Check your AI configuration and try again."
             )
             display_error(error)
-
-    def _handle_combat_continuation(
-        self, story_path: str, display_name: str, story_prompt: str
-    ):
-        """Handle combat narrative generation."""
-        self.cont_helper.handle_combat_continuation(
-            story_path, display_name, story_prompt
-        )
-
-    def _handle_exploration_continuation(
-        self,
-        story_path: str,
-        display_name: str,
-        story_prompt: str,
-        campaign_dir: str,
-    ):
-        """Handle exploration/social narrative generation."""
-        self.cont_helper.handle_exploration_continuation(
-            story_path, display_name, story_prompt, campaign_dir
-        )
 
     def _setup_session_generation(
         self, series_name: str, stories: List[str]

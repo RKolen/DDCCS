@@ -8,6 +8,7 @@ from typing import List, Optional, Tuple
 
 from src.cli.party_config_manager import load_current_party
 from src.utils.errors import DnDError, display_error
+from src.stories.story_manager_types import StoryManagerLike
 
 
 def print_section_header(title: str, width: int = 50):
@@ -220,7 +221,7 @@ def display_selection_menu(
 
 
 def require_characters(
-    story_manager,
+    story_manager: StoryManagerLike,
     user_guidance: str = "Add characters to your party first."
 ) -> bool:
     """

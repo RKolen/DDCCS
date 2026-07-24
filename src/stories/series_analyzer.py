@@ -15,6 +15,7 @@ from src.utils.file_io import write_text_file, file_exists, read_text_file
 from src.utils.text_formatting_utils import wrap_narrative_text
 from src.stories.character_action_analyzer import extract_character_actions
 from src.utils.errors import FileSystemError, wrap_exception, display_error
+from src.stories.story_manager_types import StoryManagerLike
 
 
 class CharacterAnalysisContext(NamedTuple):
@@ -40,7 +41,7 @@ class SeriesAnalysisContext(NamedTuple):
 class SeriesAnalyzer:
     """Analyzes character development and narrative across entire story series."""
 
-    def __init__(self, story_manager):
+    def __init__(self, story_manager: StoryManagerLike):
         """Initialize series analyzer.
 
         Args:

@@ -5,13 +5,14 @@ Extracts complex UI interaction logic to reduce complexity in main CLI file.
 """
 
 import os
-from typing import List, Tuple, Optional, Dict, Any
+from typing import Any, Callable, Dict, List, Optional, Tuple
 from src.characters.consultants.character_profile import (
     CharacterProfile,
     CharacterBehavior,
 )
 from src.utils.path_utils import get_campaign_path
 from src.utils.cli_utils import get_multiline_text, display_selection_menu
+from src.stories.story_manager_types import StoryManagerLike
 
 
 def edit_character_profile_interactive(
@@ -238,7 +239,7 @@ def get_multi_line_input(prompt: str, end_marker: str = "###") -> str:
 
 
 def select_story_from_series(
-    story_series: List[str], series_path_callback
+    story_series: List[str], series_path_callback: Callable[..., Any]
 ) -> Tuple[Optional[str], Optional[str]]:
     """
     Interactive story selection from series.
@@ -339,7 +340,7 @@ def select_narrative_style() -> str:
 
 
 def select_target_story_for_combat(
-    workspace_path: str, story_manager
+    workspace_path: str, story_manager: StoryManagerLike
 ) -> Tuple[Optional[str], str]:
     """
     Interactive story selection for combat narrative appending.
@@ -492,7 +493,7 @@ def _prompt_for_story_selection(
     return None
 
 
-def get_series_and_story_from_manager(story_manager) -> Optional[Tuple[str, str]]:
+def get_series_and_story_from_manager(story_manager: StoryManagerLike) -> Optional[Tuple[str, str]]:
     """Prompt user to select a series and story from story manager.
 
     Args:

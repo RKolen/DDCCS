@@ -2,9 +2,12 @@
 NPC Agent class and loader for recurring NPCs.
 """
 
+from typing import Optional
+
 from pathlib import Path
 from src.characters.character_sheet import NPCProfile
 from src.utils.file_io import load_json_file
+from src.ai.ai_client import AIClientProtocol
 
 # Import AI client if available
 try:
@@ -16,7 +19,7 @@ except ImportError:
 class NPCAgent:
     """Agent for managing and consulting on NPCs."""
 
-    def __init__(self, profile: NPCProfile, ai_client=None):
+    def __init__(self, profile: NPCProfile, ai_client: Optional[AIClientProtocol] = None):
         """
         Initialize an NPCAgent with a profile and optional AI client.
 
@@ -178,7 +181,7 @@ def load_npc_from_json(json_path: Path) -> NPCProfile:
     return profile
 
 
-def create_npc_agents(npcs_dir: Path, ai_client=None) -> list:
+def create_npc_agents(npcs_dir: Path, ai_client: Optional[AIClientProtocol] = None) -> list:
     """Create NPCAgent objects for all NPC JSON files in the directory."""
     agents = []
     for npc_file in npcs_dir.glob("*.json"):

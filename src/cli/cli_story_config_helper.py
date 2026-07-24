@@ -155,7 +155,7 @@ def build_story_config(
     campaign_dir: Optional[str],
     previous_stories: Optional[List[str]],
     story_prompt: str,
-    **kwargs,
+    **kwargs: Any,
 ) -> Dict[str, Any]:
     """Build story configuration with context.
 

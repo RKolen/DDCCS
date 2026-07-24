@@ -22,6 +22,7 @@ from src.stories.session_results_manager import (
 from src.combat.combat_narrator import CombatNarrator
 from src.utils.npc_lookup_helper import load_relevant_npcs_for_prompt
 from src.utils.terminal_display import print_warning
+from src.stories.story_manager_types import StoryManagerLike
 
 
 class CharacterSelectionHelper:
@@ -98,7 +99,7 @@ class CharacterSelectionHelper:
 class StoryContinuationHelper:
     """Helper for story continuation and session management."""
 
-    def __init__(self, story_manager, workspace_path: str):
+    def __init__(self, story_manager: StoryManagerLike, workspace_path: str):
         """Initialize with story manager and workspace path."""
         self.story_manager = story_manager
         self.workspace_path = workspace_path

@@ -8,20 +8,23 @@ Converts natural language combat prompts into engaging narrative prose with:
 - Multiple narrative styles (cinematic, gritty, heroic, tactical)
 """
 
-from typing import Dict, List
+from typing import Dict, List, Optional
 from src.characters.consultants.consultant_core import CharacterConsultant
 from src.characters.character_sheet import NPCProfile
 from src.npcs.npc_agents import NPCAgent
 from src.combat.narrator_ai import AIEnhancedNarrator
 from src.combat.narrator_descriptions import CombatDescriptor
 from src.combat.narrator_consistency import ConsistencyChecker
+from src.ai.ai_client import AIClientProtocol
 
 
 class CombatNarrator:
     """Converts combat descriptions into narrative story format."""
 
     def __init__(
-        self, character_consultants: Dict[str, CharacterConsultant], ai_client=None
+        self,
+        character_consultants: Dict[str, CharacterConsultant],
+        ai_client: Optional[AIClientProtocol] = None,
     ):
         """
         Initialize combat narrator with specialized components.

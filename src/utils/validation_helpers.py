@@ -76,7 +76,7 @@ def validate_list_field(
         data: Dict[str, Any],
         field: str,
         required: bool = True,
-        **constraints) -> Tuple[bool, List[str]]:
+        **constraints: Any) -> Tuple[bool, List[str]]:
     """Validate a list field with optional constraints.
 
     Args:
@@ -259,7 +259,7 @@ def collect_errors(validation_results: List[Tuple[bool, Any]]) -> List[str]:
     return all_errors
 
 
-def get_type_name(expected_type) -> str:
+def get_type_name(expected_type: type) -> str:
     """Get a human-readable type name string.
 
     Args:

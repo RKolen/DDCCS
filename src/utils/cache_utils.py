@@ -9,6 +9,7 @@ import os
 from typing import Dict, Optional, Any
 from src.characters.consultants.character_profile import CharacterProfile
 from src.stories.character_load_helper import load_character_consultant
+from src.ai.ai_client import AIClientProtocol
 
 
 def clear_character_from_cache(
@@ -37,7 +38,7 @@ def reload_character_from_disk(
     consultants_cache: Dict[str, Any],
     characters_path: str,
     character_name: str,
-    ai_client=None,
+    ai_client: Optional[AIClientProtocol] = None,
 ) -> bool:
     """Reload a character from disk and update cache.
 

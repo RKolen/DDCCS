@@ -22,7 +22,7 @@ def _make_nested_property(attr_path: str, doc: str):
         property object
     """
 
-    def getter(self):
+    def getter(self: Any):
         obj = self
         for attr in attr_path.split("."):
             obj = getattr(obj, attr, None)
@@ -224,7 +224,7 @@ class NPCProfile:
     major_stats: Optional[MajorNPCStats] = None
 
     @classmethod
-    def create(cls, name: str, **kwargs) -> "NPCProfile":
+    def create(cls, name: str, **kwargs: Any) -> "NPCProfile":
         """Create an NPCProfile from individual fields (backward compatibility).
 
         Args:

@@ -9,13 +9,16 @@ from pathlib import Path
 from typing import Dict, Optional
 import os
 
+from src.ai.ai_client import AIClientProtocol
 from src.characters.consultants.consultant_core import CharacterConsultant
 from src.stories.character_load_helper import load_character_consultant
 from src.utils.story_file_helpers import list_character_json_candidates
 
 
 def load_all_character_consultants(
-    characters_dir: str, ai_client: Optional[object] = None, verbose: bool = False
+    characters_dir: str,
+    ai_client: Optional[AIClientProtocol] = None,
+    verbose: bool = False,
 ) -> Dict[str, CharacterConsultant]:
     """Load all character consultants from a directory.
 
@@ -54,7 +57,7 @@ def load_all_character_consultants(
 def load_single_character_consultant(
     characters_dir: str,
     character_name: str,
-    ai_client: Optional[object] = None,
+    ai_client: Optional[AIClientProtocol] = None,
     verbose: bool = False,
 ) -> Optional[CharacterConsultant]:
     """Load a single character consultant by name.

@@ -5,13 +5,17 @@ Provides story consistency analysis, character development tracking,
 and relationship management for character consultants.
 """
 
-from typing import Dict, List, Any, Optional
+from typing import Any, Dict, List, Optional, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from src.characters.consultants.character_profile import CharacterProfile
+
 
 
 class StoryAnalyzer:
     """Handles story analysis and character development tracking."""
 
-    def __init__(self, profile, class_knowledge):
+    def __init__(self, profile: "CharacterProfile", class_knowledge: Dict[str, Any]):
         """
         Initialize story analyzer.
 
