@@ -1,5 +1,7 @@
 """Build Stable Diffusion prompts for character portraits from a profile."""
 
+import html
+import re
 from typing import Any, Dict, List, Tuple
 
 _BASE_STYLE = (
@@ -10,6 +12,24 @@ _NEGATIVE = (
     "lowres, blurry, deformed, extra limbs, bad anatomy, watermark, text, "
     "signature, multiple people, out of frame"
 )
+
+_TAG_RE = re.compile(r"<[^>]+>")
+
+
+def _clean_text(value: str) -> str:
+    """Strip HTML tags/entities and collapse whitespace from a field value.
+
+    Drupal stores rich-text fields (personality traits, arc summary, backstory)
+    with ``<p>`` wrappers; left in, those tags pollute the prompt with literal
+    markup tokens the encoder wastes attention on.
+
+    Args:
+        value: The raw field value, possibly containing HTML.
+
+    Returns:
+        The text with tags removed, entities decoded, and whitespace collapsed.
+    """
+    return " ".join(html.unescape(_TAG_RE.sub(" ", value)).split())
 
 
 def build_portrait_prompt(profile: Dict[str, Any]) -> Tuple[str, str]:
@@ -47,15 +67,19 @@ def build_portrait_prompt(profile: Dict[str, Any]) -> Tuple[str, str]:
 
     traits = profile.get("personality_traits")
     if isinstance(traits, list) and traits:
-        parts.append(", ".join(str(trait) for trait in traits[:3] if trait))
+        cleaned = [text for text in (_clean_text(str(trait)) for trait in traits[:3]) if text]
+        if cleaned:
+            parts.append(", ".join(cleaned))
 
     # Appearance / arc / backstory add flavour; keep it bounded for the encoder.
-    flavour = str(
-        profile.get("appearance")
-        or profile.get("arc_summary")
-        or profile.get("backstory")
-        or ""
-    ).strip()
+    flavour = _clean_text(
+        str(
+            profile.get("appearance")
+            or profile.get("arc_summary")
+            or profile.get("backstory")
+            or ""
+        )
+    )
     if flavour:
         parts.append(flavour[:280])
 

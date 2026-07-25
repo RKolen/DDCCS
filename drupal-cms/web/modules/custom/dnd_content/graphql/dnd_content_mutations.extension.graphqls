@@ -97,6 +97,8 @@ extend type Mutation {
     voicePitch: Float
     "Voice speed."
     voiceSpeed: Float
+    "Reusable image-generation prompt (field_image_prompt)."
+    imagePrompt: String
   ): NodeCharacter
 
   """

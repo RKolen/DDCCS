@@ -249,7 +249,7 @@ Per-action user writes go through custom GraphQL mutations called from
 | `setSessionSummary` | `frontend/src/api/create-story.ts` + `scripts/backfill-summaries.mjs` |
 | `saveCharacterArc` | `frontend/src/api/save-arc.ts` |
 | `createCharacter` | `frontend/src/api/create-character.ts` |
-| `updateCharacter` | `frontend/src/api/update-voice.ts` (voice id / pitch / speed) |
+| `updateCharacter` | `frontend/src/api/update-voice.ts` (voice id / pitch / speed); `save-image-prompt.ts` (`imagePrompt` -> `field_image_prompt`) |
 | `setCharacterPortrait` | `frontend/src/api/generate-portrait.ts` (ComfyUI portrait) |
 | `setCharacterImage` | `frontend/src/api/set-portrait-media.ts` (pick an existing media) |
 

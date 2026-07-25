@@ -284,6 +284,8 @@ field_config:
         enabled: true
       field_image:
         enabled: true
+      field_image_prompt:
+        enabled: true
       field_key_traits:
         enabled: true
       field_lair_actions:

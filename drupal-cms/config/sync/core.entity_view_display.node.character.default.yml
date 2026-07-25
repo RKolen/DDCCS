@@ -37,6 +37,7 @@ dependencies:
     - field.field.node.character.field_gold
     - field.field.node.character.field_ideals
     - field.field.node.character.field_image
+    - field.field.node.character.field_image_prompt
     - field.field.node.character.field_key_traits
     - field.field.node.character.field_lair_actions
     - field.field.node.character.field_languages
@@ -304,6 +305,7 @@ hidden:
   field_faction: true
   field_feats_ref: true
   field_gold: true
+  field_image_prompt: true
   field_key_traits: true
   field_lair_actions: true
   field_legendary_actions: true

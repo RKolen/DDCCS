@@ -131,6 +131,9 @@ Drupal credentials.
 | `generate-portrait.ts` | POST | Sidecar (`/character/portrait`) + Drupal (`setCharacterPortrait`) | Generate a character portrait with local ComfyUI (long, timeout-free call), then persist it onto the character's `field_image`; returns the new `imageUrl`. Requires `COMFYUI_ENABLED=true` on the sidecar (503 otherwise) |
 | `list-portrait-media.ts` | GET | Drupal (`mediaImages`) | List image media from the library (`{ media: [{ id, name, url, alt }] }`) for the portrait picker; `?type=character_portrait` filters by `mediaType` so the browser only receives the relevant subset (pages through the 100-cap connection) |
 | `set-portrait-media.ts` | POST | Drupal (`setCharacterImage`) | Point a character's `field_image` at an existing media (no new file); returns the new `imageUrl` |
+| `portrait-prompt.ts` | POST | Sidecar (`/character/portrait/prompt`) | Build a portrait prompt from the profile, or (with `enhance`) enrich the edited text via the fast model; returns `{ positive, negative }` |
+| `describe-image.ts` | POST | Sidecar (`/character/describe-image`) | Image→prompt: run the local Ollama vision model (`IMAGE_TO_PROMPT_MODEL`) over an image URL, returns `{ positive }`. Slow on CPU |
+| `save-image-prompt.ts` | POST | Drupal (`updateCharacter`) | Persist a character's reusable image prompt (`field_image_prompt`) |
 
 `generate-story.ts` streams Server-Sent Events from
 `AI_CREATIVE_BASE_URL/chat/completions`. `spotlight.ts` calls the Python sidecar

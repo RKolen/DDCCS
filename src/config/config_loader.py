@@ -407,9 +407,9 @@ def _apply_env_comfyui_overrides(
     ipadapter_workflow = get_env("COMFYUI_IPADAPTER_WORKFLOW")
     if ipadapter_workflow:
         config.comfyui.assets.ipadapter_workflow = ipadapter_workflow
-    vision_model = get_env("COMFYUI_VISION_MODEL")
-    if vision_model:
-        config.comfyui.assets.vision_model = vision_model
+    image_to_prompt_model = get_env("IMAGE_TO_PROMPT_MODEL")
+    if image_to_prompt_model:
+        config.comfyui.assets.image_to_prompt_model = image_to_prompt_model
     checkpoint = get_env("COMFYUI_CHECKPOINT")
     if checkpoint:
         config.comfyui.assets.checkpoint = checkpoint

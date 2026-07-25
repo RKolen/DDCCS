@@ -18,16 +18,17 @@ use GraphQL\Error\UserError;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * Updates a character node's voice settings.
+ * Updates a character node's voice settings and image-generation prompt.
  *
  * Sets the voice reference (field_voice_id_ref, resolved from the voice_ids
- * vocabulary by name), pitch, and speed. Only the arguments that are supplied
- * are changed. Returns the updated character node.
+ * vocabulary by name), pitch, speed, and the reusable image prompt
+ * (field_image_prompt). Only the arguments that are supplied are changed.
+ * Returns the updated character node.
  */
 #[DataProducer(
   id: "update_character",
   name: new TranslatableMarkup("Update Character"),
-  description: new TranslatableMarkup("Updates a character's voice id, pitch, and speed."),
+  description: new TranslatableMarkup("Updates a character's voice settings and image prompt."),
   produces: new ContextDefinition(
     data_type: "any",
     label: new TranslatableMarkup("Updated character node"),
@@ -50,6 +51,11 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
     "voice_speed" => new ContextDefinition(
       data_type: "float",
       label: new TranslatableMarkup("Voice speed"),
+      required: FALSE,
+    ),
+    "image_prompt" => new ContextDefinition(
+      data_type: "string",
+      label: new TranslatableMarkup("Reusable image-generation prompt"),
       required: FALSE,
     ),
   ],
@@ -105,6 +111,8 @@ final class UpdateCharacter extends DataProducerPluginBase implements ContainerF
    *   The voice pitch, or NULL to leave unchanged.
    * @param float|null $voice_speed
    *   The voice speed, or NULL to leave unchanged.
+   * @param string|null $image_prompt
+   *   The reusable image-generation prompt, or NULL to leave unchanged.
    * @param \Drupal\graphql\GraphQL\Execution\FieldContext $context
    *   The GraphQL field execution context.
    *
@@ -119,6 +127,7 @@ final class UpdateCharacter extends DataProducerPluginBase implements ContainerF
     ?string $voice_id,
     ?float $voice_pitch,
     ?float $voice_speed,
+    ?string $image_prompt,
     FieldContext $context,
   ): NodeInterface {
     $nodes = $this->entityTypeManager
@@ -149,6 +158,9 @@ final class UpdateCharacter extends DataProducerPluginBase implements ContainerF
     }
     if ($voice_speed !== NULL) {
       $node->set('field_voice_speed', $voice_speed);
+    }
+    if ($image_prompt !== NULL) {
+      $node->set('field_image_prompt', $image_prompt);
     }
 
     $violations = $node->validate();

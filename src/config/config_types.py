@@ -256,14 +256,15 @@ class SidecarConfig:
 class ComfyUIAssets:
     """ComfyUI workflow templates and model names used for generation.
 
-    Workflow paths are relative to ``src/sidecar/comfyui_workflows/``. The vision
-    model is an Ollama model that describes an existing portrait; the checkpoint
-    is the Stable Diffusion model file name inside ComfyUI's ``models/`` dir.
+    Workflow paths are relative to ``src/sidecar/comfyui_workflows/``.
+    ``image_to_prompt_model`` is the Ollama vision model that describes an
+    existing portrait into a prompt (image->prompt); the checkpoint is the
+    Stable Diffusion model file name inside ComfyUI's ``models/`` dir.
     """
 
     txt2img_workflow: str = ""
     ipadapter_workflow: str = ""
-    vision_model: str = ""
+    image_to_prompt_model: str = ""
     checkpoint: str = ""
 
 

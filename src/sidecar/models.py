@@ -224,6 +224,11 @@ class PortraitRequest(BaseModel):
     # SD 1.5-class checkpoints need smaller dimensions than the SDXL defaults.
     width: Optional[int] = Field(default=None, ge=256, le=2048)
     height: Optional[int] = Field(default=None, ge=256, le=2048)
+    # Explicit prompt override: when ``positive`` is set it drives generation
+    # directly (the console's edited/stored prompt), and the profile is used only
+    # for alt text. Empty falls back to building the prompt from the profile.
+    positive: Optional[str] = None
+    negative: Optional[str] = None
 
     @field_validator("profile")
     @classmethod
@@ -252,6 +257,35 @@ class PortraitResponse(BaseModel):
     seed: int
     prompt: str
     alt: str
+
+
+class PromptRequest(BaseModel):
+    """Request to build (and optionally AI-enhance) a portrait prompt."""
+
+    profile: Dict[str, Any]
+    # Existing prompt text to start from (e.g. the edited box). When omitted the
+    # prompt is built from the profile.
+    positive: Optional[str] = None
+    # When true, an LLM expands the starting prompt into a richer one.
+    enhance: bool = False
+
+
+class PromptResponse(BaseModel):
+    """A portrait prompt: the editable positive and the standard negative."""
+
+    positive: str
+    negative: str
+
+
+class DescribeImageRequest(BaseModel):
+    """Request to describe an existing image into a portrait prompt.
+
+    ``profile`` supplies known character facts (species, lineage, class) used to
+    prime the vision model so it reads fantasy features correctly.
+    """
+
+    image_url: str
+    profile: Dict[str, Any] = Field(default_factory=dict)
 
 
 class ArcStoryInput(BaseModel):

@@ -29,6 +29,8 @@ interface GeneratePortraitBody {
   /** SD 1.5-class checkpoints need smaller dimensions than the SDXL defaults. */
   width?:   number | null;
   height?:  number | null;
+  /** Explicit (edited/stored) prompt; when set it drives generation directly. */
+  positive?: string | null;
 }
 
 /** Shape of the sidecar `/character/portrait` response (PortraitResponse). */
@@ -114,10 +116,11 @@ export default async function handler(
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        profile: body.profile,
-        seed:    body.seed ?? null,
-        width:   body.width ?? null,
-        height:  body.height ?? null,
+        profile:  body.profile,
+        seed:     body.seed ?? null,
+        width:    body.width ?? null,
+        height:   body.height ?? null,
+        positive: body.positive ?? null,
       }),
     });
   } catch (err) {

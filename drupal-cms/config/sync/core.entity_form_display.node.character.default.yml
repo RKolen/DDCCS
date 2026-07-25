@@ -37,6 +37,7 @@ dependencies:
     - field.field.node.character.field_gold
     - field.field.node.character.field_ideals
     - field.field.node.character.field_image
+    - field.field.node.character.field_image_prompt
     - field.field.node.character.field_key_traits
     - field.field.node.character.field_lair_actions
     - field.field.node.character.field_languages
@@ -929,6 +930,7 @@ hidden:
   field_arc_stories: true
   field_arc_summary: true
   field_arc_updated: true
+  field_image_prompt: true
   langcode: true
   promote: true
   sticky: true

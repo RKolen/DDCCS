@@ -49,12 +49,19 @@ function parseIntOrNull(value: string): number | null {
 }
 
 function StudioPanel({ char }: { char: DrupalCharacter }): React.ReactElement {
-  const [appearance, setAppearance] = React.useState('');
+  const [prompt, setPrompt] = React.useState(char.imagePrompt ?? '');
+  // The last persisted prompt (the "old" one), shown for comparison whenever the
+  // working box diverges. `previousPrompt` is the box value before the last
+  // Generate/Enhance/Image->prompt, for a one-step Undo.
+  const [savedPrompt, setSavedPrompt] = React.useState(char.imagePrompt ?? '');
+  const [previousPrompt, setPreviousPrompt] = React.useState<string | null>(null);
   const [seed, setSeed] = React.useState('');
   const [width, setWidth] = React.useState(String(DEFAULT_PORTRAIT_WIDTH));
   const [height, setHeight] = React.useState(String(DEFAULT_PORTRAIT_HEIGHT));
 
   const [generating, setGenerating] = React.useState(false);
+  const [promptBusy, setPromptBusy] = React.useState<null | 'build' | 'enhance' | 'vision' | 'save'>(null);
+  const [promptMsg, setPromptMsg] = React.useState<string | null>(null);
   const [error, setError] = React.useState<string | null>(null);
   const [resultUrl, setResultUrl] = React.useState<string | null>(null);
   const [usedSeed, setUsedSeed] = React.useState<number | null>(null);
@@ -62,34 +69,109 @@ function StudioPanel({ char }: { char: DrupalCharacter }): React.ReactElement {
 
   /* Reset the form and result whenever the selected character changes. */
   React.useEffect(() => {
-    setAppearance('');
+    setPrompt(char.imagePrompt ?? '');
+    setSavedPrompt(char.imagePrompt ?? '');
+    setPreviousPrompt(null);
     setSeed('');
     setWidth(String(DEFAULT_PORTRAIT_WIDTH));
     setHeight(String(DEFAULT_PORTRAIT_HEIGHT));
+    setPromptMsg(null);
     setError(null);
     setResultUrl(null);
     setUsedSeed(null);
     setPickerOpen(false);
-  }, [char.id]);
+  }, [char.id, char.imagePrompt]);
 
   const portraitUrl = resultUrl ?? char.imageUrl;
+  const busy = generating || promptBusy !== null;
+
+  /* Fetch the template / enhanced prompt into the editable box. */
+  const runPromptEndpoint = async (enhance: boolean): Promise<void> => {
+    setPromptBusy(enhance ? 'enhance' : 'build');
+    setPreviousPrompt(prompt);
+    setPromptMsg(null);
+    setError(null);
+    try {
+      const res = await fetch('/api/portrait-prompt', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({
+          profile:  buildPortraitProfile(char),
+          positive: enhance ? prompt : null,
+          enhance,
+        }),
+      });
+      const data = (await res.json()) as { positive?: string; error?: string };
+      if (!res.ok) { setError(data.error ?? `Error ${res.status}`); return; }
+      if (data.positive) setPrompt(data.positive);
+    } catch {
+      setError('Network error — could not reach the server.');
+    } finally {
+      setPromptBusy(null);
+    }
+  };
+
+  /* Describe the current portrait into a prompt (image -> prompt). */
+  const handleDescribe = async (): Promise<void> => {
+    if (!portraitUrl) { setError('No portrait to describe yet.'); return; }
+    setPromptBusy('vision');
+    setPreviousPrompt(prompt);
+    setPromptMsg(null);
+    setError(null);
+    try {
+      const res = await fetch('/api/describe-image', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ imageUrl: portraitUrl, profile: buildPortraitProfile(char) }),
+      });
+      const data = (await res.json()) as { positive?: string; error?: string };
+      if (!res.ok) { setError(data.error ?? `Error ${res.status}`); return; }
+      if (data.positive) setPrompt(data.positive);
+    } catch {
+      setError('Network error — could not reach the server.');
+    } finally {
+      setPromptBusy(null);
+    }
+  };
+
+  const handleSavePrompt = async (): Promise<void> => {
+    setPromptBusy('save');
+    setPromptMsg(null);
+    setError(null);
+    try {
+      const res = await fetch('/api/save-image-prompt', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ id: char.id, prompt }),
+      });
+      if (!res.ok) {
+        const data = (await res.json()) as ApiError;
+        setError(data.error ?? `Error ${res.status}`);
+        return;
+      }
+      setSavedPrompt(prompt);
+      setPromptMsg('Prompt saved.');
+    } catch {
+      setError('Network error — could not reach the server.');
+    } finally {
+      setPromptBusy(null);
+    }
+  };
 
   const handleGenerate = async (): Promise<void> => {
     setGenerating(true);
     setError(null);
     try {
-      const profile = buildPortraitProfile(char);
-      const extra = appearance.trim();
-      if (extra) profile.appearance = extra;
       const res = await fetch('/api/generate-portrait', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify({
-          id:      char.id,
-          profile,
-          seed:    parseIntOrNull(seed),
-          width:   parseIntOrNull(width) ?? DEFAULT_PORTRAIT_WIDTH,
-          height:  parseIntOrNull(height) ?? DEFAULT_PORTRAIT_HEIGHT,
+          id:       char.id,
+          profile:  buildPortraitProfile(char),
+          positive: prompt.trim() || null,
+          seed:     parseIntOrNull(seed),
+          width:    parseIntOrNull(width) ?? DEFAULT_PORTRAIT_WIDTH,
+          height:   parseIntOrNull(height) ?? DEFAULT_PORTRAIT_HEIGHT,
         }),
       });
       if (!res.ok) {
@@ -144,14 +226,51 @@ function StudioPanel({ char }: { char: DrupalCharacter }): React.ReactElement {
         {/* Inputs */}
         <div style={{ flex: 1, minWidth: 280, display: 'flex', flexDirection: 'column', gap: 18 }}>
           <div>
-            <label style={labelStyle}>Appearance details <span style={{ textTransform: 'none', letterSpacing: 0, color: 'var(--ink-faint)', fontWeight: 400 }}>— optional, folded into the prompt</span></label>
+            <label style={labelStyle}>Image prompt <span style={{ textTransform: 'none', letterSpacing: 0, color: 'var(--ink-faint)', fontWeight: 400 }}>— edit freely; this exact text drives generation</span></label>
             <textarea
-              rows={4}
-              value={appearance}
-              onChange={e => setAppearance(e.target.value)}
-              placeholder="e.g. weathered face, silver braid, deep green cloak, faint scar over the left brow"
+              rows={5}
+              value={prompt}
+              onChange={e => setPrompt(e.target.value)}
+              placeholder="Click Generate prompt to build one from the profile, or Image → prompt to describe the current portrait."
               style={{ ...inputStyle, resize: 'vertical' }}
             />
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 8 }}>
+              <button type="button" className="ghost-btn" disabled={busy} onClick={() => void runPromptEndpoint(false)}>
+                <Icon name="sparkle" size={11} /> {promptBusy === 'build' ? 'Generating…' : 'Generate prompt'}
+              </button>
+              <button type="button" className="ghost-btn" disabled={busy || !prompt.trim()} onClick={() => void runPromptEndpoint(true)}>
+                <Icon name="model" size={11} /> {promptBusy === 'enhance' ? 'Enhancing…' : 'Enhance with AI'}
+              </button>
+              <button type="button" className="ghost-btn" disabled={busy || !portraitUrl} onClick={() => void handleDescribe()}>
+                <Icon name="image" size={11} /> {promptBusy === 'vision' ? 'Reading image…' : 'Image → prompt'}
+              </button>
+              <button type="button" className="ghost-btn" disabled={busy || !prompt.trim()} onClick={() => void handleSavePrompt()}>
+                <Icon name="scroll" size={11} /> {promptBusy === 'save' ? 'Saving…' : 'Save prompt'}
+              </button>
+              {previousPrompt !== null && previousPrompt !== prompt && (
+                <button type="button" className="ghost-btn" disabled={busy} onClick={() => { setPrompt(previousPrompt); setPreviousPrompt(null); }}>
+                  <Icon name="chevronLeft" size={11} /> Undo
+                </button>
+              )}
+            </div>
+            {promptMsg != null && (
+              <p style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--color-success)', margin: '6px 0 0' }}>{promptMsg}</p>
+            )}
+
+            {/* Comparison: show the saved prompt whenever the working box diverges. */}
+            {savedPrompt.trim() !== '' && savedPrompt !== prompt && (
+              <div style={{ marginTop: 12, border: '1px solid var(--rule)', borderRadius: 4, padding: '10px 12px', background: 'var(--surface)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 6 }}>
+                  <label style={{ ...labelStyle, marginBottom: 0 }}>Saved prompt <span style={{ textTransform: 'none', letterSpacing: 0, color: 'var(--ink-faint)', fontWeight: 400 }}>— old, for comparison</span></label>
+                  <button type="button" className="ghost-btn" disabled={busy} onClick={() => setPrompt(savedPrompt)}>
+                    Revert to saved
+                  </button>
+                </div>
+                <p style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--ink-dim)', margin: 0, whiteSpace: 'pre-wrap' }}>
+                  {savedPrompt}
+                </p>
+              </div>
+            )}
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 14 }}>
@@ -198,7 +317,7 @@ function StudioPanel({ char }: { char: DrupalCharacter }): React.ReactElement {
             <button
               type="button"
               className="primary-btn"
-              disabled={generating}
+              disabled={busy}
               onClick={() => void handleGenerate()}
             >
               <Icon name="sparkle" size={11} />
@@ -207,7 +326,7 @@ function StudioPanel({ char }: { char: DrupalCharacter }): React.ReactElement {
             <button
               type="button"
               className="ghost-btn"
-              disabled={generating}
+              disabled={busy}
               onClick={() => setPickerOpen(true)}
             >
               <Icon name="image" size={11} /> Choose existing image

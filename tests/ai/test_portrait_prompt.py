@@ -62,12 +62,30 @@ def test_build_portrait_prompt_limits_personality_traits() -> None:
     print("  [OK] Trait list bounded to the leading entries")
 
 
+def test_build_portrait_prompt_strips_html_from_traits() -> None:
+    """Rich-text HTML wrappers are stripped from traits and flavour."""
+    print("\n[TEST] build_portrait_prompt - HTML stripped")
+    profile = {
+        "species": "human",
+        "personality_traits": ["<p>Stoic</p>", "<p>Wise</p>"],
+        "appearance": "<p>weathered &amp; scarred</p>",
+    }
+    positive, _ = build_portrait_prompt(profile)
+
+    assert "Stoic" in positive
+    assert "Wise" in positive
+    assert "<p>" not in positive and "</p>" not in positive
+    assert "weathered & scarred" in positive
+    print("  [OK] Tags removed, entities decoded")
+
+
 def run_all_tests() -> None:
     """Run all portrait prompt builder tests."""
     test_build_portrait_prompt_includes_descriptor()
     test_build_portrait_prompt_bounds_flavour_text()
     test_build_portrait_prompt_handles_missing_fields()
     test_build_portrait_prompt_limits_personality_traits()
+    test_build_portrait_prompt_strips_html_from_traits()
     print("\n[PASS] All portrait prompt tests passed.")
 
 

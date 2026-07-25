@@ -45,6 +45,8 @@ export interface DrupalCharacter {
   campaignId: string | null;
   path: string | null;
   imageUrl: string | null;
+  /** Reusable image-generation prompt (field_image_prompt), or null. */
+  imagePrompt: string | null;
   /** Rich profile fields for story generation */
   species: string | null;
   lineage: string | null;

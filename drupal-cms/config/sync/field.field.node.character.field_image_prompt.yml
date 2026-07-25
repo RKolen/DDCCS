@@ -1,0 +1,19 @@
+uuid: e2e3e85c-3b52-422e-8057-fb469ab3147f
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_image_prompt
+    - node.type.character
+id: node.character.field_image_prompt
+field_name: field_image_prompt
+entity_type: node
+bundle: character
+label: 'Image prompt'
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string_long

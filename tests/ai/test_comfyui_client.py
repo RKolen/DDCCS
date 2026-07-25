@@ -3,30 +3,17 @@
 All tests mock ``requests`` so they run without a live ComfyUI server.
 """
 
-from typing import Any, Dict, Optional
-from unittest.mock import MagicMock, patch
+from typing import Any
+from unittest.mock import patch
 
 import requests
 
 from tests import test_helpers
+from tests.test_helpers import make_fake_response as _resp
 
 ComfyUIClient = test_helpers.safe_from_import(
     "src.ai.comfyui_client", "ComfyUIClient"
 )
-
-
-def _resp(
-    status: int = 200,
-    json_data: Optional[Dict[str, Any]] = None,
-    content: bytes = b"",
-) -> MagicMock:
-    """Build a fake ``requests`` response object."""
-    resp = MagicMock()
-    resp.status_code = status
-    resp.json.return_value = json_data if json_data is not None else {}
-    resp.content = content
-    resp.raise_for_status.return_value = None
-    return resp
 
 
 def _make_client() -> Any:

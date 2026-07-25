@@ -104,6 +104,7 @@ export interface RawCharacter {
   path:            string | null;
   campaign:        RawCampaignOnCharacter | null;
   image:           { mediaImage: { url: string; alt: string } | null } | null;
+  imagePrompt?:      string | null;
   species?:          { name: string } | null;
   lineage?:          { name: string } | null;
   background?:       { name: string } | null;
@@ -239,6 +240,7 @@ export function buildConsoleData(data: ConsoleQueryData | null | undefined): Con
     campaignId:       n.campaign?.id ?? null,
     path:             n.path,
     imageUrl:         n.image?.mediaImage?.url ?? null,
+    imagePrompt:      n.imagePrompt ?? null,
     species:          n.species?.name ?? null,
     lineage:          n.lineage?.name ?? null,
     background:       n.background?.name ?? null,

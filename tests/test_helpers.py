@@ -951,6 +951,29 @@ def make_mock_urlopen(status: int, body: bytes = b"") -> unittest.mock.MagicMock
     return mock
 
 
+def make_fake_response(
+    status: int = 200,
+    json_data: Optional[Dict[str, Any]] = None,
+    content: bytes = b"",
+) -> unittest.mock.MagicMock:
+    """Build a fake ``requests`` response for mocking HTTP calls in tests.
+
+    Args:
+        status: HTTP status code exposed as ``.status_code``.
+        json_data: Value returned by ``.json()`` (defaults to an empty dict).
+        content: Value of ``.content``.
+
+    Returns:
+        A MagicMock configured like a ``requests.Response``.
+    """
+    resp = unittest.mock.MagicMock()
+    resp.status_code = status
+    resp.json.return_value = json_data if json_data is not None else {}
+    resp.content = content
+    resp.raise_for_status.return_value = None
+    return resp
+
+
 def run_test_functions(tests: list, cleanup: Optional[Callable[..., Any]] = None) -> None:
     """Run a list of test callables and print a pass/fail summary.
 

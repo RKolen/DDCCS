@@ -3,12 +3,13 @@
 All tests mock ``requests`` so they run without a live Ollama server.
 """
 
-from typing import Any, Dict, List, Optional
-from unittest.mock import MagicMock, patch
+from typing import Any, Dict, List
+from unittest.mock import patch
 
 import requests
 
 from tests import test_helpers
+from tests.test_helpers import make_fake_response as _resp
 
 list_loaded_models = test_helpers.safe_from_import(
     "src.ai.ollama_admin", "list_loaded_models"
@@ -20,15 +21,6 @@ unload_ollama_models = test_helpers.safe_from_import(
 # A stand-in base URL; requests are mocked, so this is never contacted. The
 # reserved .test domain makes clear it is a fixture, not real configuration.
 _BASE = "http://ollama.test"
-
-
-def _resp(status: int = 200, json_data: Optional[Dict[str, Any]] = None) -> MagicMock:
-    """Build a fake ``requests`` response object."""
-    resp = MagicMock()
-    resp.status_code = status
-    resp.json.return_value = json_data if json_data is not None else {}
-    resp.raise_for_status.return_value = None
-    return resp
 
 
 def _ps(names: List[str]) -> Dict[str, Any]:

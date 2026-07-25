@@ -124,7 +124,8 @@ src/
 |   |-- comfyui_client.py      # HTTP client for the local ComfyUI workflow API (portraits)
 |   |-- comfyui_workflows.py   # ComfyUI API-JSON workflow builders (txt2img portrait graph)
 |   |-- portrait_prompt.py     # Builds SD positive/negative prompts from a character profile
-|   `-- ollama_admin.py        # Best-effort Ollama model unloading (free RAM before SD generation)
+|   |-- ollama_admin.py        # Best-effort Ollama model unloading (free RAM before SD generation)
+|   `-- image_describe.py      # Image->prompt via an Ollama vision model (IMAGE_TO_PROMPT_MODEL)
 |
 |-- config/             # Centralized configuration
 |   |-- config_types.py        # AIConfig, RAGConfig, DisplayConfig, PathConfig, DrupalConfig, ComfyUIConfig

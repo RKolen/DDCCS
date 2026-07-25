@@ -10,7 +10,7 @@ import sys
 import tempfile
 from contextlib import asynccontextmanager
 from functools import lru_cache
-from typing import Any, AsyncGenerator
+from typing import Any, AsyncGenerator, Dict, Optional
 
 from fastapi import APIRouter, FastAPI, HTTPException, Request, Response
 from fastapi.responses import JSONResponse
@@ -22,6 +22,7 @@ from src.ai.ai_client import AIClient
 from src.ai.comfyui_client import ComfyUIClient
 from src.ai.comfyui_workflows import RenderSettings, Txt2ImgParams, txt2img_workflow
 from src.ai.equipment_rag import get_equipment_descriptions
+from src.ai.image_describe import describe_image, fetch_image_bytes
 from src.ai.ollama_admin import unload_ollama_models
 from src.ai.portrait_prompt import build_portrait_prompt
 from src.character_arc.arc_analyzer import (
@@ -60,8 +61,11 @@ from src.sidecar.models import (
     HealthResponse,
     ParseQueryRequest,
     ParseQueryResponse,
+    DescribeImageRequest,
     PortraitRequest,
     PortraitResponse,
+    PromptRequest,
+    PromptResponse,
     ResolveBackgroundRequest,
     ResolveBackgroundResponse,
     SkillPlanRequest,
@@ -684,7 +688,12 @@ def character_portrait_endpoint(req: PortraitRequest) -> PortraitResponse:
             status_code=503, detail="ComfyUI is not reachable on the host"
         )
 
-    positive, negative = build_portrait_prompt(req.profile)
+    # Prompt-driven: an explicit (edited/stored) prompt wins; otherwise it is
+    # built from the profile. Building anyway is cheap and yields the negative
+    # default when only the positive is overridden.
+    built_positive, built_negative = build_portrait_prompt(req.profile)
+    positive = req.positive.strip() if req.positive and req.positive.strip() else built_positive
+    negative = req.negative.strip() if req.negative and req.negative.strip() else built_negative
     seed = req.seed if req.seed is not None else random.randrange(2**31)
 
     render = RenderSettings()
@@ -730,6 +739,121 @@ def character_portrait_endpoint(req: PortraitRequest) -> PortraitResponse:
         prompt=positive,
         alt=_portrait_alt(req.profile),
     )
+
+
+def _enhance_positive(positive: str) -> Optional[str]:
+    """Expand a template prompt into a richer one via the fast model.
+
+    Best-effort: returns None when no AI client is available or the call fails,
+    so the caller keeps the template prompt.
+
+    Args:
+        positive: The template positive prompt to enrich.
+
+    Returns:
+        The enhanced prompt text, or None on any failure.
+    """
+    client = _get_arc_ai_client()
+    if client is None:
+        return None
+    messages = [
+        client.create_system_message(
+            "You expand terse image tags into a vivid Stable Diffusion portrait "
+            "prompt. Keep it comma-separated, purely visual, under 60 words. "
+            "Output only the prompt, no preamble."
+        ),
+        client.create_user_message(positive),
+    ]
+    try:
+        result = client.chat_completion(messages, disable_thinking=True)
+    except (RuntimeError, OSError, ValueError):
+        return None
+    cleaned = " ".join(result.split())
+    return cleaned or None
+
+
+@_character_router.post("/portrait/prompt", response_model=PromptResponse)
+def portrait_prompt_endpoint(req: PromptRequest) -> PromptResponse:
+    """Build a portrait prompt from a profile, optionally AI-enhanced.
+
+    Args:
+        req: PromptRequest with the character profile and an ``enhance`` flag.
+
+    Returns:
+        PromptResponse with the editable positive and the standard negative.
+    """
+    built_positive, negative = build_portrait_prompt(req.profile)
+    positive = req.positive.strip() if req.positive and req.positive.strip() else built_positive
+    if req.enhance:
+        enhanced = _enhance_positive(positive)
+        if enhanced:
+            positive = enhanced
+    return PromptResponse(positive=positive, negative=negative)
+
+
+def _describe_context(profile: Dict[str, Any]) -> str:
+    """Build a known-facts hint (e.g. "a Chthonic Tiefling Ranger") for priming.
+
+    Args:
+        profile: The character profile with lineage/species/character_class.
+
+    Returns:
+        A short descriptor phrase, or an empty string when nothing is known.
+    """
+    parts = [
+        str(profile.get("lineage") or ""),
+        str(profile.get("species") or ""),
+        str(profile.get("character_class") or ""),
+    ]
+    descriptor = " ".join(part for part in parts if part).strip()
+    return f"a {descriptor}" if descriptor else ""
+
+
+@_character_router.post("/describe-image", response_model=PromptResponse)
+def describe_image_endpoint(req: DescribeImageRequest) -> PromptResponse:
+    """Describe an existing portrait into a prompt via the Ollama vision model.
+
+    Args:
+        req: DescribeImageRequest with the image URL to describe.
+
+    Returns:
+        PromptResponse with the vision description as the positive prompt.
+
+    Raises:
+        HTTPException: 503 when the vision model/Ollama is unconfigured; 502 when
+            the image cannot be fetched; 500 when the model returns nothing.
+    """
+    comfyui = load_config().comfyui
+    model = comfyui.assets.image_to_prompt_model
+    if not model:
+        raise HTTPException(
+            status_code=503,
+            detail="No image-to-prompt model configured (set IMAGE_TO_PROMPT_MODEL)",
+        )
+    if not comfyui.ollama_url:
+        raise HTTPException(
+            status_code=503,
+            detail="Ollama is not configured (set OLLAMA_HOST/OLLAMA_PORT)",
+        )
+    image_bytes = fetch_image_bytes(req.image_url)
+    if image_bytes is None:
+        raise HTTPException(status_code=502, detail="Could not fetch the source image")
+    # CPU vision inference (esp. cold model load) is slow; reuse the generous
+    # ComfyUI timeout rather than the helper's short default. Prime with known
+    # species facts so fantasy features (horns, fur, pointed ears) read right.
+    description = describe_image(
+        comfyui.ollama_url,
+        model,
+        image_bytes,
+        context=_describe_context(req.profile),
+        timeout=comfyui.timeout,
+    )
+    if not description:
+        raise HTTPException(
+            status_code=500, detail="The vision model returned no description"
+        )
+    negative = build_portrait_prompt({})[1]
+    return PromptResponse(positive=description, negative=negative)
 
 
 @_tts_router.post("/speak")

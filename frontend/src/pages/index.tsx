@@ -71,6 +71,7 @@ export const query = graphql`
               mediaImage { url alt }
             }
           }
+          imagePrompt
           species    { ... on Drupal_TermSpecies     { name } }
           lineage    { ... on Drupal_TermLineage     { name } }
           background { ... on Drupal_TermBackground  { name } }
