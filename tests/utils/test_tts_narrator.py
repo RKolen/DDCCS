@@ -178,7 +178,7 @@ class TestMultiVoiceConfig(unittest.TestCase):
         """Test default configuration values."""
         config = MultiVoiceConfig()
         self.assertEqual(config.piper_path, "piper")
-        self.assertEqual(config.narrator_voice_id, "en_US-joe-medium")
+        self.assertEqual(config.narrator_voice_id, "en_GB-alan-medium")
         self.assertEqual(config.pause_between_segments, 0.5)
         self.assertEqual(config.pause_on_speaker_change, 0.75)
 

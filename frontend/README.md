@@ -125,7 +125,9 @@ Drupal credentials.
 | `save-arc.ts` | POST | Drupal (`saveCharacterArc`) | Persist an accepted arc (direction/stage/summary + metric/relationship/goal paragraphs) |
 | `generate-story.ts` | POST | Ollama-compatible LLM | Stream an AI-generated story (SSE) |
 | `consult.ts` | POST | Ollama-compatible LLM | Stream an in-character chat reply for the character consultation (SSE) |
-| `tts.ts` | POST | Sidecar (`/tts/speak`) | Synthesise a reply to speech (Piper, using the character's voice + speed), returns `audio/wav` |
+| `tts.ts` | POST | Sidecar (`/tts/speak`) | Synthesise a reply or story segment to speech (Piper, using the character's voice + speed/pitch), returns `audio/wav` |
+| `tts-segment.ts` | POST | Sidecar (`/tts/segment`) | Split story text into multi-voice segments (`{ text, speaker, voiceId, speed, pitch }[]`) for sequential playback; used by the story page Narrate medallion |
+| `list-character-voices.ts` | GET | Drupal (`nodeCharacters`) | Page through every character's voice id / pitch / speed (cursor loop past the graphql_compose 100-cap); used when the story Narrate button starts |
 | `update-voice.ts` | POST | Drupal (`updateCharacter`) | Save a character's voice id / pitch / speed (consultation voice mini-wizard) |
 | `spotlight.ts` | POST | Sidecar (`localhost:$SIDECAR_PORT`) | Spotlight scores for a party |
 | `generate-portrait.ts` | POST | Sidecar (`/character/portrait`) + Drupal (`setCharacterPortrait`) | Generate a character portrait with local ComfyUI (long, timeout-free call), then persist it onto the character's `field_image`; returns the new `imageUrl`. Requires `COMFYUI_ENABLED=true` on the sidecar (503 otherwise) |

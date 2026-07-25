@@ -345,7 +345,7 @@ def segment_story_for_tts(
 def get_speaker_voice_map(
     segments: List[SpeechSegment],
     character_voices: dict,
-    narrator_voice_id: str = "en_US-joe-medium",
+    narrator_voice_id: str = "en_GB-alan-medium",
 ) -> List[SpeechSegment]:
     """Assign voice IDs to speech segments based on speaker.
 

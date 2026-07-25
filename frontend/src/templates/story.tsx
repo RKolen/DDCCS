@@ -1,9 +1,14 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { graphql, Link } from 'gatsby';
 import type { HeadFC, PageProps } from 'gatsby';
 import { BaseTemplate } from '../components/templates/BaseTemplate';
 import { Divider } from '../components/atoms/Divider';
 import { cleanHtml } from '../utils/cleanHtml';
+import {
+  isNarrationAbort,
+  playStoryNarration,
+  toNarrationText,
+} from '../utils/storyNarration';
 import * as styles from './story.module.css';
 
 interface CharacterImage {
@@ -27,7 +32,7 @@ interface StoryNode {
 interface StoryData {
   drupal: {
     node: Partial<StoryNode> | null;
-  };
+  } | null;
 }
 
 interface StoryPageContext {
@@ -40,11 +45,70 @@ interface StoryPageContext {
 
 type ImageState = 'idle' | 'running' | 'done';
 
-function ActionSidebar({ title }: { title: string }): React.ReactElement {
-  const [narrating, setNarrating] = useState(false);
-  const [imgState, setImgState] = useState<ImageState>('idle');
+interface ActionSidebarProps {
+  title:     string;
+  storyText: string;
+}
 
-  const toggleNarrate = (): void => setNarrating(n => !n);
+function ActionSidebar({
+  title,
+  storyText,
+}: ActionSidebarProps): React.ReactElement {
+  const [narrating, setNarrating] = useState(false);
+  const [narrateError, setNarrateError] = useState<string | null>(null);
+  const [progress, setProgress] = useState<string | null>(null);
+  const [imgState, setImgState] = useState<ImageState>('idle');
+  const abortRef = useRef<AbortController | null>(null);
+
+  useEffect(() => () => {
+    abortRef.current?.abort();
+  }, []);
+
+  const stopNarration = (): void => {
+    abortRef.current?.abort();
+    abortRef.current = null;
+    setNarrating(false);
+    setProgress(null);
+  };
+
+  const startNarration = (): void => {
+    if (!storyText.trim()) {
+      setNarrateError('No story text to narrate');
+      return;
+    }
+    setNarrateError(null);
+    setNarrating(true);
+    setProgress(null);
+    const controller = new AbortController();
+    abortRef.current = controller;
+    void playStoryNarration({
+      text:       storyText,
+      signal:     controller.signal,
+      onProgress: (index, total, speaker) => {
+        setProgress(`${index}/${total} ${speaker}`);
+      },
+    }).then(() => {
+      if (!controller.signal.aborted) {
+        setNarrating(false);
+        setProgress(null);
+        abortRef.current = null;
+      }
+    }).catch((err: unknown) => {
+      if (isNarrationAbort(err)) return;
+      setNarrateError(err instanceof Error ? err.message : String(err));
+      setNarrating(false);
+      setProgress(null);
+      abortRef.current = null;
+    });
+  };
+
+  const toggleNarrate = (): void => {
+    if (narrating) {
+      stopNarration();
+      return;
+    }
+    startNarration();
+  };
 
   const generateImage = (): void => {
     if (imgState === 'running') return;
@@ -52,7 +116,9 @@ function ActionSidebar({ title }: { title: string }): React.ReactElement {
     setTimeout(() => setImgState('done'), 1800);
   };
 
-  const narrateLabel = narrating ? 'Listening...' : 'Narrate';
+  const narrateLabel = narrating
+    ? (progress ? `Listening... ${progress}` : 'Listening...')
+    : (narrateError ?? 'Narrate');
   const imgLabel =
     imgState === 'idle'    ? 'Generate image' :
     imgState === 'running' ? 'Conjuring...' :
@@ -135,7 +201,7 @@ function PartyPanel({ characters }: { characters: CharacterRef[] }): React.React
 }
 
 const StoryPage: React.FC<PageProps<StoryData, StoryPageContext>> = ({ data, location, pageContext }) => {
-  const story = data.drupal?.node as StoryNode | null;
+  const story = data?.drupal?.node as StoryNode | null;
   const { prevPath, prevTitle, nextPath, nextTitle } = pageContext;
   const [scrollOpen, setScrollOpen] = useState(false);
 
@@ -149,6 +215,11 @@ const StoryPage: React.FC<PageProps<StoryData, StoryPageContext>> = ({ data, loc
 
   const characters = story.campaign?.currentParty ?? [];
   const hooks = story.storyHooks ?? [];
+  // Prefer value (plain_text) but run through toNarrationText so HTML bodies
+  // still get \\n\\n paragraph breaks for the dialogue detector.
+  const storyText = toNarrationText(
+    story.body?.value || story.body?.processed || '',
+  );
 
   return (
     <BaseTemplate currentPath={location.pathname}>
@@ -164,7 +235,9 @@ const StoryPage: React.FC<PageProps<StoryData, StoryPageContext>> = ({ data, loc
         <div className={styles.storyLayout}>
 
           {/* Left: action buttons */}
-          {story.body ? <ActionSidebar title={story.title} /> : <div />}
+          {story.body ? (
+            <ActionSidebar title={story.title} storyText={storyText} />
+          ) : <div />}
 
           {/* Center: main content */}
           <div className={styles.storyMain}>
@@ -295,7 +368,7 @@ export const query = graphql`
 `;
 
 export const Head: HeadFC<StoryData> = ({ data }) => {
-  const story = data.drupal?.node as StoryNode | null;
+  const story = data?.drupal?.node as StoryNode | null;
   return <title>{story?.title ?? 'Story'} | D&D Consultant</title>;
 };
 

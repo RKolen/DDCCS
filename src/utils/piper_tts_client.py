@@ -282,19 +282,46 @@ def get_default_voices() -> List[str]:
         List of default voice ID strings
     """
     return [
-        "en_US-joe-medium",  # Clear, standard American male - Narrator
-        "en_US-ryan-low",    # Deep, gruff, rugged - Mature/rough characters
-        "en_US-amy-medium",  # Warm, expressive - Female NPCs
+        "en_GB-alan-medium",  # British male - default story narrator
+        "en_US-joe-medium",   # Clear, standard American male
+        "en_US-ryan-low",     # Deep, gruff, rugged - Mature/rough characters
+        "en_US-amy-medium",   # Warm, expressive - Female NPCs
     ]
 
 
 def get_narrator_voice_id() -> str:
     """Get the default narrator voice ID.
 
+    Uses the British ``en_GB-alan-medium`` model — the closest stock Piper
+    voice to an older theatrical British delivery (Ian McKellen / Gandalf).
+
     Returns:
         Default narrator voice ID
     """
-    return "en_US-joe-medium"
+    return "en_GB-alan-medium"
+
+
+def get_narrator_speed() -> float:
+    """Get the default narrator speech speed.
+
+    Slightly measured pace for an older-narrator delivery.
+
+    Returns:
+        Piper speed multiplier (1.0 is default pace).
+    """
+    return 0.88
+
+
+def get_narrator_pitch() -> float:
+    """Get the default narrator pitch shift in semitones.
+
+    Alan is already a deeper British male; leave unshifted so narration stays
+    clear. Negative values dunk the voice further.
+
+    Returns:
+        Pitch shift applied after Piper synthesis (0.0 is unshifted).
+    """
+    return 0.0
 
 
 def get_character_voice_id(

@@ -125,7 +125,8 @@ queries and computes spotlight scores. Routes:
 - `POST /character/arc/story` + `/character/arc/aggregate` — two-step character
   arc analysis (per-story data point, then aggregate); `/character/arc` is the
   single-shot equivalent
-- (plus the `/character/*` build/skill/equipment and `/tts/speak` routes)
+- (plus the `/character/*` build/skill/equipment and `/tts/speak` +
+  `/tts/segment` routes)
 
 See [src/sidecar/README.md](../src/sidecar/README.md).
 
@@ -151,6 +152,7 @@ engine and Drupal.
 | Edit character (optional fields) | character edit screen | `api/update-character.ts` -> Drupal |
 | Create / AI-generate a story | story forge screens | `api/generate-story.ts` (AI), `api/create-story.ts` (save) |
 | Read stories | `pages/stories.tsx`, `templates/story.tsx`, `pages/campaign-reader.tsx` | Drupal GraphQL |
+| Multi-voice story narration | `templates/story.tsx` Narrate medallion | `api/tts-segment.ts` -> sidecar `/tts/segment`, then `api/tts.ts` -> `/tts/speak` per clip |
 | Items / monsters / spells | `pages/items.tsx`, `pages/monsters.tsx`, `templates/*` | Drupal GraphQL |
 | Manage party / campaigns | `pages/party.tsx` | `api/campaigns.ts`, `api/campaign-party.ts` -> Drupal |
 | Search | `pages/search.tsx` | sidecar `/search/parse-query` + Milvus |

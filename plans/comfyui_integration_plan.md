@@ -359,24 +359,87 @@ New write path via a DataProducer (the CLI JSON:API sync script is dropped).
    `imageUrl`) + two UI entry points that share `utils/portraitProfile.ts`: the
    **Generate image / Regenerate image** button on `CharacterDetailScreen.tsx`,
    and the **Portrait Studio** (`PortraitStudioScreen.tsx`, routed at
-   `characters/ascii`, replacing the deprecated notice) with appearance/seed/size
-   inputs and a reproducible seed echo. Both show a running state, surface a 503
+   `characters/ascii`, replacing the deprecated notice) with seed/size inputs and
+   a reproducible seed echo (the appearance field is superseded by the prompt
+   layer in item 6). Both show a running state, surface a 503
    (ComfyUI disabled/unreachable) as a one-line notice leaving the character
    unchanged, and swap the portrait in place on success. `npm run type-check`
    clean.
+6. **[DONE, beyond the original slice]** Prompt-as-stored-artifact layer, media
+   library reuse, and image->prompt vision:
+   - **Editable prompt is the source of truth.** `field_image_prompt` on the
+     character (plain `string_long`, exposed as `imagePrompt`, saved via
+     `updateCharacter(imagePrompt:)`). The Portrait Studio centres on an editable
+     prompt box with **Generate prompt** (template), **Enhance with AI** (fast
+     model expands the box), **Image -> prompt** (vision), and **Save prompt**;
+     generation is prompt-driven (an explicit `positive` overrides the profile
+     build). Old-vs-new compare: the saved prompt stays visible when the box
+     diverges, with Undo and Revert-to-saved.
+   - **Media library reuse.** `MediaPickerModal` lists image media (`mediaImages`,
+     enabled config-only via `edges_enabled`) filtered by a new `field_media_type`
+     (`mediaType`: character_portrait / npc_portrait / item / monster_portrait /
+     story_scenario); `setCharacterImage(id, mediaId)` points `field_image` at an
+     existing media without regenerating. `SetCharacterPortrait` stamps the type;
+     existing media were backfilled from their referencing node.
+   - **Vision config.** `IMAGE_TO_PROMPT_MODEL` (replaced the `COMFYUI_VISION_MODEL`
+     stub) = `qwen2.5vl:3b`; the describe call caps `num_ctx` (else it balloons to
+     ~15 GB / 5 min on CPU) and primes with the character's known
+     species/lineage/class so fantasy features read right (horns not wings, Tabaxi
+     fur, elf ears).
 
 ### Phase B - existing image -> vision prompt + IPAdapter consistency
 
-1. Vision helper (Ollama vision model describes the current portrait).
-2. `comfyui_client` gains the ipadapter workflow: fetch `imageUrl`,
+1. **[DONE]** Vision helper - `src/ai/image_describe.py` +
+   `/character/describe-image` (Ollama vision, `num_ctx`-capped, species-primed).
+   Built for the **Image -> prompt** button (into the editable box) rather than
+   automatic priming, but it is the same helper this phase needs.
+2. **IPAdapter consistency (unbuilt - the real remaining core).**
+   `comfyui_client` gains the ipadapter workflow: fetch `imageUrl`,
    `/upload/image` as reference, feed the vision description into the prompt.
    Sidecar chooses txt2img vs ipadapter by whether an existing image is supplied.
+   This is the true "same character, new picture" engine: text prompts alone
+   cannot preserve likeness (image -> prompt -> image is lossy). Use **IPAdapter**
+   for non-degrading identity conditioning; **img2img** only for a single
+   deliberate refine (img2img *chains* degrade - colour/contrast drift each pass).
 
-### Phase C - arc-aware prompt + polish
+### Phase C - context-aware prompt + polish
 
-1. Fold the saved arc summary (tone / scars / demeanour) into the prompt.
-2. Regenerate confirmation, progress affordance, sensible `alt` text, doc
-   updates.
+1. **Arc awareness (partial).** `build_portrait_prompt` already folds
+   `arc_summary` in as flavour text; deepen it (tone / scars / demeanour from the
+   saved arc) and expose it in the Studio.
+2. **Gear-aware prompts + gear generation (future).** Fold a character's equipped
+   gear - weapons, armor, vestiges from `field_equipment_items` - into the
+   portrait prompt via the same priming seam (`_describe_context`). Gear nodes get
+   their *own* image generation and image->prompt (items already have
+   `field_image` and `mediaType: item`), and an item's stored
+   `field_image_prompt` becomes the
+   priming text. Open calls: which gear counts (equipped/notable only), and
+   compose-vs-reference. See the `project_gear_image_generation` memory.
+3. Polish: the **per-media prompt stamp** (store the exact prompt used on each
+   generated media - the reproducibility half of decision 2A, deferred),
+   regenerate confirmation, progress affordance, sensible `alt` text, doc updates.
+
+### Phase D - story scene generation (future)
+
+Generate an image for a **story passage**: use the passage as the prompt, primed
+with the **entities present** so they render true to their profiles. Reuses the
+whole prompt pipeline (generate / describe / edit / store), one level up from a
+single character.
+
+1. Select a passage in a story -> seed a scene prompt from its text.
+2. **Prime with who is present.** Detect the characters / NPCs / monsters the
+   passage references (NPC auto-detection + party/current-party context already
+   identify who is on stage) and fold their known descriptions - species/lineage,
+   stored `field_image_prompt`, existing portraits - into the scene prompt via the
+   same `_describe_context` seam.
+3. Store the result as media with `mediaType: story_scenario` (already reserved
+   in `field_media_type`), attached to the story node (needs a story image field
+   and a `SetStoryImage`-style producer, mirroring `SetCharacterImage`).
+
+Caveats: multi-entity scenes are the **hard case** for SD - it blends distinct
+characters into one. Regional prompting or multiple IPAdapters (one per present
+character, keyed off their portraits) help but are involved; a single-subject or
+establishing-shot passage is the easy first target.
 
 ---
 
@@ -387,7 +450,11 @@ New write path via a DataProducer (the CLI JSON:API sync script is dropped).
   returns the new URL; the detail screen shows it after refetch.
 - **B:** a character **with** a portrait -> regenerate -> recognisably the same
   character (IPAdapter); the vision description appears in the sidecar log.
-- **C:** two characters with different arcs get visibly different tone.
+- **C:** two characters with different arcs get visibly different tone; equipped
+  gear appears in the portrait.
+- **D:** a passage with a known character present -> generate -> a
+  `story_scenario` media is created and attached to the story, and the present
+  character reads true to their profile.
 - **Gates each phase:** pylint 10.00 / mypy (`.venv`); PHPCS + PHPStan L6; Drupal
   `config:status` clean; `npm run type-check`. **Watch host RAM during a run** -
   it must stay bounded and models must unload between steps (this box OOM-crashed

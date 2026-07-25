@@ -4,18 +4,12 @@ import base64
 import logging
 import os
 import random
-import shutil
-import subprocess
-import sys
-import tempfile
 from contextlib import asynccontextmanager
 from functools import lru_cache
 from typing import Any, AsyncGenerator, Dict, Optional
 
-from fastapi import APIRouter, FastAPI, HTTPException, Request, Response
+from fastapi import APIRouter, FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
-
-from src.utils.piper_tts_client import PiperTTSClient, get_narrator_voice_id
 
 from src.ai.abilities_rag import Ability, get_abilities, get_background
 from src.ai.ai_client import AIClient
@@ -73,9 +67,9 @@ from src.sidecar.models import (
     SpotlightCharacterScore,
     SpotlightRequest,
     SpotlightResponse,
-    TtsRequest,
 )
 from src.sidecar.query_parser import parse_query
+from src.sidecar.tts_routes import router as tts_router
 from src.stories.spotlight_engine import SpotlightEngine
 
 logger = logging.getLogger(__name__)
@@ -129,50 +123,10 @@ async def _auth_middleware(request: Request, call_next: Any) -> Any:
 _search_router = APIRouter(prefix="/search", tags=["search"])
 _eval_router = APIRouter(prefix="/eval", tags=["eval"])
 _character_router = APIRouter(prefix="/character", tags=["character"])
-_tts_router = APIRouter(prefix="/tts", tags=["tts"])
 
 # 2024 base languages: every character knows Common plus two of their choice.
 _BASE_LANGUAGE = "Common"
 _LANGUAGE_CHOICE_COUNT = 2
-
-@lru_cache(maxsize=1)
-def _get_piper() -> PiperTTSClient:
-    """Return a cached Piper client, resolving the binary next to the venv."""
-    candidate = os.path.join(os.path.dirname(sys.executable), "piper")
-    executable = candidate if os.path.exists(candidate) else "piper"
-    return PiperTTSClient(executable_path=executable)
-
-
-def _apply_pitch(wav: bytes, semitones: float) -> bytes:
-    """Pitch-shift WAV audio by semitones using sox (Piper has no pitch control).
-
-    Returns the input unchanged when the shift is negligible or sox is missing.
-    """
-    if abs(semitones) < 0.1 or shutil.which("sox") is None:
-        return wav
-    in_path = out_path = ""
-    try:
-        with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as handle:
-            handle.write(wav)
-            in_path = handle.name
-        out_path = f"{in_path}.pitch.wav"
-        result = subprocess.run(
-            ["sox", in_path, out_path, "pitch", str(semitones * 100)],
-            capture_output=True, timeout=30, check=False,
-        )
-        if result.returncode != 0 or not os.path.exists(out_path):
-            return wav
-        with open(out_path, "rb") as handle:
-            return handle.read() or wav
-    except (OSError, subprocess.TimeoutExpired):
-        return wav
-    finally:
-        for path in (in_path, out_path):
-            if path and os.path.exists(path):
-                try:
-                    os.unlink(path)
-                except OSError:
-                    pass
 
 
 def _build_arc_client(profile_name: str) -> AIClient | None:
@@ -856,37 +810,7 @@ def describe_image_endpoint(req: DescribeImageRequest) -> PromptResponse:
     return PromptResponse(positive=description, negative=negative)
 
 
-@_tts_router.post("/speak")
-def tts_speak_endpoint(req: TtsRequest) -> Response:
-    """Synthesise speech from text with a Piper voice, returning WAV audio.
-
-    Args:
-        req: TtsRequest with the text, optional voice id, and speed.
-
-    Returns:
-        A ``audio/wav`` response with the synthesised audio.
-
-    Raises:
-        HTTPException: 503 when Piper is unavailable, 400 for empty text, or
-            500 when synthesis fails.
-    """
-    text = req.text.strip()
-    if text == "":
-        raise HTTPException(status_code=400, detail="text must not be empty")
-    piper = _get_piper()
-    if not piper.is_available():
-        raise HTTPException(status_code=503, detail="Piper TTS is not installed")
-    voice = req.voice_id.strip() or get_narrator_voice_id()
-    if not piper.is_voice_available(voice):
-        voice = get_narrator_voice_id()
-    audio = piper.synthesize(text, voice, speed=req.speed)
-    if audio is None:
-        raise HTTPException(status_code=500, detail="Speech synthesis failed")
-    audio = _apply_pitch(audio, req.pitch)
-    return Response(content=audio, media_type="audio/wav")
-
-
 app.include_router(_search_router)
 app.include_router(_eval_router)
 app.include_router(_character_router)
-app.include_router(_tts_router)
+app.include_router(tts_router)

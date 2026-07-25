@@ -443,7 +443,7 @@ class MultiVoiceConfig:
 
     piper_path: str = "piper"
     voices_dir: Optional[str] = None
-    narrator_voice_id: str = "en_US-joe-medium"
+    narrator_voice_id: str = "en_GB-alan-medium"
     character_voices: dict = field(default_factory=dict)
     pause_between_segments: float = 0.5
     pause_on_speaker_change: float = 0.75

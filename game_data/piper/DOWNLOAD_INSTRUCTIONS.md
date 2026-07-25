@@ -14,40 +14,43 @@ Download from: <https://github.com/rhasspy/piper/releases/latest>
 2. Copy `piper.exe` to this directory (`backend/piper/`)
 3. Verify: You should have `backend/piper/piper.exe`
 
-### 2. Voice Models (Female Voices Only)
+### 2. Voice Models
 
-Download these two female voices:
+#### Voice 1: Alan (Medium Quality) - REQUIRED (default narrator)
 
-#### Voice 1: Amy (Medium Quality) - REQUIRED
+**File**: `en_GB-alan-medium.onnx` + `en_GB-alan-medium.onnx.json`
+**Download from**: <https://huggingface.co/rhasspy/piper-voices/resolve/v1.0.0/en/en_GB/alan/medium/en_GB-alan-medium.onnx>
+**Config**: <https://huggingface.co/rhasspy/piper-voices/resolve/v1.0.0/en/en_GB/alan/medium/en_GB-alan-medium.onnx.json>
+**Size**: ~60MB
+**Quality**: British male — default story narrator
+**Save to**: `game_data/piper/voices/`
+
+#### Voice 2: Amy (Medium Quality) - REQUIRED
 
 **File**: `en_US-amy-medium.onnx` + `en_US-amy-medium.onnx.json`
 **Download from**: <https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/amy/medium/en_US-amy-medium.onnx>
 **Config**: <https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/amy/medium/en_US-amy-medium.onnx.json>
-**Size**: ~28MB
+**Size**: ~60MB
 **Quality**: Clear, pleasant female voice
-**Save to**: `backend/piper/voices/`
+**Save to**: `game_data/piper/voices/`
 
-#### Voice 2: Libritts (High Quality) - REQUIRED
+#### Voice 3: Joe / Ryan (optional character voices)
 
-**File**: `en_US-libritts-high.onnx` + `en_US-libritts-high.onnx.json`
-**Download from**: <https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/libritts/high/en_US-libritts-high.onnx>
-**Config**: <https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/libritts/high/en_US-libritts-high.onnx.json>
-**Size**: ~85MB
-**Quality**: High-quality, natural female voice
-**Save to**: `backend/piper/voices/`
+Also commonly used: `en_US-joe-medium`, `en_US-ryan-low` in the same
+`game_data/piper/voices/` directory.
 
 ## Final Directory Structure
 
 After downloads, you should have:
 
-backend/piper/
-├── piper.exe
+game_data/piper/
 ├── voices/
+│   ├── en_GB-alan-medium.onnx
+│   ├── en_GB-alan-medium.onnx.json
 │   ├── en_US-amy-medium.onnx
 │   ├── en_US-amy-medium.onnx.json
-│   ├── en_US-libritts-high.onnx
-│   └── en_US-libritts-high.onnx.json
-├── audio_cache/  (auto-created, stores cached audio)
+│   ├── en_US-joe-medium.onnx
+│   └── en_US-joe-medium.onnx.json
 └── DOWNLOAD_INSTRUCTIONS.md (this file)
 
 ## Testing Piper

@@ -119,10 +119,10 @@
     "system_prompt": "You are Gandalf the Grey, a wise and enigmatic wizard. Speak in riddles and parables, with warmth and authority."
   },
   "voice": {
-    "piper_voice_id": "en_US-joe-medium",
+    "piper_voice_id": "en_GB-alan-medium",
     "voice_settings": {
-      "speed": 0.9,
-      "pitch_shift": 1
+      "speed": 0.88,
+      "pitch_shift": 0
     }
   }
 }

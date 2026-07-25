@@ -38,7 +38,8 @@ background (logs to `.sidecar.log`).
 | POST | `/character/arc/synthesize` | Synthesize an arc summary, relationships, and goals from the per-story analysis **texts already stored** on the `character_analysis` node (not raw stories), on the creative model profile. This backs crash-safe resume: a re-run skips stories already persisted and this reads their stored prose instead of holding every story in memory |
 | POST | `/character/arc` | Single-shot arc analysis (all stories then aggregate) via `analyze_character_arc` on the `fast` model profile; `disable_thinking` keeps qwen3 from leaving the JSON content empty. Prefer the two-step `/story` + `/aggregate` path for many stories |
 | POST | `/character/portrait` | Generate a character portrait with local **ComfyUI** (Stable Diffusion) from the character profile, returning a base64 PNG plus the seed, prompt, and `alt` text. Disabled unless `COMFYUI_ENABLED=true`; returns 503 when disabled, unconfigured (`COMFYUI_CHECKPOINT`), or unreachable, and 500 when generation fails. Optional `seed` reproduces a render; optional `width`/`height` suit an SD 1.5-class checkpoint (the defaults are SDXL-sized). ComfyUI models are unloaded (`/free`) after every run because this box is CPU-only and a resident checkpoint is the top OOM risk |
-| POST | `/tts/speak` | Synthesise text to speech with a Piper voice + speed, returning `audio/wav` (used by the character consultation's speak button; requires the `piper-tts` package). An optional `pitch` (semitones) is applied as a post-process with `sox` (Piper has no pitch control); pitch is skipped when `sox` is not on `PATH` |
+| POST | `/tts/speak` | Synthesise text to speech with a Piper voice + speed, returning `audio/wav` (used by the character consultation's speak button and story narration clips; requires the `piper-tts` package). An optional `pitch` (semitones) is applied as a post-process with `sox` (Piper has no pitch control); pitch is skipped when `sox` is not on `PATH` |
+| POST | `/tts/segment` | Split story text into multi-voice TTS segments (dialogue detector + character voice map). Returns ordered `{ text, speaker, voice_id, speed, pitch }` clips for the frontend to synthesise sequentially via `/tts/speak`. Narrator clips use British `en_GB-alan-medium` at speed `0.88` / pitch `0` (see `get_narrator_*` in `src/utils/piper_tts_client.py`). Does not run Piper itself |
 
 Request/response shapes are defined as Pydantic models in
 [models.py](models.py). Query normalisation logic is in
@@ -63,6 +64,9 @@ allowed (local dev default).
 - `frontend/src/api/spotlight.ts` — spotlight scoring, via the sidecar.
 - `frontend/src/api/create-character.ts` — character creation wizard, via
   `/character/build-from-template`.
+- `frontend/src/api/tts.ts` — single-clip Piper synthesis, via `/tts/speak`.
+- `frontend/src/api/tts-segment.ts` — multi-voice story segmentation, via
+  `/tts/segment` (used by `templates/story.tsx` Narrate).
 
 ---
 
@@ -71,6 +75,7 @@ allowed (local dev default).
 | File | Purpose |
 | ---- | ------- |
 | `app.py` | FastAPI app, middleware, routers |
+| `tts_routes.py` | Piper `/tts/speak` and `/tts/segment` routes |
 | `models.py` | Pydantic request/response models |
 | `query_parser.py` | AI query normalisation |
 

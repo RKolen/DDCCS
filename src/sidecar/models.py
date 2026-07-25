@@ -209,6 +209,42 @@ class TtsRequest(BaseModel):
     pitch: float = Field(default=0.0, ge=-12.0, le=12.0)
 
 
+class TtsVoiceEntry(BaseModel):
+    """Per-character Piper voice settings for multi-voice segmentation."""
+
+    voice_id: str
+    speed: float = Field(default=1.0, ge=0.5, le=2.0)
+    pitch: float = Field(default=0.0, ge=-12.0, le=12.0)
+
+
+class TtsSegmentRequest(BaseModel):
+    """Request to split story text into multi-voice TTS segments."""
+
+    text: str
+    # Name -> voice id string, or full entry with speed/pitch.
+    character_voices: Dict[str, TtsVoiceEntry | str] = Field(default_factory=dict)
+    known_characters: List[str] = Field(default_factory=list)
+    known_npcs: List[str] = Field(default_factory=list)
+    # Empty string means use the sidecar's default narrator voice.
+    narrator_voice_id: str = ""
+
+
+class TtsSegmentOut(BaseModel):
+    """One speech segment ready for sequential Piper synthesis."""
+
+    text: str
+    speaker: str
+    voice_id: str
+    speed: float = 1.0
+    pitch: float = 0.0
+
+
+class TtsSegmentResponse(BaseModel):
+    """Ordered speech segments for multi-voice story narration."""
+
+    segments: List[TtsSegmentOut]
+
+
 class PortraitRequest(BaseModel):
     """Request to generate a character portrait via local ComfyUI.
 
