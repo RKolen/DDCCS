@@ -208,6 +208,8 @@ entity_config:
     image:
       enabled: true
       query_load_enabled: true
+      edges_enabled: true
+      simple_queries: '1'
 field_config:
   node:
     character:

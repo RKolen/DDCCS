@@ -148,7 +148,7 @@ export const MENU_DATA: MenuData = {
         { id: 'edit', label: 'Edit Character Profile' },
         { id: 'view', label: 'View Character Details' },
         { id: 'consult', label: 'Get Character Consultation', ai: true },
-        { id: 'ascii', label: 'Customize Portrait', note: 'ComfyUI portrait studio' },
+        { id: 'ascii', label: 'Customize Portrait', ai: true, note: 'ComfyUI portrait studio' },
         { id: 'completeness', label: 'Profile Completeness' },
         {
           id: 'arc', label: 'Character Arc Analysis', ai: true, hasSubmenu: true,

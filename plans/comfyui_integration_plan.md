@@ -306,6 +306,14 @@ New write path via a DataProducer (the CLI JSON:API sync script is dropped).
     seed used for reproducibility. This replaces the old deprecated "Customize
     Portrait" notice (`menuData.ts` `id: 'ascii'`, formerly `DeprecatedScreen`);
     the profile mapping is shared via `utils/portraitProfile.ts`.
+- **Media picker:** a `MediaPickerModal` (used by the Portrait Studio and the
+  Character Edit screen) lists the Drupal media library
+  (`list-portrait-media.ts` -> `mediaImages`) and points `field_image` at a
+  chosen existing media (`set-portrait-media.ts` -> `setCharacterImage`) without
+  generating - so a freshly generated portrait can be swapped for an older one,
+  and any character can be given a library image. The just-generated / current
+  portrait is pre-selected. Listing is config-only (`media/image` gains
+  `edges_enabled`); the select mutation is a new `SetCharacterImage` producer.
 
 ---
 

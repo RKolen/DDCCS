@@ -15,6 +15,7 @@ import type { ScreenProps } from '../ScreenRouter';
 import { Icon } from '../atoms';
 import { useConsoleData, playerCharacters } from '../ConsoleContext';
 import type { DrupalCharacter } from '../ConsoleContext';
+import { MediaPickerModal } from '../MediaPickerModal';
 
 /* ────────────────────────────────────────────────────────────
    API types
@@ -95,6 +96,8 @@ function EditForm({ char }: { char: DrupalCharacter }): React.ReactElement {
   const [saving,  setSaving]  = React.useState(false);
   const [error,   setError]   = React.useState<string | null>(null);
   const [savedAt, setSavedAt] = React.useState<string | null>(null);
+  const [pickerOpen,   setPickerOpen]   = React.useState(false);
+  const [portraitUrl,  setPortraitUrl]  = React.useState<string | null>(char.imageUrl);
 
   /* Reset form whenever the selected character changes */
   React.useEffect(() => {
@@ -106,6 +109,8 @@ function EditForm({ char }: { char: DrupalCharacter }): React.ReactElement {
     setFlaws(joinLines(char.flaws));
     setError(null);
     setSavedAt(null);
+    setPickerOpen(false);
+    setPortraitUrl(char.imageUrl);
   }, [char.id]); /* eslint-disable-line react-hooks/exhaustive-deps */
 
   const isDirty =
@@ -176,6 +181,22 @@ function EditForm({ char }: { char: DrupalCharacter }): React.ReactElement {
             {char.characterClass}{char.level != null ? ` · Level ${char.level}` : ''}{char.campaign != null ? ` · ${char.campaign}` : ''}
           </p>
         )}
+      </div>
+
+      {/* Portrait */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 24 }}>
+        <div className="char-sheet-portrait" style={{ width: 72, height: 96, borderRadius: 4, overflow: 'hidden', flexShrink: 0 }}>
+          {portraitUrl
+            ? <img src={portraitUrl} alt={char.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            : <span className="portrait-placeholder">{char.title.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()}</span>
+          }
+        </div>
+        <div>
+          <label style={labelStyle}>Portrait</label>
+          <button type="button" className="ghost-btn" onClick={() => setPickerOpen(true)}>
+            <Icon name="image" size={11} /> Select portrait
+          </button>
+        </div>
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
@@ -258,10 +279,21 @@ function EditForm({ char }: { char: DrupalCharacter }): React.ReactElement {
         </div>
 
         <p style={{ fontFamily: 'var(--font-body)', fontStyle: 'italic', fontSize: 12, color: 'var(--ink-faint)', margin: 0 }}>
-          Portrait, name, class, level, and combat stats are managed in Drupal.
-          Reload the page after saving to reflect updates in other screens.
+          Name, class, level, and combat stats are managed in Drupal. Portrait
+          changes save immediately; reload the page to reflect updates in other
+          screens.
         </p>
       </div>
+
+      {pickerOpen && (
+        <MediaPickerModal
+          characterId={char.id}
+          characterTitle={char.title}
+          currentImageUrl={portraitUrl}
+          onClose={() => setPickerOpen(false)}
+          onSelected={url => setPortraitUrl(url)}
+        />
+      )}
     </div>
   );
 }

@@ -15,6 +15,7 @@ import type { ScreenProps } from '../ScreenRouter';
 import { Icon } from '../atoms';
 import { useConsoleData, playerCharacters } from '../ConsoleContext';
 import type { DrupalCharacter } from '../ConsoleContext';
+import { MediaPickerModal } from '../MediaPickerModal';
 import {
   buildPortraitProfile,
   DEFAULT_PORTRAIT_WIDTH,
@@ -57,6 +58,7 @@ function StudioPanel({ char }: { char: DrupalCharacter }): React.ReactElement {
   const [error, setError] = React.useState<string | null>(null);
   const [resultUrl, setResultUrl] = React.useState<string | null>(null);
   const [usedSeed, setUsedSeed] = React.useState<number | null>(null);
+  const [pickerOpen, setPickerOpen] = React.useState(false);
 
   /* Reset the form and result whenever the selected character changes. */
   React.useEffect(() => {
@@ -67,6 +69,7 @@ function StudioPanel({ char }: { char: DrupalCharacter }): React.ReactElement {
     setError(null);
     setResultUrl(null);
     setUsedSeed(null);
+    setPickerOpen(false);
   }, [char.id]);
 
   const portraitUrl = resultUrl ?? char.imageUrl;
@@ -201,6 +204,14 @@ function StudioPanel({ char }: { char: DrupalCharacter }): React.ReactElement {
               <Icon name="sparkle" size={11} />
               {generating ? 'Generating…' : (portraitUrl ? 'Regenerate portrait' : 'Generate portrait')}
             </button>
+            <button
+              type="button"
+              className="ghost-btn"
+              disabled={generating}
+              onClick={() => setPickerOpen(true)}
+            >
+              <Icon name="image" size={11} /> Choose existing image
+            </button>
             {generating && (
               <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--ink-dim)', fontStyle: 'italic' }}>
                 Rendering with ComfyUI — this can take a few minutes on CPU.
@@ -214,6 +225,16 @@ function StudioPanel({ char }: { char: DrupalCharacter }): React.ReactElement {
           </div>
         </div>
       </div>
+
+      {pickerOpen && (
+        <MediaPickerModal
+          characterId={char.id}
+          characterTitle={char.title}
+          currentImageUrl={portraitUrl}
+          onClose={() => setPickerOpen(false)}
+          onSelected={url => { if (url) setResultUrl(url); }}
+        />
+      )}
     </div>
   );
 }

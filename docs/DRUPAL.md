@@ -251,6 +251,7 @@ Per-action user writes go through custom GraphQL mutations called from
 | `createCharacter` | `frontend/src/api/create-character.ts` |
 | `updateCharacter` | `frontend/src/api/update-voice.ts` (voice id / pitch / speed) |
 | `setCharacterPortrait` | `frontend/src/api/generate-portrait.ts` (ComfyUI portrait) |
+| `setCharacterImage` | `frontend/src/api/set-portrait-media.ts` (pick an existing media) |
 
 `createCharacter` persists a **source** character (`field_source_character =
 TRUE`, no campaign) from a sidecar-derived payload, building the
@@ -302,6 +303,15 @@ revision still references.
 validation. Beyond `edit any character content`, this mutation needs the
 `gatsby_user` role's `create media`, `create image media`, and `view media`
 permissions (added for this feature).
+
+`setCharacterImage(id, mediaId)` points `field_image` at an **existing** image
+media (no file/media creation) — used by the console's media picker to select a
+previously generated or library image as the active portrait. Listing that
+library is a config-only capability: the `media/image` type has
+`edges_enabled: true` + `simple_queries: '1'` in
+`graphql_compose.settings.graphql_compose_server.yml`, which exposes the
+`mediaImages(first: N) { nodes { id name mediaImage { url alt } } }` query
+(read via `frontend/src/api/list-portrait-media.ts`, requires `view media`).
 
 ### Writes — bulk/seed via the engine
 

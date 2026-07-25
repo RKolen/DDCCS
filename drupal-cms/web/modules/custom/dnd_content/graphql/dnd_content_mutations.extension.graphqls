@@ -73,6 +73,18 @@ extend type Mutation {
   ): NodeCharacter
 
   """
+  Point a character's portrait (field_image) at an existing image media entity,
+  selected from the media library - for example a previously generated portrait.
+  Does not create new media. Returns the updated character node.
+  """
+  setCharacterImage(
+    "UUID of the character node."
+    id: ID!
+    "UUID of the existing image media to attach."
+    mediaId: ID!
+  ): NodeCharacter
+
+  """
   Update a character node's voice settings. Only the supplied arguments are
   changed. Returns the updated character node.
   """
