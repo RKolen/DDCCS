@@ -128,6 +128,7 @@ Drupal credentials.
 | `tts.ts` | POST | Sidecar (`/tts/speak`) | Synthesise a reply to speech (Piper, using the character's voice + speed), returns `audio/wav` |
 | `update-voice.ts` | POST | Drupal (`updateCharacter`) | Save a character's voice id / pitch / speed (consultation voice mini-wizard) |
 | `spotlight.ts` | POST | Sidecar (`localhost:$SIDECAR_PORT`) | Spotlight scores for a party |
+| `generate-portrait.ts` | POST | Sidecar (`/character/portrait`) + Drupal (`setCharacterPortrait`) | Generate a character portrait with local ComfyUI (long, timeout-free call), then persist it onto the character's `field_image`; returns the new `imageUrl`. Requires `COMFYUI_ENABLED=true` on the sidecar (503 otherwise) |
 
 `generate-story.ts` streams Server-Sent Events from
 `AI_CREATIVE_BASE_URL/chat/completions`. `spotlight.ts` calls the Python sidecar

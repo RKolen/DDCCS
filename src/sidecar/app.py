@@ -22,6 +22,7 @@ from src.ai.ai_client import AIClient
 from src.ai.comfyui_client import ComfyUIClient
 from src.ai.comfyui_workflows import RenderSettings, Txt2ImgParams, txt2img_workflow
 from src.ai.equipment_rag import get_equipment_descriptions
+from src.ai.ollama_admin import unload_ollama_models
 from src.ai.portrait_prompt import build_portrait_prompt
 from src.character_arc.arc_analyzer import (
     ArcAnalyzer,
@@ -701,6 +702,15 @@ def character_portrait_endpoint(req: PortraitRequest) -> PortraitResponse:
             render=render,
         )
     )
+
+    # Free any resident Ollama model before the SD checkpoint loads: two large
+    # models resident on this CPU-only box is the top OOM risk. Best-effort - a
+    # portrait still generates if Ollama is unreachable. The daemon stays up and
+    # lazily reloads on the next request, so nothing is restarted afterwards.
+    if comfyui.ollama_url:
+        freed = unload_ollama_models(comfyui.ollama_url)
+        if freed:
+            logger.info("Unloaded %d Ollama model(s) before portrait generation", freed)
 
     try:
         png = client.generate(workflow)

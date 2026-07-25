@@ -208,11 +208,20 @@ class AIClient:
 
     @property
     def _is_ollama(self) -> bool:
-        """Return True when base_url targets an Ollama instance."""
+        """Return True when base_url targets an Ollama instance.
+
+        Detected by the provider name in the URL, or by the configured Ollama
+        port (OLLAMA_PORT) appearing in it - the port comes from the environment,
+        never a hardcoded literal. When OLLAMA_PORT is unset only the name match
+        applies.
+        """
         if not self.base_url:
             return False
         url = self.base_url.lower()
-        return "ollama" in url or ":11434" in url
+        if "ollama" in url:
+            return True
+        ollama_port = os.getenv("OLLAMA_PORT")
+        return bool(ollama_port) and f":{ollama_port}" in url
 
     # -- Logging hook --
 

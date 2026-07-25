@@ -9,7 +9,7 @@ import * as React from 'react';
 import { Link } from 'gatsby';
 import type { ScreenProps } from '../ScreenRouter';
 import { useConsoleData, playerCharacters, npcCharacters } from '../ConsoleContext';
-import type { DrupalCampaign } from '../ConsoleContext';
+import type { DrupalCampaign, DrupalCharacter } from '../ConsoleContext';
 import { drupalAdminUrl } from '../../../utils/drupalLinks';
 import { Icon } from '../atoms';
 import { ImageLightbox } from '../../atoms/ImageLightbox';
@@ -19,10 +19,44 @@ function partyIdsForCampaign(campaigns: DrupalCampaign[], name: string): Set<str
   return new Set(camp?.currentPartyIds ?? []);
 }
 
+/**
+ * Assemble the snake_case profile the sidecar portrait prompt builder reads
+ * (see src/ai/portrait_prompt.py). Only the keys it uses are sent; empty
+ * fields are omitted so a sparse character still yields a valid, non-generic
+ * prompt.
+ */
+function buildPortraitProfile(char: DrupalCharacter): Record<string, unknown> {
+  const profile: Record<string, unknown> = {};
+  if (char.species) profile.species = char.species;
+  if (char.lineage) profile.lineage = char.lineage;
+  if (char.characterClass) profile.character_class = char.characterClass;
+  if (char.pronouns) profile.pronouns = char.pronouns;
+  if (char.background) profile.background = char.background;
+  if (char.personalityTraits.length > 0) profile.personality_traits = char.personalityTraits;
+  if (char.arc?.summary) profile.arc_summary = char.arc.summary;
+  return profile;
+}
+
+/** Successful /api/generate-portrait response. */
+interface GeneratePortraitResult {
+  imageUrl: string | null;
+}
+
+// SD 1.5-class checkpoints render portraits best at 512x768; the sidecar's
+// default (832x1216) is SDXL-shaped and degrades on SD 1.5 (doubled faces,
+// slower on CPU). If an SDXL checkpoint is ever configured, these should move
+// to sidecar config keyed off the checkpoint rather than being fixed here.
+const PORTRAIT_WIDTH = 512;
+const PORTRAIT_HEIGHT = 768;
+
 export function CharacterDetailScreen({ ctx, setCtx }: ScreenProps): React.ReactElement {
   const data = useConsoleData();
   const isNpc = Boolean(ctx.npcMode);
   const [lightboxOpen, setLightboxOpen] = React.useState(false);
+  const [generating, setGenerating] = React.useState(false);
+  const [genError, setGenError] = React.useState<string | null>(null);
+  // Newly generated portrait URL, shown immediately without a full page reload.
+  const [genImageUrl, setGenImageUrl] = React.useState<string | null>(null);
   const allInType = isNpc ? npcCharacters(data) : playerCharacters(data);
   // PCs: filter by the campaign's currentPartyIds.
   // NPCs: show all (their campaign link isn't via currentParty).
@@ -35,6 +69,45 @@ export function CharacterDetailScreen({ ctx, setCtx }: ScreenProps): React.React
   const idx = ctx.charIdx ?? 0;
   const char = roster[idx] ?? null;
   const eyebrow = isNpc ? 'NPC Profile' : 'Character Sheet';
+  // Prefer a just-generated portrait; fall back to the stored one.
+  const portraitUrl = genImageUrl ?? char?.imageUrl ?? null;
+
+  // Reset the generation state whenever the selected character changes so a
+  // new portrait or error never bleeds across characters.
+  React.useEffect(() => {
+    setGenImageUrl(null);
+    setGenError(null);
+    setGenerating(false);
+  }, [char?.id]);
+
+  const handleGenerate = async (): Promise<void> => {
+    if (char == null) return;
+    setGenerating(true);
+    setGenError(null);
+    try {
+      const res = await fetch('/api/generate-portrait', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({
+          id:      char.id,
+          profile: buildPortraitProfile(char),
+          width:   PORTRAIT_WIDTH,
+          height:  PORTRAIT_HEIGHT,
+        }),
+      });
+      if (!res.ok) {
+        const data = (await res.json()) as { error?: string };
+        setGenError(data.error ?? `Error ${res.status}`);
+        return;
+      }
+      const data = (await res.json()) as GeneratePortraitResult;
+      if (data.imageUrl) setGenImageUrl(data.imageUrl);
+    } catch {
+      setGenError('Network error — could not reach the server.');
+    } finally {
+      setGenerating(false);
+    }
+  };
 
   const stats: Array<{ label: string; value: string | number }> = [];
   if (char?.maximumHitpoints !== null && char?.maximumHitpoints !== undefined) stats.push({ label: 'HP', value: char.maximumHitpoints });
@@ -87,18 +160,18 @@ export function CharacterDetailScreen({ ctx, setCtx }: ScreenProps): React.React
             <div className="char-sheet-head">
               <div
                 className="char-sheet-portrait"
-                onClick={char.imageUrl ? () => setLightboxOpen(true) : undefined}
-                style={char.imageUrl ? { cursor: 'zoom-in' } : undefined}
+                onClick={portraitUrl ? () => setLightboxOpen(true) : undefined}
+                style={portraitUrl ? { cursor: 'zoom-in' } : undefined}
               >
-                {char.imageUrl
-                  ? <img src={char.imageUrl} alt={char.title} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 2 }} />
+                {portraitUrl
+                  ? <img src={portraitUrl} alt={char.title} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 2 }} />
                   : <span className="portrait-placeholder">
                     {char.title.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()}
                   </span>
                 }
               </div>
-              {lightboxOpen && char.imageUrl && (
-                <ImageLightbox src={char.imageUrl} alt={char.title} onClose={() => setLightboxOpen(false)} />
+              {lightboxOpen && portraitUrl && (
+                <ImageLightbox src={portraitUrl} alt={char.title} onClose={() => setLightboxOpen(false)} />
               )}
               <div className="char-sheet-title">
                 <span className="reader-eyebrow">{eyebrow}</span>
@@ -114,6 +187,15 @@ export function CharacterDetailScreen({ ctx, setCtx }: ScreenProps): React.React
                 </span>
               </div>
               <div className="char-sheet-actions">
+                <button
+                  type="button"
+                  className="ghost-btn"
+                  disabled={generating}
+                  onClick={() => void handleGenerate()}
+                >
+                  <Icon name="sparkle" size={11} />
+                  {generating ? 'Generating…' : (portraitUrl ? 'Regenerate image' : 'Generate image')}
+                </button>
                 {char.path && (
                   <Link to={char.path} className="ghost-btn" style={{ textDecoration: 'none' }}>
                     <Icon name="scroll" size={11} /> Full sheet
@@ -121,6 +203,17 @@ export function CharacterDetailScreen({ ctx, setCtx }: ScreenProps): React.React
                 )}
               </div>
             </div>
+
+            {genError != null && (
+              <p style={{ margin: '10px 0 0', fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--color-danger)' }}>
+                {genError}
+              </p>
+            )}
+            {generating && (
+              <p style={{ margin: '10px 0 0', fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--ink-dim)', fontStyle: 'italic' }}>
+                Rendering a portrait with ComfyUI — this can take a few minutes on CPU.
+              </p>
+            )}
 
             {stats.length > 0 && (
               <div className="char-sheet-body">

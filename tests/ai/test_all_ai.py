@@ -33,6 +33,7 @@ def run_all_ai_tests():
         ("test_comfyui_client", "ComfyUI Client Tests"),
         ("test_comfyui_workflows", "ComfyUI Workflow Builder Tests"),
         ("test_portrait_prompt", "Portrait Prompt Builder Tests"),
+        ("test_ollama_admin", "Ollama Admin (Unload) Tests"),
     ]
 
 

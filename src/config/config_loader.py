@@ -414,6 +414,14 @@ def _apply_env_comfyui_overrides(
     if checkpoint:
         config.comfyui.assets.checkpoint = checkpoint
 
+    # Native Ollama API base for unloading models before generation, composed
+    # from the authoritative OLLAMA_HOST/OLLAMA_PORT env vars. No fallback: if
+    # either is unset the URL stays empty and the unload step is skipped.
+    ollama_host = get_env("OLLAMA_HOST")
+    ollama_port = get_env("OLLAMA_PORT")
+    if ollama_host and ollama_port:
+        config.comfyui.ollama_url = f"http://{ollama_host}:{ollama_port}"
+
 
 def _apply_env_overrides(config: DnDConfig, prefix: str = "") -> DnDConfig:
     """Apply environment variable overrides.

@@ -1,8 +1,10 @@
-﻿# AI Integration Tests
+# AI Integration Tests
 
 ## What We Test
 
-This folder contains tests for the AI integration subsystem, which provides optional AI enhancement features for character consultants, story generation, and campaign wiki integration.
+This folder contains tests for the AI integration subsystem, which provides
+optional AI enhancement features for character consultants, story generation,
+and campaign wiki integration.
 
 ### Test Files
 
@@ -37,7 +39,7 @@ This folder contains tests for the AI integration subsystem, which provides opti
 
 **AI features are optional** but must work correctly when enabled:
 
-1. **Environment Configuration** - Users may use OpenAI, Ollama, or other providers
+1. **Environment Configuration** - Users may use OpenAI, Ollama, or others
    - Must validate configuration before attempting API calls
    - Must detect connection issues early
    - Must verify model availability
@@ -57,42 +59,45 @@ This folder contains tests for the AI integration subsystem, which provides opti
 ## Running Tests
 
 ### Run All AI Tests
+
 ```bash
 python tests/run_all_tests.py ai
 ```
 
 ### Run Specific Test Functions
+
 All test files can be run directly and will execute all their test functions.
 
 ## Test Coverage
 
 ### What's Tested
--  Environment variable loading and defaults
--  AI client initialization (all configuration modes)
--  Message creation helpers
--  CharacterAIConfig serialization
--  WikiCache operations (set, get, delete, stats)
--  Cache TTL expiration
--  WikiClient initialization
--  Custom item filtering
+
+- Environment variable loading and defaults
+- AI client initialization (all configuration modes)
+- Message creation helpers
+- CharacterAIConfig serialization
+- WikiCache operations (set, get, delete, stats)
+- Cache TTL expiration
+- WikiClient initialization
+- Custom item filtering
 
 ### What's NOT Tested (Intentionally)
--  **Actual API calls** - Requires live connection + API keys
+
+- **Actual API calls** - Requires live connection + API keys
   - Would make tests slow and dependent on external services
   - Would consume API credits
   - Network issues would cause false failures
-  
--  **Actual web scraping** - Requires internet connection
+- **Actual web scraping** - Requires internet connection
   - Would be slow and unreliable
   - Fandom wikis may change structure
   - Rate limiting could cause failures
-
--  **AI response quality** - Subjective and model-dependent
+- **AI response quality** - Subjective and model-dependent
   - Different models produce different outputs
   - No objective "correct" answer
   - Would require human evaluation
 
 ### Future Test Enhancements
+
 - Mock API call testing (if needed for edge cases)
 - Integration tests with test API endpoints
 - Performance benchmarks for caching
@@ -120,10 +125,11 @@ All test files can be run directly and will execute all their test functions.
 ### Configuration Files
 
 **Environment Variables (.env):**
+
 ```env
 # AI Provider Configuration
 OPENAI_API_KEY=your_api_key_or_ollama
-OPENAI_BASE_URL=http://localhost:11434/v1  # Ollama local
+OPENAI_BASE_URL=http://${OLLAMA_HOST}:${OLLAMA_PORT}/v1  # Ollama local
 OPENAI_MODEL=qwen2.5:14b
 
 # RAG System Configuration
@@ -133,6 +139,7 @@ RAG_CACHE_TTL=604800  # 7 days in seconds
 ```
 
 **Character AI Config (in character JSON):**
+
 ```json
 {
   "ai_config": {
@@ -148,37 +155,43 @@ RAG_CACHE_TTL=604800  # 7 days in seconds
 ## Dependencies
 
 **Required:**
+
 - Python 3.13+
 - No external dependencies (uses only standard library)
 
 **Optional (for AI features to work):**
+
 - `openai` package (AI client)
 - `requests` package (RAG system)
 - `beautifulsoup4` package (RAG system)
 - `python-dotenv` package (environment loading)
 
-**Note:** Tests run successfully even without optional packages installed. They test the code structure and configuration handling, not the actual API calls.
+**Note:** Tests run successfully even without optional packages installed. They
+test the code structure and configuration handling, not the actual API calls.
 
 ## Quality Standards
 
 All tests in this folder:
--  Achieve 10.00/10 pylint rating
--  Use no pylint disable comments
--  Follow DRY principle (common code in test_helpers.py)
--  Include comprehensive docstrings
--  Clean up test data (use tempfile for caching tests)
--  Work with run_all_tests.py master runner
--  Provide clear, descriptive output
+
+- Achieve 10.00/10 pylint rating
+- Use no pylint disable comments
+- Follow DRY principle (common code in test_helpers.py)
+- Include comprehensive docstrings
+- Clean up test data (use tempfile for caching tests)
+- Work with run_all_tests.py master runner
+- Provide clear, descriptive output
 
 ## Maintenance Notes
 
 **When modifying AI system code:**
+
 1. Ensure tests still pass with new changes
 2. Add new tests for new functionality
 3. Update this README if test coverage changes
 4. Maintain 10.00/10 pylint on all test files
 
 **Common Issues:**
+
 - Import errors: Run from project root
 - Ollama connection fails: Start Ollama service
 - Model not found: Pull model with `ollama pull <model_name>`

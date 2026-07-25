@@ -334,7 +334,13 @@ New write path via a DataProducer (the CLI JSON:API sync script is dropped).
    permissions and exported config. Verified end-to-end against the live schema:
    file written to `public://portraits/`, media created, `field_image` set, and
    `image { mediaImage { url alt } }` returns the new URL.
-5. `generate-portrait.ts` + the **Generate image** button.
+5. **[DONE]** `frontend/src/api/generate-portrait.ts` (sidecar `/character/portrait`
+   via `sidecarFetch`, then the `setCharacterPortrait` mutation; returns the new
+   `imageUrl`) + the **Generate image / Regenerate image** button on
+   `CharacterDetailScreen.tsx` (running state, error notice, optimistic portrait
+   swap on success). 503 from the sidecar (ComfyUI disabled/unreachable) surfaces
+   as a one-line notice; the character is left unchanged. `npm run type-check`
+   clean.
 
 ### Phase B - existing image -> vision prompt + IPAdapter consistency
 

@@ -123,7 +123,8 @@ src/
 |   |-- index_sync.py          # Incremental sync called after JSON file saves
 |   |-- comfyui_client.py      # HTTP client for the local ComfyUI workflow API (portraits)
 |   |-- comfyui_workflows.py   # ComfyUI API-JSON workflow builders (txt2img portrait graph)
-|   `-- portrait_prompt.py     # Builds SD positive/negative prompts from a character profile
+|   |-- portrait_prompt.py     # Builds SD positive/negative prompts from a character profile
+|   `-- ollama_admin.py        # Best-effort Ollama model unloading (free RAM before SD generation)
 |
 |-- config/             # Centralized configuration
 |   |-- config_types.py        # AIConfig, RAGConfig, DisplayConfig, PathConfig, DrupalConfig, ComfyUIConfig

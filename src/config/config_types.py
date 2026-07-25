@@ -273,8 +273,13 @@ class ComfyUIConfig:
 
     ComfyUI runs on the host (like Ollama), never in DDEV. The sidecar reaches it
     over its HTTP workflow API. ``base_url`` is derived from host/port when empty.
-    Disabled by default; opt in via ``COMFYUI_ENABLED`` (AGENTS.md rule 4 - no
-    hardcoded values).
+    Disabled by default; opt in via ``COMFYUI_ENABLED``.
+
+    ``ollama_url`` is the local Ollama server's native API base (not the ``/v1``
+    OpenAI-compatible path), composed from OLLAMA_HOST/OLLAMA_PORT. The portrait
+    flow uses it to unload resident Ollama models before Stable Diffusion loads
+    its checkpoint - on a CPU-only box, two large models resident at once is the
+    top OOM risk.
     """
 
     enabled: bool = False
@@ -283,6 +288,7 @@ class ComfyUIConfig:
     base_url: str = ""
     timeout: float = 900.0  # CPU generation is slow (minutes/image)
     assets: ComfyUIAssets = field(default_factory=ComfyUIAssets)
+    ollama_url: str = ""
 
     def get_base_url(self) -> str:
         """Return the configured base URL, or one built from host/port."""
