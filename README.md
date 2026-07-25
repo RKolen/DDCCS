@@ -106,7 +106,7 @@ game_data/     # Local JSON content (characters, campaigns, npcs, items)
 docs/          # Project documentation (this map)
 plans/         # Implemented feature design docs (historical)
 tests/         # Engine test suite
-start.sh       # Brings up Drupal + sidecar + Gatsby
+start.sh       # Brings up Drupal + sidecar + Gatsby (+ ComfyUI when enabled)
 ```
 
 ---

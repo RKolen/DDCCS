@@ -45,6 +45,8 @@ GATSBY_LOG_FILE="${GATSBY_LOG_FILE:-$SCRIPT_DIR/.gatsby.log}"
 SIDECAR_KILL_STALE_LISTENERS="${SIDECAR_KILL_STALE_LISTENERS:-true}"
 SIDECAR_LOG_FILE="${SIDECAR_LOG_FILE:-$SCRIPT_DIR/.sidecar.log}"
 MKCERT_CA="${MKCERT_CA:-$HOME/.local/share/mkcert/rootCA.pem}"
+COMFYUI_KILL_STALE_LISTENERS="${COMFYUI_KILL_STALE_LISTENERS:-true}"
+COMFYUI_LOG_FILE="${COMFYUI_LOG_FILE:-$SCRIPT_DIR/.comfyui.log}"
 
 NO_CLI=false
 for arg in "$@"; do
@@ -97,7 +99,67 @@ else
 fi
 
 # ---------------------------------------------------------------------------
-# 3. Gatsby frontend (dev server in background)
+# 3. ComfyUI portrait service (host, background) - only when COMFYUI_ENABLED
+# ---------------------------------------------------------------------------
+# ComfyUI is opt-in: skipped entirely unless COMFYUI_ENABLED=true. It runs from
+# its own install (COMFYUI_DIR) with its own venv, on the host like Ollama - the
+# sidecar reaches it over its HTTP workflow API to generate character portraits.
+COMFYUI_STARTED=false
+if [[ "${COMFYUI_ENABLED:-}" == "true" ]]; then
+  # Required only in this branch; fail loudly rather than guess a path/port.
+  COMFYUI_HOST="${COMFYUI_HOST:?set COMFYUI_HOST in .env (COMFYUI_ENABLED=true)}"
+  COMFYUI_PORT="${COMFYUI_PORT:?set COMFYUI_PORT in .env (COMFYUI_ENABLED=true)}"
+  COMFYUI_DIR="${COMFYUI_DIR:?set COMFYUI_DIR in .env to your ComfyUI install path}"
+  COMFYUI_EXTRA_ARGS="${COMFYUI_EXTRA_ARGS:-}"
+
+  echo ""
+  echo "==> Starting ComfyUI portrait service (background)..."
+  # Free a stale ComfyUI still holding the port (LISTEN-only, same guard as the
+  # sidecar block) so a restart binds instead of dying "address already in use".
+  if [[ "$COMFYUI_KILL_STALE_LISTENERS" == "true" ]]; then
+    OLD_COMFYUI=$(lsof -tiTCP:"$COMFYUI_PORT" -sTCP:LISTEN 2>/dev/null || true)
+    if [[ -n "$OLD_COMFYUI" ]]; then
+      kill $OLD_COMFYUI 2>/dev/null && echo "    Stopped stale ComfyUI on :$COMFYUI_PORT - PIDs: $OLD_COMFYUI"
+      sleep 1
+    fi
+  fi
+
+  # ComfyUI has its own venv (its deps differ from the project's); fall back to
+  # python3 only when that venv is absent.
+  COMFYUI_PYTHON="$COMFYUI_DIR/venv/bin/python"
+  [[ -x "$COMFYUI_PYTHON" ]] || COMFYUI_PYTHON="python3"
+
+  # Optional launch flags (e.g. --cpu, --listen) come from COMFYUI_EXTRA_ARGS.
+  COMFYUI_ARGS=()
+  [[ -n "$COMFYUI_EXTRA_ARGS" ]] && read -ra COMFYUI_ARGS <<< "$COMFYUI_EXTRA_ARGS"
+
+  # exec so $! is the python PID (killable), not the transient subshell's.
+  ( cd "$COMFYUI_DIR" && exec "$COMFYUI_PYTHON" main.py --port "$COMFYUI_PORT" "${COMFYUI_ARGS[@]}" ) \
+    > "$COMFYUI_LOG_FILE" 2>&1 &
+  COMFYUI_PID=$!
+  COMFYUI_STARTED=true
+  echo "    ComfyUI PID: $COMFYUI_PID (logs: $COMFYUI_LOG_FILE)"
+
+  # Readiness probe: CPU startup + model index can take a few seconds.
+  COMFYUI_READY=false
+  for _ in $(seq 1 15); do
+    if curl -sf --max-time 2 "http://$COMFYUI_HOST:$COMFYUI_PORT/system_stats" >/dev/null 2>&1; then
+      COMFYUI_READY=true
+      break
+    fi
+    sleep 1
+  done
+  if [[ "$COMFYUI_READY" == true ]]; then
+    echo "    ComfyUI:     http://$COMFYUI_HOST:$COMFYUI_PORT (healthy)"
+  else
+    echo "    WARNING: ComfyUI did not come up on :$COMFYUI_PORT (portraits will 503)."
+    echo "    Last log lines ($COMFYUI_LOG_FILE):"
+    tail -3 "$COMFYUI_LOG_FILE" 2>/dev/null | sed 's/^/      /'
+  fi
+fi
+
+# ---------------------------------------------------------------------------
+# 4. Gatsby frontend (dev server in background)
 # ---------------------------------------------------------------------------
 cd "$FRONTEND_DIR"
 
@@ -143,7 +205,7 @@ else
 fi
 
 # ---------------------------------------------------------------------------
-# 4. Python consultant CLI (foreground, unless --no-cli)
+# 5. Python consultant CLI (foreground, unless --no-cli)
 # ---------------------------------------------------------------------------
 cd "$SCRIPT_DIR"
 
@@ -164,6 +226,13 @@ echo ""
 read -r -p "Stop search query parser sidecar? [y/N] " stop_sidecar
 if [[ "${stop_sidecar,,}" == "y" ]]; then
   kill "$SIDECAR_PID" 2>/dev/null && echo "Sidecar stopped."
+fi
+
+if [[ "${COMFYUI_STARTED:-false}" == true ]]; then
+  read -r -p "Stop ComfyUI portrait service? [y/N] " stop_comfyui
+  if [[ "${stop_comfyui,,}" == "y" ]]; then
+    kill "$COMFYUI_PID" 2>/dev/null && echo "ComfyUI stopped."
+  fi
 fi
 
 if [[ "${GATSBY_STARTED:-false}" == true ]]; then

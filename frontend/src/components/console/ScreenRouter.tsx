@@ -84,7 +84,7 @@ import { SettingsScreen }               from './screens/SettingsScreen';
 import { ModelProfileScreen }           from './screens/ModelProfileScreen';
 import { ToolsScreen }                  from './screens/ToolsScreen';
 import { NpcValidatorScreen }           from './screens/NpcValidatorScreen';
-import { DeprecatedScreen }             from './screens/DeprecatedScreen';
+import { PortraitStudioScreen }         from './screens/PortraitStudioScreen';
 import { PlaceholderScreen }            from './screens/PlaceholderScreen';
 
 /* ────────────────────────────────────────────────────────────
@@ -107,7 +107,7 @@ export function ScreenRouter({ section, item, ctx, setCtx }: ScreenRouterProps):
   if (key === 'characters/view')         return <CharacterDetailScreen ctx={ictx} setCtx={set} />;
   if (key === 'characters/consult')      return <ConsultScreen ctx={ictx} setCtx={set} />;
   if (key === 'characters/completeness') return <NpcValidatorScreen ctx={{ ...ictx, pcMode: true }} setCtx={set} />;
-  if (key === 'characters/ascii')        return <DeprecatedScreen item={item} />;
+  if (key === 'characters/ascii')        return <PortraitStudioScreen ctx={ictx} setCtx={set} />;
 
   /* Arc hub + all four sub-actions — CharacterArcScreen dispatches internally
      via ctx.arcSubAction, set by its own buttons. The sidebar only surfaces the

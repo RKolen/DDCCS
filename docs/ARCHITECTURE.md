@@ -33,7 +33,8 @@ of truth where all content lives.
 ```
 
 All of Drupal, Ollama, Milvus, and Solr run as **DDEV** containers. The sidecar
-and Gatsby dev server run on the host (see `start.sh`).
+and Gatsby dev server run on the host (see `start.sh`), as does ComfyUI (the
+optional portrait service) when `COMFYUI_ENABLED=true`.
 
 ---
 

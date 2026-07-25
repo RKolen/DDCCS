@@ -9,45 +9,21 @@ import * as React from 'react';
 import { Link } from 'gatsby';
 import type { ScreenProps } from '../ScreenRouter';
 import { useConsoleData, playerCharacters, npcCharacters } from '../ConsoleContext';
-import type { DrupalCampaign, DrupalCharacter } from '../ConsoleContext';
+import type { DrupalCampaign } from '../ConsoleContext';
 import { drupalAdminUrl } from '../../../utils/drupalLinks';
 import { Icon } from '../atoms';
 import { ImageLightbox } from '../../atoms/ImageLightbox';
+import {
+  buildPortraitProfile,
+  DEFAULT_PORTRAIT_WIDTH,
+  DEFAULT_PORTRAIT_HEIGHT,
+  type GeneratePortraitResult,
+} from '../../../utils/portraitProfile';
 
 function partyIdsForCampaign(campaigns: DrupalCampaign[], name: string): Set<string> {
   const camp = campaigns.find(c => c.name === name);
   return new Set(camp?.currentPartyIds ?? []);
 }
-
-/**
- * Assemble the snake_case profile the sidecar portrait prompt builder reads
- * (see src/ai/portrait_prompt.py). Only the keys it uses are sent; empty
- * fields are omitted so a sparse character still yields a valid, non-generic
- * prompt.
- */
-function buildPortraitProfile(char: DrupalCharacter): Record<string, unknown> {
-  const profile: Record<string, unknown> = {};
-  if (char.species) profile.species = char.species;
-  if (char.lineage) profile.lineage = char.lineage;
-  if (char.characterClass) profile.character_class = char.characterClass;
-  if (char.pronouns) profile.pronouns = char.pronouns;
-  if (char.background) profile.background = char.background;
-  if (char.personalityTraits.length > 0) profile.personality_traits = char.personalityTraits;
-  if (char.arc?.summary) profile.arc_summary = char.arc.summary;
-  return profile;
-}
-
-/** Successful /api/generate-portrait response. */
-interface GeneratePortraitResult {
-  imageUrl: string | null;
-}
-
-// SD 1.5-class checkpoints render portraits best at 512x768; the sidecar's
-// default (832x1216) is SDXL-shaped and degrades on SD 1.5 (doubled faces,
-// slower on CPU). If an SDXL checkpoint is ever configured, these should move
-// to sidecar config keyed off the checkpoint rather than being fixed here.
-const PORTRAIT_WIDTH = 512;
-const PORTRAIT_HEIGHT = 768;
 
 export function CharacterDetailScreen({ ctx, setCtx }: ScreenProps): React.ReactElement {
   const data = useConsoleData();
@@ -91,8 +67,8 @@ export function CharacterDetailScreen({ ctx, setCtx }: ScreenProps): React.React
         body:    JSON.stringify({
           id:      char.id,
           profile: buildPortraitProfile(char),
-          width:   PORTRAIT_WIDTH,
-          height:  PORTRAIT_HEIGHT,
+          width:   DEFAULT_PORTRAIT_WIDTH,
+          height:  DEFAULT_PORTRAIT_HEIGHT,
         }),
       });
       if (!res.ok) {

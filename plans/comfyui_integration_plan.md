@@ -101,11 +101,14 @@ write path is the largest new piece.
 - No workflow files need exporting: the graph is **built programmatically** in
   `src/ai/comfyui_workflows.py` (see 3.5), so the checkpoint, prompts, seed, and
   size are patched at call time.
-- `start.sh`: launch ComfyUI as a backgrounded host process (mirror the sidecar
-  Step-2 block: `.comfyui.log`, readiness probe `GET /system_stats`, shutdown
-  prompt); add `COMFYUI_HOST` / `COMFYUI_PORT` with the fail-loud `${VAR:?}`
-  pattern and free the port on restart (same LISTEN-only guard the sidecar/Gatsby
-  blocks use).
+- **[DONE]** `start.sh` launches ComfyUI as a backgrounded host process,
+  mirroring the sidecar block: `.comfyui.log`, readiness probe
+  `GET /system_stats`, LISTEN-only stale-port free on restart, and a "Stop
+  ComfyUI?" shutdown prompt. The whole block is **gated on `COMFYUI_ENABLED`**
+  (opt-in; skipped when unset), and when enabled requires `COMFYUI_HOST`,
+  `COMFYUI_PORT`, and `COMFYUI_DIR` via the fail-loud `${VAR:?}` pattern.
+  ComfyUI runs from `COMFYUI_DIR`'s own venv; `COMFYUI_EXTRA_ARGS` passes launch
+  flags (e.g. `--cpu`). Nothing is hardcoded - the install path is env-driven.
 
 ---
 
@@ -294,11 +297,15 @@ New write path via a DataProducer (the CLI JSON:API sync script is dropped).
   `create-character.ts` + `sidecarFetch` for the long, timeout-free sidecar
   call): POST to sidecar `/character/portrait`, then the `setCharacterPortrait`
   mutation with the returned base64 + `alt`.
-- **UI:** a **Generate image** button on `CharacterDetailScreen.tsx` (running
-  state, error banner, refetch/badge on success), with a `ctx`-cached result for
-  immediate feedback like the arc screen. This fills the affordance the
-  deprecated "Customize Portrait" screen already promises
-  (`menuData.ts` `id: 'ascii'` -> `DeprecatedScreen`).
+- **UI:** two entry points, both posting to `generate-portrait.ts` and swapping
+  the portrait in place on success (running state + error notice):
+  - a one-click **Generate image** button on `CharacterDetailScreen.tsx`; and
+  - the **Portrait Studio** screen (`PortraitStudioScreen.tsx`, routed at
+    `characters/ascii`), which exposes the ComfyUI inputs - appearance details
+    (folded into the prompt as `appearance`), seed, and size - and echoes the
+    seed used for reproducibility. This replaces the old deprecated "Customize
+    Portrait" notice (`menuData.ts` `id: 'ascii'`, formerly `DeprecatedScreen`);
+    the profile mapping is shared via `utils/portraitProfile.ts`.
 
 ---
 
@@ -336,10 +343,13 @@ New write path via a DataProducer (the CLI JSON:API sync script is dropped).
    `image { mediaImage { url alt } }` returns the new URL.
 5. **[DONE]** `frontend/src/api/generate-portrait.ts` (sidecar `/character/portrait`
    via `sidecarFetch`, then the `setCharacterPortrait` mutation; returns the new
-   `imageUrl`) + the **Generate image / Regenerate image** button on
-   `CharacterDetailScreen.tsx` (running state, error notice, optimistic portrait
-   swap on success). 503 from the sidecar (ComfyUI disabled/unreachable) surfaces
-   as a one-line notice; the character is left unchanged. `npm run type-check`
+   `imageUrl`) + two UI entry points that share `utils/portraitProfile.ts`: the
+   **Generate image / Regenerate image** button on `CharacterDetailScreen.tsx`,
+   and the **Portrait Studio** (`PortraitStudioScreen.tsx`, routed at
+   `characters/ascii`, replacing the deprecated notice) with appearance/seed/size
+   inputs and a reproducible seed echo. Both show a running state, surface a 503
+   (ComfyUI disabled/unreachable) as a one-line notice leaving the character
+   unchanged, and swap the portrait in place on success. `npm run type-check`
    clean.
 
 ### Phase B - existing image -> vision prompt + IPAdapter consistency
