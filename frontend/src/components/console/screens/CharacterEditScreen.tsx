@@ -290,6 +290,7 @@ function EditForm({ char }: { char: DrupalCharacter }): React.ReactElement {
           characterId={char.id}
           characterTitle={char.title}
           currentImageUrl={portraitUrl}
+          mediaType={char.characterType === false ? 'npc_portrait' : 'character_portrait'}
           onClose={() => setPickerOpen(false)}
           onSelected={url => setPortraitUrl(url)}
         />

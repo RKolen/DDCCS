@@ -25,13 +25,15 @@ interface MediaPickerModalProps {
   characterId:      string;
   characterTitle:   string;
   currentImageUrl?: string | null;
+  /** Media type to filter the library by (e.g. 'character_portrait'). */
+  mediaType?:       string;
   onClose:          () => void;
   /** Called after the portrait is saved, with the new image URL. */
   onSelected:       (imageUrl: string | null) => void;
 }
 
 export function MediaPickerModal({
-  characterId, characterTitle, currentImageUrl, onClose, onSelected,
+  characterId, characterTitle, currentImageUrl, mediaType, onClose, onSelected,
 }: MediaPickerModalProps): React.ReactElement {
   const [media, setMedia] = React.useState<MediaOption[]>([]);
   const [loading, setLoading] = React.useState(true);
@@ -51,7 +53,8 @@ export function MediaPickerModal({
     let cancelled = false;
     const load = async (): Promise<void> => {
       try {
-        const res = await fetch('/api/list-portrait-media');
+        const query = mediaType ? `?type=${encodeURIComponent(mediaType)}` : '';
+        const res = await fetch(`/api/list-portrait-media${query}`);
         const data = (await res.json()) as ListMediaResponse;
         if (cancelled) return;
         if (!res.ok) { setError(data.error ?? `Error ${res.status}`); return; }
@@ -74,7 +77,7 @@ export function MediaPickerModal({
     };
     void load();
     return () => { cancelled = true; };
-  }, [currentImageUrl]);
+  }, [currentImageUrl, mediaType]);
 
   const handleSave = async (): Promise<void> => {
     if (selectedId == null) return;

@@ -310,8 +310,17 @@ previously generated or library image as the active portrait. Listing that
 library is a config-only capability: the `media/image` type has
 `edges_enabled: true` + `simple_queries: '1'` in
 `graphql_compose.settings.graphql_compose_server.yml`, which exposes the
-`mediaImages(first: N) { nodes { id name mediaImage { url alt } } }` query
-(read via `frontend/src/api/list-portrait-media.ts`, requires `view media`).
+`mediaImages(first: N) { nodes { id name mediaType mediaImage { url alt } } }`
+query (read via `frontend/src/api/list-portrait-media.ts`, requires `view
+media`).
+
+Image media carry a `field_media_type` list field (`character_portrait`,
+`npc_portrait`, `item`, `monster_portrait`, `story_scenario`), exposed as
+`mediaType`. The picker filters by it (`?type=` on the list function) so a
+character only offers character portraits, keeping the list and its thumbnail
+downloads small. `SetCharacterPortrait` stamps the type on generation (PC ->
+`character_portrait`, NPC -> `npc_portrait`), and existing media were backfilled
+by inferring the type from the node that references each via `field_image`.
 
 ### Writes — bulk/seed via the engine
 

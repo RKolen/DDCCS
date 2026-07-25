@@ -704,6 +704,8 @@ field_config:
     image:
       field_media_image:
         enabled: true
+      field_media_type:
+        enabled: true
 settings:
   exclude_unpublished: true
   expose_entity_ids: false

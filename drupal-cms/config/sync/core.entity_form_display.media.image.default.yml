@@ -4,6 +4,7 @@ status: true
 dependencies:
   config:
     - field.field.media.image.field_media_image
+    - field.field.media.image.field_media_type
     - image.style.thumbnail
     - media.type.image
   module:
@@ -66,4 +67,5 @@ content:
       size: 60
       placeholder: ''
     third_party_settings: {  }
-hidden: {  }
+hidden:
+  field_media_type: true

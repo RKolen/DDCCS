@@ -18,6 +18,7 @@ const MAX_MEDIA = 1000;
 interface RawMediaImage {
   id:         string;
   name:       string;
+  mediaType:  string | null;
   mediaImage: { url: string; alt: string } | null;
 }
 
@@ -40,6 +41,7 @@ const LIST_MEDIA_QUERY = `
       nodes {
         id
         name
+        mediaType
         mediaImage { url alt }
       }
       pageInfo { hasNextPage endCursor }
@@ -61,6 +63,13 @@ export default async function handler(
     res.status(500).json({ error: 'Drupal credentials not configured' });
     return;
   }
+
+  // Optional ?type=character_portrait filter: the browser then only receives
+  // and renders the relevant subset, keeping the picker list and its thumbnail
+  // downloads small.
+  const wantType = typeof req.query?.type === 'string' && req.query.type.trim() !== ''
+    ? req.query.type.trim()
+    : null;
 
   const media: MediaOption[] = [];
   let after: string | null = null;
@@ -102,9 +111,9 @@ export default async function handler(
     if (!page) break;
 
     for (const n of page.nodes) {
-      if (n.mediaImage?.url) {
-        media.push({ id: n.id, name: n.name, url: n.mediaImage.url, alt: n.mediaImage.alt ?? '' });
-      }
+      if (!n.mediaImage?.url) continue;
+      if (wantType !== null && n.mediaType !== wantType) continue;
+      media.push({ id: n.id, name: n.name, url: n.mediaImage.url, alt: n.mediaImage.alt ?? '' });
     }
 
     if (!page.pageInfo.hasNextPage || !page.pageInfo.endCursor) break;

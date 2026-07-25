@@ -1,0 +1,21 @@
+uuid: 2776ee14-f0f1-43dd-820c-9c32f44839ed
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.media.field_media_type
+    - media.type.image
+  module:
+    - options
+id: media.image.field_media_type
+field_name: field_media_type
+entity_type: media
+bundle: image
+label: 'Media type'
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: list_string

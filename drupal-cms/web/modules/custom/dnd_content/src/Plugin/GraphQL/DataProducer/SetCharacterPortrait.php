@@ -224,11 +224,16 @@ final class SetCharacterPortrait extends DataProducerPluginBase implements Conta
       throw new UserError('Could not write the portrait file: ' . $e->getMessage());
     }
 
+    // Type the media so it shows under the right filter in the portrait picker.
+    $is_pc = (bool) $node->get('field_character_type')->value;
+    $media_type = $is_pc ? 'character_portrait' : 'npc_portrait';
+
     $media = $this->entityTypeManager->getStorage('media')->create([
       'bundle' => 'image',
       'name' => sprintf('Portrait: %s', $node->label()),
       'uid' => $this->currentUser->id(),
       'status' => 1,
+      'field_media_type' => $media_type,
       'field_media_image' => [
         'target_id' => $file->id(),
         'alt' => $alt,

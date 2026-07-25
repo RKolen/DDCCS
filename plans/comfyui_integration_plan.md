@@ -314,6 +314,11 @@ New write path via a DataProducer (the CLI JSON:API sync script is dropped).
   and any character can be given a library image. The just-generated / current
   portrait is pre-selected. Listing is config-only (`media/image` gains
   `edges_enabled`); the select mutation is a new `SetCharacterImage` producer.
+  A `field_media_type` list field (exposed as `mediaType`) tags each image
+  (`character_portrait` / `npc_portrait` / `item` / `monster_portrait` /
+  `story_scenario`); the picker filters by it (`?type=`) so a character only
+  sees character portraits. `SetCharacterPortrait` stamps the type on
+  generation; existing media were backfilled from their referencing node.
 
 ---
 
