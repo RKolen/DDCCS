@@ -11,13 +11,14 @@ import type { ScreenProps } from '../ScreenRouter';
 import { useConsoleData, playerCharacters, npcCharacters } from '../ConsoleContext';
 import type { DrupalCampaign } from '../ConsoleContext';
 import { drupalAdminUrl } from '../../../utils/drupalLinks';
-import { Icon } from '../atoms';
+import { Icon, Spinner } from '../atoms';
+import { enqueueJob, useJobPolling, jobResult, JOB_TYPES } from '../../../utils/aiJobs';
 import { ImageLightbox } from '../../atoms/ImageLightbox';
 import {
   buildPortraitProfile,
   DEFAULT_PORTRAIT_WIDTH,
   DEFAULT_PORTRAIT_HEIGHT,
-  type GeneratePortraitResult,
+  type PortraitJobResult,
 } from '../../../utils/portraitProfile';
 
 function partyIdsForCampaign(campaigns: DrupalCampaign[], name: string): Set<string> {
@@ -31,6 +32,8 @@ export function CharacterDetailScreen({ ctx, setCtx }: ScreenProps): React.React
   const [lightboxOpen, setLightboxOpen] = React.useState(false);
   const [generating, setGenerating] = React.useState(false);
   const [genError, setGenError] = React.useState<string | null>(null);
+  // Id of the queued portrait job being followed, or null when nothing is running.
+  const [jobId, setJobId] = React.useState<string | null>(null);
   // Newly generated portrait URL, shown immediately without a full page reload.
   const [genImageUrl, setGenImageUrl] = React.useState<string | null>(null);
   const allInType = isNpc ? npcCharacters(data) : playerCharacters(data);
@@ -54,33 +57,37 @@ export function CharacterDetailScreen({ ctx, setCtx }: ScreenProps): React.React
     setGenImageUrl(null);
     setGenError(null);
     setGenerating(false);
+    setJobId(null);
   }, [char?.id]);
+
+  /* Follow the queued render. The job runs on the host, so leaving this screen
+     (or the site) does not cancel it; coming back re-reads it from the queue. */
+  useJobPolling(jobId, job => {
+    setJobId(null);
+    setGenerating(false);
+    if (job.state === 'failure') {
+      setGenError(job.message ?? 'Portrait generation failed.');
+      return;
+    }
+    const result = jobResult<PortraitJobResult>(job);
+    if (result?.imageUrl) setGenImageUrl(result.imageUrl);
+  });
 
   const handleGenerate = async (): Promise<void> => {
     if (char == null) return;
     setGenerating(true);
     setGenError(null);
     try {
-      const res = await fetch('/api/generate-portrait', {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({
-          id:      char.id,
-          profile: buildPortraitProfile(char),
-          width:   DEFAULT_PORTRAIT_WIDTH,
-          height:  DEFAULT_PORTRAIT_HEIGHT,
-        }),
+      const job = await enqueueJob(JOB_TYPES.portrait, `Portrait: ${char.title}`, {
+        characterId: char.id,
+        profile:     buildPortraitProfile(char),
+        positive:    char.imagePrompt ?? null,
+        width:       DEFAULT_PORTRAIT_WIDTH,
+        height:      DEFAULT_PORTRAIT_HEIGHT,
       });
-      if (!res.ok) {
-        const data = (await res.json()) as { error?: string };
-        setGenError(data.error ?? `Error ${res.status}`);
-        return;
-      }
-      const data = (await res.json()) as GeneratePortraitResult;
-      if (data.imageUrl) setGenImageUrl(data.imageUrl);
-    } catch {
-      setGenError('Network error — could not reach the server.');
-    } finally {
+      setJobId(job.id);
+    } catch (err) {
+      setGenError(err instanceof Error ? err.message : 'Could not queue the portrait.');
       setGenerating(false);
     }
   };
@@ -169,7 +176,7 @@ export function CharacterDetailScreen({ ctx, setCtx }: ScreenProps): React.React
                   disabled={generating}
                   onClick={() => void handleGenerate()}
                 >
-                  <Icon name="sparkle" size={11} />
+                  {generating ? <Spinner /> : <Icon name="sparkle" size={11} />}
                   {generating ? 'Generating…' : (portraitUrl ? 'Regenerate image' : 'Generate image')}
                 </button>
                 {char.path && (

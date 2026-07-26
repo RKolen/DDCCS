@@ -93,8 +93,8 @@ write path is the largest new piece.
 
 ## 2. Local setup (host, one-time; HF models)
 
-- Install **ComfyUI** at `~/ComfyUI` in its own venv; serve on `COMFYUI_PORT`
-  (default 8188). Add the **ComfyUI-IPAdapter-plus** custom nodes.
+- Install **ComfyUI** in its own venv at `COMFYUI_DIR`; serve on `COMFYUI_PORT`.
+  Add the **ComfyUI-IPAdapter-plus** custom nodes.
 - Pull into ComfyUI `models/`: one **SD checkpoint** (SD 1.5-class on CPU;
   SDXL only with a GPU), the **IPAdapter** model, and the **CLIP-vision** encoder.
 - Pull an **Ollama vision model** on the host.
@@ -124,6 +124,8 @@ Workflow paths and model names live in a nested `ComfyUIAssets` dataclass. This
 split is required, not cosmetic: pylint caps a class at 7 instance attributes,
 and it mirrors the existing `MilvusConfig` / `MilvusEmbeddingConfig` nesting.
 
+As built (`src/config/config_types.py`):
+
 ```python
 @dataclass
 class ComfyUIAssets:
@@ -131,8 +133,8 @@ class ComfyUIAssets:
 
     txt2img_workflow: str = ""
     ipadapter_workflow: str = ""
-    vision_model: str = ""        # Ollama vision model name
-    checkpoint: str = ""          # SD checkpoint file name in ComfyUI
+    image_to_prompt_model: str = ""   # Ollama vision model name
+    checkpoint: str = ""              # SD checkpoint file name in ComfyUI
 
 
 @dataclass
@@ -140,30 +142,36 @@ class ComfyUIConfig:
     """ComfyUI image-generation service configuration."""
 
     enabled: bool = False
-    host: str = ""
-    port: int = 8188
-    base_url: str = ""            # derived host:port when empty
+    host: str = ""                # no default: env is authoritative
+    port: int = 0                 # no default: env is authoritative
+    base_url: str = ""            # derived from host/port when empty
     timeout: float = 900.0        # CPU generation is slow
     assets: ComfyUIAssets = field(default_factory=ComfyUIAssets)
+    ollama_url: str = ""          # native Ollama API, for unloading models
 
-    def get_base_url(self) -> str: ...   # base_url, else http://host:port
+    def get_base_url(self) -> str: ...   # base_url, else host+port, else ""
     def is_configured(self) -> bool: ... # enabled and a usable base URL
 ```
+
+Host and port carry **no defaults**: a guessed address hides a
+misconfiguration behind a connection error to the wrong place, so an
+unconfigured ComfyUI reports "not set up" (503) instead.
 
 Accessed as `config.comfyui.enabled` and `config.comfyui.assets.checkpoint`.
 
 `.env` / `.env.example`:
 
 ```ini
-COMFYUI_ENABLED=false
-COMFYUI_HOST=localhost
-COMFYUI_PORT=8188
+COMFYUI_ENABLED=
+COMFYUI_HOST=
+COMFYUI_PORT=
 COMFYUI_BASE_URL=
-COMFYUI_TIMEOUT=900.0
+COMFYUI_TIMEOUT=
 COMFYUI_TXT2IMG_WORKFLOW=
 COMFYUI_IPADAPTER_WORKFLOW=
-COMFYUI_VISION_MODEL=
+IMAGE_TO_PROMPT_MODEL=
 COMFYUI_CHECKPOINT=
+COMFYUI_DIR=
 ```
 
 ### 3.2 ComfyUI client
@@ -441,6 +449,92 @@ characters into one. Regional prompting or multiple IPAdapters (one per present
 character, keyed off their portraits) help but are involved; a single-subject or
 establishing-shot passage is the easy first target.
 
+### Phase E - async generation + job queue (LARGELY DONE)
+
+AI generation takes minutes on this CPU box, and the work used to be tied to the
+page: navigate away and the browser lost the result, and firing several
+generations at once would OOM the box. Heavy AI is now **queued, serialized, and
+tracked**, so you can start work and walk away. The queue, both quick wins, and
+the portrait path are done; the arc / story / summary screens still trigger
+their AI inline (see the end of this section).
+
+**Quick wins first (small, independent of the queue):**
+
+1. **[DONE]** **Animated busy state** on the generate/prompt buttons - a
+   `<Spinner>` console atom (`components/console/atoms.tsx` + `.console-spinner`
+   in `console.css`, reusing the global `spin` keyframes and `currentColor` so it
+   reads on `.primary-btn`, `.ghost-btn`, and `.arc-btn`). It replaces the
+   button's icon while running, across every long action in the console:
+   Portrait Studio (generate / prompt / enhance / vision / save), character
+   Generate image, consult Ask + Save voice, character create / add / edit,
+   NPC validator save, arc synthesize / discard / accept / analyse-all, and the
+   AI action Accept & save. Honours `prefers-reduced-motion`.
+2. **[DONE]** **Negative prompt field** in the Portrait Studio - an editable box
+   under the prompt, pre-filled with the standard negative (read from
+   `/api/portrait-prompt`, which returns it with no model call when
+   `enhance: false`) and passed through `generate-portrait.ts` to
+   `PortraitRequest.negative`. Blank falls back to the sidecar default, so a
+   failed prefill degrades to today's behaviour.
+
+**The queue - Drupal Advanced Queue orchestrates, the sidecar stays synchronous:**
+
+**[DONE]** `drupal/advancedqueue` (contrib) plus a custom `dnd_jobs` module:
+
+- **Queue:** one `dnd_ai` queue (`processor: daemon`, `lease_time: 3600`,
+  `stop_when_empty: false`). One queue + one processor = **one job at a time** =
+  the OOM protection.
+- **Runner:** a host daemon, not cron. `start.sh` backgrounds
+  `ddev drush advancedqueue:queue:process dnd_ai --timeout=0` in a restart loop
+  (`JOB_QUEUE_ENABLED`, `.jobqueue.log`, shutdown prompt), started after Gatsby
+  because some jobs call console routes.
+- **Job types** (`src/Plugin/AdvancedQueue/JobType/`): `dnd_portrait`,
+  `dnd_arc_analysis`, `dnd_story_generation`, `dnd_session_summary`. A job type
+  calls the **sidecar directly** only when the work is a single model call
+  (portrait: generate, then write file + media via the shared
+  `dnd_content` `PortraitWriter`, which the synchronous `setCharacterPortrait`
+  mutation now also uses). Multi-step orchestrations already exist as console
+  routes, so those jobs call **the console** (`ConsoleClient` ->
+  `run-arc-analysis`, `generate-story-text`, `store-session-summary`) rather than
+  growing a second copy of the chunking/prompt logic in PHP.
+- **GraphQL:** `enqueueAiJob(type, payload, label): AiJob` returns a job id
+  instantly; `aiJob(id)` / `aiJobs(states, limit)` are the poll targets, resolved
+  with `mergeCacheMaxAge(0)` (job state has no cache tag). A finished job writes
+  a small `result` back onto its payload - the processor persists the mutated
+  payload - so the console reads e.g. the new `imageUrl` on the next poll.
+- **Console:** `api/enqueue-job.ts` + `api/job-status.ts`, and
+  `utils/aiJobs.ts` (`enqueueJob`, `useJobPolling`, `useJobActivity`). The
+  right-rail **activity drawer** is now live: running, pending, and just-finished
+  jobs, so a job that completed on another screen still reports itself.
+- **Env:** the web container reaches the host over its Docker gateway, not
+  loopback (`SIDECAR_URL`, `GATSBY_SERVER_URL`, new `SIDECAR_JOB_TIMEOUT`). The
+  sidecar therefore listens on `SIDECAR_BIND_HOST` - every interface, a
+  `run_sidecar.py` launch knob like `SIDECAR_WORKERS` - while host clients keep
+  dialling `SIDECAR_HOST`; `SIDECAR_SECRET` is sent as `X-Sidecar-Secret` when
+  set.
+
+**Verified end-to-end:** a queued `dnd_portrait` job rendered on ComfyUI, created
+the file + media, set `field_image`, and returned the new `imageUrl` on the job
+result; a queued `dnd_story_generation` job produced a story through the console
+route. Gates: pylint 10.00, mypy, pyright 0/0/0, PHPCS, PHPStan L6, `npm run
+type-check`, `config:status` clean after export.
+
+**Still to do (the remaining UI switch):** `CharacterArcScreen` (single run and
+"Analyse all"), the story presets in `AiActionScreen`, and the create-story
+session summary still run their AI inline in the browser. Their job types exist
+and are callable - what is left is replacing each screen's inline run with
+`enqueueJob` + `useJobPolling`, which for the arc screen also means folding its
+per-passage progress panel into job state (queued / running / done). Once those
+land, the "don't navigate away" caveat disappears everywhere.
+
+**Ops notes:** job lease is 1 hour, which accommodates multi-minute CPU jobs; the
+daemon holds a bootstrapped Drupal, so config changes need a processor restart.
+Drupal's AI search indexing (`ai` module embeddings) still targets the host
+Ollama through the web container's `AI_CREATIVE_BASE_URL` while Ollama binds
+loopback only, so the container cannot reach it - it throws on kernel terminate
+after a CLI job. Pre-existing, and harmless to the job itself (the restart loop
+covers it), but giving Ollama the same wider bind the sidecar now uses
+(`SIDECAR_BIND_HOST`) would silence it and let Drupal-side indexing work.
+
 ---
 
 ## Verification (per phase)
@@ -455,6 +549,9 @@ establishing-shot passage is the easy first target.
 - **D:** a passage with a known character present -> generate -> a
   `story_scenario` media is created and attached to the story, and the present
   character reads true to their profile.
+- **E:** enqueue several portraits, navigate away, come back -> jobs ran **one at
+  a time** (RAM stayed bounded), the activity bar showed running + pending, each
+  finished with a notice, and every portrait was attached.
 - **Gates each phase:** pylint 10.00 / mypy (`.venv`); PHPCS + PHPStan L6; Drupal
   `config:status` clean; `npm run type-check`. **Watch host RAM during a run** -
   it must stay bounded and models must unload between steps (this box OOM-crashed

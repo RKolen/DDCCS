@@ -1,0 +1,59 @@
+"""
+A queued heavy-AI job. Jobs run one at a time on the host, so the console can
+start several and navigate away; poll aiJob/aiJobs to follow them.
+"""
+type AiJob {
+  "The job id, used to poll this job."
+  id: String!
+  "The job type plugin id (e.g. dnd_portrait)."
+  type: String!
+  "One of: queued, processing, success, failure."
+  state: String!
+  "Human-readable name for the activity bar (e.g. 'Portrait: Aragorn')."
+  label: String!
+  "The processor's message: a summary on success, the reason on failure."
+  message: String
+  "JSON-encoded result values produced by a finished job (e.g. imageUrl)."
+  result: String
+  "Unix timestamp the job became available to the processor."
+  created: Int
+  "Unix timestamp the job finished, or 0 while it is still queued/running."
+  processed: Int
+}
+
+extend type Mutation {
+  """
+  Enqueue a heavy AI job and return it immediately, before any model runs.
+  The payload is a JSON-encoded, job-type-specific object; see the job type
+  plugins in the dnd_jobs module for the keys each one reads.
+  """
+  enqueueAiJob(
+    "The job type plugin id (e.g. dnd_portrait)."
+    type: String!
+    "JSON-encoded job payload."
+    payload: String!
+    "Display name for the activity bar."
+    label: String!
+  ): AiJob
+}
+
+extend type Query {
+  """
+  Read one job by id - the console's poll target after enqueueing.
+  """
+  aiJob(
+    "The job id returned by enqueueAiJob."
+    id: String!
+  ): AiJob
+
+  """
+  List jobs, most recent first, optionally filtered by state. Backs the
+  console activity bar (running + pending) and its completion notices.
+  """
+  aiJobs(
+    "States to include (queued, processing, success, failure). Omit for all."
+    states: [String!]
+    "Maximum number of jobs to return."
+    limit: Int
+  ): [AiJob!]!
+}

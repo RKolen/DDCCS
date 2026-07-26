@@ -14,7 +14,7 @@
 
 import * as React from 'react';
 import type { ScreenProps } from '../ScreenRouter';
-import { Icon, AiTag, SlowTag } from '../atoms';
+import { Icon, AiTag, SlowTag, Spinner } from '../atoms';
 import { useConsoleData } from '../ConsoleContext';
 import type { ConsoleData } from '../ConsoleContext';
 
@@ -1224,7 +1224,7 @@ function AiActionWorkbench({ actionId, ctx, setCtx, entry }: ActionScreenProps):
                     onClick={() => { void onAccept(); }}
                     disabled={accepting || !run.streamed.trim()}
                   >
-                    <Icon name="plus" size={11} />
+                    {accepting ? <Spinner /> : <Icon name="plus" size={11} />}
                     {accepting ? ' Saving…' : ' Accept & save'}
                   </button>
                 )}
@@ -1557,7 +1557,7 @@ function AiActionForge({ actionId, ctx, setCtx, entry }: ActionScreenProps): Rea
                       onClick={() => { void onAccept(); }}
                       disabled={accepting || !run.streamed.trim()}
                     >
-                      <Icon name="plus" size={11} />
+                      {accepting ? <Spinner /> : <Icon name="plus" size={11} />}
                       {accepting ? ' Saving…' : ' Accept & save'}
                     </button>
                   )}

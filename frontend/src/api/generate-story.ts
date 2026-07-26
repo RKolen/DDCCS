@@ -1,101 +1,13 @@
 import type { GatsbyFunctionRequest, GatsbyFunctionResponse } from 'gatsby';
+import { buildPrompt, targetWords } from '../utils/storyPrompt';
+import type { GenerateStoryBody } from '../utils/storyPrompt';
 
-interface PartyMember {
-  name: string;
-  characterClass: string | null;
-  role: string | null;
-  pronouns: string | null;
-  species: string | null;
-  lineage: string | null;
-  background: string | null;
-  bonds: string[];
-  personalityTraits: string[];
-  majorPlotActions: string[];
-}
-
-interface GenerateStoryBody {
-  campaignName: string;
-  campaignId: string;
-  beats: string;
-  length: string;
-  pov: string;
-  storyNumber: number;
-  partyNames: string[];
-  partyMembers?: PartyMember[];
-  location?: string;
-  recentStoryTitles: string[];
-}
-
-function targetWords(length: string): number {
-  if (length.includes('800')) return 800;
-  if (length.includes('1600')) return 1600;
-  return 3000;
-}
-
-function buildMemberBlock(m: PartyMember): string {
-  const speciesPart = [m.lineage, m.species].filter(Boolean).join(' ');
-  const classPart = [speciesPart || null, m.characterClass].filter(Boolean).join(' ');
-  const header = [m.name, classPart || null, m.role || null, m.pronouns ? `(${m.pronouns})` : null]
-    .filter(Boolean).join(' · ');
-
-  const lines = [header];
-  if (m.background) lines.push(`  Background: ${m.background}`);
-  if (m.personalityTraits.length > 0) lines.push(`  Traits: ${m.personalityTraits.join(', ')}`);
-  if (m.bonds.length > 0) lines.push(`  Bonds: ${m.bonds.join(', ')}`);
-  if (m.majorPlotActions.length > 0) lines.push(`  Current goals: ${m.majorPlotActions.join(', ')}`);
-  return lines.join('\n');
-}
-
-function buildPartyLine(body: GenerateStoryBody): string {
-  if (body.partyMembers && body.partyMembers.length > 0) {
-    const blocks = body.partyMembers.map(buildMemberBlock).join('\n\n');
-    return `Characters featured this session (${body.partyMembers.length}):\n\n${blocks}`;
-  }
-  if (body.partyNames.length > 0) {
-    return `Characters featured this session: ${body.partyNames.join(', ')}.`;
-  }
-  return 'Party composition unknown.';
-}
-
-function buildPrompt(body: GenerateStoryBody): string {
-  const words = targetWords(body.length);
-  const partyLine = buildPartyLine(body);
-  const locationLine = body.location?.trim()
-    ? `Setting for this session: ${body.location.trim()}.`
-    : '';
-  const contextLine = body.recentStoryTitles.length > 0
-    ? `Previous sessions in this campaign: ${body.recentStoryTitles.join('; ')}.`
-    : '';
-  const povLine =
-    body.pov === 'Per-character' ? 'Write from a rotating close third-person perspective, one character per scene.' :
-      body.pov === 'DM voice' ? 'Write in DM voice — present tense, directed at the players as "you".' :
-        'Write in omniscient third-person narrator voice.';
-
-  const lines = [
-    `You are a D&D session narrative writer. Write a ${words}-word story for session ${body.storyNumber} of the campaign "${body.campaignName}".`,
-    '',
-    partyLine,
-  ];
-  if (locationLine) lines.push(locationLine);
-  if (contextLine) lines.push(contextLine);
-  lines.push('', povLine, '');
-  lines.push(
-    'Use the following story beats as your structure (cover all of them):',
-    body.beats,
-    '',
-    'Write a compelling, immersive narrative in the style of high fantasy literary fiction. ' +
-    'Use markdown headers (### Heading) to separate major scene breaks. ' +
-    'Bold character names on first appearance in each scene (**Name**). ' +
-    'Italicise in-world proper nouns (*name*). ' +
-    'Do not include a title at the top — begin the narrative directly with the first scene. ' +
-    `Target approximately ${words} words. Do not cut off mid-sentence.`,
-    // /no_think disables qwen3 extended-thinking mode at the message level
-    // (belt-and-suspenders with think:false in the API call).
-    '/no_think',
-  );
-
-  return lines.join('\n');
-}
+/**
+ * Stream an AI-generated story to the console (SSE).
+ *
+ * The prompt is built by the shared `storyPrompt` helper so the queued,
+ * non-streaming path (`generate-story-text.ts`) produces the same story.
+ */
 
 export default async function handler(
   req: GatsbyFunctionRequest,

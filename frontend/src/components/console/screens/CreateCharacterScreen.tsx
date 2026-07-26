@@ -17,6 +17,7 @@ import * as React from 'react';
 import { graphql, useStaticQuery } from 'gatsby';
 import type { ScreenProps } from '../ScreenRouter';
 import { useConsoleData } from '../ConsoleContext';
+import { Spinner } from '../atoms';
 import { CreateBackgroundModal } from './CreateBackgroundModal';
 import type { BackgroundDefinition } from './CreateBackgroundModal';
 
@@ -767,6 +768,7 @@ export function CreateCharacterScreen({ ctx }: ScreenProps): React.ReactElement 
         {step === STEPS.length - 1 ? (
           <button type="button" className="primary-btn" disabled={submitting || !form.firstName.trim()}
             onClick={() => void handleCreate()}>
+            {submitting && <Spinner />}
             {submitting ? 'Creating…' : 'Create Character'}
           </button>
         ) : (

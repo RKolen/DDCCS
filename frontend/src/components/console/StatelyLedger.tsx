@@ -10,6 +10,9 @@
 import * as React from 'react';
 import { MENU_DATA, type MenuSection, type MenuItem } from './menuData';
 import { Icon, AiTag, SlowTag, ActivityDrawer } from './atoms';
+import { useJobActivity } from '../../utils/aiJobs';
+import type { AiJob } from '../../utils/aiJobs';
+import type { ActivityItem } from './menuData';
 import { ScreenRouter, type ScreenContext } from './ScreenRouter';
 import { ActivityFullScreen } from './ActivityFullScreen';
 import {
@@ -41,6 +44,25 @@ interface StatelyLedgerProps {
   liveData?: ConsoleData;
 }
 
+/**
+ * Render one queued AI job as an activity-drawer row.
+ *
+ * A queued job reads as "running" in the drawer with a waiting detail line:
+ * from the operator's point of view it is in flight either way, and the detail
+ * says whether the host has actually started it.
+ */
+function jobToActivityItem(job: AiJob): ActivityItem {
+  const status = job.state === 'success' ? 'done' : job.state === 'failure' ? 'failed' : 'running';
+  const detail = job.state === 'queued'
+    ? 'Waiting for the host queue'
+    : job.message ?? (job.state === 'processing' ? 'Running on the host' : '');
+  const elapsed = job.processed && job.created && job.processed > job.created
+    ? `${job.processed - job.created}s`
+    : undefined;
+
+  return { kind: 'ai', status, label: job.label, detail, elapsed };
+}
+
 export function StatelyLedger({
   fullscreen = false,
   initialSection = 'read',
@@ -56,8 +78,14 @@ export function StatelyLedger({
   );
   const [drawerOpen, setDrawerOpen]     = React.useState(true);
   const [activityFull, setActivityFull] = React.useState(false);
-  /* Live activity items — populated via SSE/websocket once wired up */
-  const [activityItems] = React.useState<import('./menuData').ActivityItem[]>([]);
+  /* Live activity: what the host queue is running, waiting on, and just
+     finished. Polled, so a job that completed while you were on another screen
+     still reports itself here. */
+  const { running, recent } = useJobActivity();
+  const activityItems = React.useMemo(
+    () => [...running, ...recent].map(jobToActivityItem),
+    [running, recent],
+  );
   const [ctx, setCtxRaw] = React.useState<ScreenContext>({ storyIdx: 0, charIdx: 0 });
 
   const campaigns = liveData?.campaigns ?? [];

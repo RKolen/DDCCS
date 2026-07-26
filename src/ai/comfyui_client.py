@@ -19,7 +19,8 @@ class ComfyUIClient:
         """Initialize the client.
 
         Args:
-            base_url: The ComfyUI server base URL (e.g. http://localhost:8188).
+            base_url: The ComfyUI server base URL - scheme, host, and port, from
+                COMFYUI_BASE_URL or COMFYUI_HOST/COMFYUI_PORT.
             timeout: Overall seconds to wait for a generation to complete.
         """
         self.base_url = base_url.rstrip("/")

@@ -130,16 +130,32 @@ Drupal credentials.
 | `list-character-voices.ts` | GET | Drupal (`nodeCharacters`) | Page through every character's voice id / pitch / speed (cursor loop past the graphql_compose 100-cap); used when the story Narrate button starts |
 | `update-voice.ts` | POST | Drupal (`updateCharacter`) | Save a character's voice id / pitch / speed (consultation voice mini-wizard) |
 | `spotlight.ts` | POST | Sidecar (`localhost:$SIDECAR_PORT`) | Spotlight scores for a party |
-| `generate-portrait.ts` | POST | Sidecar (`/character/portrait`) + Drupal (`setCharacterPortrait`) | Generate a character portrait with local ComfyUI (long, timeout-free call), then persist it onto the character's `field_image`; returns the new `imageUrl`. Requires `COMFYUI_ENABLED=true` on the sidecar (503 otherwise) |
+| `generate-portrait.ts` | POST | Sidecar (`/character/portrait`) + Drupal (`setCharacterPortrait`) | Generate a character portrait with local ComfyUI (long, timeout-free call), then persist it onto the character's `field_image`; returns the new `imageUrl`. Accepts an explicit `positive` / `negative` prompt (blank falls back to the profile-built prompt and the standard negative). Requires `COMFYUI_ENABLED=true` on the sidecar (503 otherwise) |
 | `list-portrait-media.ts` | GET | Drupal (`mediaImages`) | List image media from the library (`{ media: [{ id, name, url, alt }] }`) for the portrait picker; `?type=character_portrait` filters by `mediaType` so the browser only receives the relevant subset (pages through the 100-cap connection) |
 | `set-portrait-media.ts` | POST | Drupal (`setCharacterImage`) | Point a character's `field_image` at an existing media (no new file); returns the new `imageUrl` |
 | `portrait-prompt.ts` | POST | Sidecar (`/character/portrait/prompt`) | Build a portrait prompt from the profile, or (with `enhance`) enrich the edited text via the fast model; returns `{ positive, negative }` |
 | `describe-image.ts` | POST | Sidecar (`/character/describe-image`) | Image→prompt: run the local Ollama vision model (`IMAGE_TO_PROMPT_MODEL`) over an image URL, returns `{ positive }`. Slow on CPU |
 | `save-image-prompt.ts` | POST | Drupal (`updateCharacter`) | Persist a character's reusable image prompt (`field_image_prompt`) |
+| `enqueue-job.ts` | POST | Drupal (`enqueueAiJob`) | Queue a heavy AI job (`{ type, payload, label }`) and return its id immediately; nothing runs during the call |
+| `job-status.ts` | GET | Drupal (`aiJob` / `aiJobs`) | Poll one job (`?id=`) or list recent ones (`?states=queued,processing&limit=`) for the activity drawer |
+| `run-arc-analysis.ts` | POST | own API routes + Drupal | Run a character's whole arc analysis server-side (chunk -> analyse -> persist -> synthesize); called by the queued `dnd_arc_analysis` job, which has no browser to loop in |
+| `generate-story-text.ts` | POST | Ollama-compatible LLM | Non-streaming twin of `generate-story.ts` (same prompt via `utils/storyPrompt.ts`), for the queued story job |
+| `store-session-summary.ts` | POST | Ollama-compatible LLM + Drupal (`setSessionSummary`) | Summarise a session and save it in one call, for the queued summary job |
 
 `generate-story.ts` streams Server-Sent Events from
 `AI_CREATIVE_BASE_URL/chat/completions`. `spotlight.ts` calls the Python sidecar
 (see [src/sidecar/README.md](../src/sidecar/README.md)).
+
+### Queued AI actions
+
+Anything that takes minutes is queued rather than held open in a request. The
+console calls `enqueueJob()` (`src/utils/aiJobs.ts`), gets a job id back
+instantly, and polls with `useJobPolling()`; the work runs on the host one job
+at a time, so navigating away no longer loses it. `useJobActivity()` feeds the
+right-rail activity drawer with what is running, pending, and just finished.
+Portrait generation runs this way today (`CharacterDetailScreen`,
+`PortraitStudioScreen`); the arc, story, and session-summary job types exist and
+are callable, but their console screens still run those actions inline.
 
 Session-summary prompt logic (fast-model, non-streaming) lives in the
 server-only helper `src/utils/aiSummary.ts`, shared by `summarize-session.ts`,

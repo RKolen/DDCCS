@@ -31,6 +31,8 @@ interface GeneratePortraitBody {
   height?:  number | null;
   /** Explicit (edited/stored) prompt; when set it drives generation directly. */
   positive?: string | null;
+  /** What the render must avoid; blank falls back to the standard negative. */
+  negative?: string | null;
 }
 
 /** Shape of the sidecar `/character/portrait` response (PortraitResponse). */
@@ -121,6 +123,7 @@ export default async function handler(
         width:    body.width ?? null,
         height:   body.height ?? null,
         positive: body.positive ?? null,
+        negative: body.negative ?? null,
       }),
     });
   } catch (err) {

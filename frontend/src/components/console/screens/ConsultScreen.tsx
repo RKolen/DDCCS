@@ -10,7 +10,7 @@ import * as React from 'react';
 import { graphql, useStaticQuery } from 'gatsby';
 import type { ScreenProps } from '../ScreenRouter';
 import { useConsoleData, playerCharacters } from '../ConsoleContext';
-import { Icon, AiTag } from '../atoms';
+import { Icon, AiTag, Spinner } from '../atoms';
 
 type PlayerCharacter = ReturnType<typeof playerCharacters>[number];
 
@@ -304,6 +304,7 @@ export function ConsultScreen({ ctx, setCtx }: ScreenProps): React.ReactElement 
             <Icon name="play" size={11} /> Preview
           </button>
           <button className="primary-btn" disabled={savingVoice} onClick={() => void saveVoice()}>
+            {savingVoice && <Spinner />}
             {savingVoice ? 'Saving…' : 'Save voice'}
           </button>
         </div>
@@ -354,7 +355,7 @@ export function ConsultScreen({ ctx, setCtx }: ScreenProps): React.ReactElement 
               onKeyDown={onKeyDown}
             />
             <button className="primary-btn" disabled={sending || input.trim() === ''} onClick={() => void send()}>
-              <Icon name="sparkle" size={11} /> {sending ? 'Thinking…' : 'Ask'}
+              {sending ? <Spinner /> : <Icon name="sparkle" size={11} />} {sending ? 'Thinking…' : 'Ask'}
             </button>
           </div>
         </div>

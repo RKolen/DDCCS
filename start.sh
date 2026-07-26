@@ -47,6 +47,8 @@ SIDECAR_LOG_FILE="${SIDECAR_LOG_FILE:-$SCRIPT_DIR/.sidecar.log}"
 MKCERT_CA="${MKCERT_CA:-$HOME/.local/share/mkcert/rootCA.pem}"
 COMFYUI_KILL_STALE_LISTENERS="${COMFYUI_KILL_STALE_LISTENERS:-true}"
 COMFYUI_LOG_FILE="${COMFYUI_LOG_FILE:-$SCRIPT_DIR/.comfyui.log}"
+JOB_QUEUE_ENABLED="${JOB_QUEUE_ENABLED:-true}"
+JOB_QUEUE_LOG_FILE="${JOB_QUEUE_LOG_FILE:-$SCRIPT_DIR/.jobqueue.log}"
 
 NO_CLI=false
 for arg in "$@"; do
@@ -205,7 +207,33 @@ else
 fi
 
 # ---------------------------------------------------------------------------
-# 5. Python consultant CLI (foreground, unless --no-cli)
+# 5. AI job queue processor (host, background)
+# ---------------------------------------------------------------------------
+# One processor, one job at a time: this is what serializes the heavy AI work so
+# two large models are never resident at once on this CPU-only box. It runs
+# after Gatsby because arc/story/summary jobs call the console's API routes.
+# The drush command polls the queue and blocks; the loop restarts it if it ever
+# exits (a DB blip, a config change picked up on the next bootstrap).
+JOB_QUEUE_STARTED=false
+if [[ "$JOB_QUEUE_ENABLED" == "true" ]]; then
+  echo ""
+  echo "==> Starting AI job queue processor (background)..."
+  cd "$DRUPAL_DIR"
+  (
+    while true; do
+      ddev drush advancedqueue:queue:process dnd_ai --timeout=0
+      echo "[start.sh] queue processor exited; restarting in 5s"
+      sleep 5
+    done
+  ) > "$JOB_QUEUE_LOG_FILE" 2>&1 &
+  JOB_QUEUE_PID=$!
+  JOB_QUEUE_STARTED=true
+  echo "    Queue PID:  $JOB_QUEUE_PID (logs: $JOB_QUEUE_LOG_FILE)"
+  echo "    Queue:      dnd_ai (portraits, arcs, stories, summaries - one at a time)"
+fi
+
+# ---------------------------------------------------------------------------
+# 6. Python consultant CLI (foreground, unless --no-cli)
 # ---------------------------------------------------------------------------
 cd "$SCRIPT_DIR"
 
@@ -232,6 +260,16 @@ if [[ "${COMFYUI_STARTED:-false}" == true ]]; then
   read -r -p "Stop ComfyUI portrait service? [y/N] " stop_comfyui
   if [[ "${stop_comfyui,,}" == "y" ]]; then
     kill "$COMFYUI_PID" 2>/dev/null && echo "ComfyUI stopped."
+  fi
+fi
+
+if [[ "${JOB_QUEUE_STARTED:-false}" == true ]]; then
+  read -r -p "Stop AI job queue processor? [y/N] " stop_queue
+  if [[ "${stop_queue,,}" == "y" ]]; then
+    # Kill the restart loop first, then the drush process it supervises.
+    kill "$JOB_QUEUE_PID" 2>/dev/null
+    pkill -f "advancedqueue:queue:process dnd_ai" 2>/dev/null
+    echo "Queue processor stopped."
   fi
 fi
 

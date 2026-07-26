@@ -252,6 +252,7 @@ Per-action user writes go through custom GraphQL mutations called from
 | `updateCharacter` | `frontend/src/api/update-voice.ts` (voice id / pitch / speed); `save-image-prompt.ts` (`imagePrompt` -> `field_image_prompt`) |
 | `setCharacterPortrait` | `frontend/src/api/generate-portrait.ts` (ComfyUI portrait) |
 | `setCharacterImage` | `frontend/src/api/set-portrait-media.ts` (pick an existing media) |
+| `enqueueAiJob` | `frontend/src/api/enqueue-job.ts` (queue a heavy AI job) |
 
 `createCharacter` persists a **source** character (`field_source_character =
 TRUE`, no campaign) from a sidecar-derived payload, building the
@@ -321,6 +322,38 @@ character only offers character portraits, keeping the list and its thumbnail
 downloads small. `SetCharacterPortrait` stamps the type on generation (PC ->
 `character_portrait`, NPC -> `npc_portrait`), and existing media were backfilled
 by inferring the type from the node that references each via `field_image`.
+
+### Queued AI jobs (`dnd_jobs` module)
+
+Drupal also **orchestrates** the long-running AI work. `drupal/advancedqueue`
+(contrib) provides a DB-backed job store; the custom `dnd_jobs` module adds the
+job types, the queue config, and the GraphQL surface the console polls.
+
+| Piece | Where |
+| ----- | ----- |
+| Queue | `advancedqueue.advancedqueue_queue.dnd_ai` - `processor: daemon`, `lease_time: 3600`, `stop_when_empty: false` |
+| Job types | `dnd_portrait`, `dnd_arc_analysis`, `dnd_story_generation`, `dnd_session_summary` (`src/Plugin/AdvancedQueue/JobType/`) |
+| Mutation | `enqueueAiJob(type, payload, label): AiJob` - returns a job id instantly, runs nothing |
+| Queries | `aiJob(id)`, `aiJobs(states, limit)` - resolved with `mergeCacheMaxAge(0)`, since job state changes outside any cache tag |
+| Services | `dnd_jobs.job_queue` (enqueue/read), `dnd_jobs.sidecar_client`, `dnd_jobs.console_client` |
+
+**One queue, one processor, one job at a time.** That serialization is the crash
+protection: this box is CPU-only with 32 GB, and two large models resident at
+once OOMs it. The processor is a host daemon (`start.sh`), not cron:
+`ddev drush advancedqueue:queue:process dnd_ai --timeout=0`.
+
+Payloads are JSON strings (same convention as `createCharacter`), and a finished
+job writes a small `result` object back onto its payload - the processor
+persists the mutated payload, so the console reads it on the next poll (e.g. the
+portrait job's new `imageUrl`).
+
+The web container needs `SIDECAR_URL`, `GATSBY_SERVER_URL`, and
+`SIDECAR_JOB_TIMEOUT` (see `.ddev/config.local.yaml`); `SIDECAR_SECRET` is sent
+as `X-Sidecar-Secret` when set.
+
+`PortraitWriter` (`dnd_content`) owns the file + media + `field_image` write so
+the synchronous `setCharacterPortrait` mutation and the queued portrait job
+produce identical results.
 
 ### Writes — bulk/seed via the engine
 

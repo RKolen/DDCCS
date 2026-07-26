@@ -2,17 +2,18 @@
  * PortraitStudioScreen — `characters / ascii` ("Customize Portrait").
  *
  * The ComfyUI portrait input setup: pick a character, tune the generation
- * inputs (appearance details, seed, size), and generate. Posts to
- * /api/generate-portrait, which drives local ComfyUI and attaches the result to
- * the character's field_image. Replaces the old deprecated ASCII-portrait notice.
+ * inputs (prompt, negative prompt, seed, size), and generate. Generation is
+ * queued (`dnd_portrait`): the host runs it one job at a time and attaches the
+ * result to the character's field_image, so leaving this screen mid-render no
+ * longer loses the work. Replaces the old deprecated ASCII-portrait notice.
  *
- * Generation needs COMFYUI_ENABLED=true on the sidecar; when disabled or
- * unreachable the endpoint returns 503 and this screen shows the reason.
+ * Generation needs COMFYUI_ENABLED=true on the sidecar; when it is disabled or
+ * unreachable the job fails with that reason and this screen shows it.
  */
 
 import * as React from 'react';
 import type { ScreenProps } from '../ScreenRouter';
-import { Icon } from '../atoms';
+import { Icon, Spinner } from '../atoms';
 import { useConsoleData, playerCharacters } from '../ConsoleContext';
 import type { DrupalCharacter } from '../ConsoleContext';
 import { MediaPickerModal } from '../MediaPickerModal';
@@ -20,8 +21,9 @@ import {
   buildPortraitProfile,
   DEFAULT_PORTRAIT_WIDTH,
   DEFAULT_PORTRAIT_HEIGHT,
-  type GeneratePortraitResult,
+  type PortraitJobResult,
 } from '../../../utils/portraitProfile';
+import { enqueueJob, useJobPolling, jobResult, JOB_TYPES } from '../../../utils/aiJobs';
 
 interface ApiError { error: string }
 
@@ -55,6 +57,9 @@ function StudioPanel({ char }: { char: DrupalCharacter }): React.ReactElement {
   // Generate/Enhance/Image->prompt, for a one-step Undo.
   const [savedPrompt, setSavedPrompt] = React.useState(char.imagePrompt ?? '');
   const [previousPrompt, setPreviousPrompt] = React.useState<string | null>(null);
+  // What the render must avoid. Pre-filled with the sidecar's standard negative;
+  // left blank the sidecar applies that same default.
+  const [negative, setNegative] = React.useState('');
   const [seed, setSeed] = React.useState('');
   const [width, setWidth] = React.useState(String(DEFAULT_PORTRAIT_WIDTH));
   const [height, setHeight] = React.useState(String(DEFAULT_PORTRAIT_HEIGHT));
@@ -66,12 +71,15 @@ function StudioPanel({ char }: { char: DrupalCharacter }): React.ReactElement {
   const [resultUrl, setResultUrl] = React.useState<string | null>(null);
   const [usedSeed, setUsedSeed] = React.useState<number | null>(null);
   const [pickerOpen, setPickerOpen] = React.useState(false);
+  // Id of the queued portrait job being followed, or null when idle.
+  const [jobId, setJobId] = React.useState<string | null>(null);
 
   /* Reset the form and result whenever the selected character changes. */
   React.useEffect(() => {
     setPrompt(char.imagePrompt ?? '');
     setSavedPrompt(char.imagePrompt ?? '');
     setPreviousPrompt(null);
+    setNegative('');
     setSeed('');
     setWidth(String(DEFAULT_PORTRAIT_WIDTH));
     setHeight(String(DEFAULT_PORTRAIT_HEIGHT));
@@ -80,7 +88,34 @@ function StudioPanel({ char }: { char: DrupalCharacter }): React.ReactElement {
     setResultUrl(null);
     setUsedSeed(null);
     setPickerOpen(false);
+    setJobId(null);
   }, [char.id, char.imagePrompt]);
+
+  /* Pre-fill the negative box with the sidecar's standard negative. The prompt
+     endpoint returns it next to the template positive and makes no model call
+     when `enhance` is false, so this is a cheap round trip. If it fails the box
+     stays blank and the sidecar applies the same default at generation time. */
+  React.useEffect(() => {
+    const profile = buildPortraitProfile(char);
+    if (Object.keys(profile).length === 0) return undefined;
+    let cancelled = false;
+    void (async (): Promise<void> => {
+      try {
+        const res = await fetch('/api/portrait-prompt', {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body:    JSON.stringify({ profile, positive: null, enhance: false }),
+        });
+        if (!res.ok) return;
+        const data = (await res.json()) as { negative?: string };
+        const standard = data.negative ?? '';
+        if (!cancelled && standard) setNegative(current => (current.trim() === '' ? standard : current));
+      } catch {
+        /* Leave it blank; generation still applies the sidecar default. */
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [char.id]);
 
   const portraitUrl = resultUrl ?? char.imageUrl;
   const busy = generating || promptBusy !== null;
@@ -158,33 +193,36 @@ function StudioPanel({ char }: { char: DrupalCharacter }): React.ReactElement {
     }
   };
 
+  /* Follow the queued render: the host runs it whether or not this screen is
+     open, so leaving the studio no longer throws the work away. */
+  useJobPolling(jobId, job => {
+    setJobId(null);
+    setGenerating(false);
+    if (job.state === 'failure') {
+      setError(job.message ?? 'Portrait generation failed.');
+      return;
+    }
+    const result = jobResult<PortraitJobResult>(job);
+    if (result?.imageUrl) setResultUrl(result.imageUrl);
+    if (typeof result?.seed === 'number') setUsedSeed(result.seed);
+  });
+
   const handleGenerate = async (): Promise<void> => {
     setGenerating(true);
     setError(null);
     try {
-      const res = await fetch('/api/generate-portrait', {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({
-          id:       char.id,
-          profile:  buildPortraitProfile(char),
-          positive: prompt.trim() || null,
-          seed:     parseIntOrNull(seed),
-          width:    parseIntOrNull(width) ?? DEFAULT_PORTRAIT_WIDTH,
-          height:   parseIntOrNull(height) ?? DEFAULT_PORTRAIT_HEIGHT,
-        }),
+      const job = await enqueueJob(JOB_TYPES.portrait, `Portrait: ${char.title}`, {
+        characterId: char.id,
+        profile:     buildPortraitProfile(char),
+        positive:    prompt.trim() || null,
+        negative:    negative.trim() || null,
+        seed:        parseIntOrNull(seed),
+        width:       parseIntOrNull(width) ?? DEFAULT_PORTRAIT_WIDTH,
+        height:      parseIntOrNull(height) ?? DEFAULT_PORTRAIT_HEIGHT,
       });
-      if (!res.ok) {
-        const data = (await res.json()) as ApiError;
-        setError(data.error ?? `Error ${res.status}`);
-        return;
-      }
-      const data = (await res.json()) as GeneratePortraitResult;
-      if (data.imageUrl) setResultUrl(data.imageUrl);
-      if (typeof data.seed === 'number') setUsedSeed(data.seed);
-    } catch {
-      setError('Network error — could not reach the server.');
-    } finally {
+      setJobId(job.id);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not queue the portrait.');
       setGenerating(false);
     }
   };
@@ -236,16 +274,20 @@ function StudioPanel({ char }: { char: DrupalCharacter }): React.ReactElement {
             />
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 8 }}>
               <button type="button" className="ghost-btn" disabled={busy} onClick={() => void runPromptEndpoint(false)}>
-                <Icon name="sparkle" size={11} /> {promptBusy === 'build' ? 'Generating…' : 'Generate prompt'}
+                {promptBusy === 'build' ? <Spinner /> : <Icon name="sparkle" size={11} />}
+                {promptBusy === 'build' ? 'Generating…' : 'Generate prompt'}
               </button>
               <button type="button" className="ghost-btn" disabled={busy || !prompt.trim()} onClick={() => void runPromptEndpoint(true)}>
-                <Icon name="model" size={11} /> {promptBusy === 'enhance' ? 'Enhancing…' : 'Enhance with AI'}
+                {promptBusy === 'enhance' ? <Spinner /> : <Icon name="model" size={11} />}
+                {promptBusy === 'enhance' ? 'Enhancing…' : 'Enhance with AI'}
               </button>
               <button type="button" className="ghost-btn" disabled={busy || !portraitUrl} onClick={() => void handleDescribe()}>
-                <Icon name="image" size={11} /> {promptBusy === 'vision' ? 'Reading image…' : 'Image → prompt'}
+                {promptBusy === 'vision' ? <Spinner /> : <Icon name="image" size={11} />}
+                {promptBusy === 'vision' ? 'Reading image…' : 'Image → prompt'}
               </button>
               <button type="button" className="ghost-btn" disabled={busy || !prompt.trim()} onClick={() => void handleSavePrompt()}>
-                <Icon name="scroll" size={11} /> {promptBusy === 'save' ? 'Saving…' : 'Save prompt'}
+                {promptBusy === 'save' ? <Spinner /> : <Icon name="scroll" size={11} />}
+                {promptBusy === 'save' ? 'Saving…' : 'Save prompt'}
               </button>
               {previousPrompt !== null && previousPrompt !== prompt && (
                 <button type="button" className="ghost-btn" disabled={busy} onClick={() => { setPrompt(previousPrompt); setPreviousPrompt(null); }}>
@@ -271,6 +313,17 @@ function StudioPanel({ char }: { char: DrupalCharacter }): React.ReactElement {
                 </p>
               </div>
             )}
+          </div>
+
+          <div>
+            <label style={labelStyle}>Negative prompt <span style={{ textTransform: 'none', letterSpacing: 0, color: 'var(--ink-faint)', fontWeight: 400 }}>— what the render must avoid</span></label>
+            <textarea
+              rows={2}
+              value={negative}
+              onChange={e => setNegative(e.target.value)}
+              placeholder="Leave blank to use the standard negative."
+              style={{ ...inputStyle, resize: 'vertical' }}
+            />
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 14 }}>
@@ -320,7 +373,7 @@ function StudioPanel({ char }: { char: DrupalCharacter }): React.ReactElement {
               disabled={busy}
               onClick={() => void handleGenerate()}
             >
-              <Icon name="sparkle" size={11} />
+              {generating ? <Spinner /> : <Icon name="sparkle" size={11} />}
               {generating ? 'Generating…' : (portraitUrl ? 'Regenerate portrait' : 'Generate portrait')}
             </button>
             <button
@@ -333,7 +386,7 @@ function StudioPanel({ char }: { char: DrupalCharacter }): React.ReactElement {
             </button>
             {generating && (
               <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--ink-dim)', fontStyle: 'italic' }}>
-                Rendering with ComfyUI — this can take a few minutes on CPU.
+                Queued on the host — this can take a few minutes on CPU. You can leave this screen.
               </span>
             )}
             {error != null && (

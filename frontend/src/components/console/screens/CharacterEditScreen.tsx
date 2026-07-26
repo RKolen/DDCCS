@@ -12,7 +12,7 @@
 
 import * as React from 'react';
 import type { ScreenProps } from '../ScreenRouter';
-import { Icon } from '../atoms';
+import { Icon, Spinner } from '../atoms';
 import { useConsoleData, playerCharacters } from '../ConsoleContext';
 import type { DrupalCharacter } from '../ConsoleContext';
 import { MediaPickerModal } from '../MediaPickerModal';
@@ -257,7 +257,7 @@ function EditForm({ char }: { char: DrupalCharacter }): React.ReactElement {
             disabled={saving || !isDirty}
             onClick={() => void handleSave()}
           >
-            <Icon name="tools" size={11} />
+            {saving ? <Spinner /> : <Icon name="tools" size={11} />}
             {saving ? 'Saving…' : 'Save changes'}
           </button>
 

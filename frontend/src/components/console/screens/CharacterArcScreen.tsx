@@ -29,7 +29,9 @@ import {
   type DrupalCharacterArc,
   type DrupalStory,
 } from '../ConsoleContext';
-import { AiTag, SlowTag } from '../atoms';
+import { AiTag, SlowTag, Spinner } from '../atoms';
+import { mergeStoryChunks, formatStoryAnalysis } from '../../../utils/arcRun';
+import type { ArcDataPointDict, StoryChunks } from '../../../utils/arcRun';
 
 /* ────────────────────────────────────────────────────────────
    Arc type definitions (output of the Python arc analysis CLI)
@@ -471,6 +473,7 @@ function ArcHub({ ctx, setCtx, characters }: SubScreenProps): React.ReactElement
                         void synthesize(char);
                       }}
                     >
+                      {synthId === char.id && <Spinner size={9} />}
                       {synthId === char.id
                         ? 'Synthesizing…'
                         : info.hasSummary ? 'Re-synthesize' : 'Synthesize'}
@@ -751,6 +754,7 @@ function StoredAnalysisPanel({
               onClick={synthesize}
               disabled={synthesizing || discarding}
             >
+              {synthesizing && <Spinner size={9} />}
               {synthesizing
                 ? 'Synthesizing…'
                 : summary ? 'Re-synthesize summary' : 'Synthesize summary'}
@@ -762,6 +766,7 @@ function StoredAnalysisPanel({
             onClick={discard}
             disabled={discarding || synthesizing}
           >
+            {discarding && <Spinner size={9} />}
             {discarding ? 'Discarding…' : 'Discard analysis'}
           </button>
         </div>
@@ -919,66 +924,6 @@ interface ArcProgress {
   total: number;
 }
 
-interface StoryChunks {
-  title:       string;
-  storyNumber: number | null;
-  chunks:      string[];
-}
-
-/** One story's arc data point (the shape the sidecar returns per chunk). */
-interface ArcDataPointDict {
-  story_file:    string;
-  session_id:    string;
-  timestamp:     string;
-  metric_values: Record<string, number>;
-  observations:  string[];
-  key_events:    string[];
-  ai_analysis:   string;
-}
-
-/**
- * Merge a story's per-chunk data points into one story-level data point:
- * metrics averaged, observations/events/summaries collected. Keeps the aggregate
- * payload small (per-story, not per-chunk) so it stays under the request limit.
- */
-function mergeStoryChunks(
-  parts: ArcDataPointDict[],
-  title: string,
-  storyNumber: number | null,
-): ArcDataPointDict {
-  const totals: Record<string, number> = {};
-  const counts: Record<string, number> = {};
-  const observations: string[] = [];
-  const keyEvents: string[] = [];
-  const summaries: string[] = [];
-  for (const part of parts) {
-    for (const [key, value] of Object.entries(part.metric_values ?? {})) {
-      if (typeof value === 'number') {
-        totals[key] = (totals[key] ?? 0) + value;
-        counts[key] = (counts[key] ?? 0) + 1;
-      }
-    }
-    observations.push(...(part.observations ?? []));
-    keyEvents.push(...(part.key_events ?? []));
-    if (part.ai_analysis) {
-      summaries.push(part.ai_analysis);
-    }
-  }
-  const metricValues: Record<string, number> = {};
-  for (const key of Object.keys(totals)) {
-    metricValues[key] = Math.round((totals[key] / counts[key]) * 10) / 10;
-  }
-  return {
-    story_file:    title,
-    session_id:    storyNumber != null ? String(storyNumber) : '',
-    timestamp:     new Date().toISOString(),
-    metric_values: metricValues,
-    observations:  observations.slice(0, 8),
-    key_events:    keyEvents.slice(0, 8),
-    ai_analysis:   summaries.join(' '),
-  };
-}
-
 /** Fetch every story's text split into small analysis chunks (light, no AI). */
 async function fetchStoryChunks(storyIds: string[]): Promise<StoryChunks[]> {
   const stories: StoryChunks[] = [];
@@ -998,21 +943,6 @@ async function fetchStoryChunks(storyIds: string[]): Promise<StoryChunks[]> {
     }
   }
   return stories;
-}
-
-/** Format a merged story data point into readable prose for the wysiwyg node. */
-function formatStoryAnalysis(part: ArcDataPointDict): string {
-  const sections: string[] = [];
-  if (part.ai_analysis) {
-    sections.push(part.ai_analysis);
-  }
-  if (part.key_events?.length) {
-    sections.push(`Key events: ${part.key_events.join('; ')}`);
-  }
-  if (part.observations?.length) {
-    sections.push(`Observations: ${part.observations.join('; ')}`);
-  }
-  return sections.join('\n\n');
 }
 
 /** Persist a story analysis / summary to the character_analysis node (best-effort). */
@@ -1421,6 +1351,7 @@ function ArcAnalyze({ ctx, setCtx, characters, stories }: SubScreenProps): React
                   onClick={acceptResult}
                   disabled={saving}
                 >
+                  {saving && <Spinner />}
                   {saving ? 'Saving…' : 'Accept & save'}
                 </button>
               </>
@@ -1652,6 +1583,7 @@ function ArcBatch({ ctx, setCtx, characters, stories }: SubScreenProps): React.R
             onClick={runAll}
             disabled={running || characters.length === 0}
           >
+            {running && <Spinner />}
             {running ? 'Running…' : done ? 'Run again' : 'Start'}
           </button>
         </div>

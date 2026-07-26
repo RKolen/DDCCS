@@ -10,6 +10,7 @@
  *                      and color them with CSS color.
  *   - <AiTag>          Small "AI" sparkle pill inline indicator.
  *   - <SlowTag>        "slow" label for actions that take 10s+.
+ *   - <Spinner>        Animated busy indicator for running actions.
  *   - <Rivet>          Decorative brass nail/rivet.
  *   - <TabGlyph>       Brass tab insignia (single letter, ledger-style).
  *   - <ActivityRow>    A single activity-log entry.
@@ -99,6 +100,22 @@ export function AiTag({ size = 'sm', label = 'AI' }: { size?: 'sm' | 'md'; label
 
 export function SlowTag(): React.ReactElement {
   return <span className="slow-tag" title="May take 10+ seconds">slow</span>;
+}
+
+/**
+ * Animated busy indicator for buttons that kick off long work (AI generation,
+ * saves). Sized like the inline `<Icon>` it replaces while running, and drawn
+ * in `currentColor` so it reads on both `.primary-btn` and `.ghost-btn`.
+ */
+export function Spinner({ size = 11, label = 'Working' }: { size?: number; label?: string }): React.ReactElement {
+  return (
+    <span
+      className="console-spinner"
+      role="status"
+      aria-label={label}
+      style={{ width: size, height: size }}
+    />
+  );
 }
 
 export function Rivet({ size = 8 }: { size?: number }): React.ReactElement {

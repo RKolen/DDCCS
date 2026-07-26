@@ -13,17 +13,32 @@ For how the pieces fit together, see [ARCHITECTURE.md](ARCHITECTURE.md).
 
 | Tool | Why |
 | ---- | --- |
-| [DDEV](https://ddev.readthedocs.io/) | Runs Drupal + Ollama + Milvus + Solr in containers |
+| [DDEV](https://ddev.readthedocs.io/) | Runs Drupal + Milvus + Solr in containers |
 | Node.js 18+ and npm | Gatsby frontend |
-| Python 3.8+ | Search/spotlight sidecar |
+| Python 3.8+ | Sidecar (search, spotlight, TTS, portraits) |
 | [mkcert](https://github.com/FiloSottile/mkcert) | Local TLS cert DDEV uses for `*.ddev.site` |
-| Ollama models | Pulled inside the DDEV Ollama service (chat + embeddings) |
+| An OpenAI-compatible LLM endpoint | Chat, story generation, arc analysis (`AI_CREATIVE_BASE_URL` + key). A hosted service works; the default is [Ollama](https://ollama.com/) **on the host** — never inside DDEV, where heavy models double-load and crash the box. Image-to-prompt vision and pre-ComfyUI model unloading additionally use Ollama's native API |
 
 Install Python deps once:
 
 ```bash
 pip install -r requirements.txt
 ```
+
+### Optional, per feature
+
+| Tool | Enables | Without it |
+| ---- | ------- | ---------- |
+| Piper voices (`.onnx` files in `game_data/piper/voices/`) | Multi-voice story narration and character consultation audio. The `piper-tts` package itself comes from `requirements.txt` | `/tts/speak` returns 503 and the Narrate control reports it |
+| `sox` (system package) | Pitch offsets per character voice — Piper has no pitch control of its own | Voices still play, at their natural pitch |
+| [ComfyUI](https://github.com/comfyanonymous/ComfyUI) at `COMFYUI_DIR`, own venv, plus a Stable Diffusion checkpoint (SD 1.5-class on CPU) | Portrait generation. `start.sh` launches it when `COMFYUI_ENABLED=true` | Portrait jobs fail with the reason; nothing else is affected |
+
+Both host AI services sit behind sidecar endpoints (`/tts/speak`,
+`/character/portrait`), so swapping engines is a new client behind the same
+endpoint — the frontend, Drupal, and the job queue never name the engine. The
+clients themselves are engine-specific (`PiperTTSClient` shells out to the
+`piper` binary; `ComfyUIClient` speaks ComfyUI's workflow API), so there is no
+drop-in provider switch today.
 
 ---
 
@@ -68,16 +83,19 @@ CLI):
 ./start.sh --no-cli
 ```
 
-This runs `ddev start` (Drupal, Ollama, Milvus, Solr), launches the sidecar in
-the background, and starts the Gatsby dev server. Logs go to `.sidecar.log` and
-`.gatsby.log`.
+This runs `ddev start` (Drupal, Milvus, Solr), launches the sidecar and the AI
+job-queue processor in the background, starts the Gatsby dev server, and — when
+`COMFYUI_ENABLED=true` — ComfyUI too. Logs go to `.sidecar.log`, `.gatsby.log`,
+`.jobqueue.log`, and `.comfyui.log`. Ollama is expected to be already running on
+the host.
 
 Or do it manually:
 
 ```bash
 cd drupal-cms && ddev start && cd ..
 python3 run_sidecar.py &
-cd frontend && npm run develop
+cd drupal-cms && ddev drush advancedqueue:queue:process dnd_ai --timeout=0 &
+cd ../frontend && npm run develop
 ```
 
 ---
@@ -135,7 +153,9 @@ Gatsby's 30-second refetch (or restart the dev server).
 | Gatsby cannot reach Drupal / TLS error | Use the HTTP `GATSBY_DRUPAL_BASE_URL`, or trust DDEV's mkcert CA (`NODE_EXTRA_CA_CERTS=$HOME/.local/share/mkcert/rootCA.pem`). `start.sh` does this for you. |
 | Stale schema / weird build errors | `cd frontend && npm run clean`, then `npm run develop`. |
 | Schema missing a new field/type | Re-run `ddev drush config:import -y && ddev drush cache:rebuild`, then `npm run clean`. |
-| Story generation returns no content | Confirm `AI_CREATIVE_MODEL` is pulled and loaded in the DDEV Ollama service. |
+| Story generation returns no content | Confirm `AI_CREATIVE_MODEL` is pulled into the host Ollama and that `AI_CREATIVE_BASE_URL` points at it. |
+| A queued job never leaves `queued` | The processor is not running: check `.jobqueue.log`, or start it with `ddev drush advancedqueue:queue:process dnd_ai --timeout=0`. |
+| Portrait job fails immediately | ComfyUI is not up, or `COMFYUI_ENABLED` is unset; the job message says which. |
 | Search returns nothing | Re-run `--reindex`; confirm the sidecar is up at `:$SIDECAR_PORT/health`. |
 | Inspect background services | `tail -f .gatsby.log` / `tail -f .sidecar.log`. |
 

@@ -146,11 +146,16 @@ class MilvusEmbeddingConfig:
 
 @dataclass
 class MilvusConfig:
-    """Milvus vector database configuration."""
+    """Milvus vector database configuration.
+
+    Host and port carry no defaults, for the same reason as SidecarConfig:
+    MILVUS_HOST / MILVUS_PORT are authoritative, and guessing an address hides a
+    misconfiguration behind a connection error to the wrong place.
+    """
 
     enabled: bool = False
     host: str = ""
-    port: int = 19530
+    port: int = 0
     collection_prefix: str = "dnd"
     embedding: MilvusEmbeddingConfig = field(default_factory=MilvusEmbeddingConfig)
     top_k: int = 5
@@ -241,10 +246,15 @@ class DrupalConfig:
 
 @dataclass
 class SidecarConfig:
-    """Query-parser sidecar configuration."""
+    """Query-parser sidecar configuration.
 
-    host: str = "0.0.0.0"
-    port: int = 8765
+    Host and port carry no defaults: they are authoritative configuration
+    (SIDECAR_HOST / SIDECAR_PORT), and a guessed address is worse than a loud
+    failure - it silently targets the wrong service.
+    """
+
+    host: str = ""
+    port: int = 0
     timeout: float = 5.0
     min_confidence: float = 0.6
     log_level: str = "info"
@@ -285,17 +295,24 @@ class ComfyUIConfig:
 
     enabled: bool = False
     host: str = ""
-    port: int = 8188
+    port: int = 0
     base_url: str = ""
     timeout: float = 900.0  # CPU generation is slow (minutes/image)
     assets: ComfyUIAssets = field(default_factory=ComfyUIAssets)
     ollama_url: str = ""
 
     def get_base_url(self) -> str:
-        """Return the configured base URL, or one built from host/port."""
+        """Return the configured base URL, or one built from host/port.
+
+        Returns:
+            The base URL without a trailing slash, or an empty string when
+            neither COMFYUI_BASE_URL nor a full COMFYUI_HOST/COMFYUI_PORT pair
+            is configured - which ``is_configured()`` reports as "not set up"
+            rather than guessing an address.
+        """
         if self.base_url:
             return self.base_url.rstrip("/")
-        if self.host:
+        if self.host and self.port:
             return f"http://{self.host}:{self.port}"
         return ""
 

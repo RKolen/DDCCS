@@ -11,7 +11,7 @@
 
 import * as React from 'react';
 import type { ScreenProps } from '../ScreenRouter';
-import { Icon } from '../atoms';
+import { Icon, Spinner } from '../atoms';
 import { useConsoleData, playerCharacters, npcCharacters } from '../ConsoleContext';
 import type { DrupalCharacter } from '../ConsoleContext';
 
@@ -334,7 +334,7 @@ function EditPanel({ char, onSaved }: { char: DrupalCharacter; onSaved: () => vo
           disabled={saving || saved}
           onClick={() => void handleSave()}
         >
-          <Icon name="tools" size={11} />
+          {saving ? <Spinner /> : <Icon name="tools" size={11} />}
           {saving ? 'Saving...' : saved ? 'Saved' : 'Save changes'}
         </button>
       </div>

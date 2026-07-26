@@ -15,7 +15,21 @@ import type { DrupalCharacter } from '../components/console/ConsoleContext';
 export const DEFAULT_PORTRAIT_WIDTH = 512;
 export const DEFAULT_PORTRAIT_HEIGHT = 768;
 
-/** Successful /api/generate-portrait response. */
+/**
+ * What a finished `dnd_portrait` job carries back.
+ *
+ * The job attaches the image to the character itself, so the console only needs
+ * the new URL to swap the portrait in place.
+ */
+export interface PortraitJobResult {
+  characterId: string;
+  mediaId:     string;
+  imageUrl:    string | null;
+  alt:         string;
+  seed:        number | null;
+}
+
+/** Successful /api/generate-portrait response (the synchronous path). */
 export interface GeneratePortraitResult {
   imageUrl: string | null;
   /** Seed actually used, echoed back so a pleasing render can be reproduced. */

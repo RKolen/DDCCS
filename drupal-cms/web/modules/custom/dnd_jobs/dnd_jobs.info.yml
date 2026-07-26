@@ -1,0 +1,10 @@
+name: 'D&D AI Jobs'
+type: module
+description: 'Queued, serialized background jobs for the heavy host AI actions (portraits, arc analysis, story generation, session summaries) plus the GraphQL enqueue/status surface the console polls.'
+package: 'D&D Consultant'
+core_version_requirement: ^10.4 || ^11
+dependencies:
+  - advancedqueue:advancedqueue
+  - dnd_content:dnd_content
+  - graphql:graphql
+  - graphql_compose:graphql_compose

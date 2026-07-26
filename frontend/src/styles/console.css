@@ -175,6 +175,20 @@ kbd {
 .ghost-btn:hover { color: var(--brass); border-color: var(--brass); }
 .ghost-btn.ghost-active { color: var(--brass); border-color: var(--brass); background: var(--gold-a10); }
 
+/* Busy indicator for long-running actions (AI generation, saves). Inherits the
+   button's text colour so it reads on both .primary-btn and .ghost-btn. */
+.console-spinner {
+  display: inline-block;
+  flex-shrink: 0;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .console-spinner { animation-duration: 2.4s; }
+}
+
 .iconbtn {
   display: inline-flex;
   align-items: center;

@@ -1,5 +1,6 @@
 import * as React from 'react';
 import type { DrupalCharacter } from '../ConsoleContext';
+import { Spinner } from '../atoms';
 
 interface AddCharacterModalProps {
   campaignId:   string;
@@ -164,6 +165,7 @@ export function AddCharacterModal({
             disabled={submitting || selected.size === 0}
             onClick={() => void handleSubmit()}
           >
+            {submitting && <Spinner />}
             {submitting ? 'Adding...' : `Add ${selected.size > 0 ? selected.size : ''} character${selected.size !== 1 ? 's' : ''}`}
           </button>
         </div>

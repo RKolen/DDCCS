@@ -51,3 +51,4 @@ cloneable_entities:
   - rest_resource_config
   - graphql_server
   - menu_link_content
+  - advancedqueue_queue

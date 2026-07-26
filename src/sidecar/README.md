@@ -20,6 +20,13 @@ Host, port, log level, and reload come from config (`src/config/`) /
 environment — `SIDECAR_HOST` and `SIDECAR_PORT`. `start.sh` launches it in the
 background (logs to `.sidecar.log`).
 
+`SIDECAR_BIND_HOST` (a launch knob read in `run_sidecar.py`, like
+`SIDECAR_WORKERS`) overrides the interface uvicorn listens on without changing
+the address clients dial. Bind every interface so the DDEV web container can
+reach the sidecar over its host gateway for queued AI jobs; set
+`SIDECAR_SECRET` alongside it, since the service is then reachable beyond
+loopback (every route except `/health` then requires `X-Sidecar-Secret`).
+
 ---
 
 ## Endpoints

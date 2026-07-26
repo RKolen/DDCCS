@@ -1,0 +1,19 @@
+uuid: 9e9ea27b-9a1e-4615-a2b7-9a4a80d6f36a
+langcode: en
+status: true
+dependencies: {  }
+_core:
+  default_config_hash: X_IdH7iYcB03o4rhycTABqFTb31ibyRJP3zI8RZwzQ4
+id: dnd_ai
+label: 'D&D AI jobs'
+backend: database
+backend_configuration:
+  lease_time: 3600
+processor: daemon
+processing_time: 0
+threshold:
+  type: 0
+  limit: 0
+  state: all
+locked: true
+stop_when_empty: false

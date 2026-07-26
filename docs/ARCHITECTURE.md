@@ -32,9 +32,11 @@ of truth where all content lives.
 +----------------------------------------------------------+
 ```
 
-All of Drupal, Ollama, Milvus, and Solr run as **DDEV** containers. The sidecar
-and Gatsby dev server run on the host (see `start.sh`), as does ComfyUI (the
-optional portrait service) when `COMFYUI_ENABLED=true`.
+Drupal, Milvus, and Solr run as **DDEV** containers. Everything that loads a
+model runs on the **host** (see `start.sh`): Ollama, the sidecar (which owns
+Piper TTS), the AI job-queue processor, and - when `COMFYUI_ENABLED=true` -
+ComfyUI, alongside the Gatsby dev server. Heavy models inside DDEV double-load
+and crash the box, so that split is a rule, not a preference.
 
 ---
 
@@ -130,6 +132,50 @@ queries and computes spotlight scores. Routes:
 
 See [src/sidecar/README.md](../src/sidecar/README.md).
 
+### Channel 4 — Queued AI jobs (Drupal Advanced Queue -> host)
+
+Anything that takes minutes runs as a **job**, not a held-open request. The
+console posts to `api/enqueue-job.ts`, Drupal's `enqueueAiJob` mutation drops it
+on the single `dnd_ai` queue, and one processor on the host drains that queue
+**one job at a time** — which is what keeps two large models from being resident
+at once on a CPU-only box. The console polls `api/job-status.ts` (`aiJob` /
+`aiJobs`), so navigating away no longer loses the work.
+
+```text
+console --enqueue--> Drupal (dnd_jobs)      queue: dnd_ai, one at a time
+                          |
+     drush advancedqueue:queue:process (host daemon, started by start.sh)
+                          |
+        +-----------------+------------------+
+        |                                    |
+  sidecar /character/portrait          console API routes
+  (single model call; the job           (multi-step orchestrations:
+   writes file + media itself)           run-arc-analysis,
+                                          generate-story-text,
+                                          store-session-summary)
+```
+
+Job types (`drupal-cms/web/modules/custom/dnd_jobs`):
+
+| Job type | Runs | Stores |
+| -------- | ---- | ------ |
+| `dnd_portrait` | sidecar `/character/portrait` | file + media, sets `field_image`; result carries the new `imageUrl` |
+| `dnd_arc_analysis` | console `run-arc-analysis` | per-story analyses + the saved arc |
+| `dnd_story_generation` | console `generate-story-text` | the story text on the job, for review |
+| `dnd_session_summary` | console `store-session-summary` | the summary on the campaign term |
+
+A job type only calls the sidecar directly when the work is a single model call.
+Multi-step orchestrations already exist as console routes and are called there
+rather than growing a second copy of the same prompt/chunking logic in PHP; what
+the queue adds is serialization, persistence, and tracking.
+
+The processor is started by `start.sh` (`JOB_QUEUE_ENABLED`, logs to
+`.jobqueue.log`) and needs `SIDECAR_URL`, `GATSBY_SERVER_URL`, and
+`SIDECAR_JOB_TIMEOUT` in the DDEV web container. Because the container reaches
+the host over its Docker gateway rather than loopback, the sidecar listens on
+`SIDECAR_BIND_HOST` (every interface) while host clients keep dialling
+`SIDECAR_HOST`.
+
 ### Engine to Drupal — `drupal_sync`
 
 The engine writes into Drupal through `src/integration/drupal_sync.py`:
@@ -158,6 +204,8 @@ engine and Drupal.
 | Search | `pages/search.tsx` | sidecar `/search/parse-query` + Milvus |
 | Spotlight scoring | console screens | `api/spotlight.ts` -> sidecar `/eval/spotlight` |
 | Character arc analysis | `CharacterArcScreen` (Characters tab) | `api/arc-analyze-story.ts` (per story) + `api/arc-aggregate.ts` -> sidecar `/character/arc/*`; `api/save-arc.ts` -> Drupal (`saveCharacterArc`) |
+| Portrait generation | `CharacterDetailScreen`, `PortraitStudioScreen` | queued `dnd_portrait` job -> sidecar `/character/portrait` -> Drupal file + media |
+| Long-running AI (queue) | activity drawer (right rail) | `api/enqueue-job.ts` + `api/job-status.ts` -> Drupal `enqueueAiJob` / `aiJob(s)` |
 | NPC profile validation | NPC validator screen | Drupal GraphQL + engine |
 | RAG / semantic retrieval | implicit in AI flows | `src/ai/` + Milvus |
 

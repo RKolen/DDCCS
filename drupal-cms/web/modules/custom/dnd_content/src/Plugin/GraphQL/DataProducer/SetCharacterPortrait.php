@@ -5,17 +5,14 @@ declare(strict_types=1);
 namespace Drupal\dnd_content\Plugin\GraphQL\DataProducer;
 
 use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\Core\File\FileExists;
-use Drupal\Core\File\FileSystemInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Plugin\Context\ContextDefinition;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
-use Drupal\file\FileRepositoryInterface;
+use Drupal\dnd_content\Service\PortraitWriter;
 use Drupal\graphql\Attribute\DataProducer;
 use Drupal\graphql\GraphQL\Execution\FieldContext;
 use Drupal\graphql\Plugin\GraphQL\DataProducer\DataProducerPluginBase;
-use Drupal\media\MediaInterface;
 use Drupal\node\NodeInterface;
 use GraphQL\Error\UserError;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -23,9 +20,10 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 /**
  * Attaches a generated portrait image to a character node.
  *
- * Decodes a base64 PNG produced by the sidecar's ComfyUI endpoint, writes it as
- * a managed file, wraps it in an image media entity, and points the character's
- * field_image at that media. Returns the updated node.
+ * Decodes a base64 PNG produced by the sidecar's ComfyUI endpoint and hands it
+ * to the shared portrait writer, which stores it as a managed file plus image
+ * media and points the character's field_image at that media. Returns the
+ * updated node.
  */
 #[DataProducer(
   id: "set_character_portrait",
@@ -53,11 +51,6 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 final class SetCharacterPortrait extends DataProducerPluginBase implements ContainerFactoryPluginInterface {
 
   /**
-   * Directory portraits are written to, under the public files scheme.
-   */
-  private const PORTRAIT_DIRECTORY = 'public://portraits';
-
-  /**
    * The current user.
    *
    * @var \Drupal\Core\Session\AccountInterface
@@ -72,18 +65,11 @@ final class SetCharacterPortrait extends DataProducerPluginBase implements Conta
   protected EntityTypeManagerInterface $entityTypeManager;
 
   /**
-   * The file repository.
+   * The shared portrait writer.
    *
-   * @var \Drupal\file\FileRepositoryInterface
+   * @var \Drupal\dnd_content\Service\PortraitWriter
    */
-  protected FileRepositoryInterface $fileRepository;
-
-  /**
-   * The file system.
-   *
-   * @var \Drupal\Core\File\FileSystemInterface
-   */
-  protected FileSystemInterface $fileSystem;
+  protected PortraitWriter $portraitWriter;
 
   /**
    * {@inheritdoc}
@@ -106,8 +92,7 @@ final class SetCharacterPortrait extends DataProducerPluginBase implements Conta
     $instance = new self($configuration, $plugin_id, $plugin_definition);
     $instance->currentUser = $container->get('current_user');
     $instance->entityTypeManager = $container->get('entity_type.manager');
-    $instance->fileRepository = $container->get('file.repository');
-    $instance->fileSystem = $container->get('file_system');
+    $instance->portraitWriter = $container->get('dnd_content.portrait_writer');
     return $instance;
   }
 
@@ -135,11 +120,6 @@ final class SetCharacterPortrait extends DataProducerPluginBase implements Conta
     string $alt,
     FieldContext $context,
   ): NodeInterface {
-    $alt = trim($alt);
-    if ($alt === '') {
-      throw new UserError('Alt text is required for a portrait image.');
-    }
-
     $data = base64_decode($image_base64, TRUE);
     if ($data === FALSE || $data === '') {
       throw new UserError('Invalid portrait image: expected base64-encoded data.');
@@ -151,10 +131,12 @@ final class SetCharacterPortrait extends DataProducerPluginBase implements Conta
       throw new UserError('You do not have permission to update this character.');
     }
 
-    $media = $this->createPortraitMedia($node, $data, $alt);
-
-    $node->set('field_image', ['target_id' => $media->id()]);
-    $node->save();
+    try {
+      $this->portraitWriter->attach($node, $data, $alt, (int) $this->currentUser->id());
+    }
+    catch (\RuntimeException $e) {
+      throw new UserError($e->getMessage());
+    }
 
     return $node;
   }
@@ -180,68 +162,6 @@ final class SetCharacterPortrait extends DataProducerPluginBase implements Conta
       throw new UserError('Character not found.');
     }
     return $node;
-  }
-
-  /**
-   * Write the image as a managed file and wrap it in an image media entity.
-   *
-   * @param \Drupal\node\NodeInterface $node
-   *   The character the portrait belongs to, used to name the file and media.
-   * @param string $data
-   *   The raw (decoded) PNG bytes.
-   * @param string $alt
-   *   The alt text.
-   *
-   * @return \Drupal\media\MediaInterface
-   *   The saved image media entity.
-   *
-   * @throws \GraphQL\Error\UserError
-   *   When the destination directory or file cannot be written.
-   */
-  private function createPortraitMedia(NodeInterface $node, string $data, string $alt): MediaInterface {
-    // prepareDirectory() takes the directory by reference, so it needs a
-    // variable rather than the class constant directly.
-    $directory = self::PORTRAIT_DIRECTORY;
-    if (!$this->fileSystem->prepareDirectory(
-      $directory,
-      FileSystemInterface::CREATE_DIRECTORY | FileSystemInterface::MODIFY_PERMISSIONS
-    )) {
-      throw new UserError('Could not prepare the portrait directory.');
-    }
-
-    // Timestamped so regenerating a portrait never overwrites the previous
-    // file, which older revisions may still reference.
-    $filename = sprintf('portrait-%s-%d.png', $node->uuid(), time());
-
-    try {
-      $file = $this->fileRepository->writeData(
-        $data,
-        $directory . '/' . $filename,
-        FileExists::Rename
-      );
-    }
-    catch (\Exception $e) {
-      throw new UserError('Could not write the portrait file: ' . $e->getMessage());
-    }
-
-    // Type the media so it shows under the right filter in the portrait picker.
-    $is_pc = (bool) $node->get('field_character_type')->value;
-    $media_type = $is_pc ? 'character_portrait' : 'npc_portrait';
-
-    $media = $this->entityTypeManager->getStorage('media')->create([
-      'bundle' => 'image',
-      'name' => sprintf('Portrait: %s', $node->label()),
-      'uid' => $this->currentUser->id(),
-      'status' => 1,
-      'field_media_type' => $media_type,
-      'field_media_image' => [
-        'target_id' => $file->id(),
-        'alt' => $alt,
-      ],
-    ]);
-    $media->save();
-
-    return $media;
   }
 
 }

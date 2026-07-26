@@ -1,0 +1,7 @@
+services:
+  dnd_content.portrait_writer:
+    class: Drupal\dnd_content\Service\PortraitWriter
+    arguments:
+      - '@entity_type.manager'
+      - '@file.repository'
+      - '@file_system'

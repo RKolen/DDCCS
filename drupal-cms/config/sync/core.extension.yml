@@ -1,6 +1,7 @@
 _core:
   default_config_hash: 4GIX5Esnc_umpXUBj4IIocRX7Mt5fPhm4AgXfE3E56E
 module:
+  advancedqueue: 0
   ai: 0
   ai_provider_ollama: 0
   ai_search: 0
@@ -16,6 +17,7 @@ module:
   ddccs_filters: 0
   ddccs_gatsby_auth: 0
   dnd_content: 0
+  dnd_jobs: 0
   dnd_migrate: 0
   dnd_search: 0
   dynamic_page_cache: 0

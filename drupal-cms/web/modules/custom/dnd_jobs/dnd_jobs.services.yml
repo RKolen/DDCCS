@@ -1,0 +1,16 @@
+services:
+  dnd_jobs.console_client:
+    class: Drupal\dnd_jobs\Service\ConsoleClient
+    arguments:
+      - '@http_client'
+
+  dnd_jobs.sidecar_client:
+    class: Drupal\dnd_jobs\Service\SidecarClient
+    arguments:
+      - '@http_client'
+
+  dnd_jobs.job_queue:
+    class: Drupal\dnd_jobs\Service\JobQueue
+    arguments:
+      - '@entity_type.manager'
+      - '@database'

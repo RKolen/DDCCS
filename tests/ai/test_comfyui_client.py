@@ -16,9 +16,14 @@ ComfyUIClient = test_helpers.safe_from_import(
 )
 
 
+# A stand-in host, not a real address: the tests patch the transport, and a
+# host:port literal here would drift from whatever COMFYUI_HOST/PORT really are.
+_BASE_URL = "http://comfyui.test"
+
+
 def _make_client() -> Any:
     """Return a client pointed at a stable fake base URL."""
-    return ComfyUIClient("http://localhost:8188/", timeout=5.0)
+    return ComfyUIClient(_BASE_URL + "/", timeout=5.0)
 
 
 def test_is_available_true_on_200() -> None:
@@ -50,7 +55,7 @@ def test_free_returns_true_on_200() -> None:
         "src.ai.comfyui_client.requests.post", return_value=_resp(200)
     ) as post:
         assert client.free() is True
-        assert post.call_args.args[0] == "http://localhost:8188/free"
+        assert post.call_args.args[0] == _BASE_URL + "/free"
     print("  [OK] Posts to /free and reports success")
 
 

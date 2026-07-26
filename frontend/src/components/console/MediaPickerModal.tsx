@@ -9,7 +9,7 @@
  */
 
 import * as React from 'react';
-import { Icon } from './atoms';
+import { Icon, Spinner } from './atoms';
 
 interface MediaOption {
   id:   string;
@@ -178,7 +178,7 @@ export function MediaPickerModal({
             disabled={saving || selectedId == null || isCurrent}
             onClick={() => void handleSave()}
           >
-            <Icon name="image" size={11} />
+            {saving ? <Spinner /> : <Icon name="image" size={11} />}
             {saving ? 'Saving…' : (isCurrent ? 'Current portrait' : 'Set as portrait')}
           </button>
           {error != null && (
