@@ -24,16 +24,26 @@ export interface DrupalCampaign {
   campaignOverview?: string | null;
 }
 
+/** A taxonomy term reduced to what the console needs: identity and label. */
+export interface TermRef {
+  id: string;
+  name: string;
+}
+
 export interface DrupalCharacter {
   id: string;
   title: string;
+  firstName: string | null;
+  lastName: string | null;
   nickname: string | null;
   level: number | null;
   armorClass: number | null;
   maximumHitpoints: number | null;
   movementSpeed?: number | null;
   proficiencyBonus?: number | null;
+  gold: number | null;
   pronouns: string | null;
+  gender: string | null;
   role?: string | null;
   /** Class name: omitted for now — 'class' as a field name breaks graphql-js parser */
   characterClass: string | null;
@@ -41,21 +51,54 @@ export interface DrupalCharacter {
   characterType: boolean | null;
   /** true = template / source character, false = campaign clone */
   sourceCharacter: boolean | null;
+  /**
+   * field_recurring. On an NPC this is what marks it as deserving a full
+   * character profile rather than a walk-on part, and the editor uses it to
+   * decide which field groups to offer.
+   */
+  recurring: boolean | null;
   campaign: string | null;
   campaignId: string | null;
   path: string | null;
   imageUrl: string | null;
   /** Reusable image-generation prompt (field_image_prompt), or null. */
   imagePrompt: string | null;
-  /** Rich profile fields for story generation */
+  /**
+   * Rich profile fields for story generation. The term fields are carried as
+   * both the display name (what most screens read) and the term UUID (what the
+   * editor must send back to write the reference).
+   */
   species: string | null;
+  speciesId: string | null;
   lineage: string | null;
+  lineageId: string | null;
   background: string | null;
+  backgroundId: string | null;
   bonds: string[];
   ideals: string[];
   flaws: string[];
   personalityTraits: string[];
   majorPlotActions: string[];
+  specializedAbilities: string[];
+  plotHooks: string[];
+  abilities: string[];
+  personality: string | null;
+  notes: string | null;
+  languages: TermRef[];
+  skills: TermRef[];
+  tools: TermRef[];
+  /** Antagonist fields — populated on NPCs, generally empty on PCs. */
+  encounterTactics: string[];
+  defeatConditions: string[];
+  lairActions: string[];
+  legendaryActions: string[];
+  regionalEffects: string[];
+  /** Per-character AI overrides. */
+  aiEnabled: boolean | null;
+  aiModel: string | null;
+  aiTemperature: number | null;
+  aiMaxTokens: number | null;
+  aiSystemPrompt: string | null;
   voiceId: string | null;
   voicePitch: number | null;
   voiceSpeed: number | null;
@@ -230,16 +273,56 @@ export function storiesForCampaign(data: ConsoleData, campaignName: string): Dru
   return data.stories.filter(s => s.campaign === campaignName);
 }
 
-export function charactersForCampaign(data: ConsoleData, campaignName: string): DrupalCharacter[] {
-  // A character belongs to a campaign either by its own field_campaign (clones)
-  // or by membership in the campaign term's current party (source characters
-  // added directly to a party). The party is the authoritative list, so union
-  // both signals.
+/**
+ * Scope an already-filtered roster to one campaign.
+ *
+ * A character belongs to a campaign either by its own field_campaign (clones)
+ * or by membership in the campaign term's current party (source characters
+ * added directly to a party). The party is the authoritative list, so union
+ * both signals.
+ */
+function scopeToCampaign(
+  data: ConsoleData,
+  roster: DrupalCharacter[],
+  campaignName: string,
+): DrupalCharacter[] {
   const campaign = data.campaigns.find(c => c.name === campaignName);
   const partyIds = new Set(campaign?.currentPartyIds ?? []);
-  return playerCharacters(data).filter(
-    c => c.campaign === campaignName || partyIds.has(c.id),
-  );
+  return roster.filter(c => c.campaign === campaignName || partyIds.has(c.id));
+}
+
+export function charactersForCampaign(data: ConsoleData, campaignName: string): DrupalCharacter[] {
+  return scopeToCampaign(data, playerCharacters(data), campaignName);
+}
+
+export function npcsForCampaign(data: ConsoleData, campaignName: string): DrupalCharacter[] {
+  return scopeToCampaign(data, npcCharacters(data), campaignName);
+}
+
+/**
+ * The roster a character screen should show: PCs or NPCs, scoped to the active
+ * campaign when there is one.
+ *
+ * `pinnedId` is a character that must appear even when it falls outside that
+ * scope — the one arrived at from a deep link or from the completeness audit.
+ * Without it, following a link to a character who is not in the active
+ * campaign's party lands on an empty or wrong selection.
+ */
+export function rosterForScreen(
+  data: ConsoleData,
+  options: { npcMode?: boolean; campaignName?: string | null; pinnedId?: string | null },
+): DrupalCharacter[] {
+  const { npcMode = false, campaignName = null, pinnedId = null } = options;
+  const all = npcMode ? npcCharacters(data) : playerCharacters(data);
+  const scoped = campaignName != null && campaignName !== ''
+    ? scopeToCampaign(data, all, campaignName)
+    : all;
+
+  if (pinnedId == null || scoped.some(c => c.id === pinnedId)) {
+    return scoped;
+  }
+  const pinned = data.characters.find(c => c.id === pinnedId);
+  return pinned ? [pinned, ...scoped] : scoped;
 }
 
 /* ────────────────────────────────────────────────────────────

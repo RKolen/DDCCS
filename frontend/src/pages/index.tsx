@@ -13,17 +13,64 @@
 import * as React from 'react';
 import { graphql } from 'gatsby';
 import type { HeadFC, PageProps } from 'gatsby';
+import { MENU_DATA } from '../components/console/menuData';
+import type { MenuSection } from '../components/console/menuData';
 import { StatelyLedger } from '../components/console/StatelyLedger';
 import { buildConsoleData } from '../utils/buildConsoleData';
 import type { ConsoleQueryData } from '../utils/buildConsoleData';
 
 /* ────────────────────────────────────────────────────────────
+   Deep links
+   ──────────────────────────────────────────────────────────── */
+
+/**
+ * Where a `/?section=…&item=…&char=…` link should open the console.
+ *
+ * Character and NPC pages link here to reach the profile editor. The section
+ * and item are validated against the menu rather than trusted, so a stale or
+ * hand-edited link falls back to the default landing screen instead of
+ * rendering the "missing screen" placeholder.
+ */
+function deepLink(search: string): {
+  section?: MenuSection['id'];
+  item?: string;
+  charId?: string;
+} {
+  const params  = new URLSearchParams(search);
+  const wanted  = params.get('section');
+  const section = MENU_DATA.sections.find(s => s.id === wanted);
+  if (section == null) {
+    return {};
+  }
+  const itemId = params.get('item');
+  const item   = section.items.find(i => i.id === itemId);
+  return {
+    section: section.id,
+    item:    item?.id,
+    charId:  params.get('char') ?? undefined,
+  };
+}
+
+/* ────────────────────────────────────────────────────────────
    Page
    ──────────────────────────────────────────────────────────── */
 
-const IndexPage: React.FC<PageProps<ConsoleQueryData>> = ({ data }) => (
-  <StatelyLedger fullscreen liveData={buildConsoleData(data)} />
-);
+const IndexPage: React.FC<PageProps<ConsoleQueryData>> = ({ data, location }) => {
+  const link = deepLink(location.search);
+  return (
+    <StatelyLedger
+      fullscreen
+      /* Keys on the link so a second navigation from a character page remounts
+         the console on the newly named character rather than keeping the
+         selection the first link established. */
+      key={`${link.section ?? ''}:${link.item ?? ''}:${link.charId ?? ''}`}
+      initialSection={link.section}
+      initialItem={link.item}
+      initialCharId={link.charId}
+      liveData={buildConsoleData(data)}
+    />
+  );
+};
 
 /* ────────────────────────────────────────────────────────────
    GraphQL query
@@ -49,15 +96,19 @@ export const query = graphql`
           id
           title
           firstName
+          lastName
           nickname
           level
           armorClass
           maximumHitpoints
           movementSpeed
           proficiencyBonus
+          gold
           pronouns
+          gender
           characterType
           sourceCharacter
+          recurring
           role
           path
           campaign {
@@ -72,14 +123,32 @@ export const query = graphql`
             }
           }
           imagePrompt
-          species    { ... on Drupal_TermSpecies     { name } }
-          lineage    { ... on Drupal_TermLineage     { name } }
-          background { ... on Drupal_TermBackground  { name } }
+          species    { ... on Drupal_TermSpecies     { id name } }
+          lineage    { ... on Drupal_TermLineage     { id name } }
+          background { ... on Drupal_TermBackground  { id name } }
+          languages  { ... on Drupal_TermLanguage    { id name } }
+          skills     { ... on Drupal_TermSkill       { id name } }
+          tools      { ... on Drupal_TermToolProfiency { id name } }
           personalityTraits { value }
           bonds             { value }
           ideals            { value }
           flaws             { value }
           majorPlotActions  { value }
+          specializedAbilities { value }
+          plotHooks         { value }
+          abilities         { value }
+          personality       { value }
+          notes             { value }
+          encounterTactics  { value }
+          defeatConditions  { value }
+          lairActions       { value }
+          legendaryActions  { value }
+          regionalEffects   { value }
+          aiEnabled
+          aiModel
+          aiTemperature
+          aiMaxTokens
+          aiSystemPrompt    { value }
           voiceIdRef { ... on Drupal_TermVoiceId { name } }
           voicePitch
           voiceSpeed

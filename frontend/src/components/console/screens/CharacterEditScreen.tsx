@@ -1,38 +1,248 @@
 /**
- * CharacterEditScreen — `characters / edit`
+ * CharacterEditScreen — `characters/edit` and `npcs/n-edit`
  *
- * In-app richness-field editor. Required fields (name, class, level, etc.)
- * are managed in Drupal. This screen edits the optional fields that AI
- * generation benefits from: pronouns, background, the four RP quadruplet
- * (traits / ideals / bonds / flaws).
+ * The single place a character record is edited. Covers every non-paragraph
+ * field: identity, ancestry, vitals, roleplay, story, proficiencies, the
+ * antagonist fields NPCs use, and the per-character AI overrides.
  *
- * Submits via /api/update-character (GraphQL mutation proxied server-side).
- * Portrait upload is intentionally excluded — handled separately via ComfyUI.
+ * Three field groups are deliberately not editable here and are reached by a
+ * button instead, because each has a dedicated screen with tooling this form
+ * has no business duplicating:
+ *
+ *   portrait  -> characters/ascii   (Portrait Studio, ComfyUI)
+ *   voice     -> characters/consult (voice picker with live preview)
+ *   arc       -> characters/arc     (Character Arc Analysis)
+ *
+ * Campaign membership and the player/NPC flag are shown read-only: moving a
+ * character between campaigns or flipping it to an NPC is a structural change,
+ * not a profile edit.
+ *
+ * Writes go through /api/update-character-profile, which PATCHes only the
+ * fields that changed. The older /api/update-character is still the voice and
+ * image-prompt path and is untouched.
  */
 
 import * as React from 'react';
+import { graphql, useStaticQuery } from 'gatsby';
 import type { ScreenProps } from '../ScreenRouter';
 import { Icon, Spinner } from '../atoms';
-import { useConsoleData, playerCharacters } from '../ConsoleContext';
-import type { DrupalCharacter } from '../ConsoleContext';
-import { MediaPickerModal } from '../MediaPickerModal';
+import {
+  useConsoleData, playerCharacters, npcCharacters, rosterForScreen,
+} from '../ConsoleContext';
+import type { ConsoleData, DrupalCharacter, TermRef } from '../ConsoleContext';
+import {
+  EditSection, FieldGrid, TextField, TextAreaField, NumberField, BoolField,
+  SelectField, TextRowsField, TermSelect, TermMultiSelect, ReadOnlyField,
+  HandoffCard,
+} from '../FieldEditors';
 
 /* ────────────────────────────────────────────────────────────
-   API types
+   Types
    ──────────────────────────────────────────────────────────── */
 
 interface ApiError { error: string }
 
-/* ────────────────────────────────────────────────────────────
-   Helpers
-   ──────────────────────────────────────────────────────────── */
+interface TermNodes { nodes: TermRef[] }
 
-function splitLines(v: string): string[] {
-  return v.split('\n').map(s => s.trim()).filter(Boolean);
+interface TermOptionsQuery {
+  drupal: {
+    termSpeciesItems:    TermNodes;
+    termLineages:        TermNodes;
+    termBackgrounds:     TermNodes;
+    termLanguages:       TermNodes;
+    termSkills:          TermNodes;
+    termToolProfiencies: TermNodes;
+  };
 }
 
-function joinLines(arr: string[]): string {
-  return arr.join('\n');
+/** The editable shape of a character, flattened for form state. */
+interface FormState {
+  title:            string;
+  firstName:        string;
+  lastName:         string;
+  nickname:         string;
+  pronouns:         string;
+  gender:           string;
+  role:             string;
+  speciesId:        string | null;
+  lineageId:        string | null;
+  backgroundId:     string | null;
+  level:            number | null;
+  maximumHitpoints: number | null;
+  armorClass:       number | null;
+  movementSpeed:    number | null;
+  proficiencyBonus: number | null;
+  gold:             number | null;
+  personalityTraits: string[];
+  ideals:            string[];
+  bonds:             string[];
+  flaws:             string[];
+  personality:       string;
+  notes:             string;
+  majorPlotActions:     string[];
+  specializedAbilities: string[];
+  plotHooks:            string[];
+  abilities:            string[];
+  languages: TermRef[];
+  skills:    TermRef[];
+  tools:     TermRef[];
+  recurring:        boolean;
+  encounterTactics: string[];
+  defeatConditions: string[];
+  lairActions:      string[];
+  legendaryActions: string[];
+  regionalEffects:  string[];
+  aiEnabled:      boolean;
+  aiModel:        string;
+  aiTemperature:  number | null;
+  aiMaxTokens:    number | null;
+  aiSystemPrompt: string;
+}
+
+type SectionId =
+  | 'identity' | 'ancestry' | 'vitals' | 'roleplay'
+  | 'story' | 'proficiencies' | 'antagonist' | 'ai';
+
+/* ────────────────────────────────────────────────────────────
+   Form state helpers
+   ──────────────────────────────────────────────────────────── */
+
+const GENDER_OPTIONS = [
+  { value: 'female', label: 'Female' },
+  { value: 'male',   label: 'Male' },
+  { value: 'other',  label: 'Other' },
+];
+
+function toForm(char: DrupalCharacter): FormState {
+  return {
+    title:            char.title,
+    firstName:        char.firstName ?? '',
+    lastName:         char.lastName ?? '',
+    nickname:         char.nickname ?? '',
+    pronouns:         char.pronouns ?? '',
+    gender:           char.gender ?? '',
+    role:             char.role ?? '',
+    speciesId:        char.speciesId,
+    lineageId:        char.lineageId,
+    backgroundId:     char.backgroundId,
+    level:            char.level,
+    maximumHitpoints: char.maximumHitpoints,
+    armorClass:       char.armorClass,
+    movementSpeed:    char.movementSpeed ?? null,
+    proficiencyBonus: char.proficiencyBonus ?? null,
+    gold:             char.gold,
+    personalityTraits: char.personalityTraits,
+    ideals:            char.ideals,
+    bonds:             char.bonds,
+    flaws:             char.flaws,
+    personality:       char.personality ?? '',
+    notes:             char.notes ?? '',
+    majorPlotActions:     char.majorPlotActions,
+    specializedAbilities: char.specializedAbilities,
+    plotHooks:            char.plotHooks,
+    abilities:            char.abilities,
+    languages: char.languages,
+    skills:    char.skills,
+    tools:     char.tools,
+    recurring:        char.recurring ?? false,
+    encounterTactics: char.encounterTactics,
+    defeatConditions: char.defeatConditions,
+    lairActions:      char.lairActions,
+    legendaryActions: char.legendaryActions,
+    regionalEffects:  char.regionalEffects,
+    aiEnabled:      char.aiEnabled ?? false,
+    aiModel:        char.aiModel ?? '',
+    aiTemperature:  char.aiTemperature,
+    aiMaxTokens:    char.aiMaxTokens,
+    aiSystemPrompt: char.aiSystemPrompt ?? '',
+  };
+}
+
+/** Rows the operator left blank are not values; drop them before comparing. */
+function cleanRows(rows: string[]): string[] {
+  return rows.map(r => r.trim()).filter(r => r !== '');
+}
+
+function sameRows(a: string[], b: string[]): boolean {
+  return a.length === b.length && a.every((v, i) => v === b[i]);
+}
+
+function termIds(terms: TermRef[]): string[] {
+  return terms.map(t => t.id);
+}
+
+/**
+ * The fields that differ from what Drupal holds, keyed as the mutation expects.
+ *
+ * Sending only these is what makes the editor safe to use on a partially
+ * loaded record: a field the console never queried is never in the diff, so it
+ * cannot be blanked by a save.
+ */
+function buildPatch(form: FormState, char: DrupalCharacter): Record<string, unknown> {
+  const patch: Record<string, unknown> = {};
+  const base = toForm(char);
+
+  const scalar = <K extends keyof FormState>(key: K, current: FormState[K]): void => {
+    if (current !== base[key]) patch[key] = current;
+  };
+
+  scalar('title', form.title.trim());
+  scalar('firstName', form.firstName);
+  scalar('lastName', form.lastName);
+  scalar('nickname', form.nickname);
+  scalar('pronouns', form.pronouns);
+  scalar('gender', form.gender);
+  scalar('role', form.role);
+  scalar('speciesId', form.speciesId);
+  scalar('lineageId', form.lineageId);
+  scalar('backgroundId', form.backgroundId);
+  scalar('level', form.level);
+  scalar('maximumHitpoints', form.maximumHitpoints);
+  scalar('armorClass', form.armorClass);
+  scalar('movementSpeed', form.movementSpeed);
+  scalar('proficiencyBonus', form.proficiencyBonus);
+  scalar('gold', form.gold);
+  scalar('personality', form.personality);
+  scalar('notes', form.notes);
+  scalar('recurring', form.recurring);
+  scalar('aiEnabled', form.aiEnabled);
+  scalar('aiModel', form.aiModel);
+  scalar('aiTemperature', form.aiTemperature);
+  scalar('aiMaxTokens', form.aiMaxTokens);
+  scalar('aiSystemPrompt', form.aiSystemPrompt);
+
+  /* The term selects hold UUIDs but the mutation keys them by field name. */
+  if (patch.speciesId !== undefined) {
+    patch.species = patch.speciesId;
+    delete patch.speciesId;
+  }
+  if (patch.lineageId !== undefined) {
+    patch.lineage = patch.lineageId;
+    delete patch.lineageId;
+  }
+  if (patch.backgroundId !== undefined) {
+    patch.background = patch.backgroundId;
+    delete patch.backgroundId;
+  }
+
+  const rowFields: Array<keyof FormState> = [
+    'personalityTraits', 'ideals', 'bonds', 'flaws',
+    'majorPlotActions', 'specializedAbilities', 'plotHooks', 'abilities',
+    'encounterTactics', 'defeatConditions', 'lairActions',
+    'legendaryActions', 'regionalEffects',
+  ];
+  for (const key of rowFields) {
+    const next = cleanRows(form[key] as string[]);
+    if (!sameRows(next, base[key] as string[])) patch[key] = next;
+  }
+
+  const termFields: Array<'languages' | 'skills' | 'tools'> = ['languages', 'skills', 'tools'];
+  for (const key of termFields) {
+    const next = termIds(form[key]);
+    if (!sameRows(next, termIds(base[key]))) patch[key] = next;
+  }
+
+  return patch;
 }
 
 /* ────────────────────────────────────────────────────────────
@@ -85,65 +295,61 @@ function CharPicker({
    Edit form
    ──────────────────────────────────────────────────────────── */
 
-function EditForm({ char }: { char: DrupalCharacter }): React.ReactElement {
-  const [pronouns,   setPronouns]   = React.useState(char.pronouns ?? '');
-  const [background, setBackground] = React.useState(char.background ?? '');
-  const [traits,     setTraits]     = React.useState(joinLines(char.personalityTraits));
-  const [ideals,     setIdeals]     = React.useState(joinLines(char.ideals));
-  const [bonds,      setBonds]      = React.useState(joinLines(char.bonds));
-  const [flaws,      setFlaws]      = React.useState(joinLines(char.flaws));
+interface EditFormProps {
+  char: DrupalCharacter;
+  data: ConsoleData;
+  options: TermOptionsQuery['drupal'];
+  onJump: (itemId: string, targetIndex: number) => void;
+}
 
-  const [saving,  setSaving]  = React.useState(false);
-  const [error,   setError]   = React.useState<string | null>(null);
+function EditForm({ char, data, options, onJump }: EditFormProps): React.ReactElement {
+  const [form, setForm] = React.useState<FormState>(() => toForm(char));
+  const [open, setOpen] = React.useState<Record<SectionId, boolean>>({
+    identity: true, ancestry: true, vitals: false, roleplay: true,
+    story: false, proficiencies: false, antagonist: false, ai: false,
+  });
+  const [saving, setSaving]   = React.useState(false);
+  const [error, setError]     = React.useState<string | null>(null);
   const [savedAt, setSavedAt] = React.useState<string | null>(null);
-  const [pickerOpen,   setPickerOpen]   = React.useState(false);
-  const [portraitUrl,  setPortraitUrl]  = React.useState<string | null>(char.imageUrl);
 
-  /* Reset form whenever the selected character changes */
-  React.useEffect(() => {
-    setPronouns(char.pronouns ?? '');
-    setBackground(char.background ?? '');
-    setTraits(joinLines(char.personalityTraits));
-    setIdeals(joinLines(char.ideals));
-    setBonds(joinLines(char.bonds));
-    setFlaws(joinLines(char.flaws));
-    setError(null);
+  const set = <K extends keyof FormState>(key: K, value: FormState[K]): void => {
+    setForm(prev => ({ ...prev, [key]: value }));
     setSavedAt(null);
-    setPickerOpen(false);
-    setPortraitUrl(char.imageUrl);
-  }, [char.id]); /* eslint-disable-line react-hooks/exhaustive-deps */
+  };
+  const toggle = (id: SectionId): void => setOpen(prev => ({ ...prev, [id]: !prev[id] }));
 
-  const isDirty =
-    pronouns   !== (char.pronouns ?? '')           ||
-    background !== (char.background ?? '')          ||
-    traits     !== joinLines(char.personalityTraits) ||
-    ideals     !== joinLines(char.ideals)            ||
-    bonds      !== joinLines(char.bonds)             ||
-    flaws      !== joinLines(char.flaws);
+  const patch = buildPatch(form, char);
+  const isDirty = Object.keys(patch).length > 0;
+
+  const isNpc = char.characterType === false;
+  /* An NPC only earns the full character sheet once it is marked recurring;
+     a walk-on part does not need vitals, proficiencies or an AI profile. */
+  const fullProfile = !isNpc || form.recurring;
 
   const handleSave = async (): Promise<void> => {
     setSaving(true);
     setError(null);
     try {
-      const res = await fetch('/api/update-character', {
+      const res = await fetch('/api/update-character-profile', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          id:                char.id,
-          pronouns:          pronouns.trim()   || null,
-          background:        background.trim() || null,
-          personalityTraits: splitLines(traits),
-          ideals:            splitLines(ideals),
-          bonds:             splitLines(bonds),
-          flaws:             splitLines(flaws),
-        }),
+        body:    JSON.stringify({ id: char.id, fields: patch }),
       });
       if (!res.ok) {
-        const data = (await res.json()) as ApiError;
-        setError(data.error ?? `Error ${res.status}`);
+        const body = (await res.json()) as ApiError;
+        setError(body.error ?? `Error ${res.status}`);
         return;
       }
       setSavedAt(new Date().toLocaleTimeString());
+      /* Drop blank rows from the form now that they were dropped on the way
+         out, so the view matches what was stored. */
+      setForm(prev => ({
+        ...prev,
+        personalityTraits: cleanRows(prev.personalityTraits),
+        ideals:            cleanRows(prev.ideals),
+        bonds:             cleanRows(prev.bonds),
+        flaws:             cleanRows(prev.flaws),
+      }));
     } catch {
       setError('Network error — could not reach the server.');
     } finally {
@@ -151,150 +357,384 @@ function EditForm({ char }: { char: DrupalCharacter }): React.ReactElement {
     }
   };
 
-  const inputStyle: React.CSSProperties = {
-    width: '100%', background: 'var(--canvas)',
-    border: '1px solid var(--rule)', borderRadius: 4,
-    color: 'var(--ink)', fontFamily: 'var(--font-body)', fontSize: 14,
-    padding: '8px 10px',
-  };
-  const labelStyle: React.CSSProperties = {
-    display: 'block', fontFamily: 'var(--font-display)', fontSize: 9,
-    fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase',
-    color: 'var(--brass-dim)', marginBottom: 5,
-  };
-  const hintStyle: React.CSSProperties = {
-    fontFamily: 'var(--font-body)', fontStyle: 'italic',
-    fontSize: 11, color: 'var(--ink-faint)', marginLeft: 8,
-  };
+  const portraitIdx = playerCharacters(data).findIndex(c => c.id === char.id);
+  const npcIdx      = npcCharacters(data).findIndex(c => c.id === char.id);
+  const studioIdx   = isNpc ? npcIdx : portraitIdx;
+
+  const voiceSummary = char.voiceId != null
+    ? `${char.voiceId} · pitch ${char.voicePitch ?? 0} · speed ${char.voiceSpeed ?? 1}`
+    : 'No voice assigned';
+  const arcSummary = char.arc != null
+    ? `${char.arc.stage} · ${char.arc.direction} · ${char.arc.storiesAnalyzed} stories analysed`
+    : 'Never analysed';
 
   return (
     <div className="char-sheet-detail" style={{ flex: 1, overflowY: 'auto', padding: '28px 32px 40px' }}>
 
-      {/* Character header */}
-      <div style={{ marginBottom: 28 }}>
-        <span className="reader-eyebrow">Characters · Edit profile</span>
-        <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 26, color: 'var(--brass-bright)', letterSpacing: '0.04em', margin: '4px 0 6px' }}>
+      {/* Header */}
+      <div style={{ marginBottom: 22 }}>
+        <span className="reader-eyebrow">{isNpc ? 'NPCs' : 'Characters'} · Edit profile</span>
+        <h2 style={{
+          fontFamily: 'var(--font-display)', fontSize: 26, color: 'var(--brass-bright)',
+          letterSpacing: '0.04em', margin: '4px 0 6px',
+        }}>
           {char.title}
         </h2>
-        {char.characterClass != null && (
-          <p style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--ink-dim)', margin: 0 }}>
-            {char.characterClass}{char.level != null ? ` · Level ${char.level}` : ''}{char.campaign != null ? ` · ${char.campaign}` : ''}
-          </p>
-        )}
-      </div>
-
-      {/* Portrait */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 24 }}>
-        <div className="char-sheet-portrait" style={{ width: 72, height: 96, borderRadius: 4, overflow: 'hidden', flexShrink: 0 }}>
-          {portraitUrl
-            ? <img src={portraitUrl} alt={char.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-            : <span className="portrait-placeholder">{char.title.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()}</span>
-          }
-        </div>
-        <div>
-          <label style={labelStyle}>Portrait</label>
-          <button type="button" className="ghost-btn" onClick={() => setPickerOpen(true)}>
-            <Icon name="image" size={11} /> Select portrait
-          </button>
-        </div>
-      </div>
-
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-
-        {/* Single-line fields */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-          <div>
-            <label style={labelStyle}>Pronouns</label>
-            <input
-              type="text"
-              value={pronouns}
-              onChange={e => setPronouns(e.target.value)}
-              placeholder="e.g. she/her"
-              style={inputStyle}
-            />
-          </div>
-          <div>
-            <label style={labelStyle}>Background</label>
-            <input
-              type="text"
-              value={background}
-              onChange={e => setBackground(e.target.value)}
-              placeholder="e.g. Soldier, Outlander"
-              style={inputStyle}
-            />
-          </div>
-        </div>
-
-        {/* RP quadruplet */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-          {([
-            ['Personality traits', traits,  setTraits,  'What does this character look, act, and speak like?'],
-            ['Ideals',             ideals,  setIdeals,  'What drives this character above all else?'],
-            ['Bonds',              bonds,   setBonds,   'Who or what does this character care most about?'],
-            ['Flaws',              flaws,   setFlaws,   "What are this character's vices or compulsions?"],
-          ] as const).map(([label, value, setter, hint]) => (
-            <div key={label}>
-              <label style={labelStyle}>
-                {label}
-                <span style={hintStyle}>one per line</span>
-              </label>
-              <textarea
-                rows={4}
-                value={value}
-                onChange={e => setter(e.target.value)}
-                placeholder={hint}
-                style={{ ...inputStyle, resize: 'vertical' }}
-              />
-            </div>
-          ))}
-        </div>
-
-        {/* Footer */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 14, paddingTop: 8 }}>
-          <button
-            type="button"
-            className="primary-btn"
-            disabled={saving || !isDirty}
-            onClick={() => void handleSave()}
-          >
-            {saving ? <Spinner /> : <Icon name="tools" size={11} />}
-            {saving ? 'Saving…' : 'Save changes'}
-          </button>
-
-          {!isDirty && savedAt == null && (
-            <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--ink-faint)' }}>
-              No changes
-            </span>
-          )}
-          {savedAt != null && !isDirty && (
-            <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--color-success)' }}>
-              Saved at {savedAt}
-            </span>
-          )}
-          {error != null && (
-            <span style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--color-danger)' }}>
-              {error}
-            </span>
-          )}
-        </div>
-
-        <p style={{ fontFamily: 'var(--font-body)', fontStyle: 'italic', fontSize: 12, color: 'var(--ink-faint)', margin: 0 }}>
-          Name, class, level, and combat stats are managed in Drupal. Portrait
-          changes save immediately; reload the page to reflect updates in other
-          screens.
+        <p style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--ink-dim)', margin: 0 }}>
+          {[
+            char.characterClass,
+            char.level != null ? `Level ${char.level}` : null,
+            char.campaign,
+            isNpc ? 'NPC' : 'Player character',
+          ].filter(Boolean).join(' · ')}
         </p>
       </div>
 
-      {pickerOpen && (
-        <MediaPickerModal
-          characterId={char.id}
-          characterTitle={char.title}
-          currentImageUrl={portraitUrl}
-          mediaType={char.characterType === false ? 'npc_portrait' : 'character_portrait'}
-          onClose={() => setPickerOpen(false)}
-          onSelected={url => setPortraitUrl(url)}
+      {/* Handoffs to the screens that own these fields */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 22 }}>
+        <HandoffCard
+          title="Portrait"
+          summary={char.imageUrl != null ? 'Generated in the portrait studio' : 'No portrait yet'}
+          actionLabel="Open portrait studio"
+          thumbnailUrl={char.imageUrl}
+          thumbnailAlt={char.title}
+          onOpen={() => onJump(isNpc ? 'n-ascii' : 'ascii', studioIdx)}
         />
-      )}
+        <HandoffCard
+          title="Voice"
+          summary={voiceSummary}
+          actionLabel="Open consultation"
+          onOpen={() => onJump(isNpc ? 'n-consult' : 'consult', studioIdx)}
+        />
+        <HandoffCard
+          title="Arc analysis"
+          summary={arcSummary}
+          actionLabel="Open arc analysis"
+          onOpen={() => onJump(isNpc ? 'n-arc' : 'arc', studioIdx)}
+        />
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+
+        <EditSection title="Identity" open={open.identity} onToggle={() => toggle('identity')}>
+          <FieldGrid>
+            <TextField label="Name" value={form.title} onChange={v => set('title', v)} />
+            <TextField label="Nickname" value={form.nickname} onChange={v => set('nickname', v)} />
+            <TextField label="First name" value={form.firstName} onChange={v => set('firstName', v)} />
+            <TextField label="Last name" value={form.lastName} onChange={v => set('lastName', v)} />
+            <TextField
+              label="Pronouns"
+              hint="used in narration"
+              value={form.pronouns}
+              onChange={v => set('pronouns', v)}
+              placeholder="e.g. she/her"
+            />
+            <SelectField
+              label="Gender"
+              value={form.gender}
+              options={GENDER_OPTIONS}
+              onChange={v => set('gender', v)}
+            />
+            <TextField
+              label="Role"
+              hint={isNpc ? 'how this NPC reads at the table' : 'party role'}
+              value={form.role}
+              onChange={v => set('role', v)}
+            />
+          </FieldGrid>
+          <FieldGrid>
+            <ReadOnlyField
+              label="Campaign"
+              value={char.campaign ?? 'Unassigned'}
+              note="managed in Drupal"
+            />
+            <ReadOnlyField
+              label="Record type"
+              value={isNpc ? 'NPC' : 'Player character'}
+              note="managed in Drupal"
+            />
+            <ReadOnlyField
+              label="Source character"
+              value={char.sourceCharacter === true ? 'Template' : 'Campaign clone'}
+              note="managed in Drupal"
+            />
+          </FieldGrid>
+        </EditSection>
+
+        <EditSection title="Ancestry" open={open.ancestry} onToggle={() => toggle('ancestry')}>
+          <FieldGrid>
+            <TermSelect
+              label="Species"
+              value={form.speciesId}
+              options={options.termSpeciesItems.nodes}
+              onChange={v => set('speciesId', v)}
+            />
+            <TermSelect
+              label="Lineage"
+              value={form.lineageId}
+              options={options.termLineages.nodes}
+              onChange={v => set('lineageId', v)}
+            />
+            <TermSelect
+              label="Background"
+              value={form.backgroundId}
+              options={options.termBackgrounds.nodes}
+              onChange={v => set('backgroundId', v)}
+            />
+          </FieldGrid>
+        </EditSection>
+
+        {fullProfile && (
+          <EditSection title="Vitals" open={open.vitals} onToggle={() => toggle('vitals')}>
+            <FieldGrid min={140}>
+              <NumberField label="Level" value={form.level} onChange={v => set('level', v)} min={1} />
+              <NumberField label="Max HP" value={form.maximumHitpoints} onChange={v => set('maximumHitpoints', v)} min={0} />
+              <NumberField label="Armor class" value={form.armorClass} onChange={v => set('armorClass', v)} min={0} />
+              <NumberField label="Speed" hint="ft" value={form.movementSpeed} onChange={v => set('movementSpeed', v)} min={0} />
+              <NumberField label="Proficiency bonus" value={form.proficiencyBonus} onChange={v => set('proficiencyBonus', v)} min={0} />
+              <NumberField label="Gold" hint="gp" value={form.gold} onChange={v => set('gold', v)} min={0} />
+            </FieldGrid>
+            <p style={{
+              fontFamily: 'var(--font-body)', fontStyle: 'italic', fontSize: 12,
+              color: 'var(--ink-faint)', margin: 0,
+            }}>
+              Ability scores, class and subclass, spell slots and equipment are
+              paragraph-backed and are still edited in Drupal.
+            </p>
+          </EditSection>
+        )}
+
+        <EditSection
+          title="Roleplay"
+          blurb="what the AI draws on for voice and motivation"
+          open={open.roleplay}
+          onToggle={() => toggle('roleplay')}
+        >
+          <FieldGrid min={280}>
+            <TextRowsField
+              label="Personality traits"
+              values={form.personalityTraits}
+              onChange={v => set('personalityTraits', v)}
+              placeholder="How they look, act, and speak"
+            />
+            <TextRowsField
+              label="Ideals"
+              values={form.ideals}
+              onChange={v => set('ideals', v)}
+              placeholder="What drives them above all else"
+            />
+            <TextRowsField
+              label="Bonds"
+              values={form.bonds}
+              onChange={v => set('bonds', v)}
+              placeholder="Who or what they care most about"
+            />
+            <TextRowsField
+              label="Flaws"
+              values={form.flaws}
+              onChange={v => set('flaws', v)}
+              placeholder="Their vices or compulsions"
+            />
+          </FieldGrid>
+          <TextAreaField
+            label="Personality"
+            hint="prose summary"
+            value={form.personality}
+            onChange={v => set('personality', v)}
+            rows={3}
+          />
+          <TextAreaField
+            label="Notes"
+            hint="DM notes, not shown to players"
+            value={form.notes}
+            onChange={v => set('notes', v)}
+            rows={3}
+          />
+        </EditSection>
+
+        <EditSection title="Story" open={open.story} onToggle={() => toggle('story')}>
+          <FieldGrid min={280}>
+            <TextRowsField
+              label="Major plot actions"
+              values={form.majorPlotActions}
+              onChange={v => set('majorPlotActions', v)}
+            />
+            <TextRowsField
+              label="Plot hooks"
+              values={form.plotHooks}
+              onChange={v => set('plotHooks', v)}
+            />
+            <TextRowsField
+              label="Specialized abilities"
+              values={form.specializedAbilities}
+              onChange={v => set('specializedAbilities', v)}
+            />
+            <TextRowsField
+              label="Abilities"
+              values={form.abilities}
+              onChange={v => set('abilities', v)}
+            />
+          </FieldGrid>
+        </EditSection>
+
+        {fullProfile && (
+          <EditSection title="Proficiencies" open={open.proficiencies} onToggle={() => toggle('proficiencies')}>
+            <FieldGrid min={240}>
+              <TermMultiSelect
+                label="Languages"
+                values={form.languages}
+                options={options.termLanguages.nodes}
+                onChange={v => set('languages', v)}
+              />
+              <TermMultiSelect
+                label="Skills"
+                values={form.skills}
+                options={options.termSkills.nodes}
+                onChange={v => set('skills', v)}
+              />
+              <TermMultiSelect
+                label="Tools"
+                values={form.tools}
+                options={options.termToolProfiencies.nodes}
+                onChange={v => set('tools', v)}
+              />
+            </FieldGrid>
+          </EditSection>
+        )}
+
+        {isNpc && (
+          <EditSection
+            title="Antagonist"
+            blurb="how this NPC behaves in an encounter"
+            open={open.antagonist}
+            onToggle={() => toggle('antagonist')}
+          >
+            <BoolField
+              label="Recurring"
+              hint="a recurring NPC gets the full character profile"
+              value={form.recurring}
+              onChange={v => set('recurring', v)}
+            />
+            <FieldGrid min={280}>
+              <TextRowsField
+                label="Encounter tactics"
+                values={form.encounterTactics}
+                onChange={v => set('encounterTactics', v)}
+              />
+              <TextRowsField
+                label="Defeat conditions"
+                values={form.defeatConditions}
+                onChange={v => set('defeatConditions', v)}
+              />
+              <TextRowsField
+                label="Lair actions"
+                values={form.lairActions}
+                onChange={v => set('lairActions', v)}
+              />
+              <TextRowsField
+                label="Legendary actions"
+                values={form.legendaryActions}
+                onChange={v => set('legendaryActions', v)}
+              />
+              <TextRowsField
+                label="Regional effects"
+                values={form.regionalEffects}
+                onChange={v => set('regionalEffects', v)}
+              />
+            </FieldGrid>
+          </EditSection>
+        )}
+
+        {isNpc && !form.recurring && (
+          <p style={{
+            fontFamily: 'var(--font-body)', fontSize: 12, color: 'var(--ink-faint)',
+            fontStyle: 'italic', margin: 0, padding: '0 4px',
+          }}>
+            Vitals, proficiencies and the AI profile are hidden for a one-off NPC.
+            Turn on <strong>Recurring</strong> above to fill in the full character
+            profile.
+          </p>
+        )}
+
+        {fullProfile && (
+          <EditSection
+            title="AI profile"
+            blurb="per-character overrides"
+            open={open.ai}
+            onToggle={() => toggle('ai')}
+          >
+            <FieldGrid min={180}>
+              <BoolField label="AI enabled" value={form.aiEnabled} onChange={v => set('aiEnabled', v)} />
+              <TextField label="Model" value={form.aiModel} onChange={v => set('aiModel', v)} />
+              <NumberField
+                label="Temperature"
+                value={form.aiTemperature}
+                onChange={v => set('aiTemperature', v)}
+                min={0}
+                max={2}
+                step={0.1}
+              />
+              <NumberField
+                label="Max tokens"
+                value={form.aiMaxTokens}
+                onChange={v => set('aiMaxTokens', v)}
+                min={1}
+              />
+            </FieldGrid>
+            <TextAreaField
+              label="System prompt"
+              value={form.aiSystemPrompt}
+              onChange={v => set('aiSystemPrompt', v)}
+              rows={4}
+            />
+          </EditSection>
+        )}
+      </div>
+
+      {/* Footer */}
+      <div style={{
+        display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap',
+        paddingTop: 18, marginTop: 18, borderTop: '1px solid var(--rule)',
+      }}>
+        <button
+          type="button"
+          className="primary-btn"
+          disabled={saving || !isDirty}
+          onClick={() => void handleSave()}
+        >
+          {saving ? <Spinner /> : <Icon name="tools" size={11} />}
+          {saving ? 'Saving…' : 'Save changes'}
+        </button>
+
+        {isDirty && !saving && (
+          <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--brass-dim)' }}>
+            {Object.keys(patch).length} field{Object.keys(patch).length === 1 ? '' : 's'} changed
+          </span>
+        )}
+        {!isDirty && savedAt == null && (
+          <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--ink-faint)' }}>
+            No changes
+          </span>
+        )}
+        {savedAt != null && !isDirty && (
+          <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--color-success)' }}>
+            Saved at {savedAt}
+          </span>
+        )}
+        {error != null && (
+          <span style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--color-danger)' }}>
+            {error}
+          </span>
+        )}
+      </div>
+
+      <p style={{
+        fontFamily: 'var(--font-body)', fontStyle: 'italic', fontSize: 12,
+        color: 'var(--ink-faint)', margin: '10px 0 0',
+      }}>
+        Saved values reach other screens on the next page load — the console reads
+        its data from the Gatsby build.
+      </p>
     </div>
   );
 }
@@ -305,18 +745,64 @@ function EditForm({ char }: { char: DrupalCharacter }): React.ReactElement {
 
 export function CharacterEditScreen({ ctx, setCtx }: ScreenProps): React.ReactElement {
   const data   = useConsoleData();
-  const roster = playerCharacters(data);
-  const idx    = ctx.charIdx ?? 0;
-  const char   = roster[idx] ?? null;
+  const isNpc  = ctx.npcMode === true;
+  const pinned = typeof ctx.editCharId === 'string' ? ctx.editCharId : null;
 
-  if (roster.length === 0) {
+  /* 100 is graphql_compose's hard ceiling on `first`, not a guess at the size:
+     the largest of these vocabularies currently holds 38 terms. */
+  const options = useStaticQuery<TermOptionsQuery>(graphql`
+    query CharacterEditTerms {
+      drupal {
+        termSpeciesItems(first: 100)    { nodes { id name } }
+        termLineages(first: 100)        { nodes { id name } }
+        termBackgrounds(first: 100)     { nodes { id name } }
+        termLanguages(first: 100)       { nodes { id name } }
+        termSkills(first: 100)          { nodes { id name } }
+        termToolProfiencies(first: 100) { nodes { id name } }
+      }
+    }
+  `);
+
+  /* A deep link may name a character outside the active campaign; rosterForScreen
+     pins it so the link always lands somewhere. */
+  const roster = rosterForScreen(data, {
+    npcMode:      isNpc,
+    campaignName: ctx.activeCampaignName,
+    pinnedId:     pinned,
+  });
+
+  const pinnedIdx = pinned != null ? roster.findIndex(c => c.id === pinned) : -1;
+  const idx  = pinnedIdx !== -1 ? pinnedIdx : (ctx.charIdx ?? 0);
+  const char = roster[idx] ?? roster[0] ?? null;
+
+  /* Jump to the screen that owns a field group, translating the selection into
+     that screen's own roster index — this screen's roster is campaign-scoped
+     and theirs is not, so the raw index would select the wrong character. */
+  const jump = (itemId: string, targetIndex: number): void => {
+    setCtx({
+      ...ctx,
+      editCharId: undefined,
+      _jumpTo: {
+        sectionId: isNpc ? 'npcs' : 'characters',
+        itemId,
+        charIdx: targetIndex >= 0 ? targetIndex : 0,
+      },
+    });
+  };
+
+  if (char == null) {
+    const scope = ctx.activeCampaignName != null && ctx.activeCampaignName !== ''
+      ? ` in ${ctx.activeCampaignName}`
+      : '';
     return (
       <div className="screen-generic">
         <header className="screen-head">
           <div>
-            <span className="reader-eyebrow">Characters · Edit profile</span>
-            <h2>Edit character profile</h2>
-            <p className="screen-blurb">No characters found for this campaign.</p>
+            <span className="reader-eyebrow">{isNpc ? 'NPCs' : 'Characters'} · Edit profile</span>
+            <h2>Edit {isNpc ? 'NPC' : 'character'} profile</h2>
+            <p className="screen-blurb">
+              No {isNpc ? 'NPCs' : 'characters'} found{scope}.
+            </p>
           </div>
         </header>
       </div>
@@ -327,13 +813,19 @@ export function CharacterEditScreen({ ctx, setCtx }: ScreenProps): React.ReactEl
     <div className="screen-chardetails">
       <CharPicker
         roster={roster}
-        selectedId={char?.id ?? null}
+        selectedId={char.id}
         onSelect={id => {
           const i = roster.findIndex(c => c.id === id);
-          if (i !== -1) setCtx({ ...ctx, charIdx: i });
+          if (i !== -1) setCtx({ ...ctx, charIdx: i, editCharId: undefined });
         }}
       />
-      {char != null && <EditForm key={char.id} char={char} />}
+      <EditForm
+        key={char.id}
+        char={char}
+        data={data}
+        options={options.drupal}
+        onJump={jump}
+      />
     </div>
   );
 }

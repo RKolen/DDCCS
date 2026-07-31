@@ -106,7 +106,14 @@ function HtmlList({ items }: { items: TextValue[] | null | undefined }): React.R
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 
-const CharacterPage: React.FC<PageProps<CharacterData>> = ({ data, location }) => {
+/** Page context set by gatsby-node.ts when the character pages are created. */
+interface CharacterPageContext {
+  id: string;
+}
+
+const CharacterPage: React.FC<PageProps<CharacterData, CharacterPageContext>> = ({
+  data, location, pageContext,
+}) => {
   const char = data.drupal?.node as CharacterNode | null;
 
   if (!char?.title) {
@@ -121,6 +128,7 @@ const CharacterPage: React.FC<PageProps<CharacterData>> = ({ data, location }) =
 
   const [lightboxOpen, setLightboxOpen] = React.useState(false);
 
+  const isNpc      = char.characterType === false;
   const cls        = char.characterClasses?.[0] ?? null;
   const className  = cls?.classRef?.name ?? null;
   const subclass   = cls?.subclassRef?.name ?? null;
@@ -230,7 +238,19 @@ const CharacterPage: React.FC<PageProps<CharacterData>> = ({ data, location }) =
             </div>
           </div>
 
-          <Link to="/characters/" className={styles.backLink}>All characters</Link>
+          {/* NPCs are character nodes, but they have their own index — sending
+              them to /characters/ was landing NPC pages on the PC list. */}
+          <div className={styles.heroLinks}>
+            <Link to={isNpc ? '/npcs/' : '/characters/'} className={styles.backLink}>
+              {isNpc ? 'All NPCs' : 'All characters'}
+            </Link>
+            <Link
+              to={`/?section=${isNpc ? 'npcs' : 'characters'}&item=${isNpc ? 'n-edit' : 'edit'}&char=${encodeURIComponent(pageContext.id)}`}
+              className={styles.editLink}
+            >
+              Edit character
+            </Link>
+          </div>
         </header>
 
         {/* ── Divider ── */}

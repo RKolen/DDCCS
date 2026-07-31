@@ -22,8 +22,7 @@ import * as React from 'react';
 import type { ScreenProps } from '../ScreenRouter';
 import {
   useConsoleData,
-  playerCharacters,
-  charactersForCampaign,
+  rosterForScreen,
   storiesForCampaign,
   type DrupalCharacter,
   type DrupalCharacterArc,
@@ -1805,9 +1804,10 @@ export function CharacterArcScreen({ ctx, setCtx }: ScreenProps): React.ReactEle
   const data         = useConsoleData();
   const campaignName = (ctx.activeCampaignName as string | null | undefined) ?? null;
 
-  const characters = campaignName
-    ? charactersForCampaign(data, campaignName)
-    : playerCharacters(data);
+  const characters = rosterForScreen(data, {
+    npcMode: ctx.npcMode === true,
+    campaignName,
+  });
 
   const stories = campaignName
     ? storiesForCampaign(data, campaignName)

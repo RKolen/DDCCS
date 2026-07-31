@@ -44,6 +44,12 @@ interface StatelyLedgerProps {
   fullscreen?: boolean;
   initialSection?: MenuSection['id'];
   initialItem?: string;
+  /**
+   * UUID of a character to open on, from a `?char=` deep link. Screens select
+   * by id rather than index because a campaign-scoped roster has no stable
+   * index a link could name.
+   */
+  initialCharId?: string;
   liveData?: ConsoleData;
 }
 
@@ -111,6 +117,7 @@ export function StatelyLedger({
   fullscreen = false,
   initialSection = 'read',
   initialItem,
+  initialCharId,
   liveData,
 }: StatelyLedgerProps): React.ReactElement {
   const [activeSection, setActiveSection] = React.useState<MenuSection['id']>(initialSection);
@@ -127,7 +134,12 @@ export function StatelyLedger({
      still reports itself here. */
   const { running, recent, refresh: refreshActivity } = useJobActivity();
   const [clearing, setClearing] = React.useState(false);
-  const [ctx, setCtxRaw] = React.useState<ScreenContext>({ storyIdx: 0, charIdx: 0 });
+  const [ctx, setCtxRaw] = React.useState<ScreenContext>({
+    storyIdx: 0,
+    charIdx: 0,
+    editCharId: initialCharId,
+    npcMode: initialSection === 'npcs',
+  });
 
   const campaigns = liveData?.campaigns ?? [];
 
@@ -168,7 +180,9 @@ export function StatelyLedger({
     }
     const npcIdx = npcs?.findIndex(c => c.id === characterId) ?? -1;
     if (npcIdx >= 0) {
-      return { sectionId: 'npcs', itemId: 'n-view', charIdx: npcIdx, npcMode: true };
+      /* The NPC portrait studio, not the detail screen: a finished render needs
+         an accept/discard decision, and only the studio offers one. */
+      return { sectionId: 'npcs', itemId: 'n-ascii', charIdx: npcIdx, npcMode: true };
     }
     return undefined;
   }, [pcs, npcs]);

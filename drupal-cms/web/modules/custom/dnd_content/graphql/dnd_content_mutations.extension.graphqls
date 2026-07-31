@@ -102,6 +102,26 @@ extend type Mutation {
   ): NodeCharacter
 
   """
+  Write a character node's editable profile fields. The payload is a JSON
+  object keyed by the console's camelCase field names; only the keys it
+  contains are changed, so the editor can send a partial patch. Keys the
+  mutation does not recognise are ignored.
+
+  Portrait, voice, and arc-analysis fields are not writable here - they belong
+  to setCharacterPortrait / setCharacterImage, updateCharacter, and
+  saveCharacterArc respectively. Campaign membership and the player/NPC flag
+  are not writable here either.
+
+  Returns the updated character node.
+  """
+  updateCharacterProfile(
+    "UUID of the character node."
+    id: ID!
+    "JSON-encoded map of profile fields to write."
+    payload: String!
+  ): NodeCharacter
+
+  """
   Create a new campaign taxonomy term. Returns the created term on success,
   or null if creation fails validation.
   """

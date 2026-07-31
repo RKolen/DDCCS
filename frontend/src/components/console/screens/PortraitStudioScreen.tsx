@@ -20,7 +20,7 @@
 import * as React from 'react';
 import type { ScreenProps } from '../ScreenRouter';
 import { Icon, Spinner } from '../atoms';
-import { useConsoleData, playerCharacters } from '../ConsoleContext';
+import { useConsoleData, playerCharacters, npcCharacters } from '../ConsoleContext';
 import type { DrupalCharacter } from '../ConsoleContext';
 import { MediaPickerModal } from '../MediaPickerModal';
 import {
@@ -531,7 +531,10 @@ function StudioPanel({ char, reviewJobId }: StudioPanelProps): React.ReactElemen
 
 export function PortraitStudioScreen({ ctx, setCtx }: ScreenProps): React.ReactElement {
   const data = useConsoleData();
-  const roster = playerCharacters(data);
+  const isNpc = ctx.npcMode === true;
+  /* Unfiltered by campaign on purpose: the activity drawer and the profile
+     editor both address this screen by index into these same lists. */
+  const roster = isNpc ? npcCharacters(data) : playerCharacters(data);
   const idx = ctx.charIdx ?? 0;
   const char = roster[idx] ?? null;
   const reviewJobId = typeof ctx.reviewJobId === 'string' ? ctx.reviewJobId : undefined;
@@ -541,9 +544,9 @@ export function PortraitStudioScreen({ ctx, setCtx }: ScreenProps): React.ReactE
       <div className="screen-generic">
         <header className="screen-head">
           <div>
-            <span className="reader-eyebrow">Characters · Customize portrait</span>
+            <span className="reader-eyebrow">{isNpc ? 'NPCs' : 'Characters'} · Customize portrait</span>
             <h2>Customize portrait</h2>
-            <p className="screen-blurb">No characters found for this campaign.</p>
+            <p className="screen-blurb">No {isNpc ? 'NPCs' : 'characters'} found.</p>
           </div>
         </header>
       </div>

@@ -1,12 +1,19 @@
 /**
  * DDCCS Console — menu data
  * --------------------------------------------------------------
- * Typed port of `menu/menu-data.jsx` from the design system project.
- * The CLI sections, items, campaigns, model profiles, and the
- * activity-log mock all flow through this single source of truth.
+ * The console's information architecture: which sections exist, which actions
+ * each one offers, and the utility command list. Originally a typed port of
+ * `menu/menu-data.jsx` from the design system project.
  *
- * Canonical reference (DO NOT diverge without updating both):
- *   /menu/menu-data.jsx  (in the design system repo)
+ * This file holds **structure only**. It once also carried the design mock's
+ * sample campaigns, characters, recent stories, model profiles, and activity
+ * log; those are gone. Content comes from Drupal:
+ *
+ *   campaigns / characters / stories -> ConsoleContext (index.tsx page query)
+ *   activity log                     -> utils/aiJobs, polled from the queue
+ *
+ * Do not reintroduce sample content here. A screen that renders invented
+ * characters is indistinguishable from one that lost its data connection.
  *
  * IMPORTANT — NPC/Character architecture (2026-05-16):
  *   NPCs are no longer a separate content type. They are character
@@ -15,16 +22,9 @@
  *     - Player characters: field_character_type = true
  *     - NPCs:             field_character_type = false
  *   The legacy `nodeNpc` GraphQL type should be considered deprecated.
- *   The `npcs` section in the console lists and views these filtered
- *   character nodes.
- *
- * When this is wired to Drupal:
- *   - `sections` stays static (it's the app's information architecture)
- *   - `campaigns` comes from the Campaign taxonomy term reference
- *   - `characters` comes from `node--character` (field_character_type=true,
- *                  filtered to active campaign)
- *   - `recentStories` comes from `node--story` ordered by `field_session_date`
- *   - `activityLog` comes from a websocket/SSE channel for AI job status
+ *   The `npcs` section offers the same actions as `characters`, run against
+ *   the filtered roster; `field_recurring` marks the NPCs that earn a full
+ *   character profile.
  */
 
 /* ────────────────────────────────────────────────────────────
@@ -66,13 +66,6 @@ export interface Campaign {
   name: string;
   stories: number;
   party: number;
-  active: boolean;
-}
-
-export interface ModelProfile {
-  id: string;
-  name: string;
-  task: string;
   active: boolean;
 }
 
@@ -127,46 +120,26 @@ export interface ActivityItem {
   stalled?: boolean;
 }
 
-export interface CharacterSummary {
-  name: string;
-  class: string;
-  level: number;
-  pronouns?: string;
-}
-
-export interface StorySummary {
-  title: string;
-  series: string;
-  date: string;
-}
-
+/**
+ * The console's static menu taxonomy.
+ *
+ * Structure only — sections, items, and the utility command list. Every piece
+ * of campaign content (characters, stories, campaigns, activity) comes from
+ * Drupal via ConsoleContext. This file previously also carried sample
+ * characters, stories, campaigns, and an activity log copied from the design
+ * mock; nothing read them, and they were removed so nobody wires them back up
+ * by accident.
+ */
 export interface MenuData {
-  campaigns: Campaign[];
-  modelProfiles: ModelProfile[];
   sections: MenuSection[];
   utilityCommands: UtilityCommand[];
-  characters: CharacterSummary[];
-  recentStories: StorySummary[];
-  activityLog: ActivityItem[];
 }
 
 /* ────────────────────────────────────────────────────────────
-   Data (1:1 with menu-data.jsx — keep in sync)
+   Data — the information architecture, and nothing else
    ──────────────────────────────────────────────────────────── */
 
 export const MENU_DATA: MenuData = {
-  campaigns: [
-    { id: 'whispers', name: 'Whispers of the Sundered Crown', stories: 12, party: 4, active: true },
-    { id: 'ironroot', name: 'The Ironroot Pact', stories: 7, party: 5, active: false },
-    { id: 'mistveil', name: 'Mistveil Quest', stories: 3, party: 3, active: false },
-  ],
-
-  modelProfiles: [
-    { id: 'claude-sonnet', name: 'Claude Sonnet 4.6', task: 'story_generation', active: true },
-    { id: 'claude-haiku', name: 'Claude Haiku 4.5', task: 'analysis', active: false },
-    { id: 'local-llama', name: 'Llama 3.1 70B (local)', task: 'fallback', active: false },
-  ],
-
   sections: [
     {
       id: 'characters',
@@ -251,10 +224,28 @@ export const MENU_DATA: MenuData = {
       icon: 'npc',
       blurb: 'Major antagonists, allies, factions',
       count: 14,
+      /*
+       * The same action set as Characters. An NPC is a character profile that
+       * happens to carry field_character_type = false, and field_recurring is
+       * what marks the ones that earn a full fill - so every tool that works on
+       * a PC works here too, on the same screens with npcMode set.
+       */
       items: [
         { id: 'n-list', label: 'List Major NPCs' },
+        { id: 'n-edit', label: 'Edit NPC Profile' },
         { id: 'n-view', label: 'View Major NPC Details' },
+        { id: 'n-consult', label: 'Get NPC Consultation', ai: true },
+        { id: 'n-ascii', label: 'Customize Portrait', ai: true, note: 'ComfyUI portrait studio' },
         { id: 'n-validate', label: 'Profile Completeness' },
+        {
+          id: 'n-arc', label: 'Character Arc Analysis', ai: true, hasSubmenu: true,
+          submenu: [
+            { id: 'arc-summary', label: 'View character arc summary' },
+            { id: 'arc-analyze', label: 'Analyze story for character arc', ai: true },
+            { id: 'arc-overview', label: 'View campaign arc overview' },
+            { id: 'arc-export', label: 'Export arc report to file' },
+          ],
+        },
       ],
     },
     {
@@ -327,26 +318,5 @@ export const MENU_DATA: MenuData = {
   utilityCommands: [
     { cmd: '--reindex', label: 'Reindex vector DB', slow: true },
     { cmd: '--milvus-status', label: 'Milvus health' },
-  ],
-
-  characters: [
-    { name: 'Vesper Ashwhile', class: 'Warlock', level: 8, pronouns: 'she/her' },
-    { name: 'Brynn Coldhammer', class: 'Cleric', level: 8, pronouns: 'they/them' },
-    { name: 'Kael of the Blackmarsh', class: 'Ranger', level: 7 },
-    { name: 'Mira Quickfingers', class: 'Rogue', level: 8, pronouns: 'she/her' },
-  ],
-
-  recentStories: [
-    { title: 'The Bell of Vellishar', series: 'Whispers of the Sundered Crown', date: '3 days ago' },
-    { title: 'Smoke at the Northgate', series: 'Whispers of the Sundered Crown', date: '1 week ago' },
-    { title: 'A Ledger of Names', series: 'Whispers of the Sundered Crown', date: '2 weeks ago' },
-  ],
-
-  activityLog: [
-    { kind: 'ai', status: 'running', label: 'Generating session results', detail: 'Whispers · The Bell of Vellishar', progress: 0.62, elapsed: '00:42' },
-    { kind: 'ai', status: 'done', label: 'Story continuation', detail: 'Mistveil · 1,840 tokens · 12s' },
-    { kind: 'index', status: 'done', label: 'Reindex vector DB', detail: '24 files · 18s' },
-    { kind: 'batch', status: 'done', label: 'Batch level-up: 4 characters +1', detail: '4/4 succeeded' },
-    { kind: 'ai', status: 'failed', label: 'Arc analysis: Vesper Ashwhile', detail: 'AI client unavailable — check config' },
   ],
 };

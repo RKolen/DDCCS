@@ -8,8 +8,14 @@
 
 import type {
   ConsoleData, DrupalCampaign, DrupalCharacter, DrupalStory, DrupalMonster, DrupalItem,
-  DrupalCharacterArc, DrupalArcMetric,
+  DrupalCharacterArc, DrupalArcMetric, TermRef,
 } from '../components/console/ConsoleContext';
+import { textValues, htmlToText } from './richTextToLines';
+
+/** Drop the union members GraphQL returns as `{}` for unexposed vocabularies. */
+function termRefs(items: RawTermRef[] | null | undefined): TermRef[] {
+  return (items ?? []).filter((t): t is RawTermRef => Boolean(t?.id && t.name));
+}
 
 /** Parse Drupal's comma-separated metric series string into numbers. */
 function parseSeries(csv: string | null | undefined): number[] {
@@ -72,6 +78,12 @@ export interface RawCampaignOnCharacter {
   name: string;
 }
 
+/** A taxonomy term as the console queries it: UUID plus label. */
+export interface RawTermRef {
+  id: string;
+  name: string;
+}
+
 export interface RawCampaignTerm {
   id:               string;
   name:             string;
@@ -105,14 +117,39 @@ export interface RawCharacter {
   campaign:        RawCampaignOnCharacter | null;
   image:           { mediaImage: { url: string; alt: string } | null } | null;
   imagePrompt?:      string | null;
-  species?:          { name: string } | null;
-  lineage?:          { name: string } | null;
-  background?:       { name: string } | null;
+  /* Everything below is optional: party.tsx mounts the same console from a
+     narrower query and must keep type-checking. */
+  lastName?:         string | null;
+  gold?:             number | null;
+  gender?:           string | null;
+  recurring?:        boolean | null;
+  species?:          RawTermRef | null;
+  lineage?:          RawTermRef | null;
+  background?:       RawTermRef | null;
+  languages?:        RawTermRef[] | null;
+  skills?:           RawTermRef[] | null;
+  tools?:            RawTermRef[] | null;
   bonds?:            Array<{ value: string }> | null;
   ideals?:           Array<{ value: string }> | null;
   flaws?:            Array<{ value: string }> | null;
   personalityTraits?: Array<{ value: string }> | null;
   majorPlotActions?:  Array<{ value: string }> | null;
+  specializedAbilities?: Array<{ value: string }> | null;
+  plotHooks?:        Array<{ value: string }> | null;
+  abilities?:        Array<{ value: string }> | null;
+  /* Cardinality-1 text fields expose as a single object, not a list. */
+  personality?:      { value: string } | null;
+  notes?:            { value: string } | null;
+  encounterTactics?: Array<{ value: string }> | null;
+  defeatConditions?: Array<{ value: string }> | null;
+  lairActions?:      Array<{ value: string }> | null;
+  legendaryActions?: Array<{ value: string }> | null;
+  regionalEffects?:  Array<{ value: string }> | null;
+  aiEnabled?:        boolean | null;
+  aiModel?:          string | null;
+  aiTemperature?:    number | null;
+  aiMaxTokens?:      number | null;
+  aiSystemPrompt?:   { value: string } | null;
   voiceIdRef?:       { name: string } | null;
   voicePitch?:       number | null;
   voiceSpeed?:       number | null;
@@ -225,30 +262,56 @@ export function buildConsoleData(data: ConsoleQueryData | null | undefined): Con
   const characters: DrupalCharacter[] = data.drupal.nodeCharacters.nodes.map(n => ({
     id:               n.id,
     title:            n.title,
+    firstName:        n.firstName,
+    lastName:         n.lastName ?? null,
     nickname:         n.nickname,
     level:            n.level,
     armorClass:       n.armorClass,
     maximumHitpoints: n.maximumHitpoints,
     movementSpeed:    n.movementSpeed,
     proficiencyBonus: n.proficiencyBonus,
+    gold:             n.gold ?? null,
     pronouns:         n.pronouns,
+    gender:           n.gender ?? null,
     role:             n.role,
     characterClass:   null,
     characterType:    n.characterType,
     sourceCharacter:  n.sourceCharacter,
+    recurring:        n.recurring ?? null,
     campaign:         n.campaign?.name ?? null,
     campaignId:       n.campaign?.id ?? null,
     path:             n.path,
     imageUrl:         n.image?.mediaImage?.url ?? null,
     imagePrompt:      n.imagePrompt ?? null,
     species:          n.species?.name ?? null,
+    speciesId:        n.species?.id ?? null,
     lineage:          n.lineage?.name ?? null,
+    lineageId:        n.lineage?.id ?? null,
     background:       n.background?.name ?? null,
-    bonds:            (n.bonds ?? []).map(b => b.value),
-    ideals:           (n.ideals ?? []).map(b => b.value),
-    flaws:            (n.flaws ?? []).map(b => b.value),
-    personalityTraits: (n.personalityTraits ?? []).map(b => b.value),
-    majorPlotActions:  (n.majorPlotActions ?? []).map(b => b.value),
+    backgroundId:     n.background?.id ?? null,
+    languages:        termRefs(n.languages),
+    skills:           termRefs(n.skills),
+    tools:            termRefs(n.tools),
+    bonds:            textValues(n.bonds),
+    ideals:           textValues(n.ideals),
+    flaws:            textValues(n.flaws),
+    personalityTraits: textValues(n.personalityTraits),
+    majorPlotActions:  textValues(n.majorPlotActions),
+    specializedAbilities: textValues(n.specializedAbilities),
+    plotHooks:        textValues(n.plotHooks),
+    abilities:        textValues(n.abilities),
+    personality:      htmlToText(n.personality?.value),
+    notes:            htmlToText(n.notes?.value),
+    encounterTactics: textValues(n.encounterTactics),
+    defeatConditions: textValues(n.defeatConditions),
+    lairActions:      textValues(n.lairActions),
+    legendaryActions: textValues(n.legendaryActions),
+    regionalEffects:  textValues(n.regionalEffects),
+    aiEnabled:        n.aiEnabled ?? null,
+    aiModel:          n.aiModel ?? null,
+    aiTemperature:    n.aiTemperature ?? null,
+    aiMaxTokens:      n.aiMaxTokens ?? null,
+    aiSystemPrompt:   htmlToText(n.aiSystemPrompt?.value),
     voiceId:          n.voiceIdRef?.name ?? null,
     voicePitch:       n.voicePitch ?? null,
     voiceSpeed:       n.voiceSpeed ?? null,

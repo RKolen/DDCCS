@@ -140,7 +140,17 @@
   line-height: 1.1;
 }
 
-/* ── Back link ───────────────────────────────────────────────── */
+/* ── Hero links ──────────────────────────────────────────────── */
+/* Back link on top, edit action beneath it — the edit action is the one
+   the console needs, so it sits where the eye already is. */
+.heroLinks {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  align-self: center;
+  align-items: flex-end;
+}
+
 .backLink {
   font-family: var(--font-display);
   font-size: var(--text-xs);
@@ -154,6 +164,25 @@
 }
 
 .backLink:hover { color: var(--color-gold-bright); }
+
+.editLink {
+  font-family: var(--font-display);
+  font-size: var(--text-xs);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--color-gold-mid);
+  text-decoration: none;
+  white-space: nowrap;
+  padding: 5px 11px;
+  border: 1px solid var(--color-gold-border);
+  border-radius: 4px;
+  transition: color var(--transition-fast), border-color var(--transition-fast);
+}
+
+.editLink:hover {
+  color: var(--color-gold-bright);
+  border-color: var(--color-gold-bright);
+}
 
 /* ── Section divider ─────────────────────────────────────────── */
 .divider {
@@ -172,7 +201,7 @@
 @media (max-width: 760px) {
   .mainGrid { grid-template-columns: 1fr; }
   .hero { grid-template-columns: auto 1fr; }
-  .backLink { display: none; }
+  .heroLinks { display: none; }
 }
 
 .leftCol,

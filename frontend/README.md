@@ -69,6 +69,45 @@ frontend/
 Per-node detail pages generated in `gatsby-node.ts`: `character.tsx`,
 `story.tsx`, `item.tsx`, `monster.tsx` (each with a co-located `.module.css`).
 
+### Editing a character
+
+`characters/edit` (and its NPC twin `npcs/n-edit`) is the one place a character
+record is edited — `CharacterEditScreen.tsx`, built from the field primitives in
+`components/console/FieldEditors.tsx` and writing through
+`api/update-character-profile.ts`.
+
+Three field groups are **not** editable there; the screen shows a card with a
+button to the screen that owns them:
+
+| Group | Owner screen |
+| ----- | ------------ |
+| Portrait | `characters/ascii` — Portrait Studio |
+| Voice | `characters/consult` — voice picker with live preview |
+| Arc analysis | `characters/arc` — Character Arc Analysis |
+
+Notes on behaviour worth knowing before changing this screen:
+
+- **The roster is scoped to the active campaign** via `rosterForScreen()` in
+  `ConsoleContext.tsx`, which also pins a deep-linked character that falls
+  outside that scope so a link always lands somewhere.
+- **Jumps translate the index.** The handoff buttons compute the target's index
+  in *that screen's* roster, because this screen's roster is campaign-scoped and
+  the Portrait Studio's is not.
+- **NPCs use the same screens** with `npcMode` set. `field_recurring` gates how
+  much of the form an NPC gets: off, the stat-oriented groups are hidden; on, it
+  gets the full character profile.
+- **Multi-value text fields are one row per Drupal delta.** Values arrive
+  normalised by `utils/richTextToLines.ts`, which strips legacy HTML and splits
+  a delta holding several entries into several rows.
+
+### Deep links into the console
+
+`/?section=<id>&item=<id>&char=<uuid>` opens the console on a given screen with
+a character selected — this is how the "Edit character" button on
+`/character/pc/...` and `/character/npc/...` works. `index.tsx` validates the
+section and item against `MENU_DATA` and falls back to the default landing
+screen if they do not match.
+
 ---
 
 ## Data layer
@@ -114,7 +153,8 @@ Drupal credentials.
 | `create-story.ts` | POST | Drupal (`createStory`, `setSessionSummary`) + LLM | Persist a finished story, then (best-effort) summarise the session and refresh the campaign overview |
 | `summarize-session.ts` | POST | Ollama-compatible LLM (fast model) | Summarise one story body into a concise recap (`{ storyBody }` -> `{ summary }`) |
 | `campaign-overview.ts` | POST | Ollama-compatible LLM (fast model) | Synthesize per-session recaps into one "story so far" (`{ summaries }` -> `{ overview }`) |
-| `update-character.ts` | POST | Drupal (`updateCharacter`) | PATCH optional character fields |
+| `update-character.ts` | POST | Drupal (`updateCharacter`) | PATCH voice settings and the image prompt |
+| `update-character-profile.ts` | POST | Drupal (`updateCharacterProfile`) | PATCH the character editor's profile fields |
 | `arc-story-chunks.ts` | POST | Drupal (read one story) | Split one story's body into small analysis chunks (`{ storyId }` -> `{ title, storyNumber, chunks }`); no AI. The console analyses each chunk separately so no request runs long |
 | `arc-analyze-story.ts` | POST | Sidecar (`/character/arc/story`) | Analyse one story chunk into one arc data point (one model call). The console loops this per chunk with a progress counter |
 | `arc-aggregate.ts` | POST | Sidecar (`/character/arc/aggregate`) | Aggregate the collected per-story data points into the full arc (fallback path when there is no `character_analysis` node to persist to) |

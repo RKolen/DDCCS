@@ -105,7 +105,8 @@ served by the dev server / build). They handle writes and live AI:
 | `create-character.ts` | POST | Sidecar + Drupal (`createCharacter`, `addCharacterToCampaign`) | Derive a sheet (sidecar), persist a source character, clone into the active campaign |
 | `campaign-party.ts` | POST | Drupal (`addCharacterToCampaign`) | Add a character to a campaign |
 | `create-story.ts` | POST | Drupal (`createStory` mutation) | Persist a finished story |
-| `update-character.ts` | POST | Drupal (`updateCharacter` mutation) | PATCH optional character fields |
+| `update-character.ts` | POST | Drupal (`updateCharacter` mutation) | PATCH voice settings and the image prompt |
+| `update-character-profile.ts` | POST | Drupal (`updateCharacterProfile` mutation) | PATCH the character editor's profile fields |
 | `arc-analyze-story.ts` | POST | Drupal (read) + Sidecar (`/character/arc/story`) | Analyse one story into a data point (looped per story with progress) |
 | `arc-aggregate.ts` | POST | Sidecar (`/character/arc/aggregate`) | Aggregate the per-story data points into the full arc |
 | `save-arc.ts` | POST | Drupal (`saveCharacterArc` mutation) | Persist an accepted arc analysis |

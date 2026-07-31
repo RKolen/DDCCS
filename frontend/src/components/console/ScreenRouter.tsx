@@ -28,6 +28,14 @@ export interface ScreenContext {
   storyIdx?: number;
   charIdx?: number;
   itemIdx?: number;
+  /** Character screens show NPCs (characterType === false) when true. */
+  npcMode?: boolean;
+  /**
+   * UUID of a character to select regardless of the screen's own roster order.
+   * Set by deep links (`/?item=edit&char=…`) and by the completeness audit,
+   * both of which know a character but not its index in a campaign-scoped list.
+   */
+  editCharId?: string;
   activeCampaignName?: string | null;
   settingsTab?: 'view' | 'ai' | 'rag' | 'display' | 'paths' | 'validate' | 'save';
   modelId?: string;
@@ -140,10 +148,20 @@ export function ScreenRouter({ section, item, ctx, setCtx }: ScreenRouterProps):
   if (key === 'read/r-session') return <ReadStoryFileScreen ctx={ictx} setCtx={set} />;
   if (key === 'read/r-dev')     return <CharacterDevelopmentScreen ctx={ictx} setCtx={set} />;
 
-  /* ───── NPCs (character nodes with field_character_type=false) ───── */
-  if (key === 'npcs/n-list')     return <CharacterListScreen ctx={{ ...ictx, npcMode: true }} setCtx={set} />;
+  /* ───── NPCs (character nodes with field_character_type=false) ─────
+     Same screens as the characters/* twins, with npcMode set — an NPC is a
+     character profile, so the tooling is identical. */
+  if (key === 'npcs/n-list')     return <CharacterListScreen   ctx={{ ...ictx, npcMode: true }} setCtx={set} />;
+  if (key === 'npcs/n-edit')     return <CharacterEditScreen   ctx={{ ...ictx, npcMode: true }} setCtx={set} />;
   if (key === 'npcs/n-view')     return <CharacterDetailScreen ctx={{ ...ictx, npcMode: true }} setCtx={set} />;
-  if (key === 'npcs/n-validate') return <NpcValidatorScreen ctx={ictx} setCtx={set} />;
+  if (key === 'npcs/n-consult')  return <ConsultScreen         ctx={{ ...ictx, npcMode: true }} setCtx={set} />;
+  if (key === 'npcs/n-ascii')    return <PortraitStudioScreen  ctx={{ ...ictx, npcMode: true }} setCtx={set} />;
+  if (key === 'npcs/n-validate') return <NpcValidatorScreen    ctx={ictx} setCtx={set} />;
+
+  /* Arc hub + sub-actions, same dispatch rule as characters/arc. */
+  if (section.id === 'npcs' && (item.id === 'n-arc' || item.id.startsWith('arc-'))) {
+    return <CharacterArcScreen ctx={{ ...ictx, npcMode: true }} setCtx={set} />;
+  }
 
   /* ───── Items ───── */
   if (key === 'items/i-list')     return <ItemListScreen     ctx={ictx} setCtx={set} />;

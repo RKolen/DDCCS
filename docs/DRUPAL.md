@@ -250,6 +250,7 @@ Per-action user writes go through custom GraphQL mutations called from
 | `saveCharacterArc` | `frontend/src/api/save-arc.ts` |
 | `createCharacter` | `frontend/src/api/create-character.ts` |
 | `updateCharacter` | `frontend/src/api/update-voice.ts` (voice id / pitch / speed); `save-image-prompt.ts` (`imagePrompt` -> `field_image_prompt`) |
+| `updateCharacterProfile` | `frontend/src/api/update-character-profile.ts` (the console's character editor) |
 | `setCharacterPortrait` | `frontend/src/api/generate-portrait.ts` (ComfyUI portrait) |
 | `setCharacterImage` | `frontend/src/api/set-portrait-media.ts` (pick an existing media) |
 | `enqueueAiJob` | `frontend/src/api/enqueue-job.ts` (queue a heavy AI job) |
@@ -273,6 +274,36 @@ the sidecar's `/character/equipment/describe` (rules-wiki equipment catalogue at
 `RAG_RULES_BASE_URL`) and passes the result as an `equipment_descriptions` map
 in the payload. The clone into the active campaign is a separate
 `addCharacterToCampaign` call.
+
+`updateCharacterProfile(id, payload)` is the console character editor's write
+path. `payload` is a JSON object keyed by camelCase field names; **only the keys
+it contains are written**, so the editor sends just what the operator changed.
+Keys outside the producer's `FIELD_MAP` whitelist are ignored — that map, in
+`UpdateCharacterProfile.php`, is the security boundary.
+
+Not writable through it, by design:
+
+| Excluded | Owned instead by |
+| -------- | ---------------- |
+| `field_image` | `setCharacterPortrait` / `setCharacterImage` |
+| `field_image_prompt`, `field_voice_*` | `updateCharacter` |
+| `field_arc_*` | `saveCharacterArc` |
+| `field_character_type`, `field_source_character`, `field_campaign` | Drupal admin — structural, not profile edits |
+
+Two behaviours worth knowing:
+
+- **Multi-value text fields are always written one value per delta with the
+  `plain_text` format.** Some records held `<p>Steadfast</p>`, and a few held
+  several traits inside a single delta. Gatsby normalises that on read
+  (`frontend/src/utils/richTextToLines.ts`) and this mutation writes the clean
+  values back, so a character is repaired the first time it is saved.
+- **Term references are resolved by term UUID and checked against the field's
+  vocabulary.** A UUID from the wrong vocabulary is rejected with
+  `No <vocabulary> term found for id <uuid>` rather than written.
+
+Only the fields the mutation actually set are validated
+(`$node->validate()->getByFields($changed)`), so unrelated pre-existing damage —
+a dangling `field_equipment_items` reference, say — cannot block every edit.
 
 `setSessionSummary(campaignId, storyNumber, summary, overview)` upserts the
 `session_summary` paragraph for that story number on the campaign's

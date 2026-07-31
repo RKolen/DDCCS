@@ -9,7 +9,7 @@
 import * as React from 'react';
 import { graphql, useStaticQuery } from 'gatsby';
 import type { ScreenProps } from '../ScreenRouter';
-import { useConsoleData, playerCharacters } from '../ConsoleContext';
+import { useConsoleData, playerCharacters, npcCharacters } from '../ConsoleContext';
 import { Icon, AiTag, Spinner } from '../atoms';
 
 type PlayerCharacter = ReturnType<typeof playerCharacters>[number];
@@ -48,7 +48,9 @@ function consultPayload(c: PlayerCharacter, message: string, history: ChatMessag
 
 export function ConsultScreen({ ctx, setCtx }: ScreenProps): React.ReactElement {
   const data = useConsoleData();
-  const pcs  = playerCharacters(data);
+  /* Unfiltered by campaign on purpose: the profile editor addresses this screen
+     by index into these same lists. */
+  const pcs  = ctx.npcMode === true ? npcCharacters(data) : playerCharacters(data);
   const idx  = ctx.charIdx ?? 0;
   const char = pcs[idx] ?? null;
 
