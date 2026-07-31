@@ -588,6 +588,67 @@
   text-transform: uppercase;
 }
 .char-sheet-portrait .portrait-tag { position: absolute; top: 6px; right: 6px; }
+
+/* ── Portrait review: a render that is not the portrait yet ────────────── */
+
+/* Amber frame so a proposed render is never mistaken for the stored one. */
+.char-sheet-portrait.portrait-candidate {
+  border-color: var(--color-warning);
+  box-shadow: 0 0 0 1px var(--warning-a50);
+}
+.portrait-review {
+  margin-top: 12px;
+  border: 1px solid var(--warning-a50);
+  border-radius: 4px;
+  background: var(--warning-a10);
+  padding: 10px 12px;
+}
+.portrait-review-tag {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--color-warning);
+  margin-bottom: 6px;
+}
+.portrait-review-note {
+  margin: 0 0 10px;
+  font-family: var(--font-body);
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--ink-dim);
+}
+.portrait-review-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+/* The portrait being kept if the render is refused, so the comparison is
+   visible at the moment of the decision. */
+.portrait-review-current {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--rule);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.portrait-review-current span {
+  font-family: var(--font-display);
+  font-size: 9px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.portrait-review-current img {
+  width: 44px;
+  height: 62px;
+  object-fit: cover;
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+}
 .char-sheet-title h1 {
   margin: 4px 0 6px;
   font-family: var(--font-display);
@@ -1651,6 +1712,11 @@
 .pill-running { color: var(--ai-accent); border-color: var(--ai-accent-a40); background: #d8b46e0f; }
 .pill-failed  { color: var(--color-danger-text); border-color: var(--danger-a40); background: #c0392b0f; }
 .pill-done    { color: var(--color-success); border-color: var(--success-a40); background: var(--success-a05); }
+/* A finished job whose result nobody has accepted yet: amber, because it is
+   neither a success to move on from nor a failure. */
+.pill-review  { color: var(--color-warning); border-color: var(--warning-a50); background: var(--warning-a10); }
+/* Waiting for the processor rather than being worked on: deliberately quiet. */
+.pill-queued  { color: var(--ink-dim); border-color: var(--rule); }
 
 .activity-full-body section { margin-bottom: 28px; }
 .activity-full-body h4 {

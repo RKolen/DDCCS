@@ -5,7 +5,11 @@ id: dnd_ai
 label: 'D&D AI jobs'
 backend: database
 backend_configuration:
-  lease_time: 3600
+  # Must exceed the slowest legitimate run (a CPU portrait render is ~4 minutes,
+  # a full arc analysis longer) while staying short enough that a job orphaned by
+  # a dead worker is spotted and requeued by hook_cron() the same session. An
+  # hour met the first requirement and failed the second.
+  lease_time: 900
 processor: daemon
 processing_time: 0
 locked: true

@@ -173,6 +173,26 @@ abstract class AiJobTypeBase extends JobTypeBase implements ContainerFactoryPlug
   }
 
   /**
+   * Read an optional float from a job payload.
+   *
+   * @param array<string, mixed> $payload
+   *   The job payload.
+   * @param string $key
+   *   The payload key.
+   *
+   * @return float|null
+   *   The value, or NULL when absent or not numeric.
+   */
+  protected function optionalFloat(array $payload, string $key): ?float {
+    $value = $payload[$key] ?? NULL;
+    if (is_float($value) || is_int($value)) {
+      return (float) $value;
+    }
+
+    return is_string($value) && is_numeric($value) ? (float) $value : NULL;
+  }
+
+  /**
    * Read an array from a job payload.
    *
    * @param array<string, mixed> $payload

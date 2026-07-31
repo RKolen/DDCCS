@@ -1,0 +1,10 @@
+# Gives the web container host.docker.internal resolution so Drupal can reach
+# host-side services (the host Ollama on :11434 and the sidecar). The Dockerised
+# ollama service was removed: it had no GPU passthrough, duplicated the host
+# Ollama (sharing the same /usr/share/ollama models dir), and was never reached
+# (Drupal targets host.docker.internal:11434 directly). All LLM traffic now goes
+# to the host GPU Ollama via the sidecar.
+services:
+  web:
+    extra_hosts:
+      - "host.docker.internal:host-gateway"

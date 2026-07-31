@@ -5,7 +5,8 @@ characters, NPCs, stories, items, monsters, party, and search from here without
 ever logging into Drupal. It reads content from Drupal over GraphQL and performs
 writes and live AI through its own serverless functions.
 
-- **Get it running:** [docs/FRONTEND_QUICKSTART.md](../docs/FRONTEND_QUICKSTART.md)
+- **Get it running:**
+  [docs/FRONTEND_QUICKSTART.md](../docs/FRONTEND_QUICKSTART.md)
 - **Architecture context:** [docs/ARCHITECTURE.md](../docs/ARCHITECTURE.md)
 - **Agent coding rules:** [CLAUDE.md](CLAUDE.md)
 - **Design system:** [DESIGN.md](DESIGN.md)
@@ -130,7 +131,7 @@ Drupal credentials.
 | `list-character-voices.ts` | GET | Drupal (`nodeCharacters`) | Page through every character's voice id / pitch / speed (cursor loop past the graphql_compose 100-cap); used when the story Narrate button starts |
 | `update-voice.ts` | POST | Drupal (`updateCharacter`) | Save a character's voice id / pitch / speed (consultation voice mini-wizard) |
 | `spotlight.ts` | POST | Sidecar (`localhost:$SIDECAR_PORT`) | Spotlight scores for a party |
-| `generate-portrait.ts` | POST | Sidecar (`/character/portrait`) + Drupal (`setCharacterPortrait`) | Generate a character portrait with local ComfyUI (long, timeout-free call), then persist it onto the character's `field_image`; returns the new `imageUrl`. Accepts an explicit `positive` / `negative` prompt (blank falls back to the profile-built prompt and the standard negative). Requires `COMFYUI_ENABLED=true` on the sidecar (503 otherwise) |
+| `generate-portrait.ts` | POST | Sidecar (`/character/portrait`) + Drupal (`setCharacterPortrait`) | Generate a character portrait with local ComfyUI (long, timeout-free call), then persist it onto the character's `field_image`; returns the new `imageUrl`. Accepts an explicit `positive` / `negative` prompt (blank falls back to the profile-built prompt and the standard negative), and an optional `referenceImageUrl` / `identityWeight` that keeps the character's likeness across a regeneration (IPAdapter); the response's `usedReference` says whether that was actually applied. Requires `COMFYUI_ENABLED=true` on the sidecar (503 otherwise) |
 | `list-portrait-media.ts` | GET | Drupal (`mediaImages`) | List image media from the library (`{ media: [{ id, name, url, alt }] }`) for the portrait picker; `?type=character_portrait` filters by `mediaType` so the browser only receives the relevant subset (pages through the 100-cap connection) |
 | `set-portrait-media.ts` | POST | Drupal (`setCharacterImage`) | Point a character's `field_image` at an existing media (no new file); returns the new `imageUrl` |
 | `portrait-prompt.ts` | POST | Sidecar (`/character/portrait/prompt`) | Build a portrait prompt from the profile, or (with `enhance`) enrich the edited text via the fast model; returns `{ positive, negative }` |
@@ -138,6 +139,9 @@ Drupal credentials.
 | `save-image-prompt.ts` | POST | Drupal (`updateCharacter`) | Persist a character's reusable image prompt (`field_image_prompt`) |
 | `enqueue-job.ts` | POST | Drupal (`enqueueAiJob`) | Queue a heavy AI job (`{ type, payload, label }`) and return its id immediately; nothing runs during the call |
 | `job-status.ts` | GET | Drupal (`aiJob` / `aiJobs`) | Poll one job (`?id=`) or list recent ones (`?states=queued,processing&limit=`) for the activity drawer |
+| `resolve-job.ts` | POST | Drupal (`resolveAiJob`) | Accept (`{ id, accepted: true }`) or discard a finished job's result. Accepting a portrait job is what points `field_image` at the render; discarding leaves the character alone and keeps the media in the library |
+| `requeue-job.ts` | POST | Drupal (`requeueAiJob`) | Put a stalled job back on the queue (`{ id }`); for a job whose worker died mid-run. Drupal cron does this automatically once a lease expires |
+| `clear-jobs.ts` | POST | Drupal (`clearAiJobs`) | Delete finished jobs, clearing the activity drawer (`{ states? }` -> `{ cleared, kept }`). Terminal states only; a result still awaiting a decision is kept back |
 | `run-arc-analysis.ts` | POST | own API routes + Drupal | Run a character's whole arc analysis server-side (chunk -> analyse -> persist -> synthesize); called by the queued `dnd_arc_analysis` job, which has no browser to loop in |
 | `generate-story-text.ts` | POST | Ollama-compatible LLM | Non-streaming twin of `generate-story.ts` (same prompt via `utils/storyPrompt.ts`), for the queued story job |
 | `store-session-summary.ts` | POST | Ollama-compatible LLM + Drupal (`setSessionSummary`) | Summarise a session and save it in one call, for the queued summary job |
@@ -156,6 +160,38 @@ right-rail activity drawer with what is running, pending, and just finished.
 Portrait generation runs this way today (`CharacterDetailScreen`,
 `PortraitStudioScreen`); the arc, story, and session-summary job types exist and
 are callable, but their console screens still run those actions inline.
+
+#### Results are reviewed, never auto-applied
+
+A queued job can finish while you are on another screen, so it does not write
+what it generated onto the content. A finished `dnd_portrait` job leaves the
+render in the media library with `review: pending`, and the console decides:
+
+- The activity row shows **Review result** and links to the character's screen
+  (Portrait Studio for a party member, the NPC sheet for an NPC), carrying the
+  job id in `ctx.reviewJobId`.
+- That screen previews the render, amber-framed and labelled *not attached yet*,
+  next to the portrait it would replace.
+- **Accept** calls `resolveJob(id, true)` -> `api/resolve-job.ts`, which is what
+  finally sets `field_image`. **Discard** changes nothing on the character; the
+  render stays in the media library and can still be picked later.
+
+`usePortraitReview()` (`src/utils/portraitProfile.ts`) owns that whole cycle -
+queue, follow, pick a job back up by id, accept, discard - and both portrait
+screens drive it, so neither can grow a path that attaches without asking.
+
+#### Reading the drawer
+
+- **Queued** and **Running** are separate states with separate dots. A job
+  waiting for the host processor is not being worked on, and drawing it as busy
+  made us chase a render that had never started.
+- **Stalled** rows (`AiJob.stalled`) are jobs whose worker died. They show red
+  with a **Requeue** button rather than a spinner that will never resolve.
+- **Clear completed** deletes the rows in Drupal - the drawer holds no state of
+  its own. It reports how many it kept back for review, and disables itself when
+  there is nothing to clear.
+- `useJobActivity()` returns a `refresh()` so an action that changes the list
+  (clear, requeue) updates at once instead of waiting out the 3s poll.
 
 Session-summary prompt logic (fast-model, non-streaming) lives in the
 server-only helper `src/utils/aiSummary.ts`, shared by `summarize-session.ts`,

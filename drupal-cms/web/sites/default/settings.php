@@ -885,6 +885,18 @@ if (getenv('IS_DDEV_PROJECT') == 'true' && file_exists(__DIR__ . '/settings.ddev
 $settings['config_sync_directory'] = DRUPAL_ROOT . '/../config/sync';
 
 /**
+ * HTML5 form validation.
+ *
+ * Drupal 12 will default this to FALSE, disabling browser-side HTML5
+ * validation on all forms. It is set explicitly here so behaviour does not
+ * change silently on upgrade, and so forms are exercised now under the
+ * future default. Server-side validation is unaffected.
+ *
+ * @see https://www.drupal.org/node/3494049
+ */
+$settings['enable_html5_validation'] = FALSE;
+
+/**
  * Load local development override configuration, if available.
  *
  * Create a settings.local.php file to override variables on secondary (staging,

@@ -515,6 +515,11 @@ kbd {
   box-shadow: 0 0 6px var(--brass-bright);
   animation: pulse 1.4s ease-in-out infinite;
 }
+/* Waiting for the processor: present but static, so it never reads as busy. */
+.dot-queued {
+  background: var(--ink-faint);
+  box-shadow: none;
+}
 .dot-done { background: #4caf6e; }
 .dot-failed { background: #c0392b; }
 .activity-bar {
@@ -529,6 +534,68 @@ kbd {
   background: linear-gradient(90deg, #b8862a, #f0c060);
   transition: width 220ms;
 }
+.activity-actions {
+  margin-top: 8px;
+  margin-left: 16px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+/* An activity row is a way back to the work, not just a status line: this is the
+   link to the screen that can accept or discard what the job produced. */
+.activity-open {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-display);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: .14em;
+  color: var(--ink-faint);
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  padding: 4px 8px;
+  background: none;
+  cursor: pointer;
+}
+.activity-open:hover {
+  color: var(--brass-bright);
+  border-color: var(--color-gold-border);
+}
+/* A pending result is the one thing in the drawer that needs a decision. */
+.activity-open.needs-review {
+  color: var(--color-warning);
+  border-color: var(--warning-a50);
+  background: var(--warning-a10);
+}
+.activity-open.needs-review:hover {
+  color: var(--color-warning);
+  border-color: var(--color-warning);
+}
+/* A job nobody is working on any more: red, like the failure it effectively is,
+   with the requeue sitting right next to the explanation. */
+.activity-open.needs-requeue {
+  color: var(--color-danger-text);
+  border-color: var(--danger-a40);
+}
+.activity-open.needs-requeue:hover {
+  color: var(--color-on-danger);
+  border-color: var(--color-danger);
+}
+.activity-row.activity-review {
+  border-left: 2px solid var(--color-warning);
+}
+.activity-row.activity-stalled {
+  border-left: 2px solid var(--color-danger);
+}
+.activity-review-count {
+  font-family: var(--font-display);
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: .14em;
+  color: var(--color-warning);
+}
+
 .activity-foot {
   border-top: 1px solid var(--rule);
   padding: 8px 12px;
@@ -539,8 +606,19 @@ kbd {
   text-transform: uppercase;
   letter-spacing: .15em;
   color: var(--ink-faint);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  cursor: pointer;
 }
-.activity-clear:hover { color: var(--brass); }
+.activity-clear:hover:not(:disabled) { color: var(--brass); }
+/* Nothing finished to delete: the button says so rather than doing nothing. */
+.activity-clear:disabled {
+  opacity: .45;
+  cursor: default;
+}
 
 /* ============================================================
    Variant A — Stately Ledger

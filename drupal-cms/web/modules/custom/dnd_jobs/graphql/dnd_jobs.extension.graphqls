@@ -13,12 +13,41 @@ type AiJob {
   label: String!
   "The processor's message: a summary on success, the reason on failure."
   message: String
-  "JSON-encoded result values produced by a finished job (e.g. imageUrl)."
+  """
+  JSON-encoded result values produced by a finished job (e.g. imageUrl).
+  A reviewable result carries a "review" key: pending until the operator has
+  accepted or discarded it, then accepted or discarded.
+  """
   result: String
+  """
+  UUID of the character the job is about, read from the request payload so it is
+  known while the job is still running. Lets the console link a job in flight to
+  the screen its output will land on. NULL for job types not about one character.
+  """
+  subjectId: String
+  """
+  TRUE when the job is claimed but its processing lease has expired - nothing is
+  working on it any more and it needs requeueing. Never TRUE for a job that is
+  genuinely still running.
+  """
+  stalled: Boolean
   "Unix timestamp the job became available to the processor."
   created: Int
   "Unix timestamp the job finished, or 0 while it is still queued/running."
   processed: Int
+}
+
+"""
+The outcome of clearing the activity log.
+"""
+type AiJobClearResult {
+  "How many finished jobs were deleted."
+  cleared: Int!
+  """
+  How many were deliberately kept: finished jobs whose result is still awaiting
+  a decision. Deleting one would strand what it produced.
+  """
+  kept: Int!
 }
 
 extend type Mutation {
@@ -35,6 +64,48 @@ extend type Mutation {
     "Display name for the activity bar."
     label: String!
   ): AiJob
+
+  """
+  Accept or discard a finished job's pending result. Jobs that generate content
+  (a portrait render) store it without applying it, so nothing reaches the
+  character until this is called with decision: "accept". Discarding leaves the
+  content alone; a discarded render stays in the media library.
+
+  Repeating a decision succeeds unchanged; contradicting one errors.
+  """
+  resolveAiJob(
+    "The job id whose result is being reviewed."
+    id: String!
+    """
+    Either "accept" (write the result onto the content) or "discard" (leave the
+    content as it is). A string rather than a boolean deliberately: a Boolean
+    argument here resolved twice per request, once as false, and silently
+    discarded accepted renders.
+    """
+    decision: String!
+  ): AiJob
+
+  """
+  Put a job back on the queue. For a job whose worker went away mid-run: the
+  claim is cleared so the next processor pass runs it again. hook_cron() does
+  this automatically for expired leases; this is the operator's manual trigger.
+  """
+  requeueAiJob(
+    "The job id to requeue."
+    id: String!
+  ): AiJob
+
+  """
+  Delete finished jobs. The console's activity log is a live view of the job
+  table with no copy of its own, so clearing it means deleting rows. Only
+  terminal states are accepted - live and pending work is never touched - and a
+  finished job still awaiting a decision is kept back rather than deleted, since
+  losing it would strand the render it produced.
+  """
+  clearAiJobs(
+    "Terminal states to clear (success, failure). Omit for both."
+    states: [String!]
+  ): AiJobClearResult
 }
 
 extend type Query {

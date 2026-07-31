@@ -1,6 +1,7 @@
 """FastAPI application for the D&D search query parser sidecar."""
 
 import base64
+import hashlib
 import logging
 import os
 import random
@@ -14,7 +15,14 @@ from fastapi.responses import JSONResponse
 from src.ai.abilities_rag import Ability, get_abilities, get_background
 from src.ai.ai_client import AIClient
 from src.ai.comfyui_client import ComfyUIClient
-from src.ai.comfyui_workflows import RenderSettings, Txt2ImgParams, txt2img_workflow
+from src.ai.comfyui_workflows import (
+    IdentityReference,
+    IpAdapterParams,
+    RenderSettings,
+    Txt2ImgParams,
+    ipadapter_workflow,
+    txt2img_workflow,
+)
 from src.ai.equipment_rag import get_equipment_descriptions
 from src.ai.image_describe import describe_image, fetch_image_bytes
 from src.ai.ollama_admin import unload_ollama_models
@@ -35,6 +43,7 @@ from src.characters.character_template import (
 )
 from src.characters.class_plan import get_class_plan
 from src.config.config_loader import load_config
+from src.config.config_types import ComfyUIConfig
 from src.sidecar.models import (
     ArcAggregateRequest,
     ArcAnalysisRequest,
@@ -601,19 +610,85 @@ def _resolve_abilities(req: BuildCharacterRequest) -> list[Ability]:
     return unique
 
 
+def _identity_reference(
+    client: ComfyUIClient, comfyui: ComfyUIConfig, req: PortraitRequest
+) -> Optional[IdentityReference]:
+    """Upload the portrait whose likeness a render should preserve.
+
+    Every failure here returns None rather than raising: losing the likeness is
+    a worse render, not a failed one, so an unfetchable reference degrades to
+    text-to-image with a logged reason instead of denying the operator a
+    portrait. The endpoint reports which path it took via ``used_reference``.
+
+    Args:
+        client: The ComfyUI client to upload the reference through.
+        comfyui: The ComfyUI configuration (checked for IPAdapter assets).
+        req: The portrait request, carrying the reference URL and weight.
+
+    Returns:
+        An IdentityReference naming the uploaded image, or None when identity
+        conditioning is unconfigured, unwanted, or unavailable.
+    """
+    if not req.reference_image_url:
+        return None
+    if not comfyui.assets.supports_identity():
+        logger.info(
+            "Reference portrait supplied but IPAdapter is not configured "
+            "(set COMFYUI_IPADAPTER_MODEL and COMFYUI_CLIP_VISION); "
+            "generating text-to-image instead"
+        )
+        return None
+
+    # Same CA bundle rationale as /describe-image: the local Drupal serves file
+    # URLs over HTTPS with a locally-generated certificate.
+    image_bytes = fetch_image_bytes(
+        req.reference_image_url, ca_bundle=load_config().drupal.ca_bundle
+    )
+    if image_bytes is None:
+        logger.warning(
+            "Could not fetch the reference portrait %s; generating text-to-image",
+            req.reference_image_url,
+        )
+        return None
+
+    # Name the upload after its content so re-rendering the same character
+    # reuses one file instead of piling up copies, while a genuinely different
+    # reference always lands under a new name - ComfyUI keys LoadImage on the
+    # filename, so reusing one for changed bytes can serve the old image.
+    digest = hashlib.sha256(image_bytes).hexdigest()[:16]
+    name = client.upload_image(f"identity_{digest}.png", image_bytes)
+    if name is None:
+        logger.warning("Could not upload the reference portrait; generating text-to-image")
+        return None
+
+    identity = IdentityReference(
+        image=name,
+        ipadapter_model=comfyui.assets.ipadapter_model,
+        clip_vision=comfyui.assets.clip_vision,
+    )
+    if req.identity_weight is not None:
+        identity.weight = req.identity_weight
+
+    return identity
+
+
 @_character_router.post("/portrait", response_model=PortraitResponse)
 def character_portrait_endpoint(req: PortraitRequest) -> PortraitResponse:
     """Generate a character portrait with local ComfyUI, returned as base64 PNG.
 
-    Phase A is text-to-image only: the prompt is built from the character
-    profile. Models are unloaded afterwards so the SD checkpoint does not stay
-    resident alongside other local AI services.
+    Text-to-image by default. When the request carries a reference portrait and
+    the IPAdapter models are configured, the render is conditioned on that image
+    so it stays recognisably the same character. Models are unloaded afterwards
+    so the SD checkpoint does not stay resident alongside other local AI
+    services.
 
     Args:
-        req: PortraitRequest with the character profile and optional seed/size.
+        req: PortraitRequest with the character profile, optional seed/size, and
+            an optional reference portrait to keep the likeness of.
 
     Returns:
-        PortraitResponse with the base64 PNG, the seed used, prompt, and alt text.
+        PortraitResponse with the base64 PNG, the seed used, prompt, alt text,
+        and whether the reference was actually applied.
 
     Raises:
         HTTPException: 503 when ComfyUI is disabled, unconfigured, or
@@ -656,15 +731,28 @@ def character_portrait_endpoint(req: PortraitRequest) -> PortraitResponse:
     if req.height is not None:
         render.height = req.height
 
-    workflow = txt2img_workflow(
-        Txt2ImgParams(
-            checkpoint=comfyui.assets.checkpoint,
-            positive=positive,
-            negative=negative,
-            seed=seed,
-            render=render,
+    identity = _identity_reference(client, comfyui, req)
+    if identity is not None:
+        workflow = ipadapter_workflow(
+            IpAdapterParams(
+                checkpoint=comfyui.assets.checkpoint,
+                positive=positive,
+                negative=negative,
+                seed=seed,
+                identity=identity,
+                render=render,
+            )
         )
-    )
+    else:
+        workflow = txt2img_workflow(
+            Txt2ImgParams(
+                checkpoint=comfyui.assets.checkpoint,
+                positive=positive,
+                negative=negative,
+                seed=seed,
+                render=render,
+            )
+        )
 
     # Free any resident Ollama model before the SD checkpoint loads: two large
     # models resident on this CPU-only box is the top OOM risk. Best-effort - a
@@ -692,6 +780,7 @@ def character_portrait_endpoint(req: PortraitRequest) -> PortraitResponse:
         seed=seed,
         prompt=positive,
         alt=_portrait_alt(req.profile),
+        used_reference=identity is not None,
     )
 
 
@@ -789,7 +878,10 @@ def describe_image_endpoint(req: DescribeImageRequest) -> PromptResponse:
             status_code=503,
             detail="Ollama is not configured (set OLLAMA_HOST/OLLAMA_PORT)",
         )
-    image_bytes = fetch_image_bytes(req.image_url)
+    # Portrait URLs point at the local Drupal, which serves HTTPS with a
+    # locally-generated certificate; verify against the same CA bundle the
+    # Drupal client uses or an https:// file URL fails verification.
+    image_bytes = fetch_image_bytes(req.image_url, ca_bundle=load_config().drupal.ca_bundle)
     if image_bytes is None:
         raise HTTPException(status_code=502, detail="Could not fetch the source image")
     # CPU vision inference (esp. cold model load) is slow; reuse the generous

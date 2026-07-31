@@ -14,3 +14,12 @@ services:
     arguments:
       - '@entity_type.manager'
       - '@database'
+      - '@datetime.time'
+
+  dnd_jobs.job_review:
+    class: Drupal\dnd_jobs\Service\JobReview
+    arguments:
+      - '@dnd_jobs.job_queue'
+      - '@entity_type.manager'
+      - '@dnd_content.portrait_writer'
+      - '@current_user'

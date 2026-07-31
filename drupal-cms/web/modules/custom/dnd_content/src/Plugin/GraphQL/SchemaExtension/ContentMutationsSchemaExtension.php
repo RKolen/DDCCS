@@ -137,6 +137,67 @@ class ContentMutationsSchemaExtension extends SdlSchemaExtensionPluginBase {
         ->map('story_number', $builder->fromArgument('storyNumber'))
         ->map('session_date', $builder->fromArgument('sessionDate')),
     );
+
+    $this->registerWikiCacheResolvers($registry, $builder);
+  }
+
+  /**
+   * Register the wiki cache read and write resolvers.
+   *
+   * The wiki cache backs the Python RAG system's DrupalWikiCache. It is
+   * deliberately served by hand-written resolvers rather than exposed through
+   * graphql_compose, so Gatsby never sources these nodes.
+   *
+   * @param \Drupal\graphql\GraphQL\ResolverRegistryInterface $registry
+   *   The resolver registry.
+   * @param \Drupal\graphql\GraphQL\ResolverBuilder $builder
+   *   The resolver builder.
+   */
+  private function registerWikiCacheResolvers(
+    ResolverRegistryInterface $registry,
+    ResolverBuilder $builder,
+  ): void {
+    $registry->addFieldResolver(
+      'Query',
+      'wikiCacheEntry',
+      $builder->produce('wiki_cache_lookup')
+        ->map('url_hash', $builder->fromArgument('urlHash')),
+    );
+
+    $registry->addFieldResolver(
+      'Query',
+      'wikiCacheCount',
+      $builder->produce('wiki_cache_count'),
+    );
+
+    $registry->addFieldResolver(
+      'Mutation',
+      'setWikiCacheEntry',
+      $builder->produce('set_wiki_cache_entry')
+        ->map('url_hash', $builder->fromArgument('urlHash'))
+        ->map('url', $builder->fromArgument('url'))
+        ->map('fetched_at', $builder->fromArgument('fetchedAt'))
+        ->map('content', $builder->fromArgument('content')),
+    );
+
+    $registry->addFieldResolver(
+      'Mutation',
+      'deleteWikiCacheEntry',
+      $builder->produce('delete_wiki_cache_entry')
+        ->map('url_hash', $builder->fromArgument('urlHash')),
+    );
+
+    // Cache entries are flat arrays from the producers above, so every
+    // WikiCacheEntry field is a key lookup on the parent.
+    foreach (['url', 'fetchedAt', 'content'] as $field) {
+      $registry->addFieldResolver(
+        'WikiCacheEntry',
+        $field,
+        $builder->produce('wiki_cache_entry_field')
+          ->map('entry', $builder->fromParent())
+          ->map('field', $builder->fromValue($field)),
+      );
+    }
   }
 
 }

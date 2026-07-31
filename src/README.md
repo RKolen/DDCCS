@@ -15,9 +15,8 @@ see [docs/ARCHITECTURE.md](../docs/ARCHITECTURE.md).
 
 > The interactive consultant menu (`python -m src.cli.dnd_consultant`) is the
 > **legacy `v1.0.0` path** and is deprecated. The engine has changed enough that
-> it likely no longer runs end to end. Utility flags such as `--reindex`,
-> `--milvus-status`, and `--sync-drupal` are still used. New user-facing work
-> lives in the frontend.
+> it likely no longer runs end to end. Utility flags such as `--reindex` and
+> `--milvus-status` are still used. New user-facing work lives in the frontend.
 
 ## Package Organization
 
@@ -122,7 +121,7 @@ src/
 |   |-- semantic_retriever.py  # Semantic RAG via Milvus with keyword fallback
 |   |-- index_sync.py          # Incremental sync called after JSON file saves
 |   |-- comfyui_client.py      # HTTP client for the local ComfyUI workflow API (portraits)
-|   |-- comfyui_workflows.py   # ComfyUI API-JSON workflow builders (txt2img portrait graph)
+|   |-- comfyui_workflows.py   # ComfyUI API-JSON workflow builders (txt2img + IPAdapter likeness graphs)
 |   |-- portrait_prompt.py     # Builds SD positive/negative prompts from a character profile
 |   |-- ollama_admin.py        # Best-effort Ollama model unloading (free RAM before SD generation)
 |   `-- image_describe.py      # Image->prompt via an Ollama vision model (IMAGE_TO_PROMPT_MODEL)
@@ -132,8 +131,8 @@ src/
 |   `-- config_loader.py       # Config loading from file/env
 |
 |-- integration/        # External service integration
-|   |-- drupal_sync.py         # Push characters/stories/items/monsters to Drupal, trigger Gatsby builds
-|   `-- drupal_graphql.py      # Minimal Drupal GraphQL read client (taxonomy/content reads for the class plan)
+|   |-- drupal_sync.py         # Drupal-backed wiki page cache (GraphQL; backs DrupalWikiCache)
+|   `-- drupal_graphql.py      # Drupal GraphQL client: query_drupal (degrades to {}) + mutate_drupal (raises)
 |
 |-- sidecar/            # FastAPI microservice (search + spotlight) -- see sidecar/README.md
 |   |-- app.py                 # FastAPI app (/health, /search/parse-query, /eval/spotlight)
@@ -171,9 +170,8 @@ src/
 |   `-- display_file.py             # Standalone file viewer
 |
 `-- cli/                # Command-line interface (legacy menu + live utility flags)
-    |-- dnd_consultant.py                  # Main interactive CLI (legacy) + --reindex / --milvus-status / --sync-drupal flags
+    |-- dnd_consultant.py                  # Main interactive CLI (legacy) + --reindex / --milvus-status flags
     |-- dnd_cli_helpers.py                 # CLI helper functions
-    |-- drupal_commands.py                 # --sync-drupal handler
     |-- milvus_commands.py                 # --reindex and --milvus-status handlers
     |-- cli_story_manager.py               # Story management CLI
     |-- cli_character_manager.py           # Character management CLI
@@ -192,6 +190,87 @@ src/
     `-- setup.py                           # Workspace initialization
 ```
 
+## Image->prompt (`src/ai/image_describe.py`)
+
+Turns an existing portrait into a positive prompt via a local Ollama vision
+model. Three constraints are load-bearing, all found the hard way:
+
+**Do not extend `_INSTRUCTION` without testing it against a real image.**
+Qwen2.5-VL under Ollama dies on certain prompt texts with
+`GGML_ASSERT(a->ne[2] * 4 == b->ne[0]) failed` — a shape assert in the vision
+patch merger, i.e. the model runner crashing, not a poor answer. It is
+deterministic per phrasing and independent of the image: the current two
+sentences succeed every time, while the same text plus one more sentence about
+garments or colours fails every time, on images from 512x768 to 1024x1536.
+Ollama returns this as HTTP 500 with an `error` key, which is why the body is
+read before the status is checked — swallowing it surfaces in the console as
+"the vision model returned no description" and sends you hunting through prompt
+wording instead.
+
+**Keep the prompt inside one encoder window.** Stable Diffusion reads 77 tokens
+at a time and adherence decays across windows, so a 250-token prose description
+does not fail loudly — the leading concepts dominate and the rest dilutes to
+noise. A gold dragonborn described in 154 words of prose about faces, hair, and
+elegant robes rendered as a human woman; the same checkpoint (DreamShaper 8)
+renders a correct dragonborn from `Green dragonborn, stoic, armored,
+protective`. Hence `_MAX_TAGS`, and the species from the character's own record
+placed first, where it cannot be diluted or hallucinated away.
+
+**Spend the tags on the character, not the room.** A faithful description of a
+portrait includes its setting, and those tags compete: prompts carrying
+`grand hall, chandeliers, audience watching` produced a picture of an archway
+with a tiny figure in it. `_SCENE_WORDS` drops them, and `_NON_VISUAL_TAGS`
+drops impressions (`majestic presence`) that cost tokens and change nothing.
+
+## Likeness across regenerations (`src/ai/comfyui_workflows.py`)
+
+Image->prompt is how a portrait is *described*; it is not how a character keeps
+their face. Describing a picture and re-rendering the description is lossy in
+both directions — the tags drop what they cannot name, and the checkpoint fills
+the gaps from its own priors — so a chain of prompt-only regenerations drifts
+into a different person. Chained img2img is no better: colour and contrast shift
+on every pass.
+
+`ipadapter_workflow()` is the answer to that. It conditions the model on the
+reference portrait's own CLIP-vision embedding instead of on words about it, so
+identity survives regeneration while the prompt still moves pose, clothing, and
+mood. The graph is `txt2img_workflow()` with the identity chain
+(`IPAdapterModelLoader` + `CLIPVisionLoader` + `LoadImage` ->
+`IPAdapterAdvanced`) spliced between the checkpoint and the sampler; the
+sampler's `model` input is rewired onto the patched model. **That rewire is the
+whole thing** — leave it out and the chain is built, ignored, and the render
+comes back as a plain txt2img with nothing to indicate anything went wrong.
+
+Three requirements, all checked before this path is taken (see
+`_identity_reference` in `sidecar/app.py`):
+
+- the **ComfyUI-IPAdapter-plus** custom nodes are installed (a missing node type
+  fails the whole queued prompt, not just the chain);
+- `COMFYUI_IPADAPTER_MODEL` and `COMFYUI_CLIP_VISION` both name files present in
+  ComfyUI's `models/ipadapter/` and `models/clip_vision/`. They are configured
+  rather than derived because the pair must match the checkpoint family — an
+  SD 1.5 IPAdapter on an SDXL checkpoint produces nothing useful;
+- the reference image can be fetched and uploaded to ComfyUI.
+
+Any of those missing degrades to text-to-image with a logged reason rather than
+failing the render, and the response's `used_reference` says which one actually
+ran. `weight` (default 0.8) trades prompt freedom against likeness: above ~0.9
+the prompt stops mattering and every render is the reference again; below ~0.5
+the likeness washes out.
+
+**Configure a general IPAdapter, never a `-face` variant.** Face adapters encode
+*human facial identity*; a non-human character's head is outside that
+distribution, so the adapter maps it to the nearest human face and rebuilds
+that. It fails in the most misleading way possible: costume, palette, and
+setting transfer perfectly, so the render looks like it worked while the species
+has been silently replaced. A gold dragonborn reference at `weight: 1` on
+`ip-adapter-plus-face_sd15` produced a human woman *with `human` in the negative
+prompt*; the same prompt, seed, and reference on `ip-adapter-plus_sd15` at
+`weight: 0.7` produced the dragonborn. Raising the weight makes a face adapter
+worse, not better - weight is how hard the human reconstruction is imposed. And
+no negative prompt fixes it: a negative removes a concept, it cannot supply the
+one the model is missing.
+
 ## Running the System
 
 ### Search/spotlight sidecar (used by the frontend)
@@ -207,7 +286,6 @@ See [sidecar/README.md](sidecar/README.md).
 ```bash
 python -m src.cli.dnd_consultant --reindex         # build/refresh the Milvus index
 python -m src.cli.dnd_consultant --milvus-status   # report index status
-python -m src.cli.dnd_consultant --sync-drupal     # push content into Drupal
 ```
 
 ### Legacy interactive CLI (deprecated)

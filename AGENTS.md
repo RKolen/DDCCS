@@ -332,7 +332,8 @@ src/
 |   |-- config_types.py  # AIConfig, RAGConfig, DisplayConfig, PathConfig, DrupalConfig
 |   |-- config_loader.py
 |-- integration/     # External service sync
-|   |-- drupal_sync.py  # DrupalSync: push_character, push_story, push_item, push_monster, trigger_gatsby_build
+|   |-- drupal_sync.py     # DrupalSync: Drupal-backed wiki page cache over GraphQL
+|   |-- drupal_graphql.py  # query_drupal (degrades to {}) / mutate_drupal (raises)
 |-- utils/           # Shared utilities (CHECK FIRST)
 |-- cli/             # Command-line interface
 |   |-- dnd_consultant.py  # Main interactive CLI

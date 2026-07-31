@@ -264,18 +264,34 @@ class SidecarConfig:
 
 @dataclass
 class ComfyUIAssets:
-    """ComfyUI workflow templates and model names used for generation.
+    """The model files ComfyUI generation and image->prompt need.
 
-    Workflow paths are relative to ``src/sidecar/comfyui_workflows/``.
     ``image_to_prompt_model`` is the Ollama vision model that describes an
-    existing portrait into a prompt (image->prompt); the checkpoint is the
-    Stable Diffusion model file name inside ComfyUI's ``models/`` dir.
+    existing portrait into a prompt (image->prompt); ``checkpoint`` is the
+    Stable Diffusion model file name inside ComfyUI's ``models/checkpoints/``.
+
+    ``ipadapter_model`` and ``clip_vision`` are the identity-conditioning pair
+    (in ``models/ipadapter/`` and ``models/clip_vision/``), used to keep a
+    regenerated portrait recognisably the same character. They are configured
+    rather than derived because the right pair depends on the checkpoint family
+    - an SD 1.5 IPAdapter silently produces nothing useful on an SDXL
+    checkpoint. Both empty means identity conditioning is simply unavailable and
+    generation falls back to text-to-image.
     """
 
-    txt2img_workflow: str = ""
-    ipadapter_workflow: str = ""
     image_to_prompt_model: str = ""
     checkpoint: str = ""
+    ipadapter_model: str = ""
+    clip_vision: str = ""
+
+    def supports_identity(self) -> bool:
+        """Check whether IPAdapter identity conditioning can be used.
+
+        Returns:
+            True when both the IPAdapter model and its CLIP-vision encoder are
+            configured. One without the other cannot build a valid graph.
+        """
+        return bool(self.ipadapter_model and self.clip_vision)
 
 
 @dataclass

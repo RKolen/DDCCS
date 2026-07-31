@@ -1,6 +1,7 @@
 """Tests for src.integration.drupal_sync.
 
-Unit tests mock urllib so no live Drupal instance is required.
+The wiki cache is reached over GraphQL; JSON:API is disabled server-side.
+Unit tests patch the GraphQL transport so no live Drupal instance is required.
 Integration tests (prefixed live_) are skipped unless DRUPAL_BASE_URL is set.
 
 Usage (unit tests only):
@@ -8,22 +9,17 @@ Usage (unit tests only):
 
 Usage (with live Drupal via DDEV):
     DRUPAL_BASE_URL=https://drupal-cms.ddev.site \\
-    DRUPAL_USER=admin DRUPAL_PASSWORD=... \\
+    DRUPAL_GRAPHQL_TOKEN=... \\
     python3 tests/integration/test_drupal_sync.py
 """
 
-import email.message
-import json
 import os
+import time
 import unittest.mock
-import urllib.error
-from io import BytesIO
-from pathlib import Path
-from typing import Any, Optional
+from typing import Any, Dict, Optional
 
 from tests.test_helpers import (
     make_drupal_config,
-    make_mock_urlopen,
     setup_test_environment,
     import_module,
 )
@@ -35,327 +31,269 @@ drupal_sync_mod = import_module("src.integration.drupal_sync")
 DrupalSync = drupal_sync_mod.DrupalSync
 DrupalSyncError = drupal_sync_mod.DrupalSyncError
 
+drupal_graphql_mod = import_module("src.integration.drupal_graphql")
+DrupalGraphQLError = drupal_graphql_mod.DrupalGraphQLError
+
 config_types_mod = import_module("src.config.config_types")
 DrupalConfig = config_types_mod.DrupalConfig
 
-path_utils_mod = import_module("src.utils.path_utils")
-get_characters_dir = path_utils_mod.get_characters_dir
-
-
-# ---------------------------------------------------------------------------
-# Helpers (local aliases for shared test_helpers utilities)
-# ---------------------------------------------------------------------------
 
 _make_config = make_drupal_config
-_mock_urlopen = make_mock_urlopen
+
+_ENTRY = {
+    "url": "https://wiki.test/page",
+    "fetchedAt": 1753900000.5,
+    "content": '{"sections": []}',
+}
 
 
 def _skip_if_no_live_drupal() -> Optional[str]:
     """Return a skip reason when DRUPAL_BASE_URL is not configured."""
     if not os.getenv("DRUPAL_BASE_URL"):
-        return "DRUPAL_BASE_URL not set — live Drupal tests skipped"
+        return "DRUPAL_BASE_URL not set - live Drupal tests skipped"
     return None
 
 
 def _live_config() -> Any:
-    """Build a DrupalConfig from environment variables for live tests."""
+    """Build a DrupalConfig from environment variables for live tests.
+
+    The CA that verifies DDEV's TLS comes from MKCERT_CA - the same variable
+    start.sh exports for the sidecar and Gatsby. It maps onto
+    ``DrupalConfig.ca_bundle``; the names differ, so read the variable rather
+    than guessing one from the field.
+    """
     return DrupalConfig(
         base_url=os.getenv("DRUPAL_BASE_URL", ""),
-        user=os.getenv("DRUPAL_USER", ""),
-        password=os.getenv("DRUPAL_PASSWORD", ""),
-        gatsby_webhook_url=os.getenv("DRUPAL_GATSBY_WEBHOOK_URL", ""),
+        graphql_token=os.getenv("DRUPAL_GRAPHQL_TOKEN", ""),
+        ca_bundle=os.getenv("MKCERT_CA", ""),
     )
 
 
-# ---------------------------------------------------------------------------
-# Payload builder tests (public static methods, no HTTP needed)
-# ---------------------------------------------------------------------------
-
-def test_build_character_payload_title_only() -> None:
-    """Character payload uses name as title when optional fields are absent."""
-    print("\n[TEST] build_character_payload - title only")
-    payload = DrupalSync.build_character_payload({"name": "Aragorn"})
-    assert payload["data"]["type"] == "node--character"
-    assert payload["data"]["attributes"]["title"] == "Aragorn"
-    assert "field_backstory" not in payload["data"]["attributes"]
-    print("  [OK] title-only payload is correct")
-    print("[PASS] build_character_payload - title only")
-
-
-def test_build_character_payload_all_optional_fields() -> None:
-    """Character payload maps all optional text fields correctly."""
-    print("\n[TEST] build_character_payload - all optional fields")
-    data = {
-        "name": "Frodo",
-        "backstory": "A hobbit from the Shire.",
-        "personality_traits": ["Brave", "Modest"],
-        "bonds": "The One Ring must be destroyed.",
-        "ideals": ["Friendship"],
-        "flaws": ["Drawn to the Ring's power"],
-    }
-    payload = DrupalSync.build_character_payload(data)
-    attrs = payload["data"]["attributes"]
-    assert attrs["title"] == "Frodo"
-    assert attrs["field_backstory"][0]["value"] == "A hobbit from the Shire."
-    assert len(attrs["field_personality_traits"]) == 2
-    assert attrs["field_bonds"][0]["value"] == "The One Ring must be destroyed."
-    assert len(attrs["field_ideals"]) == 1
-    assert len(attrs["field_flaws"]) == 1
-    print("  [OK] all optional fields mapped correctly")
-    print("[PASS] build_character_payload - all optional fields")
-
-
-def test_build_story_payload_structure() -> None:
-    """Story payload has the expected JSON:API structure."""
-    print("\n[TEST] build_story_payload - structure")
-    payload = DrupalSync.build_story_payload("My Campaign -- session_01", "## Session 1\n\nText")
-    assert payload["data"]["type"] == "node--story"
-    attrs = payload["data"]["attributes"]
-    assert attrs["title"] == "My Campaign -- session_01"
-    assert attrs["body"]["value"] == "## Session 1\n\nText"
-    assert attrs["body"]["format"] == "plain_text"
-    print("  [OK] story payload structure is correct")
-    print("[PASS] build_story_payload - structure")
-
-
-# ---------------------------------------------------------------------------
-# push_character tests (mocked internals)
-# ---------------------------------------------------------------------------
-
-def test_push_character_posts_new_node() -> None:
-    """push_character POSTs when no existing node is found."""
-    print("\n[TEST] push_character - POST new node")
-    sync = DrupalSync(_make_config())
-    char_file = Path(get_characters_dir()) / "aragorn.json"
-
-    with unittest.mock.patch.object(sync, "_find_node_uuid", return_value=None), \
-         unittest.mock.patch.object(sync, "_post_node", return_value="uuid-new") as mock_post:
-        result = sync.push_character(char_file)
-
-    assert result == "uuid-new"
-    mock_post.assert_called_once_with("character", unittest.mock.ANY)
-    print("  [OK] POST called for new character")
-    print("[PASS] push_character - POST new node")
-
-
-def test_push_character_patches_existing_node() -> None:
-    """push_character PATCHes when an existing node UUID is found."""
-    print("\n[TEST] push_character - PATCH existing node")
-    sync = DrupalSync(_make_config())
-    char_file = Path(get_characters_dir()) / "frodo.json"
-
-    with unittest.mock.patch.object(sync, "_find_node_uuid", return_value="uuid-existing"), \
-         unittest.mock.patch.object(sync, "_patch_node") as mock_patch:
-        result = sync.push_character(char_file)
-
-    assert result == "uuid-existing"
-    mock_patch.assert_called_once_with("character", "uuid-existing", unittest.mock.ANY)
-    print("  [OK] PATCH called for existing character")
-    print("[PASS] push_character - PATCH existing node")
-
-
-def test_push_character_raises_on_http_error() -> None:
-    """push_character propagates DrupalSyncError when the HTTP call fails."""
-    print("\n[TEST] push_character - HTTP error propagates as DrupalSyncError")
-    sync = DrupalSync(_make_config())
-    char_file = Path(get_characters_dir()) / "gandalf.json"
-    http_error = urllib.error.HTTPError(
-        url="https://drupal-cms.ddev.site/jsonapi/node/character",
-        code=422,
-        msg="Unprocessable Entity",
-        hdrs=email.message.Message(),
-        fp=BytesIO(b'{"errors":[{"detail":"Validation failed"}]}'),
+def _patch_query(result: Dict[str, Any]) -> Any:
+    """Patch query_drupal in the drupal_sync module to return a fixed payload."""
+    return unittest.mock.patch.object(
+        drupal_sync_mod, "query_drupal", return_value=result
     )
 
-    with unittest.mock.patch.object(sync, "_find_node_uuid", return_value=None), \
-         unittest.mock.patch("urllib.request.urlopen", side_effect=http_error):
-        raised = False
-        try:
-            sync.push_character(char_file)
-        except DrupalSyncError as exc:
-            raised = True
-            assert "422" in str(exc)
-    assert raised, "Expected DrupalSyncError from HTTP 422"
-    print("  [OK] DrupalSyncError raised and contains status code")
-    print("[PASS] push_character - HTTP error propagates as DrupalSyncError")
 
+def _patch_mutate(result: Any) -> Any:
+    """Patch mutate_drupal in the drupal_sync module.
 
-# ---------------------------------------------------------------------------
-# push_story tests (mocked internals)
-# ---------------------------------------------------------------------------
+    Args:
+        result: Return value, or an exception instance to raise.
 
-def test_push_story_posts_new_node(tmp_path: Path) -> None:
-    """push_story POSTs when no existing story node is found."""
-    print("\n[TEST] push_story - POST new node")
-    story_file = tmp_path / "session_01.md"
-    story_file.write_text("# Session 1\n\nThe party sets out.", encoding="utf-8")
-    sync = DrupalSync(_make_config())
-
-    with unittest.mock.patch.object(sync, "_find_node_uuid", return_value=None), \
-         unittest.mock.patch.object(sync, "_post_node", return_value="uuid-story") as mock_post:
-        result = sync.push_story(story_file, "Example_Campaign")
-
-    assert result == "uuid-story"
-    mock_post.assert_called_once_with("story", unittest.mock.ANY)
-    print("  [OK] POST called for new story")
-    print("[PASS] push_story - POST new node")
-
-
-def test_push_story_patches_existing_node(tmp_path: Path) -> None:
-    """push_story PATCHes when an existing story node is found."""
-    print("\n[TEST] push_story - PATCH existing node")
-    story_file = tmp_path / "session_02.md"
-    story_file.write_text("# Session 2\n\nThe party continues.", encoding="utf-8")
-    sync = DrupalSync(_make_config())
-
-    with unittest.mock.patch.object(sync, "_find_node_uuid", return_value="uuid-old-story"), \
-         unittest.mock.patch.object(sync, "_patch_node") as mock_patch:
-        result = sync.push_story(story_file, "Example_Campaign")
-
-    assert result == "uuid-old-story"
-    mock_patch.assert_called_once_with("story", "uuid-old-story", unittest.mock.ANY)
-    print("  [OK] PATCH called for existing story")
-    print("[PASS] push_story - PATCH existing node")
-
-
-# ---------------------------------------------------------------------------
-# trigger_gatsby_build tests (mocked urllib)
-# ---------------------------------------------------------------------------
-
-def test_trigger_gatsby_build_raises_without_url() -> None:
-    """trigger_gatsby_build raises DrupalSyncError when no webhook URL is set."""
-    print("\n[TEST] trigger_gatsby_build - no webhook URL raises")
-    sync = DrupalSync(_make_config(gatsby_webhook_url=""))
-    raised = False
-    try:
-        sync.trigger_gatsby_build()
-    except DrupalSyncError:
-        raised = True
-    assert raised, "Expected DrupalSyncError when gatsby_webhook_url is empty"
-    print("  [OK] DrupalSyncError raised as expected")
-    print("[PASS] trigger_gatsby_build - no webhook URL raises")
-
-
-def test_trigger_gatsby_build_returns_true_on_success() -> None:
-    """trigger_gatsby_build returns True when webhook returns 200."""
-    print("\n[TEST] trigger_gatsby_build - success")
-    sync = DrupalSync(_make_config(gatsby_webhook_url="https://drupal-cms.ddev.site/gatsby/build"))
-    mock_resp = _mock_urlopen(200, b"{}")
-
-    with unittest.mock.patch("urllib.request.urlopen", return_value=mock_resp):
-        result = sync.trigger_gatsby_build()
-
-    assert result is True
-    print("  [OK] True returned on 200 response")
-    print("[PASS] trigger_gatsby_build - success")
-
-
-def test_trigger_gatsby_build_raises_on_url_error() -> None:
-    """trigger_gatsby_build wraps URLError in DrupalSyncError."""
-    print("\n[TEST] trigger_gatsby_build - URLError wraps to DrupalSyncError")
-    sync = DrupalSync(_make_config(gatsby_webhook_url="https://drupal-cms.ddev.site/gatsby/build"))
-    url_error = urllib.error.URLError("connection refused")
-
-    with unittest.mock.patch("urllib.request.urlopen", side_effect=url_error):
-        raised = False
-        try:
-            sync.trigger_gatsby_build()
-        except DrupalSyncError:
-            raised = True
-    assert raised, "Expected DrupalSyncError wrapping URLError"
-    print("  [OK] URLError wrapped in DrupalSyncError")
-    print("[PASS] trigger_gatsby_build - URLError wraps to DrupalSyncError")
-
-
-# ---------------------------------------------------------------------------
-# node lookup routing tests (end-to-end via push_character + mocked urlopen)
-# ---------------------------------------------------------------------------
-
-def test_push_character_posts_when_lookup_returns_empty() -> None:
-    """push_character POSTs when the GET lookup returns no matching nodes."""
-    print("\n[TEST] push_character - GET empty -> POST")
-    sync = DrupalSync(_make_config())
-    char_file = Path(get_characters_dir()) / "aragorn.json"
-
-    get_body = json.dumps({"data": []}).encode()
-    post_body = json.dumps({"data": {"id": "post-uuid"}}).encode()
-
-    call_count = 0
-
-    def side_effect(_req: Any, timeout: int = 30):
-        # `timeout` must keep its name: drupal_sync calls urlopen(req, timeout=N)
-        # by keyword. Consumed here because the mock does not honour it.
-        _ = timeout
-        nonlocal call_count
-        call_count += 1
-        if call_count == 1:
-            return _mock_urlopen(200, get_body)
-        return _mock_urlopen(201, post_body)
-
-    with unittest.mock.patch("urllib.request.urlopen", side_effect=side_effect):
-        result = sync.push_character(char_file)
-
-    assert result == "post-uuid"
-    assert call_count == 2, "Expected GET then POST"
-    print("  [OK] GET empty -> POST called -> UUID returned")
-    print("[PASS] push_character - GET empty -> POST")
-
-
-def test_push_character_patches_when_lookup_returns_node() -> None:
-    """push_character PATCHes when the GET lookup finds an existing node."""
-    print("\n[TEST] push_character - GET match -> PATCH")
-    sync = DrupalSync(_make_config())
-    char_file = Path(get_characters_dir()) / "frodo.json"
-
-    get_body = json.dumps({"data": [{"id": "existing-uuid"}]}).encode()
-    patch_body = json.dumps({"data": {"id": "existing-uuid"}}).encode()
-
-    call_count = 0
-
-    def side_effect(_req: Any, timeout: int = 30):
-        # `timeout` must keep its name: drupal_sync calls urlopen(req, timeout=N)
-        # by keyword. Consumed here because the mock does not honour it.
-        _ = timeout
-        nonlocal call_count
-        call_count += 1
-        if call_count == 1:
-            return _mock_urlopen(200, get_body)
-        return _mock_urlopen(200, patch_body)
-
-    with unittest.mock.patch("urllib.request.urlopen", side_effect=side_effect):
-        result = sync.push_character(char_file)
-
-    assert result == "existing-uuid"
-    assert call_count == 2, "Expected GET then PATCH"
-    print("  [OK] GET match -> PATCH called -> existing UUID returned")
-    print("[PASS] push_character - GET match -> PATCH")
-
-
-# ---------------------------------------------------------------------------
-# Live integration tests (skipped when DRUPAL_BASE_URL is not set)
-# ---------------------------------------------------------------------------
-
-def test_live_push_character_real_drupal() -> None:
-    """Live: push aragorn.json to a running Drupal instance.
-
-    Requires JSON:API write access enabled in Drupal (jsonapi, basic_auth,
-    serialization modules enabled, read-only mode off).
+    Returns:
+        A patcher for use as a context manager.
     """
-    print("\n[TEST] live push_character - aragorn.json")
+    if isinstance(result, Exception):
+        return unittest.mock.patch.object(
+            drupal_sync_mod, "mutate_drupal", side_effect=result
+        )
+    return unittest.mock.patch.object(
+        drupal_sync_mod, "mutate_drupal", return_value=result
+    )
+
+
+# ---------------------------------------------------------------------------
+# Read path
+# ---------------------------------------------------------------------------
+
+def test_get_wiki_page_cache_maps_entry_fields() -> None:
+    """A cache hit is mapped onto the field_* keys DrupalWikiCache expects."""
+    sync = DrupalSync(_make_config())
+    with _patch_query({"wikiCacheEntry": _ENTRY}):
+        result = sync.get_wiki_page_cache("abc123")
+
+    assert result is not None
+    assert result["field_wiki_url"] == "https://wiki.test/page"
+    assert result["field_wiki_fetched_at"] == 1753900000.5
+    assert result["field_wiki_content"] == '{"sections": []}'
+
+
+def test_get_wiki_page_cache_returns_none_on_miss() -> None:
+    """A null entry is a cache miss, not an error."""
+    sync = DrupalSync(_make_config())
+    with _patch_query({"wikiCacheEntry": None}):
+        assert sync.get_wiki_page_cache("missing") is None
+
+
+def test_get_wiki_page_cache_returns_none_when_drupal_unreachable() -> None:
+    """An unreachable Drupal degrades to a miss so the caller re-fetches."""
+    sync = DrupalSync(_make_config())
+    with _patch_query({}):
+        assert sync.get_wiki_page_cache("abc123") is None
+
+
+def test_get_wiki_page_cache_passes_url_hash_as_variable() -> None:
+    """The hash is sent as a GraphQL variable, not interpolated into the query."""
+    sync = DrupalSync(_make_config())
+    with _patch_query({"wikiCacheEntry": _ENTRY}) as mocked:
+        sync.get_wiki_page_cache("hash-under-test")
+
+    variables = mocked.call_args[0][1]
+    assert variables == {"urlHash": "hash-under-test"}
+
+
+def test_client_config_is_passed_to_the_transport() -> None:
+    """The config the client was built with is the one the request uses.
+
+    Regression guard: the transport otherwise falls back to the globally loaded
+    configuration, silently ignoring the connection the caller asked for.
+    """
+    config = DrupalConfig(base_url="https://other-drupal.test", graphql_token="tok")
+    sync = DrupalSync(config)
+
+    with _patch_query({"wikiCacheEntry": _ENTRY}) as mocked:
+        sync.get_wiki_page_cache("abc123")
+    assert mocked.call_args[0][2] is config
+
+    with _patch_mutate({"setWikiCacheEntry": _ENTRY}) as mocked:
+        sync.set_wiki_page_cache("abc123", "https://wiki.test/p", 1.0, "{}")
+    assert mocked.call_args[0][2] is config
+
+
+# ---------------------------------------------------------------------------
+# Write path
+# ---------------------------------------------------------------------------
+
+def test_set_wiki_page_cache_sends_all_variables() -> None:
+    """The upsert forwards every field Drupal needs to store the entry."""
+    sync = DrupalSync(_make_config())
+    with _patch_mutate({"setWikiCacheEntry": _ENTRY}) as mocked:
+        returned = sync.set_wiki_page_cache(
+            "abc123", "https://wiki.test/page", 1753900000.5, '{"sections": []}'
+        )
+
+    assert returned == "https://wiki.test/page"
+    variables = mocked.call_args[0][1]
+    assert variables == {
+        "urlHash": "abc123",
+        "url": "https://wiki.test/page",
+        "fetchedAt": 1753900000.5,
+        "content": '{"sections": []}',
+    }
+
+
+def test_set_wiki_page_cache_coerces_fetched_at_to_float() -> None:
+    """An int timestamp is sent as a Float, which the schema requires."""
+    sync = DrupalSync(_make_config())
+    with _patch_mutate({"setWikiCacheEntry": _ENTRY}) as mocked:
+        sync.set_wiki_page_cache("abc123", "https://wiki.test/page", 1753900000, "{}")
+
+    variables = mocked.call_args[0][1]
+    assert isinstance(variables["fetchedAt"], float)
+
+
+def test_set_wiki_page_cache_raises_on_transport_error() -> None:
+    """A failed write raises rather than silently doing nothing."""
+    sync = DrupalSync(_make_config())
+    with _patch_mutate(DrupalGraphQLError("permission denied")):
+        try:
+            sync.set_wiki_page_cache("abc123", "https://wiki.test/p", 1.0, "{}")
+            raise AssertionError("expected DrupalSyncError")
+        except DrupalSyncError as exc:
+            assert "permission denied" in str(exc)
+
+
+def test_set_wiki_page_cache_raises_when_response_has_no_entry() -> None:
+    """A 200 response without the entry is still a failed write."""
+    sync = DrupalSync(_make_config())
+    with _patch_mutate({"setWikiCacheEntry": None}):
+        try:
+            sync.set_wiki_page_cache("abc123", "https://wiki.test/p", 1.0, "{}")
+            raise AssertionError("expected DrupalSyncError")
+        except DrupalSyncError as exc:
+            assert "returned no entry" in str(exc)
+
+
+# ---------------------------------------------------------------------------
+# Delete path
+# ---------------------------------------------------------------------------
+
+def test_delete_wiki_page_cache_succeeds_on_true() -> None:
+    """A TRUE result means the cache no longer holds the entry."""
+    sync = DrupalSync(_make_config())
+    with _patch_mutate({"deleteWikiCacheEntry": True}):
+        sync.delete_wiki_page_cache("abc123")
+
+
+def test_delete_wiki_page_cache_raises_when_refused() -> None:
+    """A FALSE result means Drupal refused, which must not pass silently."""
+    sync = DrupalSync(_make_config())
+    with _patch_mutate({"deleteWikiCacheEntry": False}):
+        try:
+            sync.delete_wiki_page_cache("abc123")
+            raise AssertionError("expected DrupalSyncError")
+        except DrupalSyncError as exc:
+            assert "refused" in str(exc)
+
+
+def test_delete_wiki_page_cache_raises_on_transport_error() -> None:
+    """A transport failure during delete is surfaced."""
+    sync = DrupalSync(_make_config())
+    with _patch_mutate(DrupalGraphQLError("boom")):
+        try:
+            sync.delete_wiki_page_cache("abc123")
+            raise AssertionError("expected DrupalSyncError")
+        except DrupalSyncError as exc:
+            assert "boom" in str(exc)
+
+
+# ---------------------------------------------------------------------------
+# Count
+# ---------------------------------------------------------------------------
+
+def test_count_wiki_page_cache_returns_count() -> None:
+    """The entry count is read straight from the query result."""
+    sync = DrupalSync(_make_config())
+    with _patch_query({"wikiCacheCount": 42}):
+        assert sync.count_wiki_page_cache() == 42
+
+
+def test_count_wiki_page_cache_returns_zero_when_unreachable() -> None:
+    """An unreachable Drupal reports an empty cache rather than raising."""
+    sync = DrupalSync(_make_config())
+    with _patch_query({}):
+        assert sync.count_wiki_page_cache() == 0
+
+
+def test_count_wiki_page_cache_returns_zero_on_bad_value() -> None:
+    """A non-numeric count degrades to zero instead of raising."""
+    sync = DrupalSync(_make_config())
+    with _patch_query({"wikiCacheCount": "not-a-number"}):
+        assert sync.count_wiki_page_cache() == 0
+
+
+# ---------------------------------------------------------------------------
+# Live round trip (skipped unless DRUPAL_BASE_URL is set)
+# ---------------------------------------------------------------------------
+
+def test_live_wiki_cache_round_trip_real_drupal() -> None:
+    """Write, read back, and delete a cache entry against a real Drupal."""
     skip = _skip_if_no_live_drupal()
     if skip:
         print(f"  [SKIP] {skip}")
         return
+
     sync = DrupalSync(_live_config())
-    char_file = Path(get_characters_dir()) / "aragorn.json"
+    url_hash = f"pytest-{int(time.time())}"
+    page_url = f"https://wiki.test/{url_hash}"
+    content = '{"sections": [{"title": "A \\"quoted\\" bit"}]}'
+
     try:
-        uuid = sync.push_character(char_file)
+        sync.set_wiki_page_cache(url_hash, page_url, time.time(), content)
     except DrupalSyncError as exc:
-        print(f"  [SKIP] Drupal API not writable (enable jsonapi/basic_auth modules): {exc}")
+        print(f"  [SKIP] Drupal wiki cache not writable: {exc}")
         return
-    assert isinstance(uuid, str) and uuid, "Expected a non-empty UUID string"
-    print(f"  [OK] aragorn synced: {uuid}")
-    print("[PASS] live push_character - aragorn.json")
+
+    entry = sync.get_wiki_page_cache(url_hash)
+    assert entry is not None, "entry should be readable straight after writing"
+    assert entry["field_wiki_url"] == page_url
+    assert entry["field_wiki_content"] == content
+
+    sync.delete_wiki_page_cache(url_hash)
+    assert sync.get_wiki_page_cache(url_hash) is None
+    print("[PASS] live wiki cache round trip")
 
 
 # ---------------------------------------------------------------------------
@@ -368,20 +306,22 @@ def run_all_tests() -> None:
     print("DRUPAL SYNC TESTS")
     print("=" * 70)
 
-    test_build_character_payload_title_only()
-    test_build_character_payload_all_optional_fields()
-    test_build_story_payload_structure()
-    test_push_character_posts_new_node()
-    test_push_character_patches_existing_node()
-    test_push_character_raises_on_http_error()
-    test_push_story_posts_new_node(Path("/tmp"))
-    test_push_story_patches_existing_node(Path("/tmp"))
-    test_trigger_gatsby_build_raises_without_url()
-    test_trigger_gatsby_build_returns_true_on_success()
-    test_trigger_gatsby_build_raises_on_url_error()
-    test_push_character_posts_when_lookup_returns_empty()
-    test_push_character_patches_when_lookup_returns_node()
-    test_live_push_character_real_drupal()
+    test_get_wiki_page_cache_maps_entry_fields()
+    test_get_wiki_page_cache_returns_none_on_miss()
+    test_get_wiki_page_cache_returns_none_when_drupal_unreachable()
+    test_get_wiki_page_cache_passes_url_hash_as_variable()
+    test_client_config_is_passed_to_the_transport()
+    test_set_wiki_page_cache_sends_all_variables()
+    test_set_wiki_page_cache_coerces_fetched_at_to_float()
+    test_set_wiki_page_cache_raises_on_transport_error()
+    test_set_wiki_page_cache_raises_when_response_has_no_entry()
+    test_delete_wiki_page_cache_succeeds_on_true()
+    test_delete_wiki_page_cache_raises_when_refused()
+    test_delete_wiki_page_cache_raises_on_transport_error()
+    test_count_wiki_page_cache_returns_count()
+    test_count_wiki_page_cache_returns_zero_when_unreachable()
+    test_count_wiki_page_cache_returns_zero_on_bad_value()
+    test_live_wiki_cache_round_trip_real_drupal()
 
     print("\n" + "=" * 70)
     print("[SUCCESS] ALL DRUPAL SYNC TESTS PASSED")

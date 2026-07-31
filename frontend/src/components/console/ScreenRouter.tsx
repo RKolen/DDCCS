@@ -31,6 +31,11 @@ export interface ScreenContext {
   activeCampaignName?: string | null;
   settingsTab?: 'view' | 'ai' | 'rag' | 'display' | 'paths' | 'validate' | 'save';
   modelId?: string;
+  /**
+   * A queued job whose result the screen should pick back up and offer for
+   * review. Set when the operator clicks through from an activity row.
+   */
+  reviewJobId?: string;
   _jumpTo?: {
     sectionId?: string;
     itemId?: string;

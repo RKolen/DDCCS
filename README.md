@@ -17,9 +17,9 @@ frontend; the Python engine does the heavy lifting; Drupal stores the truth.
                 Ollama, ComfyUI, Piper, the sidecar, and the job queue
 ```
 
-> This project began as a Python CLI (tagged `v1.0.0`). It has since moved to the
-> three-tier model above; **the interactive CLI is deprecated** and likely no
-> longer runs end to end. New work targets the frontend. The full story is in
+> This project began as a Python CLI (tagged `v1.0.0`). It has since moved to
+> the three-tier model above; **the interactive CLI is deprecated** and likely
+> no longer runs end to end. New work targets the frontend. The full story is in
 > [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 ---
@@ -32,8 +32,10 @@ frontend; the Python engine does the heavy lifting; Drupal stores the truth.
 | **Drupal CMS** | [`drupal-cms/`](drupal-cms/) | Headless content store and single source of truth; exposes content over GraphQL. |
 | **Python engine** | [`src/`](src/) | AI client, RAG + Milvus semantic search, validation, calendar/timeline, spotlight, and Drupal sync; also runs the search sidecar. |
 
-Anything the old CLI did is now reachable from the frontend — see the capability
-map in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md#capability-map-cli-feature---where-it-lives-now).
+Anything the old CLI did is now reachable from the frontend — see the
+[capability map][capmap] in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+
+[capmap]: docs/ARCHITECTURE.md#capability-map-cli-feature---where-it-lives-now
 
 ---
 
@@ -77,8 +79,9 @@ python3 -m src.cli.dnd_consultant --reindex
 python -m src.cli.dnd_consultant   # interactive menu; may not run end to end
 ```
 
-The `--reindex`, `--milvus-status`, and `--sync-drupal` flags are still used as
-engine utilities; the interactive menu is not maintained.
+The `--reindex` and `--milvus-status` flags are still used as engine utilities;
+the interactive menu is not maintained. `--sync-drupal` was removed with the
+JSON:API push path - Drupal content is written over GraphQL from the frontend.
 
 ---
 
@@ -120,7 +123,9 @@ and narration are local services either way.
 
 Because a CPU model run takes minutes, the long jobs (portraits, arc analysis,
 story generation, session summaries) are **queued and run one at a time** on the
-host, tracked in the console's activity rail — start several and walk away.
+host, tracked in the console's activity rail — start several and walk away. What
+a job generates is never applied behind your back: the activity row links back
+to the screen where you accept or discard the result.
 
 ### What it looks like
 
@@ -153,7 +158,8 @@ start.sh       # Brings up Drupal + sidecar + Gatsby + AI job queue (+ ComfyUI w
 
 - DDEV (Drupal + Milvus + Solr), Node.js 18+, Python 3.8+, mkcert.
 - `pip install -r requirements.txt` for the engine and sidecar. This also
-  installs **Piper TTS**, whose `.onnx` voices live in `game_data/piper/voices/`.
+  installs **Piper TTS**, whose `.onnx` voices live in
+  `game_data/piper/voices/`.
 - **An OpenAI-compatible LLM endpoint** (`AI_CREATIVE_BASE_URL` + a key) for
   chat, story generation, and arc analysis — a cloud service works. The default
   is **Ollama on the host**, which is what keeps everything local and free; run

@@ -933,24 +933,6 @@ def make_drupal_config(
     )
 
 
-def make_mock_urlopen(status: int, body: bytes = b"") -> unittest.mock.MagicMock:
-    """Return a context-manager MagicMock simulating a urllib response.
-
-    Args:
-        status: HTTP status code exposed as ``mock.status``.
-        body: Response body bytes returned by ``mock.read()``.
-
-    Returns:
-        Configured MagicMock ready for use as a urlopen return value.
-    """
-    mock = unittest.mock.MagicMock()
-    mock.status = status
-    mock.read.return_value = body
-    mock.__enter__.return_value = mock
-    mock.__exit__.return_value = False
-    return mock
-
-
 def make_fake_response(
     status: int = 200,
     json_data: Optional[Dict[str, Any]] = None,

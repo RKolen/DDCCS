@@ -3,6 +3,10 @@
  *
  * Data from ConsoleContext only. ctx.charIdx indexes into the
  * playerCharacters() or npcCharacters() list. No mock fallbacks.
+ *
+ * Portrait generation is queued, and a finished render is offered for review
+ * rather than attached: the sheet previews the candidate and Accept is what
+ * actually replaces the character's portrait.
  */
 
 import * as React from 'react';
@@ -12,13 +16,12 @@ import { useConsoleData, playerCharacters, npcCharacters } from '../ConsoleConte
 import type { DrupalCampaign } from '../ConsoleContext';
 import { drupalAdminUrl } from '../../../utils/drupalLinks';
 import { Icon, Spinner } from '../atoms';
-import { enqueueJob, useJobPolling, jobResult, JOB_TYPES } from '../../../utils/aiJobs';
 import { ImageLightbox } from '../../atoms/ImageLightbox';
 import {
   buildPortraitProfile,
+  usePortraitReview,
   DEFAULT_PORTRAIT_WIDTH,
   DEFAULT_PORTRAIT_HEIGHT,
-  type PortraitJobResult,
 } from '../../../utils/portraitProfile';
 
 function partyIdsForCampaign(campaigns: DrupalCampaign[], name: string): Set<string> {
@@ -30,12 +33,8 @@ export function CharacterDetailScreen({ ctx, setCtx }: ScreenProps): React.React
   const data = useConsoleData();
   const isNpc = Boolean(ctx.npcMode);
   const [lightboxOpen, setLightboxOpen] = React.useState(false);
-  const [generating, setGenerating] = React.useState(false);
-  const [genError, setGenError] = React.useState<string | null>(null);
-  // Id of the queued portrait job being followed, or null when nothing is running.
-  const [jobId, setJobId] = React.useState<string | null>(null);
-  // Newly generated portrait URL, shown immediately without a full page reload.
-  const [genImageUrl, setGenImageUrl] = React.useState<string | null>(null);
+  // The queue-then-confirm cycle. Nothing here writes field_image until accept.
+  const review = usePortraitReview(typeof ctx.reviewJobId === 'string' ? ctx.reviewJobId : undefined);
   const allInType = isNpc ? npcCharacters(data) : playerCharacters(data);
   // PCs: filter by the campaign's currentPartyIds.
   // NPCs: show all (their campaign link isn't via currentParty).
@@ -48,48 +47,38 @@ export function CharacterDetailScreen({ ctx, setCtx }: ScreenProps): React.React
   const idx = ctx.charIdx ?? 0;
   const char = roster[idx] ?? null;
   const eyebrow = isNpc ? 'NPC Profile' : 'Character Sheet';
-  // Prefer a just-generated portrait; fall back to the stored one.
-  const portraitUrl = genImageUrl ?? char?.imageUrl ?? null;
+  // What the character actually shows: the stored portrait, or one accepted here.
+  const attachedUrl = review.attachedUrl ?? char?.imageUrl ?? null;
+  // A pending render takes over the preview, labelled as not yet attached.
+  const portraitUrl = review.candidate?.imageUrl ?? attachedUrl;
 
-  // Reset the generation state whenever the selected character changes so a
-  // new portrait or error never bleeds across characters.
+  // Clear the review state whenever the selected character changes so a render
+  // or error never bleeds across characters. Guarded on an actual change: on the
+  // first render there is nothing to clear, and clearing would race the pickup
+  // of the job an activity row sent us here to review.
+  const charId = char?.id;
+  const resetReview = review.reset;
+  const shownCharId = React.useRef(charId);
   React.useEffect(() => {
-    setGenImageUrl(null);
-    setGenError(null);
-    setGenerating(false);
-    setJobId(null);
-  }, [char?.id]);
-
-  /* Follow the queued render. The job runs on the host, so leaving this screen
-     (or the site) does not cancel it; coming back re-reads it from the queue. */
-  useJobPolling(jobId, job => {
-    setJobId(null);
-    setGenerating(false);
-    if (job.state === 'failure') {
-      setGenError(job.message ?? 'Portrait generation failed.');
-      return;
-    }
-    const result = jobResult<PortraitJobResult>(job);
-    if (result?.imageUrl) setGenImageUrl(result.imageUrl);
-  });
+    if (shownCharId.current === charId) return;
+    shownCharId.current = charId;
+    resetReview();
+  }, [charId, resetReview]);
 
   const handleGenerate = async (): Promise<void> => {
     if (char == null) return;
-    setGenerating(true);
-    setGenError(null);
-    try {
-      const job = await enqueueJob(JOB_TYPES.portrait, `Portrait: ${char.title}`, {
-        characterId: char.id,
-        profile:     buildPortraitProfile(char),
-        positive:    char.imagePrompt ?? null,
-        width:       DEFAULT_PORTRAIT_WIDTH,
-        height:      DEFAULT_PORTRAIT_HEIGHT,
-      });
-      setJobId(job.id);
-    } catch (err) {
-      setGenError(err instanceof Error ? err.message : 'Could not queue the portrait.');
-      setGenerating(false);
-    }
+    await review.generate(`Portrait: ${char.title}`, {
+      characterId: char.id,
+      profile:     buildPortraitProfile(char),
+      positive:    char.imagePrompt ?? null,
+      width:       DEFAULT_PORTRAIT_WIDTH,
+      height:      DEFAULT_PORTRAIT_HEIGHT,
+      // Regenerating from here is always "another picture of this character",
+      // so the attached portrait conditions the render (IPAdapter) and the face
+      // carries over. Ignored by the sidecar when IPAdapter is not installed.
+      // The Portrait Studio is where that can be turned off deliberately.
+      referenceImageUrl: attachedUrl,
+    });
   };
 
   const stats: Array<{ label: string; value: string | number }> = [];
@@ -142,7 +131,7 @@ export function CharacterDetailScreen({ ctx, setCtx }: ScreenProps): React.React
           <>
             <div className="char-sheet-head">
               <div
-                className="char-sheet-portrait"
+                className={`char-sheet-portrait${review.candidate ? ' portrait-candidate' : ''}`}
                 onClick={portraitUrl ? () => setLightboxOpen(true) : undefined}
                 style={portraitUrl ? { cursor: 'zoom-in' } : undefined}
               >
@@ -170,15 +159,38 @@ export function CharacterDetailScreen({ ctx, setCtx }: ScreenProps): React.React
                 </span>
               </div>
               <div className="char-sheet-actions">
-                <button
-                  type="button"
-                  className="ghost-btn"
-                  disabled={generating}
-                  onClick={() => void handleGenerate()}
-                >
-                  {generating ? <Spinner /> : <Icon name="sparkle" size={11} />}
-                  {generating ? 'Generating…' : (portraitUrl ? 'Regenerate image' : 'Generate image')}
-                </button>
+                {review.candidate ? (
+                  <>
+                    <button
+                      type="button"
+                      className="primary-btn"
+                      disabled={review.reviewing !== null}
+                      onClick={() => void review.accept()}
+                    >
+                      {review.reviewing === 'accept' ? <Spinner /> : <Icon name="image" size={11} />}
+                      {review.reviewing === 'accept' ? 'Attaching…' : 'Accept image'}
+                    </button>
+                    <button
+                      type="button"
+                      className="ghost-btn"
+                      disabled={review.reviewing !== null}
+                      onClick={() => void review.discard()}
+                    >
+                      {review.reviewing === 'discard' ? <Spinner /> : <Icon name="close" size={11} />}
+                      {review.reviewing === 'discard' ? 'Discarding…' : 'Discard'}
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    type="button"
+                    className="ghost-btn"
+                    disabled={review.running}
+                    onClick={() => void handleGenerate()}
+                  >
+                    {review.running ? <Spinner /> : <Icon name="sparkle" size={11} />}
+                    {review.running ? 'Generating…' : (portraitUrl ? 'Regenerate image' : 'Generate image')}
+                  </button>
+                )}
                 {char.path && (
                   <Link to={char.path} className="ghost-btn" style={{ textDecoration: 'none' }}>
                     <Icon name="scroll" size={11} /> Full sheet
@@ -187,14 +199,27 @@ export function CharacterDetailScreen({ ctx, setCtx }: ScreenProps): React.React
               </div>
             </div>
 
-            {genError != null && (
-              <p style={{ margin: '10px 0 0', fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--color-danger)' }}>
-                {genError}
+            {review.candidate && (
+              <p style={{ margin: '10px 0 0', fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--color-warning)' }}>
+                Showing a new render, not attached yet — {char.title} keeps the
+                current portrait unless you accept it.
               </p>
             )}
-            {generating && (
+            {review.error != null && (
+              <p style={{ margin: '10px 0 0', fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--color-danger)' }}>
+                {review.error}
+              </p>
+            )}
+            {review.notice != null && (
+              <p style={{ margin: '10px 0 0', fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--color-success)' }}>
+                {review.notice}
+              </p>
+            )}
+            {review.running && (
               <p style={{ margin: '10px 0 0', fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--ink-dim)', fontStyle: 'italic' }}>
-                Rendering a portrait with ComfyUI — this can take a few minutes on CPU.
+                Rendering a portrait with ComfyUI — this can take a few minutes on
+                CPU. You can leave this screen; the activity drawer links back here
+                to accept the result.
               </p>
             )}
 

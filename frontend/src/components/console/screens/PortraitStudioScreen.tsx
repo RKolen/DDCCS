@@ -3,9 +3,15 @@
  *
  * The ComfyUI portrait input setup: pick a character, tune the generation
  * inputs (prompt, negative prompt, seed, size), and generate. Generation is
- * queued (`dnd_portrait`): the host runs it one job at a time and attaches the
- * result to the character's field_image, so leaving this screen mid-render no
- * longer loses the work. Replaces the old deprecated ASCII-portrait notice.
+ * queued (`dnd_portrait`): the host runs it one job at a time, so leaving this
+ * screen mid-render no longer loses the work. Replaces the old deprecated
+ * ASCII-portrait notice.
+ *
+ * A finished render is a proposal, not a fact: it is stored in the media library
+ * and shown here as a candidate, and only Accept points the character's
+ * field_image at it. That is what stops a render finishing in the background
+ * from replacing a portrait nobody wanted replaced. The activity drawer links
+ * back here for exactly that decision.
  *
  * Generation needs COMFYUI_ENABLED=true on the sidecar; when it is disabled or
  * unreachable the job fails with that reason and this screen shows it.
@@ -19,11 +25,11 @@ import type { DrupalCharacter } from '../ConsoleContext';
 import { MediaPickerModal } from '../MediaPickerModal';
 import {
   buildPortraitProfile,
+  usePortraitReview,
   DEFAULT_PORTRAIT_WIDTH,
   DEFAULT_PORTRAIT_HEIGHT,
-  type PortraitJobResult,
+  DEFAULT_IDENTITY_WEIGHT,
 } from '../../../utils/portraitProfile';
-import { enqueueJob, useJobPolling, jobResult, JOB_TYPES } from '../../../utils/aiJobs';
 
 interface ApiError { error: string }
 
@@ -50,7 +56,24 @@ function parseIntOrNull(value: string): number | null {
   return Number.isFinite(parsed) ? parsed : null;
 }
 
-function StudioPanel({ char }: { char: DrupalCharacter }): React.ReactElement {
+/**
+ * Parse the likeness weight, falling back to the shared default so a cleared or
+ * nonsensical box still generates rather than sending the sidecar a null it
+ * would have to guess about.
+ */
+function parseWeight(value: string): number {
+  const parsed = Number.parseFloat(value.trim());
+  if (!Number.isFinite(parsed)) return DEFAULT_IDENTITY_WEIGHT;
+  return Math.min(Math.max(parsed, 0), 1.5);
+}
+
+interface StudioPanelProps {
+  char: DrupalCharacter;
+  /** A queued render to pick back up, passed through from an activity row. */
+  reviewJobId?: string;
+}
+
+function StudioPanel({ char, reviewJobId }: StudioPanelProps): React.ReactElement {
   const [prompt, setPrompt] = React.useState(char.imagePrompt ?? '');
   // The last persisted prompt (the "old" one), shown for comparison whenever the
   // working box diverges. `previousPrompt` is the box value before the last
@@ -63,18 +86,26 @@ function StudioPanel({ char }: { char: DrupalCharacter }): React.ReactElement {
   const [seed, setSeed] = React.useState('');
   const [width, setWidth] = React.useState(String(DEFAULT_PORTRAIT_WIDTH));
   const [height, setHeight] = React.useState(String(DEFAULT_PORTRAIT_HEIGHT));
+  // Condition the render on the current portrait so the face carries over
+  // (IPAdapter). On by default: a regeneration is nearly always meant to be the
+  // same character. Turn it off to let the prompt redesign them from scratch.
+  const [keepLikeness, setKeepLikeness] = React.useState(true);
+  const [likenessWeight, setLikenessWeight] = React.useState(String(DEFAULT_IDENTITY_WEIGHT));
 
-  const [generating, setGenerating] = React.useState(false);
   const [promptBusy, setPromptBusy] = React.useState<null | 'build' | 'enhance' | 'vision' | 'save'>(null);
   const [promptMsg, setPromptMsg] = React.useState<string | null>(null);
   const [error, setError] = React.useState<string | null>(null);
-  const [resultUrl, setResultUrl] = React.useState<string | null>(null);
+  // The portrait actually stored on the character right now: what it had, or
+  // what a later accept or library pick replaced it with.
+  const [storedUrl, setStoredUrl] = React.useState<string | null>(char.imageUrl);
   const [usedSeed, setUsedSeed] = React.useState<number | null>(null);
   const [pickerOpen, setPickerOpen] = React.useState(false);
-  // Id of the queued portrait job being followed, or null when idle.
-  const [jobId, setJobId] = React.useState<string | null>(null);
+  // The queue-then-confirm cycle: nothing here touches field_image until accept.
+  const review = usePortraitReview(reviewJobId);
 
-  /* Reset the form and result whenever the selected character changes. */
+  /* Reset the form whenever the selected character changes. Review state is
+     deliberately untouched: the panel is keyed by character, so a switch
+     remounts it, and a prompt save must not throw away a pending render. */
   React.useEffect(() => {
     setPrompt(char.imagePrompt ?? '');
     setSavedPrompt(char.imagePrompt ?? '');
@@ -83,13 +114,14 @@ function StudioPanel({ char }: { char: DrupalCharacter }): React.ReactElement {
     setSeed('');
     setWidth(String(DEFAULT_PORTRAIT_WIDTH));
     setHeight(String(DEFAULT_PORTRAIT_HEIGHT));
+    setKeepLikeness(true);
+    setLikenessWeight(String(DEFAULT_IDENTITY_WEIGHT));
     setPromptMsg(null);
     setError(null);
-    setResultUrl(null);
+    setStoredUrl(char.imageUrl);
     setUsedSeed(null);
     setPickerOpen(false);
-    setJobId(null);
-  }, [char.id, char.imagePrompt]);
+  }, [char.id, char.imagePrompt, char.imageUrl]);
 
   /* Pre-fill the negative box with the sidecar's standard negative. The prompt
      endpoint returns it next to the template positive and makes no model call
@@ -117,8 +149,12 @@ function StudioPanel({ char }: { char: DrupalCharacter }): React.ReactElement {
     return () => { cancelled = true; };
   }, [char.id]);
 
-  const portraitUrl = resultUrl ?? char.imageUrl;
-  const busy = generating || promptBusy !== null;
+  // A pending render is what the preview shows - clearly marked as not attached
+  // - so the operator judges the thing they are about to accept.
+  const attachedUrl = review.attachedUrl ?? storedUrl;
+  const portraitUrl = review.candidate?.imageUrl ?? attachedUrl;
+  const busy = review.running || review.reviewing !== null || promptBusy !== null;
+  const seedShown = review.candidate?.seed ?? usedSeed;
 
   /* Fetch the template / enhanced prompt into the editable box. */
   const runPromptEndpoint = async (enhance: boolean): Promise<void> => {
@@ -193,38 +229,24 @@ function StudioPanel({ char }: { char: DrupalCharacter }): React.ReactElement {
     }
   };
 
-  /* Follow the queued render: the host runs it whether or not this screen is
-     open, so leaving the studio no longer throws the work away. */
-  useJobPolling(jobId, job => {
-    setJobId(null);
-    setGenerating(false);
-    if (job.state === 'failure') {
-      setError(job.message ?? 'Portrait generation failed.');
-      return;
-    }
-    const result = jobResult<PortraitJobResult>(job);
-    if (result?.imageUrl) setResultUrl(result.imageUrl);
-    if (typeof result?.seed === 'number') setUsedSeed(result.seed);
-  });
-
+  /* Queue the render. The host runs it whether or not this screen stays open,
+     which is also why the result comes back as a candidate rather than a fact. */
   const handleGenerate = async (): Promise<void> => {
-    setGenerating(true);
     setError(null);
-    try {
-      const job = await enqueueJob(JOB_TYPES.portrait, `Portrait: ${char.title}`, {
-        characterId: char.id,
-        profile:     buildPortraitProfile(char),
-        positive:    prompt.trim() || null,
-        negative:    negative.trim() || null,
-        seed:        parseIntOrNull(seed),
-        width:       parseIntOrNull(width) ?? DEFAULT_PORTRAIT_WIDTH,
-        height:      parseIntOrNull(height) ?? DEFAULT_PORTRAIT_HEIGHT,
-      });
-      setJobId(job.id);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not queue the portrait.');
-      setGenerating(false);
-    }
+    setPromptMsg(null);
+    await review.generate(`Portrait: ${char.title}`, {
+      characterId: char.id,
+      profile:     buildPortraitProfile(char),
+      positive:    prompt.trim() || null,
+      negative:    negative.trim() || null,
+      seed:        parseIntOrNull(seed),
+      width:       parseIntOrNull(width) ?? DEFAULT_PORTRAIT_WIDTH,
+      height:      parseIntOrNull(height) ?? DEFAULT_PORTRAIT_HEIGHT,
+      // The attached portrait, not the pending candidate: likeness is carried
+      // from what the character actually is, not from a render nobody kept.
+      referenceImageUrl: keepLikeness ? attachedUrl : null,
+      identityWeight:    keepLikeness ? parseWeight(likenessWeight) : null,
+    });
   };
 
   const initials = char.title.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
@@ -246,7 +268,7 @@ function StudioPanel({ char }: { char: DrupalCharacter }): React.ReactElement {
         {/* Preview */}
         <div style={{ width: 220, flexShrink: 0 }}>
           <div
-            className="char-sheet-portrait"
+            className={`char-sheet-portrait${review.candidate ? ' portrait-candidate' : ''}`}
             style={{ width: 220, height: 320, borderRadius: 4, overflow: 'hidden' }}
           >
             {portraitUrl
@@ -254,9 +276,69 @@ function StudioPanel({ char }: { char: DrupalCharacter }): React.ReactElement {
               : <span className="portrait-placeholder">{initials}</span>
             }
           </div>
-          {usedSeed !== null && (
+
+          {/* The confirm step. Until Accept, the character still shows whatever
+              it showed before, and this render is only a file in the library. */}
+          {review.candidate && (
+            <div className="portrait-review">
+              <span className="portrait-review-tag">Not attached yet</span>
+              <p className="portrait-review-note">
+                This render is stored in the media library. {char.title} keeps the
+                portrait it has until you accept it.
+              </p>
+              <div className="portrait-review-actions">
+                <button
+                  type="button"
+                  className="primary-btn"
+                  disabled={review.reviewing !== null}
+                  onClick={() => void review.accept()}
+                >
+                  {review.reviewing === 'accept' ? <Spinner /> : <Icon name="image" size={11} />}
+                  {review.reviewing === 'accept' ? 'Attaching…' : 'Accept portrait'}
+                </button>
+                <button
+                  type="button"
+                  className="ghost-btn"
+                  disabled={review.reviewing !== null}
+                  onClick={() => void review.discard()}
+                >
+                  {review.reviewing === 'discard' ? <Spinner /> : <Icon name="close" size={11} />}
+                  {review.reviewing === 'discard' ? 'Discarding…' : 'Discard'}
+                </button>
+              </div>
+              {attachedUrl && (
+                <div className="portrait-review-current">
+                  <span>Current portrait</span>
+                  <img src={attachedUrl} alt={`Current portrait of ${char.title}`} />
+                </div>
+              )}
+            </div>
+          )}
+
+          {review.notice != null && (
+            <p style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--color-success)', margin: '8px 0 0' }}>
+              {review.notice}
+            </p>
+          )}
+          {review.error != null && (
+            <p style={{ fontFamily: 'var(--font-body)', fontSize: 12, color: 'var(--color-danger)', margin: '8px 0 0' }}>
+              {review.error}
+            </p>
+          )}
+          {seedShown !== null && (
             <p style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--ink-faint)', margin: '8px 0 0' }}>
-              Seed {usedSeed} — reuse it above to reproduce this render.
+              Seed {seedShown} — reuse it above to reproduce this render.
+            </p>
+          )}
+          {/* Say which render this actually is. Asking to keep the likeness and
+              getting it are different things: without IPAdapter installed, or
+              with an unreachable reference, the sidecar still renders - just
+              from the prompt alone. */}
+          {review.candidate !== null && (
+            <p style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--ink-faint)', margin: '4px 0 0' }}>
+              {review.candidate.usedReference
+                ? 'Likeness matched to the current portrait.'
+                : 'Rendered from the prompt alone — no likeness reference applied.'}
             </p>
           )}
         </div>
@@ -360,10 +442,44 @@ function StudioPanel({ char }: { char: DrupalCharacter }): React.ReactElement {
             </div>
           </div>
 
+          <div>
+            <label style={{ ...labelStyle, display: 'flex', alignItems: 'center', gap: 7, marginBottom: 6 }}>
+              <input
+                type="checkbox"
+                checked={keepLikeness}
+                disabled={attachedUrl === null}
+                onChange={e => setKeepLikeness(e.target.checked)}
+              />
+              Keep this character&apos;s likeness
+            </label>
+            {attachedUrl === null ? (
+              <p style={{ fontFamily: 'var(--font-body)', fontStyle: 'italic', fontSize: 12, color: 'var(--ink-faint)', margin: 0 }}>
+                Nothing to match yet — the first render sets the face, and later
+                ones can be held to it.
+              </p>
+            ) : (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <input
+                  type="range"
+                  min="0.3"
+                  max="1"
+                  step="0.05"
+                  value={likenessWeight}
+                  disabled={!keepLikeness}
+                  onChange={e => setLikenessWeight(e.target.value)}
+                  style={{ flex: 1, maxWidth: 220, opacity: keepLikeness ? 1 : 0.4 }}
+                />
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--ink-dim)' }}>
+                  {keepLikeness ? `${parseWeight(likenessWeight).toFixed(2)} — prompt freedom ↔ likeness` : 'off — the prompt alone'}
+                </span>
+              </div>
+            )}
+          </div>
+
           <p style={{ fontFamily: 'var(--font-body)', fontStyle: 'italic', fontSize: 12, color: 'var(--ink-faint)', margin: 0 }}>
             Portraits generate on the local ComfyUI (SD 1.5-class); 512×768 suits
-            it best. CPU generation takes a few minutes. The result attaches to
-            the character automatically.
+            it best. CPU generation takes a few minutes. The render comes back for
+            you to accept — nothing replaces the current portrait until you do.
           </p>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 14, paddingTop: 2 }}>
@@ -373,8 +489,8 @@ function StudioPanel({ char }: { char: DrupalCharacter }): React.ReactElement {
               disabled={busy}
               onClick={() => void handleGenerate()}
             >
-              {generating ? <Spinner /> : <Icon name="sparkle" size={11} />}
-              {generating ? 'Generating…' : (portraitUrl ? 'Regenerate portrait' : 'Generate portrait')}
+              {review.running ? <Spinner /> : <Icon name="sparkle" size={11} />}
+              {review.running ? 'Generating…' : (portraitUrl ? 'Regenerate portrait' : 'Generate portrait')}
             </button>
             <button
               type="button"
@@ -384,9 +500,10 @@ function StudioPanel({ char }: { char: DrupalCharacter }): React.ReactElement {
             >
               <Icon name="image" size={11} /> Choose existing image
             </button>
-            {generating && (
+            {review.running && (
               <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--ink-dim)', fontStyle: 'italic' }}>
-                Queued on the host — this can take a few minutes on CPU. You can leave this screen.
+                Queued on the host — this can take a few minutes on CPU. You can
+                leave this screen; the activity drawer will link you back to accept it.
               </span>
             )}
             {error != null && (
@@ -405,7 +522,7 @@ function StudioPanel({ char }: { char: DrupalCharacter }): React.ReactElement {
           currentImageUrl={portraitUrl}
           mediaType={char.characterType === false ? 'npc_portrait' : 'character_portrait'}
           onClose={() => setPickerOpen(false)}
-          onSelected={url => { if (url) setResultUrl(url); }}
+          onSelected={url => { if (url) setStoredUrl(url); }}
         />
       )}
     </div>
@@ -417,6 +534,7 @@ export function PortraitStudioScreen({ ctx, setCtx }: ScreenProps): React.ReactE
   const roster = playerCharacters(data);
   const idx = ctx.charIdx ?? 0;
   const char = roster[idx] ?? null;
+  const reviewJobId = typeof ctx.reviewJobId === 'string' ? ctx.reviewJobId : undefined;
 
   if (roster.length === 0) {
     return (
@@ -464,7 +582,7 @@ export function PortraitStudioScreen({ ctx, setCtx }: ScreenProps): React.ReactE
           })}
         </ul>
       </aside>
-      {char != null && <StudioPanel key={char.id} char={char} />}
+      {char != null && <StudioPanel key={char.id} char={char} reviewJobId={reviewJobId} />}
     </div>
   );
 }

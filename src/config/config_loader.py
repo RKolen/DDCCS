@@ -401,18 +401,18 @@ def _apply_env_comfyui_overrides(
         config.comfyui.base_url = base_url
     config.comfyui.timeout = get_env_float("COMFYUI_TIMEOUT", config.comfyui.timeout)
 
-    txt2img_workflow = get_env("COMFYUI_TXT2IMG_WORKFLOW")
-    if txt2img_workflow:
-        config.comfyui.assets.txt2img_workflow = txt2img_workflow
-    ipadapter_workflow = get_env("COMFYUI_IPADAPTER_WORKFLOW")
-    if ipadapter_workflow:
-        config.comfyui.assets.ipadapter_workflow = ipadapter_workflow
     image_to_prompt_model = get_env("IMAGE_TO_PROMPT_MODEL")
     if image_to_prompt_model:
         config.comfyui.assets.image_to_prompt_model = image_to_prompt_model
     checkpoint = get_env("COMFYUI_CHECKPOINT")
     if checkpoint:
         config.comfyui.assets.checkpoint = checkpoint
+    ipadapter_model = get_env("COMFYUI_IPADAPTER_MODEL")
+    if ipadapter_model:
+        config.comfyui.assets.ipadapter_model = ipadapter_model
+    clip_vision = get_env("COMFYUI_CLIP_VISION")
+    if clip_vision:
+        config.comfyui.assets.clip_vision = clip_vision
 
     # Native Ollama API base for unloading models before generation, composed
     # from the authoritative OLLAMA_HOST/OLLAMA_PORT env vars. No fallback: if

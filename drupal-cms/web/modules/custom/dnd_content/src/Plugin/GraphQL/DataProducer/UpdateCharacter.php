@@ -144,6 +144,7 @@ final class UpdateCharacter extends DataProducerPluginBase implements ContainerF
       throw new UserError('You do not have permission to update this character.');
     }
 
+    $changed = [];
     if ($voice_id !== NULL && trim($voice_id) !== '') {
       $terms = $this->entityTypeManager
         ->getStorage('taxonomy_term')
@@ -151,19 +152,30 @@ final class UpdateCharacter extends DataProducerPluginBase implements ContainerF
       $term = reset($terms);
       if ($term instanceof TermInterface) {
         $node->set('field_voice_id_ref', ['target_id' => $term->id()]);
+        $changed[] = 'field_voice_id_ref';
       }
     }
     if ($voice_pitch !== NULL) {
       $node->set('field_voice_pitch', $voice_pitch);
+      $changed[] = 'field_voice_pitch';
     }
     if ($voice_speed !== NULL) {
       $node->set('field_voice_speed', $voice_speed);
+      $changed[] = 'field_voice_speed';
     }
     if ($image_prompt !== NULL) {
       $node->set('field_image_prompt', $image_prompt);
+      $changed[] = 'field_image_prompt';
     }
 
+    // Only the fields this mutation actually set are validated. Validating the
+    // whole node would let unrelated pre-existing damage - a dangling
+    // field_equipment_items reference to a deleted item, say - block every
+    // edit to a character, including ones that have nothing to do with it.
     $violations = $node->validate();
+    if ($changed !== []) {
+      $violations = $violations->getByFields($changed);
+    }
     if ($violations->count() > 0) {
       throw new UserError((string) $violations->get(0)->getMessage());
     }

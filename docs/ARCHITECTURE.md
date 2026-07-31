@@ -69,8 +69,8 @@ The original system, now repositioned as a reusable engine. It powers:
 
 - **Validation** of all JSON data (`src/validation/`).
 - **RAG + semantic search** over a Milvus vector index (`src/ai/`).
-- **Drupal sync** — pushing engine-side content into Drupal
-  (`src/integration/drupal_sync.py`).
+- **Drupal wiki cache** — storing fetched wiki pages as Drupal nodes over
+  GraphQL (`src/integration/drupal_sync.py`).
 - **The sidecar** FastAPI service (`src/sidecar/`).
 - **Spotlight** scoring, **calendar**, **timeline**, **character arc**, and
   more (see [src/README.md](../src/README.md)).
@@ -90,9 +90,9 @@ The frontend uses three distinct channels.
 `gatsby-source-graphql` stitches Drupal's `graphql_compose` schema into Gatsby
 under the `drupal` field. Page queries in `frontend/src/pages/` and
 `frontend/src/templates/` read all content this way. The endpoint is
-`${DRUPAL_BASE_URL}/graphql` (configured in `frontend/gatsby-config.ts`), **not**
-the Gatsby dev server at `localhost:$GATSBY_PORT`, whose `___graphql` explorer is
-only a local IDE over the stitched schema.
+`${DRUPAL_BASE_URL}/graphql` (configured in `frontend/gatsby-config.ts`),
+**not** the Gatsby dev server at `localhost:$GATSBY_PORT`, whose `___graphql`
+explorer is only a local IDE over the stitched schema.
 
 ### Channel 2 — Gatsby serverless functions (`frontend/src/api/`)
 
@@ -159,10 +159,38 @@ Job types (`drupal-cms/web/modules/custom/dnd_jobs`):
 
 | Job type | Runs | Stores |
 | -------- | ---- | ------ |
-| `dnd_portrait` | sidecar `/character/portrait` | file + media, sets `field_image`; result carries the new `imageUrl` |
+| `dnd_portrait` | sidecar `/character/portrait` | file + media only; result carries `imageUrl`, `usedReference`, and `review: pending`, and **does not** set `field_image` |
 | `dnd_arc_analysis` | console `run-arc-analysis` | per-story analyses + the saved arc |
 | `dnd_story_generation` | console `generate-story-text` | the story text on the job, for review |
 | `dnd_session_summary` | console `store-session-summary` | the summary on the campaign term |
+
+#### Nothing a job generates is applied unattended
+
+A job finishes on its own schedule, which means it can finish while the operator
+is on a different screen or away from the console entirely. Writing its output
+straight onto the content would let a background render replace a portrait
+somebody deliberately chose, so a job type that generates content stops one step
+short: it stores the render in the media library and marks its result
+`review: pending`.
+
+```text
+job finishes -> result: { mediaId, imageUrl, review: pending }
+                          |
+        activity drawer row: "Review result" -> the character's screen
+                          |
+        Accept --> resolveAiJob(id, accepted: true)  -> field_image = mediaId
+        Discard -> resolveAiJob(id, accepted: false) -> content untouched
+```
+
+`resolveAiJob` is the only path that applies a generated result, and it records
+the decision back on the job (`review: accepted | discarded`) so the activity
+drawer stops asking. Discarding is not destructive: the render stays in the
+media library and can still be chosen later from the portrait picker.
+
+The console side is one shared hook, `usePortraitReview()`
+(`frontend/src/utils/portraitProfile.ts`), used by both portrait entry points -
+which is what keeps either screen from growing a path that attaches without
+asking.
 
 A job type only calls the sidecar directly when the work is a single model call.
 Multi-step orchestrations already exist as console routes and are called there
@@ -178,10 +206,18 @@ the host over its Docker gateway rather than loopback, the sidecar listens on
 
 ### Engine to Drupal — `drupal_sync`
 
-The engine writes into Drupal through `src/integration/drupal_sync.py`:
-`push_character`, `push_story`, `push_item`, `push_monster`, and
-`trigger_gatsby_build`. This is the bulk/seed path; per-action user edits go
-through the Gatsby serverless functions above.
+`src/integration/drupal_sync.py` is the engine's wiki page cache client. It
+stores fetched wiki pages as `wiki_cache` nodes so the CMS owns the RAG cache
+and it survives restarts, over four GraphQL operations supplied by the
+`dnd_content` module: `wikiCacheEntry`, `wikiCacheCount`, `setWikiCacheEntry`,
+and `deleteWikiCacheEntry`.
+
+All Drupal access is GraphQL. JSON:API is disabled server-side
+(`jsonapi_extras.settings` sets `default_disabled: true`, and no
+`jsonapi_resource_config` entities re-enable it), so every JSON:API path 404s.
+The old `push_character` / `push_story` / `push_item` / `push_monster` seed
+methods and the `--sync-drupal` flag were removed with it; content is written
+by the Gatsby serverless functions above.
 
 ---
 
@@ -204,8 +240,11 @@ engine and Drupal.
 | Search | `pages/search.tsx` | sidecar `/search/parse-query` + Milvus |
 | Spotlight scoring | console screens | `api/spotlight.ts` -> sidecar `/eval/spotlight` |
 | Character arc analysis | `CharacterArcScreen` (Characters tab) | `api/arc-analyze-story.ts` (per story) + `api/arc-aggregate.ts` -> sidecar `/character/arc/*`; `api/save-arc.ts` -> Drupal (`saveCharacterArc`) |
-| Portrait generation | `CharacterDetailScreen`, `PortraitStudioScreen` | queued `dnd_portrait` job -> sidecar `/character/portrait` -> Drupal file + media |
+| Portrait generation | `CharacterDetailScreen`, `PortraitStudioScreen` | queued `dnd_portrait` job -> sidecar `/character/portrait` -> Drupal file + media (not attached until accepted). A regeneration passes the attached portrait as an IPAdapter reference so the likeness carries over; the Studio can turn that off or reweight it |
 | Long-running AI (queue) | activity drawer (right rail) | `api/enqueue-job.ts` + `api/job-status.ts` -> Drupal `enqueueAiJob` / `aiJob(s)` |
+| Accept / discard a generated result | activity row -> the target screen | `api/resolve-job.ts` -> Drupal `resolveAiJob` |
+| Recover a stalled job | activity row **Requeue**, or `drush dnd-jobs:recover` (run by `start.sh` on every processor restart) | `api/requeue-job.ts` -> Drupal `requeueAiJob`; `dnd_jobs_cron()` sweeps expired leases, capped at 2 retries |
+| Clear the activity log | activity drawer **Clear completed** | `api/clear-jobs.ts` -> Drupal `clearAiJobs` (deletes finished rows; keeps ones awaiting review) |
 | NPC profile validation | NPC validator screen | Drupal GraphQL + engine |
 | RAG / semantic retrieval | implicit in AI flows | `src/ai/` + Milvus |
 
@@ -229,8 +268,8 @@ Started by `start.sh` (values are `.env`-driven; defaults shown):
 - **NPCs are character nodes**, distinguished by `field_character_type` — there
   is no separate NPC bundle. (A legacy `nodeNpcs` GraphQL type is deprecated.)
 - After changing Drupal config, run
-  `ddev drush config:import -y && ddev drush cache:rebuild`, then `npm run clean`
-  in `frontend/`.
+  `ddev drush config:import -y && ddev drush cache:rebuild`, then
+  `npm run clean` in `frontend/`.
 
 Full detail: [docs/DRUPAL.md](DRUPAL.md) and
 [drupal-cms/AGENTS.md](../drupal-cms/AGENTS.md).

@@ -1,0 +1,49 @@
+<?php
+
+/**
+ * @file
+ * Hook implementations for the D&D AI jobs module.
+ */
+
+declare(strict_types=1);
+
+use Drupal\dnd_jobs\Service\JobQueue;
+
+/**
+ * Implements hook_cron().
+ *
+ * Recovers jobs orphaned by a worker that went away mid-run. The processor
+ * claims a job and then calls out to the host; if that call never returns - the
+ * sidecar was restarted, the host rebooted, the box ran out of memory - the row
+ * keeps a "processing" state and a lease nobody is honouring, and the queue
+ * stops moving until the lease runs out.
+ *
+ * Only jobs whose lease has already expired are touched, so work that is
+ * genuinely still running is never duplicated. A job that stalls repeatedly is
+ * failed rather than requeued forever - on a single-threaded queue, one job that
+ * always times out would block everything behind it.
+ */
+function dnd_jobs_cron(): void {
+  $recovered = \Drupal::service('dnd_jobs.job_queue')->requeueStalled();
+  $logger = \Drupal::logger('dnd_jobs');
+
+  if ($recovered['requeued'] !== []) {
+    $logger->warning(
+      'Requeued @count stalled job(s) whose processing lease had expired: @ids.',
+      [
+        '@count' => count($recovered['requeued']),
+        '@ids' => implode(', ', $recovered['requeued']),
+      ]
+    );
+  }
+  if ($recovered['failed'] !== []) {
+    $logger->error(
+      'Failed @count job(s) that stalled more than @max times: @ids.',
+      [
+        '@count' => count($recovered['failed']),
+        '@max' => JobQueue::MAX_STALL_RETRIES,
+        '@ids' => implode(', ', $recovered['failed']),
+      ]
+    );
+  }
+}

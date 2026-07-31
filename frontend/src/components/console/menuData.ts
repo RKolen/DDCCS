@@ -83,8 +83,29 @@ export interface UtilityCommand {
   slow?: boolean;
 }
 
-export type ActivityStatus = 'running' | 'done' | 'failed';
+/**
+ * `queued` and `running` are deliberately separate: a job waiting for the host
+ * processor and a job the host is actually working on look identical otherwise,
+ * and a pulsing "busy" row for work nothing has started yet is a lie.
+ */
+export type ActivityStatus = 'queued' | 'running' | 'done' | 'failed';
 export type ActivityKind = 'ai' | 'index' | 'batch';
+
+/**
+ * The console screen an activity row leads to.
+ *
+ * An activity row is not just a status line: a finished job's output is waiting
+ * on a decision, and this is the address of the screen where that decision gets
+ * made. Fed to StatelyLedger's `_jumpTo` when the row is opened.
+ */
+export interface ActivityTarget {
+  sectionId: MenuSection['id'];
+  itemId: string;
+  /** Index into that screen's roster, for the per-character screens. */
+  charIdx?: number;
+  /** True when the target roster is the NPC one rather than the party. */
+  npcMode?: boolean;
+}
 
 export interface ActivityItem {
   kind: ActivityKind;
@@ -93,6 +114,17 @@ export interface ActivityItem {
   detail: string;
   progress?: number;
   elapsed?: string;
+  /** The queue job behind this row, when there is one. */
+  jobId?: string;
+  /** Where this row's work can be inspected or reviewed. */
+  target?: ActivityTarget;
+  /** True when the job finished and its result has not been accepted yet. */
+  needsReview?: boolean;
+  /**
+   * True when the job was claimed but its worker stopped responding. It is not
+   * running and will not finish on its own, so the row offers a requeue.
+   */
+  stalled?: boolean;
 }
 
 export interface CharacterSummary {
@@ -295,7 +327,6 @@ export const MENU_DATA: MenuData = {
   utilityCommands: [
     { cmd: '--reindex', label: 'Reindex vector DB', slow: true },
     { cmd: '--milvus-status', label: 'Milvus health' },
-    { cmd: '--sync-drupal', label: 'Sync to Drupal' },
   ],
 
   characters: [

@@ -156,6 +156,10 @@ Gatsby's 30-second refetch (or restart the dev server).
 | Story generation returns no content | Confirm `AI_CREATIVE_MODEL` is pulled into the host Ollama and that `AI_CREATIVE_BASE_URL` points at it. |
 | A queued job never leaves `queued` | The processor is not running: check `.jobqueue.log`, or start it with `ddev drush advancedqueue:queue:process dnd_ai --timeout=0`. |
 | Portrait job fails immediately | ComfyUI is not up, or `COMFYUI_ENABLED` is unset; the job message says which. |
+| Every module shows a pending update | Check whether it is *installed* first. Most contrib here is uninstalled Drupal CMS baggage; the fix is `composer remove`, not updating dead code. |
+| A job sits in `processing` far too long | Its worker died (a restarted sidecar will do it). The row shows red with **Requeue**; or run `ddev drush dnd-jobs:recover`. `start.sh` also sweeps on every processor restart, twice at most before failing the job. Drupal cron would too, but nothing here runs cron. |
+| Activity shows work but nothing is happening | Check the row: `Queued` means the processor is not draining the queue (see `.jobqueue.log`). Only `Running` means the host is working. |
+| A finished portrait did not change the character | It is not meant to: the render waits for you. Open the activity drawer and click **Review result** to accept or discard it. |
 | Search returns nothing | Re-run `--reindex`; confirm the sidecar is up at `:$SIDECAR_PORT/health`. |
 | Inspect background services | `tail -f .gatsby.log` / `tail -f .sidecar.log`. |
 

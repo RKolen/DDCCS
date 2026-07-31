@@ -119,7 +119,7 @@ scroll + unfurl animation and prev/next session navigation. What it lacks:
 
 ## 6. Utility commands — not wired
 
-`MENU_DATA.utilityCommands` (`--reindex`, `--milvus-status`, `--sync-drupal`)
+`MENU_DATA.utilityCommands` (`--reindex`, `--milvus-status`)
 render in the sidebar footer but have no dispatch endpoint. Buttons need an
 `onClick` handler that calls the Python AI worker.
 

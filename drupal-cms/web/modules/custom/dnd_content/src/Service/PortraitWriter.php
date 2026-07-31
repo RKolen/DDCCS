@@ -19,6 +19,11 @@ use Drupal\node\NodeInterface;
  * field_image at it. Shared by the setCharacterPortrait GraphQL mutation (a
  * request-time write) and the queued portrait job (a background write), so both
  * paths produce identical file, media, and field state.
+ *
+ * The two halves are separately callable, because a background render must not
+ * decide for the operator: store() puts the image in the library, assign()
+ * makes it the character's portrait, and attach() does both for the callers
+ * that were explicitly asked to.
  */
 final class PortraitWriter {
 
@@ -46,6 +51,10 @@ final class PortraitWriter {
   /**
    * Attach a portrait image to a character, replacing any previous reference.
    *
+   * Stores and assigns in one step. Use this for a write the operator has
+   * already asked for; a generated render that still needs review should call
+   * store() now and assign() only once it is accepted.
+   *
    * @param \Drupal\node\NodeInterface $node
    *   The character node to attach the portrait to.
    * @param string $data
@@ -62,6 +71,38 @@ final class PortraitWriter {
    *   When the alt text is empty, or the directory or file cannot be written.
    */
   public function attach(NodeInterface $node, string $data, string $alt, int $owner_id): MediaInterface {
+    $media = $this->store($node, $data, $alt, $owner_id);
+    $this->assign($node, $media);
+
+    return $media;
+  }
+
+  /**
+   * Store a portrait in the media library without touching the character.
+   *
+   * This is the half of the write that is safe to do unattended: the render
+   * lands in the library, but the character keeps the portrait it already has
+   * until somebody accepts the new one. The queued portrait job stops here so a
+   * background render can never silently replace a portrait the operator was
+   * happy with.
+   *
+   * @param \Drupal\node\NodeInterface $node
+   *   The character the portrait was rendered for. Used to name and type the
+   *   file and media, not modified.
+   * @param string $data
+   *   The raw (already decoded) image bytes.
+   * @param string $alt
+   *   The alt text. Required by the media image field.
+   * @param int $owner_id
+   *   The user id to own the new file and media entities.
+   *
+   * @return \Drupal\media\MediaInterface
+   *   The saved image media entity.
+   *
+   * @throws \RuntimeException
+   *   When the alt text is empty, or the directory or file cannot be written.
+   */
+  public function store(NodeInterface $node, string $data, string $alt, int $owner_id): MediaInterface {
     $alt = trim($alt);
     if ($alt === '') {
       throw new \RuntimeException('Alt text is required for a portrait image.');
@@ -70,11 +111,23 @@ final class PortraitWriter {
       throw new \RuntimeException('Portrait image data is empty.');
     }
 
-    $media = $this->createMedia($node, $data, $alt, $owner_id);
+    return $this->createMedia($node, $data, $alt, $owner_id);
+  }
+
+  /**
+   * Point a character's portrait at an image media entity.
+   *
+   * The accept half of a reviewed render, and the only step that changes what
+   * the character shows.
+   *
+   * @param \Drupal\node\NodeInterface $node
+   *   The character node to attach the portrait to.
+   * @param \Drupal\media\MediaInterface $media
+   *   The image media entity to reference.
+   */
+  public function assign(NodeInterface $node, MediaInterface $media): void {
     $node->set('field_image', ['target_id' => $media->id()]);
     $node->save();
-
-    return $media;
   }
 
   /**

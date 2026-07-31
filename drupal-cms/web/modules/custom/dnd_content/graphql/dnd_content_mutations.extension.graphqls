@@ -156,3 +156,59 @@ extend type Mutation {
     sessionDate: String
   ): NodeStory
 }
+
+"""
+A cached wiki page, stored as a wiki_cache node and keyed by the MD5 hash of
+its URL. Internal to the Python RAG system's DrupalWikiCache - deliberately
+kept out of graphql_compose so Gatsby never sources these nodes.
+"""
+type WikiCacheEntry {
+  "The original page URL."
+  url: String!
+  "Unix timestamp of when the page was fetched."
+  fetchedAt: Float!
+  "Serialized JSON of the page's parsed sections."
+  content: String!
+}
+
+extend type Query {
+  """
+  Look up a cached wiki page by the MD5 hash of its URL. NULL when nothing is
+  cached for that hash - callers treat that as a cache miss and re-fetch.
+  """
+  wikiCacheEntry(
+    "MD5 hash of the page URL, used as the node title."
+    urlHash: String!
+  ): WikiCacheEntry
+
+  """
+  Total number of wiki cache entries, for cache statistics.
+  """
+  wikiCacheCount: Int!
+}
+
+extend type Mutation {
+  """
+  Create or replace the cached wiki page for a URL hash. Returns the stored
+  entry.
+  """
+  setWikiCacheEntry(
+    "MD5 hash of the page URL, used as the node title."
+    urlHash: String!
+    "The original page URL."
+    url: String!
+    "Unix timestamp of when the page was fetched."
+    fetchedAt: Float!
+    "Serialized JSON of the page's parsed sections."
+    content: String!
+  ): WikiCacheEntry
+
+  """
+  Delete the cached wiki page for a URL hash. Returns TRUE when an entry was
+  removed or none existed, FALSE when permission was denied.
+  """
+  deleteWikiCacheEntry(
+    "MD5 hash of the page URL, used as the node title."
+    urlHash: String!
+  ): Boolean!
+}

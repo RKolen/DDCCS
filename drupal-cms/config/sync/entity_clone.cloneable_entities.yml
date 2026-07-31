@@ -52,3 +52,4 @@ cloneable_entities:
   - graphql_server
   - menu_link_content
   - advancedqueue_queue
+  - ai_file

@@ -253,6 +253,7 @@ Per-action user writes go through custom GraphQL mutations called from
 | `setCharacterPortrait` | `frontend/src/api/generate-portrait.ts` (ComfyUI portrait) |
 | `setCharacterImage` | `frontend/src/api/set-portrait-media.ts` (pick an existing media) |
 | `enqueueAiJob` | `frontend/src/api/enqueue-job.ts` (queue a heavy AI job) |
+| `resolveAiJob` | `frontend/src/api/resolve-job.ts` (accept or discard a finished job's result) |
 
 `createCharacter` persists a **source** character (`field_source_character =
 TRUE`, no campaign) from a sidecar-derived payload, building the
@@ -331,11 +332,22 @@ job types, the queue config, and the GraphQL surface the console polls.
 
 | Piece | Where |
 | ----- | ----- |
-| Queue | `advancedqueue.advancedqueue_queue.dnd_ai` - `processor: daemon`, `lease_time: 3600`, `stop_when_empty: false` |
+| Queue | `advancedqueue.advancedqueue_queue.dnd_ai` - `processor: daemon`, `lease_time: 900`, `stop_when_empty: false` |
 | Job types | `dnd_portrait`, `dnd_arc_analysis`, `dnd_story_generation`, `dnd_session_summary` (`src/Plugin/AdvancedQueue/JobType/`) |
-| Mutation | `enqueueAiJob(type, payload, label): AiJob` - returns a job id instantly, runs nothing |
+| Mutations | `enqueueAiJob(type, payload, label)`, `resolveAiJob(id, decision)`, `requeueAiJob(id)`, `clearAiJobs(states)` |
 | Queries | `aiJob(id)`, `aiJobs(states, limit)` - resolved with `mergeCacheMaxAge(0)`, since job state changes outside any cache tag |
-| Services | `dnd_jobs.job_queue` (enqueue/read), `dnd_jobs.sidecar_client`, `dnd_jobs.console_client` |
+| Services | `dnd_jobs.job_queue` (enqueue/read/update/requeue/clear), `dnd_jobs.job_review` (accept/discard), `dnd_jobs.sidecar_client`, `dnd_jobs.console_client` |
+| Cron | `dnd_jobs_cron()` - recovers jobs orphaned by a dead worker |
+| Drush | `drush dnd-jobs:recover` (alias `dndjr`) - the same sweep on demand |
+
+**Never give a mutation argument a GraphQL `Boolean!`.** `resolveAiJob` first
+took `accepted: Boolean!`, and the data producer was resolved **twice per
+request** - once with `false`, then with the real argument. The `false` pass
+discarded renders the operator had just accepted. A `String` argument
+(`decision: "accept" | "discard"`) resolves exactly once; both were measured.
+Every other mutation here already passes strings, which is why none of them hit
+this. Producers that write should be idempotent as well, as `JobReview` now is:
+repeating a decision succeeds unchanged, only a contradicting one errors.
 
 **One queue, one processor, one job at a time.** That serialization is the crash
 protection: this box is CPU-only with 32 GB, and two large models resident at
@@ -347,26 +359,99 @@ job writes a small `result` object back onto its payload - the processor
 persists the mutated payload, so the console reads it on the next poll (e.g. the
 portrait job's new `imageUrl`).
 
+**A job never applies generated content by itself.** A job can finish while
+nobody is looking at the screen that started it, so writing straight onto the
+node would let a background render replace a portrait somebody chose. Job types
+that generate content therefore store the output and mark the result
+`review: pending`; `resolveAiJob` is the only thing that applies it:
+
+- `accepted: true` - `JobReview` points `field_image` at the stored media (via
+  `PortraitWriter::assign()`) and marks the result `accepted`.
+- `accepted: false` - nothing on the node changes and the result is marked
+  `discarded`. The media stays in the library, so a discarded render is still
+  selectable from the portrait picker later.
+
+Either way the decision lives on the job (`JobQueue::updateResult()` rewrites the
+payload), which is what lets the console's activity drawer show what still needs
+a decision and stop asking once one is made. `JobReview` checks `update` access
+on the target node before writing, like the request-time mutations do.
+
+#### Stall recovery
+
+The processor claims a job, then calls out to the host. If that call never
+returns - the sidecar restarted, the host ran out of memory - the row keeps a
+`processing` state and a lease nobody is honouring, and this single-threaded queue
+stops moving. Recovery has three parts:
+
+- `dnd_jobs_cron()` calls `JobQueue::requeueStalled()`, which requeues jobs whose
+  lease has expired. **Do not rely on this alone:** this site is headless, has no
+  `automated_cron`, and nothing schedules `drush cron` - as of this writing cron
+  had not run in 71 days. `start.sh` therefore calls `drush dnd-jobs:recover`
+  from the queue processor's restart loop, which fires at exactly the moment a
+  worker has died. The cron hook stays as a second net for whenever cron does run. Capped at `JobQueue::MAX_STALL_RETRIES` (2); past that the
+  job is **failed** with `Timed out after N attempts...`, because a job that
+  always stalls would otherwise sit at the head of the queue forever.
+- `requeueAiJob(id)` is the operator's manual trigger, exposed as **Requeue** on a
+  stalled activity row. A deliberate retry does not count against the cap.
+- `AiJob.stalled` is computed from the lease, so the console can show a claimed
+  job as dead rather than spinning. A `processing` row with `expires = 0` also
+  counts: the backend sets state and lease in one claim and only claims rows with
+  `expires = 0`, so that combination cannot arise from normal processing - and
+  nothing would ever pick it up, since the claim loop only looks at queued jobs
+  and contrib's `cleanupQueue()` only resets leases that exist.
+
+**Two timing invariants.** `lease_time` (900s) must exceed the slowest legitimate
+run, or a job still working gets requeued and duplicated. `SIDECAR_JOB_TIMEOUT`
+(720s) must be *under* the lease, or a hung call outlives it. A CPU portrait
+render is ~4 minutes, so both hold with room to spare. Note that contrib's own
+`cleanupQueue()` also resets expired leases, without any retry accounting - if it
+wins the race, that reset does not count against the cap.
+
 The web container needs `SIDECAR_URL`, `GATSBY_SERVER_URL`, and
-`SIDECAR_JOB_TIMEOUT` (see `.ddev/config.local.yaml`); `SIDECAR_SECRET` is sent
-as `X-Sidecar-Secret` when set.
+`SIDECAR_JOB_TIMEOUT` (see `.ddev/config.local.yaml`, which is gitignored and so
+must be set per machine); `SIDECAR_SECRET` is sent as `X-Sidecar-Secret` when set.
+
+#### Clearing the log
+
+Nothing prunes the `advancedqueue` table (`threshold: {type: 0, limit: 0}`), and
+the console's activity drawer is a live view of it with no copy of its own - so
+the drawer's **Clear completed** has to delete rows. `clearAiJobs(states)`
+accepts terminal states only, and keeps back any finished job whose result is
+still awaiting a decision: deleting one would strand the render it produced in
+the media library with nothing left to attach it. It returns
+`{ cleared, kept }`.
 
 `PortraitWriter` (`dnd_content`) owns the file + media + `field_image` write so
 the synchronous `setCharacterPortrait` mutation and the queued portrait job
-produce identical results.
+produce identical results. Its two halves are separately callable: `store()`
+writes the file and media, `assign()` points `field_image` at a media, and
+`attach()` does both. The synchronous mutation calls `attach()` because the user
+asked for it in that request; the queued job calls `store()` and leaves
+`assign()` to the review step.
 
-### Writes — bulk/seed via the engine
+### Writes — the engine's wiki cache
 
-The Python engine pushes content into Drupal through
-`src/integration/drupal_sync.py`:
+The Python engine writes to Drupal through `src/integration/drupal_sync.py`,
+which backs the RAG system's wiki page cache:
 
-- `push_character(character_file)`
-- `push_story(story_file, campaign)`
-- `push_item(item_data, skip_existing=True)`
-- `push_monster(monster_data, skip_existing=True)`
-- `trigger_gatsby_build()`
+- `get_wiki_page_cache(url_hash)` -> `wikiCacheEntry` query
+- `set_wiki_page_cache(url_hash, url, fetched_at, content_json)` ->
+  `setWikiCacheEntry` mutation
+- `delete_wiki_page_cache(url_hash)` -> `deleteWikiCacheEntry` mutation
+- `count_wiki_page_cache()` -> `wikiCacheCount` query
 
-This is the path used to seed or batch-sync engine-side JSON into Drupal.
+Entries are keyed by the MD5 hash of the page URL, stored as the node title.
+The `wiki_cache` bundle is served by hand-written resolvers in `dnd_content`
+rather than exposed through graphql_compose, so Gatsby never sources these
+nodes. Writes need the `create` / `edit any` / `delete any wiki_cache content`
+permissions, held by the `gatsby_user` role.
+
+Reads degrade to a cache miss when Drupal is unreachable; writes raise, because
+a write that silently does nothing is a data-loss bug.
+
+**JSON:API is not used anywhere.** `jsonapi_extras.settings` sets
+`default_disabled: true` with no resource configs re-enabling it, so every
+JSON:API route returns 404.
 
 ---
 

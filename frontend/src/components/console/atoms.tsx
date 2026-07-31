@@ -130,9 +130,19 @@ export function TabGlyph({ glyph, active }: { glyph: string; active?: boolean })
    Activity drawer (right rail)
    ──────────────────────────────────────────────────────────── */
 
-export function ActivityRow({ item }: { item: ActivityItem }): React.ReactElement {
+interface ActivityRowProps {
+  item: ActivityItem;
+  /** Opens the screen the row points at. Omit to render the row as a status line only. */
+  onOpen?: (item: ActivityItem) => void;
+  /** Puts a stalled job back on the queue. */
+  onRequeue?: (item: ActivityItem) => void;
+}
+
+export function ActivityRow({ item, onOpen, onRequeue }: ActivityRowProps): React.ReactElement {
+  const openable = item.target != null && onOpen != null;
+  const requeueable = Boolean(item.stalled) && item.jobId != null && onRequeue != null;
   return (
-    <div className={`activity-row activity-${item.status}`}>
+    <div className={`activity-row activity-${item.status}${item.needsReview ? ' activity-review' : ''}${item.stalled ? ' activity-stalled' : ''}`}>
       <div className="activity-head">
         <span className={`dot dot-${item.status}`} />
         <span className="activity-label">
@@ -147,6 +157,29 @@ export function ActivityRow({ item }: { item: ActivityItem }): React.ReactElemen
           <div className="activity-bar-fill" style={{ width: `${item.progress * 100}%` }} />
         </div>
       )}
+      {(openable || requeueable) && (
+        <div className="activity-actions">
+          {openable && (
+            <button
+              type="button"
+              className={`activity-open${item.needsReview ? ' needs-review' : ''}`}
+              onClick={() => onOpen?.(item)}
+            >
+              <Icon name={item.needsReview ? 'flag' : 'chevron'} size={10} />
+              {item.needsReview ? 'Review result' : 'Open'}
+            </button>
+          )}
+          {requeueable && (
+            <button
+              type="button"
+              className="activity-open needs-requeue"
+              onClick={() => onRequeue?.(item)}
+            >
+              <Icon name="play" size={10} /> Requeue
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -156,10 +189,25 @@ interface ActivityDrawerProps {
   open: boolean;
   onToggle: () => void;
   compact?: boolean;
+  /** Opens the screen a row points at, so a finished job can be reviewed. */
+  onOpen?: (item: ActivityItem) => void;
+  /** Puts a stalled job back on the queue. */
+  onRequeue?: (item: ActivityItem) => void;
+  /** Deletes the finished jobs. Omit to render the clear button disabled. */
+  onClear?: () => void;
+  /** True while a clear is in flight. */
+  clearing?: boolean;
 }
 
-export function ActivityDrawer({ items, open, onToggle, compact }: ActivityDrawerProps): React.ReactElement {
-  const runningCount = items.filter(i => i.status === 'running').length;
+export function ActivityDrawer({
+  items, open, onToggle, compact, onOpen, onRequeue, onClear, clearing,
+}: ActivityDrawerProps): React.ReactElement {
+  const runningCount = items.filter(i => i.status === 'running' || i.status === 'queued').length;
+  const reviewCount = items.filter(i => i.needsReview).length;
+  // What Clear would remove: finished, and not waiting on a decision.
+  const clearable = items.filter(
+    i => (i.status === 'done' || i.status === 'failed') && !i.needsReview,
+  ).length;
   return (
     <aside className={`activity-drawer${open ? ' open' : ''}${compact ? ' compact' : ''}`}>
       <button className="activity-toggle" onClick={onToggle} title={open ? 'Hide activity' : 'Show activity'}>
@@ -170,13 +218,29 @@ export function ActivityDrawer({ items, open, onToggle, compact }: ActivityDrawe
         <div className="activity-body">
           <div className="activity-head-row">
             <h3>Activity</h3>
+            {reviewCount > 0 && (
+              <span className="activity-review-count">{reviewCount} to review</span>
+            )}
             <span className="activity-count">{items.length}</span>
           </div>
           <div className="activity-list">
-            {items.map((item, i) => <ActivityRow key={i} item={item} />)}
+            {items.map((item, i) => (
+              <ActivityRow key={item.jobId ?? i} item={item} onOpen={onOpen} onRequeue={onRequeue} />
+            ))}
           </div>
           <div className="activity-foot">
-            <button className="activity-clear">Clear completed</button>
+            {/* Deletes the rows in Drupal: the drawer is a view of that
+                table, so there is nothing local to clear. Finished jobs still
+                awaiting a decision are kept back server-side. */}
+            <button
+              type="button"
+              className="activity-clear"
+              disabled={onClear == null || clearing || clearable === 0}
+              onClick={onClear}
+            >
+              {clearing ? <Spinner size={9} /> : null}
+              {clearing ? 'Clearing…' : `Clear completed${clearable > 0 ? ` (${clearable})` : ''}`}
+            </button>
           </div>
         </div>
       )}

@@ -44,7 +44,51 @@ GATSBY_KILL_STALE_LISTENERS="${GATSBY_KILL_STALE_LISTENERS:-true}"
 GATSBY_LOG_FILE="${GATSBY_LOG_FILE:-$SCRIPT_DIR/.gatsby.log}"
 SIDECAR_KILL_STALE_LISTENERS="${SIDECAR_KILL_STALE_LISTENERS:-true}"
 SIDECAR_LOG_FILE="${SIDECAR_LOG_FILE:-$SCRIPT_DIR/.sidecar.log}"
-MKCERT_CA="${MKCERT_CA:-$HOME/.local/share/mkcert/rootCA.pem}"
+# The CA that signs DDEV's TLS cert, used by Node (NODE_EXTRA_CA_CERTS) and by
+# the sidecar when it fetches files from Drupal over HTTPS.
+#
+# Do not hardcode this path. mkcert's CAROOT depends on the environment it was
+# installed from: a plain shell puts it under ~/.local/share/mkcert, while a snap
+# VS Code terminal puts it under ~/snap/code/<revision>/... - and that revision
+# number changes on every VS Code update, so any fixed path rots. Both CAs carry
+# the same subject name (it is derived from user@host), so a name match proves
+# nothing; only the key matters. Asking mkcert in this shell returns the same
+# CAROOT DDEV used when it generated the cert, which is what keeps this correct.
+# Rather than bet on one path, trust every mkcert CA on this machine at once: a
+# CA bundle may hold several certificates, so whichever one signed the DDEV cert
+# is covered no matter which shell generated it. They are all this user's own
+# development CAs. An explicit MKCERT_CA in the environment still wins.
+if [[ -z "${MKCERT_CA:-}" ]]; then
+  MKCERT_CA_BUNDLE="$SCRIPT_DIR/.mkcert-ca-bundle.pem"
+  MKCERT_CANDIDATES=()
+  if command -v mkcert >/dev/null 2>&1; then
+    MKCERT_CAROOT="$(mkcert -CAROOT 2>/dev/null || true)"
+    [[ -n "$MKCERT_CAROOT" ]] && MKCERT_CANDIDATES+=("$MKCERT_CAROOT/rootCA.pem")
+  fi
+  MKCERT_CANDIDATES+=("$HOME/.local/share/mkcert/rootCA.pem")
+  # snap keeps "current" pointing at the live revision, so this survives updates.
+  for snap_ca in "$HOME"/snap/*/current/.local/share/mkcert/rootCA.pem; do
+    [[ -f "$snap_ca" ]] && MKCERT_CANDIDATES+=("$snap_ca")
+  done
+
+  : > "$MKCERT_CA_BUNDLE"
+  MKCERT_FOUND=0
+  for ca in "${MKCERT_CANDIDATES[@]}"; do
+    if [[ -f "$ca" ]] && ! grep -qxFf "$ca" "$MKCERT_CA_BUNDLE" 2>/dev/null; then
+      cat "$ca" >> "$MKCERT_CA_BUNDLE"
+      MKCERT_FOUND=$((MKCERT_FOUND + 1))
+    fi
+  done
+
+  if [[ "$MKCERT_FOUND" -gt 0 ]]; then
+    MKCERT_CA="$MKCERT_CA_BUNDLE"
+    echo "==> Trusting $MKCERT_FOUND mkcert CA(s) via $MKCERT_CA_BUNDLE"
+  else
+    echo "==> WARNING: no mkcert rootCA.pem found on this machine."
+    echo "    HTTPS calls to Drupal will fail certificate verification."
+    echo "    Set MKCERT_CA in .env to the rootCA.pem that signs the DDEV cert."
+  fi
+fi
 COMFYUI_KILL_STALE_LISTENERS="${COMFYUI_KILL_STALE_LISTENERS:-true}"
 COMFYUI_LOG_FILE="${COMFYUI_LOG_FILE:-$SCRIPT_DIR/.comfyui.log}"
 JOB_QUEUE_ENABLED="${JOB_QUEUE_ENABLED:-true}"
@@ -58,7 +102,7 @@ done
 # ---------------------------------------------------------------------------
 # 1. Drupal CMS + all DDEV services (Ollama, Milvus, Solr)
 # ---------------------------------------------------------------------------
-echo "==> Starting Drupal CMS (+ Ollama, Milvus, Solr via DDEV)..."
+echo "==> Starting Drupal CMS (+ Milvus, Solr via DDEV; Ollama runs on the host)..."
 cd "$DRUPAL_DIR"
 ddev start
 
@@ -221,6 +265,13 @@ if [[ "$JOB_QUEUE_ENABLED" == "true" ]]; then
   cd "$DRUPAL_DIR"
   (
     while true; do
+      # Recover jobs orphaned by a worker that died mid-run. Runs before every
+      # start, which is precisely when that has just happened: a job claimed by
+      # the previous processor still holds a lease nobody is honouring, and on a
+      # single-threaded queue it blocks everything behind it. hook_cron() does
+      # the same sweep, but nothing on this host runs cron, so this is the path
+      # that actually fires.
+      ddev drush dnd-jobs:recover
       ddev drush advancedqueue:queue:process dnd_ai --timeout=0
       echo "[start.sh] queue processor exited; restarting in 5s"
       sleep 5

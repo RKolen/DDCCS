@@ -18,6 +18,8 @@ interface AiJob {
   label:     string;
   message:   string | null;
   result:    string | null;
+  subjectId: string | null;
+  stalled:   boolean | null;
   created:   number | null;
   processed: number | null;
 }
@@ -27,7 +29,7 @@ interface GraphQlResponse {
   errors?: Array<{ message: string }>;
 }
 
-const JOB_FIELDS = 'id type state label message result created processed';
+const JOB_FIELDS = 'id type state label message result subjectId stalled created processed';
 
 const JOB_QUERY = `query AiJob($id: String!) { aiJob(id: $id) { ${JOB_FIELDS} } }`;
 

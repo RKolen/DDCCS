@@ -21,5 +21,15 @@ Desktop.ini
 $RECYCLE.BIN/
 
 .ddev/docker-compose.*
+# ...except the service topology, which every checkout needs to reproduce the
+# environment. host-gateway.yaml in particular is what gives the web container
+# host.docker.internal resolution - without it Drupal cannot reach the host
+# Ollama, and AI/embedding calls fail with "cURL error 7".
+!.ddev/docker-compose.milvus.yaml
+!.ddev/docker-compose.solr.yaml
+!.ddev/docker-compose.solr-modules.yaml
+!.ddev/docker-compose.host-gateway.yaml
+# docker-compose.game_data.yaml stays ignored: it hardcodes an absolute host
+# path to this repo's game_data/ directory and is therefore machine-specific.
 .ddev/.env
 .ddev/traefik/certs/

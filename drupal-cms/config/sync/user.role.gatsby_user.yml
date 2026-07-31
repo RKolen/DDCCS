@@ -12,6 +12,7 @@ dependencies:
     - node.type.session
     - node.type.spell
     - node.type.story
+    - node.type.wiki_cache
     - taxonomy.vocabulary.abilities
     - taxonomy.vocabulary.ability_scores
     - taxonomy.vocabulary.action_types
@@ -67,6 +68,7 @@ permissions:
   - 'create session content'
   - 'create spell content'
   - 'create story content'
+  - 'create wiki_cache content'
   - 'create terms in abilities'
   - 'create terms in ability_scores'
   - 'create terms in action_types'
@@ -104,7 +106,9 @@ permissions:
   - 'create terms in weapon_properties'
   - 'create terms in weapon_subtype'
   - 'delete any character_analysis content'
+  - 'delete any wiki_cache content'
   - 'edit any character content'
   - 'edit any character_analysis content'
+  - 'edit any wiki_cache content'
   - 'edit terms in campaign'
   - 'view media'

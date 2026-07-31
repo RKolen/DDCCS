@@ -25,6 +25,8 @@ interface AiJob {
   label:     string;
   message:   string | null;
   result:    string | null;
+  subjectId: string | null;
+  stalled:   boolean | null;
   created:   number | null;
   processed: number | null;
 }
@@ -37,7 +39,7 @@ interface GraphQlResponse {
 const ENQUEUE_MUTATION = `
   mutation EnqueueAiJob($type: String!, $payload: String!, $label: String!) {
     enqueueAiJob(type: $type, payload: $payload, label: $label) {
-      id type state label message result created processed
+      id type state label message result subjectId stalled created processed
     }
   }
 `;

@@ -218,3 +218,7 @@ frontend/.env
 frontend/.env.development
 frontend/.env.production
 frontend/.env.test
+
+# Generated CA bundle: every mkcert dev CA on this machine, so DDEV TLS
+# verification does not depend on which shell generated the certificate.
+.mkcert-ca-bundle.pem

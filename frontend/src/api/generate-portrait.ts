@@ -5,10 +5,13 @@ import { sidecarFetch } from '../utils/sidecarFetch';
 /**
  * Generate a character portrait and attach it to the character node.
  *
- * Flow (Phase A, text-to-image only):
+ * Flow:
  *   1. POST the character profile to the Python sidecar `/character/portrait`,
  *      which drives local ComfyUI and returns a base64 PNG. CPU generation
- *      takes minutes, so `sidecarFetch` (no request timeout) is used.
+ *      takes minutes, so `sidecarFetch` (no request timeout) is used. Passing
+ *      `referenceImageUrl` conditions the render on an existing portrait
+ *      (IPAdapter) so the character stays recognisable; `usedReference` in the
+ *      response reports whether that was actually applied.
  *   2. Persist the image via the Drupal `setCharacterPortrait` mutation, which
  *      creates a file + image media entity and points `field_image` at it.
  *   3. Return the persisted image URL so the console can show it immediately.
@@ -33,14 +36,24 @@ interface GeneratePortraitBody {
   positive?: string | null;
   /** What the render must avoid; blank falls back to the standard negative. */
   negative?: string | null;
+  /**
+   * An existing portrait to keep the likeness of (IPAdapter). The sidecar
+   * degrades to text-to-image when IPAdapter is not installed or the image
+   * cannot be fetched, so this never turns a render into a failure.
+   */
+  referenceImageUrl?: string | null;
+  /** How hard the reference pulls towards the original face (0-1.5). */
+  identityWeight?: number | null;
 }
 
 /** Shape of the sidecar `/character/portrait` response (PortraitResponse). */
 interface SidecarPortrait {
-  image_base64: string;
-  seed:         number;
-  prompt:       string;
-  alt:          string;
+  image_base64:   string;
+  seed:           number;
+  prompt:         string;
+  alt:            string;
+  /** Whether the likeness reference was actually applied, not just requested. */
+  used_reference: boolean;
 }
 
 interface MediaImageResult {
@@ -118,12 +131,14 @@ export default async function handler(
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        profile:  body.profile,
-        seed:     body.seed ?? null,
-        width:    body.width ?? null,
-        height:   body.height ?? null,
-        positive: body.positive ?? null,
-        negative: body.negative ?? null,
+        profile:             body.profile,
+        seed:                body.seed ?? null,
+        width:               body.width ?? null,
+        height:              body.height ?? null,
+        positive:            body.positive ?? null,
+        negative:            body.negative ?? null,
+        reference_image_url: body.referenceImageUrl ?? null,
+        identity_weight:     body.identityWeight ?? null,
       }),
     });
   } catch (err) {
@@ -190,10 +205,11 @@ export default async function handler(
   }
 
   res.status(200).json({
-    id:       character.id,
-    title:    character.title,
-    imageUrl: character.image?.mediaImage?.url ?? null,
-    alt:      portrait.alt,
-    seed:     portrait.seed,
+    id:            character.id,
+    title:         character.title,
+    imageUrl:      character.image?.mediaImage?.url ?? null,
+    alt:           portrait.alt,
+    seed:          portrait.seed,
+    usedReference: portrait.used_reference === true,
   });
 }

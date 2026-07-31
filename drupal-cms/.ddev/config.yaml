@@ -303,3 +303,11 @@ web_environment:
 #   - exec: drush sql:sanitize
 #   - exec: drush updatedb
 #   - exec: drush cache:rebuild
+
+# DDEV's settings management makes settings.php and services.yml writable each
+# time it regenerates settings.ddev.php. Drupal's status report treats writable
+# settings files as a security risk, so restore read-only permissions after
+# every start.
+hooks:
+  post-start:
+    - exec-host: .ddev/scripts/protect-settings.sh

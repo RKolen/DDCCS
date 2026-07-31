@@ -265,6 +265,14 @@ class PortraitRequest(BaseModel):
     # for alt text. Empty falls back to building the prompt from the profile.
     positive: Optional[str] = None
     negative: Optional[str] = None
+    # An existing portrait to keep the likeness of (IPAdapter). When set - and
+    # the IPAdapter models are configured - the render is conditioned on this
+    # image so it stays recognisably the same character. Omitted or unusable,
+    # generation is plain text-to-image.
+    reference_image_url: Optional[str] = None
+    # How strongly the reference pulls the render towards the original face.
+    # Capped below 1.5: past that the reference overwhelms the prompt entirely.
+    identity_weight: Optional[float] = Field(default=None, ge=0.0, le=1.5)
 
     @field_validator("profile")
     @classmethod
@@ -293,6 +301,11 @@ class PortraitResponse(BaseModel):
     seed: int
     prompt: str
     alt: str
+    # True when the render was conditioned on a reference portrait (IPAdapter).
+    # Reported rather than assumed: a reference that could not be fetched or
+    # uploaded degrades to text-to-image, and the console should say which it got
+    # instead of promising a likeness it did not apply.
+    used_reference: bool = False
 
 
 class PromptRequest(BaseModel):

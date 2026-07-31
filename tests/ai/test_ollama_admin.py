@@ -40,9 +40,9 @@ def test_list_loaded_models_returns_names() -> None:
     print("\n[TEST] list_loaded_models - two resident models")
     with patch(
         "src.ai.ollama_admin.requests.get",
-        return_value=_resp(200, _ps(["llama3", "qwen2.5vl"])),
+        return_value=_resp(200, _ps(["test-model-a", "test-model-b"])),
     ):
-        assert list_loaded_models(_BASE) == ["llama3", "qwen2.5vl"]
+        assert list_loaded_models(_BASE) == ["test-model-a", "test-model-b"]
     print("  [OK] Names extracted from /api/ps")
 
 
@@ -69,7 +69,7 @@ def test_unload_evicts_each_resident_model() -> None:
     print("\n[TEST] unload_ollama_models - two models evicted")
     with patch(
         "src.ai.ollama_admin.requests.get",
-        return_value=_resp(200, _ps(["llama3", "qwen2.5vl"])),
+        return_value=_resp(200, _ps(["test-model-a", "test-model-b"])),
     ), patch(
         "src.ai.ollama_admin.requests.post", return_value=_resp(200)
     ) as mock_post:
