@@ -99,6 +99,28 @@ Notes on behaviour worth knowing before changing this screen:
 - **Multi-value text fields are one row per Drupal delta.** Values arrive
   normalised by `utils/richTextToLines.ts`, which strips legacy HTML and splits
   a delta holding several entries into several rows.
+- **Campaign, record type and source flag are editable** in the Identity group.
+  The campaign select is built from the same `termCampaigns` list the campaign
+  switcher uses. Switching the record type between Player character and NPC
+  moves the record between the Characters and NPCs rosters on the next build;
+  the form reveals or hides the NPC-only groups straight away, while the handoff
+  buttons keep pointing at the roster the record was last built into.
+- **Ability scores are editable in Vitals**, sent as a partial map of only the
+  abilities that changed. A blank box means "leave that score as it is" — the
+  write path cannot clear a score.
+
+### The character list card
+
+`characters/list` (and `npcs/n-list`) shows each record as a `.char-card`:
+portrait, name, nickname, then class — with subclass in brackets, and each
+class's own level when the character is multiclassed — followed by species and
+heritage, background, and pronouns, with AC and HP in the card footer.
+
+Classes come from the `characterClasses` paragraphs, mapped in
+`utils/buildConsoleData.ts` into `DrupalCharacter.classes`, with the first one
+also flattened onto `characterClass` for the many one-line summaries that show a
+single class. Only `index.tsx` queries them; the narrower console routes
+(`/party`, `/characters`, `/npcs`) leave the list empty.
 
 ### Deep links into the console
 

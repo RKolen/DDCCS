@@ -1152,6 +1152,12 @@ kbd {
   color: var(--ink-dim);
   margin-top: 4px;
 }
+/* Secondary identity lines (heritage, background) sit below the class line. */
+.char-card-meta.subtle {
+  font-size: 10px;
+  color: var(--ink-faint);
+  margin-top: 2px;
+}
 .char-card-pron {
   display: inline-block;
   font-size: 10px;

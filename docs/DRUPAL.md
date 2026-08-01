@@ -288,9 +288,8 @@ Not writable through it, by design:
 | `field_image` | `setCharacterPortrait` / `setCharacterImage` |
 | `field_image_prompt`, `field_voice_*` | `updateCharacter` |
 | `field_arc_*` | `saveCharacterArc` |
-| `field_character_type`, `field_source_character`, `field_campaign` | Drupal admin — structural, not profile edits |
 
-Two behaviours worth knowing:
+Three behaviours worth knowing:
 
 - **Multi-value text fields are always written one value per delta with the
   `plain_text` format.** Some records held `<p>Steadfast</p>`, and a few held
@@ -300,6 +299,18 @@ Two behaviours worth knowing:
 - **Term references are resolved by term UUID and checked against the field's
   vocabulary.** A UUID from the wrong vocabulary is rejected with
   `No <vocabulary> term found for id <uuid>` rather than written.
+- **`abilityScores` is handled outside `FIELD_MAP`**, because ability scores are
+  a paragraph hierarchy rather than a field value: an `ability_scores` wrapper
+  holding one `ability_score` paragraph (`field_ability` term + `field_score`)
+  per ability. The payload is a partial map keyed `strength` … `charisma`, so
+  only the abilities it names are rewritten; the wrapper and any missing
+  sub-paragraph are created on demand. A non-numeric or absent value leaves that
+  ability alone — the mutation has no way to clear a score.
+
+`field_campaign`, `field_character_type` and `field_source_character` **are**
+writable. Flipping `field_character_type` is how a record is reclassified: it
+moves between the console's Characters and NPCs rosters on the next Gatsby
+build.
 
 Only the fields the mutation actually set are validated
 (`$node->validate()->getByFields($changed)`), so unrelated pre-existing damage —

@@ -8,7 +8,7 @@
 
 import type {
   ConsoleData, DrupalCampaign, DrupalCharacter, DrupalStory, DrupalMonster, DrupalItem,
-  DrupalCharacterArc, DrupalArcMetric, TermRef,
+  DrupalCharacterArc, DrupalArcMetric, DrupalAbilityScores, DrupalCharacterClass, TermRef,
 } from '../components/console/ConsoleContext';
 import { textValues, htmlToText } from './richTextToLines';
 
@@ -73,9 +73,64 @@ function buildCharacterArc(n: RawCharacter): DrupalCharacterArc | null {
   };
 }
 
+/**
+ * Flatten the ability_scores paragraph into six numbers.
+ *
+ * Each ability is its own ability_score paragraph, so an unexposed or missing
+ * one arrives as `{}` and reads as null rather than a score of zero.
+ */
+function abilityScores(raw: RawAbilityScores | null | undefined): DrupalAbilityScores {
+  return {
+    strength:     raw?.strength?.score ?? null,
+    dexterity:    raw?.dexterity?.score ?? null,
+    constitution: raw?.constitution?.score ?? null,
+    intelligence: raw?.intelligence?.score ?? null,
+    wisdom:       raw?.wisdom?.score ?? null,
+    charisma:     raw?.charisma?.score ?? null,
+  };
+}
+
+/**
+ * Map the class paragraphs, dropping any whose class reference is empty.
+ *
+ * A paragraph with no classRef carries nothing worth showing — it is a half
+ * filled row in Drupal, not a class the character has.
+ */
+function characterClasses(raw: RawClassParagraph[] | null | undefined): DrupalCharacterClass[] {
+  return (raw ?? [])
+    .filter((c): c is RawClassParagraph => Boolean(c?.classRef?.name))
+    .map(c => ({
+      name:     c.classRef?.name ?? '',
+      subclass: c.subclassRef?.name ?? null,
+      level:    c.level ?? null,
+    }));
+}
+
 export interface RawCampaignOnCharacter {
   id: string;
   name: string;
+}
+
+/** One field_class paragraph as the console queries it. */
+export interface RawClassParagraph {
+  level?:       number | null;
+  classRef?:    { name: string } | null;
+  subclassRef?: { name: string } | null;
+}
+
+/** One ability_score paragraph, or `{}` when the reference is empty. */
+export interface RawAbilityScoreItem {
+  score?: number | null;
+}
+
+/** The ability_scores wrapper paragraph as the console queries it. */
+export interface RawAbilityScores {
+  strength?:     RawAbilityScoreItem | null;
+  dexterity?:    RawAbilityScoreItem | null;
+  constitution?: RawAbilityScoreItem | null;
+  intelligence?: RawAbilityScoreItem | null;
+  wisdom?:       RawAbilityScoreItem | null;
+  charisma?:     RawAbilityScoreItem | null;
 }
 
 /** A taxonomy term as the console queries it: UUID plus label. */
@@ -122,6 +177,8 @@ export interface RawCharacter {
   lastName?:         string | null;
   gold?:             number | null;
   gender?:           string | null;
+  abilityScores?:    RawAbilityScores | null;
+  characterClasses?: RawClassParagraph[] | null;
   recurring?:        boolean | null;
   species?:          RawTermRef | null;
   lineage?:          RawTermRef | null;
@@ -259,64 +316,69 @@ function splitCsv(s: string | null | undefined): string[] {
 export function buildConsoleData(data: ConsoleQueryData | null | undefined): ConsoleData {
   if (!data?.drupal) return { campaigns: [], characters: [], stories: [], monsters: [], items: [] };
 
-  const characters: DrupalCharacter[] = data.drupal.nodeCharacters.nodes.map(n => ({
-    id:               n.id,
-    title:            n.title,
-    firstName:        n.firstName,
-    lastName:         n.lastName ?? null,
-    nickname:         n.nickname,
-    level:            n.level,
-    armorClass:       n.armorClass,
-    maximumHitpoints: n.maximumHitpoints,
-    movementSpeed:    n.movementSpeed,
-    proficiencyBonus: n.proficiencyBonus,
-    gold:             n.gold ?? null,
-    pronouns:         n.pronouns,
-    gender:           n.gender ?? null,
-    role:             n.role,
-    characterClass:   null,
-    characterType:    n.characterType,
-    sourceCharacter:  n.sourceCharacter,
-    recurring:        n.recurring ?? null,
-    campaign:         n.campaign?.name ?? null,
-    campaignId:       n.campaign?.id ?? null,
-    path:             n.path,
-    imageUrl:         n.image?.mediaImage?.url ?? null,
-    imagePrompt:      n.imagePrompt ?? null,
-    species:          n.species?.name ?? null,
-    speciesId:        n.species?.id ?? null,
-    lineage:          n.lineage?.name ?? null,
-    lineageId:        n.lineage?.id ?? null,
-    background:       n.background?.name ?? null,
-    backgroundId:     n.background?.id ?? null,
-    languages:        termRefs(n.languages),
-    skills:           termRefs(n.skills),
-    tools:            termRefs(n.tools),
-    bonds:            textValues(n.bonds),
-    ideals:           textValues(n.ideals),
-    flaws:            textValues(n.flaws),
-    personalityTraits: textValues(n.personalityTraits),
-    majorPlotActions:  textValues(n.majorPlotActions),
-    specializedAbilities: textValues(n.specializedAbilities),
-    plotHooks:        textValues(n.plotHooks),
-    abilities:        textValues(n.abilities),
-    personality:      htmlToText(n.personality?.value),
-    notes:            htmlToText(n.notes?.value),
-    encounterTactics: textValues(n.encounterTactics),
-    defeatConditions: textValues(n.defeatConditions),
-    lairActions:      textValues(n.lairActions),
-    legendaryActions: textValues(n.legendaryActions),
-    regionalEffects:  textValues(n.regionalEffects),
-    aiEnabled:        n.aiEnabled ?? null,
-    aiModel:          n.aiModel ?? null,
-    aiTemperature:    n.aiTemperature ?? null,
-    aiMaxTokens:      n.aiMaxTokens ?? null,
-    aiSystemPrompt:   htmlToText(n.aiSystemPrompt?.value),
-    voiceId:          n.voiceIdRef?.name ?? null,
-    voicePitch:       n.voicePitch ?? null,
-    voiceSpeed:       n.voiceSpeed ?? null,
-    arc:              buildCharacterArc(n),
-  }));
+  const characters: DrupalCharacter[] = data.drupal.nodeCharacters.nodes.map(n => {
+    const classes = characterClasses(n.characterClasses);
+    return {
+      id:               n.id,
+      title:            n.title,
+      firstName:        n.firstName,
+      lastName:         n.lastName ?? null,
+      nickname:         n.nickname,
+      level:            n.level,
+      armorClass:       n.armorClass,
+      maximumHitpoints: n.maximumHitpoints,
+      movementSpeed:    n.movementSpeed,
+      proficiencyBonus: n.proficiencyBonus,
+      gold:             n.gold ?? null,
+      abilityScores:    abilityScores(n.abilityScores),
+      pronouns:         n.pronouns,
+      gender:           n.gender ?? null,
+      role:             n.role,
+      characterClass:   classes.length > 0 ? classes[0].name : null,
+      classes,
+      characterType:    n.characterType,
+      sourceCharacter:  n.sourceCharacter,
+      recurring:        n.recurring ?? null,
+      campaign:         n.campaign?.name ?? null,
+      campaignId:       n.campaign?.id ?? null,
+      path:             n.path,
+      imageUrl:         n.image?.mediaImage?.url ?? null,
+      imagePrompt:      n.imagePrompt ?? null,
+      species:          n.species?.name ?? null,
+      speciesId:        n.species?.id ?? null,
+      lineage:          n.lineage?.name ?? null,
+      lineageId:        n.lineage?.id ?? null,
+      background:       n.background?.name ?? null,
+      backgroundId:     n.background?.id ?? null,
+      languages:        termRefs(n.languages),
+      skills:           termRefs(n.skills),
+      tools:            termRefs(n.tools),
+      bonds:            textValues(n.bonds),
+      ideals:           textValues(n.ideals),
+      flaws:            textValues(n.flaws),
+      personalityTraits: textValues(n.personalityTraits),
+      majorPlotActions:  textValues(n.majorPlotActions),
+      specializedAbilities: textValues(n.specializedAbilities),
+      plotHooks:        textValues(n.plotHooks),
+      abilities:        textValues(n.abilities),
+      personality:      htmlToText(n.personality?.value),
+      notes:            htmlToText(n.notes?.value),
+      encounterTactics: textValues(n.encounterTactics),
+      defeatConditions: textValues(n.defeatConditions),
+      lairActions:      textValues(n.lairActions),
+      legendaryActions: textValues(n.legendaryActions),
+      regionalEffects:  textValues(n.regionalEffects),
+      aiEnabled:        n.aiEnabled ?? null,
+      aiModel:          n.aiModel ?? null,
+      aiTemperature:    n.aiTemperature ?? null,
+      aiMaxTokens:      n.aiMaxTokens ?? null,
+      aiSystemPrompt:   htmlToText(n.aiSystemPrompt?.value),
+      voiceId:          n.voiceIdRef?.name ?? null,
+      voicePitch:       n.voicePitch ?? null,
+      voiceSpeed:       n.voiceSpeed ?? null,
+      arc:              buildCharacterArc(n),
+    };
+  });
 
   const stories: DrupalStory[] = data.drupal.nodeStories.nodes
     .slice()

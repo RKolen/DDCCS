@@ -14,6 +14,7 @@ use Drupal\graphql\Attribute\DataProducer;
 use Drupal\graphql\GraphQL\Execution\FieldContext;
 use Drupal\graphql\Plugin\GraphQL\DataProducer\DataProducerPluginBase;
 use Drupal\node\NodeInterface;
+use Drupal\paragraphs\Entity\Paragraph;
 use Drupal\taxonomy\TermInterface;
 use GraphQL\Error\UserError;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -30,10 +31,15 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * Portrait, voice, and arc-analysis fields are deliberately absent: they are
  * owned by the Portrait Studio, Consultation, and Arc Analysis screens and are
  * written by ::updateCharacter, ::setCharacterPortrait, ::setCharacterImage and
- * ::saveCharacterArc. field_character_type, field_source_character and
- * field_campaign are absent too - moving a character between campaigns or
- * flipping a player character into an NPC is a structural change with its own
- * consequences, not a profile edit.
+ * ::saveCharacterArc.
+ *
+ * field_campaign, field_character_type and field_source_character are writable.
+ * Flipping field_character_type moves the record between the console's
+ * character and NPC rosters, which is the intended way to reclassify a record.
+ *
+ * Ability scores are handled outside ::FIELD_MAP by ::writeAbilityScores,
+ * because they are not a field value but a paragraph hierarchy: an
+ * ability_scores wrapper holding one ability_score paragraph per ability.
  *
  * Multi-value text fields are always written with the plain_text format and one
  * value per delta. That is what stops the "<p>Steadfast</p>" wrappers, and the
@@ -66,6 +72,30 @@ final class UpdateCharacterProfile extends DataProducerPluginBase implements Con
   private const TEXT_FORMAT = 'plain_text';
 
   /**
+   * The node field holding the ability_scores paragraph.
+   */
+  private const ABILITY_SCORES_FIELD = 'field_ability_scores';
+
+  /**
+   * The ability_scores wrapper's fields, keyed by the payload key.
+   *
+   * Each entry is [wrapper field name, ability term name]. The term name is
+   * what field_ability on a newly created ability_score paragraph is pointed
+   * at; that field is required, so a sub-paragraph cannot be created without
+   * it.
+   *
+   * @var array<string, array{0: string, 1: string}>
+   */
+  private const ABILITY_FIELDS = [
+    'strength'     => ['field_strength', 'Strength'],
+    'dexterity'    => ['field_dexterity', 'Dexterity'],
+    'constitution' => ['field_constitution', 'Constitution'],
+    'intelligence' => ['field_intelligence', 'Intelligence'],
+    'wisdom'       => ['field_wisdom', 'Wisdom'],
+    'charisma'     => ['field_charisma', 'Charisma'],
+  ];
+
+  /**
    * The editable fields, keyed by the payload key the console sends.
    *
    * Each entry is [field name, kind, vocabulary]. The vocabulary is present
@@ -82,6 +112,10 @@ final class UpdateCharacterProfile extends DataProducerPluginBase implements Con
     'pronouns'    => ['field_pronouns', 'string'],
     'gender'      => ['field_gender', 'list_string'],
     'role'        => ['field_role', 'string'],
+    // Placement.
+    'campaign'        => ['field_campaign', 'term_ref', 'campaign'],
+    'characterType'   => ['field_character_type', 'bool'],
+    'sourceCharacter' => ['field_source_character', 'bool'],
     // Ancestry.
     'species'     => ['field_species', 'term_ref', 'species'],
     'lineage'     => ['field_lineage', 'term_ref', 'lineage'],
@@ -226,6 +260,13 @@ final class UpdateCharacterProfile extends DataProducerPluginBase implements Con
       $changed[] = $field;
     }
 
+    if (array_key_exists('abilityScores', $data)
+      && $node->hasField(self::ABILITY_SCORES_FIELD)
+      && $this->writeAbilityScores($node, $data['abilityScores'], $term_storage)
+    ) {
+      $changed[] = self::ABILITY_SCORES_FIELD;
+    }
+
     if ($changed === []) {
       return $node;
     }
@@ -241,6 +282,101 @@ final class UpdateCharacterProfile extends DataProducerPluginBase implements Con
     $node->save();
 
     return $node;
+  }
+
+  /**
+   * Write the supplied ability scores into the character's paragraphs.
+   *
+   * Only the abilities named in the payload are touched, so the editor can send
+   * a single changed score without disturbing the other five. The wrapper and
+   * any missing ability_score sub-paragraph are created on demand, which is
+   * what lets a character that never had scores be given them here.
+   *
+   * @param \Drupal\node\NodeInterface $node
+   *   The character node.
+   * @param mixed $scores
+   *   Map of ability key to score, from the payload.
+   * @param \Drupal\Core\Entity\EntityStorageInterface $term_storage
+   *   Taxonomy term storage.
+   *
+   * @return bool
+   *   TRUE when the node's ability-scores field was set.
+   *
+   * @throws \GraphQL\Error\UserError
+   *   When the payload is not an object, or an ability term is missing.
+   */
+  private function writeAbilityScores(
+    NodeInterface $node,
+    mixed $scores,
+    EntityStorageInterface $term_storage,
+  ): bool {
+    if (!is_array($scores)) {
+      throw new UserError('abilityScores must be a JSON object.');
+    }
+
+    $wrapper = $node->get(self::ABILITY_SCORES_FIELD)->entity;
+    if (!$wrapper instanceof Paragraph) {
+      $wrapper = Paragraph::create(['type' => 'ability_scores']);
+    }
+
+    $written = FALSE;
+    foreach (self::ABILITY_FIELDS as $key => [$field, $term_name]) {
+      if (!array_key_exists($key, $scores) || !is_numeric($scores[$key])) {
+        continue;
+      }
+      $sub = $wrapper->get($field)->entity;
+      if (!$sub instanceof Paragraph) {
+        $sub = Paragraph::create([
+          'type'          => 'ability_score',
+          'field_ability' => ['target_id' => $this->abilityTermId($term_name, $term_storage)],
+        ]);
+      }
+      $sub->set('field_score', (int) $scores[$key]);
+      $sub->save();
+      // Re-setting the reference is what pins the wrapper to the revision just
+      // saved; without it the wrapper keeps pointing at the old one and the
+      // new score never surfaces.
+      $wrapper->set($field, $sub);
+      $written = TRUE;
+    }
+
+    if (!$written) {
+      return FALSE;
+    }
+
+    $wrapper->save();
+    $node->set(self::ABILITY_SCORES_FIELD, [
+      'target_id'          => (int) $wrapper->id(),
+      'target_revision_id' => (int) $wrapper->getRevisionId(),
+    ]);
+    return TRUE;
+  }
+
+  /**
+   * Look up an ability term by name.
+   *
+   * An ability_score paragraph requires field_ability, so a missing term is
+   * reported here rather than left unset for node validation to reject with a
+   * message that says nothing about ability scores.
+   *
+   * @param string $name
+   *   The term name, as listed in ::ABILITY_FIELDS.
+   * @param \Drupal\Core\Entity\EntityStorageInterface $term_storage
+   *   Taxonomy term storage.
+   *
+   * @return int
+   *   The term ID.
+   *
+   * @throws \GraphQL\Error\UserError
+   *   When the ability_scores vocabulary holds no such term.
+   */
+  private function abilityTermId(string $name, EntityStorageInterface $term_storage): int {
+    $terms = $term_storage->loadByProperties(['vid' => 'ability_scores', 'name' => $name]);
+    $term = reset($terms);
+    if (!$term instanceof TermInterface) {
+      throw new UserError(sprintf('No ability_scores term named %s.', $name));
+    }
+    return (int) $term->id();
   }
 
   /**

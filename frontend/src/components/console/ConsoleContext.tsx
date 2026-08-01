@@ -30,6 +30,35 @@ export interface TermRef {
   name: string;
 }
 
+/**
+ * The six ability scores, flattened out of the ability_scores paragraph.
+ *
+ * Always present as an object so a consumer can read a score without a null
+ * check on the paragraph; an ability the character has no score for is null.
+ */
+export interface DrupalAbilityScores {
+  strength:     number | null;
+  dexterity:    number | null;
+  constitution: number | null;
+  intelligence: number | null;
+  wisdom:       number | null;
+  charisma:     number | null;
+}
+
+/**
+ * One class paragraph. A multiclassed character has several, in Drupal's order.
+ */
+export interface DrupalCharacterClass {
+  name: string;
+  subclass: string | null;
+  level: number | null;
+}
+
+/** The ability keys, in the order a character sheet lists them. */
+export const ABILITY_KEYS: Array<keyof DrupalAbilityScores> = [
+  'strength', 'dexterity', 'constitution', 'intelligence', 'wisdom', 'charisma',
+];
+
 export interface DrupalCharacter {
   id: string;
   title: string;
@@ -42,11 +71,14 @@ export interface DrupalCharacter {
   movementSpeed?: number | null;
   proficiencyBonus?: number | null;
   gold: number | null;
+  abilityScores: DrupalAbilityScores;
   pronouns: string | null;
   gender: string | null;
   role?: string | null;
-  /** Class name: omitted for now — 'class' as a field name breaks graphql-js parser */
+  /** Primary class name — `classes[0]`, kept flat for the many one-line summaries. */
   characterClass: string | null;
+  /** Every class paragraph, so a multiclassed character reads correctly. */
+  classes: DrupalCharacterClass[];
   /** true = player character, false = NPC */
   characterType: boolean | null;
   /** true = template / source character, false = campaign clone */

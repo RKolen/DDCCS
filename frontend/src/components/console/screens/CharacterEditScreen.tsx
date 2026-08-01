@@ -13,9 +13,9 @@
  *   voice     -> characters/consult (voice picker with live preview)
  *   arc       -> characters/arc     (Character Arc Analysis)
  *
- * Campaign membership and the player/NPC flag are shown read-only: moving a
- * character between campaigns or flipping it to an NPC is a structural change,
- * not a profile edit.
+ * Campaign, record type and source flag are editable here. Switching the
+ * record type moves the character between the Characters and NPCs rosters on
+ * the next build, which is the intended way to reclassify a record.
  *
  * Writes go through /api/update-character-profile, which PATCHes only the
  * fields that changed. The older /api/update-character is still the voice and
@@ -27,13 +27,14 @@ import { graphql, useStaticQuery } from 'gatsby';
 import type { ScreenProps } from '../ScreenRouter';
 import { Icon, Spinner } from '../atoms';
 import {
-  useConsoleData, playerCharacters, npcCharacters, rosterForScreen,
+  useConsoleData, playerCharacters, npcCharacters, rosterForScreen, ABILITY_KEYS,
 } from '../ConsoleContext';
-import type { ConsoleData, DrupalCharacter, TermRef } from '../ConsoleContext';
+import type {
+  ConsoleData, DrupalAbilityScores, DrupalCharacter, TermRef,
+} from '../ConsoleContext';
 import {
   EditSection, FieldGrid, TextField, TextAreaField, NumberField, BoolField,
-  SelectField, TextRowsField, TermSelect, TermMultiSelect, ReadOnlyField,
-  HandoffCard,
+  SelectField, TextRowsField, TermSelect, TermMultiSelect, HandoffCard,
 } from '../FieldEditors';
 
 /* ────────────────────────────────────────────────────────────
@@ -64,9 +65,13 @@ interface FormState {
   pronouns:         string;
   gender:           string;
   role:             string;
+  campaignId:       string | null;
+  characterType:    boolean;
+  sourceCharacter:  boolean;
   speciesId:        string | null;
   lineageId:        string | null;
   backgroundId:     string | null;
+  abilityScores:    DrupalAbilityScores;
   level:            number | null;
   maximumHitpoints: number | null;
   armorClass:       number | null;
@@ -113,6 +118,35 @@ const GENDER_OPTIONS = [
   { value: 'other',  label: 'Other' },
 ];
 
+/* field_character_type is a boolean with PC as its on state. */
+const RECORD_TYPE_OPTIONS = [
+  { value: 'pc',  label: 'Player character' },
+  { value: 'npc', label: 'NPC' },
+];
+
+const SOURCE_OPTIONS = [
+  { value: 'template', label: 'Template' },
+  { value: 'clone',    label: 'Campaign clone' },
+];
+
+const ABILITY_LABELS: Record<keyof DrupalAbilityScores, string> = {
+  strength:     'Strength',
+  dexterity:    'Dexterity',
+  constitution: 'Constitution',
+  intelligence: 'Intelligence',
+  wisdom:       'Wisdom',
+  charisma:     'Charisma',
+};
+
+/** The 5e modifier for a score, as the sheet prints it. */
+function abilityModifier(score: number | null): string | undefined {
+  if (score == null) {
+    return undefined;
+  }
+  const mod = Math.floor((score - 10) / 2);
+  return mod >= 0 ? `+${mod}` : String(mod);
+}
+
 function toForm(char: DrupalCharacter): FormState {
   return {
     title:            char.title,
@@ -122,9 +156,14 @@ function toForm(char: DrupalCharacter): FormState {
     pronouns:         char.pronouns ?? '',
     gender:           char.gender ?? '',
     role:             char.role ?? '',
+    campaignId:       char.campaignId,
+    /* The Drupal field defaults to PC, so an unset flag is a player character. */
+    characterType:    char.characterType !== false,
+    sourceCharacter:  char.sourceCharacter === true,
     speciesId:        char.speciesId,
     lineageId:        char.lineageId,
     backgroundId:     char.backgroundId,
+    abilityScores:    { ...char.abilityScores },
     level:            char.level,
     maximumHitpoints: char.maximumHitpoints,
     armorClass:       char.armorClass,
@@ -193,6 +232,9 @@ function buildPatch(form: FormState, char: DrupalCharacter): Record<string, unkn
   scalar('pronouns', form.pronouns);
   scalar('gender', form.gender);
   scalar('role', form.role);
+  scalar('campaignId', form.campaignId);
+  scalar('characterType', form.characterType);
+  scalar('sourceCharacter', form.sourceCharacter);
   scalar('speciesId', form.speciesId);
   scalar('lineageId', form.lineageId);
   scalar('backgroundId', form.backgroundId);
@@ -212,6 +254,10 @@ function buildPatch(form: FormState, char: DrupalCharacter): Record<string, unkn
   scalar('aiSystemPrompt', form.aiSystemPrompt);
 
   /* The term selects hold UUIDs but the mutation keys them by field name. */
+  if (patch.campaignId !== undefined) {
+    patch.campaign = patch.campaignId;
+    delete patch.campaignId;
+  }
   if (patch.speciesId !== undefined) {
     patch.species = patch.speciesId;
     delete patch.speciesId;
@@ -241,6 +287,16 @@ function buildPatch(form: FormState, char: DrupalCharacter): Record<string, unkn
     const next = termIds(form[key]);
     if (!sameRows(next, termIds(base[key]))) patch[key] = next;
   }
+
+  /* Each ability score is its own paragraph in Drupal, so only the abilities
+     that actually moved are sent and the rest are left untouched. A score can
+     be changed but not cleared — an empty box means "leave it alone". */
+  const scores: Record<string, number> = {};
+  for (const key of ABILITY_KEYS) {
+    const next = form.abilityScores[key];
+    if (next != null && next !== base.abilityScores[key]) scores[key] = next;
+  }
+  if (Object.keys(scores).length > 0) patch.abilityScores = scores;
 
   return patch;
 }
@@ -316,12 +372,24 @@ function EditForm({ char, data, options, onJump }: EditFormProps): React.ReactEl
     setForm(prev => ({ ...prev, [key]: value }));
     setSavedAt(null);
   };
+  const setScore = (key: keyof DrupalAbilityScores, value: number | null): void => {
+    setForm(prev => ({ ...prev, abilityScores: { ...prev.abilityScores, [key]: value } }));
+    setSavedAt(null);
+  };
   const toggle = (id: SectionId): void => setOpen(prev => ({ ...prev, [id]: !prev[id] }));
 
   const patch = buildPatch(form, char);
   const isDirty = Object.keys(patch).length > 0;
 
-  const isNpc = char.characterType === false;
+  /* Read the classification from the form, not the record: switching a record
+     to NPC should reveal the antagonist fields before the save, not after the
+     next build moves it to the other roster. */
+  const isNpc = !form.characterType;
+  const savedIsNpc = char.characterType === false;
+
+  /* The campaign select reads the same term list the campaign switcher does,
+     so a campaign with no characters yet is still assignable. */
+  const campaignOptions: TermRef[] = data.campaigns.map(c => ({ id: c.id, name: c.name }));
   /* An NPC only earns the full character sheet once it is marked recurring;
      a walk-on part does not need vitals, proficiencies or an AI profile. */
   const fullProfile = !isNpc || form.recurring;
@@ -359,7 +427,9 @@ function EditForm({ char, data, options, onJump }: EditFormProps): React.ReactEl
 
   const portraitIdx = playerCharacters(data).findIndex(c => c.id === char.id);
   const npcIdx      = npcCharacters(data).findIndex(c => c.id === char.id);
-  const studioIdx   = isNpc ? npcIdx : portraitIdx;
+  /* Keyed off the saved classification, not the form: the other screens still
+     hold this record in the roster it was last built into. */
+  const studioIdx   = savedIsNpc ? npcIdx : portraitIdx;
 
   const voiceSummary = char.voiceId != null
     ? `${char.voiceId} · pitch ${char.voicePitch ?? 0} · speed ${char.voiceSpeed ?? 1}`
@@ -373,7 +443,7 @@ function EditForm({ char, data, options, onJump }: EditFormProps): React.ReactEl
 
       {/* Header */}
       <div style={{ marginBottom: 22 }}>
-        <span className="reader-eyebrow">{isNpc ? 'NPCs' : 'Characters'} · Edit profile</span>
+        <span className="reader-eyebrow">{savedIsNpc ? 'NPCs' : 'Characters'} · Edit profile</span>
         <h2 style={{
           fontFamily: 'var(--font-display)', fontSize: 26, color: 'var(--brass-bright)',
           letterSpacing: '0.04em', margin: '4px 0 6px',
@@ -385,7 +455,7 @@ function EditForm({ char, data, options, onJump }: EditFormProps): React.ReactEl
             char.characterClass,
             char.level != null ? `Level ${char.level}` : null,
             char.campaign,
-            isNpc ? 'NPC' : 'Player character',
+            savedIsNpc ? 'NPC' : 'Player character',
           ].filter(Boolean).join(' · ')}
         </p>
       </div>
@@ -398,19 +468,19 @@ function EditForm({ char, data, options, onJump }: EditFormProps): React.ReactEl
           actionLabel="Open portrait studio"
           thumbnailUrl={char.imageUrl}
           thumbnailAlt={char.title}
-          onOpen={() => onJump(isNpc ? 'n-ascii' : 'ascii', studioIdx)}
+          onOpen={() => onJump(savedIsNpc ? 'n-ascii' : 'ascii', studioIdx)}
         />
         <HandoffCard
           title="Voice"
           summary={voiceSummary}
           actionLabel="Open consultation"
-          onOpen={() => onJump(isNpc ? 'n-consult' : 'consult', studioIdx)}
+          onOpen={() => onJump(savedIsNpc ? 'n-consult' : 'consult', studioIdx)}
         />
         <HandoffCard
           title="Arc analysis"
           summary={arcSummary}
           actionLabel="Open arc analysis"
-          onOpen={() => onJump(isNpc ? 'n-arc' : 'arc', studioIdx)}
+          onOpen={() => onJump(savedIsNpc ? 'n-arc' : 'arc', studioIdx)}
         />
       </div>
 
@@ -443,20 +513,30 @@ function EditForm({ char, data, options, onJump }: EditFormProps): React.ReactEl
             />
           </FieldGrid>
           <FieldGrid>
-            <ReadOnlyField
+            <TermSelect
               label="Campaign"
-              value={char.campaign ?? 'Unassigned'}
-              note="managed in Drupal"
+              hint="blank leaves the record unassigned"
+              value={form.campaignId}
+              options={campaignOptions}
+              onChange={v => set('campaignId', v)}
             />
-            <ReadOnlyField
+            <SelectField
               label="Record type"
-              value={isNpc ? 'NPC' : 'Player character'}
-              note="managed in Drupal"
+              hint={form.characterType !== (char.characterType !== false)
+                ? `saving moves this record to the ${isNpc ? 'NPCs' : 'Characters'} roster`
+                : 'player character or NPC'}
+              value={form.characterType ? 'pc' : 'npc'}
+              options={RECORD_TYPE_OPTIONS}
+              onChange={v => set('characterType', v === 'pc')}
+              allowEmpty={false}
             />
-            <ReadOnlyField
+            <SelectField
               label="Source character"
-              value={char.sourceCharacter === true ? 'Template' : 'Campaign clone'}
-              note="managed in Drupal"
+              hint="a template is reused across campaigns"
+              value={form.sourceCharacter ? 'template' : 'clone'}
+              options={SOURCE_OPTIONS}
+              onChange={v => set('sourceCharacter', v === 'template')}
+              allowEmpty={false}
             />
           </FieldGrid>
         </EditSection>
@@ -494,12 +574,26 @@ function EditForm({ char, data, options, onJump }: EditFormProps): React.ReactEl
               <NumberField label="Proficiency bonus" value={form.proficiencyBonus} onChange={v => set('proficiencyBonus', v)} min={0} />
               <NumberField label="Gold" hint="gp" value={form.gold} onChange={v => set('gold', v)} min={0} />
             </FieldGrid>
+            <FieldGrid min={140}>
+              {ABILITY_KEYS.map(key => (
+                <NumberField
+                  key={key}
+                  label={ABILITY_LABELS[key]}
+                  hint={abilityModifier(form.abilityScores[key])}
+                  value={form.abilityScores[key]}
+                  onChange={v => setScore(key, v)}
+                  min={1}
+                  max={30}
+                />
+              ))}
+            </FieldGrid>
             <p style={{
               fontFamily: 'var(--font-body)', fontStyle: 'italic', fontSize: 12,
               color: 'var(--ink-faint)', margin: 0,
             }}>
-              Ability scores, class and subclass, spell slots and equipment are
-              paragraph-backed and are still edited in Drupal.
+              Class and subclass, spell slots and equipment are paragraph-backed
+              and are still edited in Drupal. A blank ability score is left as it
+              is on save — it cannot be cleared from here.
             </p>
           </EditSection>
         )}

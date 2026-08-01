@@ -6,8 +6,9 @@
  * personalityTraits, bonds, ideals, flaws, majorPlotActions are text fields
  * (already enabled). species/lineage/background reference taxonomy terms enabled
  * via entity_config.taxonomy_term in graphql_compose settings (requires ddev drush cim).
- * The `class` paragraph field is intentionally omitted — graphql-js's tagged-template
- * parser rejects `class` as a fragment field name, cascading all other queries to fail.
+ * Classes come through `characterClasses` (the field_class paragraphs). The bare
+ * name `class` is what graphql-js's tagged-template parser rejects as a fragment
+ * field, which is why the exposed field is named for the plural.
  */
 
 import * as React from 'react';
@@ -129,6 +130,23 @@ export const query = graphql`
           languages  { ... on Drupal_TermLanguage    { id name } }
           skills     { ... on Drupal_TermSkill       { id name } }
           tools      { ... on Drupal_TermToolProfiency { id name } }
+          characterClasses {
+            ... on Drupal_ParagraphClass {
+              level
+              classRef    { ... on Drupal_TermClass { name } }
+              subclassRef { ... on Drupal_TermClass { name } }
+            }
+          }
+          abilityScores {
+            ... on Drupal_ParagraphAbilityScore {
+              strength     { ... on Drupal_AbilityScoreItem { score } }
+              dexterity    { ... on Drupal_AbilityScoreItem { score } }
+              constitution { ... on Drupal_AbilityScoreItem { score } }
+              intelligence { ... on Drupal_AbilityScoreItem { score } }
+              wisdom       { ... on Drupal_AbilityScoreItem { score } }
+              charisma     { ... on Drupal_AbilityScoreItem { score } }
+            }
+          }
           personalityTraits { value }
           bonds             { value }
           ideals            { value }

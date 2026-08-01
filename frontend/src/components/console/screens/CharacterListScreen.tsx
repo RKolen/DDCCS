@@ -15,13 +15,30 @@ import type { DrupalCharacter, DrupalCampaign } from '../ConsoleContext';
 import { drupalAdminUrl } from '../../../utils/drupalLinks';
 import { AddCharacterModal } from './AddCharacterModal';
 
+/** "Ranger (Hunter)", or "Ranger 3 / Rogue 2" for a multiclass. */
+function classLine(char: DrupalCharacter): string | null {
+  if (char.classes.length === 0) {
+    return null;
+  }
+  return char.classes
+    .map(c => [
+      c.name,
+      c.subclass != null ? `(${c.subclass})` : null,
+      char.classes.length > 1 && c.level != null ? String(c.level) : null,
+    ].filter(Boolean).join(' '))
+    .join(' / ');
+}
+
 function CharCard({ char }: { char: DrupalCharacter }): React.ReactElement {
   const initials = char.title.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
   const href = char.path ?? '#';
 
+  const classes = classLine(char);
+  /* An NPC has no class paragraph to speak of; its role is what identifies it. */
   const classLabel = char.characterType !== false
-    ? [char.characterClass, char.level !== null ? `Lv ${char.level}` : null].filter(Boolean).join(' · ')
+    ? [classes, char.level !== null ? `Lv ${char.level}` : null].filter(Boolean).join(' · ')
     : char.role ?? null;
+  const heritage = [char.species, char.lineage].filter(Boolean).join(' · ');
 
   return (
     <Link to={href} className="char-card" style={{ textDecoration: 'none' }}>
@@ -35,6 +52,12 @@ function CharCard({ char }: { char: DrupalCharacter }): React.ReactElement {
         <h4>{char.title}</h4>
         {char.nickname && <span className="char-card-meta" style={{ fontStyle: 'italic' }}>{char.nickname}</span>}
         {classLabel && <span className="char-card-meta">{classLabel}</span>}
+        {heritage && (
+          <span className="char-card-meta subtle" title="Species · Heritage">{heritage}</span>
+        )}
+        {char.background && (
+          <span className="char-card-meta subtle" title="Background">{char.background}</span>
+        )}
         {char.pronouns && <span className="char-card-pron">{char.pronouns}</span>}
       </div>
       <div className="char-card-stats">

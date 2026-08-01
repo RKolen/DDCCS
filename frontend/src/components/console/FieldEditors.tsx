@@ -261,12 +261,15 @@ export function BoolField({
 }
 
 export function SelectField({
-  label, hint, value, options, onChange, emptyLabel = '— none —',
+  label, hint, value, options, onChange, emptyLabel = '— none —', allowEmpty = true,
 }: FieldProps & {
   value: string;
   options: Array<{ value: string; label: string }>;
   onChange: (next: string) => void;
   emptyLabel?: string;
+  /** Offer the blank option. Turn off for a field that is always one of the
+      listed values, so it cannot be cleared into a meaningless state. */
+  allowEmpty?: boolean;
 }): React.ReactElement {
   const id = useFieldId(label);
   return (
@@ -279,7 +282,7 @@ export function SelectField({
         onChange={e => onChange(e.target.value)}
         style={{ width: '100%' }}
       >
-        <option value="">{emptyLabel}</option>
+        {allowEmpty && <option value="">{emptyLabel}</option>}
         {options.map(o => (
           <option key={o.value} value={o.value}>{o.label}</option>
         ))}
