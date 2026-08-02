@@ -23,7 +23,8 @@ const ITEM_FIELDS = `
   damageTypes      { ... on TermDamageType    { name } }
   weaponProperties { ... on TermWeaponProperty { name } }
   weaponMastery    { ... on TermWeaponMastery  { name } }
-  weaponSubtype    { ... on TermWeaponSubtype  { name } }
+  weaponCategory   { ... on TermWeaponCategory { name } }
+  weaponRange      { ... on TermWeaponRange    { name } }
   itemProperties {
     ... on TermMagicalProperty {
       name
@@ -63,7 +64,8 @@ interface RawItemNode {
   damageTypes:            Array<{ name: string }> | null;
   weaponProperties:       Array<{ name: string }> | null;
   weaponMastery:          Array<{ name: string }> | null;
-  weaponSubtype:          Array<{ name: string }> | null;
+  weaponCategory:         { name: string } | null;
+  weaponRange:            { name: string } | null;
   itemProperties:         Array<{
     name: string;
     effect: Array<{ text: Array<{ processed: string }> }> | null;
@@ -114,7 +116,8 @@ export const createSchemaCustomization: GatsbyNode['createSchemaCustomization'] 
       damageTypes:            [AllItemTerm]
       weaponProperties:       [AllItemTerm]
       weaponMastery:          [AllItemTerm]
-      weaponSubtype:          [AllItemTerm]
+      weaponCategory:         AllItemTerm
+      weaponRange:            AllItemTerm
       itemProperties:         [AllItemProperty]
       image:                  AllItemMediaImage
     }
@@ -206,7 +209,8 @@ export const sourceNodes: GatsbyNode['sourceNodes'] = async ({
         damageTypes:     item.damageTypes ?? [],
         weaponProperties: item.weaponProperties ?? [],
         weaponMastery:   item.weaponMastery ?? [],
-        weaponSubtype:   item.weaponSubtype ?? [],
+        weaponCategory:  item.weaponCategory ?? null,
+        weaponRange:     item.weaponRange ?? null,
         internal: {
           type:          'AllItem',
           contentDigest: createContentDigest(item),

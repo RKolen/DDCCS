@@ -40,7 +40,7 @@ export function ItemRoster({ data }: ItemRosterProps): React.ReactElement {
 
   const allTypes = React.useMemo(() => {
     const s = new Set<string>();
-    all.forEach(i => { if (i.itemType) s.add(normalizeType(i.itemType, i.weaponSubtype)); });
+    all.forEach(i => { if (i.itemType) s.add(normalizeType(i.itemType, i.weaponRange)); });
     return Array.from(s).sort();
   }, [all]);
 
@@ -57,7 +57,7 @@ export function ItemRoster({ data }: ItemRosterProps): React.ReactElement {
     const q = search.trim().toLowerCase();
     return all.filter(i => {
       const r = normalizeRarity(i.itemRarity);
-      const t = normalizeType(i.itemType, i.weaponSubtype);
+      const t = normalizeType(i.itemType, i.weaponRange);
       if (rarities.size > 0 && !rarities.has(r)) return false;
       if (types.size > 0 && !types.has(t))       return false;
       if (attune && !i.itemRequiresAttunement)   return false;

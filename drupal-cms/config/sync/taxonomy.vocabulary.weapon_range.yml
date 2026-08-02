@@ -1,9 +1,9 @@
-uuid: 01cdcc20-7fb4-4f5e-bb52-7f8af3c1256a
+uuid: 9c8eba33-0985-4526-8e97-192b6ab3472a
 langcode: en
 status: true
 dependencies: {  }
-name: 'Weapon Subtype'
-vid: weapon_subtype
+name: 'Weapon Range'
+vid: weapon_range
 description: null
 weight: 0
 new_revision: false

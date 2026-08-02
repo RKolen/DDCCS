@@ -41,6 +41,7 @@ interface ItemCardProps {
 
 const TYPE_ICONS: Record<ItemType, GameIconName> = {
   weapon:        'broadsword',
+  melee_weapon:  'broadsword',
   ranged_weapon: 'arrow-flights',
   armor:         'round-shield',
   shield:        'round-shield',
@@ -72,7 +73,7 @@ export function ItemCard({
   className,
 }: ItemCardProps): React.ReactElement {
   const rarity     = normalizeRarity(item.itemRarity);
-  const type       = normalizeType(item.itemType, item.weaponSubtype);
+  const type       = normalizeType(item.itemType, item.weaponRange);
   const typeIcon   = TYPE_ICONS[type] ?? 'gem-pendant';
   const rarityCls  = RARITY_CLASS[rarity];
   const rarityName = rarityDisplayLabel(rarity);

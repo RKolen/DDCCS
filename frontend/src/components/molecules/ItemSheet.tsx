@@ -33,6 +33,7 @@ interface ItemSheetProps {
 
 const TYPE_ICONS: Record<ItemType, GameIconName> = {
   weapon:        'broadsword',
+  melee_weapon:  'broadsword',
   ranged_weapon: 'arrow-flights',
   armor:         'round-shield',
   shield:        'round-shield',

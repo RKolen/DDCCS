@@ -113,6 +113,33 @@ class RAGConfig:
 
 
 @dataclass
+class RulesetConfig:
+    """Which published rules content this group may use.
+
+    Separate from RAGConfig, which says *how* rules pages are retrieved: this
+    says *which* of them count. Character creation only offers the backgrounds,
+    species, and classes introduced by the books listed here.
+    """
+
+    sourcebooks: List[str] = field(default_factory=list)
+
+    def owns(self, sourcebook: str) -> bool:
+        """Check whether a rules page's sourcebook line is one we own.
+
+        Args:
+            sourcebook: The "Source:" line from a rules page.
+
+        Returns:
+            True when no restriction is configured, or when any configured
+            book name appears in the line (case-insensitive).
+        """
+        if not self.sourcebooks:
+            return True
+        haystack = sourcebook.lower()
+        return any(book.strip().lower() in haystack for book in self.sourcebooks if book.strip())
+
+
+@dataclass
 class DisplayConfig:
     """Terminal display configuration."""
 
@@ -347,6 +374,7 @@ class ServiceConfig:
     drupal: DrupalConfig = field(default_factory=DrupalConfig)
     sidecar: SidecarConfig = field(default_factory=SidecarConfig)
     comfyui: ComfyUIConfig = field(default_factory=ComfyUIConfig)
+    ruleset: RulesetConfig = field(default_factory=RulesetConfig)
 
 
 @dataclass
@@ -386,6 +414,16 @@ class DnDConfig:
     def milvus(self, value: MilvusConfig) -> None:
         """Replace the Milvus config."""
         self.services.milvus = value
+
+    @property
+    def ruleset(self) -> RulesetConfig:
+        """Return the ruleset content config."""
+        return self.services.ruleset
+
+    @ruleset.setter
+    def ruleset(self, value: RulesetConfig) -> None:
+        """Replace the ruleset content config."""
+        self.services.ruleset = value
 
     @property
     def spotlight(self) -> "SpotlightConfig":

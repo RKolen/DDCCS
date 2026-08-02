@@ -23,9 +23,10 @@ dependencies:
     - field.field.node.item.field_nonidentified_name
     - field.field.node.item.field_source
     - field.field.node.item.field_vestige_level
+    - field.field.node.item.field_weapon_category
     - field.field.node.item.field_weapon_mastery
     - field.field.node.item.field_weapon_properties
-    - field.field.node.item.field_weapon_subtype
+    - field.field.node.item.field_weapon_range
     - node.type.item
   module:
     - entity_reference_revisions
@@ -161,6 +162,14 @@ content:
     third_party_settings: {  }
     weight: 102
     region: content
+  field_weapon_category:
+    type: entity_reference_label
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 105
+    region: content
   field_weapon_mastery:
     type: entity_reference_label
     label: above
@@ -177,13 +186,13 @@ content:
     third_party_settings: {  }
     weight: 105
     region: content
-  field_weapon_subtype:
+  field_weapon_range:
     type: entity_reference_label
     label: above
     settings:
       link: true
     third_party_settings: {  }
-    weight: 104
+    weight: 106
     region: content
   links:
     settings: {  }

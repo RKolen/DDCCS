@@ -1,0 +1,257 @@
+{
+  "name": "Artificer",
+  "class": "Artificer",
+  "description": "An inventor who infuses objects with magic, arming allies with replicated wonders and improvised solutions",
+  "hit_die": 8,
+  "primary_abilities": [
+    "Intelligence"
+  ],
+  "saving_throws": [
+    "Constitution",
+    "Intelligence"
+  ],
+  "base_ability_scores": {
+    "strength": 10,
+    "dexterity": 14,
+    "constitution": 14,
+    "intelligence": 16,
+    "wisdom": 12,
+    "charisma": 8
+  },
+  "skill_options": {
+    "choose": 2,
+    "from": [
+      "Arcana",
+      "History",
+      "Investigation",
+      "Medicine",
+      "Nature",
+      "Perception",
+      "Sleight of Hand"
+    ]
+  },
+  "starting_equipment": {
+    "weapons": [
+      "Dagger"
+    ],
+    "armor": [
+      "Studded Leather Armor"
+    ],
+    "items": [
+      "Thieves\u2019 Tools",
+      "Tinker\u2019s Tools",
+      "Dungeoneer\u2019s Pack"
+    ],
+    "gold": 16
+  },
+  "class_features": {
+    "1": [
+      "Spellcasting",
+      "Tinker's Magic"
+    ],
+    "2": [
+      "Replicate Magic Item"
+    ],
+    "3": [
+      "Artificer Subclass"
+    ],
+    "4": [
+      "Ability Score Improvement"
+    ],
+    "5": [
+      "Subclass Feature"
+    ],
+    "6": [
+      "Magic Item Tinker"
+    ],
+    "7": [
+      "Flash of Genius"
+    ],
+    "8": [
+      "Ability Score Improvement"
+    ],
+    "9": [
+      "Subclass Feature"
+    ],
+    "10": [
+      "Magic Item Adept"
+    ],
+    "11": [
+      "Spell-Storing Item"
+    ],
+    "12": [
+      "Ability Score Improvement"
+    ],
+    "14": [
+      "Advanced Artifice"
+    ],
+    "15": [
+      "Subclass Feature"
+    ],
+    "16": [
+      "Ability Score Improvement"
+    ],
+    "18": [
+      "Magic Item Master"
+    ],
+    "19": [
+      "Epic Boon"
+    ],
+    "20": [
+      "Soul of Artifice"
+    ]
+  },
+  "spellcasting": {
+    "ability": "Intelligence",
+    "type": "half",
+    "cantrips_known": {
+      "1": 2,
+      "2": 2,
+      "3": 2,
+      "4": 2,
+      "5": 2,
+      "6": 2,
+      "7": 2,
+      "8": 2,
+      "9": 2,
+      "10": 3,
+      "11": 3,
+      "12": 3,
+      "13": 3,
+      "14": 4,
+      "15": 4,
+      "16": 4,
+      "17": 4,
+      "18": 4,
+      "19": 4,
+      "20": 4
+    },
+    "spell_slots": {
+      "1": {
+        "1": 2
+      },
+      "2": {
+        "1": 2
+      },
+      "3": {
+        "1": 3
+      },
+      "4": {
+        "1": 3
+      },
+      "5": {
+        "1": 4,
+        "2": 2
+      },
+      "6": {
+        "1": 4,
+        "2": 2
+      },
+      "7": {
+        "1": 4,
+        "2": 3
+      },
+      "8": {
+        "1": 4,
+        "2": 3
+      },
+      "9": {
+        "1": 4,
+        "2": 3,
+        "3": 2
+      },
+      "10": {
+        "1": 4,
+        "2": 3,
+        "3": 2
+      },
+      "11": {
+        "1": 4,
+        "2": 3,
+        "3": 3
+      },
+      "12": {
+        "1": 4,
+        "2": 3,
+        "3": 3
+      },
+      "13": {
+        "1": 4,
+        "2": 3,
+        "3": 3,
+        "4": 1
+      },
+      "14": {
+        "1": 4,
+        "2": 3,
+        "3": 3,
+        "4": 1
+      },
+      "15": {
+        "1": 4,
+        "2": 3,
+        "3": 3,
+        "4": 2
+      },
+      "16": {
+        "1": 4,
+        "2": 3,
+        "3": 3,
+        "4": 2
+      },
+      "17": {
+        "1": 4,
+        "2": 3,
+        "3": 3,
+        "4": 3,
+        "5": 1
+      },
+      "18": {
+        "1": 4,
+        "2": 3,
+        "3": 3,
+        "4": 3,
+        "5": 1
+      },
+      "19": {
+        "1": 4,
+        "2": 3,
+        "3": 3,
+        "4": 3,
+        "5": 2
+      },
+      "20": {
+        "1": 4,
+        "2": 3,
+        "3": 3,
+        "4": 3,
+        "5": 2
+      }
+    }
+  },
+  "subclass_options": {
+    "level": 3,
+    "options": [
+      "Alchemist",
+      "Armorer",
+      "Artillerist",
+      "Battle Smith",
+      "Cartographer",
+      "Reanimator"
+    ]
+  },
+  "recommended_backgrounds": [
+    "Artisan",
+    "Archaeologist",
+    "House Cannith Heir",
+    "Sage",
+    "Guide"
+  ],
+  "recommended_races": [
+    "Warforged",
+    "Gnome",
+    "Human",
+    "Khoravar",
+    "Kalashtar"
+  ]
+}

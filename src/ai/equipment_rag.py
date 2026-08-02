@@ -4,23 +4,24 @@ Scrapes the rules-wiki equipment and tool pages into a catalogue of item
 descriptions and types, and exposes the tool-proficiency categories. Used to
 enrich item nodes (and the proficiency sublists) during character creation.
 
-Shared scraping primitives are imported from :mod:`src.ai.abilities_rag`.
+Shared scraping primitives come from :mod:`src.ai.wiki_scraping`.
 """
 
 from __future__ import annotations
 
 import re
-from typing import Dict, List, Optional, TypedDict, cast
+from typing import Dict, List, Optional, TypedDict
 
 from src.ai.abilities_rag import (
     _CACHE_SUFFIX,
     _MAX_DESCRIPTION,
-    _SCRAPING_AVAILABLE,
-    BeautifulSoup,
-    Tag,
     _clean,
-    _fetch_html,
     _safe_rag_system,
+)
+from src.ai.wiki_scraping import (
+    SCRAPING_AVAILABLE as _SCRAPING_AVAILABLE,
+    fetch_html as _fetch_html,
+    page_content,
 )
 from src.ai.rag_system import RAGSystem
 
@@ -136,13 +137,11 @@ def _parse_tool_categories(html: str) -> Dict[str, List[str]]:
     Returns:
         Category key to member tool names.
     """
-    if not _SCRAPING_AVAILABLE:
-        return {}
-    found = BeautifulSoup(html, "html.parser").find("div", id="page-content")
-    if not isinstance(found, Tag):
+    content = page_content(html)
+    if content is None:
         return {}
     result: Dict[str, List[str]] = {}
-    for table in cast("Tag", found).find_all("table"):
+    for table in content.find_all("table"):
         rows = table.find_all("tr")
         if not rows:
             continue
@@ -226,12 +225,9 @@ def _parse_tool_descriptions(html: str) -> Dict[str, str]:
     Returns:
         A map of specific tool name to its description.
     """
-    if not _SCRAPING_AVAILABLE:
+    content = page_content(html)
+    if content is None:
         return {}
-    found = BeautifulSoup(html, "html.parser").find("div", id="page-content")
-    if not isinstance(found, Tag):
-        return {}
-    content = cast("Tag", found)
     categories = _parse_tool_categories(html)
     result: Dict[str, str] = {}
     for navset in content.select("div.yui-navset"):
@@ -274,12 +270,9 @@ def _parse_equipment_page(
         item_type: The item type all rows on this page receive.
         catalog: Catalogue to populate (mutated in place).
     """
-    if not _SCRAPING_AVAILABLE:
+    content = page_content(html)
+    if content is None:
         return
-    found = BeautifulSoup(html, "html.parser").find("div", id="page-content")
-    if not isinstance(found, Tag):
-        return
-    content = cast("Tag", found)
     for table in content.find_all("table"):
         desc_index: Optional[int] = None
         for row in table.find_all("tr"):

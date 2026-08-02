@@ -23,9 +23,10 @@ dependencies:
     - field.field.node.item.field_nonidentified_name
     - field.field.node.item.field_source
     - field.field.node.item.field_vestige_level
+    - field.field.node.item.field_weapon_category
     - field.field.node.item.field_weapon_mastery
     - field.field.node.item.field_weapon_properties
-    - field.field.node.item.field_weapon_subtype
+    - field.field.node.item.field_weapon_range
     - node.type.item
   module:
     - field_group
@@ -114,9 +115,10 @@ third_party_settings:
         required_fields: true
     group_weapon:
       children:
+        - field_weapon_category
+        - field_weapon_range
         - field_damage
         - field_damage_types
-        - field_weapon_subtype
         - field_weapon_properties
         - field_weapon_mastery
       label: Weapon
@@ -289,6 +291,12 @@ content:
       size: 60
       placeholder: ''
     third_party_settings: {  }
+  field_weapon_category:
+    type: options_select
+    weight: 29
+    region: content
+    settings: {  }
+    third_party_settings: {  }
   field_weapon_mastery:
     type: entity_reference_autocomplete
     weight: 32
@@ -309,15 +317,11 @@ content:
       size: 60
       placeholder: ''
     third_party_settings: {  }
-  field_weapon_subtype:
-    type: entity_reference_autocomplete
+  field_weapon_range:
+    type: options_select
     weight: 30
     region: content
-    settings:
-      match_operator: CONTAINS
-      match_limit: 10
-      size: 60
-      placeholder: ''
+    settings: {  }
     third_party_settings: {  }
   group_armor:
     weight: 28

@@ -23,6 +23,7 @@ def run_all_ai_tests():
         ("test_ai_client", "AI Client Interface"),
         ("test_rag_system", "RAG System Tests"),
         ("test_abilities_rag", "Abilities RAG Resolver Tests"),
+        ("test_catalog_rag", "Catalogue RAG Resolver Tests"),
         ("test_behavior_generation_ai_mock", "Behavior Generation (Mock)"),
         ("test_availability", "AI Availability Tests"),
         ("test_task_router", "Task Router Tests"),

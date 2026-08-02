@@ -31,7 +31,7 @@ export type ItemRarity =
 /** Drupal stores itemType as a free string (lowercase). The labels and
  *  icons map off this. Unknown values fall back to 'gear'. */
 export type ItemType =
-  | 'weapon' | 'ranged_weapon' | 'armor' | 'shield'
+  | 'weapon' | 'melee_weapon' | 'ranged_weapon' | 'armor' | 'shield'
   | 'ring' | 'staff' | 'wondrous' | 'scroll' | 'potion'
   | 'tool' | 'gear';
 
@@ -60,9 +60,12 @@ export interface ItemNode {
   provenanceJson?: string | null;
   benefits?:    string[] | null;
   tags?:        string[] | null;
-  /** Weapon subtype taxonomy terms (e.g. "Ranged", "Melee", "Shortbow"). Used
-   *  to distinguish ranged weapons from melee when itemType is 'weapon'. */
-  weaponSubtype?: Array<{ name: string }> | null;
+  /** Proficiency category term — "Simple" or "Martial". */
+  weaponCategory?: { name: string } | null;
+  /** Range term — "Melee" or "Ranged". The authoritative signal for telling
+   *  ranged weapons from melee ones; Drupal's itemType is only weapon/armor/
+   *  item and carries no range information. */
+  weaponRange?: { name: string } | null;
   bearer?: {
     name:   string;
     status: string;
@@ -155,20 +158,25 @@ export function rarityDisplayLabel(r: ItemRarity): string {
 /** Maps Drupal's lowercased itemType to one of the curated `ItemType`
  *  values. Unknowns fall back to 'gear' so an icon and label always show.
  *
- *  When `itemType` is generic 'weapon', pass the weaponSubtype terms to
- *  distinguish ranged weapons (any subtype whose name contains "Ranged"). */
+ *  Drupal's `field_item_type` only has weapon/armor/item — melee vs ranged
+ *  lives in `field_weapon_range`. So a generic 'weapon' is only resolved to
+ *  melee or ranged when that term is supplied; without it the type stays the
+ *  neutral 'weapon' rather than being guessed as melee. */
 export function normalizeType(
   raw: string | null | undefined,
-  weaponSubtype?: Array<{ name: string }> | null,
+  weaponRange?: { name: string } | null,
 ): ItemType {
+  const ranged = weaponRange != null && /ranged/i.test(weaponRange.name);
   const k = (raw ?? '').toLowerCase().replace(/\s+/g, '_').trim();
   switch (k) {
     case 'weapon':
-    case 'melee_weapon':
-      if (weaponSubtype?.some(s => /ranged/i.test(s.name))) {
-        return 'ranged_weapon';
+      if (ranged) return 'ranged_weapon';
+      if (weaponRange != null && /melee/i.test(weaponRange.name)) {
+        return 'melee_weapon';
       }
       return 'weapon';
+    case 'melee_weapon':
+      return ranged ? 'ranged_weapon' : 'melee_weapon';
     case 'ranged_weapon':
     case 'bow':
     case 'crossbow':       return 'ranged_weapon';
@@ -190,7 +198,8 @@ export function normalizeType(
 }
 
 const TYPE_LABEL: Record<ItemType, string> = {
-  weapon:        'Melee Weapon',
+  weapon:        'Weapon',
+  melee_weapon:  'Melee Weapon',
   ranged_weapon: 'Ranged Weapon',
   armor:         'Armor',
   shield:        'Shield',
@@ -215,7 +224,7 @@ function safeParseJson<T>(raw: string | null | undefined, fallback: T): T {
  *  the back end has only the legacy 6-field shape. */
 export function toItemEntity(node: ItemNode): ItemEntity {
   const rarity = normalizeRarity(node.itemRarity);
-  const type   = normalizeType(node.itemType, node.weaponSubtype);
+  const type   = normalizeType(node.itemType, node.weaponRange);
   return {
     id:        node.id ?? node.title,
     title:     node.title,

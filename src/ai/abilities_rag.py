@@ -25,12 +25,15 @@ from typing import Any, Dict, List, Optional, Tuple, TypedDict, cast
 from src.ai.rag_system import RAGSystem, get_rag_system
 from src.integration.drupal_graphql import query_drupal
 
-try:
-    from bs4 import BeautifulSoup
+from src.ai.wiki_scraping import (
+    SCRAPING_AVAILABLE as _SCRAPING_AVAILABLE,
+    fetch_first as _fetch_first,
+    fetch_html as _fetch_html,
+    page_content,
+)
+
+if _SCRAPING_AVAILABLE:
     from bs4.element import Tag
-    _SCRAPING_AVAILABLE = True
-except ImportError:
-    _SCRAPING_AVAILABLE = False
 
 logger = logging.getLogger(__name__)
 
@@ -70,8 +73,28 @@ class BackgroundData(TypedDict):
     equipment: List[str]
 
 
-# Labels that segment the single background data paragraph on the rules wiki.
-_BG_LABELS = ("Ability Scores", "Feat", "Skill Proficiencies", "Tool Proficiency", "Equipment")
+# Labels that segment the background data on the rules wiki. Individual pages
+# slip between the singular and plural form of the ability and tool labels, so
+# both spellings are recognised and merged after the split.
+_BG_LABELS = (
+    "Ability Scores", "Ability Score", "Feat", "Skill Proficiencies",
+    "Tool Proficiencies", "Tool Proficiency", "Equipment",
+)
+
+# Stray space some pages leave before a label's colon ("Skill Proficiencies :").
+_LOOSE_LABEL_COLON = re.compile(r"\s+:")
+
+# Page-slug forms to try per source type, most canonical first. Only the Player's
+# Handbook entries have a bare redirect page (``/human``); sourcebook entries
+# exist solely under their category prefix (``/species:warforged``), and class
+# pages live at ``<class>:main`` with only the core classes redirecting from the
+# bare slug.
+_SLUG_FORMS: Dict[str, Tuple[str, ...]] = {
+    "species": ("species:{slug}", "{slug}"),
+    "subspecies": ("species:{slug}", "{slug}"),
+    "class": ("{slug}:main", "{slug}"),
+    "background": ("background:{slug}",),
+}
 
 # Labels that follow "Tool Proficiencies" in a class page's proficiency block.
 _CLASS_PROF_NEXT = (
@@ -210,10 +233,7 @@ def get_background(name: str, *, rag: Optional[RAGSystem] = None) -> Optional[Ba
     if client is None or not _SCRAPING_AVAILABLE or getattr(client, "session", None) is None:
         return None
 
-    slug = "background:" + name.strip().lower().replace(" ", "-")
-    if slug == "background:":
-        return None
-    html = _fetch_html(client, f"{client.base_url}/{slug}")
+    html = _fetch_first(client, page_urls(client.base_url, "background", name))
     if html is None:
         return None
     data = _parse_background(html)
@@ -277,44 +297,41 @@ def _resolve_page(rag: RAGSystem, source_type: str, source_name: str) -> List[Ab
     if client is None or not _SCRAPING_AVAILABLE or getattr(client, "session", None) is None:
         return []
 
-    slug = source_name.strip().lower().replace(" ", "-")
-    if slug == "":
+    urls = page_urls(client.base_url, source_type, source_name)
+    if not urls:
         return []
-    url = f"{client.base_url}/{slug}"
 
-    cached = client.cache.get(url + _CACHE_SUFFIX)
+    cached = client.cache.get(urls[0] + _CACHE_SUFFIX)
     if cached is not None and isinstance(cached.get("abilities"), list):
         return [_coerce_ability(item) for item in cached["abilities"] if isinstance(item, dict)]
 
-    html = _fetch_html(client, url)
-    if html is None:
-        return []
+    for url in urls:
+        html = _fetch_html(client, url)
+        if html is None:
+            continue
+        abilities = _parse_abilities(html, source_type)
+        if abilities:
+            client.cache.set(urls[0] + _CACHE_SUFFIX, {"abilities": [dict(a) for a in abilities]})
+            return abilities
+    return []
 
-    abilities = _parse_abilities(html, source_type)
-    client.cache.set(url + _CACHE_SUFFIX, {"abilities": [dict(a) for a in abilities]})
-    return abilities
 
-
-def _fetch_html(client: object, url: str) -> Optional[str]:
-    """Fetch the page-content HTML for a URL, returning None on any failure.
+def page_urls(base_url: str, source_type: str, source_name: str) -> List[str]:
+    """Build the candidate rules-wiki page URLs for a source, best guess first.
 
     Args:
-        client: The rules WikiClient (provides a requests session).
-        url: Absolute page URL.
+        base_url: The rules wiki base URL.
+        source_type: Source category ("class", "species", "background", ...).
+        source_name: Source name (e.g. "Warforged").
 
     Returns:
-        The raw HTML body, or None when the request fails.
+        Ordered candidate URLs, or an empty list when the name is blank.
     """
-    session = getattr(client, "session", None)
-    if session is None:
-        return None
-    try:
-        response = session.get(url, timeout=10)
-        response.raise_for_status()
-    except OSError as exc:
-        logger.debug("Ability page fetch failed for %s: %s", url, exc)
-        return None
-    return str(response.text)
+    slug = source_name.strip().lower().replace(" ", "-")
+    if slug == "":
+        return []
+    forms = _SLUG_FORMS.get(source_type, ("{slug}",))
+    return [f"{base_url}/{form.format(slug=slug)}" for form in forms]
 
 
 def _parse_abilities(html: str, source_type: str) -> List[Ability]:
@@ -327,12 +344,9 @@ def _parse_abilities(html: str, source_type: str) -> List[Ability]:
     Returns:
         De-duplicated abilities parsed from the page.
     """
-    if not _SCRAPING_AVAILABLE:
+    content = page_content(html)
+    if content is None:
         return []
-    found = BeautifulSoup(html, "html.parser").find("div", id="page-content")
-    if not isinstance(found, Tag):
-        return []
-    content = cast("Tag", found)
 
     leveled = _parse_level_headings(content, source_type)
     if source_type not in _TRAIT_SOURCES:
@@ -473,36 +487,30 @@ def _dedupe(abilities: List[Ability]) -> List[Ability]:
 
 
 def _parse_background(html: str) -> Optional[BackgroundData]:
-    """Parse the labeled background data paragraph from page HTML.
+    """Parse the labeled background data from page HTML.
 
     Args:
         html: Raw background page HTML.
 
     Returns:
-        Structured background data, or None when the data paragraph is absent.
+        Structured background data, or None when the data block is absent.
     """
-    if not _SCRAPING_AVAILABLE:
+    content = page_content(html)
+    if content is None:
         return None
-    found = BeautifulSoup(html, "html.parser").find("div", id="page-content")
-    if not isinstance(found, Tag):
-        return None
-    content = cast("Tag", found)
 
-    data_text = ""
-    for paragraph in content.find_all("p"):
-        text = paragraph.get_text(" ", strip=True)
-        if "Ability Scores" in text and "Skill Proficiencies" in text:
-            data_text = _clean(text)
-            break
+    data_text = _background_data_text(cast("Tag", content))
     if data_text == "":
         return None
 
     segments = _split_labeled(data_text, _BG_LABELS)
     equipment_text = segments.get("Equipment", "")
-    fixed_tools, tool_choices = _split_background_tools(segments.get("Tool Proficiency", ""))
+    tool_text = segments.get("Tool Proficiencies", "") or segments.get("Tool Proficiency", "")
+    ability_text = segments.get("Ability Scores", "") or segments.get("Ability Score", "")
+    fixed_tools, tool_choices = _split_background_tools(tool_text)
     return BackgroundData(
-        ability_options=_split_names(segments.get("Ability Scores", "")),
-        feat=segments.get("Feat", "").strip(),
+        ability_options=_split_names(ability_text),
+        feat=_clean_feat(segments.get("Feat", "")),
         feat_description="",
         skills=_split_names(segments.get("Skill Proficiencies", "")),
         tools=fixed_tools,
@@ -510,6 +518,56 @@ def _parse_background(html: str) -> Optional[BackgroundData]:
         gold=_parse_gold(equipment_text),
         equipment=_parse_equipment(equipment_text),
     )
+
+
+def _background_data_text(content: "Tag") -> str:
+    """Collect a background's labeled data into one text block.
+
+    The rules wiki uses two layouts: Player's Handbook pages put every label in
+    a single paragraph, while the sourcebook pages give each label its own
+    paragraph. Joining every label-bearing paragraph handles both.
+
+    Args:
+        content: The page-content BeautifulSoup element.
+
+    Returns:
+        The joined data text, or an empty string when no labels are present.
+    """
+    parts: List[str] = []
+    for paragraph in content.find_all("p"):
+        text = _LOOSE_LABEL_COLON.sub(":", _clean(paragraph.get_text(" ", strip=True)))
+        if any(f"{label}:" in text for label in _BG_LABELS):
+            parts.append(text)
+    joined = " ".join(parts)
+    if "Skill Proficiencies:" not in joined:
+        return ""
+    if "Ability Scores:" not in joined and "Ability Score:" not in joined:
+        return ""
+    return joined
+
+
+# Cross-reference asides the sourcebooks append to a feat grant, e.g.
+# "A Dark Gift feat of your choice (see "Feats" ...; Mist Walker is recommended)".
+# Deliberately narrow: a trailing parenthetical is usually a specialisation that
+# belongs in the name ("Magic Initiate (Cleric)"), so only prose is dropped.
+_FEAT_ASIDE = re.compile(r"\s*\((?=[^)]*(?:\bsee\b|recommend))[^)]*\)\s*$", re.IGNORECASE)
+_FEAT_CHOICE = re.compile(r"^(?:A|An)\s+(.*?)\s+feat of your choice\b.*$", re.IGNORECASE)
+
+
+def _clean_feat(segment: str) -> str:
+    """Reduce a raw feat segment to the feat (or feat category) name.
+
+    Args:
+        segment: The raw "Feat" text from the page.
+
+    Returns:
+        The feat name, or the category name when the background grants a choice.
+    """
+    text = _FEAT_ASIDE.sub("", segment.strip()).strip()
+    match = _FEAT_CHOICE.match(text)
+    if match is not None:
+        return match.group(1).strip()
+    return text
 
 
 def _split_background_tools(segment: str) -> Tuple[List[str], List[Dict[str, Any]]]:
@@ -562,10 +620,7 @@ def get_class_tools(class_name: str, *, rag: Optional[RAGSystem] = None) -> Dict
     if client is None or not _SCRAPING_AVAILABLE or getattr(client, "session", None) is None:
         return result
 
-    slug = class_name.strip().lower().replace(" ", "-")
-    if slug == "":
-        return result
-    html = _fetch_html(client, f"{client.base_url}/{slug}")
+    html = _fetch_first(client, page_urls(client.base_url, "class", class_name))
     if html is None:
         return result
 
@@ -635,12 +690,10 @@ def _class_tool_segment(html: str) -> str:
         The text following "Tool Proficiencies" up to the next proficiency
         label, or the empty string when absent.
     """
-    if not _SCRAPING_AVAILABLE:
+    content = page_content(html)
+    if content is None:
         return ""
-    found = BeautifulSoup(html, "html.parser").find("div", id="page-content")
-    if not isinstance(found, Tag):
-        return ""
-    text = _clean(cast("Tag", found).get_text(" ", strip=True))
+    text = _clean(content.get_text(" ", strip=True))
     index = text.find("Tool Proficiencies")
     if index == -1:
         return ""
@@ -661,12 +714,9 @@ def _parse_feat_description(html: str) -> Optional[str]:
     Returns:
         The joined description paragraphs, or None when none are found.
     """
-    if not _SCRAPING_AVAILABLE:
+    content = page_content(html)
+    if content is None:
         return None
-    found = BeautifulSoup(html, "html.parser").find("div", id="page-content")
-    if not isinstance(found, Tag):
-        return None
-    content = cast("Tag", found)
 
     parts: List[str] = []
     for paragraph in content.find_all("p"):

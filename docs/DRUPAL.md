@@ -56,12 +56,22 @@ Full field sets live in
 - **story** — `field_body`, `field_story_number`, `field_campaign`,
   `field_session_date`, `field_session_results`, `field_story_hooks`,
   `field_locations`, `field_npcs`, `field_story_tags`.
-- **item** — `field_item_type` (weapon/armor/item), `field_description`
-  (a `wysiwyg` paragraph), `field_item_rarity`, `field_is_magic`,
-  `field_item_properties`, `field_damage` / `field_damage_types`,
-  `field_armor_*`, `field_weapon_*`, `field_item_cost`, `field_source`,
-  `field_edition`. (`field_notes` was removed from the item bundle — it is now
-  only on `character`.)
+- **item** — `field_item_type` (weapon/armor/item, defaults to `item`, whose
+  label is "Gear"), `field_description` (a `wysiwyg` paragraph),
+  `field_item_rarity`, `field_is_magic`, `field_item_properties`,
+  `field_damage` / `field_damage_types`, `field_armor_*`, `field_weapon_*`,
+  `field_item_cost`, `field_source`, `field_edition`. (`field_notes` was
+  removed from the item bundle — it is now only on `character`.)
+
+  Melee vs ranged is **not** in `field_item_type`, which only distinguishes
+  weapon/armor/gear. It lives in `field_weapon_range` (Melee/Ranged), paired
+  with `field_weapon_category` (Simple/Martial). Both are single-value
+  taxonomy references rendered as selects in the Weapon tab of the item form.
+  They replaced `field_weapon_subtype`, one unlimited-cardinality autocomplete
+  that carried both axes at once and which editors routinely half-filled,
+  leaving ranged weapons indistinguishable from melee ones. Anything deriving
+  a weapon's range must read `field_weapon_range` — never infer it from
+  `field_item_type`.
 - **monster** — `field_challenge_rating`, `field_ability_scores`,
   `field_armor_class`, `field_maximum_hitpoints`, `field_monster_*` (actions,
   traits, senses, languages, legendary/lair actions), `field_type`.
@@ -93,8 +103,9 @@ term).
 **Exposed taxonomy vocabularies:** `abilities`, `campaign`, `class`, `skills`,
 `species`, `lineage`, `backgrounds`, `feats`, `feat_type`, `ability_scores`,
 `tool_profiencies`, `creature_types`, `factions`, `game_edition`,
-`magical_properties`. A vocabulary must be listed here with `enabled: true`
-before its term type appears in `TermUnion`.
+`magical_properties`, `weapon_category`, `weapon_range`, `weapon_properties`,
+`weapon_mastery`, `damage_types`, `vestige_level`. A vocabulary must be listed
+here with `enabled: true` before its term type appears in `TermUnion`.
 
 **Term collection queries:** `abilities`, `class`, `skills`, `species`,
 `lineage`, `backgrounds`, `feats`, `ability_scores`, and `tool_profiencies` set
@@ -119,6 +130,25 @@ same shape as the character node so the data transfers directly), and
 `field_feat`, `field_ability_options`, `field_gold`, `field_equipment_items`) are
 shared across vocabularies — note that field storages are scoped per entity type,
 so these are distinct from the identically named `node.*` storages.
+
+The wizard offers whatever `backgrounds`, `species`, and `class` terms exist, so
+those vocabularies define which options a player can pick. They are seeded from
+the rules wiki by the gitignored scripts under `drupal-cms/scripts/`:
+`build_catalog.py` enumerates the wiki's `background:all` / `species:all` /
+`class:all` index pages, keeps the entries whose `Source:` line matches
+`RAG_SOURCEBOOKS`, resolves each background's grants, and writes `catalog.json`;
+`seed_catalog.php` then creates the missing terms and back-fills the background
+fields, find-or-creating any `feats`, `tool_profiencies`, and `item` nodes they
+reference. It is additive and idempotent: existing terms keep their identity and
+only gain fields they are missing, so hand-authored and homebrew terms survive a
+reseed. Wiki names use curly apostrophes where the taxonomy uses straight ones,
+so the seeder compares normalised names rather than duplicating terms.
+
+```bash
+.venv/bin/python drupal-cms/scripts/build_catalog.py   # from the project root
+ddev drush scr scripts/seed_catalog.php                # from drupal-cms/
+cd ../frontend && npm run clean                        # re-pull the schema
+```
 
 When the creation wizard's background selector uses "Other (not on the list)", a
 modal collects a homebrew definition (3 ability options, skills, tools, an
@@ -206,8 +236,16 @@ paragraph has `field_level` (int), `field_grant_kind` (list: `skill_choice`,
 These terms are populated by gitignored seed scripts under `drupal-cms/scripts/`
 (`build_class_specs.py` gathers per-class data from the JSON templates + rules
 wiki; `seed_class_grants.php` and `seed_subclasses.php` materialise the grant
-paragraphs). The sidecar's class-plan resolver reads them (see
-[../src/sidecar/README.md](../src/sidecar/README.md)).
+paragraphs). `seed_class_grants.php` skips any class that already has grants, so
+it is safe to rerun after adding a class. `seed_subclasses.php` **clears and
+rebuilds** the whole vocabulary; to add a new class's subclasses without
+disturbing existing terms or the character references pointing at them, use the
+additive `seed_new_subclasses.php` instead. The sidecar's class-plan resolver
+reads them (see [../src/sidecar/README.md](../src/sidecar/README.md)).
+
+A class also needs a JSON template under `templates/characters/`: the class-plan
+fallback and `/character/build-from-template` both key off it, and
+`list_available_templates()` drives which classes can be built at all.
 
 After editing this config:
 

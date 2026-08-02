@@ -24,6 +24,7 @@ from src.config.config_types import (
     ModelRegistryConfig,
     PathConfig,
     RAGConfig,
+    RulesetConfig,
     SidecarConfig,
 )
 from src.utils.errors import display_error, FileSystemError
@@ -122,6 +123,12 @@ def _merge_config(base: DnDConfig, override: Dict[str, Any]) -> DnDConfig:
             max_cache_size=rag_data.get("max_cache_size", base.rag.max_cache_size),
             search_depth=rag_data.get("search_depth", base.rag.search_depth),
             min_relevance=rag_data.get("min_relevance", base.rag.min_relevance),
+        )
+
+    # Ruleset config
+    if "ruleset" in override:
+        base.ruleset = RulesetConfig(
+            sourcebooks=override["ruleset"].get("sourcebooks", base.ruleset.sourcebooks),
         )
 
     # Display config
@@ -500,6 +507,12 @@ def _apply_env_overrides(config: DnDConfig, prefix: str = "") -> DnDConfig:
     config.rag.search_depth = get_env_int("RAG_SEARCH_DEPTH", config.rag.search_depth)
     config.rag.min_relevance = get_env_float("RAG_MIN_RELEVANCE", config.rag.min_relevance)
 
+    sourcebooks = get_env("RAG_SOURCEBOOKS")
+    if sourcebooks:
+        config.ruleset.sourcebooks = [
+            book.strip() for book in str(sourcebooks).split(",") if book.strip()
+        ]
+
     cache_dir = get_env("RAG_CACHE_DIR")
     if cache_dir:
         config.paths.cache_dir = Path(cache_dir)
@@ -548,6 +561,9 @@ def save_config(config: DnDConfig, path: Optional[Path] = None) -> bool:
             "max_cache_size": config.rag.max_cache_size,
             "search_depth": config.rag.search_depth,
             "min_relevance": config.rag.min_relevance,
+        },
+        "ruleset": {
+            "sourcebooks": config.ruleset.sourcebooks,
         },
         "display": {
             "use_rich": config.display.use_rich,

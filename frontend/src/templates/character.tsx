@@ -531,12 +531,14 @@ export const query = graphql`
           equipmentItems {
             ... on Drupal_NodeItem {
               title path itemType itemRarity isMagic itemRequiresAttunement
+              weaponRange { ... on Drupal_TermWeaponRange { name } }
               image { ... on Drupal_MediaImage { mediaImage { url alt } } }
             }
           }
           magicItemsRef {
             ... on Drupal_NodeItem {
               title path itemType itemRarity isMagic itemRequiresAttunement
+              weaponRange { ... on Drupal_TermWeaponRange { name } }
               image { ... on Drupal_MediaImage { mediaImage { url alt } } }
             }
           }

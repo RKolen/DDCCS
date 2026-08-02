@@ -46,7 +46,8 @@ interface ItemPageData {
       damageTypes: ItemTerm[] | null;
       weaponProperties: ItemTerm[] | null;
       weaponMastery: ItemTerm[] | null;
-      weaponSubtype: ItemTerm[] | null;
+      weaponCategory: ItemTerm | null;
+      weaponRange: ItemTerm | null;
       itemProperties: Array<{
         name: string;
         effect: Array<{ text: Array<{ processed: string }> }> | null;
@@ -61,6 +62,7 @@ interface ItemPageData {
    ──────────────────────────────────────────────────────────── */
 
 import { rarityColor } from '../utils/rarityColor';
+import { normalizeType, typeDisplayLabel } from '../types/item';
 
 function isHomebrew(item: ItemPageData['drupal']): boolean {
   const node = item?.node;
@@ -114,7 +116,8 @@ const ItemPage: React.FC<ItemPageProps> = ({ data, location }) => {
   }));
 
   const stats: Array<{ label: string; value: string; accent?: string }> = [
-    item.weaponSubtype?.length ? { label: 'Class', value: item.weaponSubtype.map(t => t.name).join(', ') } : null,
+    item.weaponCategory != null ? { label: 'Category', value: item.weaponCategory.name } : null,
+    item.weaponRange != null ? { label: 'Range', value: item.weaponRange.name } : null,
     item.damage != null ? { label: 'Damage', value: item.damage + (item.damageTypes?.length ? ` ${item.damageTypes.map(t => t.name).join('/')}` : '') } : null,
     item.armorAcBase != null ? { label: 'AC', value: `${item.armorAcBase}${item.armorCategory ? ` (${item.armorCategory})` : ''}` } : null,
     item.itemBonus != null ? { label: 'Bonus', value: `+${item.itemBonus}` } : null,
@@ -159,7 +162,10 @@ const ItemPage: React.FC<ItemPageProps> = ({ data, location }) => {
             )}
 
             <p className={styles.pronouns}>
-              {[item.itemType, item.itemRarity].filter(Boolean).map(v => (v ?? '').charAt(0).toUpperCase() + (v ?? '').slice(1)).join(' · ')}
+              {[
+                item.itemType ? typeDisplayLabel(normalizeType(item.itemType, item.weaponRange)) : null,
+                item.itemRarity ? item.itemRarity.charAt(0).toUpperCase() + item.itemRarity.slice(1) : null,
+              ].filter(Boolean).join(' · ')}
             </p>
 
             <div className={styles.heroBadges}>
@@ -271,7 +277,8 @@ export const query = graphql`
           damageTypes      { ... on Drupal_TermDamageType     { name } }
           weaponProperties { ... on Drupal_TermWeaponProperty { name } }
           weaponMastery    { ... on Drupal_TermWeaponMastery  { name } }
-          weaponSubtype    { ... on Drupal_TermWeaponSubtype  { name } }
+          weaponCategory   { ... on Drupal_TermWeaponCategory { name } }
+          weaponRange      { ... on Drupal_TermWeaponRange    { name } }
           itemProperties {
             ... on Drupal_TermMagicalProperty {
               name

@@ -201,7 +201,10 @@ entity_config:
     weapon_properties:
       enabled: true
       query_load_enabled: true
-    weapon_subtype:
+    weapon_category:
+      enabled: true
+      query_load_enabled: true
+    weapon_range:
       enabled: true
       query_load_enabled: true
   media:
@@ -427,7 +430,9 @@ field_config:
         enabled: true
       field_weapon_properties:
         enabled: true
-      field_weapon_subtype:
+      field_weapon_category:
+        enabled: true
+      field_weapon_range:
         enabled: true
     spell:
       path:

@@ -30,7 +30,18 @@ and campaign wiki integration.
    - Tests WikiClient initialization
    - Validates custom item filtering (homebrew blocking)
 
-4. **test_all_ai.py** - AI Subsystem Test Runner
+4. **test_catalog_rag.py** - Character-Creation Catalogue Resolver
+   - Tests index-page parsing into catalogue entries, sorted by name
+   - Validates each entry's sourcebook, read from its page's "Source:" line
+   - Tests the per-kind page slug forms (`species:<slug>`, `<class>:main`)
+   - Validates wiki title normalisation (minor words lowercased, slug preserved)
+   - Tests sourcebook filtering, including the unrestricted (empty) case
+   - Verifies safe degradation for unknown kinds and disabled RAG
+
+   Shares its fake rules-wiki client with the other resolver tests via
+   `rag_fixtures.py`.
+
+5. **test_all_ai.py** - AI Subsystem Test Runner
    - Runs all AI tests in sequence
    - Provides comprehensive test summary
    - Returns proper exit codes for CI/CD

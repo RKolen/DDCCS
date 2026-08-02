@@ -212,6 +212,13 @@ Drupal credentials.
 `AI_CREATIVE_BASE_URL/chat/completions`. `spotlight.ts` calls the Python sidecar
 (see [src/sidecar/README.md](../src/sidecar/README.md)).
 
+The creation wizard's class, species, and background dropdowns are a build-time
+`useStaticQuery` over `termClasses` / `termSpeciesItems` / `termBackgrounds`, so
+they show exactly what those Drupal vocabularies contain. Adding options from a
+new sourcebook is a Drupal-side seed followed by `npm run clean` here — see
+[docs/DRUPAL.md](../docs/DRUPAL.md). A background typed in by hand rather than
+picked from the list is treated as homebrew and opens the definition modal.
+
 ### Queued AI actions
 
 Anything that takes minutes is queued rather than held open in a request. The

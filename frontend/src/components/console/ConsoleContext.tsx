@@ -275,7 +275,8 @@ export interface DrupalItem {
   damageTypes:            string[];
   weaponProperties:       string[];
   weaponMastery:          string[];
-  weaponSubtype:          string[];
+  weaponCategory:         string | null;
+  weaponRange:            string | null;
   itemProperties:         Array<{ name: string; effectHtml: string | null }>;
   path:                   string | null;
   imageUrl:               string | null;

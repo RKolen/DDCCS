@@ -1,26 +1,26 @@
-uuid: 24e11ff7-7e82-4b05-b46f-8999f68857da
+uuid: 15e85350-a3d8-4a81-86c8-5a69aacc8846
 langcode: en
 status: true
 dependencies:
   config:
-    - field.storage.node.field_weapon_subtype
+    - field.storage.node.field_weapon_range
     - node.type.item
-    - taxonomy.vocabulary.weapon_subtype
-id: node.item.field_weapon_subtype
-field_name: field_weapon_subtype
+    - taxonomy.vocabulary.weapon_range
+id: node.item.field_weapon_range
+field_name: field_weapon_range
 entity_type: node
 bundle: item
-label: 'Weapon Subtype'
+label: 'Weapon Range'
 description: ''
 required: false
-translatable: false
+translatable: true
 default_value: {  }
 default_value_callback: ''
 settings:
   handler: 'default:taxonomy_term'
   handler_settings:
     target_bundles:
-      weapon_subtype: weapon_subtype
+      weapon_range: weapon_range
     sort:
       field: name
       direction: asc

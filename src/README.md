@@ -113,6 +113,8 @@ src/
 |   |-- rag_system.py          # RAG (Retrieval Augmented Generation)
 |   |-- abilities_rag.py       # Reusable rules resolver: abilities/features, backgrounds, feats, class tools, subclass features (via RAG_RULES_BASE_URL wiki)
 |   |-- equipment_rag.py       # Equipment + tool item catalogue: descriptions/types + tool proficiency categories (via RAG_RULES_BASE_URL wiki)
+|   |-- catalog_rag.py         # Which backgrounds/species/classes exist, each tagged with its sourcebook; filtered by RAG_SOURCEBOOKS
+|   |-- wiki_scraping.py       # Shared Wikidot primitives (page content, title, tolerant fetch) for the rules resolvers
 |   |-- availability.py        # AI availability detection
 |   |-- lazy_imports.py        # Lazy import helpers
 |   |-- milvus_client.py       # Milvus vector DB wrapper (connect/insert/search)
@@ -127,7 +129,7 @@ src/
 |   `-- image_describe.py      # Image->prompt via an Ollama vision model (IMAGE_TO_PROMPT_MODEL)
 |
 |-- config/             # Centralized configuration
-|   |-- config_types.py        # AIConfig, RAGConfig, DisplayConfig, PathConfig, DrupalConfig, ComfyUIConfig
+|   |-- config_types.py        # AIConfig, RAGConfig, RulesetConfig, DisplayConfig, PathConfig, DrupalConfig, ComfyUIConfig
 |   `-- config_loader.py       # Config loading from file/env
 |
 |-- integration/        # External service integration

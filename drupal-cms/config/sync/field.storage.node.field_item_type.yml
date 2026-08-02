@@ -19,7 +19,7 @@ settings:
       label: Armor
     -
       value: item
-      label: Item
+      label: Gear
   allowed_values_function: ''
 module: options
 locked: false

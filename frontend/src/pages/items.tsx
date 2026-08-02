@@ -29,7 +29,8 @@ export const query = graphql`
         isMagic
         itemRarity
         itemRequiresAttunement
-        weaponSubtype { name }
+        weaponCategory { name }
+        weaponRange { name }
         image { mediaImage { url alt } }
       }
     }

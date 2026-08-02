@@ -1,0 +1,9 @@
+uuid: 559da441-222e-4fda-9702-aa1cd5c86d14
+langcode: en
+status: true
+dependencies: {  }
+name: 'Weapon Category'
+vid: weapon_category
+description: null
+weight: 0
+new_revision: false

@@ -31,7 +31,8 @@ interface AllItemDetailNode {
   isMagic: boolean | null;
   itemRequiresAttunement: boolean | null;
   descriptionHtml: string | null;
-  weaponSubtype: Array<{ name: string }> | null;
+  weaponCategory: { name: string } | null;
+  weaponRange: { name: string } | null;
   image: { mediaImage: { url: string; alt: string } | null } | null;
 }
 
@@ -49,7 +50,8 @@ function toItemNode(n: AllItemDetailNode): ItemNode {
     isMagic: n.isMagic,
     itemRequiresAttunement: n.itemRequiresAttunement,
     body: n.descriptionHtml ? { value: n.descriptionHtml } : null,
-    weaponSubtype: n.weaponSubtype,
+    weaponCategory: n.weaponCategory,
+    weaponRange: n.weaponRange,
     image: n.image,
   };
 }
@@ -63,7 +65,8 @@ export function ItemDetailScreen({ ctx, setCtx }: ScreenProps): React.ReactEleme
         nodes {
           drupalId title path itemType itemRarity isMagic itemRequiresAttunement
           descriptionHtml
-          weaponSubtype { name }
+          weaponCategory { name }
+          weaponRange { name }
           image { mediaImage { url alt } }
         }
       }

@@ -249,7 +249,8 @@ export interface RawItem {
   damageTypes?:           Array<{ name: string }> | null;
   weaponProperties?:      Array<{ name: string }> | null;
   weaponMastery?:         Array<{ name: string }> | null;
-  weaponSubtype?:         Array<{ name: string }> | null;
+  weaponCategory?:        { name: string } | null;
+  weaponRange?:           { name: string } | null;
   itemProperties?:        Array<{ name: string; effectHtml: string | null }> | null;
   damage?:                string | null;
   itemBonus?:             number | null;
@@ -490,7 +491,8 @@ export function buildConsoleData(data: ConsoleQueryData | null | undefined): Con
     damageTypes:            (n.damageTypes ?? []).map(t => t.name),
     weaponProperties:       (n.weaponProperties ?? []).map(t => t.name),
     weaponMastery:          (n.weaponMastery ?? []).map(t => t.name),
-    weaponSubtype:          (n.weaponSubtype ?? []).map(t => t.name),
+    weaponCategory:         n.weaponCategory?.name ?? null,
+    weaponRange:            n.weaponRange?.name ?? null,
     itemProperties:         n.itemProperties ?? [],
     path:                   n.path ?? null,
     imageUrl:               n.image?.mediaImage?.url ?? null,

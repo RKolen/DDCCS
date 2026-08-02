@@ -17,9 +17,8 @@ Why we test this:
 - Ensures the resolver degrades safely and never blocks character creation
 """
 
-from types import SimpleNamespace
-
 from tests import test_helpers
+from tests.ai import rag_fixtures
 
 (
     get_abilities,
@@ -29,6 +28,8 @@ from tests import test_helpers
     _subclass_slugs,
     _tool_category_key,
     _split_background_tools,
+    page_urls,
+    _parse_background,
 ) = test_helpers.safe_from_import(
     "src.ai.abilities_rag",
     "get_abilities",
@@ -38,6 +39,8 @@ from tests import test_helpers
     "_subclass_slugs",
     "_tool_category_key",
     "_split_background_tools",
+    "page_urls",
+    "_parse_background",
 )
 
 (
@@ -93,6 +96,22 @@ _WEAPON_HTML = """
 _EMPTY_HTML = '<html><body><div id="page-content"></div></body></html>'
 
 
+def _equipment_page(url: str) -> str:
+    """Serve the canned equipment page for a requested URL.
+
+    Args:
+        url: The requested page URL.
+
+    Returns:
+        The page HTML; an empty page for URLs with no fixture.
+    """
+    if "equipment:adventuring-gear" in url:
+        return _GEAR_HTML
+    if "equipment:weapon" in url:
+        return _WEAPON_HTML
+    return _EMPTY_HTML
+
+
 def _fake_equipment_rag(enabled: bool = True):
     """Build a RAG stand-in serving per-page equipment HTML by URL.
 
@@ -102,21 +121,7 @@ def _fake_equipment_rag(enabled: bool = True):
     Returns:
         A SimpleNamespace exposing enabled + rules_client.
     """
-
-    def _get(url: str, timeout: int = 10):
-        _ = timeout
-        if "equipment:adventuring-gear" in url:
-            body = _GEAR_HTML
-        elif "equipment:weapon" in url:
-            body = _WEAPON_HTML
-        else:
-            body = _EMPTY_HTML
-        return SimpleNamespace(text=body, raise_for_status=lambda: None)
-
-    session = SimpleNamespace(get=_get)
-    cache = SimpleNamespace(get=lambda key: None, set=lambda key, content: None)
-    client = SimpleNamespace(base_url="http://rules.example", session=session, cache=cache)
-    return SimpleNamespace(enabled=enabled, rules_client=client)
+    return rag_fixtures.make_fake_rules_rag(_equipment_page, enabled=enabled)
 
 _CLASS_HTML = """
 <html><body><div id="page-content">
@@ -147,11 +152,7 @@ def _fake_rag(html: str, enabled: bool = True):
     Returns:
         A SimpleNamespace exposing enabled + rules_client.
     """
-    response = SimpleNamespace(text=html, raise_for_status=lambda: None)
-    session = SimpleNamespace(get=lambda url, timeout=10: response)
-    cache = SimpleNamespace(get=lambda key: None, set=lambda key, content: None)
-    client = SimpleNamespace(base_url="http://rules.example", session=session, cache=cache)
-    return SimpleNamespace(enabled=enabled, rules_client=client)
+    return rag_fixtures.make_fake_rules_rag(lambda url: html, enabled=enabled)
 
 
 def test_parse_class_features():
@@ -306,6 +307,93 @@ def test_background_tools_split_category_choice():
     print("  [PASS] Category phrase -> choice; specific tool -> fixed")
 
 
+_BG_SINGLE_PARAGRAPH_HTML = """
+<html><body><div id="page-content">
+  <p>Source: Player's Handbook</p>
+  <p>You devoted yourself to service in a temple.</p>
+  <p><strong>Ability Scores:</strong> Intelligence, Wisdom, Charisma
+     <strong>Feat:</strong> Magic Initiate (Cleric)
+     <strong>Skill Proficiencies:</strong> Insight and Religion
+     <strong>Tool Proficiency:</strong> Calligrapher's Supplies
+     <strong>Equipment:</strong> Choose A or B: (A) Holy Symbol, Robe, 8 GP; or (B) 50 GP</p>
+</div></body></html>
+"""
+
+_BG_PER_LABEL_HTML = """
+<html><body><div id="page-content">
+  <p>Source: Forgotten Realms - Heroes of Faerun</p>
+  <p><strong>Ability Scores:</strong> Dexterity, Intelligence, Charisma</p>
+  <p><strong>Feat:</strong> Harper Agent</p>
+  <p><strong>Skill Proficiencies:</strong> Performance and Sleight of Hand</p>
+  <p><strong>Tool Proficiency:</strong> Disguise Kit</p>
+  <p><strong>Equipment:</strong> Choose A or B: (A) Disguise Kit, Rope, 14 GP; or (B) 50 GP</p>
+  <p>You accepted an invitation to join the Harpers.</p>
+</div></body></html>
+"""
+
+_BG_LOOSE_LABEL_HTML = """
+<html><body><div id="page-content">
+  <p>Source: Ravenloft - The Horrors Within</p>
+  <p><strong>Ability Score:</strong> Dexterity, Intelligence, Charisma
+     <strong>Feat:</strong> A Dark Gift feat of your choice (see "Feats"; Mist Walker is recommended)
+     <strong>Skill Proficiencies :</strong> Insight and Investigation
+     <strong>Tool Proficiencies:</strong> Choose one kind of Musical Instrument
+     <strong>Equipment:</strong> Choose A or B: (A) Lamp, Rope, 30 GP; or (B) 50 GP</p>
+</div></body></html>
+"""
+
+
+def test_page_urls_per_source_type():
+    """Each source type tries its canonical page slug form first."""
+    print("\n[TEST] Page URLs - per source type slug forms")
+    base = "http://rules.example"
+    assert page_urls(base, "species", "Warforged")[0] == f"{base}/species:warforged"
+    assert page_urls(base, "class", "Artificer")[0] == f"{base}/artificer:main"
+    assert page_urls(base, "background", "Harper") == [f"{base}/background:harper"]
+    assert page_urls(base, "species", "Human")[1] == f"{base}/human"
+    assert page_urls(base, "species", "   ") == []
+    print("  [PASS] Sourcebook-only pages reachable via their category prefix")
+
+
+def test_background_both_layouts_parse():
+    """Both the single-paragraph and per-label page layouts parse alike."""
+    print("\n[TEST] Background - single vs per-label paragraph layouts")
+    acolyte = _parse_background(_BG_SINGLE_PARAGRAPH_HTML)
+    assert acolyte is not None
+    assert acolyte["skills"] == ["Insight", "Religion"], acolyte
+    assert acolyte["feat"] == "Magic Initiate (Cleric)", acolyte
+    assert acolyte["tools"] == ["Calligrapher's Supplies"], acolyte
+
+    harper = _parse_background(_BG_PER_LABEL_HTML)
+    assert harper is not None
+    assert harper["ability_options"] == ["Dexterity", "Intelligence", "Charisma"], harper
+    assert harper["skills"] == ["Performance", "Sleight of Hand"], harper
+    assert harper["feat"] == "Harper Agent", harper
+    assert harper["gold"] == 50, harper
+    print("  [PASS] Both wiki layouts yield the same structure")
+
+
+def test_background_tolerates_label_typos():
+    """Singular ability labels and stray spaces before colons still parse."""
+    print("\n[TEST] Background - label spelling and spacing typos")
+    data = _parse_background(_BG_LOOSE_LABEL_HTML)
+    assert data is not None
+    assert data["ability_options"] == ["Dexterity", "Intelligence", "Charisma"], data
+    assert data["skills"] == ["Insight", "Investigation"], data
+    assert data["tool_choices"] and data["tool_choices"][0]["kind"] == "tool", data
+    print("  [PASS] 'Ability Score' and 'Proficiencies :' variants handled")
+
+
+def test_feat_aside_stripped_specialisation_kept():
+    """Cross-reference prose is dropped but a specialisation is kept."""
+    print("\n[TEST] Background - feat name cleaning")
+    loose = _parse_background(_BG_LOOSE_LABEL_HTML)
+    assert loose is not None and loose["feat"] == "Dark Gift", loose
+    single = _parse_background(_BG_SINGLE_PARAGRAPH_HTML)
+    assert single is not None and single["feat"] == "Magic Initiate (Cleric)", single
+    print("  [PASS] '(see ...)' dropped, '(Cleric)' retained")
+
+
 def run_all_tests():
     """Run all abilities RAG resolver tests."""
     print("=" * 70)
@@ -326,6 +414,10 @@ def run_all_tests():
     test_tool_categories_parsed()
     test_tool_category_key_mapping()
     test_background_tools_split_category_choice()
+    test_page_urls_per_source_type()
+    test_background_both_layouts_parse()
+    test_background_tolerates_label_typos()
+    test_feat_aside_stripped_specialisation_kept()
 
     print("\n" + "=" * 70)
     print("[SUCCESS] ALL ABILITIES RAG RESOLVER TESTS PASSED")

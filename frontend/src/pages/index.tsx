@@ -251,7 +251,8 @@ export const query = graphql`
         damageTypes   { name }
         weaponProperties { name }
         weaponMastery    { name }
-        weaponSubtype    { name }
+        weaponCategory   { name }
+        weaponRange      { name }
         itemProperties   { name effectHtml }
         image { mediaImage { url alt } }
       }

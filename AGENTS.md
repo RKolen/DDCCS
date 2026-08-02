@@ -327,9 +327,12 @@ src/
 |-- ai/              # AI client and RAG system
 |   |-- ai_client.py
 |   |-- rag_system.py
+|   |-- catalog_rag.py     # Which backgrounds/species/classes exist, per sourcebook
+|   |-- wiki_scraping.py   # Shared Wikidot scraping primitives
 |   |-- availability.py
 |-- config/          # Centralized configuration
-|   |-- config_types.py  # AIConfig, RAGConfig, DisplayConfig, PathConfig, DrupalConfig
+|   |-- config_types.py  # AIConfig, RAGConfig, RulesetConfig, DisplayConfig,
+|                        # PathConfig, DrupalConfig
 |   |-- config_loader.py
 |-- integration/     # External service sync
 |   |-- drupal_sync.py     # DrupalSync: Drupal-backed wiki page cache over GraphQL

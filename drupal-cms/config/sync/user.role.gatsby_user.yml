@@ -46,9 +46,10 @@ dependencies:
     - taxonomy.vocabulary.traits
     - taxonomy.vocabulary.vestige_level
     - taxonomy.vocabulary.voice_ids
+    - taxonomy.vocabulary.weapon_category
     - taxonomy.vocabulary.weapon_mastery
     - taxonomy.vocabulary.weapon_properties
-    - taxonomy.vocabulary.weapon_subtype
+    - taxonomy.vocabulary.weapon_range
   module:
     - media
     - node
@@ -68,7 +69,6 @@ permissions:
   - 'create session content'
   - 'create spell content'
   - 'create story content'
-  - 'create wiki_cache content'
   - 'create terms in abilities'
   - 'create terms in ability_scores'
   - 'create terms in action_types'
@@ -102,9 +102,11 @@ permissions:
   - 'create terms in traits'
   - 'create terms in vestige_level'
   - 'create terms in voice_ids'
+  - 'create terms in weapon_category'
   - 'create terms in weapon_mastery'
   - 'create terms in weapon_properties'
-  - 'create terms in weapon_subtype'
+  - 'create terms in weapon_range'
+  - 'create wiki_cache content'
   - 'delete any character_analysis content'
   - 'delete any wiki_cache content'
   - 'edit any character content'

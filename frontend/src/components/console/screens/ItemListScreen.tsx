@@ -33,7 +33,8 @@ interface AllItemListNode {
   itemRarity:             string | null;
   isMagic:                boolean | null;
   itemRequiresAttunement: boolean | null;
-  weaponSubtype:          Array<{ name: string }> | null;
+  weaponCategory:         { name: string } | null;
+  weaponRange:            { name: string } | null;
   image:                  { mediaImage: { url: string; alt: string } | null } | null;
 }
 
@@ -50,7 +51,8 @@ function toItemNode(n: AllItemListNode): ItemNode {
     itemRarity:             n.itemRarity,
     isMagic:                n.isMagic,
     itemRequiresAttunement: n.itemRequiresAttunement,
-    weaponSubtype:          n.weaponSubtype,
+    weaponCategory:         n.weaponCategory,
+    weaponRange:            n.weaponRange,
     image:                  n.image,
   };
 }
@@ -63,7 +65,8 @@ export function ItemListScreen({ ctx, setCtx }: ScreenProps): React.ReactElement
       allAllItem {
         nodes {
           drupalId title path itemType itemRarity isMagic itemRequiresAttunement
-          weaponSubtype { name }
+          weaponCategory { name }
+          weaponRange { name }
           image { mediaImage { url alt } }
         }
       }

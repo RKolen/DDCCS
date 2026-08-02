@@ -11,5 +11,5 @@
 
 pylint==4.0.5    # Style/logic gate - must score 10.00/10
 mypy==2.1.0      # Static type gate - config in mypy.ini (mypy_path = stubs)
-pyright==1.1.410 # Same engine as the VS Code Pylance extension (rule 3.1);
+pyright==1.1.411 # Same engine as the VS Code Pylance extension (rule 3.1);
                  # config in pyrightconfig.json (stubPath = stubs)
