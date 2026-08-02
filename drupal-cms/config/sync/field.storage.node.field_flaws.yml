@@ -8,9 +8,8 @@ dependencies:
 id: node.field_flaws
 field_name: field_flaws
 entity_type: node
-type: text
-settings:
-  max_length: 255
+type: text_long
+settings: {  }
 module: text
 locked: false
 cardinality: -1

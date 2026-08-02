@@ -53,6 +53,12 @@ Full field sets live in
   `field_voice_id_ref` / `field_voice_pitch` / `field_voice_speed`,
   `field_personality_traits`, `field_bonds`, `field_ideals`, `field_flaws`,
   `field_major_plot_actions`, `field_relationships`.
+  The four personality fields are all `text_long` with cardinality -1, so a
+  bond or flaw can hold real prose rather than a one-line note. `field_bonds`,
+  `field_ideals`, and `field_flaws` started as `text` (varchar 255) and were
+  converted in place by the gitignored
+  `drupal-cms/scripts/widen_personality_fields.php`; the GraphQL type is
+  `[Text!]` either way, so nothing downstream changed.
 - **story** — `field_body`, `field_story_number`, `field_campaign`,
   `field_session_date`, `field_session_results`, `field_story_hooks`,
   `field_locations`, `field_npcs`, `field_story_tags`.

@@ -434,11 +434,11 @@ content:
         duplicate: duplicate
     third_party_settings: {  }
   field_bonds:
-    type: text_textfield
+    type: text_textarea
     weight: 15
     region: content
     settings:
-      size: 60
+      rows: 5
       placeholder: ''
     third_party_settings: {  }
   field_campaign:
@@ -540,11 +540,11 @@ content:
       placeholder: ''
     third_party_settings: {  }
   field_flaws:
-    type: text_textfield
+    type: text_textarea
     weight: 16
     region: content
     settings:
-      size: 60
+      rows: 5
       placeholder: ''
     third_party_settings: {  }
   field_gender:
@@ -561,11 +561,11 @@ content:
       placeholder: '0'
     third_party_settings: {  }
   field_ideals:
-    type: text_textfield
+    type: text_textarea
     weight: 14
     region: content
     settings:
-      size: 60
+      rows: 5
       placeholder: ''
     third_party_settings: {  }
   field_image:

@@ -8,9 +8,8 @@ dependencies:
 id: node.field_ideals
 field_name: field_ideals
 entity_type: node
-type: text
-settings:
-  max_length: 255
+type: text_long
+settings: {  }
 module: text
 locked: false
 cardinality: -1
