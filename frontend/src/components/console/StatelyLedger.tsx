@@ -9,15 +9,10 @@
 
 import * as React from 'react';
 import { MENU_DATA, type MenuSection, type MenuItem } from './menuData';
-import { Icon, AiTag, SlowTag, ActivityDrawer } from './atoms';
-import {
-  useJobActivity, jobResult, requeueJob, clearFinishedJobs, JOB_TYPES,
-} from '../../utils/aiJobs';
-import type { AiJob } from '../../utils/aiJobs';
-import type { PortraitJobResult } from '../../utils/portraitProfile';
+import { Icon, AiTag, SlowTag } from './atoms';
 import type { ActivityItem, ActivityTarget } from './menuData';
 import { ScreenRouter, type ScreenContext } from './ScreenRouter';
-import { ActivityFullScreen } from './ActivityFullScreen';
+import { useConsoleActivity } from '../layout/ActivityContext';
 import {
   ConsoleContext, type ConsoleData,
   playerCharacters, npcCharacters,
@@ -53,66 +48,6 @@ interface StatelyLedgerProps {
   liveData?: ConsoleData;
 }
 
-/**
- * Render one queued AI job as an activity-drawer row.
- *
- * A job waiting for the processor reads as `queued`, not `running`: it is in
- * flight from the operator's point of view, but nothing is working on it yet and
- * showing it as busy has misled us before.
- *
- * Every portrait job gets a target - the screen its output lands on - so the row
- * is a way back to the work from the moment it is queued, not only once it has
- * finished. `subjectId` is what makes that possible before there is a result. A
- * finished job whose result is still `pending` additionally gets `needsReview`,
- * which is what turns the link into the accept/discard decision; without it a
- * render would sit in the media library with nothing pointing at it.
- *
- * @param job    The job as the queue reports it.
- * @param locate Resolves a character id to the screen showing that character.
- */
-function jobToActivityItem(
-  job: AiJob,
-  locate: (characterId: string) => ActivityTarget | undefined,
-): ActivityItem {
-  const stalled = Boolean(job.stalled);
-  const status: ActivityItem['status'] =
-    job.state === 'success' ? 'done'
-      : job.state === 'failure' ? 'failed'
-        : job.state === 'queued' ? 'queued'
-          // A claimed job whose lease lapsed is not running, whatever the state
-          // column says; drawing it as busy is what left us watching a spinner.
-          : stalled ? 'failed' : 'running';
-  const elapsed = job.processed && job.created && job.processed > job.created
-    ? `${job.processed - job.created}s`
-    : undefined;
-
-  const isPortrait = job.type === JOB_TYPES.portrait;
-  const portrait = isPortrait ? jobResult<PortraitJobResult>(job) : null;
-  const needsReview = portrait?.review === 'pending';
-  const subject = portrait?.characterId ?? job.subjectId;
-  const target = isPortrait && subject ? locate(subject) : undefined;
-
-  const detail = needsReview
-    ? 'Rendered - not attached until you accept it'
-    : stalled
-      ? 'Stalled - the host stopped responding; requeue to run it again'
-      : job.state === 'queued'
-        ? 'Waiting for the host queue'
-        : job.message ?? (job.state === 'processing' ? 'Running on the host' : '');
-
-  return {
-    kind: 'ai',
-    status,
-    label: job.label,
-    detail,
-    elapsed,
-    jobId: job.id,
-    target,
-    needsReview,
-    stalled,
-  };
-}
-
 export function StatelyLedger({
   fullscreen = false,
   initialSection = 'read',
@@ -127,13 +62,6 @@ export function StatelyLedger({
     ?? MENU_DATA.sections.find(s => s.id === initialSection)?.items[0]?.id
     ?? ''
   );
-  const [drawerOpen, setDrawerOpen]     = React.useState(true);
-  const [activityFull, setActivityFull] = React.useState(false);
-  /* Live activity: what the host queue is running, waiting on, and just
-     finished. Polled, so a job that completed while you were on another screen
-     still reports itself here. */
-  const { running, recent, refresh: refreshActivity } = useJobActivity();
-  const [clearing, setClearing] = React.useState(false);
   const [ctx, setCtxRaw] = React.useState<ScreenContext>({
     storyIdx: 0,
     charIdx: 0,
@@ -187,16 +115,10 @@ export function StatelyLedger({
     return undefined;
   }, [pcs, npcs]);
 
-  const activityItems = React.useMemo(
-    () => [...running, ...recent].map(job => jobToActivityItem(job, locateCharacter)),
-    [running, recent, locateCharacter],
-  );
-
   /* Open the screen a row points at, carrying the job id so that screen picks
      the result back up and can accept or discard it. */
   const openActivity = React.useCallback((item: ActivityItem): void => {
     if (!item.target) return;
-    setActivityFull(false);
     setCtxRaw(current => ({
       ...current,
       charIdx: item.target?.charIdx ?? 0,
@@ -207,30 +129,13 @@ export function StatelyLedger({
     setActiveItem(item.target.itemId);
   }, []);
 
-  /* Put a stalled job back on the queue, then re-read so the row updates now
-     rather than on the next tick. */
-  const requeueActivity = React.useCallback((item: ActivityItem): void => {
-    if (!item.jobId) return;
-    void requeueJob(item.jobId)
-      .catch(() => {
-        /* The refresh below re-reads the truth either way. */
-      })
-      .finally(() => refreshActivity());
-  }, [refreshActivity]);
-
-  /* Clear the finished jobs. Drupal decides what is safe to delete; anything it
-     keeps back (a result still awaiting a decision) reappears on the refresh. */
-  const clearActivity = React.useCallback((): void => {
-    setClearing(true);
-    void clearFinishedJobs()
-      .catch(() => {
-        /* Nothing was deleted; the refresh shows the list unchanged. */
-      })
-      .finally(() => {
-        setClearing(false);
-        refreshActivity();
-      });
-  }, [refreshActivity]);
+  /* The console can do two things the shared drawer cannot: resolve a
+     character id against the roster it holds, and open a row's screen without
+     a page load. Register both for as long as it is mounted. */
+  useConsoleActivity(React.useMemo(
+    () => ({ locate: locateCharacter, open: openActivity }),
+    [locateCharacter, openActivity],
+  ));
 
   const sections = MENU_DATA.sections.map(s => {
     if (s.id === 'characters' && pcs) return { ...s, count: pcs.length };
@@ -333,40 +238,9 @@ export function StatelyLedger({
             </div>
           </section>
 
-          {/* Right activity drawer */}
-          {!activityFull && (
-            <ActivityDrawer
-              items={activityItems}
-              open={drawerOpen}
-              onToggle={() => setDrawerOpen(!drawerOpen)}
-              onOpen={openActivity}
-              onRequeue={requeueActivity}
-              onClear={clearActivity}
-              clearing={clearing}
-            />
-          )}
+          {/* The activity drawer is a sibling of the whole page, mounted by
+              GlobalLayout, so it stays put when you navigate off the console. */}
         </div>
-
-        {drawerOpen && !activityFull && (
-          <button
-            className="activity-expand-btn"
-            onClick={() => setActivityFull(true)}
-            title="Open activity log full-screen"
-          >
-            <Icon name="drawer" size={13} /> Expand
-          </button>
-        )}
-
-        {activityFull && (
-          <div className="activity-overlay">
-            <ActivityFullScreen
-              items={activityItems}
-              onClose={() => setActivityFull(false)}
-              onOpen={openActivity}
-              onRequeue={requeueActivity}
-            />
-          </div>
-        )}
       </div>
     </ConsoleContext.Provider>
   );

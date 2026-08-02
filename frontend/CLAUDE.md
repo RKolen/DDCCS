@@ -35,7 +35,7 @@ src/
 |   |-- organisms/      # Molecules combined into a self-contained section
 |   |-- templates/      # Full page layout shells (no real data)
 |   |-- console/        # Admin/console screens (create, edit, validate, forge)
-|   `-- layout/         # Global layout / chrome
+|   `-- layout/         # Global chrome: topbar, campaign state, activity log
 |-- pages/              # Gatsby page components (run GraphQL page queries)
 |-- templates/          # Per-node detail templates (built in gatsby-node.ts)
 |-- types/              # Shared TypeScript interfaces and type aliases

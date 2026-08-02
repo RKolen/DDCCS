@@ -11,8 +11,17 @@
   background: var(--desk-wood);
 }
 
+/* Page content and the activity drawer sit side by side, so the drawer is
+   present on every route rather than only inside the console. */
+.global-shell {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+}
+
 .global-content {
   flex: 1;
+  min-width: 0;
   min-height: 0;
   overflow-y: auto;
 }

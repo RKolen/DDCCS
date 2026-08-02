@@ -111,6 +111,12 @@ export interface ActivityItem {
   jobId?: string;
   /** Where this row's work can be inspected or reviewed. */
   target?: ActivityTarget;
+  /**
+   * UUID of the character this row is about. The console resolves it to a
+   * roster index; pages outside the console have no roster, so they deep-link
+   * to `/?char=…` with it instead.
+   */
+  subjectId?: string;
   /** True when the job finished and its result has not been accepted yet. */
   needsReview?: boolean;
   /**

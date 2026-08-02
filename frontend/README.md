@@ -41,7 +41,7 @@ frontend/
     |   |-- organisms/    # Self-contained sections
     |   |-- templates/    # Page layout shells (no data)
     |   |-- console/      # Admin/console screens (create, edit, validate, forge)
-    |   `-- layout/       # Global layout / chrome
+    |   `-- layout/       # Global chrome: topbar, campaign state, activity log
     |-- pages/            # Gatsby pages (run GraphQL page queries)
     |-- templates/        # Per-node detail templates (built by gatsby-node.ts)
     |-- types/            # Shared TS interfaces (Drupal shapes, query results)
@@ -224,11 +224,21 @@ picked from the list is treated as homebrew and opens the definition modal.
 Anything that takes minutes is queued rather than held open in a request. The
 console calls `enqueueJob()` (`src/utils/aiJobs.ts`), gets a job id back
 instantly, and polls with `useJobPolling()`; the work runs on the host one job
-at a time, so navigating away no longer loses it. `useJobActivity()` feeds the
-right-rail activity drawer with what is running, pending, and just finished.
-Portrait generation runs this way today (`CharacterDetailScreen`,
-`PortraitStudioScreen`); the arc, story, and session-summary job types exist and
-are callable, but their console screens still run those actions inline.
+at a time, so navigating away no longer loses it. Portrait generation runs this
+way today (`CharacterDetailScreen`, `PortraitStudioScreen`); the arc, story, and
+session-summary job types exist and are callable, but their console screens
+still run those actions inline.
+
+The right-rail activity drawer is mounted **once by `GlobalLayout`**, as a
+sibling of the page content, so it is on every route rather than only the
+console. `ActivityProvider` (`src/components/layout/ActivityContext.tsx`) owns
+the `useJobActivity()` polling, the open/full-screen state, and the row
+handlers. Two things still need the console, which has the character roster:
+resolving a character id to the screen showing it, and opening a row in place
+without a page load. `StatelyLedger` registers both through
+`useConsoleActivity()` while it is mounted; on any other page a row instead
+deep-links to `/?section=…&item=…&char=…`, which the console route resolves
+against its roster.
 
 #### Results are reviewed, never auto-applied
 

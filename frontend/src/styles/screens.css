@@ -1647,23 +1647,18 @@
 /* ============================================================
    Activity drawer overlay + expand
    ============================================================ */
+/* Sits in the drawer header. It used to float over the console at a fixed
+   offset, which had nothing to anchor to once the drawer moved to every page. */
 .activity-expand-btn {
-  position: absolute;
-  right: 300px;
-  top: 78px;
-  display: inline-flex; align-items: center; gap: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   background: var(--canvas-raised);
   border: 1px solid var(--rule-strong);
   border-radius: 3px;
-  padding: 4px 10px;
+  padding: 3px 5px;
   color: var(--brass);
-  font-family: var(--font-display);
-  font-size: 9px;
-  letter-spacing: .15em;
-  text-transform: uppercase;
   cursor: pointer;
-  box-shadow: var(--shadow-card);
-  z-index: 10;
 }
 .activity-expand-btn:hover { color: var(--brass-bright); border-color: var(--brass); }
 

@@ -195,12 +195,14 @@ interface ActivityDrawerProps {
   onRequeue?: (item: ActivityItem) => void;
   /** Deletes the finished jobs. Omit to render the clear button disabled. */
   onClear?: () => void;
+  /** Opens the full-screen log. Omit to hide the expand control. */
+  onExpand?: () => void;
   /** True while a clear is in flight. */
   clearing?: boolean;
 }
 
 export function ActivityDrawer({
-  items, open, onToggle, compact, onOpen, onRequeue, onClear, clearing,
+  items, open, onToggle, compact, onOpen, onRequeue, onClear, onExpand, clearing,
 }: ActivityDrawerProps): React.ReactElement {
   const runningCount = items.filter(i => i.status === 'running' || i.status === 'queued').length;
   const reviewCount = items.filter(i => i.needsReview).length;
@@ -222,6 +224,19 @@ export function ActivityDrawer({
               <span className="activity-review-count">{reviewCount} to review</span>
             )}
             <span className="activity-count">{items.length}</span>
+            {/* In the header rather than floating over the page: the drawer now
+                renders on every route, and an absolutely-positioned button had
+                nothing dependable to anchor to outside the console. */}
+            {onExpand != null && (
+              <button
+                type="button"
+                className="activity-expand-btn"
+                onClick={onExpand}
+                title="Open activity log full-screen"
+              >
+                <Icon name="drawer" size={12} />
+              </button>
+            )}
           </div>
           <div className="activity-list">
             {items.map((item, i) => (

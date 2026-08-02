@@ -13,6 +13,9 @@
 import * as React from 'react';
 import { GlobalTopbar } from './GlobalTopbar';
 import { TopbarContext } from './TopbarContext';
+import { ActivityProvider, useActivity } from './ActivityContext';
+import { ActivityDrawer } from '../console/atoms';
+import { ActivityFullScreen } from '../console/ActivityFullScreen';
 import type { DrupalCampaign } from '../console/ConsoleContext';
 
 const ACTIVE_KEY    = 'ddccs:activeCampaign';
@@ -114,12 +117,57 @@ export function GlobalLayout({ children, location }: GlobalLayoutProps): React.R
 
   return (
     <TopbarContext.Provider value={{ campaigns, activeCampaignName, onSwitchCampaign, register, addCampaign }}>
-      <div className="global-layout">
-        <GlobalTopbar location={location} />
-        <div className="global-content">
-          {children}
+      <ActivityProvider>
+        <div className="global-layout">
+          <GlobalTopbar location={location} />
+          <div className="global-shell">
+            <div className="global-content">
+              {children}
+            </div>
+            <GlobalActivity />
+          </div>
         </div>
-      </div>
+      </ActivityProvider>
     </TopbarContext.Provider>
+  );
+}
+
+/**
+ * The site-wide activity drawer and its full-screen view.
+ *
+ * Rendered as a sibling of the page content so it survives navigation: the
+ * queue keeps running whatever page you are on, and this is the only view of
+ * it. Split out from GlobalLayout because it has to sit inside ActivityProvider
+ * to read the context that provider supplies.
+ */
+function GlobalActivity(): React.ReactElement | null {
+  const activity = useActivity();
+  if (activity == null) return null;
+
+  return (
+    <>
+      {!activity.full && (
+        <ActivityDrawer
+          items={activity.items}
+          open={activity.open}
+          onToggle={() => activity.setOpen(!activity.open)}
+          onOpen={activity.openRow}
+          onRequeue={activity.requeueRow}
+          onClear={activity.clearFinished}
+          onExpand={() => activity.setFull(true)}
+          clearing={activity.clearing}
+        />
+      )}
+      {activity.full && (
+        <div className="activity-overlay">
+          <ActivityFullScreen
+            items={activity.items}
+            onClose={() => activity.setFull(false)}
+            onOpen={activity.openRow}
+            onRequeue={activity.requeueRow}
+          />
+        </div>
+      )}
+    </>
   );
 }
