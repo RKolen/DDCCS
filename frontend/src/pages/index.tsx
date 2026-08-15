@@ -130,6 +130,8 @@ export const query = graphql`
           languages  { ... on Drupal_TermLanguage    { id name } }
           skills     { ... on Drupal_TermSkill       { id name } }
           tools      { ... on Drupal_TermToolProfiency { id name } }
+          faction    { ... on Drupal_TermFaction     { id name } }
+          keyTraits  { ... on Drupal_TermTrait       { id name } }
           characterClasses {
             ... on Drupal_ParagraphClass {
               level

@@ -113,21 +113,28 @@ export function ScreenRouter({ section, item, ctx, setCtx }: ScreenRouterProps):
     setCtx({ ...next, _itemId: next._itemId ?? item.id });
   };
 
+  /* The route decides which roster a character screen shows, never the inherited
+     context. npcMode survives in ctx across section switches (it is seeded from
+     the landing section and set by activity rows), so a screen that merely
+     forwards ctx would render the wrong roster — the Characters tab listing NPCs
+     is the mirror of the NPC tab listing a player character. */
+  const pcctx: ScreenContext = { ...ictx, npcMode: false };
+
   /* ───── Characters ───── */
-  if (key === 'characters/list')         return <CharacterListScreen  ctx={ictx} setCtx={set} />;
-  if (key === 'characters/template')     return <CreateCharacterScreen ctx={ictx} setCtx={set} />;
-  if (key === 'characters/edit')         return <CharacterEditScreen  ctx={ictx} setCtx={set} />;
-  if (key === 'characters/view')         return <CharacterDetailScreen ctx={ictx} setCtx={set} />;
-  if (key === 'characters/consult')      return <ConsultScreen ctx={ictx} setCtx={set} />;
-  if (key === 'characters/completeness') return <NpcValidatorScreen ctx={{ ...ictx, pcMode: true }} setCtx={set} />;
-  if (key === 'characters/ascii')        return <PortraitStudioScreen ctx={ictx} setCtx={set} />;
+  if (key === 'characters/list')         return <CharacterListScreen  ctx={pcctx} setCtx={set} />;
+  if (key === 'characters/template')     return <CreateCharacterScreen ctx={pcctx} setCtx={set} />;
+  if (key === 'characters/edit')         return <CharacterEditScreen  ctx={pcctx} setCtx={set} />;
+  if (key === 'characters/view')         return <CharacterDetailScreen ctx={pcctx} setCtx={set} />;
+  if (key === 'characters/consult')      return <ConsultScreen ctx={pcctx} setCtx={set} />;
+  if (key === 'characters/completeness') return <NpcValidatorScreen ctx={{ ...pcctx, pcMode: true }} setCtx={set} />;
+  if (key === 'characters/ascii')        return <PortraitStudioScreen ctx={pcctx} setCtx={set} />;
 
   /* Arc hub + all four sub-actions — CharacterArcScreen dispatches internally
      via ctx.arcSubAction, set by its own buttons. The sidebar only surfaces the
      top-level 'arc' item, so we must NOT override arcSubAction from item.id
      (that would pin the screen to the hub and swallow in-screen navigation). */
   if (section.id === 'characters' && (item.id === 'arc' || item.id.startsWith('arc-'))) {
-    return <CharacterArcScreen ctx={ictx} setCtx={set} />;
+    return <CharacterArcScreen ctx={pcctx} setCtx={set} />;
   }
 
   /* ───── Stories ───── */
@@ -144,9 +151,9 @@ export function ScreenRouter({ section, item, ctx, setCtx }: ScreenRouterProps):
 
   /* ───── Read Stories ───── */
   if (key === 'read/r-story')   return <ReadStoryFileScreen ctx={ictx} setCtx={set} />;
-  if (key === 'read/r-char')    return <CharacterDetailScreen ctx={ictx} setCtx={set} />;
+  if (key === 'read/r-char')    return <CharacterDetailScreen ctx={pcctx} setCtx={set} />;
   if (key === 'read/r-session') return <ReadStoryFileScreen ctx={ictx} setCtx={set} />;
-  if (key === 'read/r-dev')     return <CharacterDevelopmentScreen ctx={ictx} setCtx={set} />;
+  if (key === 'read/r-dev')     return <CharacterDevelopmentScreen ctx={pcctx} setCtx={set} />;
 
   /* ───── NPCs (character nodes with field_character_type=false) ─────
      Same screens as the characters/* twins, with npcMode set — an NPC is a
@@ -195,7 +202,7 @@ export function ScreenRouter({ section, item, ctx, setCtx }: ScreenRouterProps):
   if (section.id === 'tools') return <ToolsScreen ctx={ictx} setCtx={set} />;
 
   /* ───── Characters — party ───── */
-  if (key === 'characters/party') return <CurrentPartyScreen ctx={ictx} setCtx={set} />;
+  if (key === 'characters/party') return <CurrentPartyScreen ctx={pcctx} setCtx={set} />;
 
   /* Fallback — loud placeholder so missing screens can't be shipped silently */
   return <PlaceholderScreen section={section} item={item} />;

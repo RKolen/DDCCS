@@ -101,7 +101,12 @@ export function CharacterDetailScreen({ ctx, setCtx }: ScreenProps): React.React
                     className={`char-picker-item${i === idx ? ' active' : ''}`}
                     onClick={() => setCtx({ ...ctx, charIdx: i })}
                   >
-                    <span className="char-pip">{initials}</span>
+                    <span className="char-pip">
+                      {c.imageUrl
+                        ? <img src={c.imageUrl} alt={c.title} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
+                        : initials
+                      }
+                    </span>
                     <span className="char-pip-meta">
                       <strong>{c.title}</strong>
                       <span>

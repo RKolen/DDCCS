@@ -186,6 +186,8 @@ export interface RawCharacter {
   languages?:        RawTermRef[] | null;
   skills?:           RawTermRef[] | null;
   tools?:            RawTermRef[] | null;
+  faction?:          RawTermRef | null;
+  keyTraits?:        RawTermRef[] | null;
   bonds?:            Array<{ value: string }> | null;
   ideals?:           Array<{ value: string }> | null;
   flaws?:            Array<{ value: string }> | null;
@@ -354,6 +356,9 @@ export function buildConsoleData(data: ConsoleQueryData | null | undefined): Con
       languages:        termRefs(n.languages),
       skills:           termRefs(n.skills),
       tools:            termRefs(n.tools),
+      faction:          n.faction?.name ?? null,
+      factionId:        n.faction?.id ?? null,
+      keyTraits:        termRefs(n.keyTraits),
       bonds:            textValues(n.bonds),
       ideals:           textValues(n.ideals),
       flaws:            textValues(n.flaws),

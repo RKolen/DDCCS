@@ -53,6 +53,8 @@ interface TermOptionsQuery {
     termLanguages:       TermNodes;
     termSkills:          TermNodes;
     termToolProfiencies: TermNodes;
+    termFactions:        TermNodes;
+    termTraits:          TermNodes;
   };
 }
 
@@ -91,6 +93,8 @@ interface FormState {
   languages: TermRef[];
   skills:    TermRef[];
   tools:     TermRef[];
+  factionId: string | null;
+  keyTraits: TermRef[];
   recurring:        boolean;
   encounterTactics: string[];
   defeatConditions: string[];
@@ -183,6 +187,8 @@ function toForm(char: DrupalCharacter): FormState {
     languages: char.languages,
     skills:    char.skills,
     tools:     char.tools,
+    factionId: char.factionId,
+    keyTraits: char.keyTraits,
     recurring:        char.recurring ?? false,
     encounterTactics: char.encounterTactics,
     defeatConditions: char.defeatConditions,
@@ -238,6 +244,7 @@ function buildPatch(form: FormState, char: DrupalCharacter): Record<string, unkn
   scalar('speciesId', form.speciesId);
   scalar('lineageId', form.lineageId);
   scalar('backgroundId', form.backgroundId);
+  scalar('factionId', form.factionId);
   scalar('level', form.level);
   scalar('maximumHitpoints', form.maximumHitpoints);
   scalar('armorClass', form.armorClass);
@@ -270,6 +277,10 @@ function buildPatch(form: FormState, char: DrupalCharacter): Record<string, unkn
     patch.background = patch.backgroundId;
     delete patch.backgroundId;
   }
+  if (patch.factionId !== undefined) {
+    patch.faction = patch.factionId;
+    delete patch.factionId;
+  }
 
   const rowFields: Array<keyof FormState> = [
     'personalityTraits', 'ideals', 'bonds', 'flaws',
@@ -282,7 +293,9 @@ function buildPatch(form: FormState, char: DrupalCharacter): Record<string, unkn
     if (!sameRows(next, base[key] as string[])) patch[key] = next;
   }
 
-  const termFields: Array<'languages' | 'skills' | 'tools'> = ['languages', 'skills', 'tools'];
+  const termFields: Array<'languages' | 'skills' | 'tools' | 'keyTraits'> = [
+    'languages', 'skills', 'tools', 'keyTraits',
+  ];
   for (const key of termFields) {
     const next = termIds(form[key]);
     if (!sameRows(next, termIds(base[key]))) patch[key] = next;
@@ -360,10 +373,13 @@ interface EditFormProps {
 
 function EditForm({ char, data, options, onJump }: EditFormProps): React.ReactElement {
   const [form, setForm] = React.useState<FormState>(() => toForm(char));
-  const [open, setOpen] = React.useState<Record<SectionId, boolean>>({
+  /* On an NPC the antagonist group is the reason the operator opened this
+     screen, so it starts expanded there and collapsed on a player character. */
+  const [open, setOpen] = React.useState<Record<SectionId, boolean>>(() => ({
     identity: true, ancestry: true, vitals: false, roleplay: true,
-    story: false, proficiencies: false, antagonist: false, ai: false,
-  });
+    story: false, proficiencies: false, ai: false,
+    antagonist: char.characterType === false,
+  }));
   const [saving, setSaving]   = React.useState(false);
   const [error, setError]     = React.useState<string | null>(null);
   const [savedAt, setSavedAt] = React.useState<string | null>(null);
@@ -630,6 +646,22 @@ function EditForm({ char, data, options, onJump }: EditFormProps): React.ReactEl
               placeholder="Their vices or compulsions"
             />
           </FieldGrid>
+          <FieldGrid min={240}>
+            <TermSelect
+              label="Faction"
+              hint={isNpc ? 'how this NPC stands to the party' : 'allegiance'}
+              value={form.factionId}
+              options={options.termFactions.nodes}
+              onChange={v => set('factionId', v)}
+            />
+            <TermMultiSelect
+              label="Key traits"
+              hint="shared vocabulary — reused across the roster"
+              values={form.keyTraits}
+              options={options.termTraits.nodes}
+              onChange={v => set('keyTraits', v)}
+            />
+          </FieldGrid>
           <TextAreaField
             label="Personality"
             hint="prose summary"
@@ -853,12 +885,15 @@ export function CharacterEditScreen({ ctx, setCtx }: ScreenProps): React.ReactEl
         termLanguages(first: 100)       { nodes { id name } }
         termSkills(first: 100)          { nodes { id name } }
         termToolProfiencies(first: 100) { nodes { id name } }
+        termFactions(first: 100)        { nodes { id name } }
+        termTraits(first: 100)          { nodes { id name } }
       }
     }
   `);
 
   /* A deep link may name a character outside the active campaign; rosterForScreen
-     pins it so the link always lands somewhere. */
+     pins it so the link always lands somewhere. NPCs are not campaign-scoped, so
+     for them this is the whole NPC list. */
   const roster = rosterForScreen(data, {
     npcMode:      isNpc,
     campaignName: ctx.activeCampaignName,
@@ -885,7 +920,9 @@ export function CharacterEditScreen({ ctx, setCtx }: ScreenProps): React.ReactEl
   };
 
   if (char == null) {
-    const scope = ctx.activeCampaignName != null && ctx.activeCampaignName !== ''
+    /* Only the player roster is campaign-scoped, so only it can be empty
+       "in <campaign>" — an empty NPC roster means there are none at all. */
+    const scope = !isNpc && ctx.activeCampaignName != null && ctx.activeCampaignName !== ''
       ? ` in ${ctx.activeCampaignName}`
       : '';
     return (

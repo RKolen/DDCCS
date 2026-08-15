@@ -167,6 +167,13 @@ export function StatelyLedger({
                 onClick={() => {
                   setActiveSection(s.id);
                   setActiveItem(SECTION_DEFAULTS[s.id] ?? s.items[0].id);
+                  /* Characters and NPCs are separate rosters, so a selection
+                     made in one means nothing in the other. Drop the index and
+                     the deep-link pin rather than carry them across, or the
+                     NPC screens open on whatever row the Characters screens
+                     were left on. Programmatic jumps (_jumpTo, openActivity)
+                     set the section themselves and are unaffected. */
+                  setCtxRaw(current => ({ ...current, charIdx: 0, editCharId: undefined }));
                 }}
               >
                 <span className="ledger-tab-glyph">

@@ -87,15 +87,37 @@ button to the screen that owns them:
 
 Notes on behaviour worth knowing before changing this screen:
 
-- **The roster is scoped to the active campaign** via `rosterForScreen()` in
-  `ConsoleContext.tsx`, which also pins a deep-linked character that falls
-  outside that scope so a link always lands somewhere.
+- **The player roster is scoped to the active campaign; the NPC roster is not.**
+  `rosterForScreen()` in `ConsoleContext.tsx` skips campaign scoping entirely in
+  `npcMode`, because an NPC carries no `field_campaign` and never joins a
+  campaign's `currentParty` — scoping NPCs by campaign empties the roster
+  outright. NPCs are shared across campaigns by design, and there is
+  deliberately no `npcsForCampaign()`. `CharacterListScreen` and
+  `CharacterDetailScreen` make the same carve-out inline.
+- **The deep-link pin escapes campaign scope but not PC/NPC scope.**
+  `rosterForScreen()` resolves `pinnedId` against the roster the screen asked
+  for, so a `?char=` link to a player character cannot surface in the NPC editor
+  after a section switch.
+- **The route sets `npcMode`, not the inherited context.** `npcMode` persists in
+  `ctx` across section switches, so every `characters/*` screen pins it to
+  `false` and every `npcs/*` screen to `true`. A screen that just forwards `ctx`
+  renders whichever roster the operator happened to visit last. Switching
+  sections in the sidebar also resets `charIdx` and drops the deep-link pin,
+  because an index into one roster means nothing in the other.
 - **Jumps translate the index.** The handoff buttons compute the target's index
   in *that screen's* roster, because this screen's roster is campaign-scoped and
   the Portrait Studio's is not.
 - **NPCs use the same screens** with `npcMode` set. `field_recurring` gates how
   much of the form an NPC gets: off, the stat-oriented groups are hidden; on, it
   gets the full character profile.
+- **The Antagonist group is the NPC-only one** — Recurring, encounter tactics,
+  defeat conditions, lair actions, legendary actions and regional effects. It is
+  shown whenever the form's record type reads NPC, and starts expanded when the
+  record was already saved as one, since it is what the NPC editor is for.
+- **Faction and Key traits sit together in Roleplay** — taxonomy fields backed
+  by the `factions` and `traits` vocabularies, offered to player characters and
+  NPCs alike. Both are ungated by `field_recurring`, matching the group they sit
+  in.
 - **Multi-value text fields are one row per Drupal delta.** Values arrive
   normalised by `utils/richTextToLines.ts`, which strips legacy HTML and splits
   a delta holding several entries into several rows.

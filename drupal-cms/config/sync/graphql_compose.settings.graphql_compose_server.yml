@@ -183,6 +183,13 @@ entity_config:
     factions:
       enabled: true
       query_load_enabled: true
+      edges_enabled: true
+      simple_queries: '1'
+    traits:
+      enabled: true
+      query_load_enabled: true
+      edges_enabled: true
+      simple_queries: '1'
     game_edition:
       enabled: true
       query_load_enabled: true

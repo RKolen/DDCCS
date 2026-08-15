@@ -143,6 +143,9 @@ final class UpdateCharacterProfile extends DataProducerPluginBase implements Con
     'languages' => ['field_languages', 'term_ref_multi', 'languages'],
     'skills'    => ['field_skills', 'term_ref_multi', 'skills'],
     'tools'     => ['field_tools', 'term_ref_multi', 'tool_profiencies'],
+    // Allegiance and characterisation.
+    'faction'   => ['field_faction', 'term_ref', 'factions'],
+    'keyTraits' => ['field_key_traits', 'term_ref_multi', 'traits'],
     // Antagonist (NPCs).
     'encounterTactics' => ['field_encounter_tactics', 'text_list'],
     'defeatConditions' => ['field_defeat_conditions', 'text_list'],

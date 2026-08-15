@@ -52,7 +52,15 @@ Full field sets live in
   `field_ai_temperature` / `field_ai_max_tokens` / `field_ai_system_prompt`,
   `field_voice_id_ref` / `field_voice_pitch` / `field_voice_speed`,
   `field_personality_traits`, `field_bonds`, `field_ideals`, `field_flaws`,
-  `field_major_plot_actions`, `field_relationships`.
+  `field_major_plot_actions`, `field_relationships`, `field_faction`
+  (-> `factions`, cardinality 1), `field_key_traits` (-> `traits`,
+  cardinality -1).
+  NPCs additionally use `field_recurring` plus the antagonist set
+  `field_encounter_tactics`, `field_defeat_conditions`, `field_lair_actions`,
+  `field_legendary_actions`, `field_regional_effects` — all `text_list`.
+  `field_faction` and `field_key_traits` declare no target-bundle restriction in
+  their field config, so the vocabulary they belong to is enforced by the
+  mutation's `FIELD_MAP` rather than by Drupal's reference handler.
   The four personality fields are all `text_long` with cardinality -1, so a
   bond or flaw can hold real prose rather than a one-line note. `field_bonds`,
   `field_ideals`, and `field_flaws` started as `text` (varchar 255) and were
@@ -110,16 +118,17 @@ term).
 `species`, `lineage`, `backgrounds`, `feats`, `feat_type`, `ability_scores`,
 `tool_profiencies`, `creature_types`, `factions`, `game_edition`,
 `magical_properties`, `weapon_category`, `weapon_range`, `weapon_properties`,
-`weapon_mastery`, `damage_types`, `vestige_level`. A vocabulary must be listed
-here with `enabled: true` before its term type appears in `TermUnion`.
+`weapon_mastery`, `damage_types`, `vestige_level`, `traits`. A vocabulary must
+be listed here with `enabled: true` before its term type appears in `TermUnion`.
 
 **Term collection queries:** `abilities`, `class`, `skills`, `species`,
-`lineage`, `backgrounds`, `feats`, `ability_scores`, and `tool_profiencies` set
-`edges_enabled` + `simple_queries`, generating collection queries (`termClasses`,
-`termSkills`, `termSpeciesItems`, `termLineages`, `termBackgrounds`, `termFeats`,
-`termAbilityScores`, `termToolProfiencies`) consumed by the character-creation
-wizard. Note the uncountable-noun quirk: the `species` collection is
-`termSpeciesItems`, not `termSpecies`.
+`lineage`, `backgrounds`, `feats`, `ability_scores`, `tool_profiencies`,
+`factions`, and `traits` set `edges_enabled` + `simple_queries`, generating
+collection queries (`termClasses`, `termSkills`, `termSpeciesItems`,
+`termLineages`, `termBackgrounds`, `termFeats`, `termAbilityScores`,
+`termToolProfiencies`, `termFactions`, `termTraits`) consumed by the
+character-creation wizard and the profile editor. Note the uncountable-noun
+quirk: the `species` collection is `termSpeciesItems`, not `termSpecies`.
 
 **Abilities (`TermAbility`)** carry the ability rules text and metadata:
 `field_ability_description` (text), `field_ability_source_type` (list:

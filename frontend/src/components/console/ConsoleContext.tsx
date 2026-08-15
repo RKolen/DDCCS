@@ -119,6 +119,14 @@ export interface DrupalCharacter {
   languages: TermRef[];
   skills: TermRef[];
   tools: TermRef[];
+  /**
+   * Allegiance and characterisation. field_faction carries the ally/bbeg/neutral
+   * style tag an NPC is filed under; field_key_traits is the shared `traits`
+   * vocabulary the AI draws on for characterisation.
+   */
+  faction: string | null;
+  factionId: string | null;
+  keyTraits: TermRef[];
   /** Antagonist fields — populated on NPCs, generally empty on PCs. */
   encounterTactics: string[];
   defeatConditions: string[];
@@ -328,18 +336,31 @@ export function charactersForCampaign(data: ConsoleData, campaignName: string): 
   return scopeToCampaign(data, playerCharacters(data), campaignName);
 }
 
-export function npcsForCampaign(data: ConsoleData, campaignName: string): DrupalCharacter[] {
-  return scopeToCampaign(data, npcCharacters(data), campaignName);
-}
+/*
+ * There is deliberately no npcsForCampaign(). NPCs are not campaign-scoped:
+ * field_campaign is unset on every NPC and they never join a campaign's
+ * currentParty, so scoping them to a campaign yields an empty roster. The
+ * bestiary of antagonists is shared across campaigns.
+ */
 
 /**
- * The roster a character screen should show: PCs or NPCs, scoped to the active
- * campaign when there is one.
+ * The roster a character screen should show: PCs scoped to the active campaign,
+ * or the full NPC list.
+ *
+ * **NPCs are never campaign-scoped.** A player character belongs to a campaign
+ * through field_campaign or the campaign's current party; an NPC carries
+ * neither, so filtering NPCs by campaign empties the roster outright. The NPC
+ * roster is shared across campaigns by design.
  *
  * `pinnedId` is a character that must appear even when it falls outside that
  * scope — the one arrived at from a deep link or from the completeness audit.
  * Without it, following a link to a character who is not in the active
  * campaign's party lands on an empty or wrong selection.
+ *
+ * The pin escapes the campaign scope but never the record-type one: it is
+ * resolved against the PC/NPC list this screen asked for, so a player character
+ * left over from a `?char=` link cannot be pinned into the NPC roster (and vice
+ * versa) when the operator switches sections.
  */
 export function rosterForScreen(
   data: ConsoleData,
@@ -347,14 +368,14 @@ export function rosterForScreen(
 ): DrupalCharacter[] {
   const { npcMode = false, campaignName = null, pinnedId = null } = options;
   const all = npcMode ? npcCharacters(data) : playerCharacters(data);
-  const scoped = campaignName != null && campaignName !== ''
+  const scoped = !npcMode && campaignName != null && campaignName !== ''
     ? scopeToCampaign(data, all, campaignName)
     : all;
 
   if (pinnedId == null || scoped.some(c => c.id === pinnedId)) {
     return scoped;
   }
-  const pinned = data.characters.find(c => c.id === pinnedId);
+  const pinned = all.find(c => c.id === pinnedId);
   return pinned ? [pinned, ...scoped] : scoped;
 }
 
