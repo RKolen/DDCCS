@@ -9,9 +9,9 @@ dependencies:
     - node.type.character_analysis
     - node.type.item
     - node.type.monster
-    - node.type.session
     - node.type.spell
     - node.type.story
+    - node.type.story_arc
     - node.type.wiki_cache
     - taxonomy.vocabulary.abilities
     - taxonomy.vocabulary.ability_scores
@@ -66,9 +66,9 @@ permissions:
   - 'create item content'
   - 'create media'
   - 'create monster content'
-  - 'create session content'
   - 'create spell content'
   - 'create story content'
+  - 'create story_arc content'
   - 'create terms in abilities'
   - 'create terms in ability_scores'
   - 'create terms in action_types'
@@ -111,6 +111,7 @@ permissions:
   - 'delete any wiki_cache content'
   - 'edit any character content'
   - 'edit any character_analysis content'
+  - 'edit any story_arc content'
   - 'edit any wiki_cache content'
   - 'edit terms in campaign'
   - 'view media'

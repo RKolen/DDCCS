@@ -1,0 +1,31 @@
+uuid: 3e0569df-6eac-466c-8870-0a59ce4bcac8
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_arc_party_relations
+    - node.type.story_arc
+    - paragraphs.paragraphs_type.arc_relationship_pair
+  module:
+    - entity_reference_revisions
+id: node.story_arc.field_arc_party_relations
+field_name: field_arc_party_relations
+entity_type: node
+bundle: story_arc
+label: 'Party relationships'
+description: 'Bonds and frictions within the party'
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:paragraph'
+  handler_settings:
+    target_bundles:
+      arc_relationship_pair: arc_relationship_pair
+    negate: 0
+    target_bundles_drag_drop:
+      arc_relationship_pair:
+        weight: 0
+        enabled: true
+field_type: entity_reference_revisions

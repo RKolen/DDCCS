@@ -1,0 +1,64 @@
+uuid: 04632a96-5680-4dff-9f7d-3770f8efad0d
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.paragraph.arc_relationship_pair.field_pair_note
+    - field.field.paragraph.arc_relationship_pair.field_pair_source
+    - field.field.paragraph.arc_relationship_pair.field_pair_target
+    - field.field.paragraph.arc_relationship_pair.field_pair_tier
+    - field.field.paragraph.arc_relationship_pair.field_pair_type
+    - paragraphs.paragraphs_type.arc_relationship_pair
+  module:
+    - text
+id: paragraph.arc_relationship_pair.default
+targetEntityType: paragraph
+bundle: arc_relationship_pair
+mode: default
+content:
+  field_pair_note:
+    type: text_textarea
+    weight: 4
+    region: content
+    settings:
+      rows: 5
+      placeholder: ''
+    third_party_settings: {  }
+  field_pair_source:
+    type: entity_reference_autocomplete
+    weight: 0
+    region: content
+    settings:
+      match_operator: CONTAINS
+      match_limit: 10
+      size: 60
+      placeholder: 'Character the bond starts from'
+    third_party_settings: {  }
+  field_pair_target:
+    type: entity_reference_autocomplete
+    weight: 1
+    region: content
+    settings:
+      match_operator: CONTAINS
+      match_limit: 10
+      size: 60
+      placeholder: 'Character the bond points at'
+    third_party_settings: {  }
+  field_pair_tier:
+    type: number
+    weight: 3
+    region: content
+    settings:
+      placeholder: '1'
+    third_party_settings: {  }
+  field_pair_type:
+    type: string_textfield
+    weight: 2
+    region: content
+    settings:
+      size: 60
+      placeholder: 'e.g. shared hometown, hunter and quarry'
+    third_party_settings: {  }
+hidden:
+  created: true
+  status: true

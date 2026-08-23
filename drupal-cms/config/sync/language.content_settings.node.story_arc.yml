@@ -1,11 +1,11 @@
-uuid: f4399d3e-4257-4d8e-aec0-389c27fed558
+uuid: 7461c12d-00c3-48db-bc7c-56a70e172ba8
 langcode: en
 status: true
 dependencies:
   config:
-    - node.type.session
-id: node.session
+    - node.type.story_arc
+id: node.story_arc
 target_entity_type_id: node
-target_bundle: session
+target_bundle: story_arc
 default_langcode: site_default
 language_alterable: false

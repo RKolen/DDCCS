@@ -1,0 +1,19 @@
+uuid: d6e4b9b8-354a-4c9f-be86-cf7d2ecdfe51
+langcode: en
+status: true
+dependencies:
+  module:
+    - node
+id: node.field_story_arc
+field_name: field_story_arc
+entity_type: node
+type: entity_reference
+settings:
+  target_type: node
+module: core
+locked: false
+cardinality: 1
+translatable: false
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

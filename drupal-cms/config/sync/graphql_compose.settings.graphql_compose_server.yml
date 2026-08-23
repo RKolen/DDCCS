@@ -26,7 +26,7 @@ entity_config:
     query_load_enabled: '1'
     edges_enabled: '1'
     simple_queries: '1'
-  node--session:
+  node--story_arc:
     enabled: '1'
     query_load_enabled: '1'
     edges_enabled: '1'
@@ -65,7 +65,7 @@ entity_config:
       query_load_enabled: true
       edges_enabled: true
       simple_queries: '1'
-    session:
+    story_arc:
       enabled: true
       query_load_enabled: true
       edges_enabled: true
@@ -91,6 +91,9 @@ entity_config:
       enabled: true
       query_load_enabled: true
     arc_relationship:
+      enabled: true
+      query_load_enabled: true
+    arc_relationship_pair:
       enabled: true
       query_load_enabled: true
     arc_goal:
@@ -390,6 +393,10 @@ field_config:
         enabled: true
       field_story_tags:
         enabled: true
+      field_characters_present:
+        enabled: true
+      field_story_arc:
+        enabled: true
     item:
       path:
         enabled: true
@@ -519,24 +526,28 @@ field_config:
         enabled: true
       field_type:
         enabled: true
-    session:
+    story_arc:
       path:
         enabled: true
       field_body:
         enabled: true
       field_campaign:
         enabled: true
-      field_characters_present:
+      field_overall_plot:
         enabled: true
-      field_character_development:
+      field_faction:
         enabled: true
-      field_npcs_encountered:
+      field_npcs:
         enabled: true
-      field_session_date:
+      field_party:
         enabled: true
-      field_session_number:
+      field_level_range:
         enabled: true
-      field_story_files:
+      field_target_stories:
+        enabled: true
+      field_arc_party_relations:
+        enabled: true
+      field_arc_npc_relations:
         enabled: true
   paragraph:
     ability_score:
@@ -620,6 +631,17 @@ field_config:
       field_rel_trust:
         enabled: true
       field_rel_note:
+        enabled: true
+    arc_relationship_pair:
+      field_pair_source:
+        enabled: true
+      field_pair_target:
+        enabled: true
+      field_pair_type:
+        enabled: true
+      field_pair_tier:
+        enabled: true
+      field_pair_note:
         enabled: true
     arc_goal:
       field_goal_description:

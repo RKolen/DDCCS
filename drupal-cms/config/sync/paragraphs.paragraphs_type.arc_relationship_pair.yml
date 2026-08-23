@@ -1,0 +1,10 @@
+uuid: 68852baa-b2ad-4299-8a2d-5c03a674351b
+langcode: en
+status: true
+dependencies: {  }
+id: arc_relationship_pair
+label: 'Arc Relationship Pair'
+icon_uuid: null
+icon_default: null
+description: 'A directed relationship between two characters, scoped to a story arc'
+behavior_plugins: {  }

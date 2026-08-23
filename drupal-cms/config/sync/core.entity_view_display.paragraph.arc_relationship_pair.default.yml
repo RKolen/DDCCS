@@ -1,0 +1,60 @@
+uuid: 3ef69810-c6de-4d88-bc65-172a3541c5fb
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.paragraph.arc_relationship_pair.field_pair_note
+    - field.field.paragraph.arc_relationship_pair.field_pair_source
+    - field.field.paragraph.arc_relationship_pair.field_pair_target
+    - field.field.paragraph.arc_relationship_pair.field_pair_tier
+    - field.field.paragraph.arc_relationship_pair.field_pair_type
+    - paragraphs.paragraphs_type.arc_relationship_pair
+  module:
+    - text
+id: paragraph.arc_relationship_pair.default
+targetEntityType: paragraph
+bundle: arc_relationship_pair
+mode: default
+content:
+  field_pair_note:
+    type: text_default
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    weight: 4
+    region: content
+  field_pair_source:
+    type: entity_reference_label
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 0
+    region: content
+  field_pair_target:
+    type: entity_reference_label
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 1
+    region: content
+  field_pair_tier:
+    type: number_integer
+    label: above
+    settings:
+      thousand_separator: ''
+      prefix_suffix: true
+    third_party_settings: {  }
+    weight: 3
+    region: content
+  field_pair_type:
+    type: string
+    label: above
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+    weight: 2
+    region: content
+hidden:
+  search_api_excerpt: true

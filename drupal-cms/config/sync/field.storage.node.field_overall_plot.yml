@@ -1,0 +1,19 @@
+uuid: 57617a74-6161-4afe-af28-44747404756f
+langcode: en
+status: true
+dependencies:
+  module:
+    - node
+    - text
+id: node.field_overall_plot
+field_name: field_overall_plot
+entity_type: node
+type: text_long
+settings: {  }
+module: text
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

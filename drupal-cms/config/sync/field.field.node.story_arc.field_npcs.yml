@@ -1,16 +1,17 @@
-uuid: 4ae283ca-8b1f-4f46-b06b-153f0e32be49
+uuid: 14b89f10-115b-4af2-ac39-00831fa480a3
 langcode: en
 status: true
 dependencies:
   config:
-    - field.storage.node.field_npcs_encountered
-    - node.type.session
-id: node.session.field_npcs_encountered
-field_name: field_npcs_encountered
+    - field.storage.node.field_npcs
+    - node.type.character
+    - node.type.story_arc
+id: node.story_arc.field_npcs
+field_name: field_npcs
 entity_type: node
-bundle: session
-label: 'NPCs Encountered'
-description: 'NPCs encountered during this session'
+bundle: story_arc
+label: NPCs
+description: 'Antagonists and supporting NPCs curated into this arc'
 required: false
 translatable: false
 default_value: {  }
@@ -18,7 +19,8 @@ default_value_callback: ''
 settings:
   handler: 'default:node'
   handler_settings:
-    target_bundles: {  }
+    target_bundles:
+      character: character
     sort:
       field: title
       direction: ASC

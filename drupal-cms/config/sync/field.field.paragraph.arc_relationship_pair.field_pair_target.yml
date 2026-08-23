@@ -1,0 +1,29 @@
+uuid: 4c8943ac-f322-4072-855a-73e73d688439
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.paragraph.field_pair_target
+    - node.type.character
+    - paragraphs.paragraphs_type.arc_relationship_pair
+id: paragraph.arc_relationship_pair.field_pair_target
+field_name: field_pair_target
+entity_type: paragraph
+bundle: arc_relationship_pair
+label: Target
+description: 'The character the relationship points at'
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:node'
+  handler_settings:
+    target_bundles:
+      character: character
+    sort:
+      field: title
+      direction: ASC
+    auto_create: false
+    auto_create_bundle: ''
+field_type: entity_reference

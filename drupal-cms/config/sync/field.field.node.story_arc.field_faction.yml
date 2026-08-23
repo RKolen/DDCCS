@@ -1,0 +1,29 @@
+uuid: d8eb8746-88c3-4f9f-a916-ab69f4a313f8
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_faction
+    - node.type.story_arc
+    - taxonomy.vocabulary.factions
+id: node.story_arc.field_faction
+field_name: field_faction
+entity_type: node
+bundle: story_arc
+label: 'Antagonist faction'
+description: 'The faction opposing the party in this arc. Its members resolve the antagonist roster.'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:taxonomy_term'
+  handler_settings:
+    target_bundles:
+      factions: factions
+    sort:
+      field: name
+      direction: asc
+    auto_create: false
+    auto_create_bundle: ''
+field_type: entity_reference

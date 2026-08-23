@@ -1,0 +1,29 @@
+uuid: 6d1fc5d4-8b3d-4b47-a935-e93b6e0585e6
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_story_arc
+    - node.type.story
+    - node.type.story_arc
+id: node.story.field_story_arc
+field_name: field_story_arc
+entity_type: node
+bundle: story
+label: 'Story Arc'
+description: 'The arc this story belongs to'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:node'
+  handler_settings:
+    target_bundles:
+      story_arc: story_arc
+    sort:
+      field: title
+      direction: ASC
+    auto_create: false
+    auto_create_bundle: ''
+field_type: entity_reference

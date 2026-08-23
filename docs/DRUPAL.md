@@ -25,7 +25,7 @@ Defined in `drupal-cms/config/sync/node.type.*.yml`:
 | `item` | Items / equipment (incl. homebrew) | Yes |
 | `monster` | Statblocks | Yes |
 | `spell` | Spells (incl. homebrew) | Yes |
-| `session` | Session records | Yes |
+| `story_arc` | Multi-story campaign arc: premise, antagonist faction, party, relationship web | Yes |
 | `character_analysis` | Per-(campaign, character) arc analysis record: stored per-story analysis prose + a synthesized summary | Yes |
 | `ability` | Ability/feature reference entries | No |
 | `wiki_cache` | Cached RAG wiki content | No |
@@ -61,6 +61,8 @@ Full field sets live in
   `field_faction` and `field_key_traits` declare no target-bundle restriction in
   their field config, so the vocabulary they belong to is enforced by the
   mutation's `FIELD_MAP` rather than by Drupal's reference handler.
+  `field_faction` holds a **real faction** (cardinality 1); the ally / neutral /
+  BBEG axis lives on `field_role` — see "Story arcs" below.
   The four personality fields are all `text_long` with cardinality -1, so a
   bond or flaw can hold real prose rather than a one-line note. `field_bonds`,
   `field_ideals`, and `field_flaws` started as `text` (varchar 255) and were
@@ -69,7 +71,20 @@ Full field sets live in
   `[Text!]` either way, so nothing downstream changed.
 - **story** — `field_body`, `field_story_number`, `field_campaign`,
   `field_session_date`, `field_session_results`, `field_story_hooks`,
-  `field_locations`, `field_npcs`, `field_story_tags`.
+  `field_locations`, `field_npcs`, `field_story_tags`, `field_story_arc`
+  (-> the `story_arc` node this story belongs to), `field_characters_present`
+  (-> `character` nodes). `field_characters_present` is **optional and means
+  "narrow the scene"**: empty = the whole party is present, set = only these
+  PCs, which is what lets Spotlight score a split party without loading all
+  thirteen.
+- **story_arc** — `field_campaign`, `field_body` (the full premise, not a
+  one-liner), `field_overall_plot` (act structure / campaign spine),
+  `field_level_range` (string, e.g. `6-17`), `field_target_stories` (int),
+  `field_faction` (-> the antagonist faction term; its members resolve the
+  antagonist roster), `field_npcs` and `field_party` (-> `character` nodes),
+  and two `arc_relationship_pair` paragraph collections,
+  `field_arc_party_relations` (party-internal bonds) and
+  `field_arc_npc_relations` (party <-> NPC connections).
 - **item** — `field_item_type` (weapon/armor/item, defaults to `item`, whose
   label is "Gear"), `field_description` (a `wysiwyg` paragraph),
   `field_item_rarity`, `field_is_magic`, `field_item_properties`,
@@ -97,8 +112,8 @@ Full field sets live in
 Exposure is configured in
 `drupal-cms/config/sync/graphql_compose.settings.graphql_compose_server.yml`.
 
-**Exposed node bundles:** `character`, `story`, `item`, `spell`, `monster`,
-`session` (each with `query_load_enabled`, `edges_enabled`, `simple_queries`).
+**Exposed node bundles:** `character`, `story`, `story_arc`, `item`, `spell`,
+`monster` (each with `query_load_enabled`, `edges_enabled`, `simple_queries`).
 
 **Tools (`TermToolProfiency`)** carry `field_tool_category` (list:
 `artisan`/`other`/`gaming_set`/`musical_instrument`), seeded from the rules wiki.
@@ -179,8 +194,9 @@ reused untouched. The modal sources its options from
 `tool_profiencies` are exposed as term collections for this.
 
 **Exposed paragraph types:** `ability_score`, `ability_scores`, `class`,
-`class_grant`, `session_summary`, `arc_metric`, `arc_relationship`, `arc_goal`,
-`spell_reference`, `spell_slot`, `relationship`, `wysiwyg`.
+`class_grant`, `session_summary`, `arc_metric`, `arc_relationship`,
+`arc_relationship_pair`, `arc_goal`, `spell_reference`, `spell_slot`,
+`relationship`, `wysiwyg`.
 
 ### Character arc analysis
 
@@ -194,6 +210,37 @@ target/type/strength/trust/note), and `field_arc_goals` (-> `arc_goal`:
 description/status/progress). Written by the `saveCharacterArc` mutation from a
 JSON payload produced by the sidecar `/character/arc` endpoint; read back via
 the camelCase `arcDirection`/`arcMetrics`/... fields on `NodeCharacter`.
+
+### Story arcs (`story_arc` node)
+
+A `story_arc` is the plan a run of stories is written against — a premise that
+spans levels and sessions, not a single session's narrative. Stories point at
+their arc through `story.field_story_arc`; the arc points at its campaign
+through `field_campaign`, so campaign -> arc -> story is the full chain.
+
+**Antagonists are resolved through the faction, not a dedicated field.** The arc
+carries `field_faction` (cardinality 1), and every antagonist `character` node
+carries the same term. That keeps one source of truth: adding a member to the
+faction adds them to every arc that opposes it. `field_npcs` on the arc is the
+*curated* roster — who actually appears — and may be a subset.
+
+`field_role` carries the ally / neutral / BBEG axis that the `factions` vocab
+used to overload. The `factions` vocab is now for real factions only; its
+leftover `ally`, `bbeg`, and `neutral` terms are unused.
+
+### Arc relationships (`arc_relationship_pair` paragraph)
+
+Distinct from `arc_relationship`, which hangs off a **character** and therefore
+has an implicit source. `arc_relationship_pair` is arc-scoped and directed, so
+it stores both ends: `field_pair_source` and `field_pair_target` (-> `character`
+nodes), `field_pair_type` (short label), `field_pair_tier` (1 = direct and
+personal, 2 = thematic, 3 = incidental), `field_pair_note` (the connection and
+how to play it). Exposed as `ParagraphArcRelationshipPair` with `pairSource`,
+`pairTarget`, `pairType`, `pairTier`, `pairNote`.
+
+Keeping these on the arc rather than on `character.field_relationships` is
+deliberate: the content is spoiler-bearing and arc-specific, and a directed pair
+lets one record be read from either character's page.
 
 ### Character analysis record (`character_analysis` node)
 

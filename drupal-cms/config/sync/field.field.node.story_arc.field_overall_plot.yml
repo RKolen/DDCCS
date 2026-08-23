@@ -1,0 +1,23 @@
+uuid: e405d6eb-3dbd-4fad-9436-47968cde7ac9
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_overall_plot
+    - node.type.story_arc
+  module:
+    - text
+id: node.story_arc.field_overall_plot
+field_name: field_overall_plot
+entity_type: node
+bundle: story_arc
+label: 'Overall plot'
+description: 'The act structure / campaign spine for this arc'
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  allowed_formats:
+    - plain_text
+field_type: text_long

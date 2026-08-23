@@ -4,6 +4,7 @@ status: true
 dependencies:
   config:
     - field.field.node.story.field_body
+    - field.field.node.story.field_characters_present
     - field.field.node.story.field_campaign
     - field.field.node.story.field_locations
     - field.field.node.story.field_npcs
@@ -12,6 +13,7 @@ dependencies:
     - field.field.node.story.field_story_tags
     - field.field.node.story.field_story_hooks
     - field.field.node.story.field_story_number
+    - field.field.node.story.field_story_arc
     - node.type.story
   module:
     - path
@@ -40,6 +42,16 @@ content:
       match_limit: 10
       size: 60
       placeholder: ''
+    third_party_settings: {  }
+  field_characters_present:
+    type: entity_reference_autocomplete
+    weight: 4
+    region: content
+    settings:
+      match_operator: CONTAINS
+      match_limit: 10
+      size: 60
+      placeholder: 'Leave empty for the whole party'
     third_party_settings: {  }
   field_locations:
     type: entity_reference_autocomplete
@@ -75,6 +87,16 @@ content:
     region: content
     settings:
       rows: 5
+      placeholder: ''
+    third_party_settings: {  }
+  field_story_arc:
+    type: entity_reference_autocomplete
+    weight: 13
+    region: content
+    settings:
+      match_operator: CONTAINS
+      match_limit: 10
+      size: 60
       placeholder: ''
     third_party_settings: {  }
   field_story_hooks:

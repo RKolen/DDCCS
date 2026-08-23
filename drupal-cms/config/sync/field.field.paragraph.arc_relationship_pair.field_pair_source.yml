@@ -1,0 +1,29 @@
+uuid: 0d883ca2-f993-4f91-b582-325bb3113a35
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.paragraph.field_pair_source
+    - node.type.character
+    - paragraphs.paragraphs_type.arc_relationship_pair
+id: paragraph.arc_relationship_pair.field_pair_source
+field_name: field_pair_source
+entity_type: paragraph
+bundle: arc_relationship_pair
+label: Source
+description: 'The character the relationship originates from'
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:node'
+  handler_settings:
+    target_bundles:
+      character: character
+    sort:
+      field: title
+      direction: ASC
+    auto_create: false
+    auto_create_bundle: ''
+field_type: entity_reference

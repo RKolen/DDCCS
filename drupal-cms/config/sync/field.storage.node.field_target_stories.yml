@@ -1,16 +1,17 @@
-uuid: aa558b9f-cf69-42a7-a15c-aef7a9288b83
+uuid: f2e5824c-d0dc-4d8e-a81d-240c2fe4a043
 langcode: en
 status: true
 dependencies:
   module:
     - node
-    - text
-id: node.field_character_development
-field_name: field_character_development
+id: node.field_target_stories
+field_name: field_target_stories
 entity_type: node
-type: text_long
-settings: {  }
-module: text
+type: integer
+settings:
+  unsigned: false
+  size: normal
+module: core
 locked: false
 cardinality: 1
 translatable: false

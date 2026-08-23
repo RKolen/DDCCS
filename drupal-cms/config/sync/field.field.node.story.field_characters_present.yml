@@ -1,17 +1,17 @@
-uuid: 29b9ab48-99a7-40fa-97ef-e5de430f74cf
+uuid: 8e3c5129-3f61-4796-b924-6dd0fb7bc5da
 langcode: en
 status: true
 dependencies:
   config:
     - field.storage.node.field_characters_present
     - node.type.character
-    - node.type.session
-id: node.session.field_characters_present
+    - node.type.story
+id: node.story.field_characters_present
 field_name: field_characters_present
 entity_type: node
-bundle: session
+bundle: story
 label: 'Characters Present'
-description: 'Characters present during this session'
+description: 'Player characters present in this story. Leave empty for the whole party; set it when the party splits, to narrow Spotlight scoring.'
 required: false
 translatable: false
 default_value: {  }

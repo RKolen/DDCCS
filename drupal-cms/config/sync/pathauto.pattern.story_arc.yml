@@ -1,23 +1,23 @@
-uuid: 3fcffa08-6a52-4124-8caa-6868a68f1d1e
+uuid: 85eb31b1-62c7-401e-ab02-4b2e36be8a44
 langcode: en
 status: true
 dependencies:
   config:
-    - node.type.session
+    - node.type.story_arc
   module:
     - node
-id: session
-label: Session
+id: story_arc
+label: 'Story Arc'
 type: 'canonical_entities:node'
-pattern: '/[node:content-type]/[node:title]'
+pattern: '/[node:field_campaign:entity:name]/arc/[node:title]'
 selection_criteria:
-  a5b17a5b-dc2b-4c28-91d6-6f906485d705:
+  891794e8-147c-4f8b-ade1-9bd6943297fb:
     id: 'entity_bundle:node'
     negate: false
     context_mapping:
       node: node
     bundles:
-      session: session
+      story_arc: story_arc
 selection_logic: and
 weight: -5
 relationships: {  }

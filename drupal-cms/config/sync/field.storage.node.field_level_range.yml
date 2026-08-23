@@ -1,16 +1,17 @@
-uuid: fb6d5cec-4c23-4605-9f89-e8eaf1ad0882
+uuid: 5e8c3c59-ed61-475d-be87-45929704217b
 langcode: en
 status: true
 dependencies:
   module:
     - node
-id: node.field_session_number
-field_name: field_session_number
+id: node.field_level_range
+field_name: field_level_range
 entity_type: node
-type: integer
+type: string
 settings:
-  unsigned: false
-  size: normal
+  max_length: 255
+  case_sensitive: false
+  is_ascii: false
 module: core
 locked: false
 cardinality: 1

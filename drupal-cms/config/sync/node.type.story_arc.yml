@@ -1,0 +1,11 @@
+uuid: 773250f8-5cae-48cf-b78e-20cd2e99706b
+langcode: en
+status: true
+dependencies: {  }
+name: 'Story Arc'
+type: story_arc
+description: 'Multi-story campaign arc: premise, antagonist faction, party, and relationship web'
+help: ''
+new_revision: true
+preview_mode: 1
+display_submitted: false

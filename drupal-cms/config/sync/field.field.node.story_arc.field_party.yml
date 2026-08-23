@@ -1,17 +1,17 @@
-uuid: b81b2bc1-c0d1-4e6e-b249-06776aaafa5a
+uuid: c0c57ffa-d532-4ce1-9d9f-068e2242de5e
 langcode: en
 status: true
 dependencies:
   config:
-    - field.storage.node.field_story_files
-    - node.type.session
-    - node.type.story
-id: node.session.field_story_files
-field_name: field_story_files
+    - field.storage.node.field_party
+    - node.type.character
+    - node.type.story_arc
+id: node.story_arc.field_party
+field_name: field_party
 entity_type: node
-bundle: session
-label: 'Story Files'
-description: 'Related story nodes for this session'
+bundle: story_arc
+label: Party
+description: 'Player characters taking part in this arc'
 required: false
 translatable: false
 default_value: {  }
@@ -20,7 +20,7 @@ settings:
   handler: 'default:node'
   handler_settings:
     target_bundles:
-      story: story
+      character: character
     sort:
       field: title
       direction: ASC

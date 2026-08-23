@@ -1,31 +1,49 @@
-uuid: c9813ca9-ccb4-4672-a499-136df8e6395e
+uuid: 21074189-f0d4-4f60-9325-a6b21e26b3be
 langcode: en
 status: true
 dependencies:
   config:
-    - field.field.node.story.field_body
-    - field.field.node.story.field_characters_present
-    - field.field.node.story.field_campaign
-    - field.field.node.story.field_locations
-    - field.field.node.story.field_npcs
-    - field.field.node.story.field_session_date
-    - field.field.node.story.field_session_results
-    - field.field.node.story.field_story_tags
-    - field.field.node.story.field_story_hooks
-    - field.field.node.story.field_story_number
-    - field.field.node.story.field_story_arc
-    - node.type.story
+    - field.field.node.story_arc.field_arc_npc_relations
+    - field.field.node.story_arc.field_arc_party_relations
+    - field.field.node.story_arc.field_body
+    - field.field.node.story_arc.field_campaign
+    - field.field.node.story_arc.field_faction
+    - field.field.node.story_arc.field_level_range
+    - field.field.node.story_arc.field_npcs
+    - field.field.node.story_arc.field_overall_plot
+    - field.field.node.story_arc.field_party
+    - field.field.node.story_arc.field_target_stories
+    - node.type.story_arc
   module:
+    - entity_reference_revisions
     - text
     - user
-id: node.story.default
+id: node.story_arc.default
 targetEntityType: node
-bundle: story
+bundle: story_arc
 mode: default
 content:
+  field_arc_npc_relations:
+    type: entity_reference_revisions_entity_view
+    label: above
+    settings:
+      view_mode: default
+      link: ''
+    third_party_settings: {  }
+    weight: 10
+    region: content
+  field_arc_party_relations:
+    type: entity_reference_revisions_entity_view
+    label: above
+    settings:
+      view_mode: default
+      link: ''
+    third_party_settings: {  }
+    weight: 9
+    region: content
   field_body:
     type: text_default
-    label: above
+    label: hidden
     settings: {  }
     third_party_settings: {  }
     weight: 2
@@ -38,15 +56,7 @@ content:
     third_party_settings: {  }
     weight: 1
     region: content
-  field_characters_present:
-    type: entity_reference_label
-    label: above
-    settings:
-      link: true
-    third_party_settings: {  }
-    weight: 4
-    region: content
-  field_locations:
+  field_faction:
     type: entity_reference_label
     label: above
     settings:
@@ -54,65 +64,50 @@ content:
     third_party_settings: {  }
     weight: 6
     region: content
+  field_level_range:
+    type: string
+    label: above
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+    weight: 4
+    region: content
   field_npcs:
     type: entity_reference_label
     label: above
     settings:
       link: true
     third_party_settings: {  }
-    weight: 5
-    region: content
-  field_session_date:
-    type: string
-    label: above
-    settings:
-      link_to_entity: false
-    third_party_settings: {  }
     weight: 7
     region: content
-  field_session_results:
+  field_overall_plot:
     type: text_default
     label: above
     settings: {  }
     third_party_settings: {  }
-    weight: 9
+    weight: 3
     region: content
-  field_story_arc:
+  field_party:
     type: entity_reference_label
     label: above
     settings:
       link: true
     third_party_settings: {  }
-    weight: 11
-    region: content
-  field_story_hooks:
-    type: text_default
-    label: above
-    settings: {  }
-    third_party_settings: {  }
     weight: 8
     region: content
-  field_story_number:
+  field_target_stories:
     type: number_integer
     label: above
     settings:
       thousand_separator: ''
       prefix_suffix: true
     third_party_settings: {  }
-    weight: 3
-    region: content
-  field_story_tags:
-    type: entity_reference_label
-    label: above
-    settings:
-      link: true
-    third_party_settings: {  }
-    weight: 10
+    weight: 5
     region: content
   links:
     settings: {  }
     third_party_settings: {  }
-    weight: 100
+    weight: 0
     region: content
 hidden:
   gatsby_iframe_preview: true

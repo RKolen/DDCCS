@@ -1,0 +1,19 @@
+uuid: 3dc7d889-dfbd-403c-afc3-8e098b8d6971
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_level_range
+    - node.type.story_arc
+id: node.story_arc.field_level_range
+field_name: field_level_range
+entity_type: node
+bundle: story_arc
+label: 'Level range'
+description: 'Character levels this arc spans, e.g. "6-17"'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string

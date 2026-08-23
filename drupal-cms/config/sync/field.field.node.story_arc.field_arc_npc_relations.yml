@@ -1,0 +1,31 @@
+uuid: cbfb1566-f2c1-47a8-940d-7d1b5cb1d807
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_arc_npc_relations
+    - node.type.story_arc
+    - paragraphs.paragraphs_type.arc_relationship_pair
+  module:
+    - entity_reference_revisions
+id: node.story_arc.field_arc_npc_relations
+field_name: field_arc_npc_relations
+entity_type: node
+bundle: story_arc
+label: 'NPC relationships'
+description: 'Connections between the party and this arc NPCs'
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:paragraph'
+  handler_settings:
+    target_bundles:
+      arc_relationship_pair: arc_relationship_pair
+    negate: 0
+    target_bundles_drag_drop:
+      arc_relationship_pair:
+        weight: 0
+        enabled: true
+field_type: entity_reference_revisions

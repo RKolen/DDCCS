@@ -1,0 +1,161 @@
+uuid: bf691b9d-d3fd-462d-a510-a89eb1a0a0f9
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.node.story_arc.field_arc_npc_relations
+    - field.field.node.story_arc.field_arc_party_relations
+    - field.field.node.story_arc.field_body
+    - field.field.node.story_arc.field_campaign
+    - field.field.node.story_arc.field_faction
+    - field.field.node.story_arc.field_level_range
+    - field.field.node.story_arc.field_npcs
+    - field.field.node.story_arc.field_overall_plot
+    - field.field.node.story_arc.field_party
+    - field.field.node.story_arc.field_target_stories
+    - node.type.story_arc
+  module:
+    - entity_reference_revisions
+    - path
+    - text
+id: node.story_arc.default
+targetEntityType: node
+bundle: story_arc
+mode: default
+content:
+  field_arc_npc_relations:
+    type: paragraphs
+    weight: 10
+    region: content
+    settings:
+      title: 'NPC relationship'
+      title_plural: 'NPC relationships'
+      edit_mode: closed
+      closed_mode: summary
+      autocollapse: none
+      closed_mode_threshold: 0
+      add_mode: dropdown
+      form_display_mode: default
+      default_paragraph_type: arc_relationship_pair
+      features:
+        collapse_edit_all: collapse_edit_all
+        duplicate: duplicate
+    third_party_settings: {  }
+  field_arc_party_relations:
+    type: paragraphs
+    weight: 9
+    region: content
+    settings:
+      title: 'Party relationship'
+      title_plural: 'Party relationships'
+      edit_mode: closed
+      closed_mode: summary
+      autocollapse: none
+      closed_mode_threshold: 0
+      add_mode: dropdown
+      form_display_mode: default
+      default_paragraph_type: arc_relationship_pair
+      features:
+        collapse_edit_all: collapse_edit_all
+        duplicate: duplicate
+    third_party_settings: {  }
+  field_body:
+    type: text_textarea_with_summary
+    weight: 2
+    region: content
+    settings:
+      rows: 16
+      summary_rows: 3
+      placeholder: 'The full premise for this arc'
+      show_summary: false
+    third_party_settings: {  }
+  field_campaign:
+    type: entity_reference_autocomplete
+    weight: 1
+    region: content
+    settings:
+      match_operator: CONTAINS
+      match_limit: 10
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+  field_faction:
+    type: entity_reference_autocomplete
+    weight: 6
+    region: content
+    settings:
+      match_operator: CONTAINS
+      match_limit: 10
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+  field_level_range:
+    type: string_textfield
+    weight: 4
+    region: content
+    settings:
+      size: 30
+      placeholder: 6-17
+    third_party_settings: {  }
+  field_npcs:
+    type: entity_reference_autocomplete
+    weight: 7
+    region: content
+    settings:
+      match_operator: CONTAINS
+      match_limit: 10
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+  field_overall_plot:
+    type: text_textarea
+    weight: 3
+    region: content
+    settings:
+      rows: 16
+      placeholder: 'Act structure / campaign spine'
+    third_party_settings: {  }
+  field_party:
+    type: entity_reference_autocomplete
+    weight: 8
+    region: content
+    settings:
+      match_operator: CONTAINS
+      match_limit: 10
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+  field_target_stories:
+    type: number
+    weight: 5
+    region: content
+    settings:
+      placeholder: ''
+    third_party_settings: {  }
+  path:
+    type: path
+    weight: 12
+    region: content
+    settings: {  }
+    third_party_settings: {  }
+  status:
+    type: boolean_checkbox
+    weight: 11
+    region: content
+    settings:
+      display_label: true
+    third_party_settings: {  }
+  title:
+    type: string_textfield
+    weight: 0
+    region: content
+    settings:
+      size: 60
+      placeholder: 'Arc title'
+    third_party_settings: {  }
+hidden:
+  created: true
+  langcode: true
+  promote: true
+  sticky: true
+  uid: true

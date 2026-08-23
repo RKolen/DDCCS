@@ -1,11 +1,11 @@
-uuid: 70e8c857-8845-4bec-b04f-ba05c8813fd6
+uuid: 683ea8cc-30a7-420b-9006-66cfc892102b
 langcode: en
 status: true
 dependencies:
   module:
     - node
-id: node.field_npcs_encountered
-field_name: field_npcs_encountered
+id: node.field_party
+field_name: field_party
 entity_type: node
 type: entity_reference
 settings:

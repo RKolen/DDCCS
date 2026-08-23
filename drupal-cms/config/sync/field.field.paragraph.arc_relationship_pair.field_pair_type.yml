@@ -1,0 +1,19 @@
+uuid: 1a970b1a-0622-40a5-b7ea-b639c6b5562f
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.paragraph.field_pair_type
+    - paragraphs.paragraphs_type.arc_relationship_pair
+id: paragraph.arc_relationship_pair.field_pair_type
+field_name: field_pair_type
+entity_type: paragraph
+bundle: arc_relationship_pair
+label: 'Relationship type'
+description: 'Short label for the bond, e.g. "shared hometown", "hunter and quarry"'
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string

@@ -1,0 +1,23 @@
+uuid: 0408d050-8459-47d8-a159-a0281b3b02de
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_target_stories
+    - node.type.story_arc
+id: node.story_arc.field_target_stories
+field_name: field_target_stories
+entity_type: node
+bundle: story_arc
+label: 'Target story count'
+description: 'Roughly how many stories this arc is planned to run for'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  min: 1
+  max: null
+  prefix: ''
+  suffix: ''
+field_type: integer

@@ -1,0 +1,22 @@
+uuid: d9c6b43b-6a54-4a66-8f2c-299a341b0ad4
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.paragraph.field_pair_note
+    - paragraphs.paragraphs_type.arc_relationship_pair
+  module:
+    - text
+id: paragraph.arc_relationship_pair.field_pair_note
+field_name: field_pair_note
+entity_type: paragraph
+bundle: arc_relationship_pair
+label: Note
+description: 'The connection itself, and how it can be used in play'
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  allowed_formats: {  }
+field_type: text_long
