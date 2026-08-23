@@ -64,11 +64,25 @@ export function useActivity(): ActivityApi | null {
 export function useConsoleActivity(handlers: ConsoleActivityHandlers | null): void {
   const api = React.useContext(ActivityContext);
   const register = api?.registerConsole;
+
+  /* Registering the caller's object directly made this an update loop: the
+     console rebuilds locate/open whenever its roster changes identity, the
+     registration then set provider state, and that re-rendered the console.
+     React caps it with "Maximum update depth exceeded". Register one stable
+     proxy instead and keep the live pair behind a ref, so registration happens
+     once per mount however often the handlers are rebuilt. */
+  const latest = React.useRef(handlers);
+  latest.current = handlers;
+
+  const active = handlers != null;
   React.useEffect(() => {
-    if (register == null) return undefined;
-    register(handlers);
+    if (register == null || !active) return undefined;
+    register({
+      locate: (characterId: string) => latest.current?.locate(characterId),
+      open:   (item: ActivityItem) => latest.current?.open(item),
+    });
     return () => register(null);
-  }, [register, handlers]);
+  }, [register, active]);
 }
 
 /**

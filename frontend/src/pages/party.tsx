@@ -18,14 +18,19 @@ import { StatelyLedger } from '../components/console/StatelyLedger';
 import { buildConsoleData } from '../utils/buildConsoleData';
 import type { ConsoleQueryData } from '../utils/buildConsoleData';
 
-const PartyPage: React.FC<PageProps<ConsoleQueryData>> = ({ data }) => (
-  <StatelyLedger
-    fullscreen
-    initialSection="characters"
-    initialItem="list"
-    liveData={buildConsoleData(data)}
-  />
-);
+const PartyPage: React.FC<PageProps<ConsoleQueryData>> = ({ data }) => {
+  /* Memoised for the same reason as index.tsx: a fresh roster object on every
+     render re-registers the console with the activity log. */
+  const liveData = React.useMemo(() => buildConsoleData(data), [data]);
+  return (
+    <StatelyLedger
+      fullscreen
+      initialSection="characters"
+      initialItem="list"
+      liveData={liveData}
+    />
+  );
+};
 
 export const query = graphql`
   query PartyPageData {

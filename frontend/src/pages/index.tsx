@@ -58,6 +58,10 @@ function deepLink(search: string): {
 
 const IndexPage: React.FC<PageProps<ConsoleQueryData>> = ({ data, location }) => {
   const link = deepLink(location.search);
+  /* One object per query result. Rebuilding it on every render handed the
+     console a new roster each time, which is what turned the activity-log
+     registration into an update loop. */
+  const liveData = React.useMemo(() => buildConsoleData(data), [data]);
   return (
     <StatelyLedger
       fullscreen
@@ -68,7 +72,7 @@ const IndexPage: React.FC<PageProps<ConsoleQueryData>> = ({ data, location }) =>
       initialSection={link.section}
       initialItem={link.item}
       initialCharId={link.charId}
-      liveData={buildConsoleData(data)}
+      liveData={liveData}
     />
   );
 };

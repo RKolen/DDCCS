@@ -115,8 +115,15 @@ export function GlobalLayout({ children, location }: GlobalLayoutProps): React.R
     window.localStorage.setItem(ACTIVE_KEY, JSON.stringify(campaign.name));
   }, []);
 
+  /* Memoised so a re-render here does not hand every useTopbar() consumer a
+     new context object, which restarts their registration effects. */
+  const topbar = React.useMemo(
+    () => ({ campaigns, activeCampaignName, onSwitchCampaign, register, addCampaign }),
+    [campaigns, activeCampaignName, onSwitchCampaign, register, addCampaign],
+  );
+
   return (
-    <TopbarContext.Provider value={{ campaigns, activeCampaignName, onSwitchCampaign, register, addCampaign }}>
+    <TopbarContext.Provider value={topbar}>
       <ActivityProvider>
         <div className="global-layout">
           <GlobalTopbar location={location} />

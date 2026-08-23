@@ -69,7 +69,10 @@ export function StatelyLedger({
     npcMode: initialSection === 'npcs',
   });
 
-  const campaigns = liveData?.campaigns ?? [];
+  /* Derived rosters are memoised on liveData: they feed the topbar effect and
+     the activity-log handlers below, and a new array on every render restarts
+     both. */
+  const campaigns = React.useMemo(() => liveData?.campaigns ?? [], [liveData]);
 
   /* Register campaigns with the global topbar. GlobalLayout owns
      activeCampaignName — we read it back via useTopbar(). */
@@ -93,8 +96,8 @@ export function StatelyLedger({
   }, []);
 
   /* Patch sidebar counts from real Drupal data */
-  const pcs = liveData ? playerCharacters(liveData) : null;
-  const npcs = liveData ? npcCharacters(liveData) : null;
+  const pcs = React.useMemo(() => (liveData ? playerCharacters(liveData) : null), [liveData]);
+  const npcs = React.useMemo(() => (liveData ? npcCharacters(liveData) : null), [liveData]);
   const stories = liveData?.stories ?? null;
 
   /* Where a job's character can be reviewed. A party member goes to the Portrait
@@ -150,7 +153,12 @@ export function StatelyLedger({
   /* Enrich ctx with active campaign so screens can filter by it */
   const enrichedCtx: ScreenContext = { ...ctx, activeCampaignName };
 
-  const consoleData: ConsoleData = liveData ?? { campaigns: [], characters: [], stories: [], monsters: [], items: [] };
+  /* A literal fallback would be a new object each render, remounting every
+     consumer of the context below it. */
+  const consoleData: ConsoleData = React.useMemo(
+    () => liveData ?? { campaigns: [], characters: [], stories: [], monsters: [], items: [] },
+    [liveData],
+  );
 
   return (
     <ConsoleContext.Provider value={consoleData}>
