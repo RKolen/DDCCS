@@ -128,6 +128,7 @@ export function ScreenRouter({ section, item, ctx, setCtx }: ScreenRouterProps):
   if (key === 'characters/consult')      return <ConsultScreen ctx={pcctx} setCtx={set} />;
   if (key === 'characters/completeness') return <NpcValidatorScreen ctx={{ ...pcctx, pcMode: true }} setCtx={set} />;
   if (key === 'characters/ascii')        return <PortraitStudioScreen ctx={pcctx} setCtx={set} />;
+  if (key === 'characters/development')  return <CharacterDevelopmentScreen ctx={pcctx} setCtx={set} />;
 
   /* Arc hub + all four sub-actions — CharacterArcScreen dispatches internally
      via ctx.arcSubAction, set by its own buttons. The sidebar only surfaces the
@@ -145,15 +146,10 @@ export function ScreenRouter({ section, item, ctx, setCtx }: ScreenRouterProps):
     if (actionId !== undefined) return <AiActionScreen      ctx={ictx} setCtx={set} />;
     return <StorySeriesWorkspaceScreen ctx={ictx} setCtx={set} />;
   }
+  if (key === 'stories/read')        return <ReadStoryFileScreen ctx={ictx} setCtx={set} />;
   if (key === 'stories/timeline')    return <TimelineScreen ctx={ictx} setCtx={set} />;
   if (key === 'stories/spells')      return <SpellRegistryScreen ctx={ictx} setCtx={set} />;
   if (key === 'stories/new-series')  return <NewSeriesScreen ctx={ictx} setCtx={set} />;
-
-  /* ───── Read Stories ───── */
-  if (key === 'read/r-story')   return <ReadStoryFileScreen ctx={ictx} setCtx={set} />;
-  if (key === 'read/r-char')    return <CharacterDetailScreen ctx={pcctx} setCtx={set} />;
-  if (key === 'read/r-session') return <ReadStoryFileScreen ctx={ictx} setCtx={set} />;
-  if (key === 'read/r-dev')     return <CharacterDevelopmentScreen ctx={pcctx} setCtx={set} />;
 
   /* ───── NPCs (character nodes with field_character_type=false) ─────
      Same screens as the characters/* twins, with npcMode set — an NPC is a

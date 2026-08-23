@@ -2,8 +2,7 @@
  * EncounterSpotlightScreen — `monsters / m-encounter`
  *
  * Live DM combat dashboard: HP tracker, legendary action economy,
- * recharge toggle, lair action reminder, save DCs parsed from prose,
- * and active party threat panel.
+ * recharge toggle, lair action reminder, and save DCs parsed from prose.
  *
  * All state is local — encounter state is never persisted.
  * Design reference: /project/Encounter Spotlight.html
@@ -12,7 +11,7 @@
 import * as React from 'react';
 import type { ScreenProps } from '../ScreenRouter';
 import { Icon } from '../atoms';
-import { useConsoleData, playerCharacters } from '../ConsoleContext';
+import { useConsoleData } from '../ConsoleContext';
 import type { DrupalMonster } from '../ConsoleContext';
 
 /* ────────────────────────────────────────────────────────────
@@ -275,60 +274,6 @@ function SaveDCPanel({ saveDCs }: { saveDCs: Array<{ ability: string; dc: number
 }
 
 /* ────────────────────────────────────────────────────────────
-   Party threat panel
-   ──────────────────────────────────────────────────────────── */
-
-function PartyPanel({ campaign }: { campaign: string | null }): React.ReactElement {
-  const data  = useConsoleData();
-  const party = playerCharacters(data).filter(c =>
-    campaign == null || c.campaign === campaign
-  );
-
-  if (party.length === 0) return <></>;
-
-  return (
-    <div style={{ background: 'var(--canvas-raised)', border: '1px solid var(--rule)', borderRadius: 10, padding: '14px 18px' }}>
-      <div style={{ fontFamily: 'var(--font-display)', fontSize: 9, color: 'var(--brass-dim)', letterSpacing: '0.16em', textTransform: 'uppercase', marginBottom: 10 }}>
-        Active Party
-      </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-        {party.map(c => {
-          const initials = c.title.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
-          return (
-            <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <div style={{
-                width: 28, height: 28, borderRadius: '50%', flexShrink: 0,
-                background: 'var(--canvas)', border: '1px solid var(--rule)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                overflow: 'hidden',
-              }}>
-                {c.imageUrl
-                  ? <img src={c.imageUrl} alt={c.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  : <span style={{ fontFamily: 'var(--font-display)', fontSize: 9, color: 'var(--brass)', fontWeight: 700 }}>{initials}</span>
-                }
-              </div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontFamily: 'var(--font-display)', fontSize: 11, color: 'var(--ink)', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                  {c.title}
-                </div>
-                <div style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: 'var(--ink-dim)' }}>
-                  {c.characterClass != null ? `${c.characterClass} ${c.level ?? ''}` : ''}
-                </div>
-              </div>
-              {c.maximumHitpoints != null && (
-                <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--ink-dim)', flexShrink: 0 }}>
-                  {c.maximumHitpoints} HP
-                </span>
-              )}
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-/* ────────────────────────────────────────────────────────────
    Round tracker
    ──────────────────────────────────────────────────────────── */
 
@@ -488,7 +433,6 @@ export function EncounterSpotlightScreen({ ctx, setCtx }: ScreenProps): React.Re
           {/* Right column — DCs + party */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             <SaveDCPanel saveDCs={saveDCs} />
-            <PartyPanel campaign={monster.campaign} />
 
             {(monster.encounterTactics.length > 0 || monster.defeatConditions.length > 0) && (
               <div style={{ background: 'var(--canvas-raised)', border: '1px solid var(--rule)', borderRadius: 10, padding: '14px 18px' }}>

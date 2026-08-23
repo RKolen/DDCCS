@@ -1,5 +1,5 @@
 /**
- * ReadStoryFileScreen — `read / r-story` default landing.
+ * ReadStoryFileScreen — `stories / read`.
  *
  * Story list comes from ConsoleContext (real Drupal stories).
  * Filtered to the active campaign from ctx.activeCampaignName.

@@ -1,5 +1,5 @@
 /**
- * CharacterDetailScreen — `characters / view` and `read / r-char`.
+ * CharacterDetailScreen — `characters / view` (and `npcs / n-view`).
  *
  * Data from ConsoleContext only. ctx.charIdx indexes into the
  * playerCharacters() or npcCharacters() list. No mock fallbacks.

@@ -26,7 +26,6 @@ import { useTopbar } from '../layout/TopbarContext';
 const SECTION_DEFAULTS: Record<MenuSection['id'], string> = {
   characters: 'list',
   stories:    'work-series',
-  read:       'r-story',
   npcs:       'n-list',
   items:      'i-list',
   monsters:   'm-list',
@@ -50,7 +49,7 @@ interface StatelyLedgerProps {
 
 export function StatelyLedger({
   fullscreen = false,
-  initialSection = 'read',
+  initialSection = 'stories',
   initialItem,
   initialCharId,
   liveData,
@@ -140,7 +139,7 @@ export function StatelyLedger({
   const sections = MENU_DATA.sections.map(s => {
     if (s.id === 'characters' && pcs) return { ...s, count: pcs.length };
     if (s.id === 'npcs' && npcs) return { ...s, count: npcs.length };
-    if ((s.id === 'stories' || s.id === 'read') && stories) return { ...s, count: stories.length };
+    if (s.id === 'stories' && stories) return { ...s, count: stories.length };
     return s;
   });
 

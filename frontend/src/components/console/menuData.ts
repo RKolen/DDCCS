@@ -15,6 +15,16 @@
  * Do not reintroduce sample content here. A screen that renders invented
  * characters is indistinguishable from one that lost its data connection.
  *
+ * IMPORTANT — the `read` section is gone (2026-08-16):
+ *   It carried four items backed by one unique screen. `r-story` and
+ *   `r-session` routed to the same component with the same context, and
+ *   `r-char` was byte-identical to `characters/view`. Its two real
+ *   destinations now live where they belong:
+ *     r-story -> `stories/read`            (ReadStoryFileScreen)
+ *     r-dev   -> `characters/development`  (CharacterDevelopmentScreen)
+ *   Do not reintroduce it. The public reader at `/stories/` and
+ *   `templates/story.tsx` is a separate surface and is unaffected.
+ *
  * IMPORTANT — NPC/Character architecture (2026-05-16):
  *   NPCs are no longer a separate content type. They are character
  *   nodes (nodeCharacter) with the `field_character_type` field set
@@ -52,7 +62,7 @@ export interface MenuItem {
 }
 
 export interface MenuSection {
-  id: 'characters' | 'stories' | 'read' | 'npcs' | 'monsters' | 'items' | 'config' | 'model' | 'tools';
+  id: 'characters' | 'stories' | 'npcs' | 'monsters' | 'items' | 'config' | 'model' | 'tools';
   label: string;
   glyph: string;
   icon: IconName;
@@ -170,6 +180,7 @@ export const MENU_DATA: MenuData = {
             { id: 'arc-export', label: 'Export arc report to file' },
           ],
         },
+        { id: 'development', label: 'Character Development' },
         { id: 'template', label: 'Create Character from Template' },
       ],
     },
@@ -200,22 +211,9 @@ export const MENU_DATA: MenuData = {
             { id: 's-suggest', label: 'AI Story Suggestions', ai: true },
           ],
         },
+        { id: 'read', label: 'Read Story File' },
         { id: 'timeline', label: 'Timeline Tracking' },
         { id: 'spells', label: 'Spell Registry' },
-      ],
-    },
-    {
-      id: 'read',
-      label: 'Read Stories',
-      glyph: 'R',
-      icon: 'read',
-      blurb: 'Player view — read aloud, generate art',
-      count: 22,
-      items: [
-        { id: 'r-story', label: 'Read Story File' },
-        { id: 'r-char', label: 'Read Character Profile' },
-        { id: 'r-session', label: 'Read Session Results' },
-        { id: 'r-dev', label: 'Read Character Development' },
       ],
     },
     {

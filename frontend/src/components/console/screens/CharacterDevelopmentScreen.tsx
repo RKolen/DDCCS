@@ -1,5 +1,5 @@
 /**
- * CharacterDevelopmentScreen — `read / r-dev`
+ * CharacterDevelopmentScreen — `characters / development`
  *
  * Reads back the accumulated character development log — the output of
  * repeated `s-chardev` (Generate Character Development) AI passes, one

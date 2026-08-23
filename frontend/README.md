@@ -152,6 +152,15 @@ a character selected — this is how the "Edit character" button on
 section and item against `MENU_DATA` and falls back to the default landing
 screen if they do not match.
 
+Valid `section` ids are `characters`, `stories`, `npcs`, `monsters`, `items`,
+`config`, `model`, and `tools`; the console lands on `stories` when no section
+is named. There is no longer a `read` section — it held four menu items backed
+by one unique screen, with `r-story`/`r-session` pointing at the same component
+and `r-char` duplicating `characters/view`. Its two real destinations moved to
+`stories/read` (story reader) and `characters/development` (development log).
+This is console IA only: the public reader at `/stories/` and
+`src/templates/story.tsx` is a separate surface and is unchanged.
+
 ---
 
 ## Data layer
