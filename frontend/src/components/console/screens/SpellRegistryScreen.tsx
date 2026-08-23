@@ -1,7 +1,10 @@
 /**
- * SpellRegistryScreen — `stories/spells`.
+ * SpellRegistryScreen — `spells/sp-list`.
  *
- * Spells are stored as `node--spell` content in Drupal.
+ * Spells are stored as `node--spell` content in Drupal. This was
+ * `stories/spells` until Spells was promoted to its own console section
+ * and `/spells/` topbar link (2026-08-23).
+ *
  * This screen renders a table once spells are in ConsoleData.
  * Currently shows an empty state pointing to the data path.
  *

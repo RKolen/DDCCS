@@ -148,7 +148,6 @@ export function ScreenRouter({ section, item, ctx, setCtx }: ScreenRouterProps):
   }
   if (key === 'stories/read')        return <ReadStoryFileScreen ctx={ictx} setCtx={set} />;
   if (key === 'stories/timeline')    return <TimelineScreen ctx={ictx} setCtx={set} />;
-  if (key === 'stories/spells')      return <SpellRegistryScreen ctx={ictx} setCtx={set} />;
   if (key === 'stories/new-series')  return <NewSeriesScreen ctx={ictx} setCtx={set} />;
 
   /* ───── NPCs (character nodes with field_character_type=false) ─────
@@ -165,6 +164,9 @@ export function ScreenRouter({ section, item, ctx, setCtx }: ScreenRouterProps):
   if (section.id === 'npcs' && (item.id === 'n-arc' || item.id.startsWith('arc-'))) {
     return <CharacterArcScreen ctx={{ ...ictx, npcMode: true }} setCtx={set} />;
   }
+
+  /* ───── Spells ───── */
+  if (key === 'spells/sp-list') return <SpellRegistryScreen ctx={ictx} setCtx={set} />;
 
   /* ───── Items ───── */
   if (key === 'items/i-list')     return <ItemListScreen     ctx={ictx} setCtx={set} />;

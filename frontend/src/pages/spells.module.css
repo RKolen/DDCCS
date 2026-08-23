@@ -1,0 +1,106 @@
+/* ============================================================
+   spells.module.css
+   Spell Compendium — level-grouped index
+   ============================================================ */
+
+/* -- Page shell ------------------------------------------------ */
+.page {
+  padding: var(--space-8) var(--space-10);
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.pageHeader {
+  margin-bottom: var(--space-8);
+}
+
+.heading {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: var(--font-bold);
+  color: var(--color-gold-bright);
+  margin: 0 0 var(--space-1);
+  letter-spacing: var(--tracking-wide);
+}
+
+.subtitle {
+  font-family: var(--font-body);
+  font-style: italic;
+  font-size: var(--text-base);
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+
+/* -- Level group ----------------------------------------------- */
+.group {
+  margin-bottom: var(--space-8);
+}
+
+.groupHeading {
+  font-family: var(--font-display);
+  font-size: var(--text-base);
+  font-weight: var(--font-bold);
+  color: var(--color-gold-bright);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  margin: 0 0 var(--space-3);
+  padding-bottom: var(--space-2);
+  border-bottom: var(--border-thin);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: var(--space-4);
+}
+
+/* -- Spell row -------------------------------------------------- */
+.spell {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  background: var(--color-bg-surface);
+  border: var(--border-thin);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  text-decoration: none;
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast);
+}
+
+.spell:hover {
+  background: var(--color-bg-raised);
+  border-color: var(--color-gold-border);
+}
+
+.spellName {
+  font-family: var(--font-display);
+  font-size: var(--text-base);
+  color: var(--color-gold-bright);
+  margin: 0;
+}
+
+.spellMeta {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+
+.tag {
+  display: inline-block;
+  margin-right: var(--space-2);
+}
+
+/* -- Empty state ------------------------------------------------ */
+.empty {
+  font-family: var(--font-body);
+  font-style: italic;
+  font-size: var(--text-base);
+  color: var(--color-text-secondary);
+  text-align: center;
+  padding: var(--space-10) var(--space-6);
+  border: 1px dashed var(--color-gold-border);
+  border-radius: var(--radius-md);
+}

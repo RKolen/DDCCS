@@ -62,7 +62,7 @@ export interface MenuItem {
 }
 
 export interface MenuSection {
-  id: 'characters' | 'stories' | 'npcs' | 'monsters' | 'items' | 'config' | 'model' | 'tools';
+  id: 'characters' | 'stories' | 'npcs' | 'items' | 'spells' | 'monsters' | 'config' | 'model' | 'tools';
   label: string;
   glyph: string;
   icon: IconName;
@@ -213,7 +213,6 @@ export const MENU_DATA: MenuData = {
         },
         { id: 'read', label: 'Read Story File' },
         { id: 'timeline', label: 'Timeline Tracking' },
-        { id: 'spells', label: 'Spell Registry' },
       ],
     },
     {
@@ -256,12 +255,31 @@ export const MENU_DATA: MenuData = {
       id: 'items',
       label: 'Items',
       glyph: 'I',
-      icon: 'spell',
+      icon: 'grid',
       blurb: 'Registry, validation, loot tracking',
       items: [
         { id: 'i-list',     label: 'Loot Vault' },
         { id: 'i-view',     label: 'Item Sheet' },
         { id: 'i-validate', label: 'Validate Registry' },
+      ],
+    },
+    {
+      /*
+       * Spells are `node--spell` content, a compendium in their own right —
+       * not a property of a story. This section was `stories/spells` until it
+       * was promoted alongside a `/spells/` topbar link (2026-08-23).
+       *
+       * The item list is deliberately minimal. Flesh it out as the screens
+       * are designed; anything added here without a ScreenRouter case falls
+       * through to PlaceholderScreen, which says so loudly.
+       */
+      id: 'spells',
+      label: 'Spells',
+      glyph: 'A',
+      icon: 'spell',
+      blurb: 'Compendium, schools, slot tracking',
+      items: [
+        { id: 'sp-list', label: 'Spell Compendium' },
       ],
     },
     {

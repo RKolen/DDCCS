@@ -28,6 +28,7 @@ const SECTION_DEFAULTS: Record<MenuSection['id'], string> = {
   stories:    'work-series',
   npcs:       'n-list',
   items:      'i-list',
+  spells:     'sp-list',
   monsters:   'm-list',
   config:     'c-view',
   model:      'm-switch',
