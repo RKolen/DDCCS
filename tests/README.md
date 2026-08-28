@@ -66,4 +66,3 @@ and comment out all tests you do not want to run.
 - Architecture overview: ../docs/ARCHITECTURE.md
 - Semantic search (Milvus): ../docs/MILVUS_INTEGRATION.md
 - Copilot Instructions: ../.github/copilot-instructions.md
-- TODO: ../TODO.md

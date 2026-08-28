@@ -561,9 +561,8 @@ modifier = DC_MODIFIERS.get(difficulty, 0)
 ### Before Starting Work
 
 1. Read this AGENTS.md file completely
-2. Check `TODO.md` for current tasks and priorities
-3. Review existing code in the relevant module
-4. Check `src/utils/` for existing utilities
+2. Review existing code in the relevant module
+3. Check `src/utils/` for existing utilities
 
 ### Making Changes
 
