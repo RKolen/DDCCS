@@ -756,7 +756,9 @@ git config core.hooksPath .githooks
 ```
 
 `./check.sh` gates that the setting is present, so a fresh clone cannot skip
-it silently. Bypass with `--no-verify` in a genuine emergency only.
+it silently. The gate is skipped when `CI` is set: a runner has no local git
+config and never commits, so there it would fail every run. Bypass with
+`--no-verify` in a genuine emergency only.
 
 Avoid - no type, three unrelated changes, subject over 50 characters:
 

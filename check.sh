@@ -112,6 +112,14 @@ check_commit_hook_enabled() {
     # fresh clone does not inherit it. Without this gate the commit format is
     # documented and unenforced - exactly the failure mode this file exists to
     # prevent.
+    #
+    # CI has no local config and never commits, so the gate is meaningless
+    # there and would fail every run. It checks a developer's working copy.
+    if [ -n "${CI:-}" ]; then
+        echo "Skipped on CI: core.hooksPath is developer-machine config."
+        return 0
+    fi
+
     local path
     path=$(git config core.hooksPath || true)
 
