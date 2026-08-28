@@ -94,7 +94,8 @@ check_script_exec_bits() {
     # ("Permission denied") - which is what happened to check.sh itself.
     # Fix a hit with: git update-index --chmod=+x <file>
     local bad
-    bad=$(git ls-files -s -- '*.sh' 2>/dev/null | awk '$1 != "100755" {print $4}')
+    bad=$(git ls-files -s -- '*.sh' '.githooks/*' 2>/dev/null \
+        | awk '$1 != "100755" {print $4}')
 
     if [ -n "$bad" ]; then
         echo "Shell scripts committed without the executable bit:"
@@ -106,7 +107,30 @@ check_script_exec_bits() {
     return 0
 }
 
+check_commit_hook_enabled() {
+    # The commit-msg hook is tracked, but core.hooksPath is local config and a
+    # fresh clone does not inherit it. Without this gate the commit format is
+    # documented and unenforced - exactly the failure mode this file exists to
+    # prevent.
+    local path
+    path=$(git config core.hooksPath || true)
+
+    if [ "$path" != ".githooks" ]; then
+        echo "core.hooksPath is '${path:-unset}', expected '.githooks'."
+        echo "The commit-msg hook is not active. Enable it with:"
+        echo "        git config core.hooksPath .githooks"
+        return 1
+    fi
+    if [ ! -x .githooks/commit-msg ]; then
+        echo ".githooks/commit-msg is missing or not executable."
+        return 1
+    fi
+    echo "commit-msg hook active via core.hooksPath."
+    return 0
+}
+
 run_gate "shell scripts executable in git" check_script_exec_bits
+run_gate "commit-msg hook enabled" check_commit_hook_enabled
 run_gate "no checker suppressions" check_no_suppressions
 run_gate "Example Campaign world only" check_example_world_only
 run_gate "CSS palette single source" check_css_palette

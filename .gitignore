@@ -222,3 +222,11 @@ frontend/.env.test
 # Generated CA bundle: every mkcert dev CA on this machine, so DDEV TLS
 # verification does not depend on which shell generated the certificate.
 .mkcert-ca-bundle.pem
+
+# Symlinks created by scripts/new-feature.sh in each feature worktree.
+# The existing rules do not cover these: `venv/` and `node_modules/` end in a
+# slash so they match directories only, and a symlink is a file. Without these
+# entries every worktree reports them untracked and `git worktree remove`
+# refuses to run without --force.
+.venv
+frontend/node_modules

@@ -618,6 +618,60 @@ modifier = DC_MODIFIERS.get(difficulty, 0)
 
 ## Workflow
 
+### Starting a Feature - One Worktree Per Agent
+
+More than one agent works in this repo at a time. **Never work directly in
+the primary checkout.** Two agents sharing one working directory overwrite
+each other's edits, and `./check.sh` cannot tell whose change failed.
+
+Claim your own worktree before writing any code:
+
+```bash
+scripts/new-feature.sh
+```
+
+That creates branch `feature/ddcs-<n>` - numbered from 1, next free number -
+checked out at `../ddcs-worktrees/ddcs-<n>/`, and symlinks the untracked
+things a fresh worktree does not inherit: `.venv`, `.env`, `game_data`,
+`frontend/node_modules`. Without the `.venv` link `./check.sh` refuses to
+run at all.
+
+Run every gate from inside your own worktree:
+
+```bash
+cd ../ddcs-worktrees/ddcs-<n>
+./check.sh
+```
+
+Never `cd` back to the primary checkout to run a check - you would be
+testing someone else's uncommitted work and reporting the result as yours.
+
+When the branch is merged:
+
+```bash
+git worktree remove ../ddcs-worktrees/ddcs-<n>
+git branch -d feature/ddcs-<n>
+```
+
+#### Shared resources a worktree does NOT isolate
+
+A worktree forks the source tree. It does not fork the machine. The
+following are single instances shared by every agent - claim one before you
+use it, and say so:
+
+| Resource | Why it collides |
+|----------|-----------------|
+| DDEV / Drupal | One project, one database, one router port. Two agents running `ddev drush config:import -y` fight over the same DB. |
+| Gatsby dev server | Both want port 8000. Set `GATSBY_PORT`, or let only one agent run `npm run develop`. |
+| Ollama, Milvus, ComfyUI | Single instances on CPU inference. Two AI-heavy agents at once thrash the box. |
+| `frontend/node_modules` | Symlinked, not copied. `npm install` mutates it for every worktree at once. |
+
+Drupal schema work is a single-agent lane: `config/sync/*.yml` is
+per-worktree, but the database it imports into is global.
+
+Never free one of these by killing a process by port - find the PID and
+check what it is first.
+
 ### Before Starting Work
 
 1. Read this AGENTS.md file completely
@@ -634,10 +688,75 @@ modifier = DC_MODIFIERS.get(difficulty, 0)
 
 ### Committing Changes
 
+**Agents never run `git commit` or `git push`.** Stage the work, report what
+changed, and hand it to the maintainer. Committing is an act of
+accountability and it stays with the person who can be held to it.
+
 1. Verify all tests pass
 2. Verify Pylint score is 10.00/10
-3. Write clear commit messages
+3. Stage the change and propose a message - see the section below
 4. Do not commit files with emojis
+
+### Commit Messages - Conventional Commits, No Prose
+
+**Never use an editor's "generate commit message" button.** Kilo Code
+contributes `kilo-code.new.generateCommitMessage` to the Source Control
+toolbar and input box; it does not follow the format below and pads the
+message with prose restating the diff. Hide it: right-click the Source
+Control toolbar, untick "Generate Commit Message". Write the message from
+the staged diff yourself.
+
+Format:
+
+```text
+<type>(<optional scope>): <subject>
+
+<body - only when the "why" is not obvious from the subject>
+```
+
+Rules:
+
+- `type` is one of `feat`, `fix`, `docs`, `style`, `refactor`, `perf`,
+  `test`, `build`, `ci`, `chore`, `revert`.
+- Subject: imperative mood ("add", not "added"), lower case after the
+  colon, no trailing period, 50 characters or fewer.
+- Body: only when the subject cannot carry the reason. Wrap at 72 columns.
+  Explain *why*; never restate *what* the diff already shows.
+- No file-by-file bullet summaries. The diff is the summary.
+- No emojis (rule 1).
+- Breaking change: `!` after the type or scope, plus a `BREAKING CHANGE:`
+  footer.
+- No `Co-Authored-By:` trailers, ever. A commit is a statement of
+  accountability for the change. An agent cannot be held accountable,
+  so it must not appear to share the responsibility. The person who
+  commits owns the work.
+- One concern per commit. Unrelated work goes in separate commits.
+
+Good:
+
+```text
+fix(relations): drop off-roster candidates
+
+The candidate list came from every NPC in the campaign, so a
+subject with no roster entry still scored matches.
+```
+
+This is enforced, not merely documented. `.githooks/commit-msg` rejects a
+message that breaks any rule above, whoever or whatever wrote it. Enable it
+once per clone (worktrees share `.git/config`, so this covers all of them):
+
+```bash
+git config core.hooksPath .githooks
+```
+
+`./check.sh` gates that the setting is present, so a fresh clone cannot skip
+it silently. Bypass with `--no-verify` in a genuine emergency only.
+
+Avoid - no type, three unrelated changes, subject over 50 characters:
+
+```text
+feat: added tory image generation, Story Arcs & Relations and FE cleanup
+```
 
 ## Quick Reference
 
@@ -662,6 +781,12 @@ python3 -m mypy tests/
 
 # Run pyright (the engine behind Pylance - rule 3.1)
 .venv/bin/python -m pyright
+
+# Create an isolated worktree for a new feature (feature/ddcs-<n>)
+scripts/new-feature.sh
+
+# Summarise every feature worktree: ahead/behind, dirty files, diffstat
+scripts/review-features.sh
 
 # Run every quality gate at once (pylint + mypy + pyright + world + tests)
 ./check.sh

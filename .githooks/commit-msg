@@ -1,0 +1,114 @@
+#!/usr/bin/env bash
+#
+# Reject commit messages that do not follow Conventional Commits.
+#
+# AGENTS.md documents the format. check.sh exists because "a documented rule
+# that nothing enforces is not a rule" - this hook is the same idea applied to
+# the commit log, and it does not care whether a human, Kilo Code, or an agent
+# wrote the message.
+#
+# Enabled per clone with:
+#   git config core.hooksPath .githooks
+# check.sh gates that the setting is present, so a fresh clone cannot silently
+# skip it. Worktrees share .git/config, so setting it once covers all of them.
+#
+# Bypass for a genuine emergency only: git commit --no-verify
+
+set -uo pipefail
+
+MSG_FILE="$1"
+TYPES="feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert"
+MAX_SUBJECT=50
+MAX_BODY=72
+
+# Strip comments and trailing blank lines; git adds both.
+mapfile -t LINES < <(grep -v '^#' "$MSG_FILE" | sed -e :a -e '/^\n*$/{$d;N;ba' -e '}')
+
+if [ "${#LINES[@]}" -eq 0 ]; then
+    echo "[commit-msg] Empty commit message." >&2
+    exit 1
+fi
+
+SUBJECT="${LINES[0]}"
+
+# Messages git generates or reuses verbatim are not ours to police.
+case "$SUBJECT" in
+    "Merge "*|"Revert \""*|"fixup! "*|"squash! "*|"amend! "*)
+        exit 0 ;;
+esac
+
+ERRORS=()
+
+# 1. Conventional Commits shape.
+if ! printf '%s' "$SUBJECT" \
+    | grep -qE "^(${TYPES})(\([a-z0-9._/-]+\))?!?: .+"; then
+    ERRORS+=("Subject must be '<type>(<scope>)?!?: <subject>'.")
+    ERRORS+=("  Allowed types: ${TYPES//|/, }")
+fi
+
+# 2. Subject length.
+if [ "${#SUBJECT}" -gt "$MAX_SUBJECT" ]; then
+    ERRORS+=("Subject is ${#SUBJECT} characters; the limit is ${MAX_SUBJECT}.")
+fi
+
+# 3. No trailing period.
+case "$SUBJECT" in
+    *.) ERRORS+=("Subject must not end with a period.") ;;
+esac
+
+# 4. Lower case after the colon - "fix: Add x" reads as a sentence, not a
+#    change description, and mixed casing makes the log hard to scan.
+DESC="${SUBJECT#*: }"
+case "$DESC" in
+    [A-Z]*)
+        # An acronym or an identifier is fine; a capitalised ordinary word
+        # is not. Treat two or more leading capitals as an acronym.
+        if ! printf '%s' "$DESC" | grep -qE '^([A-Z]{2,}|[A-Z][a-z]*[A-Z])'; then
+            ERRORS+=("Start the subject lower case after the colon.")
+        fi ;;
+esac
+
+# 5. Blank line between subject and body.
+if [ "${#LINES[@]}" -gt 1 ] && [ -n "${LINES[1]}" ]; then
+    ERRORS+=("Leave a blank line between the subject and the body.")
+fi
+
+# 6. Body wrapping. Trailers (Refs:, Signed-off-by:) and unbroken tokens
+#    such as URLs cannot be wrapped, so they are exempt.
+for i in "${!LINES[@]}"; do
+    [ "$i" -lt 2 ] && continue
+    line="${LINES[$i]}"
+    [ "${#line}" -le "$MAX_BODY" ] && continue
+    printf '%s' "$line" | grep -qE '^[A-Za-z-]+: ' && continue
+    printf '%s' "$line" | grep -qv ' ' && continue
+    ERRORS+=("Body line $((i + 1)) is ${#line} chars; wrap at ${MAX_BODY}.")
+done
+
+# 7. No co-author trailers. The commit log records who committed; an agent
+#    or editor that appends itself as a co-author adds noise and misstates
+#    authorship. Applies whatever tool generated the message.
+if grep -qiE '^Co-Authored-By:' "$MSG_FILE"; then
+    ERRORS+=("Remove the Co-Authored-By trailer - no co-authors in this repo.")
+fi
+
+# 8. No emojis or other non-ASCII (AGENTS.md rule 1: cp1252 breakage).
+if LC_ALL=C grep -qP '[^\x00-\x7F]' "$MSG_FILE" 2>/dev/null; then
+    ERRORS+=("Message contains non-ASCII characters. No emojis (rule 1).")
+fi
+
+if [ "${#ERRORS[@]}" -gt 0 ]; then
+    echo >&2
+    echo "[commit-msg] Rejected - see AGENTS.md 'Commit Messages'." >&2
+    echo >&2
+    printf '  %s\n' "${ERRORS[@]}" >&2
+    echo >&2
+    echo "  Your subject was:" >&2
+    echo "    ${SUBJECT}" >&2
+    echo >&2
+    echo "  Example:" >&2
+    echo "    fix(relations): drop off-roster candidates" >&2
+    echo >&2
+    exit 1
+fi
+
+exit 0
