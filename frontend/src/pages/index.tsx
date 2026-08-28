@@ -201,10 +201,39 @@ export const query = graphql`
       nodeStories(first: 100) {
         nodes {
           id title storyNumber path sessionDate
+          storyArc { ... on Drupal_NodeStoryArc { id } }
+          charactersPresent { ... on Drupal_NodeCharacter { id } }
           campaign {
             ... on Drupal_TermCampaign {
               id name campaignStatus
               currentParty { ... on Drupal_NodeCharacter { id title } }
+            }
+          }
+        }
+      }
+      nodeStoryArcs(first: 100) {
+        nodes {
+          id title path levelRange targetStories
+          body { processed }
+          overallPlot { processed }
+          campaign { ... on Drupal_TermCampaign { id name } }
+          faction  { ... on Drupal_TermFaction  { id name } }
+          party { ... on Drupal_NodeCharacter { id } }
+          npcs  { ... on Drupal_NodeCharacter { id } }
+          arcPartyRelations {
+            ... on Drupal_ParagraphArcRelationshipPair {
+              pairType pairTier
+              pairNote { processed }
+              pairSource { ... on Drupal_NodeCharacter { id title } }
+              pairTarget { ... on Drupal_NodeCharacter { id title } }
+            }
+          }
+          arcNpcRelations {
+            ... on Drupal_ParagraphArcRelationshipPair {
+              pairType pairTier
+              pairNote { processed }
+              pairSource { ... on Drupal_NodeCharacter { id title } }
+              pairTarget { ... on Drupal_NodeCharacter { id title } }
             }
           }
         }

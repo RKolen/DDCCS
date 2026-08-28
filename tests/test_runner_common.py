@@ -1,17 +1,7 @@
-"""Common helpers for per-subsystem test aggregator scripts.
+"""Shared helpers for the per-subsystem test aggregator scripts.
 
-This module centralizes small helpers used by many
-``test_all_<subsystem>.py`` files to avoid duplicated scaffolding that
-triggers Pylint R0801 (duplicate-code).
-
-Public utilities in this module:
-- print_subsystem_summary(results: Dict[str, bool], title: str) -> int
-- run_test_file(test_file: str, module_prefix: str, test_name: str) -> bool
-
-The ``run_test_file`` helper centralizes the subprocess invocation used to
-run per-file test modules (the pattern ``python -m <package>.<module>``).
-Aggregator scripts should import it rather than reimplementing the same
-subprocess wrapper.
+Centralised so the aggregators do not duplicate scaffolding, which would
+trigger Pylint R0801.
 """
 from typing import Dict
 import sys

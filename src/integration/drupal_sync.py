@@ -1,18 +1,11 @@
 """Drupal wiki cache client.
 
-Backs :class:`src.ai.rag_system.DrupalWikiCache`: stores fetched wiki pages as
-``wiki_cache`` nodes in Drupal so the CMS owns the cache and it survives
-restarts.
+Backs :class:`src.ai.rag_system.DrupalWikiCache`, storing fetched wiki pages as
+``wiki_cache`` nodes so the CMS owns the cache across restarts.
 
-All access goes through the GraphQL endpoint. The project standardises on
-GraphQL for Drupal access; JSON:API is disabled server-side
-(``jsonapi_extras.settings`` sets ``default_disabled: true``), so any JSON:API
-call returns 404.
-
-The ``wikiCacheEntry`` / ``wikiCacheCount`` queries and the
-``setWikiCacheEntry`` / ``deleteWikiCacheEntry`` mutations are provided by the
-``dnd_content`` Drupal module. They are hand-written resolvers rather than
-graphql_compose exposure, so Gatsby never sources these nodes.
+Access is GraphQL only; JSON:API is disabled server-side and returns 404. The
+queries and mutations are hand-written resolvers in the ``dnd_content`` module
+rather than graphql_compose exposure, so Gatsby never sources these nodes.
 """
 
 import logging

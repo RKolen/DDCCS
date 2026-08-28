@@ -5,3 +5,7 @@ services:
       - '@entity_type.manager'
       - '@file.repository'
       - '@file_system'
+  dnd_content.story_arc_writer:
+    class: Drupal\dnd_content\Service\StoryArcWriter
+    arguments:
+      - '@entity_type.manager'

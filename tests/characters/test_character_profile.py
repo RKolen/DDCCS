@@ -1,21 +1,9 @@
-"""
-Test CharacterProfile Dataclass
+"""Test CharacterProfile Dataclass
 
 Tests the CharacterProfile dataclass for character data management,
 JSON serialization/deserialization, and field validation.
 
-What we test:
-- CharacterProfile initialization with defaults
-- Field validation and required fields
-- JSON serialization (to_dict, save_to_file)
-- JSON deserialization (from_dict, load_from_file)
-- File I/O operations
-
-Why we test this:
-- CharacterProfile is the core data structure for all characters
-- Must correctly save/load character data from JSON files
-- Field validation prevents invalid character configurations
-- Serialization must preserve all character information
+CharacterProfile is the core data structure for all characters.
 """
 
 from pathlib import Path

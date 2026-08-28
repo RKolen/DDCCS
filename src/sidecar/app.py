@@ -78,6 +78,8 @@ from src.sidecar.models import (
     SpotlightResponse,
 )
 from src.sidecar.query_parser import parse_query
+from src.sidecar.ai_profiles import build_profile_client
+from src.sidecar.relation_routes import router as relations_router
 from src.sidecar.tts_routes import router as tts_router
 from src.stories.spotlight_engine import SpotlightEngine
 
@@ -147,24 +149,7 @@ def _build_arc_client(profile_name: str) -> AIClient | None:
     Returns:
         A configured AIClient, or None when no usable profile is available.
     """
-    config = load_config()
-    profile = (
-        config.model_registry.get_profile(profile_name)
-        or config.model_registry.get_active_profile()
-    )
-    if profile is None or not profile.base_url or not profile.model:
-        return None
-    # Local CPU inference of a large model takes minutes per call; the default
-    # 30s AIClient timeout would abort every arc call. Allow a generous, tunable
-    # timeout (ARC_AI_TIMEOUT seconds) so synthesis actually completes.
-    return AIClient(
-        api_key=os.getenv("OLLAMA_API_KEY", "") or config.ai.api_key,
-        base_url=profile.base_url,
-        model=profile.model,
-        default_temperature=profile.temperature,
-        default_max_tokens=max(profile.max_tokens, 2000),
-        timeout=float(os.getenv("ARC_AI_TIMEOUT", "1800")),
-    )
+    return build_profile_client(profile_name)
 
 
 @lru_cache(maxsize=1)
@@ -187,6 +172,8 @@ def _get_arc_aggregate_client() -> AIClient | None:
     """
     profile = os.getenv("ARC_AGGREGATE_PROFILE", "creative")
     return _build_arc_client(profile) or _get_arc_ai_client()
+
+
 
 
 @lru_cache(maxsize=1)
@@ -905,4 +892,5 @@ def describe_image_endpoint(req: DescribeImageRequest) -> PromptResponse:
 app.include_router(_search_router)
 app.include_router(_eval_router)
 app.include_router(_character_router)
+app.include_router(relations_router)
 app.include_router(tts_router)

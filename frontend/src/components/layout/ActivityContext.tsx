@@ -1,17 +1,13 @@
 /**
  * ActivityContext — one activity log for the whole site.
  *
- * The queue drawer used to live inside StatelyLedger, so it existed only on the
- * console route: queue a portrait, walk to a story or a character page, and the
- * only view of what the host was doing vanished. The polling, the drawer state,
- * and the row handlers live here instead, mounted once by GlobalLayout, so
- * every page shows the same log and a job stays visible wherever you navigate.
+ * Polling, drawer state, and row handlers live here, mounted once by
+ * GlobalLayout, so a queued job stays visible wherever you navigate rather
+ * than only on the console route.
  *
- * Two things still belong to the console: resolving a character id to the
- * screen that shows it (that needs the roster), and opening a row in place
- * rather than through a page load. StatelyLedger registers both via
- * `registerConsole()` while it is mounted; everywhere else the defaults
- * deep-link back to `/`.
+ * StatelyLedger registers two console-only behaviours via `registerConsole()`
+ * while mounted: resolving a character id to its screen, and opening a row in
+ * place. Elsewhere the defaults deep-link back to `/`.
  */
 
 import * as React from 'react';

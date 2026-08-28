@@ -1,25 +1,4 @@
-"""
-Party Configuration JSON Validation Module
-
-Validates current party JSON files to ensure they contain proper structure
-and data types according to the D&D Campaign System schema.
-
-Usage:
-    # Standalone validation (validates all campaign party files)
-    python party_validator.py
-
-    # Validate a specific campaign's party file
-    python party_validator.py --campaign "Example_Campaign"
-
-    # Validate a specific file path
-    python party_validator.py [filepath]
-
-    # Programmatic validation
-    from src.validation.party_validator import validate_party_json, validate_party_file
-    is_valid, errors = validate_party_file(
-        "game_data/campaigns/Example_Campaign/current_party.json"
-    )
-"""
+"""Validate party composition files."""
 
 from typing import Dict, Any, List, Tuple, Optional
 import os

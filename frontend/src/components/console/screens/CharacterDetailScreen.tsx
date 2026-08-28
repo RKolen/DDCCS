@@ -17,6 +17,7 @@ import type { DrupalCampaign } from '../ConsoleContext';
 import { drupalAdminUrl } from '../../../utils/drupalLinks';
 import { Icon, Spinner } from '../atoms';
 import { ImageLightbox } from '../../atoms/ImageLightbox';
+import { CharacterRelationsTab } from '../CharacterRelationsTab';
 import {
   buildPortraitProfile,
   usePortraitReview,
@@ -47,6 +48,9 @@ export function CharacterDetailScreen({ ctx, setCtx }: ScreenProps): React.React
   const idx = ctx.charIdx ?? 0;
   const char = roster[idx] ?? null;
   const eyebrow = isNpc ? 'NPC Profile' : 'Character Sheet';
+  // Sheet vs Relations. Relations reads across every arc this character is in,
+  // so it is a view of the sheet rather than a separate screen.
+  const [tab, setTab] = React.useState<'sheet' | 'relations'>('sheet');
   // What the character actually shows: the stored portrait, or one accepted here.
   const attachedUrl = review.attachedUrl ?? char?.imageUrl ?? null;
   // A pending render takes over the preview, labelled as not yet attached.
@@ -228,7 +232,24 @@ export function CharacterDetailScreen({ ctx, setCtx }: ScreenProps): React.React
               </p>
             )}
 
-            {stats.length > 0 && (
+            <div className="arc-tab-row char-sheet-tabs">
+              <button
+                type="button"
+                className={`arc-tab${tab === 'sheet' ? ' active' : ''}`}
+                onClick={() => setTab('sheet')}
+              >
+                Sheet
+              </button>
+              <button
+                type="button"
+                className={`arc-tab${tab === 'relations' ? ' active' : ''}`}
+                onClick={() => setTab('relations')}
+              >
+                Relations
+              </button>
+            </div>
+
+            {tab === 'sheet' && stats.length > 0 && (
               <div className="char-sheet-body">
                 <div className="char-stat-row" style={{ gridTemplateColumns: `repeat(${stats.length}, 1fr)` }}>
                   {stats.map(s => (
@@ -240,6 +261,8 @@ export function CharacterDetailScreen({ ctx, setCtx }: ScreenProps): React.React
                 </div>
               </div>
             )}
+
+            {tab === 'relations' && <CharacterRelationsTab char={char} />}
           </>
         )}
       </div>

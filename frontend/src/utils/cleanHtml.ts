@@ -1,18 +1,5 @@
 /**
- * Sanitises CKEditor/WYSIWYG HTML before rendering with dangerouslySetInnerHTML.
- *
- * CKEditor 5 in Drupal inserts <br> tags for EVERY soft line-wrap inside the
- * editor, plus &nbsp; characters immediately before each <br> as padding.
- * Neither is semantically meaningful — they are display artefacts that must be
- * stripped and joined as plain text.
- *
- * Pipeline (order matters):
- *  1. Split paragraphs on double <br> (intentional paragraph breaks)
- *  2. Strip leading / trailing <br> from every <p>
- *  3. Replace remaining single <br> inside <p> with a regular space
- *  4. Remove &nbsp; that appear immediately before or after a space (padding)
- *  5. Collapse multiple internal spaces to one
- *  6. Remove paragraphs that are now empty or whitespace-only
+ * Strip Drupal's processed HTML down to what the console renders safely.
  */
 
 export function cleanHtml(raw: string | null | undefined): string {

@@ -95,7 +95,7 @@ content:
     region: content
     settings:
       size: 30
-      placeholder: 6-17
+      placeholder: 4-10
     third_party_settings: {  }
   field_npcs:
     type: entity_reference_autocomplete

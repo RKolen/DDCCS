@@ -1,17 +1,6 @@
-"""
-Tests for the character template system (D&D 2024).
+"""Tests for the character template system (D&D 2024).
 
-What we test:
-- Loading individual class templates
-- Listing available templates
-- Level-scaling calculations (HP, proficiency bonus, spell slots, features)
-- Building character data from a template (TemplateOptions API)
-- validate_character_template() validator
-
-Why we test this:
-- Templates are the foundation of the character creation wizard.
-- Level scaling must match D&D 2024 rules exactly.
-- Validation prevents malformed templates from reaching production.
+Templates are the foundation of the character creation wizard..
 """
 
 from pathlib import Path

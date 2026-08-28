@@ -10,7 +10,7 @@ field_name: field_pair_type
 entity_type: paragraph
 bundle: arc_relationship_pair
 label: 'Relationship type'
-description: 'Short label for the bond, e.g. "shared hometown", "hunter and quarry"'
+description: 'Short label for the bond, e.g. "sworn protector", "hunter and quarry"'
 required: false
 translatable: true
 default_value: {  }

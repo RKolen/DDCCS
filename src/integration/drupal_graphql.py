@@ -1,16 +1,8 @@
-"""Minimal Drupal GraphQL client.
+"""Drupal GraphQL transport.
 
-Reads published content (taxonomy terms, nodes) from the Drupal
-``graphql_compose`` endpoint. Published content is readable anonymously, so no
-credentials are required for queries; writes need a token and go through
-:func:`mutate_drupal`.
-
-Every entry point takes an optional ``config``. Callers holding their own
-:class:`DrupalConfig` pass it through so the connection they were built with is
-the one actually used; omitting it falls back to the loaded configuration.
-
-The project standardises on GraphQL for all Drupal access; JSON:API is disabled
-server-side (``jsonapi_extras`` sets ``default_disabled: true``).
+``query_drupal`` degrades to an empty dict so a read never breaks a caller;
+``mutate_drupal`` raises, because a silently dropped write is worse than a
+failure.
 """
 
 from __future__ import annotations

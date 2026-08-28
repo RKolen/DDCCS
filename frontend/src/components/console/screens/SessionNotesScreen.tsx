@@ -1,18 +1,8 @@
 /**
  * SessionNotesScreen — `stories/work-series` > s-notes.
  *
- * Three-column layout:
- *   Left  — sessions list (which session are we viewing notes for)
- *   Center — chronological tagged timeline + note composer
- *   Right  — tag counts, linked characters, linked items, AI assists
- *
- * Port of work-series/session-notes.jsx (standalone design)
- * and _canonical_source/ work-series session notes variant.
- *
- * Production wiring:
- *   - Session list from Drupal node--story ordered by field_order
- *   - Notes from node--session_note filtered by field_story reference
- *   - Note composer dispatches to POST /api/notes endpoint
+ * Three columns: the session list, a chronological tagged timeline with the
+ * note composer, and tag/character/item counts.
  */
 
 import * as React from 'react';

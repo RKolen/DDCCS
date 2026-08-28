@@ -1,16 +1,5 @@
 /**
  * Item entity types — aligned with Drupal `node--item`.
- *
- * Live Drupal schema fields:
- *   - title                  string
- *   - path                   string | null
- *   - itemType               string  (lowercase: 'weapon', 'armor', 'ring', …)
- *   - itemRarity             string  ('common' | 'uncommon' | 'rare' | 'very_rare'
- *                                    | 'legendary' | 'artifact' | 'vestige')
- *   - isMagic                boolean
- *   - itemRequiresAttunement boolean
- *
- * Plus optional rich entity fields queried when available.
  */
 
 /* ── Wire types — mirror Drupal exactly ──────────────────────────────── */

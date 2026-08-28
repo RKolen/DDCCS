@@ -120,9 +120,10 @@ export interface DrupalCharacter {
   skills: TermRef[];
   tools: TermRef[];
   /**
-   * Allegiance and characterisation. field_faction carries the ally/bbeg/neutral
-   * style tag an NPC is filed under; field_key_traits is the shared `traits`
-   * vocabulary the AI draws on for characterisation.
+   * Allegiance and characterisation. field_faction carries the character's real
+   * faction (the ally/neutral/BBEG axis lives on `role`), which is what a story
+   * arc resolves its antagonist roster through; field_key_traits is the shared
+   * `traits` vocabulary the AI draws on for characterisation.
    */
   faction: string | null;
   factionId: string | null;
@@ -191,6 +192,54 @@ export interface DrupalStory {
   /** Campaign taxonomy term name */
   campaign: string | null;
   campaignId: string | null;
+  /** UUID of the story_arc this story belongs to, if any. */
+  storyArcId: string | null;
+  /**
+   * PCs present in this story. Empty means the whole party — the field is a
+   * scene narrowing for when the party splits, not a roster.
+   */
+  charactersPresentIds: string[];
+}
+
+/**
+ * One directed relationship inside a story arc.
+ *
+ * Both ends are character UUIDs rather than names: the pair is read from
+ * either character's page, and names are ambiguous when a canonical character
+ * and its campaign clone share a title.
+ */
+export interface DrupalArcRelation {
+  sourceId: string | null;
+  sourceName: string | null;
+  targetId: string | null;
+  targetName: string | null;
+  /** Short label for the bond, e.g. "sworn protector". */
+  type: string | null;
+  /** 1 = direct and personal, 2 = thematic, 3 = incidental. */
+  tier: number | null;
+  note: string | null;
+}
+
+/** A story arc: the multi-story plan a run of stories is written against. */
+export interface DrupalStoryArc {
+  id: string;
+  title: string;
+  path: string | null;
+  campaign: string | null;
+  campaignId: string | null;
+  /** The full premise, as plain text. */
+  body: string | null;
+  /** Act structure / campaign spine, as plain text. */
+  overallPlot: string | null;
+  levelRange: string | null;
+  targetStories: number | null;
+  /** Antagonist faction term; its members are the antagonist roster. */
+  faction: string | null;
+  factionId: string | null;
+  partyIds: string[];
+  npcIds: string[];
+  partyRelations: DrupalArcRelation[];
+  npcRelations: DrupalArcRelation[];
 }
 
 /* ── Monster action shapes ───────────────────────────── */
@@ -294,6 +343,7 @@ export interface ConsoleData {
   campaigns: DrupalCampaign[];
   characters: DrupalCharacter[];
   stories: DrupalStory[];
+  storyArcs: DrupalStoryArc[];
   monsters: DrupalMonster[];
   items: DrupalItem[];
 }
@@ -312,6 +362,38 @@ export function npcCharacters(data: ConsoleData): DrupalCharacter[] {
 
 export function storiesForCampaign(data: ConsoleData, campaignName: string): DrupalStory[] {
   return data.stories.filter(s => s.campaign === campaignName);
+}
+
+export function storyArcsForCampaign(data: ConsoleData, campaignName: string): DrupalStoryArc[] {
+  return data.storyArcs.filter(a => a.campaign === campaignName);
+}
+
+/**
+ * Every arc relation touching a character, from either end.
+ *
+ * Reads across all arcs so a recurring NPC shows their whole web rather than
+ * one arc's slice, and pairs the relation with the arc it belongs to so the
+ * caller can say where a connection comes from.
+ */
+export function relationsForCharacter(
+  data: ConsoleData,
+  characterId: string,
+): Array<{ arc: DrupalStoryArc; relation: DrupalArcRelation; side: 'party' | 'npc' }> {
+  const out: Array<{ arc: DrupalStoryArc; relation: DrupalArcRelation; side: 'party' | 'npc' }> = [];
+  for (const arc of data.storyArcs) {
+    const sides: Array<['party' | 'npc', DrupalArcRelation[]]> = [
+      ['party', arc.partyRelations],
+      ['npc', arc.npcRelations],
+    ];
+    for (const [side, rels] of sides) {
+      for (const relation of rels) {
+        if (relation.sourceId === characterId || relation.targetId === characterId) {
+          out.push({ arc, relation, side });
+        }
+      }
+    }
+  }
+  return out;
 }
 
 /**
@@ -387,6 +469,7 @@ const ConsoleContext = React.createContext<ConsoleData>({
   campaigns: [],
   characters: [],
   stories: [],
+  storyArcs: [],
   monsters: [],
   items: [],
 });

@@ -156,7 +156,7 @@ export function StatelyLedger({
   /* A literal fallback would be a new object each render, remounting every
      consumer of the context below it. */
   const consoleData: ConsoleData = React.useMemo(
-    () => liveData ?? { campaigns: [], characters: [], stories: [], monsters: [], items: [] },
+    () => liveData ?? { campaigns: [], characters: [], stories: [], storyArcs: [], monsters: [], items: [] },
     [liveData],
   );
 

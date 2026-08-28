@@ -688,6 +688,7 @@ kbd {
   flex: 1;
   display: flex;
   min-height: 0;
+  min-width: 0;
 }
 
 .ledger-sidebar {
@@ -897,6 +898,10 @@ kbd {
 /* Action column */
 .ledger-action {
   flex: 1;
+  /* Without this the column cannot shrink below the max-content width of the
+     action-tab row, so the flex row overflows and the drawer plus the
+     right-hand buttons end up off-screen. */
+  min-width: 0;
   background: var(--canvas);
   overflow-y: auto;
   padding: 28px 32px;

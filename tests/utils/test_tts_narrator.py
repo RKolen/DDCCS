@@ -210,11 +210,11 @@ class TestMultiVoiceNarrator(unittest.TestCase):
         """Test MultiVoiceNarrator with custom config."""
         config = MultiVoiceConfig(
             narrator_voice_id="en_US-amy-medium",
-            character_voices={"Gorak": "en_US-ryan-low"},
+            character_voices={"Aragorn": "en_US-ryan-low"},
         )
         narrator = MultiVoiceNarrator(config=config)
         self.assertEqual(narrator.narrator_voice_id, "en_US-amy-medium")
-        self.assertEqual(narrator.character_voices["Gorak"], "en_US-ryan-low")
+        self.assertEqual(narrator.character_voices["Aragorn"], "en_US-ryan-low")
 
 
 class TestDialogueDetector(unittest.TestCase):

@@ -1,25 +1,13 @@
 /**
- * CharacterEditScreen — `characters/edit` and `npcs/n-edit`
+ * CharacterEditScreen — `characters/edit` and `npcs/n-edit`.
  *
- * The single place a character record is edited. Covers every non-paragraph
- * field: identity, ancestry, vitals, roleplay, story, proficiencies, the
- * antagonist fields NPCs use, and the per-character AI overrides.
+ * The single place a character record is edited, covering every non-paragraph
+ * field. Portrait, voice, and arc are reached by button instead, each having a
+ * dedicated screen this form has no business duplicating.
  *
- * Three field groups are deliberately not editable here and are reached by a
- * button instead, because each has a dedicated screen with tooling this form
- * has no business duplicating:
- *
- *   portrait  -> characters/ascii   (Portrait Studio, ComfyUI)
- *   voice     -> characters/consult (voice picker with live preview)
- *   arc       -> characters/arc     (Character Arc Analysis)
- *
- * Campaign, record type and source flag are editable here. Switching the
- * record type moves the character between the Characters and NPCs rosters on
- * the next build, which is the intended way to reclassify a record.
- *
- * Writes go through /api/update-character-profile, which PATCHes only the
- * fields that changed. The older /api/update-character is still the voice and
- * image-prompt path and is untouched.
+ * Switching the record type moves the character between the Characters and
+ * NPCs rosters on the next build. Writes PATCH only changed fields via
+ * /api/update-character-profile.
  */
 
 import * as React from 'react';

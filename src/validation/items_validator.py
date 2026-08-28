@@ -1,17 +1,4 @@
-"""
-Items Registry JSON Validation Module
-
-Validates custom items registry JSON files to ensure they contain proper structure
-and data types according to the D&D Campaign System schema.
-
-Usage:
-    # Standalone validation
-    python -m src.validation.items_validator [filepath]
-
-    # Programmatic validation
-    from src.validation.items_validator import validate_items_json, validate_items_file
-    is_valid, errors = validate_items_file("game_data/items/custom_items_registry.json")
-"""
+"""Validate the custom items registry."""
 
 from typing import Dict, Any, List, Tuple
 from src.utils.file_io import load_json_file

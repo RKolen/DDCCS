@@ -1,22 +1,9 @@
-"""
-Test RAG System (Retrieval-Augmented Generation)
+"""Test RAG System (Retrieval-Augmented Generation)
 
 Tests the DrupalWikiCache and WikiClient classes using a mock DrupalSync so
 no live Drupal instance or internet connection is required.
 
-What we test:
-- DrupalWikiCache with no sync configured (graceful no-op)
-- DrupalWikiCache set/get/delete/stats via MockDrupalSync
-- TTL expiration logic
-- DrupalSyncError graceful handling (cache miss on error)
-- WikiClient initialization and URL normalization
-- Custom item filtering via item registry
-
-Why we test this:
-- Ensures wiki content is cached correctly via Drupal
-- Validates TTL expiration prevents stale data
-- Confirms custom items block wiki lookups (homebrew filtering)
-- Verifies graceful degradation when Drupal is unavailable
+Ensures wiki content is cached correctly via Drupal.
 """
 
 import hashlib

@@ -1,21 +1,10 @@
-"""
-Test Prompt Templates
+"""Test Prompt Templates
 
 Validates that the shared AI prompt fragments are correctly defined
 and that the language instruction is present in all system prompts
 across the codebase.
 
-What we test:
-- LANGUAGE_INSTRUCTION constant is a non-empty string
-- LANGUAGE_INSTRUCTION references English as the default
-- LANGUAGE_INSTRUCTION instructs the model to match the user's language
-- Key system prompt builder functions include the language instruction
-
-Why we test this:
-- Guards against the local LLM reverting to Chinese or another unexpected
-  language when the user's prompt is in English.
-- Ensures multi-language support: a Dutch or German prompt yields a
-  response in the same language.
+Guards against the local LLM reverting to Chinese or another unexpected.
 """
 
 import unittest

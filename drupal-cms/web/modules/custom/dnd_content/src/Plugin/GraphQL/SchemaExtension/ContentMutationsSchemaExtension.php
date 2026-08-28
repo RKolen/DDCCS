@@ -146,6 +146,31 @@ class ContentMutationsSchemaExtension extends SdlSchemaExtensionPluginBase {
         ->map('session_date', $builder->fromArgument('sessionDate')),
     );
 
+    $registry->addFieldResolver(
+      'Mutation',
+      'createStoryArc',
+      $builder->produce('create_story_arc')
+        ->map('campaign_id', $builder->fromArgument('campaignId'))
+        ->map('title', $builder->fromArgument('title'))
+        ->map('payload', $builder->fromArgument('payload')),
+    );
+
+    $registry->addFieldResolver(
+      'Mutation',
+      'updateStoryArc',
+      $builder->produce('update_story_arc')
+        ->map('id', $builder->fromArgument('id'))
+        ->map('payload', $builder->fromArgument('payload')),
+    );
+
+    $registry->addFieldResolver(
+      'Mutation',
+      'saveStoryArcRelations',
+      $builder->produce('save_story_arc_relations')
+        ->map('id', $builder->fromArgument('id'))
+        ->map('payload', $builder->fromArgument('payload')),
+    );
+
     $this->registerWikiCacheResolvers($registry, $builder);
   }
 

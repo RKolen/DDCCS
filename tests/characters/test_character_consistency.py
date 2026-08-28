@@ -1,18 +1,8 @@
-"""
-Test Character Consistency Module
+"""Test Character Consistency Module
 
 Tests character development tracking and consistency utilities.
 
-What we test:
-- Character development file creation
-- Available recruits filtering
-- File content formatting
-- Exclude list handling
-
-Why we test this:
-- Development files track character growth and consistency
-- Recruitment system needs accurate character filtering
-- File generation must create valid markdown
+Development files track character growth and consistency.
 """
 from typing import Any
 

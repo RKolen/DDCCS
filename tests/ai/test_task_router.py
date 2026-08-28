@@ -1,21 +1,8 @@
-"""
-Test Task Router
+"""Test Task Router
 
 Tests for the TaskRouter, ModelRegistry, and get_client_for_task integration.
 
-What we test:
-- TaskRouter profile resolution per task type
-- TaskRouter character override handling
-- TaskRouter fallback to "default" for unknown profiles
-- ModelRegistry initialize, switch_profile, get_active_profile
-- ModelRegistry.get_router() returns a correctly wired TaskRouter
-- get_client_for_task returns AIClient with correct kwargs
-- ModelRegistryConfig.get_profile and list_profile_names
-
-Why we test this:
-- Ensures task routing produces the expected model profiles
-- Validates session switching is in-memory only
-- Confirms graceful fallback when registry is uninitialized
+Ensures task routing produces the expected model profiles.
 """
 
 from typing import Any

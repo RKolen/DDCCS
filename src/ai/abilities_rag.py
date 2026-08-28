@@ -1,19 +1,13 @@
 """Resolve D&D abilities and features from the 2024 ruleset.
 
-Given a source (class, species, subspecies, ...) and a character level, this
-fetches the relevant page from the rules wiki configured via
-``RAG_RULES_BASE_URL`` and extracts the abilities granted up to that level,
-with their rules text.
+Fetches the relevant page from the wiki at ``RAG_RULES_BASE_URL`` and extracts
+the abilities granted up to a character level, with their rules text.
 
-Two page layouts are supported:
-  * Class pages use ``Level N: Feature`` headings followed by description text.
-  * Species/subspecies pages list traits as bold-lead paragraphs
-    (``<strong>Resourceful.</strong> ...``); higher-level lineage traits using
-    ``Level N:`` headings are also captured.
+Two page layouts are supported: class pages use ``Level N: Feature`` headings,
+while species pages list traits as bold-lead paragraphs.
 
-The resolver degrades gracefully to an empty list whenever RAG is disabled,
-scraping dependencies are missing, or a page cannot be fetched or parsed. It is
-intentionally generic so other features can resolve rules content the same way.
+Degrades to an empty list whenever RAG is disabled, scraping dependencies are
+missing, or a page cannot be fetched.
 """
 
 from __future__ import annotations

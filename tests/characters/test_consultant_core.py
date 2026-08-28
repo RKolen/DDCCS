@@ -1,22 +1,9 @@
-"""
-Test Character Consultant Core
+"""Test Character Consultant Core
 
 Tests the main CharacterConsultant class that coordinates all character
 consultation services.
 
-What we test:
-- Consultant initialization with CharacterProfile
-- Reaction suggestions based on situation type
-- Personality-based modifications
-- Item management and retrieval
-- Status reporting
-- Delegation to specialized components (DC, Story, AI)
-
-Why we test this:
-- CharacterConsultant is the main interface for character consultations
-- Must correctly coordinate between multiple components
-- Reactions must be consistent with class and personality
-- Component delegation must work correctly
+CharacterConsultant is the main interface for character consultations.
 """
 
 from tests import test_helpers

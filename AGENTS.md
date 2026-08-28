@@ -291,6 +291,9 @@ src/
 |   |-- character_sheet.py
 |   |-- character_consistency.py
 |   |-- npc_constants.py
+|-- relations/       # Story-arc relationship suggestion
+|   |-- relation_types.py     # CharacterDigest + RelationSuggestion
+|   |-- relation_suggester.py # Per-subject prompting, parsing, merge
 |-- npcs/            # NPC management and auto-detection
 |   |-- npc_agents.py
 |   |-- npc_auto_detection.py
@@ -368,6 +371,7 @@ tests/
 |-- integration/     # Cross-module integration tests (Drupal sync)
 |-- items/           # Tests for src/items/
 |-- npcs/            # Tests for src/npcs/
+|-- relations/       # Tests for src/relations/
 |-- stories/         # Tests for src/stories/
 |-- utils/           # Tests for src/utils/
 |-- validators/      # Tests for src/validation/

@@ -402,6 +402,54 @@ class ArcDataPointModel(BaseModel):
     ai_analysis: str = ""
 
 
+class CharacterDigestModel(BaseModel):
+    """The little a model needs to reason about one character."""
+
+    name: str
+    summary: str = ""
+    origin: str = ""
+    faction: str = ""
+    hooks: List[str] = Field(default_factory=list)
+
+
+class RelationSuggestRequest(BaseModel):
+    """Request one subject's relationship suggestions (one model call)."""
+
+    subject: CharacterDigestModel
+    others: List[CharacterDigestModel] = Field(default_factory=list)
+    kind: str = "party"
+    context: str = ""
+
+
+class RelationSuggestionModel(BaseModel):
+    """One suggested directed relationship between two characters."""
+
+    source: str
+    target: str
+    relation_type: str = ""
+    tier: int = 2
+    note: str = ""
+
+
+class RelationSuggestResponse(BaseModel):
+    """Suggestions produced for one subject."""
+
+    subject: str
+    relations: List[RelationSuggestionModel] = Field(default_factory=list)
+
+
+class RelationMergeRequest(BaseModel):
+    """Request to merge per-subject batches into one deduplicated set."""
+
+    batches: List[List[RelationSuggestionModel]] = Field(default_factory=list)
+
+
+class RelationMergeResponse(BaseModel):
+    """The merged, deduplicated relationship set."""
+
+    relations: List[RelationSuggestionModel] = Field(default_factory=list)
+
+
 class ArcAggregateRequest(BaseModel):
     """Request to aggregate stored per-story data points into a full arc."""
 

@@ -40,6 +40,10 @@ src/
 |   |-- arc_reports.py       # Report generation
 |   `-- arc_storage.py       # Arc data persistence
 |
+|-- relations/          # Story-arc relationship suggestion
+|   |-- relation_types.py     # CharacterDigest + RelationSuggestion
+|   `-- relation_suggester.py # Per-subject prompting, parsing, and merge
+|
 |-- npcs/               # NPC management
 |   |-- npc_agents.py           # NPC AI agents
 |   `-- npc_auto_detection.py   # Automatic NPC detection from stories

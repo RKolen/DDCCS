@@ -1,18 +1,4 @@
-"""Best-effort admin calls to the local Ollama server (model unloading).
-
-The ComfyUI portrait flow uses this to free RAM held by resident Ollama models
-before Stable Diffusion loads its checkpoint. This box is CPU-only; two large
-models resident at once is the top OOM risk (see AGENTS.md and the ComfyUI
-integration plan).
-
-Unloading uses Ollama's native API (``/api/ps`` to list, ``/api/generate`` with
-``keep_alive: 0`` to evict) - the OpenAI-compatible ``/v1`` path ignores
-``keep_alive``. The Ollama daemon is left running: it lazily reloads a model on
-the next request, so no restart is needed after generation.
-
-All functions are best-effort: they return quietly (0 / empty) and never raise
-when Ollama is unreachable, so a portrait still generates if Ollama is down.
-"""
+"""Administrative helpers for a local Ollama instance."""
 
 from typing import List
 

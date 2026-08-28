@@ -1,18 +1,9 @@
-"""Enumerate the rules wiki's catalogue of character-creation options.
+"""Resolve which backgrounds, species, and classes exist, per sourcebook.
 
-Where :mod:`src.ai.abilities_rag` resolves *one* known background, species, or
-class, this module answers the prior question: **which ones exist?** It reads
-the wiki's index pages (``background:all``, ``species:all``, ``class:all``) and
-tags each entry with the sourcebook that introduced it, taken from the
-``Source:`` line every rules page carries.
-
-That sourcebook tag is what makes the catalogue useful: a group only owns some
-books, so ``RAG_SOURCEBOOKS`` names the ones whose content should be offered,
-and :func:`filter_by_sourcebooks` drops the rest. With the variable unset the
-catalogue is returned whole.
-
-The resolver degrades gracefully to an empty catalogue whenever RAG is
-disabled, scraping dependencies are missing, or a page cannot be fetched.
+Reads index pages from the rules wiki at ``RAG_RULES_BASE_URL`` and returns
+catalogue entries tagged with the sourcebook each came from, so a group is only
+offered content from books it owns. Degrades to an empty catalogue whenever RAG
+is unavailable, and never blocks character creation.
 """
 
 from __future__ import annotations

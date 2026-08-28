@@ -1,18 +1,12 @@
 /**
- * /spells/ — the Spell Compendium index page.
+ * /spells/ — the Spell Compendium index.
  *
- * Spells are `node--spell` content, promoted out of the Stories console
- * section into a surface of their own (2026-08-23).
+ * Deliberately thin: a level-grouped index over the fields Drupal exposes
+ * today. Search, school filters, and slot tracking are still to be designed.
  *
- * Deliberately thin: a level-grouped index over the fields Drupal actually
- * exposes today, plus an honest empty state. The compendium proper — search,
- * school filters, class lists, slot tracking — is still to be designed.
- *
- * Schema note: `spellSchool` is a `TermUnion`, but the `spell_school`
- * vocabulary is NOT enabled under `taxonomy_term:` in
- * `graphql_compose.settings.graphql_compose_server.yml`, so no
- * `TermSpellSchool` type exists to spread on and the school cannot be read.
- * Enable the vocabulary and re-import config before querying it here.
+ * `spellSchool` cannot be read yet: the `spell_school` vocabulary is not
+ * enabled under `taxonomy_term:` in graphql_compose settings, so no
+ * `TermSpellSchool` type exists to spread on.
  */
 
 import React from 'react';

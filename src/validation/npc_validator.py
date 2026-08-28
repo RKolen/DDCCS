@@ -1,17 +1,4 @@
-"""
-NPC JSON Validation Module
-
-Validates NPC profile JSON files to ensure they contain all required fields
-and proper data types according to the D&D Campaign System schema.
-
-Usage:
-    # Standalone validation
-    python -m src.validation.npc_validator [filepath]
-
-    # Programmatic validation
-    from src.validation.npc_validator import validate_npc_json, validate_npc_file
-    is_valid, errors = validate_npc_file("game_data/npcs/my_npc.json")
-"""
+"""Validate NPC JSON records."""
 
 from typing import Dict, Any, List, Tuple
 from src.utils.file_io import load_json_file, get_json_files_in_directory

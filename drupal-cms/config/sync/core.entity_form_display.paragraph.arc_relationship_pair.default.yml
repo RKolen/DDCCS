@@ -57,7 +57,7 @@ content:
     region: content
     settings:
       size: 60
-      placeholder: 'e.g. shared hometown, hunter and quarry'
+      placeholder: 'e.g. sworn protector, hunter and quarry'
     third_party_settings: {  }
 hidden:
   created: true

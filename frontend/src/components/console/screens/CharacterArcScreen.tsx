@@ -1,21 +1,11 @@
 /**
- * CharacterArcScreen — `characters/arc` and arc sub-screens.
+ * CharacterArcScreen — `characters/arc` and its sub-screens.
  *
- * Sub-screens dispatched via ctx.arcSubAction:
- *   arc-summary  → character arc summary (metrics, timeline)
- *   arc-analyze  → AI analysis — 3-phase: setup → stream → result
- *   arc-overview → campaign-wide arc comparison
- *   arc-export   → export arc report to file
- *   (none)       → arc hub — all characters at a glance
+ * ctx.arcSubAction selects the view: arc-summary, arc-analyze, arc-overview,
+ * arc-export, or the hub when unset.
  *
- * All character/story data comes from ConsoleContext (Drupal).
- * Arc analysis output (direction, stage, metrics, etc.) is produced by
- * the Python CLI's arc analysis commands and is not yet in Drupal; screens
- * show an empty state until analysis has been run.
- *
- * Canonical CSS: src/styles/arcs.css
- * Canonical atoms: _canonical_source/arc-atoms.jsx
- * Canonical data shapes: _canonical_source/arc-data.jsx
+ * Character and story data come from ConsoleContext. Arc analysis output is
+ * produced separately, so screens show an empty state until it has been run.
  */
 
 import * as React from 'react';

@@ -1,22 +1,10 @@
-"""
-Test AI Client Interface
+"""Test AI Client Interface
 
 Tests the AIClient class for basic initialization, message creation,
 and configuration management. Does NOT test actual API calls (those require
 a live connection and are tested separately).
 
-What we test:
-- Client initialization with various configurations
-- Environment variable loading
-- Message helper methods
-- CharacterAIConfig dataclass operations
-- Configuration serialization/deserialization
-
-Why we test this:
-- Ensures AI client can be configured correctly
-- Validates environment variable fallbacks work
-- Confirms message creation helpers produce correct format
-- Verifies character-specific AI config can be saved/loaded
+Ensures AI client can be configured correctly.
 """
 
 import os

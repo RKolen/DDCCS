@@ -1,20 +1,15 @@
 /**
- * PortraitStudioScreen — `characters / ascii` ("Customize Portrait").
+ * PortraitStudioScreen — `characters/ascii` ("Customize Portrait").
  *
- * The ComfyUI portrait input setup: pick a character, tune the generation
- * inputs (prompt, negative prompt, seed, size), and generate. Generation is
- * queued (`dnd_portrait`): the host runs it one job at a time, so leaving this
- * screen mid-render no longer loses the work. Replaces the old deprecated
- * ASCII-portrait notice.
+ * Tune the ComfyUI generation inputs and queue a render (`dnd_portrait`), so
+ * leaving the screen mid-render does not lose the work.
  *
- * A finished render is a proposal, not a fact: it is stored in the media library
- * and shown here as a candidate, and only Accept points the character's
- * field_image at it. That is what stops a render finishing in the background
- * from replacing a portrait nobody wanted replaced. The activity drawer links
- * back here for exactly that decision.
+ * A finished render is a proposal: it lands in the media library as a
+ * candidate, and only Accept points the character's field_image at it — so a
+ * background render never replaces a portrait nobody wanted replaced.
  *
- * Generation needs COMFYUI_ENABLED=true on the sidecar; when it is disabled or
- * unreachable the job fails with that reason and this screen shows it.
+ * Needs COMFYUI_ENABLED=true on the sidecar; otherwise the job fails with that
+ * reason and this screen shows it.
  */
 
 import * as React from 'react';

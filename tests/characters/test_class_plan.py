@@ -1,5 +1,4 @@
-"""
-Test the class plan resolver.
+"""Test the class plan resolver.
 
 Tests src.characters.class_plan: shaping raw class_grant paragraphs into a
 ClassPlan (the taxonomy path) and building a plan from a JSON template (the
@@ -7,14 +6,7 @@ fallback). No live Drupal or wiki access is required - grant dicts are crafted
 to mirror the GraphQL shape, and the template fallback uses a real class
 template from templates/characters/.
 
-What we test:
-- Grant paragraphs become skill/tool/equipment choice groups + features
-- Grants above the character level are dropped
-- The template fallback yields a plan with the class skill choice and equipment
-
-Why we test this:
-- Locks the taxonomy-to-plan contract the wizard's skills step depends on
-- Ensures the resolver degrades to the template without Drupal
+Locks the taxonomy-to-plan contract the wizard's skills step depends on.
 """
 
 from tests import test_helpers

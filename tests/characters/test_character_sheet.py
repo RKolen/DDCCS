@@ -1,19 +1,8 @@
-"""
-Test Character Sheet Data Structures
+"""Test Character Sheet Data Structures
 
 Tests enums and NPC dataclasses from character_sheet.py.
 
-What we test:
-- DnDClass enum has all 12 classes
-- Species enum has expected species
-- Lineage lists are non-empty
-- NPC dataclasses can be instantiated
-- NPC data structures are valid
-
-Why we test this:
-- These structures are used throughout the character system
-- Enums must have correct values for JSON serialization
-- NPC profiles are used by story manager and auto-detection
+These structures are used throughout the character system.
 """
 
 from src.characters.character_sheet import (

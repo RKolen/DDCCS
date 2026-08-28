@@ -25,11 +25,13 @@ tests/
 |-- integration/     # Cross-module integration tests
 |-- items/           # Tests for src/items/
 |-- npcs/            # Tests for src/npcs/
+|-- relations/       # Tests for src/relations/
 |-- stories/         # Tests for src/stories/
 |-- utils/           # Tests for src/utils/
 |-- validators/      # Tests for src/validation/
 |-- run_all_tests.py # Main test runner
 |-- test_helpers.py  # Shared test utilities
+|-- ai_fixtures.py   # ScriptedAIClient (exact responses / scripted failures)
 `-- test_runner_common.py  # Common runner infrastructure
 ```
 

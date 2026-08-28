@@ -1,20 +1,9 @@
 /**
- * Normalise Drupal text-field values into plain lines.
+ * Convert Drupal rich-text field values into editable plain-text lines.
  *
- * Several character records hold HTML in fields that are semantically a list of
- * short phrases — `<p>Steadfast</p>` instead of `Steadfast`, and in a few cases
- * three separate traits crammed into one field value as three `<p>` blocks.
- * The fields are `plain_text` format and always were, so this is stored damage
- * from a one-off write rather than an ongoing source; the console repairs it on
- * read and the editor writes clean values back.
- *
- * Block-level closing tags and `<br>` are treated as line breaks, so a single
- * value that contains several paragraphs yields several lines. That is what
- * makes a value like Kaelith Ashveil's three-paragraph trait list editable as
- * three rows.
- *
- * Runs during the Gatsby build as well as in the browser, so it is written
- * against strings only — no DOM.
+ * A cardinality -1 text field arrives as a list of processed HTML values; the
+ * editor works in lines. Paragraph breaks become line breaks so a multi-
+ * paragraph trait stays editable, and a single wrapped sentence stays one line.
  */
 
 /** Block-level closing tags. These always end an entry. */
@@ -29,11 +18,6 @@ const ANY_TAG = /<[^>]*>/g;
 /**
  * Decide whether each `<br>` ends an entry or merely wraps a line.
  *
- * The content uses `<br>` for both. Raghoth Stormmaul's traits are three
- * complete sentences separated by `<br>`, and splitting them is the whole
- * point; Irixel Delymar's single trait is one sentence that happens to wrap at
- * a `<br>` after a comma, and splitting that would invent a second trait out of
- * a sentence fragment.
  *
  * Sentence-ending punctuation before the break is the signal that separates the
  * two. It is a heuristic, not a rule the data guarantees — but it is right on

@@ -1,20 +1,12 @@
 /**
- * DDCCS Console — ScreenRouter
- * --------------------------------------------------------------
- * Typed port of `menu/screens-router.jsx` from the design system.
+ * DDCCS Console — ScreenRouter.
  *
- * Maps (section.id, item.id) -> the screen component that fills the
- * action-body panel of the StatelyLedger. This is intentionally a
- * dispatch table rather than per-route file structure — it mirrors
- * the CLI's section/item taxonomy and lets us share state via `ctx`.
+ * Maps (section.id, item.id) -> the screen filling the ledger's action panel.
+ * A dispatch table rather than per-route files, so screens share state via
+ * `ctx`.
  *
- * Canonical reference:
- *   /menu/screens-router.jsx          <- the routing table
- *   /menu/screens-content.jsx         <- story/reader screens
- *   /menu/screens-admin.jsx           <- settings/tools/NPC screens
- *
- * NPC note: NPCs are character nodes with field_character_type=false.
- * The `npcs/*` routes query nodeCharacter filtered by that field.
+ * NPCs are character nodes with field_character_type=false; `npcs/*` routes
+ * query nodeCharacter filtered by that field.
  */
 
 import * as React from 'react';
@@ -37,6 +29,8 @@ export interface ScreenContext {
    */
   editCharId?: string;
   activeCampaignName?: string | null;
+  /** UUID of the story arc a stories screen is focused on. */
+  arcId?: string;
   settingsTab?: 'view' | 'ai' | 'rag' | 'display' | 'paths' | 'validate' | 'save';
   modelId?: string;
   /**
@@ -93,6 +87,7 @@ import { SessionNotesScreen }           from './screens/SessionNotesScreen';
 import { TimelineScreen }               from './screens/TimelineScreen';
 import { SpellRegistryScreen }          from './screens/SpellRegistryScreen';
 import { NewSeriesScreen }              from './screens/NewSeriesScreen';
+import { StoryArcScreen }               from './screens/StoryArcScreen';
 import { SettingsScreen }               from './screens/SettingsScreen';
 import { ModelProfileScreen }           from './screens/ModelProfileScreen';
 import { ToolsScreen }                  from './screens/ToolsScreen';
@@ -149,6 +144,7 @@ export function ScreenRouter({ section, item, ctx, setCtx }: ScreenRouterProps):
   if (key === 'stories/read')        return <ReadStoryFileScreen ctx={ictx} setCtx={set} />;
   if (key === 'stories/timeline')    return <TimelineScreen ctx={ictx} setCtx={set} />;
   if (key === 'stories/new-series')  return <NewSeriesScreen ctx={ictx} setCtx={set} />;
+  if (key === 'stories/arcs')        return <StoryArcScreen ctx={ictx} setCtx={set} />;
 
   /* ───── NPCs (character nodes with field_character_type=false) ─────
      Same screens as the characters/* twins, with npcMode set — an NPC is a

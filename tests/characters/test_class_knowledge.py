@@ -1,18 +1,8 @@
-"""
-Test Class Knowledge Database
+"""Test Class Knowledge Database
 
 Tests the static D&D class knowledge database for all 12 classes.
 
-What we test:
-- All 12 D&D classes are present
-- Each class has required data fields
-- Data structure is consistent
-- Class data is valid and complete
-
-Why we test this:
-- Class knowledge is used by character consultants for roleplay guidance
-- Missing or invalid data would break consultant behavior
-- Ensures consistency across all character classes
+Class knowledge is used by character consultants for roleplay guidance.
 """
 
 from tests import test_helpers

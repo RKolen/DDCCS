@@ -9,6 +9,7 @@
 import type {
   ConsoleData, DrupalCampaign, DrupalCharacter, DrupalStory, DrupalMonster, DrupalItem,
   DrupalCharacterArc, DrupalArcMetric, DrupalAbilityScores, DrupalCharacterClass, TermRef,
+  DrupalStoryArc, DrupalArcRelation,
 } from '../components/console/ConsoleContext';
 import { textValues, htmlToText } from './richTextToLines';
 
@@ -298,17 +299,69 @@ export interface RawStory {
   path:        string | null;
   sessionDate: string | null;
   campaign:    RawCampaignOnStory | null;
+  storyArc?:   { id: string } | null;
+  charactersPresent?: Array<{ id?: string } | null> | null;
+}
+
+interface RawArcPair {
+  pairType?:   string | null;
+  pairTier?:   number | null;
+  pairNote?:   { processed?: string | null } | null;
+  pairSource?: { id?: string; title?: string } | null;
+  pairTarget?: { id?: string; title?: string } | null;
+}
+
+export interface RawStoryArc {
+  id:             string;
+  title:          string;
+  path:           string | null;
+  levelRange:     string | null;
+  targetStories:  number | null;
+  body?:          { processed?: string | null } | null;
+  overallPlot?:   { processed?: string | null } | null;
+  campaign?:      RawTermRef | null;
+  faction?:       RawTermRef | null;
+  party?:         Array<{ id?: string } | null> | null;
+  npcs?:          Array<{ id?: string } | null> | null;
+  arcPartyRelations?: Array<RawArcPair | null> | null;
+  arcNpcRelations?:   Array<RawArcPair | null> | null;
 }
 
 export interface ConsoleQueryData {
   drupal: {
     nodeCharacters: { nodes: RawCharacter[] };
     nodeStories:    { nodes: RawStory[] };
+    nodeStoryArcs?: { nodes: RawStoryArc[] } | null;
     termCampaigns:  { nodes: RawCampaignTerm[] };
     nodeMonsters?:  { nodes: RawMonster[] } | null;
   } | null;
   /* Items come from Gatsby sourceNodes (all pages, no 100-item cap) */
   allAllItem?: { nodes: RawItem[] } | null;
+}
+
+/** Collect the ids from an entity-reference list, dropping unresolved members. */
+function idList(refs: Array<{ id?: string } | null> | null | undefined): string[] {
+  return (refs ?? []).map(r => r?.id).filter((id): id is string => Boolean(id));
+}
+
+/**
+ * Map arc_relationship_pair paragraphs into DrupalArcRelation.
+ *
+ * A pair missing either end is dropped: it cannot be shown from a character's
+ * page, which is the whole reason both ends are stored as references.
+ */
+function arcRelations(pairs: Array<RawArcPair | null> | null | undefined): DrupalArcRelation[] {
+  return (pairs ?? [])
+    .filter((p): p is RawArcPair => Boolean(p?.pairSource?.id && p?.pairTarget?.id))
+    .map(p => ({
+      sourceId:   p.pairSource?.id ?? null,
+      sourceName: p.pairSource?.title ?? null,
+      targetId:   p.pairTarget?.id ?? null,
+      targetName: p.pairTarget?.title ?? null,
+      type:       p.pairType ?? null,
+      tier:       p.pairTier ?? null,
+      note:       htmlToText(p.pairNote?.processed ?? '') || null,
+    }));
 }
 
 function splitCsv(s: string | null | undefined): string[] {
@@ -317,7 +370,9 @@ function splitCsv(s: string | null | undefined): string[] {
 }
 
 export function buildConsoleData(data: ConsoleQueryData | null | undefined): ConsoleData {
-  if (!data?.drupal) return { campaigns: [], characters: [], stories: [], monsters: [], items: [] };
+  if (!data?.drupal) {
+    return { campaigns: [], characters: [], stories: [], storyArcs: [], monsters: [], items: [] };
+  }
 
   const characters: DrupalCharacter[] = data.drupal.nodeCharacters.nodes.map(n => {
     const classes = characterClasses(n.characterClasses);
@@ -397,7 +452,27 @@ export function buildConsoleData(data: ConsoleQueryData | null | undefined): Con
       sessionDate: n.sessionDate,
       campaign:    n.campaign?.name ?? null,
       campaignId:  n.campaign?.id ?? null,
+      storyArcId:  n.storyArc?.id ?? null,
+      charactersPresentIds: idList(n.charactersPresent),
     }));
+
+  const storyArcs: DrupalStoryArc[] = (data.drupal.nodeStoryArcs?.nodes ?? []).map(n => ({
+    id:             n.id,
+    title:          n.title,
+    path:           n.path,
+    campaign:       n.campaign?.name ?? null,
+    campaignId:     n.campaign?.id ?? null,
+    body:           htmlToText(n.body?.processed ?? '') || null,
+    overallPlot:    htmlToText(n.overallPlot?.processed ?? '') || null,
+    levelRange:     n.levelRange,
+    targetStories:  n.targetStories,
+    faction:        n.faction?.name ?? null,
+    factionId:      n.faction?.id ?? null,
+    partyIds:       idList(n.party),
+    npcIds:         idList(n.npcs),
+    partyRelations: arcRelations(n.arcPartyRelations),
+    npcRelations:   arcRelations(n.arcNpcRelations),
+  }));
 
   /* Build campaign map — primary source is the direct termCampaigns query
      so campaigns without stories or characters are always included. */
@@ -507,6 +582,7 @@ export function buildConsoleData(data: ConsoleQueryData | null | undefined): Con
     campaigns: Array.from(campaignMap.values()),
     characters,
     stories,
+    storyArcs,
     monsters,
     items,
   };

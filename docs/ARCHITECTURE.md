@@ -128,6 +128,9 @@ queries and computes spotlight scores. Routes:
 - `POST /character/arc/story` + `/character/arc/aggregate` — two-step character
   arc analysis (per-story data point, then aggregate); `/character/arc` is the
   single-shot equivalent
+- `POST /relations/suggest` + `/relations/merge` — story-arc relationship
+  suggestion, one subject per call, then a merge that collapses reciprocal
+  pairs (`src/sidecar/relation_routes.py`)
 - (plus the `/character/*` build/skill/equipment and `/tts/speak` +
   `/tts/segment` routes)
 
@@ -162,8 +165,40 @@ Job types (`drupal-cms/web/modules/custom/dnd_jobs`):
 | -------- | ---- | ------ |
 | `dnd_portrait` | sidecar `/character/portrait` | file + media only; result carries `imageUrl`, `usedReference`, and `review: pending`, and **does not** set `field_image` |
 | `dnd_arc_analysis` | console `run-arc-analysis` | per-story analyses + the saved arc |
+| `dnd_arc_relations` | console `run-arc-relations` | the suggested relations on the job, for review; **does not** write them onto the arc |
 | `dnd_story_generation` | console `generate-story-text` | the story text on the job, for review |
 | `dnd_session_summary` | console `store-session-summary` | the summary on the campaign term |
+
+#### Story arcs and their relationship web
+
+A `story_arc` node is the multi-story plan a run of stories is written against.
+It carries the premise, the act spine, the antagonist faction, the party, and
+two collections of `arc_relationship_pair` paragraphs — party-internal bonds and
+party-to-NPC connections. Stories point back at their arc through
+`field_story_arc`, so the chain is campaign -> arc -> story.
+
+Suggesting the web is a fan-out, for the same reason arc analysis is: a large
+cast is hundreds of possible connections, too many for one local inference pass.
+One call per party member, then a merge:
+
+```text
+console (or queue worker)
+   |  per subject
+   +--> api/suggest-arc-relations --> sidecar /relations/suggest --> instruct model
+   |
+   +--> api/merge-arc-relations   --> sidecar /relations/merge    (dedupe pairs)
+   |
+   +--> accept/reject review --> api/save-arc-relations --> Drupal saveStoryArcRelations
+```
+
+The interactive run loops in the browser to show progress; the queued run
+(`dnd_arc_relations`) loops on the host via `run-arc-relations` so the tab can
+be closed. Either way the operator reviews before anything is written, because
+`saveStoryArcRelations` replaces a whole relation side.
+
+The suggestion model must be an **instruct** model. A local "thinking" model
+ignores `think:false` over the OpenAI endpoint and spends its whole token budget
+reasoning, returning empty content; `RELATIONS_PROFILE` selects the profile.
 
 #### Nothing a job generates is applied unattended
 

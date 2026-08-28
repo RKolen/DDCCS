@@ -31,7 +31,7 @@ class SpeechSegment:
 # Regex patterns for dialogue detection
 DIALOGUE_PATTERNS = {
     # Pattern A: "Dialogue," speaker said
-    # Examples: "Evenin'," the barkeep said. "Ale," Gorak replied.
+    # Examples: "Evenin'," the barkeep said. "Ale," Aragorn replied.
     "inline_after": re.compile(
         r'"([^"]+)"\s*,?\s*(?:the\s+)?(\w+)\s+(?:said|replied|asked|muttered|'
         r'whispered|called|answered|responded|added|stated|exclaimed|'
@@ -39,14 +39,14 @@ DIALOGUE_PATTERNS = {
         re.IGNORECASE,
     ),
     # Pattern B: Speaker: "Dialogue" or Speaker (action): "Dialogue"
-    # Examples: Nymur: "I couldn't help but hear..."
-    #           Kaelen: (with a raised eyebrow) "Friendship comes cheap..."
+    # Examples: Frodo: "I couldn't help but hear..."
+    #           Aragorn: (with a raised eyebrow) "Friendship comes cheap..."
     "prefix_explicit": re.compile(
         r"^([A-Z][a-zA-Z]+)\s*:?\s*(?:\([^)]+\))?\s*:\s*\"([^\"]+)\"",
         re.MULTILINE,
     ),
     # Pattern C: Speaker: "Multi-line dialogue" (continuation)
-    # Example: Gorak: "I've heard rumors..."
+    # Example: Gandalf: "I've heard rumors..."
     "prefix_continuation": re.compile(
         r"^([A-Z][a-zA-Z]+)\s*:\s*\"([^\"]+)\"",
         re.MULTILINE,

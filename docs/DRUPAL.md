@@ -79,7 +79,7 @@ Full field sets live in
   thirteen.
 - **story_arc** — `field_campaign`, `field_body` (the full premise, not a
   one-liner), `field_overall_plot` (act structure / campaign spine),
-  `field_level_range` (string, e.g. `6-17`), `field_target_stories` (int),
+  `field_level_range` (string, e.g. `4-10`), `field_target_stories` (int),
   `field_faction` (-> the antagonist faction term; its members resolve the
   antagonist roster), `field_npcs` and `field_party` (-> `character` nodes),
   and two `arc_relationship_pair` paragraph collections,
@@ -268,6 +268,32 @@ summary server-side (sidecar `/character/arc/synthesize`) instead of holding eve
 story in memory. `deleteCharacterAnalysis` discards the record (the arc screen's
 Discard action).
 
+### Story arc mutations
+
+`createStoryArc` needs only a campaign and a title; everything else arrives as
+a JSON payload keyed by the console's camelCase names, applied as a **partial
+patch**. `updateStoryArc` takes the same keys (plus `title` and `campaign`).
+That is what lets the wizard create the arc at step 1 and fill it in as the
+user advances, rather than holding a half-built arc in browser state.
+
+Recognised payload keys: `body` (the full premise), `overallPlot`,
+`levelRange`, `targetStories`, `faction`, `party`, `npcs`.
+
+`saveStoryArcRelations` takes `{"party": [...], "npc": [...]}` where each entry
+is `{source, target, type, tier, note}`. **Only the sides present are
+replaced**, so the party run and the NPC run each save without clearing the
+other's work. Within a side the replacement is wholesale, because the console
+sends the set that survived accept/reject rather than a diff.
+
+**Reference resolution.** Characters and terms may be given as a UUID *or* an
+exact name, so the markdown importer and the AI suggestions can pass the names
+they read. Names are ambiguous here — a canonical character and its campaign
+clone share a title — so a name match prefers the clone belonging to the arc's
+campaign, falling back to the canonical node. That resolves PCs to their
+campaign clones and NPCs to canon, which is what each actually has. A reference
+that resolves to nothing is **skipped, not fatal**: a relation pair missing
+either end is dropped, and a partially matched import still saves what matched.
+
 ### Campaign summaries (`session_summary` paragraph)
 
 The `campaign` vocab carries `field_session_summaries` (-> `session_summary`
@@ -346,6 +372,9 @@ Per-action user writes go through custom GraphQL mutations called from
 | `createCampaign` | `frontend/src/api/campaigns.ts` |
 | `addCharacterToCampaign` | `frontend/src/api/campaign-party.ts` |
 | `createStory` | `frontend/src/api/create-story.ts` |
+| `createStoryArc` | the console's new-series wizard (step 1) |
+| `updateStoryArc` | the wizard's later steps + the arc overview screen |
+| `saveStoryArcRelations` | the party / NPC relation suggestion runs + the relations tabs |
 | `setSessionSummary` | `frontend/src/api/create-story.ts` + `scripts/backfill-summaries.mjs` |
 | `saveCharacterArc` | `frontend/src/api/save-arc.ts` |
 | `createCharacter` | `frontend/src/api/create-character.ts` |
@@ -475,7 +504,7 @@ job types, the queue config, and the GraphQL surface the console polls.
 | Piece | Where |
 | ----- | ----- |
 | Queue | `advancedqueue.advancedqueue_queue.dnd_ai` - `processor: daemon`, `lease_time: 900`, `stop_when_empty: false` |
-| Job types | `dnd_portrait`, `dnd_arc_analysis`, `dnd_story_generation`, `dnd_session_summary` (`src/Plugin/AdvancedQueue/JobType/`) |
+| Job types | `dnd_portrait`, `dnd_arc_analysis`, `dnd_arc_relations`, `dnd_story_generation`, `dnd_session_summary` (`src/Plugin/AdvancedQueue/JobType/`) |
 | Mutations | `enqueueAiJob(type, payload, label)`, `resolveAiJob(id, decision)`, `requeueAiJob(id)`, `clearAiJobs(states)` |
 | Queries | `aiJob(id)`, `aiJobs(states, limit)` - resolved with `mergeCacheMaxAge(0)`, since job state changes outside any cache tag |
 | Services | `dnd_jobs.job_queue` (enqueue/read/update/requeue/clear), `dnd_jobs.job_review` (accept/discard), `dnd_jobs.sidecar_client`, `dnd_jobs.console_client` |

@@ -1,29 +1,8 @@
 /**
- * DDCCS Console — atoms
- * --------------------------------------------------------------
- * Typed port of `menu/menu-atoms.jsx`.
+ * DDCCS Console — shared atoms.
  *
- * What lives here:
- *   - <Icon>           Inline-SVG icon set used by the console chrome.
- *                      All icons are 16x16 stroke glyphs that use
- *                      `currentColor`, so size them with width/height
- *                      and color them with CSS color.
- *   - <AiTag>          Small "AI" sparkle pill inline indicator.
- *   - <SlowTag>        "slow" label for actions that take 10s+.
- *   - <Spinner>        Animated busy indicator for running actions.
- *   - <Rivet>          Decorative brass nail/rivet.
- *   - <TabGlyph>       Brass tab insignia (single letter, ledger-style).
- *   - <ActivityRow>    A single activity-log entry.
- *   - <ActivityDrawer> Collapsible right rail.
- *   - <CampaignChip>   Persistent active-campaign chip in the top bar.
- *   - <SearchField>    Top-bar command-K search input.
- *
- * Game icons (those used inside character pages — class glyphs,
- * ability icons, spell schools, item types) live separately under
- * `components/atoms/GameIcon.tsx` and are sourced from `static/icons/game/`.
- * This file only owns the console chrome glyph set.
- *
- * Canonical reference: /menu/menu-atoms.jsx
+ * Small presentational pieces used across console screens: icons, tags,
+ * spinner, activity rows, and the campaign chip.
  */
 
 import * as React from 'react';

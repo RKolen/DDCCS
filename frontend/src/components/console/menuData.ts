@@ -1,40 +1,13 @@
 /**
- * DDCCS Console — menu data
- * --------------------------------------------------------------
- * The console's information architecture: which sections exist, which actions
- * each one offers, and the utility command list. Originally a typed port of
- * `menu/menu-data.jsx` from the design system project.
+ * DDCCS Console — menu data.
  *
- * This file holds **structure only**. It once also carried the design mock's
- * sample campaigns, characters, recent stories, model profiles, and activity
- * log; those are gone. Content comes from Drupal:
+ * Structure only: which sections exist and what actions each offers. All
+ * content comes from Drupal (ConsoleContext) or the job queue (utils/aiJobs).
+ * Never add sample content here — a screen rendering invented characters is
+ * indistinguishable from one that lost its data connection.
  *
- *   campaigns / characters / stories -> ConsoleContext (index.tsx page query)
- *   activity log                     -> utils/aiJobs, polled from the queue
- *
- * Do not reintroduce sample content here. A screen that renders invented
- * characters is indistinguishable from one that lost its data connection.
- *
- * IMPORTANT — the `read` section is gone (2026-08-16):
- *   It carried four items backed by one unique screen. `r-story` and
- *   `r-session` routed to the same component with the same context, and
- *   `r-char` was byte-identical to `characters/view`. Its two real
- *   destinations now live where they belong:
- *     r-story -> `stories/read`            (ReadStoryFileScreen)
- *     r-dev   -> `characters/development`  (CharacterDevelopmentScreen)
- *   Do not reintroduce it. The public reader at `/stories/` and
- *   `templates/story.tsx` is a separate surface and is unaffected.
- *
- * IMPORTANT — NPC/Character architecture (2026-05-16):
- *   NPCs are no longer a separate content type. They are character
- *   nodes (nodeCharacter) with the `field_character_type` field set
- *   to false/off. When querying Drupal, filter by:
- *     - Player characters: field_character_type = true
- *     - NPCs:             field_character_type = false
- *   The legacy `nodeNpc` GraphQL type should be considered deprecated.
- *   The `npcs` section offers the same actions as `characters`, run against
- *   the filtered roster; `field_recurring` marks the NPCs that earn a full
- *   character profile.
+ * NPCs are character nodes with `field_character_type` false; the `npcs`
+ * section runs the same actions against that filtered roster.
  */
 
 /* ────────────────────────────────────────────────────────────
@@ -189,10 +162,11 @@ export const MENU_DATA: MenuData = {
       label: 'Stories',
       glyph: 'S',
       icon: 'story',
-      blurb: 'Sessions, series, timelines',
-      count: 22,
+      blurb: 'Arcs, sessions, timelines',
+      count: 23,
       items: [
-        { id: 'new-series', label: 'Create New Story Series', ai: true },
+        { id: 'new-series', label: 'Create New Story Arc', ai: true },
+        { id: 'arcs', label: 'Story Arcs & Relations' },
         {
           id: 'work-series', label: 'Work with Story Series', hasSubmenu: true,
           submenu: [

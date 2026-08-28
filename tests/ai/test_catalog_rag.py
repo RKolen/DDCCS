@@ -1,23 +1,9 @@
-"""
-Test the character-creation catalogue resolver.
+"""Test the character-creation catalogue resolver.
 
 Tests src.ai.catalog_rag using crafted Wikidot-style HTML and a faked RAG
 system, so no live wiki or internet connection is required.
 
-What we test:
-- An index page's entry links become catalogue entries, sorted by name
-- Each entry carries the sourcebook from its own page's "Source:" line
-- Entry names come from the page title with minor words lowercased
-- Classes resolve through the "<class>:main" slug form, species through
-  "species:<slug>"
-- Sourcebook filtering keeps only owned books and is case-insensitive
-- An empty sourcebook list means no restriction
-- An unknown kind and a disabled RAG system both yield an empty catalogue
-
-Why we test this:
-- Locks the index-page contract the taxonomy seeder depends on
-- Ensures a group is only ever offered content from books it owns
-- Ensures the resolver degrades safely and never blocks character creation
+Locks the index-page contract the taxonomy seeder depends on.
 """
 
 from tests import test_helpers

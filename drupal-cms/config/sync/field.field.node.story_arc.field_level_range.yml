@@ -10,7 +10,7 @@ field_name: field_level_range
 entity_type: node
 bundle: story_arc
 label: 'Level range'
-description: 'Character levels this arc spans, e.g. "6-17"'
+description: 'Character levels this arc spans, e.g. "4-10"'
 required: false
 translatable: false
 default_value: {  }

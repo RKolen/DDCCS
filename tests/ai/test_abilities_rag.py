@@ -1,20 +1,9 @@
-"""
-Test the abilities RAG resolver.
+"""Test the abilities RAG resolver.
 
 Tests src.ai.abilities_rag using crafted Wikidot-style HTML and a faked RAG
 system, so no live wiki or internet connection is required.
 
-What we test:
-- Class pages parse "Level N: Feature" headings into leveled abilities
-- Species pages parse bold-lead trait paragraphs (level 1)
-- Stat lines (bold lead ending in ':') are excluded from traits
-- get_abilities filters by level and tags the source type
-- A disabled RAG system yields no abilities
-- Duplicate ability names are de-duplicated
-
-Why we test this:
-- Locks the two-layout parsing contract against the 2024 ruleset structure
-- Ensures the resolver degrades safely and never blocks character creation
+Locks the two-layout parsing contract against the 2024 ruleset structure.
 """
 
 from tests import test_helpers

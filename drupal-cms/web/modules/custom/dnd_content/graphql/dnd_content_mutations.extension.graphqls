@@ -175,6 +175,67 @@ extend type Mutation {
     "Session date in YYYY-MM-DD format. Defaults to today."
     sessionDate: String
   ): NodeStory
+
+  """
+  Create a story arc: the multi-story plan a run of stories is written
+  against. Only the campaign and title are required, so the console's wizard
+  can create the arc after its first step and fill the rest in as the user
+  advances (via updateStoryArc).
+
+  The payload is a JSON object keyed by the console's camelCase names; only
+  the keys it contains are written. Recognised keys: body (the full premise),
+  overallPlot, levelRange, targetStories, faction (a factions-vocabulary term
+  UUID or exact name), party and npcs (lists of character node UUIDs or exact
+  titles). References that do not resolve are skipped rather than failing the
+  write, so a partially matched markdown import still saves what it matched.
+
+  Relationships are not written here - see saveStoryArcRelations.
+  Returns the created story arc node.
+  """
+  createStoryArc(
+    "UUID of the campaign taxonomy term."
+    campaignId: ID!
+    "Arc title."
+    title: String!
+    "JSON-encoded map of arc fields. Omit to create a bare arc."
+    payload: String
+  ): NodeStoryArc
+
+  """
+  Write a story arc's editable fields from a partial JSON patch. Accepts the
+  same keys as createStoryArc, plus title and campaign (a campaign term UUID
+  or exact name). Only the keys present are changed.
+
+  Relationships are not written here - see saveStoryArcRelations.
+  Returns the updated story arc node.
+  """
+  updateStoryArc(
+    "UUID of the story arc node."
+    id: ID!
+    "JSON-encoded map of arc fields to write."
+    payload: String!
+  ): NodeStoryArc
+
+  """
+  Replace a story arc's relationship collections. The payload is a JSON object
+  holding a "party" list, an "npc" list, or both; each entry is
+  {source, target, type, tier, note}, where source and target are character
+  node UUIDs or exact titles and tier is 1 (direct and personal), 2
+  (thematic), or 3 (incidental).
+
+  Only the sides present are replaced, so the party and NPC suggestion runs can
+  each save without clearing the other. Replacement within a side is wholesale:
+  the console sends the set that survived accept/reject, not a diff. A pair
+  whose source or target does not resolve is skipped.
+
+  Returns the updated story arc node.
+  """
+  saveStoryArcRelations(
+    "UUID of the story arc node."
+    id: ID!
+    "JSON-encoded map with a party and/or npc list of relations."
+    payload: String!
+  ): NodeStoryArc
 }
 
 """

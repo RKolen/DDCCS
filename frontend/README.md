@@ -211,6 +211,12 @@ Drupal credentials.
 | `skill-plan.ts` | POST | Sidecar | Class + species/subspecies plan for the skills step: granted + skill/tool choice groups, class equipment A/B choices (items vs gold), and the subclass choice (from the `class`/`subclasses` taxonomy, template/RAG fallback) |
 | `campaign-party.ts` | POST | Drupal (`addCharacterToCampaign`) | Add a character to a campaign |
 | `create-story.ts` | POST | Drupal (`createStory`, `setSessionSummary`) + LLM | Persist a finished story, then (best-effort) summarise the session and refresh the campaign overview |
+| `create-story-arc.ts` | POST | Drupal (`createStoryArc`) | Create a story arc for a campaign (`{ campaignId, title, fields? }`). Only campaign + title are required |
+| `update-story-arc.ts` | POST | Drupal (`updateStoryArc`) | PATCH an arc's fields (`{ id, fields }`); only the keys sent are written |
+| `save-arc-relations.ts` | POST | Drupal (`saveStoryArcRelations`) | Replace an arc's party and/or NPC relations; returns the counts Drupal actually saved, since unresolvable pairs are skipped |
+| `suggest-arc-relations.ts` | POST | Sidecar (`/relations/suggest`) | Suggest one subject's relationships (one model call) |
+| `merge-arc-relations.ts` | POST | Sidecar (`/relations/merge`) | Collapse the per-subject batches into one deduplicated set |
+| `run-arc-relations.ts` | POST | Self (loops the two above) | Whole-side run for the queued job, which has no browser to loop in |
 | `summarize-session.ts` | POST | Ollama-compatible LLM (fast model) | Summarise one story body into a concise recap (`{ storyBody }` -> `{ summary }`) |
 | `campaign-overview.ts` | POST | Ollama-compatible LLM (fast model) | Synthesize per-session recaps into one "story so far" (`{ summaries }` -> `{ overview }`) |
 | `update-character.ts` | POST | Drupal (`updateCharacter`) | PATCH voice settings and the image prompt |
@@ -256,6 +262,84 @@ they show exactly what those Drupal vocabularies contain. Adding options from a
 new sourcebook is a Drupal-side seed followed by `npm run clean` here — see
 [docs/DRUPAL.md](../docs/DRUPAL.md). A background typed in by hand rather than
 picked from the list is treated as homebrew and opens the definition modal.
+
+### Story arcs
+
+A **story arc** (`story_arc` node) is the multi-story plan a run of stories is
+written against — premise, act spine, antagonist faction, party, and the
+relationship web. `stories/new-series` builds one through a five-step wizard
+(`NewSeriesScreen`). The arc is created in Drupal at the end of step 1 and
+patched as the user advances, so a refresh costs one step rather than the whole
+arc.
+
+Supporting modules:
+
+| Module | Role |
+| ------ | ---- |
+| `src/utils/arcPayload.ts` | The payload contract shared by the console and the API functions; mirrors what Drupal's `StoryArcWriter` accepts |
+| `src/utils/arcMarkdown.ts` | Parses an existing arc document into fields + relations (see below) |
+| `src/utils/arcRoster.ts` | Builds the PC and NPC pickers, which cannot share a filter |
+| `src/utils/arcRelationsEdit.ts` | `useArcRelations()` — editing state and the single save path for both relation editors |
+| `src/utils/drupalMutation.ts` | Shared credentials + mutation transport for the arc endpoints |
+| `src/components/console/ArcRelationsTable.tsx` | The editable relation rows, shared by both editors |
+
+**Where relations are edited.** Two surfaces, one save path:
+
+- `stories/arcs` (`StoryArcScreen`) is the authoring surface — one campaign's
+  arcs, what each is made of, the stories attached to it, and the full
+  relationship web with inline add/edit/delete.
+- The **Relations** tab on a character sheet (`CharacterRelationsTab`) is the
+  same data from one character's side. It reads across *every* arc, so a
+  recurring NPC shows their whole web rather than one arc's slice, and filters
+  to the rows that character is an end of.
+
+Editing is scoped to one arc because that is the unit `saveStoryArcRelations`
+replaces. `useArcRelations()` therefore holds **both sides of the arc in full**
+even when the character tab is showing a filtered subset — saving from a
+character sheet must not drop the bonds that sheet never displayed. After a
+save the hook keeps its own state as the truth: the page's Drupal data comes
+from a build-time query and would visibly revert the write until the next
+source.
+
+**The two rosters differ.** A player character exists twice — a canonical
+template with no campaign, and a clone belonging to the campaign — and the arc
+must point at the clone, so `partyRoster()` keeps only clones. NPCs have no
+clones yet, so the same filter would return nothing; `npcRoster()` prefers a
+campaign clone when one exists and falls back to canon, which keeps working once
+NPCs are cloned too.
+
+**Markdown import.** Step 1 accepts a pasted arc document and maps it onto
+fields rather than dumping it into one box. It reads the shapes the DM's notes
+already use: `ACT I, ... (Levels 6-8)` as a plain line (everything before the
+first ACT line is the premise, everything after is the spine), `### TIER n`
+setting the tier for the `####` pairs beneath it, `#### A <-> The Epithet (Real
+Name) & The Other (Other Name)` as one source against two targets, the
+party-internal `### A & B - description` heading, and pair tables written as
+`| A & B | description |`. Names are resolved against the campaign roster;
+anything unresolved is **listed in the preview, not guessed at**, and the
+operator applies the import only after seeing what matched.
+
+### Suggesting relations
+
+One model call per party member, not one for the whole web: a large cast is
+hundreds of possible connections, too many for a single local inference pass.
+The console loops `suggest-arc-relations` per subject (showing progress), then
+posts the batches to `merge-arc-relations`, which collapses the reciprocal
+pairs — A->B and B->A are one bond.
+
+Two ways to run it, both ending in the same accept/reject review:
+
+- **Interactive** (`arcSuggest.ts`, driven by `ArcSuggestButtons`) loops in the
+  browser so progress is visible. A failing subject is skipped rather than
+  aborting the run.
+- **Queued** (`dnd_arc_relations` -> `run-arc-relations.ts`) loops on the host,
+  so the tab can be closed. Its suggestions are stored as the **job's result**
+  and are not written to the arc: saving replaces a whole relation side, so an
+  unattended job must never overwrite bonds written by hand. Opening the job
+  from the activity bar loads them into `StoryArcScreen` for review.
+
+The suggestion model must be an **instruct** model, not a "thinking" one — see
+`RELATIONS_PROFILE` in `.env.example`.
 
 ### Queued AI actions
 

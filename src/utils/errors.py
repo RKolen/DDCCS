@@ -1,27 +1,7 @@
-"""
-Centralized Error Handling System
+"""Centralized error handling.
 
-Provides consistent, actionable error messages throughout the D&D Consultant system.
-All custom exceptions inherit from DnDError to enable catching all
-application-specific errors.
-
-Usage:
-    from src.utils.errors import (
-        DnDError,
-        UserInputError,
-        AIConnectionError,
-        handle_errors,
-        display_error,
-    )
-
-    # Raise specific errors
-    raise UserInputError("Invalid input", user_guidance="Try again with valid input.")
-
-    # Use decorator for consistent handling
-    @handle_errors(FileSystemError, AIIntegrationError)
-    def my_function():
-        # ... code that might raise errors
-        pass
+All custom exceptions inherit from DnDError so application errors can be
+caught as one family. See the utils catalog in AGENTS.md for the full list.
 """
 
 import builtins

@@ -1,25 +1,4 @@
-"""
-Unified Game Data Validation Module
-
-Validates all JSON data files in the D&D Campaign System:
-- Character profiles
-- NPC profiles
-- Custom items registry
-- Party configuration
-
-Usage:
-    # Validate all game data
-    python validate_all.py
-
-    # Validate specific types
-    python validate_all.py --characters
-    python validate_all.py --npcs
-    python validate_all.py --items
-    python validate_all.py --party
-
-    # Validate with verbose output
-    python validate_all.py --verbose
-"""
+"""Run every game-data validator and report the combined result."""
 
 import sys
 import os

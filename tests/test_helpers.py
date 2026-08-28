@@ -1,26 +1,7 @@
-"""
-Test Helper Functions
+"""Shared test helpers.
 
-Common utilities and setup for all test files to reduce boilerplate code.
-
-This module configures the test environment when imported. Test files should
-import this module FIRST before any other project imports.
-
-Usage in test files:
-    # Standard imports
-    import sys
-    from pathlib import Path
-
-    # Add tests directory to path (required to find test_helpers)
-    sys.path.insert(0, str(Path(__file__).parent.parent))
-
-    # Import test helpers and configure environment
-    import test_helpers
-    project_root = test_helpers.setup_test_environment()
-
-    # Now import project modules
-    from src.validation.character_validator import validate_character_json
-
+Configures the test environment on import, so test modules must import
+this before any project module.
 """
 
 import importlib

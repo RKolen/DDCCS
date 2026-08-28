@@ -1,20 +1,8 @@
-"""
-Test Relationship Mapping System
+"""Test Relationship Mapping System
 
 Tests the relationship types, schema, manager, and visualizer modules.
 
-What we test:
-- RelationshipType enum and inverse mappings
-- Relationship/RelationshipEvent dataclasses (create, serialize, legacy migration)
-- RelationshipGraph (node/edge queries)
-- RelationshipManager (graph building, consistency validation, bidirectional sync)
-- RelationshipVisualizer (DOT and Mermaid output)
-
-Why we test this:
-- Relationship data drives narrative consistency checks
-- Legacy string format must still work after structured format is added
-- Bidirectional sync ensures no orphaned relationships in data files
-- Visualization output must be valid syntax for downstream tools
+Relationship data drives narrative consistency checks.
 """
 
 import json

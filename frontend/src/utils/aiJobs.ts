@@ -32,6 +32,7 @@ export const JOB_TYPES = {
   arc:       'dnd_arc_analysis',
   story:     'dnd_story_generation',
   summary:   'dnd_session_summary',
+  relations: 'dnd_arc_relations',
 } as const;
 
 /** One queued job, as the console sees it. */

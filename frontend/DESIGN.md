@@ -22,7 +22,7 @@ section accordingly (shows role instead of class badges).
 - Right column: special abilities, weapons, magic items, gear
 
 **Sections not yet wired to the template** (data exists in Drupal for
-complete characters like Triara):
+complete characters):
 
 | Section | What to add to `character.tsx` |
 | ------- | ------------------------------ |
