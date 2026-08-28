@@ -40,6 +40,7 @@ def run_all_utils_tests() -> int:
         ("test_tts_narrator", "TTS Narrator Tests"),
         ("test_character_profile_utils", "Character Profile Utils Tests"),
         ("test_name_utils", "Name Utilities Tests"),
+        ("test_ai_json", "AI JSON Extraction Tests"),
     )
 
     results: Dict[str, bool] = {}

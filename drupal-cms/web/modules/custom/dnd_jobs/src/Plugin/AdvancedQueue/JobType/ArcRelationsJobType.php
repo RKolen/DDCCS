@@ -8,6 +8,7 @@ use Drupal\advancedqueue\Attribute\AdvancedQueueJobType;
 use Drupal\advancedqueue\Job;
 use Drupal\advancedqueue\JobResult;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\dnd_jobs\Service\JobReview;
 
 /**
  * Suggests a story arc's relationships in the background.
@@ -55,6 +56,7 @@ final class ArcRelationsJobType extends AiJobTypeBase {
 
       $suggested = is_array($response['suggested'] ?? NULL) ? $response['suggested'] : [];
       $this->storeResult($job, [
+        'review' => JobReview::PENDING,
         'arcId' => $arc_id,
         'side' => $side,
         'subjectsRun' => is_int($response['subjectsRun'] ?? NULL) ? $response['subjectsRun'] : 0,

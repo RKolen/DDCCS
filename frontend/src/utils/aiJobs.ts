@@ -28,11 +28,14 @@ export type JobReview = 'pending' | 'accepted' | 'discarded';
 
 /** Job type plugin ids, as registered by the dnd_jobs module. */
 export const JOB_TYPES = {
-  portrait:  'dnd_portrait',
-  arc:       'dnd_arc_analysis',
-  story:     'dnd_story_generation',
-  summary:   'dnd_session_summary',
-  relations: 'dnd_arc_relations',
+  portrait:      'dnd_portrait',
+  arc:           'dnd_arc_analysis',
+  story:         'dnd_story_generation',
+  summary:       'dnd_session_summary',
+  relations:     'dnd_arc_relations',
+  backfill:      'dnd_arc_backfill',
+  storyEvents:   'dnd_story_events',
+  illustration:  'dnd_story_illustration',
 } as const;
 
 /** One queued job, as the console sees it. */

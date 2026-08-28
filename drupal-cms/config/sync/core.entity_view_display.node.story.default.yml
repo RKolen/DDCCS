@@ -14,8 +14,10 @@ dependencies:
     - field.field.node.story.field_story_hooks
     - field.field.node.story.field_story_number
     - field.field.node.story.field_story_arc
+    - field.field.node.story.field_illustrations
     - node.type.story
   module:
+    - media
     - text
     - user
 id: node.story.default
@@ -45,6 +47,15 @@ content:
       link: true
     third_party_settings: {  }
     weight: 4
+    region: content
+  field_illustrations:
+    type: entity_reference_entity_view
+    label: above
+    settings:
+      view_mode: default
+      link: false
+    third_party_settings: {  }
+    weight: 12
     region: content
   field_locations:
     type: entity_reference_label

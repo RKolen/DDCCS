@@ -36,6 +36,8 @@ TEST_CATEGORIES = [
     "cli",
     "integration",
     "relations",
+    "story_arcs",
+    "story_images",
     "sidecar",
 ]
 

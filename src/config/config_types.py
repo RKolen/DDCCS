@@ -290,6 +290,23 @@ class SidecarConfig:
 
 
 @dataclass
+class ComfyUIReactor:
+    """Optional ReActor face-swap files for staggered story-scene likeness.
+
+    Empty ``swap_model`` means those swaps are skipped rather than failing the
+    render. Detection and node class have working defaults.
+    """
+
+    swap_model: str = ""
+    face_detection: str = "retinaface_resnet50"
+    node: str = "ReActorFaceSwap"
+
+    def available(self) -> bool:
+        """True when a swap model filename is configured."""
+        return bool(self.swap_model)
+
+
+@dataclass
 class ComfyUIAssets:
     """The model files ComfyUI generation and image->prompt need.
 
@@ -304,12 +321,18 @@ class ComfyUIAssets:
     - an SD 1.5 IPAdapter silently produces nothing useful on an SDXL
     checkpoint. Both empty means identity conditioning is simply unavailable and
     generation falls back to text-to-image.
+
+    ``reactor`` is the InsightFace swapper used after the two IPAdapter leads
+    on a story scene. ``scene_timeout`` is the longer ComfyUI wait for that
+    path (base render plus staggered swaps).
     """
 
     image_to_prompt_model: str = ""
     checkpoint: str = ""
     ipadapter_model: str = ""
     clip_vision: str = ""
+    reactor: ComfyUIReactor = field(default_factory=ComfyUIReactor)
+    scene_timeout: float = 1800.0
 
     def supports_identity(self) -> bool:
         """Check whether IPAdapter identity conditioning can be used.
@@ -319,6 +342,15 @@ class ComfyUIAssets:
             configured. One without the other cannot build a valid graph.
         """
         return bool(self.ipadapter_model and self.clip_vision)
+
+    def supports_reactor(self) -> bool:
+        """Check whether staggered ReActor face swaps can be used.
+
+        Returns:
+            True when a swap model filename is configured. Detection and node
+            class have defaults; the swap file is what a deployment must install.
+        """
+        return self.reactor.available()
 
 
 @dataclass
@@ -362,6 +394,20 @@ class ComfyUIConfig:
     def is_configured(self) -> bool:
         """Check if ComfyUI is enabled and has a reachable base URL."""
         return self.enabled and bool(self.get_base_url())
+
+    @property
+    def scene_timeout(self) -> float:
+        """Seconds to wait for a story-scene render, including staggered swaps."""
+        return self.assets.scene_timeout
+
+    @scene_timeout.setter
+    def scene_timeout(self, value: float) -> None:
+        """Store the scene timeout on the assets bundle.
+
+        Args:
+            value: Seconds. Must stay under the Drupal job lease.
+        """
+        self.assets.scene_timeout = value
 
 
 @dataclass

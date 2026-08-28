@@ -4,42 +4,24 @@
 */
 
 :root {
-  --color-bg-base:    #1a1208;
-  --color-bg-surface: #2a1e0f;
-  --color-bg-overlay: #3a2a1a;
-  --color-bg-hover:   #4a3520;
   --color-bg-soft:    #221710;
   --color-bg-sunken:  #14100a;
 
-  --color-gold-bright: #f0c060;
-  --color-gold-mid:    #c9a96e;
-  --color-gold-muted:  #8a6d3e;
-  --color-gold-border: var(--color-gold-border);
   --color-gold-rule:   var(--gold-a20);
 
-  --color-text-primary:   #e8d5b0;
-  --color-text-secondary: #b09070;
   --color-text-tertiary:  #7a6a4c;
-  --color-text-disabled:  #5a4a38;
 
-  --color-success: #4caf6e;
-  --color-warning: #e8a030;
-  --color-danger:  #c0392b;
-  --color-info:    #5b9bd5;
 
   /* Arc direction tints */
   --dir-growth:         #4caf6e;
   --dir-decline:        #c46055;
-  --dir-stasis:         #8a6d3e;
-  --dir-fluctuation:    #e8a030;
+  --dir-stasis:         var(--color-gold-muted);
+  --dir-fluctuation:    var(--color-warning);
   --dir-transformation: #c69cd8;
 
   --color-ai-accent: #d8b46e;
   --color-ai-glow:   #d8b46e59;
 
-  --font-display: 'Cinzel', 'Palatino Linotype', serif;
-  --font-body:    'Crimson Text', 'Georgia', serif;
-  --font-mono:    'Fira Code', 'Courier New', monospace;
 }
 
 .arc-art {
@@ -1009,7 +991,7 @@
 .arc-phase-rail .step.done .pip {
   background: var(--color-gold-mid);
   border-color: var(--color-gold-mid);
-  color: var(--color-bg-base);
+  color: var(--color-text-inverse);
 }
 .arc-phase-rail .step.current { color: var(--color-gold-bright); }
 .arc-phase-rail .step.current .pip {
@@ -1282,7 +1264,7 @@
   content: '✓';
   font-family: var(--font-mono);
   font-size: 10px;
-  color: var(--color-bg-base);
+  color: var(--color-text-inverse);
   font-weight: 700;
 }
 .arc-exp-char-row .label {

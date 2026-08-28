@@ -22,4 +22,5 @@ services:
       - '@dnd_jobs.job_queue'
       - '@entity_type.manager'
       - '@dnd_content.portrait_writer'
+      - '@dnd_content.illustration_writer'
       - '@current_user'

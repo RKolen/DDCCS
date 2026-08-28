@@ -37,6 +37,51 @@ Before assuming any Drupal field name, GraphQL type name, or schema shape,
 
 This applies to ALL content types and all taxonomy vocabularies.
 
+### 0.5 Only the Example Campaign world, everywhere except game_data
+
+**Never use a live campaign's characters, NPCs, factions, or places in code,
+comments, tests, documentation, or test data you create in Drupal.** Only the
+Example Campaign world may be named outside `game_data/` and
+`docs/docs_personal/`.
+
+The sanctioned names are listed in `game_data/example_world.json`. Every other
+name in `game_data` is a live campaign's and is off limits. Enforced by
+`src/validation/example_world.py`, run as a gate from `./check.sh`.
+
+This is not tidiness. A live NPC written into a fixture becomes part of the
+shared repository, and worse, anything the console later shows a model - an arc
+roster, a relationship candidate list - keeps proposing those names because
+they are the ones on record. A bbeg from a live campaign was once attached to
+an Example Campaign test arc this way, and every relation suggestion run on
+that arc proposed him, because he was the only NPC there.
+
+**This includes content created for testing through the console or Drupal**,
+not only files. When you need a character to test with, use one of the
+Example Campaign names or create a new one in that world - never reach for a
+name that exists because it belongs to someone's real game.
+
+### 0.6 Colours live in tokens.css, and nowhere else
+
+`frontend/src/styles/tokens.css` is the palette. Every other stylesheet
+consumes it and defines nothing that already lives there.
+
+- **Never write a raw hex** that the palette already holds. Use the token.
+- **Never redefine a token** another stylesheet defines. The feature sheets
+  load after `tokens.css`, so a second copy silently wins and editing the
+  palette does nothing.
+- **Never write `--x: var(--x)`.** It is invalid at computed-value time and
+  drops the colour wherever it is used. `arcs.css` shipped exactly this for
+  `--color-gold-border`, so every gold border in the arc screens fell back to
+  `currentColor`.
+- **When a value has more than one token name, use the more universal one.**
+  `tokens.css` is ordered from raw palette to semantic roles, so the first
+  name declared for a value describes the colour and the later ones describe
+  what it happens to be used for: `#c9a96e` is `--color-gold-mid` before it is
+  `--color-partial`.
+
+A genuinely new colour is fine - add it to `tokens.css`, not to the sheet that
+needed it. Enforced by `src/validation/css_palette.py`, run from `./check.sh`.
+
 ### 1. NO Emojis - NEVER
 
 Never use emojis in `.py` or `.md` files. This causes Windows cp1252 codec
@@ -212,8 +257,9 @@ violation of project standards.
 | | | `get_story_file_path`, `get_game_data_path`, |
 | | | `get_npcs_dir`, `get_calendars_dir` |
 | Strings | `src/utils/string_utils.py` | `sanitize_filename`, `normalize_name`, |
-| | | `slugify`, `truncate_text`, `get_session_date`, |
-| | | `get_timestamp` |
+| | | `slugify`, `truncate_text`, `clip_to_budget`, |
+| | | `get_session_date`, `get_timestamp` |
+| AI JSON | `src/utils/ai_json.py` | `extract_json_object` |
 | Validation | `src/utils/validation_helpers.py` | `validate_required_fields`, |
 | | | `validate_field_type`, `validate_list_field`, |
 | | | `format_validation_errors` |
@@ -294,6 +340,17 @@ src/
 |-- relations/       # Story-arc relationship suggestion
 |   |-- relation_types.py     # CharacterDigest + RelationSuggestion
 |   |-- relation_suggester.py # Per-subject prompting, parsing, merge
+|-- story_arcs/      # Story-arc drafting from played sessions
+|   |-- arc_draft_types.py    # SessionRecap, ArcDraft, DiscoveredNpc
+|   |-- recap_prompt.py       # Shared recap prompt opening
+|   |-- arc_drafter.py        # The arc a campaign's sessions add up to
+|   |-- npc_extractor.py      # The NPC cast those sessions name
+|-- story_images/    # Story-scene illustrations (queued, event-scoped)
+|   |-- types.py              # StoryEvent, RosterEntry, ShotAnalysis
+|   |-- events.py             # Chunked Ollama event extraction
+|   |-- shot.py               # Shot analysis against the Drupal roster
+|   |-- scene_prompt.py       # Landscape SD prompt from the analysis
+|   |-- render.py             # DreamShaper scene + 2 IPAdapters + ReActor
 |-- npcs/            # NPC management and auto-detection
 |   |-- npc_agents.py
 |   |-- npc_auto_detection.py
@@ -326,6 +383,8 @@ src/
 |-- validation/      # JSON validation for all data types
 |   |-- character_validator.py / npc_validator.py
 |   |-- items_validator.py / party_validator.py
+|   |-- example_world.py     # Live-campaign names must stay in game_data
+|   |-- css_palette.py       # Colours must live only in tokens.css
 |   |-- validate_all.py
 |-- ai/              # AI client and RAG system
 |   |-- ai_client.py
@@ -372,6 +431,7 @@ tests/
 |-- items/           # Tests for src/items/
 |-- npcs/            # Tests for src/npcs/
 |-- relations/       # Tests for src/relations/
+|-- story_arcs/      # Tests for src/story_arcs/
 |-- stories/         # Tests for src/stories/
 |-- utils/           # Tests for src/utils/
 |-- validators/      # Tests for src/validation/
@@ -603,8 +663,14 @@ python3 -m mypy tests/
 # Run pyright (the engine behind Pylance - rule 3.1)
 .venv/bin/python -m pyright
 
-# Run every quality gate at once (pylint + mypy + pyright + tests)
+# Run every quality gate at once (pylint + mypy + pyright + world + tests)
 ./check.sh
+
+# Check no live-campaign names leaked into code, tests, or docs (rule 0.5)
+python3 -m src.validation.example_world
+
+# Check the CSS palette has a single source of truth (rule 0.6)
+python3 -m src.validation.css_palette
 ./check.sh --fast   # gates only, skip the test suite
 
 # Validate all game data

@@ -3,6 +3,10 @@
 ## What This Tests
 JSON validation for all game data files (characters, NPCs, items, party configuration). Ensures data integrity and catches schema errors before they cause runtime issues.
 
+Also covers `example_world.py`, which enforces AGENTS.md rule 0.5: only the
+Example Campaign world may be named in code, tests, and documentation. A live
+campaign's cast stays in `game_data/` and `docs/docs_personal/`.
+
 ## Why These Tests Matter
 - **Early Error Detection:** Catch invalid data before it breaks the system
 - **Data Integrity:** Ensure all JSON files match expected schemas

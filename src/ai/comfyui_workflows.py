@@ -11,7 +11,7 @@ rather than an option on the first.
 """
 
 from dataclasses import dataclass, field
-from typing import Any, Dict
+from typing import Any, Dict, List, Sequence
 
 
 @dataclass
@@ -206,3 +206,178 @@ def ipadapter_workflow(params: IpAdapterParams) -> Dict[str, Any]:
     workflow["3"]["inputs"]["model"] = ["13", 0]
 
     return workflow
+
+
+# Landscape scene size: larger than a 512x768 portrait, still SD 1.5-class so
+# this CPU box can finish without loading an SDXL checkpoint.
+SCENE_RENDER = RenderSettings(width=768, height=512, steps=30, cfg=7.0)
+MAX_SCENE_IDENTITIES = 2
+
+
+@dataclass
+class SceneIpAdapterParams:
+    """Per-request parameters for a scene with up to two identity references."""
+
+    checkpoint: str
+    positive: str
+    negative: str
+    seed: int
+    identities: Sequence[IdentityReference]
+    render: RenderSettings = field(default_factory=lambda: SCENE_RENDER)
+
+
+@dataclass
+class ReactorSwapParams:
+    """Per-request parameters for one ReActor face swap.
+
+    ``scene_image`` and ``source_image`` are ComfyUI input filenames, the same
+    contract as ``IdentityReference.image``. ``face_index`` selects which
+    detected face in the scene to replace (0-based, largest first).
+    """
+
+    scene_image: str
+    source_image: str
+    swap_model: str
+    face_index: int = 0
+    face_detection: str = "retinaface_resnet50"
+    node_type: str = "ReActorFaceSwap"
+
+
+def _adapter_node(
+    model_ref: List[Any],
+    image_node: str,
+    weight: float,
+) -> Dict[str, Any]:
+    """Build one IPAdapterAdvanced node dict.
+
+    Args:
+        model_ref: The previous model output, either the checkpoint or an
+            earlier adapter.
+        image_node: Node id of the LoadImage holding this identity.
+        weight: How strongly this reference pulls the render.
+
+    Returns:
+        The node dictionary.
+    """
+    return {
+        "class_type": "IPAdapterAdvanced",
+        "inputs": {
+            "model": model_ref,
+            "ipadapter": ["10", 0],
+            "image": [image_node, 0],
+            "clip_vision": ["11", 0],
+            "weight": weight,
+            "weight_type": "linear",
+            "combine_embeds": "concat",
+            "start_at": 0.0,
+            "end_at": 1.0,
+            "embeds_scaling": "V only",
+        },
+    }
+
+
+def scene_workflow(params: SceneIpAdapterParams) -> Dict[str, Any]:
+    """Build a landscape text-to-image graph, optionally with two IPAdapters.
+
+    The first two identities are chained: each adapter patches the previous
+    model. A third identity is ignored here - remaining likenesses are applied
+    afterwards by ``reactor_swap_workflow``, one face at a time, so the
+    checkpoint and twenty-odd portraits are never resident together.
+
+    Args:
+        params: Checkpoint, prompts, seed, and zero to two identities.
+
+    Returns:
+        The workflow as a node-id -> node dict, ready to POST to /prompt.
+    """
+    workflow = txt2img_workflow(
+        Txt2ImgParams(
+            checkpoint=params.checkpoint,
+            positive=params.positive,
+            negative=params.negative,
+            seed=params.seed,
+            render=params.render,
+        )
+    )
+    workflow["9"]["inputs"]["filename_prefix"] = "scene"
+
+    identities = list(params.identities)[:MAX_SCENE_IDENTITIES]
+    if not identities:
+        return workflow
+
+    first = identities[0]
+    workflow["10"] = {
+        "class_type": "IPAdapterModelLoader",
+        "inputs": {"ipadapter_file": first.ipadapter_model},
+    }
+    workflow["11"] = {
+        "class_type": "CLIPVisionLoader",
+        "inputs": {"clip_name": first.clip_vision},
+    }
+    workflow["12"] = {
+        "class_type": "LoadImage",
+        "inputs": {"image": first.image},
+    }
+    workflow["13"] = _adapter_node(["4", 0], "12", first.weight)
+    last_adapter = "13"
+
+    if len(identities) > 1:
+        second = identities[1]
+        workflow["14"] = {
+            "class_type": "LoadImage",
+            "inputs": {"image": second.image},
+        }
+        workflow["15"] = _adapter_node(["13", 0], "14", second.weight)
+        last_adapter = "15"
+
+    workflow["3"]["inputs"]["model"] = [last_adapter, 0]
+    return workflow
+
+
+def reactor_swap_workflow(params: ReactorSwapParams) -> Dict[str, Any]:
+    """Build a one-face ReActor swap graph.
+
+    Load the current scene and one portrait, swap a single detected face, save.
+    Callers run this once per remaining likeness and unload models between
+    calls. A missing ReActor node fails the queued prompt, so callers must
+    check ``supports_reactor`` first and treat a failed generate as "skip the
+    rest", never as a failed scene.
+
+    Args:
+        params: Scene filename, portrait filename, swap model, and face index.
+
+    Returns:
+        The workflow as a node-id -> node dict, ready to POST to /prompt.
+    """
+    return {
+        "1": {
+            "class_type": "LoadImage",
+            "inputs": {"image": params.scene_image},
+        },
+        "2": {
+            "class_type": "LoadImage",
+            "inputs": {"image": params.source_image},
+        },
+        "3": {
+            "class_type": params.node_type,
+            "inputs": {
+                "enabled": True,
+                "input_image": ["1", 0],
+                "source_image": ["2", 0],
+                "swap_model": params.swap_model,
+                "facedetection": params.face_detection,
+                "face_restore_model": "none",
+                "face_restore_visibility": 1.0,
+                "codeformer_weight": 0.5,
+                "detect_gender_source": "no",
+                "detect_gender_input": "no",
+                "input_faces_index": str(params.face_index),
+                "source_faces_index": "0",
+                "console_log_level": 1,
+            },
+        },
+        "4": {
+            "class_type": "SaveImage",
+            "inputs": {"filename_prefix": "scene_swap", "images": ["3", 0]},
+        },
+    }

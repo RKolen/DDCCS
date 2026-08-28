@@ -3,7 +3,12 @@ import { graphql, Link } from 'gatsby';
 import type { HeadFC, PageProps } from 'gatsby';
 import { BaseTemplate } from '../components/templates/BaseTemplate';
 import { Divider } from '../components/atoms/Divider';
-import { cleanHtml } from '../utils/cleanHtml';
+import { StoryScroll } from '../components/molecules/StoryScroll';
+import { StoryImageWizard } from '../components/console/StoryImageWizard';
+import {
+  rosterPersonFromCharacter,
+  type StoryImageRosterPerson,
+} from '../utils/storyImage';
 import {
   isNarrationAbort,
   playStoryNarration,
@@ -16,6 +21,7 @@ interface CharacterImage {
 }
 
 interface CharacterRef {
+  id: string | null;
   title: string;
   image: CharacterImage | null;
 }
@@ -43,21 +49,22 @@ interface StoryPageContext {
   nextTitle: string | null;
 }
 
-type ImageState = 'idle' | 'running' | 'done';
-
 interface ActionSidebarProps {
   title:     string;
   storyText: string;
+  storyId:   string;
+  roster:    StoryImageRosterPerson[];
 }
 
 function ActionSidebar({
   title,
   storyText,
+  storyId,
+  roster,
 }: ActionSidebarProps): React.ReactElement {
   const [narrating, setNarrating] = useState(false);
   const [narrateError, setNarrateError] = useState<string | null>(null);
   const [progress, setProgress] = useState<string | null>(null);
-  const [imgState, setImgState] = useState<ImageState>('idle');
   const abortRef = useRef<AbortController | null>(null);
 
   useEffect(() => () => {
@@ -110,19 +117,9 @@ function ActionSidebar({
     startNarration();
   };
 
-  const generateImage = (): void => {
-    if (imgState === 'running') return;
-    setImgState('running');
-    setTimeout(() => setImgState('done'), 1800);
-  };
-
   const narrateLabel = narrating
     ? (progress ? `Listening... ${progress}` : 'Listening...')
     : (narrateError ?? 'Narrate');
-  const imgLabel =
-    imgState === 'idle'    ? 'Generate image' :
-    imgState === 'running' ? 'Conjuring...' :
-    'View image';
 
   return (
     <div className={styles.actionSidebar} role="group" aria-label={`Actions for ${title}`}>
@@ -141,31 +138,12 @@ function ActionSidebar({
         <span className={styles.medallionTooltip}>{narrateLabel}</span>
       </button>
 
-      <button
-        className={[
-          styles.medallion,
-          styles.medallionAi,
-          imgState === 'done' ? styles.medallionDone : '',
-        ].filter(Boolean).join(' ')}
-        onClick={generateImage}
-        title={imgLabel}
-        disabled={imgState === 'running'}
-        type="button"
-      >
-        {imgState === 'running' ? (
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <circle cx="12" cy="12" r="8" strokeDasharray="14 8" className={styles.medallionSpinner}/>
-          </svg>
-        ) : (
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <rect x="3" y="5" width="18" height="14" rx="1"/>
-            <circle cx="8.5" cy="10" r="1.4"/>
-            <path d="M3 17l5-5 4 4 3-3 6 5"/>
-            <path d="M18 3l.6 1.6L20 5l-1.4.4L18 7l-.6-1.6L16 5l1.4-.4z" fill="currentColor" stroke="none"/>
-          </svg>
-        )}
-        <span className={styles.medallionTooltip}>{imgLabel}</span>
-      </button>
+      <StoryImageWizard
+        compact
+        storyId={storyId}
+        storyTitle={title}
+        roster={roster}
+      />
     </div>
   );
 }
@@ -203,7 +181,6 @@ function PartyPanel({ characters }: { characters: CharacterRef[] }): React.React
 const StoryPage: React.FC<PageProps<StoryData, StoryPageContext>> = ({ data, location, pageContext }) => {
   const story = data?.drupal?.node as StoryNode | null;
   const { prevPath, prevTitle, nextPath, nextTitle } = pageContext;
-  const [scrollOpen, setScrollOpen] = useState(false);
 
   if (!story || !story.title) {
     return (
@@ -215,6 +192,14 @@ const StoryPage: React.FC<PageProps<StoryData, StoryPageContext>> = ({ data, loc
 
   const characters = story.campaign?.currentParty ?? [];
   const hooks = story.storyHooks ?? [];
+  const roster = characters
+    .filter((c): c is CharacterRef & { id: string } => Boolean(c.id))
+    .map(c => rosterPersonFromCharacter({
+      id: c.id,
+      title: c.title,
+      imageUrl: c.image?.mediaImage?.url ?? '',
+      isNpc: false,
+    }));
   // Prefer value (plain_text) but run through toNarrationText so HTML bodies
   // still get \\n\\n paragraph breaks for the dialogue detector.
   const storyText = toNarrationText(
@@ -236,7 +221,12 @@ const StoryPage: React.FC<PageProps<StoryData, StoryPageContext>> = ({ data, loc
 
           {/* Left: action buttons */}
           {story.body ? (
-            <ActionSidebar title={story.title} storyText={storyText} />
+            <ActionSidebar
+              title={story.title}
+              storyText={storyText}
+              storyId={pageContext.id}
+              roster={roster}
+            />
           ) : <div />}
 
           {/* Center: main content */}
@@ -259,36 +249,7 @@ const StoryPage: React.FC<PageProps<StoryData, StoryPageContext>> = ({ data, loc
 
             <Divider icon="scroll-unfurled" />
 
-            {story.body && (
-              <div className={styles.scroll}>
-                <button
-                  type="button"
-                  className={styles.scrollDowelBtn}
-                  onClick={() => setScrollOpen(o => !o)}
-                  aria-expanded={scrollOpen}
-                  aria-label={scrollOpen ? 'Roll up chronicle' : 'Unfurl chronicle'}
-                >
-                  <div className={styles.scrollDowel} aria-hidden="true" />
-                  {!scrollOpen && (
-                    <span className={styles.scrollHint}>Tap to unfurl the chronicle</span>
-                  )}
-                </button>
-
-                <div className={`${styles.scrollBody} ${scrollOpen ? styles.scrollBodyOpen : ''}`}>
-                  <div className={styles.scrollBodyInner}>
-                    <div className={styles.parchment}>
-                      <div
-                        className={styles.body}
-                        dangerouslySetInnerHTML={{ __html: cleanHtml(story.body.processed) }}
-                      />
-                      <p className={styles.ornament}>{'-- . -- . --'}</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className={styles.scrollDowel} aria-hidden="true" />
-              </div>
-            )}
+            {story.body && <StoryScroll html={story.body.processed} />}
 
             {hooks.length > 0 && (
               <aside className={styles.hooks}>
@@ -351,6 +312,7 @@ export const query = graphql`
             ... on Drupal_TermCampaign {
               currentParty {
                 ... on Drupal_NodeCharacter {
+                  id
                   title
                   image {
                     ... on Drupal_MediaImage {

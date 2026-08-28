@@ -93,6 +93,20 @@ class ComfyUIClient:
             return None
         return self._view(image_ref)
 
+    def generate_then_free(self, workflow: Dict[str, Any]) -> Optional[bytes]:
+        """Generate an image, then unload models even if generation failed.
+
+        Args:
+            workflow: The ComfyUI workflow in API JSON form.
+
+        Returns:
+            PNG bytes of the first output image, or None on failure/timeout.
+        """
+        try:
+            return self.generate(workflow)
+        finally:
+            self.free()
+
     def _queue(self, workflow: Dict[str, Any]) -> Optional[str]:
         """Submit a workflow to /prompt, returning the prompt id."""
         try:

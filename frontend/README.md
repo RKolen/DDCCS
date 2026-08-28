@@ -162,6 +162,16 @@ and `r-char` duplicating `characters/view`. Its two real destinations moved to
 This is console IA only: the public reader at `/stories/` and
 `src/templates/story.tsx` is a separate surface and is unchanged.
 
+`stories/read` now renders the story itself, in the same unfurling chronicle
+scroll the story page uses — the markup moved into
+`src/components/molecules/StoryScroll.tsx` and both surfaces render it, so the
+console cannot drift from the public page. The scroll stays **furled by
+default** on both: the unfurl is a deliberate flourish, not friction. Its
+`onUnfurl` fires on the opening edge only, which is where a scroll sound goes
+when there is one. The body is fetched per story through `story-body.ts`
+rather than carried in the console's page data, and the old "Read full story"
+link is gone — there is nothing left to go elsewhere for.
+
 `spells` was likewise promoted out of `stories/spells` into a top-level section
 with its own `/spells/` topbar link — a compendium is not a property of a story.
 Its console item list is deliberately minimal (`sp-list` only) pending design;
@@ -217,6 +227,13 @@ Drupal credentials.
 | `suggest-arc-relations.ts` | POST | Sidecar (`/relations/suggest`) | Suggest one subject's relationships (one model call) |
 | `merge-arc-relations.ts` | POST | Sidecar (`/relations/merge`) | Collapse the per-subject batches into one deduplicated set |
 | `run-arc-relations.ts` | POST | Self (loops the two above) | Whole-side run for the queued job, which has no browser to loop in |
+| `campaign-recaps.ts` | POST | Drupal (read `TermCampaign`) | Read a campaign's stored session recaps and overview (`{ campaignId }` -> `{ campaignName, recaps, overview }`); no AI. The arc backfill starts here so it only pays to summarise what has never been summarised |
+| `summarize-story.ts` | POST | Drupal (read one story) + LLM (fast model) + Drupal (`setSessionSummary`) | Summarise one stored story by id and persist the recap on its campaign (`{ campaignId, storyId }` -> `{ storyNumber, summary }`). Unlike `store-session-summary.ts` the body is fetched, not supplied, which is what a backfill has; persisting per story is what makes the run resumable |
+| `draft-arc.ts` | POST | Sidecar (`/arc-draft/propose`) | Propose the story arc a campaign's played sessions add up to (`{ campaignName, recaps, party, npcs }` -> `{ draft }`). One model call over the **recaps**, never the story bodies |
+| `run-arc-backfill.ts` | POST | Self (loops the three above) | Whole backfill for the queued job, which has no browser to loop in |
+| `extract-story-npcs.ts` | POST | Sidecar (`/arc-draft/npcs`) | Read the NPC cast a campaign's sessions name (`{ campaignName, recaps, party, known }` -> `{ npcs: [{ name, role, known }] }`). A separate call from `draft-arc`: the NPC roster is not the cast |
+| `create-npc.ts` | POST | Drupal (`createNpcStub`) | Create a minimal NPC for a campaign (name + one-line role + provenance). Returns the existing NPC when the campaign already has that name, so a rerun cannot duplicate |
+| `story-body.ts` | POST | Drupal (read one story) | One story's processed HTML (`{ storyId }` -> `{ title, storyNumber, body }`); no AI. Backs the console reader, which fetches per story rather than carrying every body in page data |
 | `summarize-session.ts` | POST | Ollama-compatible LLM (fast model) | Summarise one story body into a concise recap (`{ storyBody }` -> `{ summary }`) |
 | `campaign-overview.ts` | POST | Ollama-compatible LLM (fast model) | Synthesize per-session recaps into one "story so far" (`{ summaries }` -> `{ overview }`) |
 | `update-character.ts` | POST | Drupal (`updateCharacter`) | PATCH voice settings and the image prompt |
@@ -282,6 +299,10 @@ Supporting modules:
 | `src/utils/arcRelationsEdit.ts` | `useArcRelations()` — editing state and the single save path for both relation editors |
 | `src/utils/drupalMutation.ts` | Shared credentials + mutation transport for the arc endpoints |
 | `src/components/console/ArcRelationsTable.tsx` | The editable relation rows, shared by both editors |
+| `src/utils/arcBackfill.ts` | Drives the backfill run for a campaign with no arc, and maps an accepted draft onto the arc payload |
+| `src/components/console/ArcBackfillPanel.tsx` | The empty state's run/queue controls and progress |
+| `src/components/console/ArcDraftReview.tsx` | The editable accept/discard form a drafted arc lands in |
+| `src/components/molecules/StoryScroll.tsx` | The unfurling chronicle scroll, shared by the story page and the console reader |
 
 **Where relations are edited.** Two surfaces, one save path:
 
@@ -341,6 +362,61 @@ Two ways to run it, both ending in the same accept/reject review:
 The suggestion model must be an **instruct** model, not a "thinking" one — see
 `RELATIONS_PROFILE` in `.env.example`.
 
+### Drafting an arc for a campaign that predates arcs
+
+A campaign played before story arcs existed has stories but no arc, so
+`StoryArcScreen` had nothing to show and relationship suggestion had nothing to
+hang on — its roster and context both come from an arc. The empty state is now
+the way in rather than a dead end.
+
+`ArcBackfillPanel` runs `arcBackfill.ts`, which:
+
+1. reads the campaign's stored recaps (`campaign-recaps`),
+2. summarises every session that has none, one call each
+   (`summarize-story`, which persists as it goes so a rerun resumes),
+3. asks for the arc they add up to (`draft-arc` -> sidecar), and
+4. asks, separately, which NPCs those sessions name
+   (`extract-story-npcs` -> sidecar).
+
+**The cast is a second question, not a second job for the same prompt.** The
+NPC roster is not the cast: a campaign ported from elsewhere has stories full
+of people who have no character node at all, so offering the arc only the NPCs
+already on record offers it people who never appear in the story. Names that
+match something on record come back `known` and are ticked into the arc; the
+rest are offered for creation as stubs — a name and one line, nothing invented
+— through `create-npc`. Drupal returns the existing NPC for a name the campaign
+already has, so a rerun cannot duplicate them.
+
+**Level range and target-story count are deliberately not drafted.** Both stay
+fluid for the life of an arc — a campaign can plan twenty-seven stories and
+write fourteen — so a model reading the past has nothing to say about them.
+They are set in the arc editor, where planning decisions belong.
+
+The draft is read from the **recaps, not the story bodies**: a campaign's
+bodies run to hundreds of thousands of characters and will not fit a local
+context, while its recaps fit in one call.
+
+Two ways to run it, both ending in the same review:
+
+- **Interactive** (`arcBackfill.ts`, driven by `ArcBackfillPanel`) loops in the
+  browser so the session being read is visible. A story with no body, or one
+  call the model fumbles, is skipped rather than aborting the run.
+- **Queued** (`dnd_arc_backfill` -> `run-arc-backfill.ts`) loops on the host, so
+  the tab can be closed. The proposal is stored as the **job's result** and
+  never written: an arc is the plan a campaign's stories hang off, so an
+  unattended job must not create one nobody has read. Opening the job from the
+  activity bar loads it into `StoryArcScreen`'s review form.
+
+Nothing reaches Drupal until the operator accepts. `ArcDraftReview` makes every
+field editable — title, premise, act spine, antagonist faction — and the party
+and cast are ticked by hand, so the arc that gets created is the one that was
+read and agreed to. Discarding leaves the campaign
+untouched; the recaps the run produced are kept either way, since they are
+useful on their own.
+
+Like relationship suggestion, drafting needs an **instruct** model, not a
+"thinking" one — see `ARC_DRAFT_PROFILE` in `.env.example`.
+
 ### Queued AI actions
 
 Anything that takes minutes is queued rather than held open in a request. The
@@ -380,6 +456,26 @@ render in the media library with `review: pending`, and the console decides:
 `usePortraitReview()` (`src/utils/portraitProfile.ts`) owns that whole cycle -
 queue, follow, pick a job back up by id, accept, discard - and both portrait
 screens drive it, so neither can grow a path that attaches without asking.
+
+#### Story scene illustrations
+
+**Generate image** on the story reader (`ReadStoryFileScreen`) and the public
+story page is a queued wizard, not a fake timeout. Stories are too large for one
+prompt, so the work is two jobs:
+
+1. `dnd_story_events` posts the body to sidecar `/story/events`, which chunks
+   it and returns selectable moments. The operator picks one.
+2. `dnd_story_illustration` posts that excerpt plus the checked cast to
+   `/story/scene`. ComfyUI renders 768x512 DreamShaper with at most two
+   IPAdapter leads, then staggered ReActor swaps. The PNG is stored pending
+   review; **Accept** appends it to `field_illustrations`.
+
+The activity bar links both job types to `stories / read` (`?story=` + `?job=`
+off-console). Minutes-to-tens-of-minutes is expected; the browser never holds
+the ComfyUI request.
+
+Helpers live in `src/utils/storyImage.ts` and
+`src/components/console/StoryImageWizard.tsx`.
 
 #### Reading the drawer
 
@@ -444,3 +540,15 @@ See [CLAUDE.md](CLAUDE.md) for the enforced rules: strict TypeScript (no `any`,
 no `@ts-ignore`), no emojis, hex-only colours via `tokens.css`, page queries in
 `pages/`/`templates/` only, and named exports everywhere except Gatsby pages and
 templates.
+
+**The palette is `src/styles/tokens.css` and nothing else defines a colour.**
+Feature stylesheets consume tokens; they never write a raw hex the palette
+already holds, never redefine a token it declares (they load after it, so the
+copy would silently win), and never write `--x: var(--x)`, which is invalid and
+drops the colour. Where one value carries several token names, use the more
+universal one - `tokens.css` runs from raw palette to semantic roles, so
+`#c9a96e` is `--color-gold-mid` before it is `--color-partial`. A genuinely new
+colour belongs in `tokens.css`, not in the sheet that needed it.
+
+Enforced by `src/validation/css_palette.py`, which runs as a gate in
+`./check.sh`. See AGENTS.md rule 0.6.

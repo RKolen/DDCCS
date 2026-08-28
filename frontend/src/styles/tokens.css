@@ -88,6 +88,7 @@
   --overlay-40: #00000066;   /* 40% */
   --overlay-50: #00000080;   /* 50% */
   --overlay-60: #00000099;   /* 60% */
+  --overlay-70: #000000b3;   /* 70% */
 
   /* Parchment overlays */
   --parchment-a35: #6b4a1f59;       /* 35% */
@@ -192,7 +193,7 @@
   /* ── Shadows ─────────────────────────────────────────────── */
   --shadow-sm:        0 1px 3px var(--overlay-50);
   --shadow-md:        0 4px 12px var(--overlay-60);
-  --shadow-lg:        0 8px 24px #000000b3;
+  --shadow-lg:        0 8px 24px var(--overlay-70);
   --shadow-glow-gold: 0 0 8px var(--gold-a30);
 
   /* ── Transitions ─────────────────────────────────────────── */

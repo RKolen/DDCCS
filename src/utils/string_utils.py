@@ -163,6 +163,26 @@ def extract_bracketed_text(
     return re.findall(pattern, text)
 
 
+def clip_to_budget(text: str, limit: int) -> str:
+    """Collapse whitespace and trim text to a character budget.
+
+    For prompt fragments, where a hard slice mid-word wastes tokens on a
+    fragment the model has to guess at. Unlike :func:`truncate_text` no suffix
+    is added: the model must not read "..." as part of the content.
+
+    Args:
+        text: The text to clip.
+        limit: Maximum characters to keep.
+
+    Returns:
+        The clipped text, cut on a word boundary.
+    """
+    cleaned = " ".join(text.split())
+    if len(cleaned) <= limit:
+        return cleaned
+    return cleaned[:limit].rsplit(" ", 1)[0]
+
+
 def truncate_text(text: str, max_length: int, suffix: str = "...") -> str:
     """Truncate text to a maximum length.
 

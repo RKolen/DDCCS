@@ -44,6 +44,26 @@ extend type Mutation {
   ): NodeCharacter
 
   """
+  Create a minimal NPC character node for a campaign: a name, one line on who
+  they are, and where they came from. The counterpart to createCharacter,
+  which derives a full player sheet and always creates a PC. Used when a
+  campaign's session recaps name NPCs that have no node yet; everything else
+  is filled in later through the character editor. Creating a name that
+  already exists in the campaign returns the existing NPC rather than a
+  duplicate.
+  """
+  createNpcStub(
+    "UUID of the campaign term to scope the NPC to."
+    campaignId: ID
+    "The NPC's name."
+    name: String!
+    "One line on who they are."
+    role: String
+    "Where the NPC came from, e.g. which sessions named them."
+    note: String
+  ): NodeCharacter
+
+  """
   Save character arc analysis results onto a character node. The payload is the
   JSON-encoded arc result (direction, stage, summary, storiesAnalyzed,
   updatedAt, metrics, relationships, goals) from the sidecar /character/arc

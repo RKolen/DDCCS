@@ -9,15 +9,23 @@
 
 import * as React from 'react';
 import { Link } from 'gatsby';
+import { drupalAdminUrl } from '../../../utils/drupalLinks';
 import type { ScreenProps } from '../ScreenRouter';
-import { useConsoleData, storyArcsForCampaign } from '../ConsoleContext';
+import { useConsoleData, storyArcsForCampaign, storiesForCampaign } from '../ConsoleContext';
 import type { DrupalStoryArc } from '../ConsoleContext';
 import { Icon, Spinner } from '../atoms';
 import { ArcRelationsTable } from '../ArcRelationsTable';
 import { ArcSuggestButtons } from '../ArcSuggestButtons';
+import { ArcBackfillPanel } from '../ArcBackfillPanel';
 import { useArcRelations } from '../../../utils/arcRelationsEdit';
 import { partyRoster, npcRoster } from '../../../utils/arcRoster';
-import { fetchJob, jobResult, resolveJob } from '../../../utils/aiJobs';
+import { fetchJob, jobResult, resolveJob, JOB_TYPES } from '../../../utils/aiJobs';
+import {
+  toArcDraft,
+  type ArcDraft,
+  type DiscoveredNpc,
+  type RawArcDraft,
+} from '../../../utils/arcBackfill';
 import type { DrupalArcRelation } from '../ConsoleContext';
 
 function nameFor(ids: string[], all: Array<{ id: string; title: string }>): string[] {
@@ -33,6 +41,16 @@ export function StoryArcScreen({ ctx, setCtx }: ScreenProps): React.ReactElement
 
   const arcs = React.useMemo(
     () => (campaignName ? storyArcsForCampaign(data, campaignName) : []),
+    [data, campaignName],
+  );
+
+  const campaign = data.campaigns.find(c => c.name === campaignName) ?? null;
+
+  /* Every story on the campaign, not just an arc's own: the backfill reads the
+     whole play history, which is what there is before any arc exists. */
+  const campaignStories = React.useMemo(
+    () => (campaignName ? storiesForCampaign(data, campaignName) : [])
+      .map(s => ({ id: s.id, title: s.title, storyNumber: s.storyNumber })),
     [data, campaignName],
   );
 
@@ -77,6 +95,12 @@ export function StoryArcScreen({ ctx, setCtx }: ScreenProps): React.ReactElement
   const reviewJobId = typeof ctx.reviewJobId === 'string' ? ctx.reviewJobId : null;
   const [picked, setPicked] = React.useState<string | null>(null);
   const [jobNotice, setJobNotice] = React.useState<string | null>(null);
+  const [queuedDraft, setQueuedDraft] = React.useState<ArcDraft | null>(null);
+  const [queuedCast, setQueuedCast] = React.useState<DiscoveredNpc[]>([]);
+
+  /* The backfill belongs on the empty state, but a queued run can also finish
+     after an arc exists - following that job here must not drop its proposal. */
+  const showBackfill = arcs.length === 0 || queuedDraft !== null;
 
   React.useEffect(() => {
     if (!reviewJobId || picked === reviewJobId) {
@@ -85,6 +109,26 @@ export function StoryArcScreen({ ctx, setCtx }: ScreenProps): React.ReactElement
     setPicked(reviewJobId);
     void (async () => {
       const job = await fetchJob(reviewJobId);
+
+      /* A backfill job carries a whole arc proposal, not relations: it goes to
+         the review form, which is the only thing that can create the arc. */
+      if (job?.type === JOB_TYPES.backfill) {
+        const backfill = jobResult<{
+          draft?: RawArcDraft | null;
+          cast?:  DiscoveredNpc[];
+        }>(job);
+        const draft = toArcDraft(backfill?.draft);
+        if (draft === null) {
+          setJobNotice('That run proposed no arc.');
+          return;
+        }
+        setQueuedDraft(draft);
+        setQueuedCast(backfill?.cast ?? []);
+        setJobNotice('Loaded the proposed arc from the queued run. Edit it, then accept.');
+        await resolveJob(reviewJobId, true);
+        return;
+      }
+
       const result = jobResult<{
         side?: 'party' | 'npc';
         suggested?: DrupalArcRelation[];
@@ -125,12 +169,33 @@ export function StoryArcScreen({ ctx, setCtx }: ScreenProps): React.ReactElement
         </div>
       </header>
 
+      {showBackfill && campaign && (
+        <section className="arc-prose">
+          <h4>
+            {arcs.length === 0
+              ? 'No arcs on this campaign yet'
+              : 'Proposed arc from a queued run'}
+          </h4>
+          <ArcBackfillPanel
+            campaignId={campaign.id}
+            campaignName={campaign.name}
+            stories={campaignStories}
+            party={party}
+            npcs={npcs}
+            incoming={queuedDraft}
+            incomingCast={queuedCast}
+          />
+          {jobNotice && <p className="arc-saved">{jobNotice}</p>}
+          {arcs.length === 0 && (
+            <p className="arc-hint">
+              Or plan one from scratch in &quot;Create New Story Arc&quot;.
+            </p>
+          )}
+        </section>
+      )}
+
       {arcs.length === 0 ? (
-        <p className="arc-empty">
-          {campaignName
-            ? `No story arcs on ${campaignName} yet. Create one from "Create New Story Arc".`
-            : 'Select a campaign first.'}
-        </p>
+        campaign ? null : <p className="arc-empty">Select a campaign first.</p>
       ) : (
         <div className="arc-layout">
           <aside className="arc-list">
@@ -156,10 +221,19 @@ export function StoryArcScreen({ ctx, setCtx }: ScreenProps): React.ReactElement
             <div className="arc-detail">
               <div className="arc-detail-head">
                 <h3>{arc.title}</h3>
+                {/* Gatsby builds pages for characters, stories, monsters and
+                    items - not story arcs, so arc.path is a Drupal alias with
+                    no Gatsby route behind it. Link where it actually resolves. */}
                 {arc.path && (
-                  <Link to={arc.path} className="ghost-btn" style={{ textDecoration: 'none' }}>
-                    <Icon name="scroll" size={11} /> Full page
-                  </Link>
+                  <a
+                    href={drupalAdminUrl(arc.path)}
+                    className="ghost-btn"
+                    style={{ textDecoration: 'none' }}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    <Icon name="scroll" size={11} /> Open in Drupal
+                  </a>
                 )}
               </div>
 

@@ -8,7 +8,7 @@ id: dnd_ai
 label: 'D&D AI jobs'
 backend: database
 backend_configuration:
-  lease_time: 900
+  lease_time: 2400
 processor: daemon
 processing_time: 0
 locked: true

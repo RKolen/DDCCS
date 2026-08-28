@@ -1,0 +1,21 @@
+{
+  "_comment": [
+    "Names that may appear in code, tests, and documentation.",
+    "",
+    "Everything else named in game_data belongs to a live campaign and is",
+    "allowed only inside game_data/ and docs/docs_personal/. Writing a live",
+    "character into a test, a comment, a doc, or a test fixture in Drupal puts",
+    "someone's real campaign into the shared codebase, and a suggester that is",
+    "shown those names will keep proposing them.",
+    "",
+    "Enforced by src/validation/example_world.py, run from check.sh.",
+    "Add a name here only when it belongs to the Example Campaign world."
+  ],
+  "allowed": [
+    "Aragorn",
+    "Frodo Baggins",
+    "Gandalf the Grey",
+    "Barliman Butterbur",
+    "Tobias Stone"
+  ]
+}

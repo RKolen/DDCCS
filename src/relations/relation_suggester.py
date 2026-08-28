@@ -5,8 +5,6 @@ too many for one local inference pass. Each call asks about one character
 against short digests of the others; the caller merges the batches.
 """
 
-import json
-import re
 from typing import Any, Dict, List, Optional, Sequence
 
 from src.ai.ai_client import AIClientProtocol
@@ -16,6 +14,8 @@ from src.relations.relation_types import (
     TIER_DIRECT,
     TIER_THEMATIC,
 )
+from src.utils.ai_json import extract_json_object
+from src.utils.string_utils import clip_to_budget
 
 # Keep prompts small; local inference degrades with a wide context. The JSON
 # request needs an instruct model - a "thinking" model spends the whole budget
@@ -35,22 +35,6 @@ _NPC_TASK = (
     "would be explosive if revealed: shared origins, a wrong that was done, "
     "mirrored abilities, or a stake in the same events."
 )
-
-
-def _clip(text: str, limit: int) -> str:
-    """Trim text to a character budget on a word boundary.
-
-    Args:
-        text: The text to clip.
-        limit: Maximum characters to keep.
-
-    Returns:
-        The clipped text.
-    """
-    cleaned = " ".join(text.split())
-    if len(cleaned) <= limit:
-        return cleaned
-    return cleaned[:limit].rsplit(" ", 1)[0]
 
 
 def build_prompt(
@@ -79,20 +63,25 @@ def build_prompt(
         roster,
     ]
     if context:
-        blocks.extend(["", f"Arc context: {_clip(context, MAX_CONTEXT_CHARS)}"])
+        blocks.extend(["", f"Arc context: {clip_to_budget(context, MAX_CONTEXT_CHARS)}"])
     blocks.extend(
         [
             "",
             task,
             "",
-            "Only suggest a connection you can justify from the details above. "
-            "It is correct to return fewer connections than candidates, and "
-            "correct to return none. Never invent a character that is not "
-            "listed.",
+            "Every connection must rest on a specific detail written above, and "
+            "the note must open by naming that detail. A connection that would "
+            "fit any other candidate just as well is not a connection: if the "
+            "same reasoning applies to every member of a faction, it describes "
+            "the faction, not this character, so leave it out. Belonging to a "
+            "group is never itself a connection. It is correct to return fewer "
+            "connections than candidates, and correct to return none. Never "
+            "invent a character that is not listed.",
             "",
             'Reply with JSON only: {"relations": [{"source": "<subject>", '
             '"target": "<candidate name>", "relation_type": "<short label>", '
-            '"tier": 1, "note": "<the connection and how to play it>"}]}',
+            '"tier": 1, "note": "<the detail this rests on, then the '
+            'connection and how to play it>"}]}',
             "tier 1 = direct and personal, 2 = thematic, 3 = incidental.",
         ]
     )
@@ -117,7 +106,7 @@ def parse_suggestions(
     Returns:
         The valid suggestions, in model order.
     """
-    payload = _extract_json(response)
+    payload = extract_json_object(response)
     if payload is None:
         return []
     raw = payload.get("relations")
@@ -147,32 +136,6 @@ def parse_suggestions(
         seen.add(key)
         out.append(suggestion)
     return out
-
-
-def _extract_json(response: str) -> Optional[Dict[str, Any]]:
-    """Pull the first JSON object out of a model response.
-
-    Args:
-        response: The raw response, which may be fenced or prefaced.
-
-    Returns:
-        The decoded object, or None when nothing parses.
-    """
-    text = response.strip()
-    if not text:
-        return None
-    fenced = re.search(r"```(?:json)?\s*(.*?)```", text, re.DOTALL)
-    if fenced:
-        text = fenced.group(1).strip()
-    start = text.find("{")
-    end = text.rfind("}")
-    if start == -1 or end == -1 or end <= start:
-        return None
-    try:
-        parsed = json.loads(text[start : end + 1])
-    except (ValueError, TypeError):
-        return None
-    return parsed if isinstance(parsed, dict) else None
 
 
 def suggest_relations_for_subject(

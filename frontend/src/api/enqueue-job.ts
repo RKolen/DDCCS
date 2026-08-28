@@ -10,7 +10,7 @@ import type { GatsbyFunctionRequest, GatsbyFunctionResponse } from 'gatsby';
  */
 
 interface EnqueueBody {
-  /** Job type plugin id: dnd_portrait, dnd_arc_analysis, dnd_story_generation, dnd_session_summary. */
+  /** Job type plugin id: dnd_portrait, dnd_story_events, dnd_story_illustration, ... */
   type:    string;
   /** Job-type-specific payload; sent to Drupal JSON-encoded. */
   payload: Record<string, unknown>;

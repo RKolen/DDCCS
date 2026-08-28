@@ -26,6 +26,7 @@ tests/
 |-- items/           # Tests for src/items/
 |-- npcs/            # Tests for src/npcs/
 |-- relations/       # Tests for src/relations/
+|-- story_arcs/      # Tests for src/story_arcs/
 |-- stories/         # Tests for src/stories/
 |-- utils/           # Tests for src/utils/
 |-- validators/      # Tests for src/validation/

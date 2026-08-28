@@ -209,6 +209,23 @@ Bare hex is only acceptable when no token exists *and* the value is truly
 one-off (e.g. a specific parchment grain colour in a single gradient). In that
 case add a comment explaining why no token was used.
 
+**Never redefine a token another stylesheet declares.** The feature sheets are
+imported after `tokens.css`, so a second copy silently wins and editing the
+palette does nothing. `arcs.css` carried sixteen such copies plus
+`--color-gold-border: var(--color-gold-border)` - a self-reference, which is
+invalid at computed-value time and dropped every gold border in the arc screens
+to `currentColor`. A genuinely new colour goes in `tokens.css`, not in the sheet
+that needed it.
+
+**When a value has more than one token name, use the more universal one.**
+`tokens.css` runs from raw palette to semantic roles, so the first name declared
+for a value describes the colour and later ones describe what it is used for:
+`#c9a96e` is `--color-gold-mid` before it is `--color-partial`.
+
+**Enforced**, not just documented: `src/validation/css_palette.py` runs as a
+gate in `./check.sh` and fails on a raw hex the palette already holds, a
+redefined token, or a self-reference.
+
 **Canonical token file:** `frontend/src/styles/tokens.css`
 
 | Need | Token to use |

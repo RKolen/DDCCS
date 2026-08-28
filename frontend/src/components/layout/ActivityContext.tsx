@@ -17,6 +17,7 @@ import {
 } from '../../utils/aiJobs';
 import type { AiJob } from '../../utils/aiJobs';
 import type { PortraitJobResult } from '../../utils/portraitProfile';
+import type { StoryIllustrationJobResult } from '../../utils/storyImage';
 import type { ActivityItem, ActivityTarget } from '../console/menuData';
 
 /** What the console supplies while it is the active page. */
@@ -82,6 +83,23 @@ export function useConsoleActivity(handlers: ConsoleActivityHandlers | null): vo
 }
 
 /**
+ * Arc jobs review on the Story Arcs screen: a queued relation run loads its
+ * suggestions into the relations tables, and a queued backfill loads its
+ * proposed arc into the review form. Both are decisions the operator still
+ * owes, so the row has to lead somewhere.
+ */
+const ARC_JOB_TYPES = new Set<string>([JOB_TYPES.relations, JOB_TYPES.backfill]);
+
+const ARC_TARGET: ActivityTarget = { sectionId: 'stories', itemId: 'arcs' };
+
+const STORY_IMAGE_JOB_TYPES = new Set<string>([
+  JOB_TYPES.storyEvents,
+  JOB_TYPES.illustration,
+]);
+
+const STORY_IMAGE_TARGET: ActivityTarget = { sectionId: 'stories', itemId: 'read' };
+
+/**
  * Render one queued AI job as an activity-drawer row.
  *
  * A job waiting for the processor reads as `queued`, not `running`: it is in
@@ -116,9 +134,21 @@ function jobToActivityItem(
 
   const isPortrait = job.type === JOB_TYPES.portrait;
   const portrait = isPortrait ? jobResult<PortraitJobResult>(job) : null;
-  const needsReview = portrait?.review === 'pending';
+  const illustration = job.type === JOB_TYPES.illustration
+    ? jobResult<StoryIllustrationJobResult>(job)
+    : null;
+  const needsReview = portrait?.review === 'pending' || illustration?.review === 'pending';
   const subject = portrait?.characterId ?? job.subjectId;
-  const target = isPortrait && subject ? locate(subject) : undefined;
+  /* An arc job's output is reviewed on the arc screen, which is addressed by
+     name rather than by roster index - there is no character to locate. Story
+     scene jobs review on the story reader, keyed by storyId as subjectId. */
+  const target = isPortrait && subject
+    ? locate(subject)
+    : ARC_JOB_TYPES.has(job.type)
+      ? ARC_TARGET
+      : STORY_IMAGE_JOB_TYPES.has(job.type)
+        ? STORY_IMAGE_TARGET
+        : undefined;
 
   const detail = needsReview
     ? 'Rendered - not attached until you accept it'
@@ -177,9 +207,9 @@ export function ActivityProvider(
     [running, recent, locate],
   );
 
-  /* On the console, open the row's screen in place. Anywhere else, hand the
-     character id to the console route's `?char=` deep link, which resolves it
-     against the roster the console alone has. */
+  /* On the console, open the row's screen in place. Anywhere else, deep-link
+     to `/?section=…&item=…` with `char=` for a portrait, `story=` for a scene,
+     and `job=` so the landing screen can pick the pending review back up. */
   const openRow = React.useCallback((item: ActivityItem): void => {
     if (item.target == null) return;
     setFull(false);
@@ -191,7 +221,12 @@ export function ActivityProvider(
       section: item.target.sectionId,
       item:    item.target.itemId,
     });
-    if (item.subjectId != null) query.set('char', item.subjectId);
+    if (item.jobId != null) query.set('job', item.jobId);
+    if (item.target.sectionId === 'stories' && item.target.itemId === 'read' && item.subjectId != null) {
+      query.set('story', item.subjectId);
+    } else if (item.subjectId != null) {
+      query.set('char', item.subjectId);
+    }
     void navigate(`/?${query.toString()}`);
   }, [console_]);
 

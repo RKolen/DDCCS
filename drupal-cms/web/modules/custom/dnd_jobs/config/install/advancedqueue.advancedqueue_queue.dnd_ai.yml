@@ -5,11 +5,11 @@ id: dnd_ai
 label: 'D&D AI jobs'
 backend: database
 backend_configuration:
-  # Must exceed the slowest legitimate run (a CPU portrait render is ~4 minutes,
-  # a full arc analysis longer) while staying short enough that a job orphaned by
-  # a dead worker is spotted and requeued by hook_cron() the same session. An
-  # hour met the first requirement and failed the second.
-  lease_time: 900
+  # Must exceed the slowest legitimate run. A CPU portrait is ~4 minutes; a
+  # story scene at 768x512 with staggered ReActor swaps can take COMFYUI_SCENE_TIMEOUT
+  # (1800s) plus Ollama analysis. SIDECAR_JOB_TIMEOUT (2100) must stay under this
+  # lease (2400) so a hung call is reaped before the worker is assumed dead.
+  lease_time: 2400
 processor: daemon
 processing_time: 0
 locked: true

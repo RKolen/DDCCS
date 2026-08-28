@@ -52,6 +52,10 @@
   z-index: 10;
 }
 
+.actionSidebar :global(.story-image-wizard) {
+  position: relative;
+}
+
 /* ── Right: party panel ──────────────────────────────────── */
 .partySidebar {
   position: sticky;

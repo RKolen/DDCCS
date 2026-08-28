@@ -45,6 +45,10 @@ interface StatelyLedgerProps {
    * index a link could name.
    */
   initialCharId?: string;
+  /** UUID of a story to open on, from a `?story=` deep link. */
+  initialStoryId?: string;
+  /** Queued job the activity bar asked the landing screen to pick back up. */
+  initialJobId?: string;
   liveData?: ConsoleData;
 }
 
@@ -53,6 +57,8 @@ export function StatelyLedger({
   initialSection = 'stories',
   initialItem,
   initialCharId,
+  initialStoryId,
+  initialJobId,
   liveData,
 }: StatelyLedgerProps): React.ReactElement {
   const [activeSection, setActiveSection] = React.useState<MenuSection['id']>(initialSection);
@@ -66,6 +72,8 @@ export function StatelyLedger({
     storyIdx: 0,
     charIdx: 0,
     editCharId: initialCharId,
+    storyId: initialStoryId,
+    reviewJobId: initialJobId,
     npcMode: initialSection === 'npcs',
   });
 
@@ -122,15 +130,18 @@ export function StatelyLedger({
      the result back up and can accept or discard it. */
   const openActivity = React.useCallback((item: ActivityItem): void => {
     if (!item.target) return;
+    const storyIdx = stories?.findIndex(s => s.id === item.subjectId) ?? -1;
     setCtxRaw(current => ({
       ...current,
       charIdx: item.target?.charIdx ?? 0,
       npcMode: item.target?.npcMode ?? false,
+      storyIdx: storyIdx >= 0 ? storyIdx : current.storyIdx,
+      storyId: item.subjectId,
       reviewJobId: item.jobId,
     }));
     setActiveSection(item.target.sectionId);
     setActiveItem(item.target.itemId);
-  }, []);
+  }, [stories]);
 
   /* The console can do two things the shared drawer cannot: resolve a
      character id against the roster it holds, and open a row's screen without

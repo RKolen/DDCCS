@@ -6,6 +6,7 @@ namespace Drupal\dnd_jobs\Service;
 
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\dnd_content\Service\IllustrationWriter;
 use Drupal\dnd_content\Service\PortraitWriter;
 use Drupal\media\MediaInterface;
 use Drupal\node\NodeInterface;
@@ -54,6 +55,23 @@ final class JobReview {
   public const DISCARD = 'discard';
 
   /**
+   * Job types whose result the console applies itself.
+   *
+   * A portrait is written onto the character here, server-side, because the
+   * media already exists and only Drupal can attach it. An arc result is
+   * different: the console loads it into an editable review - relations into
+   * the relation tables, a drafted arc into its form - and the operator saves
+   * from there, through the ordinary write paths. Accepting one of these is
+   * therefore only a bookkeeping flip, so the activity bar stops offering a
+   * decision that has already been made.
+   */
+  private const CONSOLE_APPLIED_TYPES = [
+    'dnd_arc_relations',
+    'dnd_arc_backfill',
+    'dnd_story_events',
+  ];
+
+  /**
    * Constructs a JobReview.
    *
    * @param \Drupal\dnd_jobs\Service\JobQueue $jobQueue
@@ -62,6 +80,8 @@ final class JobReview {
    *   The entity type manager.
    * @param \Drupal\dnd_content\Service\PortraitWriter $portraitWriter
    *   The shared portrait writer.
+   * @param \Drupal\dnd_content\Service\IllustrationWriter $illustrationWriter
+   *   The shared illustration writer.
    * @param \Drupal\Core\Session\AccountInterface $currentUser
    *   The current user, checked for update access on the target content.
    */
@@ -69,6 +89,7 @@ final class JobReview {
     private readonly JobQueue $jobQueue,
     private readonly EntityTypeManagerInterface $entityTypeManager,
     private readonly PortraitWriter $portraitWriter,
+    private readonly IllustrationWriter $illustrationWriter,
     private readonly AccountInterface $currentUser,
   ) {}
 
@@ -107,7 +128,10 @@ final class JobReview {
       throw new \RuntimeException('This job produced no result to review.');
     }
 
-    $review = $result['review'] ?? NULL;
+    // A result stored without a marker has not been decided by anyone, so it
+    // is pending. Only the portrait job type has ever written one, which left
+    // every other reviewable result unresolvable.
+    $review = $result['review'] ?? self::PENDING;
     $wanted = $accepted ? self::ACCEPTED : self::DISCARDED;
     if ($review === $wanted) {
       return $job;
@@ -144,6 +168,17 @@ final class JobReview {
    *   gone, or the user cannot update it.
    */
   private function apply(string $type, array $result): void {
+    if (in_array($type, self::CONSOLE_APPLIED_TYPES, TRUE)) {
+      return;
+    }
+    if ($type === 'dnd_story_illustration') {
+      $node = $this->loadStory($this->requireString($result, 'storyId'));
+      if (!$node->access('update', $this->currentUser)) {
+        throw new \RuntimeException('You do not have permission to update this story.');
+      }
+      $this->illustrationWriter->assign($node, $this->loadImageMedia($this->requireString($result, 'mediaId')));
+      return;
+    }
     if ($type !== 'dnd_portrait') {
       throw new \RuntimeException(sprintf('Job type %s produces nothing to review.', $type));
     }
@@ -198,6 +233,30 @@ final class JobReview {
     $node = reset($nodes);
     if (!$node instanceof NodeInterface) {
       throw new \RuntimeException('The character this result belongs to no longer exists.');
+    }
+
+    return $node;
+  }
+
+  /**
+   * Load a story node by UUID.
+   *
+   * @param string $uuid
+   *   The story node UUID.
+   *
+   * @return \Drupal\node\NodeInterface
+   *   The story node.
+   *
+   * @throws \RuntimeException
+   *   When no story matches the UUID.
+   */
+  private function loadStory(string $uuid): NodeInterface {
+    $nodes = $this->entityTypeManager
+      ->getStorage('node')
+      ->loadByProperties(['uuid' => $uuid, 'type' => 'story']);
+    $node = reset($nodes);
+    if (!$node instanceof NodeInterface) {
+      throw new \RuntimeException('The story this result belongs to no longer exists.');
     }
 
     return $node;

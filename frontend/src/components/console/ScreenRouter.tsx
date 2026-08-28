@@ -18,6 +18,8 @@ import type { MenuSection, MenuItem } from './menuData';
 
 export interface ScreenContext {
   storyIdx?: number;
+  /** UUID of the story an activity row asked the reader to open. */
+  storyId?: string;
   charIdx?: number;
   itemIdx?: number;
   /** Character screens show NPCs (characterType === false) when true. */

@@ -450,6 +450,62 @@ class RelationMergeResponse(BaseModel):
     relations: List[RelationSuggestionModel] = Field(default_factory=list)
 
 
+class SessionRecapModel(BaseModel):
+    """One stored session recap, as the console reads it off the campaign."""
+
+    story_number: int = 0
+    summary: str = ""
+
+
+class ArcDraftRequest(BaseModel):
+    """Request an arc proposal built from a campaign's played sessions."""
+
+    campaign_name: str = ""
+    recaps: List[SessionRecapModel] = Field(default_factory=list)
+    party: List[str] = Field(default_factory=list)
+    npcs: List[str] = Field(default_factory=list)
+
+
+class ArcDraftModel(BaseModel):
+    """A proposed story arc, before the operator has agreed to it."""
+
+    title: str = ""
+    premise: str = ""
+    overall_plot: str = ""
+    faction: str = ""
+    party: List[str] = Field(default_factory=list)
+    npcs: List[str] = Field(default_factory=list)
+
+
+class ArcDraftResponse(BaseModel):
+    """The proposed arc, or nothing when the model produced none."""
+
+    draft: Optional[ArcDraftModel] = None
+
+
+class NpcExtractRequest(BaseModel):
+    """Request the NPC cast a campaign's played sessions name."""
+
+    campaign_name: str = ""
+    recaps: List[SessionRecapModel] = Field(default_factory=list)
+    party: List[str] = Field(default_factory=list)
+    known: List[str] = Field(default_factory=list)
+
+
+class DiscoveredNpcModel(BaseModel):
+    """One NPC the sessions name, matched against the roster or not."""
+
+    name: str
+    role: str = ""
+    known: bool = False
+
+
+class NpcExtractResponse(BaseModel):
+    """The cast the sessions name; empty is a valid answer."""
+
+    npcs: List[DiscoveredNpcModel] = Field(default_factory=list)
+
+
 class ArcAggregateRequest(BaseModel):
     """Request to aggregate stored per-story data points into a full arc."""
 
@@ -486,6 +542,114 @@ class ArcAnalysisResponse(BaseModel):
     metrics: Dict[str, ArcMetricModel] = Field(default_factory=dict)
     relationships: List[ArcRelationshipModel] = Field(default_factory=list)
     goals: List[ArcGoalModel] = Field(default_factory=list)
+
+
+class StoryRosterPerson(BaseModel):
+    """A campaign character the story-image endpoints may match a name against."""
+
+    name: str = Field(..., min_length=1)
+    character_id: str = Field(default="", description="Drupal UUID when known")
+    portrait_url: str = Field(default="")
+    appearance: str = Field(default="")
+    is_npc: bool = False
+
+
+class StoryEventsRequest(BaseModel):
+    """Request key visual moments from a story body."""
+
+    body: str
+    title: str = ""
+    roster: List[StoryRosterPerson] = Field(default_factory=list)
+
+    @field_validator("body")
+    @classmethod
+    def reject_empty_body(cls, value: str) -> str:
+        """Reject a blank story, which would yield no events.
+
+        Args:
+            value: The submitted body.
+
+        Returns:
+            The stripped body.
+
+        Raises:
+            ValueError: If the body is empty after stripping.
+        """
+        stripped = value.strip()
+        if not stripped:
+            raise ValueError("body must not be empty")
+        return stripped
+
+
+class StoryEventModel(BaseModel):
+    """One selectable moment extracted from a story."""
+
+    title: str
+    one_line: str = ""
+    excerpt: str = ""
+
+
+class StoryEventsResponse(BaseModel):
+    """Key visual moments, empty when none were found."""
+
+    events: List[StoryEventModel] = Field(default_factory=list)
+
+
+class StoryScenePerson(BaseModel):
+    """Someone the operator left in the shot, with optional likeness."""
+
+    name: str = Field(..., min_length=1)
+    character_id: str = Field(default="", description="Drupal UUID when matched")
+    portrait_url: str = Field(default="")
+    appearance: str = Field(default="")
+    is_npc: bool = False
+    use_likeness: bool = False
+    role: str = Field(default="")
+    known: bool = False
+
+
+class StorySceneRequest(BaseModel):
+    """Request a scene illustration of one selected event."""
+
+    excerpt: str
+    title: str = ""
+    roster: List[StoryRosterPerson] = Field(default_factory=list)
+    people: List[StoryScenePerson] = Field(default_factory=list)
+    seed: Optional[int] = None
+
+    @field_validator("excerpt")
+    @classmethod
+    def reject_empty_excerpt(cls, value: str) -> str:
+        """Reject a blank excerpt, which would yield a generic scene.
+
+        Args:
+            value: The submitted excerpt.
+
+        Returns:
+            The stripped excerpt.
+
+        Raises:
+            ValueError: If the excerpt is empty after stripping.
+        """
+        stripped = value.strip()
+        if not stripped:
+            raise ValueError("excerpt must not be empty")
+        return stripped
+
+
+class StorySceneResponse(BaseModel):
+    """A generated scene, base64-encoded for transport to Drupal."""
+
+    image_base64: str
+    seed: int
+    prompt: str
+    alt: str
+    setting: str = ""
+    action: str = ""
+    mood: str = ""
+    used_ipadapter: int = 0
+    swapped_faces: List[str] = Field(default_factory=list)
+    people: List[StoryScenePerson] = Field(default_factory=list)
 
 
 class ErrorResponse(BaseModel):

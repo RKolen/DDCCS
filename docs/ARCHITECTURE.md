@@ -131,6 +131,9 @@ queries and computes spotlight scores. Routes:
 - `POST /relations/suggest` + `/relations/merge` — story-arc relationship
   suggestion, one subject per call, then a merge that collapses reciprocal
   pairs (`src/sidecar/relation_routes.py`)
+- `POST /arc-draft/propose` + `/arc-draft/npcs` — propose the story arc a
+  campaign's played sessions add up to, and read the NPC cast those sessions
+  name (`src/sidecar/arc_draft_routes.py`)
 - (plus the `/character/*` build/skill/equipment and `/tts/speak` +
   `/tts/segment` routes)
 
@@ -168,6 +171,7 @@ Job types (`drupal-cms/web/modules/custom/dnd_jobs`):
 | `dnd_arc_relations` | console `run-arc-relations` | the suggested relations on the job, for review; **does not** write them onto the arc |
 | `dnd_story_generation` | console `generate-story-text` | the story text on the job, for review |
 | `dnd_session_summary` | console `store-session-summary` | the summary on the campaign term |
+| `dnd_arc_backfill` | console `run-arc-backfill` | the recaps it produced on the campaign term, and the proposed arc plus discovered cast on the job for review; **does not** create the arc or any NPC |
 
 #### Story arcs and their relationship web
 
@@ -199,6 +203,56 @@ be closed. Either way the operator reviews before anything is written, because
 The suggestion model must be an **instruct** model. A local "thinking" model
 ignores `think:false` over the OpenAI endpoint and spends its whole token budget
 reasoning, returning empty content; `RELATIONS_PROFILE` selects the profile.
+
+#### Backfilling an arc for a campaign that predates arcs
+
+A campaign played before the arc feature has stories but no arc, which leaves
+the arc screen empty and relationship suggestion with nothing to hang on — its
+roster and context both come from an arc. The backfill reads the arc out of the
+play history instead:
+
+```text
+console (or queue worker)
+   |
+   +--> api/campaign-recaps   --> Drupal (stored session_summary paragraphs)
+   |
+   |  per session with no recap
+   +--> api/summarize-story   --> fast model --> Drupal setSessionSummary
+   |
+   +--> api/draft-arc         --> sidecar /arc-draft/propose --> instruct model
+   |
+   +--> api/extract-story-npcs --> sidecar /arc-draft/npcs   --> instruct model
+   |
+   +--> editable review --> api/create-npc      --> Drupal createNpcStub
+                        --> api/create-story-arc --> Drupal createStoryArc
+```
+
+The cast is asked as its own question rather than bolted onto the arc prompt.
+A campaign's NPC roster is not its cast: one ported from elsewhere has stories
+full of people who have no character node, so offering the arc only the NPCs
+already on record offers it people who never appear in the story. Names that
+match the roster come back marked known; the rest are offered as stubs — a
+name, one line on who they are, and where that line came from. `createNpcStub`
+returns the existing NPC for a name the campaign already has, so a rerun of a
+non-deterministic model cannot fill the roster with duplicates.
+
+Level range and target-story count are deliberately not drafted. Both stay
+fluid for the life of an arc, so a model reading the past has nothing to say
+about them; they are set in the arc editor.
+
+The draft is read from the **recaps, not the story bodies**: a campaign's
+bodies run to hundreds of thousands of characters and will not fit a local
+context, while its recaps fit in one call. Summarising persists per session, so
+a run that dies halfway leaves the recaps it earned and a rerun resumes.
+
+Nothing reaches Drupal until the operator accepts the proposal — an arc is the
+plan a campaign's stories hang off, so an unattended job must not create one
+nobody has read. The review form makes every field editable and both rosters
+hand-ticked. Discarding leaves the campaign untouched; the recaps are kept
+either way, since they are useful on their own.
+
+Drafting needs an **instruct** model for the same reason suggestion does;
+`ARC_DRAFT_PROFILE` selects the profile.
 
 #### Nothing a job generates is applied unattended
 

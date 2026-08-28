@@ -15,6 +15,7 @@ from typing import Any, Callable, Dict, Optional
 
 from src.config.config_types import (
     AIConfig,
+    ComfyUIAssets,
     DisplayConfig,
     DnDConfig,
     DrupalConfig,
@@ -382,6 +383,24 @@ def _apply_env_sidecar_overrides(
     config.sidecar.reload = get_env_bool("SIDECAR_RELOAD", config.sidecar.reload)
 
 
+def _apply_env_reactor(assets: ComfyUIAssets, get_env: Any) -> None:
+    """Apply optional ReActor filenames from the environment.
+
+    Args:
+        assets: The ComfyUI asset bundle to update.
+        get_env: Callable to read a string env var.
+    """
+    swap_model = get_env("COMFYUI_REACTOR_SWAP_MODEL")
+    if swap_model:
+        assets.reactor.swap_model = swap_model
+    face_detection = get_env("COMFYUI_REACTOR_FACE_DETECTION")
+    if face_detection:
+        assets.reactor.face_detection = face_detection
+    node = get_env("COMFYUI_REACTOR_NODE")
+    if node:
+        assets.reactor.node = node
+
+
 def _apply_env_comfyui_overrides(
     config: DnDConfig,
     get_env: Any,
@@ -420,6 +439,10 @@ def _apply_env_comfyui_overrides(
     clip_vision = get_env("COMFYUI_CLIP_VISION")
     if clip_vision:
         config.comfyui.assets.clip_vision = clip_vision
+    _apply_env_reactor(config.comfyui.assets, get_env)
+    config.comfyui.scene_timeout = get_env_float(
+        "COMFYUI_SCENE_TIMEOUT", config.comfyui.scene_timeout
+    )
 
     # Native Ollama API base for unloading models before generation, composed
     # from the authoritative OLLAMA_HOST/OLLAMA_PORT env vars. No fallback: if

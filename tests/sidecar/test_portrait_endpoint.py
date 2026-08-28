@@ -68,6 +68,12 @@ def _client(
     client = MagicMock()
     client.is_available.return_value = available
     client.generate.return_value = png
+    def generate_then_free(workflow: Any) -> Any:
+        try:
+            return client.generate(workflow)
+        finally:
+            client.free()
+    client.generate_then_free.side_effect = generate_then_free
     client.free.return_value = True
     client.upload_image.return_value = upload
     return client

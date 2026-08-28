@@ -6,7 +6,9 @@
 #   1. pylint  - 10.00/10, zero messages (rule 2/3)
 #   2. mypy    - zero errors on src/ and tests/ (rule 6)
 #   3. pyright - zero errors; same engine as VS Code Pylance (rule 3.1)
-#   4. tests   - full suite green
+#   4. Example Campaign world only - no live campaign names in the codebase
+#   5. CSS palette - colours live in tokens.css and nowhere else
+#   6. tests   - full suite green
 #
 # pyright is included because rule 3.1 requires Pylance to be happy. Without a
 # terminal-runnable check, Pylance-only errors accumulate invisibly to anyone
@@ -69,6 +71,23 @@ check_no_suppressions() {
     return 0
 }
 
+check_css_palette() {
+    # tokens.css is the palette; every other stylesheet consumes it. Catches a
+    # raw hex the palette already holds, a token redefined on top of the palette
+    # file (the copy wins, so editing the palette does nothing), and a
+    # self-referential definition, which drops the colour silently.
+    "$PYTHON" -m src.validation.css_palette
+}
+
+check_example_world_only() {
+    # Only the Example Campaign world may be named in code, tests, and docs.
+    # A live campaign's cast belongs in game_data/ and docs/docs_personal/.
+    # This is not tidiness: a live NPC written into a fixture ends up on record,
+    # and anything the console later shows a model keeps proposing those names.
+    # That is how a bbeg from one campaign was attached to an Example test arc.
+    "$PYTHON" -m src.validation.example_world
+}
+
 check_script_exec_bits() {
     # This repo sets core.fileMode=false, so `chmod +x` is invisible to git and
     # a shell script can be committed as 100644. CI then fails with exit 126
@@ -89,6 +108,8 @@ check_script_exec_bits() {
 
 run_gate "shell scripts executable in git" check_script_exec_bits
 run_gate "no checker suppressions" check_no_suppressions
+run_gate "Example Campaign world only" check_example_world_only
+run_gate "CSS palette single source" check_css_palette
 run_gate "pylint (src/ tests/)" "$PYTHON" -m pylint src/ tests/
 run_gate "mypy (src/)" "$PYTHON" -m mypy src/
 run_gate "mypy (tests/)" "$PYTHON" -m mypy tests/

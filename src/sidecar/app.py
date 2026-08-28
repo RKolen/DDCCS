@@ -44,6 +44,7 @@ from src.characters.character_template import (
 from src.characters.class_plan import get_class_plan
 from src.config.config_loader import load_config
 from src.config.config_types import ComfyUIConfig
+from src.sidecar.comfyui_guard import comfyui_unavailable, raise_unless_ready
 from src.sidecar.models import (
     ArcAggregateRequest,
     ArcAnalysisRequest,
@@ -79,7 +80,9 @@ from src.sidecar.models import (
 )
 from src.sidecar.query_parser import parse_query
 from src.sidecar.ai_profiles import build_profile_client
+from src.sidecar.arc_draft_routes import router as arc_draft_router
 from src.sidecar.relation_routes import router as relations_router
+from src.sidecar.story_image_routes import router as story_image_router
 from src.sidecar.tts_routes import router as tts_router
 from src.stories.spotlight_engine import SpotlightEngine
 
@@ -682,27 +685,15 @@ def character_portrait_endpoint(req: PortraitRequest) -> PortraitResponse:
             unreachable; 500 when generation fails or times out.
     """
     comfyui = load_config().comfyui
-    if not comfyui.enabled:
-        raise HTTPException(
-            status_code=503,
-            detail="ComfyUI portrait generation is disabled (set COMFYUI_ENABLED=true)",
-        )
-
-    client = _get_comfyui_client()
-    if client is None:
-        raise HTTPException(
-            status_code=503,
-            detail="ComfyUI has no reachable base URL (set COMFYUI_HOST/COMFYUI_PORT)",
-        )
-    if not comfyui.assets.checkpoint:
-        raise HTTPException(
-            status_code=503,
-            detail="No Stable Diffusion checkpoint configured (set COMFYUI_CHECKPOINT)",
-        )
-    if not client.is_available():
-        raise HTTPException(
-            status_code=503, detail="ComfyUI is not reachable on the host"
-        )
+    raw_client = _get_comfyui_client()
+    client = raise_unless_ready(
+        comfyui_unavailable(
+            comfyui,
+            raw_client,
+            "ComfyUI portrait generation is disabled (set COMFYUI_ENABLED=true)",
+        ),
+        raw_client,
+    )
 
     # Prompt-driven: an explicit (edited/stored) prompt wins; otherwise it is
     # built from the profile. Building anyway is cheap and yields the negative
@@ -750,12 +741,7 @@ def character_portrait_endpoint(req: PortraitRequest) -> PortraitResponse:
         if freed:
             logger.info("Unloaded %d Ollama model(s) before portrait generation", freed)
 
-    try:
-        png = client.generate(workflow)
-    finally:
-        # Unload models between runs: this box is CPU-only and an SD checkpoint
-        # left resident alongside Ollama/DDEV is the top OOM risk.
-        client.free()
+    png = client.generate_then_free(workflow)
 
     if png is None:
         raise HTTPException(
@@ -893,4 +879,6 @@ app.include_router(_search_router)
 app.include_router(_eval_router)
 app.include_router(_character_router)
 app.include_router(relations_router)
+app.include_router(arc_draft_router)
+app.include_router(story_image_router)
 app.include_router(tts_router)

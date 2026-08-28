@@ -67,6 +67,16 @@ class ContentMutationsSchemaExtension extends SdlSchemaExtensionPluginBase {
 
     $registry->addFieldResolver(
       'Mutation',
+      'createNpcStub',
+      $builder->produce('create_npc_stub')
+        ->map('campaign_id', $builder->fromArgument('campaignId'))
+        ->map('name', $builder->fromArgument('name'))
+        ->map('role', $builder->fromArgument('role'))
+        ->map('note', $builder->fromArgument('note')),
+    );
+
+    $registry->addFieldResolver(
+      'Mutation',
       'saveCharacterArc',
       $builder->produce('save_character_arc')
         ->map('id', $builder->fromArgument('id'))

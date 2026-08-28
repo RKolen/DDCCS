@@ -13,12 +13,12 @@
   --canvas: #2f2114;
   --canvas-raised: #3a2918;
   --canvas-soft: #221710;
-  --brass: #c9a96e;
-  --brass-bright: #f0c060;
-  --brass-dim: #8a6d3e;
-  --ink: #e8d5b0;
-  --ink-dim: #b09070;
-  --ink-faint: #5a4a38;
+  --brass: var(--color-gold-mid);
+  --brass-bright: var(--color-gold-bright);
+  --brass-dim: var(--color-gold-muted);
+  --ink: var(--color-text-primary);
+  --ink-dim: var(--color-text-secondary);
+  --ink-faint: var(--color-text-disabled);
   --rule: var(--gold-a20);
   --rule-strong: #c9a96e66;
   --shadow-deep: 0 8px 28px var(--overlay-60);
@@ -98,7 +98,7 @@ input:focus, select:focus, textarea:focus {
   font-size: 9px;
   letter-spacing: .08em;
   text-transform: uppercase;
-  color: #e8a030;
+  color: var(--color-warning);
   background: var(--warning-a10);
   vertical-align: middle;
 }
@@ -523,7 +523,7 @@ kbd {
   box-shadow: none;
 }
 .dot-done { background: #4caf6e; }
-.dot-failed { background: #c0392b; }
+.dot-failed { background: var(--color-danger); }
 .activity-bar {
   margin-top: 8px;
   height: 2px;
@@ -533,7 +533,7 @@ kbd {
 }
 .activity-bar-fill {
   height: 100%;
-  background: linear-gradient(90deg, #b8862a, #f0c060);
+  background: linear-gradient(90deg, #b8862a, var(--color-gold-bright));
   transition: width 220ms;
 }
 .activity-actions {
@@ -654,7 +654,7 @@ kbd {
 .brand-mark {
   display: flex; align-items: center; justify-content: center;
   width: 36px; height: 36px;
-  background: linear-gradient(135deg, #d4a960, #8a6d3e);
+  background: linear-gradient(135deg, #d4a960, var(--color-gold-muted));
   color: var(--desk-wood-dark);
   border-radius: 4px;
   font-family: var(--font-display);
@@ -1243,7 +1243,7 @@ kbd {
 }
 .atlas-brand-mark {
   width: 28px; height: 28px;
-  background: linear-gradient(135deg, #d4a960, #8a6d3e);
+  background: linear-gradient(135deg, #d4a960, var(--color-gold-muted));
   color: var(--desk-wood-dark);
   border-radius: 3px;
   display: flex; align-items: center; justify-content: center;
@@ -1459,7 +1459,7 @@ kbd {
   width: fit-content;
 }
 .hist-status.ok { color: #4caf6e; background: var(--success-a10); border: 1px solid #4caf6e4d; }
-.hist-status.fail { color: #c0392b; background: #c0392b14; border: 1px solid var(--danger-a40); }
+.hist-status.fail { color: var(--color-danger); background: #c0392b14; border: 1px solid var(--danger-a40); }
 .history-list code {
   font-family: var(--font-mono);
   font-size: 11px;

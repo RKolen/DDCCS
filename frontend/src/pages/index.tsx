@@ -36,6 +36,8 @@ function deepLink(search: string): {
   section?: MenuSection['id'];
   item?: string;
   charId?: string;
+  storyId?: string;
+  jobId?: string;
 } {
   const params  = new URLSearchParams(search);
   const wanted  = params.get('section');
@@ -49,6 +51,8 @@ function deepLink(search: string): {
     section: section.id,
     item:    item?.id,
     charId:  params.get('char') ?? undefined,
+    storyId: params.get('story') ?? undefined,
+    jobId:   params.get('job') ?? undefined,
   };
 }
 
@@ -68,10 +72,12 @@ const IndexPage: React.FC<PageProps<ConsoleQueryData>> = ({ data, location }) =>
       /* Keys on the link so a second navigation from a character page remounts
          the console on the newly named character rather than keeping the
          selection the first link established. */
-      key={`${link.section ?? ''}:${link.item ?? ''}:${link.charId ?? ''}`}
+      key={`${link.section ?? ''}:${link.item ?? ''}:${link.charId ?? ''}:${link.storyId ?? ''}:${link.jobId ?? ''}`}
       initialSection={link.section}
       initialItem={link.item}
       initialCharId={link.charId}
+      initialStoryId={link.storyId}
+      initialJobId={link.jobId}
       liveData={liveData}
     />
   );

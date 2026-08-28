@@ -485,13 +485,18 @@ final class JobQueue {
    *   The job payload.
    *
    * @return string|null
-   *   The character UUID the job concerns, or NULL for job types that are not
-   *   about one character.
+   *   The character or story UUID the job concerns, or NULL when the payload
+   *   names neither.
    */
   private function subjectId(array $payload): ?string {
-    $value = $payload['characterId'] ?? NULL;
+    foreach (['characterId', 'storyId'] as $key) {
+      $value = $payload[$key] ?? NULL;
+      if (is_string($value) && trim($value) !== '') {
+        return trim($value);
+      }
+    }
 
-    return is_string($value) && trim($value) !== '' ? trim($value) : NULL;
+    return NULL;
   }
 
   /**

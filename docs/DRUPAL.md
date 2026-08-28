@@ -378,12 +378,24 @@ Per-action user writes go through custom GraphQL mutations called from
 | `setSessionSummary` | `frontend/src/api/create-story.ts` + `scripts/backfill-summaries.mjs` |
 | `saveCharacterArc` | `frontend/src/api/save-arc.ts` |
 | `createCharacter` | `frontend/src/api/create-character.ts` |
+| `createNpcStub` | `frontend/src/api/create-npc.ts` (NPCs read out of a campaign's session recaps) |
 | `updateCharacter` | `frontend/src/api/update-voice.ts` (voice id / pitch / speed); `save-image-prompt.ts` (`imagePrompt` -> `field_image_prompt`) |
 | `updateCharacterProfile` | `frontend/src/api/update-character-profile.ts` (the console's character editor) |
 | `setCharacterPortrait` | `frontend/src/api/generate-portrait.ts` (ComfyUI portrait) |
 | `setCharacterImage` | `frontend/src/api/set-portrait-media.ts` (pick an existing media) |
 | `enqueueAiJob` | `frontend/src/api/enqueue-job.ts` (queue a heavy AI job) |
 | `resolveAiJob` | `frontend/src/api/resolve-job.ts` (accept or discard a finished job's result) |
+
+`createNpcStub` is its deliberate opposite: `createCharacter` always creates a
+PC (`field_character_type = TRUE` is hardcoded) from a full derived sheet,
+which is the wrong shape for an NPC read out of a session recap. That NPC has a
+name and a line about who they are, and the stories rarely give a stat block —
+inventing one would put made-up numbers on record as though they were canon.
+The stub is `field_character_type = FALSE`, `field_source_character = TRUE`,
+scoped to its campaign via `field_campaign`, with `field_role` holding the one
+line and `field_notes` its provenance. Creating a name the campaign already has
+returns the existing node, so a rerun of a non-deterministic model cannot fill
+the roster with duplicates.
 
 `createCharacter` persists a **source** character (`field_source_character =
 TRUE`, no campaign) from a sidecar-derived payload, building the
@@ -503,8 +515,8 @@ job types, the queue config, and the GraphQL surface the console polls.
 
 | Piece | Where |
 | ----- | ----- |
-| Queue | `advancedqueue.advancedqueue_queue.dnd_ai` - `processor: daemon`, `lease_time: 900`, `stop_when_empty: false` |
-| Job types | `dnd_portrait`, `dnd_arc_analysis`, `dnd_arc_relations`, `dnd_story_generation`, `dnd_session_summary` (`src/Plugin/AdvancedQueue/JobType/`) |
+| Queue | `advancedqueue.advancedqueue_queue.dnd_ai` - `processor: daemon`, `lease_time: 2400`, `stop_when_empty: false` |
+| Job types | `dnd_portrait`, `dnd_arc_analysis`, `dnd_arc_relations`, `dnd_arc_backfill`, `dnd_story_generation`, `dnd_session_summary`, `dnd_story_events`, `dnd_story_illustration` (`src/Plugin/AdvancedQueue/JobType/`) |
 | Mutations | `enqueueAiJob(type, payload, label)`, `resolveAiJob(id, decision)`, `requeueAiJob(id)`, `clearAiJobs(states)` |
 | Queries | `aiJob(id)`, `aiJobs(states, limit)` - resolved with `mergeCacheMaxAge(0)`, since job state changes outside any cache tag |
 | Services | `dnd_jobs.job_queue` (enqueue/read/update/requeue/clear), `dnd_jobs.job_review` (accept/discard), `dnd_jobs.sidecar_client`, `dnd_jobs.console_client` |
@@ -537,7 +549,9 @@ that generate content therefore store the output and mark the result
 `review: pending`; `resolveAiJob` is the only thing that applies it:
 
 - `accepted: true` - `JobReview` points `field_image` at the stored media (via
-  `PortraitWriter::assign()`) and marks the result `accepted`.
+  `PortraitWriter::assign()`) for portraits, or appends to the story's
+  `field_illustrations` (via `IllustrationWriter::assign()`) for scene
+  renders, and marks the result `accepted`.
 - `accepted: false` - nothing on the node changes and the result is marked
   `discarded`. The media stays in the library, so a discarded render is still
   selectable from the portrait picker later.
@@ -571,12 +585,13 @@ stops moving. Recovery has three parts:
   nothing would ever pick it up, since the claim loop only looks at queued jobs
   and contrib's `cleanupQueue()` only resets leases that exist.
 
-**Two timing invariants.** `lease_time` (900s) must exceed the slowest legitimate
+**Two timing invariants.** `lease_time` (2400s) must exceed the slowest legitimate
 run, or a job still working gets requeued and duplicated. `SIDECAR_JOB_TIMEOUT`
-(720s) must be *under* the lease, or a hung call outlives it. A CPU portrait
-render is ~4 minutes, so both hold with room to spare. Note that contrib's own
-`cleanupQueue()` also resets expired leases, without any retry accounting - if it
-wins the race, that reset does not count against the cap.
+(2100s) must be *under* the lease, or a hung call outlives it. A CPU portrait
+render is ~4 minutes; a story scene (`COMFYUI_SCENE_TIMEOUT`, default 1800s)
+plus shot analysis is why the lease is longer than a portrait needs. Note that
+contrib's own `cleanupQueue()` also resets expired leases, without any retry
+accounting - if it wins the race, that reset does not count against the cap.
 
 The web container needs `SIDECAR_URL`, `GATSBY_SERVER_URL`, and
 `SIDECAR_JOB_TIMEOUT` (see `.ddev/config.local.yaml`, which is gitignored and so
@@ -599,6 +614,14 @@ writes the file and media, `assign()` points `field_image` at a media, and
 `attach()` does both. The synchronous mutation calls `attach()` because the user
 asked for it in that request; the queued job calls `store()` and leaves
 `assign()` to the review step.
+
+`IllustrationWriter` is the story equivalent: `store()` writes to
+`public://illustrations` with `field_media_type` `story_scenario` and does not
+touch the story; `assign()` **appends** to unlimited `field_illustrations`.
+Stories have no portrait-style replace: each accepted render is a gallery item,
+alt text is the event title. `dnd_story_events` is console-applied bookkeeping
+only (the picker lives in the frontend); `dnd_story_illustration` is the
+review-before-attach job.
 
 ### Writes — the engine's wiki cache
 

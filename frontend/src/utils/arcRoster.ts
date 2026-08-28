@@ -1,23 +1,40 @@
 /**
  * Character rosters for a story arc.
  *
- * The two pickers cannot share a filter: a PC exists twice (canonical template
- * plus campaign clone) and the arc must point at the clone, while NPCs have no
- * clones yet and the same filter would return nothing.
+ * The two pickers cannot share a filter: a PC can exist twice (canonical
+ * template plus campaign clone) and the arc must point at one of them, while
+ * NPCs have no clones yet and the same filter would return nothing.
  */
 
 import type { ConsoleData, DrupalCharacter } from '../components/console/ConsoleContext';
 import type { RosterEntry } from './arcMarkdown';
 
-/** Player characters belonging to one campaign: clones only, never templates. */
+/**
+ * Player characters belonging to one campaign.
+ *
+ * The campaign term's own party list leads. It is the authoritative answer to
+ * "who plays in this campaign", it names each character exactly once, and it
+ * points at whichever node the campaign actually uses - the clone for a
+ * campaign built here, the un-cloned source for one ported in. Filtering on
+ * the clone flag instead returned nothing at all for a ported campaign, whose
+ * characters have no clones and no campaign reference.
+ *
+ * The clone filter remains the fallback, for a campaign whose term has no
+ * party list yet.
+ */
 export function partyRoster(data: ConsoleData, campaignName: string | null): DrupalCharacter[] {
   if (!campaignName) {
     return [];
   }
-  return data.characters
-    .filter(c => c.characterType !== false)
-    .filter(c => c.sourceCharacter === false && c.campaign === campaignName)
-    .sort((a, b) => a.title.localeCompare(b.title));
+  const pcs = data.characters.filter(c => c.characterType !== false);
+  const campaign = data.campaigns.find(c => c.name === campaignName);
+  const partyIds = new Set(campaign?.currentPartyIds ?? []);
+
+  const roster = partyIds.size > 0
+    ? pcs.filter(c => partyIds.has(c.id))
+    : pcs.filter(c => c.sourceCharacter === false && c.campaign === campaignName);
+
+  return roster.sort((a, b) => a.title.localeCompare(b.title));
 }
 
 /** Prefers a campaign clone when one exists, else canon, so each NPC appears once. */

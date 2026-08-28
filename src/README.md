@@ -44,6 +44,19 @@ src/
 |   |-- relation_types.py     # CharacterDigest + RelationSuggestion
 |   `-- relation_suggester.py # Per-subject prompting, parsing, and merge
 |
+|-- story_arcs/         # Story-arc drafting from played sessions
+|   |-- arc_draft_types.py    # SessionRecap, ArcDraft/ArcRoster, DiscoveredNpc
+|   |-- recap_prompt.py       # The prompt opening both recap passes share
+|   |-- arc_drafter.py        # The arc a campaign's sessions add up to
+|   `-- npc_extractor.py      # The NPC cast those sessions name
+|
+|-- story_images/       # Story-scene illustrations (queued, event-scoped)
+|   |-- types.py              # StoryEvent, RosterEntry, ShotPerson, ShotAnalysis
+|   |-- events.py             # Chunked event extraction (never the whole story)
+|   |-- shot.py               # Who is in the picked excerpt
+|   |-- scene_prompt.py       # Wide-shot SD prompt (not a portrait prompt)
+|   `-- render.py             # 768x512 DreamShaper + 2 IPAdapters + staggered ReActor
+|
 |-- npcs/               # NPC management
 |   |-- npc_agents.py           # NPC AI agents
 |   `-- npc_auto_detection.py   # Automatic NPC detection from stories
@@ -110,6 +123,8 @@ src/
 |   |-- npc_validator.py        # NPC JSON validation
 |   |-- items_validator.py      # Items JSON validation
 |   |-- party_validator.py      # Party config validation
+|   |-- example_world.py        # Keeps live-campaign names out of the codebase
+|   |-- css_palette.py          # Keeps colours in tokens.css and nowhere else
 |   `-- validate_all.py         # Unified validator
 |
 |-- ai/                 # AI integration
@@ -127,7 +142,7 @@ src/
 |   |-- semantic_retriever.py  # Semantic RAG via Milvus with keyword fallback
 |   |-- index_sync.py          # Incremental sync called after JSON file saves
 |   |-- comfyui_client.py      # HTTP client for the local ComfyUI workflow API (portraits)
-|   |-- comfyui_workflows.py   # ComfyUI API-JSON workflow builders (txt2img + IPAdapter likeness graphs)
+|   |-- comfyui_workflows.py   # ComfyUI API-JSON workflow builders (txt2img, IPAdapter, scene, ReActor)
 |   |-- portrait_prompt.py     # Builds SD positive/negative prompts from a character profile
 |   |-- ollama_admin.py        # Best-effort Ollama model unloading (free RAM before SD generation)
 |   `-- image_describe.py      # Image->prompt via an Ollama vision model (IMAGE_TO_PROMPT_MODEL)
@@ -276,6 +291,16 @@ prompt*; the same prompt, seed, and reference on `ip-adapter-plus_sd15` at
 worse, not better - weight is how hard the human reconstruction is imposed. And
 no negative prompt fixes it: a negative removes a concept, it cannot supply the
 one the model is missing.
+
+## Story scenes (`src/story_images/`)
+
+Portraits are one face. A story illustration is a **shot**: whoever the picked
+event puts in frame, not the whole campaign roster in one graph. `scene_workflow()`
+renders 768x512 DreamShaper with at most two chained IPAdapters (the leads).
+Remaining likenesses go through `reactor_swap_workflow()` one face at a time,
+with ComfyUI `/free` between steps. ReActor is optional (`COMFYUI_REACTOR_*`);
+without it the job still ships and reports `used_ipadapter` / `swapped_faces`
+honestly. Do not load Flux, SDXL, or extra FaceID graphs on this CPU box.
 
 ## Running the System
 

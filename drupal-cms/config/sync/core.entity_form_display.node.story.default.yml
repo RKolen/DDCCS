@@ -14,6 +14,7 @@ dependencies:
     - field.field.node.story.field_story_hooks
     - field.field.node.story.field_story_number
     - field.field.node.story.field_story_arc
+    - field.field.node.story.field_illustrations
     - node.type.story
   module:
     - path
@@ -52,6 +53,16 @@ content:
       match_limit: 10
       size: 60
       placeholder: 'Leave empty for the whole party'
+    third_party_settings: {  }
+  field_illustrations:
+    type: entity_reference_autocomplete
+    weight: 14
+    region: content
+    settings:
+      match_operator: CONTAINS
+      match_limit: 10
+      size: 60
+      placeholder: ''
     third_party_settings: {  }
   field_locations:
     type: entity_reference_autocomplete
