@@ -12,8 +12,14 @@
 # directories, so it never collides with a branch someone already pushed.
 #
 # The untracked things a fresh worktree does not get - .venv, .env,
-# game_data, frontend/node_modules - are symlinked back to the primary
-# checkout. ./check.sh needs .venv/bin/python and will not run without it.
+# frontend/node_modules - are symlinked back to the primary checkout.
+# ./check.sh needs .venv/bin/python and will not run without it.
+#
+# game_data is deliberately NOT linked. A worktree gets only the tracked
+# Example Campaign data, which is what every clone has. Features must work
+# universally, so they are built and tested against data that ships with the
+# repo - never against one maintainer's private campaign. Reach for the
+# primary checkout explicitly if you genuinely need live data.
 #
 # Usage:
 #   scripts/new-feature.sh          # next free number
@@ -30,7 +36,7 @@
 set -euo pipefail
 
 BASE_BRANCH="master"
-SHARED_PATHS=(".venv" ".env" "game_data" "frontend/node_modules")
+SHARED_PATHS=(".venv" ".env" "frontend/node_modules")
 
 # Resolve the primary checkout even when this script is run from a worktree:
 # --git-common-dir always points at the primary .git directory.

@@ -632,9 +632,15 @@ scripts/new-feature.sh
 
 That creates branch `feature/ddcs-<n>` - numbered from 1, next free number -
 checked out at `../ddcs-worktrees/ddcs-<n>/`, and symlinks the untracked
-things a fresh worktree does not inherit: `.venv`, `.env`, `game_data`,
+things a fresh worktree does not inherit: `.venv`, `.env`, and
 `frontend/node_modules`. Without the `.venv` link `./check.sh` refuses to
 run at all.
+
+`game_data` is deliberately not linked. A worktree sees only the tracked
+Example Campaign data, which is what every clone has. Features have to work
+universally, so build and test against data that ships with the repo rather
+than against one maintainer's private campaigns - the same reason rule 0.5
+exists.
 
 Run every gate from inside your own worktree:
 
