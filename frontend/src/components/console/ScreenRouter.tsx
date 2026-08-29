@@ -22,6 +22,8 @@ export interface ScreenContext {
   storyId?: string;
   charIdx?: number;
   itemIdx?: number;
+  /** Index into the spell roster for Read Spell. */
+  spellIdx?: number;
   /** Character screens show NPCs (characterType === false) when true. */
   npcMode?: boolean;
   /**
@@ -88,6 +90,9 @@ import { StoryDetailsScreen }           from './screens/StoryDetailsScreen';
 import { SessionNotesScreen }           from './screens/SessionNotesScreen';
 import { TimelineScreen }               from './screens/TimelineScreen';
 import { SpellRegistryScreen }          from './screens/SpellRegistryScreen';
+import { SpellReadScreen }              from './screens/SpellReadScreen';
+import { SpellSearchScreen }            from './screens/SpellSearchScreen';
+import { SpellCreateScreen }            from './screens/SpellCreateScreen';
 import { NewSeriesScreen }              from './screens/NewSeriesScreen';
 import { StoryArcScreen }               from './screens/StoryArcScreen';
 import { SettingsScreen }               from './screens/SettingsScreen';
@@ -164,7 +169,10 @@ export function ScreenRouter({ section, item, ctx, setCtx }: ScreenRouterProps):
   }
 
   /* ───── Spells ───── */
-  if (key === 'spells/sp-list') return <SpellRegistryScreen ctx={ictx} setCtx={set} />;
+  if (key === 'spells/sp-list')   return <SpellRegistryScreen ctx={ictx} setCtx={set} />;
+  if (key === 'spells/sp-read')   return <SpellReadScreen     ctx={ictx} setCtx={set} />;
+  if (key === 'spells/sp-search') return <SpellSearchScreen   ctx={ictx} setCtx={set} />;
+  if (key === 'spells/sp-create') return <SpellCreateScreen   ctx={ictx} setCtx={set} />;
 
   /* ───── Items ───── */
   if (key === 'items/i-list')     return <ItemListScreen     ctx={ictx} setCtx={set} />;

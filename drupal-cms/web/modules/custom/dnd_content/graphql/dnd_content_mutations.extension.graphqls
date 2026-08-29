@@ -64,6 +64,35 @@ extend type Mutation {
   ): NodeCharacter
 
   """
+  Create a spell node (homebrew or an official spell imported from the
+  rules wiki). Creating a title that already exists returns the existing
+  node rather than a duplicate. School is a spell_schools term, created
+  on first use. Description is stored as a wysiwyg paragraph.
+  """
+  createSpell(
+    "Spell name."
+    title: String!
+    "Spell level; 0 is a cantrip. Defaults to 0."
+    level: Int
+    "School of magic (spell_schools term name)."
+    school: String
+    "Casting time, e.g. 1 action."
+    castingTime: String
+    "Range, e.g. 60 feet."
+    spellRange: String
+    "Components, e.g. V, S, M."
+    components: String
+    "Duration, e.g. Instantaneous."
+    duration: String
+    "Whether the spell requires concentration."
+    concentration: Boolean
+    "Whether the spell can be cast as a ritual."
+    ritual: Boolean
+    "Rules text stored as a wysiwyg paragraph."
+    description: String
+  ): NodeSpell
+
+  """
   Save character arc analysis results onto a character node. The payload is the
   JSON-encoded arc result (direction, stage, summary, storiesAnalyzed,
   updatedAt, metrics, relationships, goals) from the sidecar /character/arc

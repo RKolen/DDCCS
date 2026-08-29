@@ -146,6 +146,42 @@ class ResolveBackgroundResponse(BaseModel):
     background: Optional[Dict[str, Any]] = None
 
 
+class SpellLookupRequest(BaseModel):
+    """Request to resolve a spell's stat block from the rules wiki."""
+
+    name: str
+
+    @field_validator("name")
+    @classmethod
+    def strip_name(cls, value: str) -> str:
+        """Strip whitespace and reject a blank spell name.
+
+        Args:
+            value: Raw spell name.
+
+        Returns:
+            The stripped name.
+
+        Raises:
+            ValueError: If the name is empty after stripping.
+        """
+        stripped = value.strip()
+        if not stripped:
+            raise ValueError("name must not be empty")
+        return stripped
+
+
+class SpellLookupResponse(BaseModel):
+    """Resolved spell data, or null when the wiki has no such page.
+
+    The ``spell`` payload (when present) holds name, level, school,
+    casting_time, spell_range, components, duration, concentration,
+    ritual, and description.
+    """
+
+    spell: Optional[Dict[str, Any]] = None
+
+
 class SkillPlanRequest(BaseModel):
     """Request for a character's class + species/subspecies skill plan."""
 

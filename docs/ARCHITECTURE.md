@@ -134,8 +134,8 @@ queries and computes spotlight scores. Routes:
 - `POST /arc-draft/propose` + `/arc-draft/npcs` — propose the story arc a
   campaign's played sessions add up to, and read the NPC cast those sessions
   name (`src/sidecar/arc_draft_routes.py`)
-- (plus the `/character/*` build/skill/equipment and `/tts/speak` +
-  `/tts/segment` routes)
+- (plus the `/character/*` build/skill/equipment, `/spells/lookup`, and
+  `/tts/speak` + `/tts/segment` routes)
 
 See [src/sidecar/README.md](../src/sidecar/README.md).
 

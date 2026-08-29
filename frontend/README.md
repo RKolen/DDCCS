@@ -31,7 +31,7 @@ writes and live AI through its own serverless functions.
 ```text
 frontend/
 |-- gatsby-config.ts      # Plugins; bridges root .env vars; sets the GraphQL URL
-|-- gatsby-node.ts        # createPages for character/story/item/monster templates
+|-- gatsby-node.ts        # createPages for character/story/item/monster/spell templates
 |-- gatsby-browser.ts / gatsby-ssr.ts
 `-- src/
     |-- api/              # Gatsby serverless functions (writes + live AI)
@@ -68,7 +68,8 @@ frontend/
 ### Templates (`src/templates/`)
 
 Per-node detail pages generated in `gatsby-node.ts`: `character.tsx`,
-`story.tsx`, `item.tsx`, `monster.tsx` (each with a co-located `.module.css`).
+`story.tsx`, `item.tsx`, `monster.tsx`, `spell.tsx` (each with a
+co-located `.module.css`).
 
 ### Editing a character
 
@@ -172,11 +173,13 @@ when there is one. The body is fetched per story through `story-body.ts`
 rather than carried in the console's page data, and the old "Read full story"
 link is gone — there is nothing left to go elsewhere for.
 
-`spells` was likewise promoted out of `stories/spells` into a top-level section
-with its own `/spells/` topbar link — a compendium is not a property of a story.
-Its console item list is deliberately minimal (`sp-list` only) pending design;
-menu items added without a `ScreenRouter` case fall through to
-`PlaceholderScreen`, which says so loudly.
+`spells` was promoted out of `stories/spells` into a top-level section
+with its own `/spells/` topbar link — a compendium is not a property of a
+story. Console actions: `sp-list` (filterable vault), `sp-read` (the same
+parchment sheet as `/spells/{title}`), `sp-search` (rules-wiki lookup +
+import, AI), `sp-create` (homebrew form). Writes go through
+`create-spell.ts` (`createSpell`) and `lookup-spell.ts` (sidecar
+`/spells/lookup`).
 
 ---
 
@@ -233,6 +236,8 @@ Drupal credentials.
 | `run-arc-backfill.ts` | POST | Self (loops the three above) | Whole backfill for the queued job, which has no browser to loop in |
 | `extract-story-npcs.ts` | POST | Sidecar (`/arc-draft/npcs`) | Read the NPC cast a campaign's sessions name (`{ campaignName, recaps, party, known }` -> `{ npcs: [{ name, role, known }] }`). A separate call from `draft-arc`: the NPC roster is not the cast |
 | `create-npc.ts` | POST | Drupal (`createNpcStub`) | Create a minimal NPC for a campaign (name + one-line role + provenance). Returns the existing NPC when the campaign already has that name, so a rerun cannot duplicate |
+| `create-spell.ts` | POST | Drupal (`createSpell`) | Create a spell node (homebrew or wiki import). Returns the existing node when the title already exists |
+| `lookup-spell.ts` | POST | Sidecar (`/spells/lookup`) | Resolve an official spell's stat block from the rules wiki |
 | `story-body.ts` | POST | Drupal (read one story) | One story's processed HTML (`{ storyId }` -> `{ title, storyNumber, body }`); no AI. Backs the console reader, which fetches per story rather than carrying every body in page data |
 | `summarize-session.ts` | POST | Ollama-compatible LLM (fast model) | Summarise one story body into a concise recap (`{ storyBody }` -> `{ summary }`) |
 | `campaign-overview.ts` | POST | Ollama-compatible LLM (fast model) | Synthesize per-session recaps into one "story so far" (`{ summaries }` -> `{ overview }`) |

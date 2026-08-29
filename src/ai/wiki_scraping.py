@@ -1,16 +1,19 @@
 """Shared Wikidot scraping primitives for the rules-wiki resolvers.
 
-Every rules-wiki resolver needs the same three things: an optional BeautifulSoup
+Every rules-wiki resolver needs the same four things: an optional BeautifulSoup
 import that must not break the app when the scraping extras are absent, the
-``#page-content`` element a Wikidot page wraps its body in, and a page fetch
-that degrades to None instead of raising. They live here so the resolvers in
-this package share one implementation rather than each carrying a copy.
+``#page-content`` element a Wikidot page wraps its body in, a page fetch
+that degrades to None instead of raising, and a ready rules-wiki client.
+They live here so the resolvers in this package share one implementation
+rather than each carrying a copy.
 """
 
 from __future__ import annotations
 
 import logging
 from typing import List, Optional, cast
+
+from src.ai.rag_system import RAGSystem, get_rag_system
 
 try:
     from bs4 import BeautifulSoup
@@ -96,3 +99,25 @@ def fetch_first(client: object, urls: List[str]) -> Optional[str]:
         if html is not None:
             return html
     return None
+
+
+def ready_rules_client(rag: Optional[RAGSystem] = None) -> Optional[object]:
+    """Return the rules-wiki client when RAG scraping is usable.
+
+    Args:
+        rag: Optional RAG system; resolved from config when omitted.
+
+    Returns:
+        The wiki client when enabled with a session, otherwise None.
+    """
+    try:
+        rag_system = rag if rag is not None else get_rag_system()
+    except (ImportError, OSError, ValueError) as exc:
+        logger.debug("RAG system unavailable: %s", exc)
+        return None
+    if rag_system is None or not getattr(rag_system, "enabled", False):
+        return None
+    client = getattr(rag_system, "rules_client", None)
+    if client is None or not SCRAPING_AVAILABLE or getattr(client, "session", None) is None:
+        return None
+    return client

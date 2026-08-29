@@ -131,9 +131,10 @@ src/
 |   |-- ai_client.py           # AI client interface (includes embed() for vectors)
 |   |-- rag_system.py          # RAG (Retrieval Augmented Generation)
 |   |-- abilities_rag.py       # Reusable rules resolver: abilities/features, backgrounds, feats, class tools, subclass features (via RAG_RULES_BASE_URL wiki)
+|   |-- spells_rag.py          # Spell stat-block resolver from spell:{slug} wiki pages
 |   |-- equipment_rag.py       # Equipment + tool item catalogue: descriptions/types + tool proficiency categories (via RAG_RULES_BASE_URL wiki)
 |   |-- catalog_rag.py         # Which backgrounds/species/classes exist, each tagged with its sourcebook; filtered by RAG_SOURCEBOOKS
-|   |-- wiki_scraping.py       # Shared Wikidot primitives (page content, title, tolerant fetch) for the rules resolvers
+|   |-- wiki_scraping.py       # Shared Wikidot primitives (page content, title, tolerant fetch, ready client) for the rules resolvers
 |   |-- availability.py        # AI availability detection
 |   |-- lazy_imports.py        # Lazy import helpers
 |   |-- milvus_client.py       # Milvus vector DB wrapper (connect/insert/search)

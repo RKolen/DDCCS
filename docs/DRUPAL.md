@@ -104,6 +104,11 @@ Full field sets live in
 - **monster** — `field_challenge_rating`, `field_ability_scores`,
   `field_armor_class`, `field_maximum_hitpoints`, `field_monster_*` (actions,
   traits, senses, languages, legendary/lair actions), `field_type`.
+- **spell** — `field_spell_level` (int, 0 = cantrip), `field_spell_school`
+  (-> `spell_schools`), `field_casting_time`, `field_spell_range`,
+  `field_spell_components`, `field_spell_duration`, `field_concentration`,
+  `field_ritual`, `field_description` (a `wysiwyg` paragraph). Pathauto
+  aliases are `/spells/[node:title]`.
 
 ---
 
@@ -129,12 +134,13 @@ one kind of Musical Instrument / Gaming Set / Artisan's Tools" surfaces it as a
 wizard tool **choice** from that category (not a literal "Choose one kind of…"
 term).
 
-**Exposed taxonomy vocabularies:** `abilities`, `campaign`, `class`, `skills`,
-`species`, `lineage`, `backgrounds`, `feats`, `feat_type`, `ability_scores`,
-`tool_profiencies`, `creature_types`, `factions`, `game_edition`,
-`magical_properties`, `weapon_category`, `weapon_range`, `weapon_properties`,
-`weapon_mastery`, `damage_types`, `vestige_level`, `traits`. A vocabulary must
-be listed here with `enabled: true` before its term type appears in `TermUnion`.
+**Exposed taxonomy vocabularies:** `abilities`, `campaign`, `class`,
+`skills`, `species`, `lineage`, `backgrounds`, `feats`, `feat_type`,
+`ability_scores`, `tool_profiencies`, `creature_types`, `factions`,
+`game_edition`, `magical_properties`, `weapon_category`, `weapon_range`,
+`weapon_properties`, `weapon_mastery`, `damage_types`, `vestige_level`,
+`traits`, `spell_schools`. A vocabulary must be listed here with
+`enabled: true` before its term type appears in `TermUnion`.
 
 **Term collection queries:** `abilities`, `class`, `skills`, `species`,
 `lineage`, `backgrounds`, `feats`, `ability_scores`, `tool_profiencies`,
@@ -379,6 +385,7 @@ Per-action user writes go through custom GraphQL mutations called from
 | `saveCharacterArc` | `frontend/src/api/save-arc.ts` |
 | `createCharacter` | `frontend/src/api/create-character.ts` |
 | `createNpcStub` | `frontend/src/api/create-npc.ts` (NPCs read out of a campaign's session recaps) |
+| `createSpell` | `frontend/src/api/create-spell.ts` (homebrew form + wiki import) |
 | `updateCharacter` | `frontend/src/api/update-voice.ts` (voice id / pitch / speed); `save-image-prompt.ts` (`imagePrompt` -> `field_image_prompt`) |
 | `updateCharacterProfile` | `frontend/src/api/update-character-profile.ts` (the console's character editor) |
 | `setCharacterPortrait` | `frontend/src/api/generate-portrait.ts` (ComfyUI portrait) |
@@ -396,6 +403,12 @@ scoped to its campaign via `field_campaign`, with `field_role` holding the one
 line and `field_notes` its provenance. Creating a name the campaign already has
 returns the existing node, so a rerun of a non-deterministic model cannot fill
 the roster with duplicates.
+
+`createSpell` writes a `node--spell` from the console: title is required,
+level defaults to 0 (cantrip), and school is a `spell_schools` term created
+on first use. Description is a `wysiwyg` paragraph. Creating a title that
+already exists returns the existing node, so a wiki-import rerun cannot
+duplicate the vault. Pathauto aliases are `/spells/[node:title]`.
 
 `createCharacter` persists a **source** character (`field_source_character =
 TRUE`, no campaign) from a sidecar-derived payload, building the

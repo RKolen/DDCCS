@@ -13,6 +13,7 @@ from fastapi import APIRouter, FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
 
 from src.ai.abilities_rag import Ability, get_abilities, get_background
+from src.ai.spells_rag import lookup_spell
 from src.ai.ai_client import AIClient
 from src.ai.comfyui_client import ComfyUIClient
 from src.ai.comfyui_workflows import (
@@ -74,6 +75,8 @@ from src.sidecar.models import (
     ResolveBackgroundResponse,
     SkillPlanRequest,
     SkillPlanResponse,
+    SpellLookupRequest,
+    SpellLookupResponse,
     SpotlightCharacterScore,
     SpotlightRequest,
     SpotlightResponse,
@@ -137,6 +140,7 @@ async def _auth_middleware(request: Request, call_next: Any) -> Any:
 _search_router = APIRouter(prefix="/search", tags=["search"])
 _eval_router = APIRouter(prefix="/eval", tags=["eval"])
 _character_router = APIRouter(prefix="/character", tags=["character"])
+_spells_router = APIRouter(prefix="/spells", tags=["spells"])
 
 # 2024 base languages: every character knows Common plus two of their choice.
 _BASE_LANGUAGE = "Common"
@@ -345,6 +349,24 @@ def resolve_background_endpoint(req: ResolveBackgroundRequest) -> ResolveBackgro
     """
     data = get_background(req.name)
     return ResolveBackgroundResponse(background=dict(data) if data is not None else None)
+
+
+@_spells_router.post("/lookup", response_model=SpellLookupResponse)
+def lookup_spell_endpoint(req: SpellLookupRequest) -> SpellLookupResponse:
+    """Resolve a spell's stat block from the rules wiki.
+
+    Used by the console's Search Rules Wiki action so an official spell can
+    be previewed and then imported as a Drupal spell node.
+
+    Args:
+        req: SpellLookupRequest with the spell name.
+
+    Returns:
+        SpellLookupResponse with the structured data, or null spell when it
+        cannot be resolved.
+    """
+    data = lookup_spell(req.name)
+    return SpellLookupResponse(spell=dict(data) if data is not None else None)
 
 
 @_character_router.post("/skill-plan", response_model=SkillPlanResponse)
@@ -878,6 +900,7 @@ def describe_image_endpoint(req: DescribeImageRequest) -> PromptResponse:
 app.include_router(_search_router)
 app.include_router(_eval_router)
 app.include_router(_character_router)
+app.include_router(_spells_router)
 app.include_router(relations_router)
 app.include_router(arc_draft_router)
 app.include_router(story_image_router)

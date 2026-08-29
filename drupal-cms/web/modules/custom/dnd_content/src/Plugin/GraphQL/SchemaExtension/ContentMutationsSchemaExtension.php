@@ -77,6 +77,22 @@ class ContentMutationsSchemaExtension extends SdlSchemaExtensionPluginBase {
 
     $registry->addFieldResolver(
       'Mutation',
+      'createSpell',
+      $builder->produce('create_spell')
+        ->map('title', $builder->fromArgument('title'))
+        ->map('level', $builder->fromArgument('level'))
+        ->map('school', $builder->fromArgument('school'))
+        ->map('casting_time', $builder->fromArgument('castingTime'))
+        ->map('spell_range', $builder->fromArgument('spellRange'))
+        ->map('components', $builder->fromArgument('components'))
+        ->map('duration', $builder->fromArgument('duration'))
+        ->map('concentration', $builder->fromArgument('concentration'))
+        ->map('ritual', $builder->fromArgument('ritual'))
+        ->map('description', $builder->fromArgument('description')),
+    );
+
+    $registry->addFieldResolver(
+      'Mutation',
       'saveCharacterArc',
       $builder->produce('save_character_arc')
         ->map('id', $builder->fromArgument('id'))

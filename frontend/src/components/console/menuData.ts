@@ -243,9 +243,9 @@ export const MENU_DATA: MenuData = {
        * not a property of a story. This section was `stories/spells` until it
        * was promoted alongside a `/spells/` topbar link (2026-08-23).
        *
-       * The item list is deliberately minimal. Flesh it out as the screens
-       * are designed; anything added here without a ScreenRouter case falls
-       * through to PlaceholderScreen, which says so loudly.
+       * Four actions: list the vault, read a spell in the same parchment
+       * scroll the public page uses, search the rules wiki for official
+       * spells to import, and create a homebrew node.
        */
       id: 'spells',
       label: 'Spells',
@@ -253,7 +253,10 @@ export const MENU_DATA: MenuData = {
       icon: 'spell',
       blurb: 'Compendium, schools, slot tracking',
       items: [
-        { id: 'sp-list', label: 'Spell Compendium' },
+        { id: 'sp-list',   label: 'Spell Compendium' },
+        { id: 'sp-read',   label: 'Read Spell' },
+        { id: 'sp-search', label: 'Search Rules Wiki', ai: true },
+        { id: 'sp-create', label: 'Create Custom Spell' },
       ],
     },
     {

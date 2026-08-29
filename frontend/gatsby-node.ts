@@ -239,8 +239,13 @@ interface DrupalStoryNode {
   storyNumber: number | null;
 }
 
+interface DrupalSpellNode {
+  id: string;
+  path: string | null;
+}
+
 interface DrupalMonsterNode {
-  id:   string;
+  id: string;
   path: string | null;
 }
 
@@ -256,6 +261,10 @@ interface MonstersQueryData {
   drupal: { nodeMonsters: { nodes: DrupalMonsterNode[] } };
 }
 
+interface SpellsQueryData {
+  drupal: { nodeSpells: { nodes: DrupalSpellNode[] } };
+}
+
 export const createPages: GatsbyNode['createPages'] = async ({ graphql, actions }) => {
   const drupalUrl = process.env.DRUPAL_BASE_URL;
   if (!drupalUrl) {
@@ -268,6 +277,7 @@ export const createPages: GatsbyNode['createPages'] = async ({ graphql, actions 
   const storyTemplate     = nodePath.resolve('./src/templates/story.tsx');
   const monsterTemplate   = nodePath.resolve('./src/templates/monster.tsx');
   const itemTemplate      = nodePath.resolve('./src/templates/item.tsx');
+  const spellTemplate     = nodePath.resolve('./src/templates/spell.tsx');
 
   const characterQuery = await graphql<CharactersQueryData>(`
     {
@@ -283,6 +293,16 @@ export const createPages: GatsbyNode['createPages'] = async ({ graphql, actions 
     {
       drupal {
         nodeMonsters(first: 100) {
+          nodes { id path }
+        }
+      }
+    }
+  `);
+
+  const spellQuery = await graphql<SpellsQueryData>(`
+    {
+      drupal {
+        nodeSpells(first: 100) {
           nodes { id path }
         }
       }
@@ -312,6 +332,11 @@ export const createPages: GatsbyNode['createPages'] = async ({ graphql, actions 
   monsterQuery.data?.drupal.nodeMonsters.nodes.forEach(node => {
     const pagePath = node.path ?? `/monsters/${node.id}`;
     createPage({ path: pagePath, component: monsterTemplate, context: { id: node.id } });
+  });
+
+  spellQuery.data?.drupal.nodeSpells.nodes.forEach(node => {
+    const pagePath = node.path ?? `/spells/${node.id}`;
+    createPage({ path: pagePath, component: spellTemplate, context: { id: node.id } });
   });
 
   /* Items — query the AllItem source nodes created by sourceNodes */

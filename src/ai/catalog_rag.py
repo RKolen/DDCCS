@@ -13,8 +13,8 @@ import re
 from typing import Dict, List, Optional, Sequence, TypedDict
 
 from src.ai.abilities_rag import page_urls
-from src.ai.rag_system import RAGSystem, get_rag_system
-from src.ai.wiki_scraping import SCRAPING_AVAILABLE, fetch_html, page_content, page_title
+from src.ai.rag_system import RAGSystem
+from src.ai.wiki_scraping import fetch_html, page_content, page_title, ready_rules_client
 from src.config.config_loader import load_config
 from src.config.config_types import RulesetConfig
 
@@ -78,7 +78,7 @@ def list_catalog(kind: str, *, rag: Optional[RAGSystem] = None) -> List[CatalogE
         logger.debug("Unknown catalogue kind: %s", kind)
         return []
 
-    client = _rules_client(rag)
+    client = ready_rules_client(rag)
     if client is None:
         return []
 
@@ -131,7 +131,7 @@ def get_sourcebook(kind: str, name: str, *, rag: Optional[RAGSystem] = None) -> 
         The sourcebook title (e.g. "Eberron - Forge of the Artificer"), or an
         empty string when the page carries no source line or cannot be fetched.
     """
-    client = _rules_client(rag)
+    client = ready_rules_client(rag)
     if client is None:
         return ""
     entry = _entry_from_page(client, kind, name)
@@ -171,37 +171,6 @@ def filter_by_sourcebooks(
     wanted = list(sourcebooks) if sourcebooks is not None else owned_sourcebooks()
     ruleset = RulesetConfig(sourcebooks=wanted)
     return [entry for entry in entries if ruleset.owns(entry["source"])]
-
-
-def _rules_client(rag: Optional[RAGSystem]) -> Optional[object]:
-    """Resolve the rules-wiki client, returning None when unusable.
-
-    Args:
-        rag: Optional RAG system; resolved from config when omitted.
-
-    Returns:
-        The rules WikiClient, or None when RAG or scraping is unavailable.
-    """
-    rag_system = rag if rag is not None else _safe_rag_system()
-    if rag_system is None or not getattr(rag_system, "enabled", False):
-        return None
-    client = getattr(rag_system, "rules_client", None)
-    if client is None or not SCRAPING_AVAILABLE or getattr(client, "session", None) is None:
-        return None
-    return client
-
-
-def _safe_rag_system() -> Optional[RAGSystem]:
-    """Resolve the shared RAG system, returning None when unavailable.
-
-    Returns:
-        A RAG system instance when one can be built, otherwise None.
-    """
-    try:
-        return get_rag_system()
-    except (ImportError, OSError, ValueError) as exc:
-        logger.debug("RAG system unavailable for the catalogue: %s", exc)
-        return None
 
 
 def _index_slugs(html: str, kind: str) -> List[str]:

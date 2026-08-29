@@ -1,18 +1,16 @@
 /**
  * /spells/ — the Spell Compendium index.
  *
- * Deliberately thin: a level-grouped index over the fields Drupal exposes
- * today. Search, school filters, and slot tracking are still to be designed.
- *
- * `spellSchool` cannot be read yet: the `spell_school` vocabulary is not
- * enabled under `taxonomy_term:` in graphql_compose settings, so no
- * `TermSpellSchool` type exists to spread on.
+ * Level-grouped index over Drupal spell nodes, including school when the
+ * `spell_schools` term is set. Detail pages are built in gatsby-node
+ * from each node's path (`/spells/{title}`).
  */
 
 import React from 'react';
 import { graphql, Link } from 'gatsby';
 import type { HeadFC, PageProps } from 'gatsby';
 import { BaseTemplate } from '../components/templates/BaseTemplate';
+import { schoolName } from '../types/spell';
 import * as styles from './spells.module.css';
 
 // -- Types ---------------------------------------------------------------------
@@ -26,6 +24,7 @@ interface SpellNode {
   spellRange:      string | null;
   concentration:   boolean | null;
   ritual:          boolean | null;
+  spellSchool:     { name: string | null } | null;
 }
 
 interface SpellsData {
@@ -69,6 +68,8 @@ function levelLabel(level: number): string {
 /** Casting time and range, with the ritual/concentration flags Drupal carries. */
 function spellMeta(spell: SpellNode): string {
   const parts: string[] = [];
+  const school = schoolName(spell.spellSchool);
+  if (school !== null) parts.push(school);
   if (spell.castingTime !== null && spell.castingTime !== '') parts.push(spell.castingTime);
   if (spell.spellRange !== null && spell.spellRange !== '')   parts.push(spell.spellRange);
   if (spell.concentration === true) parts.push('concentration');
@@ -148,6 +149,7 @@ export const query = graphql`
           spellRange
           concentration
           ritual
+          spellSchool { ... on Drupal_TermSpellSchool { name } }
         }
       }
     }

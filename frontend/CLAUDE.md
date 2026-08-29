@@ -73,6 +73,7 @@ Examples:
 | `SkillRow` | Proficiency marker + skill name + modifier |
 | `CharacterBadgeGroup` | Class + race + alignment `Badge` atoms |
 | `SpellCard` | Spell name, school `Badge`, level, description excerpt |
+| `SpellSheet` | Hero + parchment scroll for one spell (public page + console read) |
 
 ### Organisms (`components/organisms/`)
 

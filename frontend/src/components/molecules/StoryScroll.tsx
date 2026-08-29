@@ -21,9 +21,25 @@ export interface StoryScrollProps {
   html: string;
   /** Called when the scroll is opened, never when it is rolled up. */
   onUnfurl?: () => void;
+  /** Hint shown on the furled dowel. Defaults to the chronicle wording. */
+  unfurlHint?: string;
+  /** Accessible name when the scroll is furled. */
+  unfurlLabel?: string;
+  /** Accessible name when the scroll is open. */
+  rollUpLabel?: string;
 }
 
-export function StoryScroll({ html, onUnfurl }: StoryScrollProps): React.ReactElement | null {
+const DEFAULT_UNFURL_HINT = 'Tap to unfurl the chronicle';
+const DEFAULT_UNFURL_LABEL = 'Unfurl chronicle';
+const DEFAULT_ROLL_UP_LABEL = 'Roll up chronicle';
+
+export function StoryScroll({
+  html,
+  onUnfurl,
+  unfurlHint = DEFAULT_UNFURL_HINT,
+  unfurlLabel = DEFAULT_UNFURL_LABEL,
+  rollUpLabel = DEFAULT_ROLL_UP_LABEL,
+}: StoryScrollProps): React.ReactElement | null {
   const [open, setOpen] = React.useState(false);
 
   if (!html.trim()) {
@@ -46,10 +62,10 @@ export function StoryScroll({ html, onUnfurl }: StoryScrollProps): React.ReactEl
         className={styles.scrollDowelBtn}
         onClick={toggle}
         aria-expanded={open}
-        aria-label={open ? 'Roll up chronicle' : 'Unfurl chronicle'}
+        aria-label={open ? rollUpLabel : unfurlLabel}
       >
         <div className={styles.scrollDowel} aria-hidden="true" />
-        {!open && <span className={styles.scrollHint}>Tap to unfurl the chronicle</span>}
+        {!open && <span className={styles.scrollHint}>{unfurlHint}</span>}
       </button>
 
       <div className={`${styles.scrollBody} ${open ? styles.scrollBodyOpen : ''}`}>

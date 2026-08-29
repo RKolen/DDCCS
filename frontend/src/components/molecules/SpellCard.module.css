@@ -28,12 +28,15 @@
   align-items: center;
 }
 
-.description {
+.clickable {
+  cursor: pointer;
+  text-align: inherit;
   width: 100%;
-  font-family: var(--font-body);
-  font-style: italic;
-  font-size: var(--text-sm);
-  color: var(--color-text-secondary);
-  line-height: var(--leading-normal);
-  margin-top: var(--space-1);
+  font: inherit;
+  color: inherit;
+  background: var(--color-bg-surface);
+}
+
+.clickable:hover {
+  background: var(--color-bg-hover);
 }
