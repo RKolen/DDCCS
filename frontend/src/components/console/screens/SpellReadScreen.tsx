@@ -2,7 +2,7 @@
  * SpellReadScreen — `spells/sp-read`.
  *
  * Split-pane: picker rail plus the same SpellSheet the public page uses.
- * ctx.spellIdx indexes the nodeSpells list; the compendium sets it before
+ * ctx.spellIdx indexes the termSpells list; the compendium sets it before
  * jumping here.
  */
 
@@ -12,68 +12,33 @@ import type { ScreenProps } from '../ScreenRouter';
 import { Icon } from '../atoms';
 import { SpellSheet } from '../../molecules/SpellSheet';
 import {
-  type SpellRecord,
-  flattenDescription,
+  type SpellTermNode,
   levelLabel,
-  schoolName,
+  spellTermToRecord,
 } from '../../../types/spell';
-
-interface ReadNode {
-  id: string;
-  title: string;
-  path: string | null;
-  spellLevel: number;
-  castingTime: string | null;
-  spellRange: string | null;
-  spellComponents: string | null;
-  spellDuration: string | null;
-  concentration: boolean | null;
-  ritual: boolean | null;
-  spellSchool: { name: string | null } | null;
-  description: Array<{ text: Array<{ processed: string }> | null }> | null;
-}
+import '../../../graphql/spellTerm';
 
 interface ReadQuery {
-  drupal: { nodeSpells: { nodes: ReadNode[] } };
-}
-
-function toRecord(node: ReadNode): SpellRecord {
-  return {
-    id: node.id,
-    title: node.title,
-    path: node.path,
-    spellLevel: node.spellLevel,
-    school: schoolName(node.spellSchool),
-    castingTime: node.castingTime,
-    spellRange: node.spellRange,
-    spellComponents: node.spellComponents,
-    spellDuration: node.spellDuration,
-    concentration: node.concentration,
-    ritual: node.ritual,
-    descriptionHtml: flattenDescription(node.description),
-  };
+  drupal: { termSpells: { nodes: SpellTermNode[] } };
 }
 
 export function SpellReadScreen({ ctx, setCtx }: ScreenProps): React.ReactElement {
   const data = useStaticQuery<ReadQuery>(graphql`
     query ConsoleSpellRead {
       drupal {
-        nodeSpells(first: 100) {
+        termSpells(first: 500) {
           nodes {
-            id title path spellLevel castingTime spellRange
-            spellComponents spellDuration concentration ritual
-            spellSchool { ... on Drupal_TermSpellSchool { name } }
-            description { ... on Drupal_ParagraphWysiwyg { text { processed } } }
+            ...SpellTermFields
           }
         }
       }
     }
   `);
 
-  const all = data?.drupal?.nodeSpells?.nodes ?? [];
+  const all = data?.drupal?.termSpells?.nodes ?? [];
   const idx = ctx.spellIdx ?? 0;
   const raw = all[idx] ?? null;
-  const spell = raw != null ? toRecord(raw) : null;
+  const spell = raw != null ? spellTermToRecord(raw) : null;
 
   return (
     <div className="screen-itemdetails">
@@ -81,7 +46,7 @@ export function SpellReadScreen({ ctx, setCtx }: ScreenProps): React.ReactElemen
         <aside className="char-picker">
           <ul className="char-picker-list">
             {all.map((node, index) => {
-              const initials = node.title.split(' ').map(word => word[0]).slice(0, 2).join('').toUpperCase();
+              const initials = node.name.split(' ').map(word => word[0]).slice(0, 2).join('').toUpperCase();
               return (
                 <li key={node.id}>
                   <button
@@ -91,8 +56,8 @@ export function SpellReadScreen({ ctx, setCtx }: ScreenProps): React.ReactElemen
                   >
                     <span className="char-pip">{initials}</span>
                     <span className="char-pip-meta">
-                      <strong>{node.title}</strong>
-                      <span>{levelLabel(node.spellLevel)}</span>
+                      <strong>{node.name}</strong>
+                      <span>{levelLabel(node.spellLevel ?? 0)}</span>
                     </span>
                   </button>
                 </li>

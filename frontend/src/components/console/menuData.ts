@@ -239,13 +239,13 @@ export const MENU_DATA: MenuData = {
     },
     {
       /*
-       * Spells are `node--spell` content, a compendium in their own right —
+       * Spells are `taxonomy_term.spells`, a compendium in their own right —
        * not a property of a story. This section was `stories/spells` until it
        * was promoted alongside a `/spells/` topbar link (2026-08-23).
        *
        * Four actions: list the vault, read a spell in the same parchment
        * scroll the public page uses, search the rules wiki for official
-       * spells to import, and create a homebrew node.
+       * spells to import, and create a homebrew term.
        */
       id: 'spells',
       label: 'Spells',

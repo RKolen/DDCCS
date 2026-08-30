@@ -239,7 +239,7 @@ interface DrupalStoryNode {
   storyNumber: number | null;
 }
 
-interface DrupalSpellNode {
+interface DrupalSpellTerm {
   id: string;
   path: string | null;
 }
@@ -262,7 +262,7 @@ interface MonstersQueryData {
 }
 
 interface SpellsQueryData {
-  drupal: { nodeSpells: { nodes: DrupalSpellNode[] } };
+  drupal: { termSpells: { nodes: DrupalSpellTerm[] } };
 }
 
 export const createPages: GatsbyNode['createPages'] = async ({ graphql, actions }) => {
@@ -302,7 +302,7 @@ export const createPages: GatsbyNode['createPages'] = async ({ graphql, actions 
   const spellQuery = await graphql<SpellsQueryData>(`
     {
       drupal {
-        nodeSpells(first: 100) {
+        termSpells(first: 500) {
           nodes { id path }
         }
       }
@@ -334,9 +334,9 @@ export const createPages: GatsbyNode['createPages'] = async ({ graphql, actions 
     createPage({ path: pagePath, component: monsterTemplate, context: { id: node.id } });
   });
 
-  spellQuery.data?.drupal.nodeSpells.nodes.forEach(node => {
-    const pagePath = node.path ?? `/spells/${node.id}`;
-    createPage({ path: pagePath, component: spellTemplate, context: { id: node.id } });
+  spellQuery.data?.drupal.termSpells.nodes.forEach(term => {
+    const pagePath = term.path ?? `/spells/${term.id}`;
+    createPage({ path: pagePath, component: spellTemplate, context: { id: term.id } });
   });
 
   /* Items — query the AllItem source nodes created by sourceNodes */

@@ -1,7 +1,8 @@
 /**
  * SpellCreateScreen — `spells/sp-create`.
  *
- * Homebrew form that writes a Drupal spell node through /api/create-spell.
+ * Homebrew form that writes a Drupal spells-vocabulary term through
+ * /api/create-spell.
  */
 
 import * as React from 'react';
@@ -12,7 +13,7 @@ import { refreshAndReload } from '../../../utils/refreshContent';
 
 interface CreateSpellResult {
   id?: string;
-  title?: string;
+  name?: string;
   path?: string | null;
   error?: string;
 }
@@ -65,7 +66,7 @@ export function SpellCreateScreen(_props: ScreenProps): React.ReactElement {
       if (!res.ok || payload.error != null) {
         throw new Error(payload.error ?? `Request failed (${res.status})`);
       }
-      setSavedTitle(payload.title ?? name);
+      setSavedTitle(payload.name ?? name);
       void refreshAndReload();
       setTitle('');
       setDescription('');
@@ -83,8 +84,8 @@ export function SpellCreateScreen(_props: ScreenProps): React.ReactElement {
           <span className="reader-eyebrow">Spells</span>
           <h2>Create Custom Spell</h2>
           <p className="screen-blurb">
-            Writes a homebrew Spell node in Drupal. Official spells belong
-            on Search Rules Wiki.
+            Writes a homebrew spells-vocabulary term in Drupal. Official
+            spells belong on Search Rules Wiki.
           </p>
         </div>
       </header>

@@ -276,6 +276,18 @@
   z-index: 1;
 }
 
+.body :global(a.spell-mention) {
+  color: var(--parchment-shadow);
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
+.body :global(a.spell-mention:hover) {
+  color: var(--parchment-ink);
+}
+
 .body p {
   margin: 0 0 1em;
   text-align: justify;

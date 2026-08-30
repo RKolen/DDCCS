@@ -63,6 +63,12 @@ type names** — never guess them.
 See [docs/DRUPAL.md](DRUPAL.md) for content types and GraphQL exposure, and
 [drupal-cms/AGENTS.md](../drupal-cms/AGENTS.md) for DDEV/PHP rules.
 
+Site search (`/api/content-search`) reads two Search API indexes,
+`solr_content` and `milvus_ai_content`. Both index `entity:node` and
+`entity:taxonomy_term` (bundle `spells` only). The type filter `spell`
+maps to that vocabulary; merge/dedupe uses the Search API item id, not
+nid alone.
+
 ### 3. Python engine (`src/`)
 
 The original system, now repositioned as a reusable engine. It powers:
@@ -327,7 +333,7 @@ engine and Drupal.
 | Multi-voice story narration | `templates/story.tsx` Narrate medallion | `api/tts-segment.ts` -> sidecar `/tts/segment`, then `api/tts.ts` -> `/tts/speak` per clip |
 | Items / monsters / spells | `pages/items.tsx`, `pages/monsters.tsx`, `templates/*` | Drupal GraphQL |
 | Manage party / campaigns | `pages/party.tsx` | `api/campaigns.ts`, `api/campaign-party.ts` -> Drupal |
-| Search | `pages/search.tsx` | sidecar `/search/parse-query` + Milvus |
+| Search | `pages/search.tsx` | Drupal `/api/content-search` (EntityQuery + Solr + Milvus). Spells are `taxonomy_term.spells` |
 | Spotlight scoring | console screens | `api/spotlight.ts` -> sidecar `/eval/spotlight` |
 | Character arc analysis | `CharacterArcScreen` (Characters tab) | `api/arc-analyze-story.ts` (per story) + `api/arc-aggregate.ts` -> sidecar `/character/arc/*`; `api/save-arc.ts` -> Drupal (`saveCharacterArc`) |
 | Portrait generation | `CharacterDetailScreen`, `PortraitStudioScreen` | queued `dnd_portrait` job -> sidecar `/character/portrait` -> Drupal file + media (not attached until accepted). A regeneration passes the attached portrait as an IPAdapter reference so the likeness carries over; the Studio can turn that off or reweight it |

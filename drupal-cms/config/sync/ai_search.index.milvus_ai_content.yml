@@ -55,3 +55,18 @@ indexing_options:
   type:
     indexing_option: ignore
     max: -1
+  spell_name:
+    indexing_option: main_content
+    max: -1
+  spell_description:
+    indexing_option: main_content
+    max: -1
+  spell_school_name:
+    indexing_option: contextual_content
+    max: -1
+  spell_level:
+    indexing_option: ignore
+    max: -1
+  tid:
+    indexing_option: ignore
+    max: -1

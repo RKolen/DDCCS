@@ -59,7 +59,7 @@ frontend/
 | `stories.tsx` | Story list |
 | `campaign-reader.tsx` | Continuous campaign story reader |
 | `items.tsx` | Item registry |
-| `spells.tsx` | Spell compendium (level-grouped index over `node--spell`) |
+| `spells.tsx` | Spell compendium (level-grouped index over `taxonomy_term.spells`) |
 | `monsters.tsx` | Monster list |
 | `party.tsx` | Party / campaign membership management |
 | `search.tsx` | Search (backed by the sidecar) |
@@ -178,8 +178,8 @@ with its own `/spells/` topbar link — a compendium is not a property of a
 story. Console actions: `sp-list` (filterable vault), `sp-read` (the same
 parchment sheet as `/spells/{title}`), `sp-search` (rules-wiki lookup +
 import, AI), `sp-create` (homebrew form). Writes go through
-`create-spell.ts` (`createSpell`) and `lookup-spell.ts` (sidecar
-`/spells/lookup`).
+`create-spell.ts` (`createSpell`, a `taxonomy_term.spells` upsert) and
+`lookup-spell.ts` (sidecar `/spells/lookup`).
 
 ---
 
@@ -236,7 +236,7 @@ Drupal credentials.
 | `run-arc-backfill.ts` | POST | Self (loops the three above) | Whole backfill for the queued job, which has no browser to loop in |
 | `extract-story-npcs.ts` | POST | Sidecar (`/arc-draft/npcs`) | Read the NPC cast a campaign's sessions name (`{ campaignName, recaps, party, known }` -> `{ npcs: [{ name, role, known }] }`). A separate call from `draft-arc`: the NPC roster is not the cast |
 | `create-npc.ts` | POST | Drupal (`createNpcStub`) | Create a minimal NPC for a campaign (name + one-line role + provenance). Returns the existing NPC when the campaign already has that name, so a rerun cannot duplicate |
-| `create-spell.ts` | POST | Drupal (`createSpell`) | Create a spell node (homebrew or wiki import). Returns the existing node when the title already exists |
+| `create-spell.ts` | POST | Drupal (`createSpell`) | Create a spells-vocabulary term (homebrew or wiki import). Returns the existing term when the name already exists; fills empty stub fields only |
 | `lookup-spell.ts` | POST | Sidecar (`/spells/lookup`) | Resolve an official spell's stat block from the rules wiki |
 | `story-body.ts` | POST | Drupal (read one story) | One story's processed HTML (`{ storyId }` -> `{ title, storyNumber, body }`); no AI. Backs the console reader, which fetches per story rather than carrying every body in page data |
 | `summarize-session.ts` | POST | Ollama-compatible LLM (fast model) | Summarise one story body into a concise recap (`{ storyBody }` -> `{ summary }`) |
@@ -307,7 +307,7 @@ Supporting modules:
 | `src/utils/arcBackfill.ts` | Drives the backfill run for a campaign with no arc, and maps an accepted draft onto the arc payload |
 | `src/components/console/ArcBackfillPanel.tsx` | The empty state's run/queue controls and progress |
 | `src/components/console/ArcDraftReview.tsx` | The editable accept/discard form a drafted arc lands in |
-| `src/components/molecules/StoryScroll.tsx` | The unfurling chronicle scroll, shared by the story page and the console reader |
+| `src/components/molecules/StoryScroll.tsx` | The unfurling chronicle scroll, shared by the story page and the console reader. After `cleanHtml()` it wraps exact-case vault spell names as links with a hover tooltip. `SpellSheet` turns highlighting off |
 
 **Where relations are edited.** Two surfaces, one save path:
 

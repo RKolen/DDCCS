@@ -11,6 +11,8 @@ use Drupal\dnd_search\Service\QueryDecomposer;
 use Drupal\dnd_search\Service\SolrResolver;
 use Drupal\dnd_search\Service\StructuredFilterResolver;
 use Drupal\dnd_search\ValueObject\DecomposedQuery;
+use Drupal\node\NodeInterface;
+use Drupal\taxonomy\TermInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -22,7 +24,7 @@ use Symfony\Component\HttpFoundation\Request;
  * selects one or more backends (EntityQuery, Solr, Milvus) and extracts
  * structured filters. Results from all active backends are merged in priority
  * order: exact EntityQuery matches first, then Solr keyword results, then
- * Milvus semantic results. Duplicates are removed by nid.
+ * Milvus semantic results. Duplicates are removed by Search API item id.
  */
 class SearchController extends ControllerBase {
 
@@ -53,6 +55,13 @@ class SearchController extends ControllerBase {
    * @var \Drupal\Core\Entity\EntityStorageInterface
    */
   private EntityStorageInterface $nodeStorage;
+
+  /**
+   * The taxonomy term entity storage.
+   *
+   * @var \Drupal\Core\Entity\EntityStorageInterface
+   */
+  private EntityStorageInterface $termStorage;
 
   /**
    * The Search API index entity storage.
@@ -86,6 +95,7 @@ class SearchController extends ControllerBase {
     /** @var \Drupal\Core\Entity\EntityTypeManagerInterface $etm */
     $etm = $container->get('entity_type.manager');
     $instance->nodeStorage = $etm->getStorage('node');
+    $instance->termStorage = $etm->getStorage('taxonomy_term');
     $instance->indexStorage = $etm->getStorage('search_api_index');
 
     return $instance;
@@ -142,44 +152,58 @@ class SearchController extends ControllerBase {
       ? (int) round((microtime(TRUE) - $milvusStart) * 1000)
       : NULL;
 
-    // Step 3: Merge in priority order, deduplicating by nid.
+    // Step 3: Merge in priority order, deduplicating by Search API item id.
     $output = [];
     $seen = [];
 
     foreach ($exactNids as $nid) {
-      $row = $this->buildRow($nid, 1.0, 'exact', $entityTypes);
+      $node = $this->nodeStorage->load($nid);
+      if (!$node instanceof NodeInterface) {
+        continue;
+      }
+      $key = $this->dedupeKey('entity:node/' . $nid);
+      $row = $this->buildRowFromEntity($node, 1.0, 'exact', $entityTypes);
       if ($row !== NULL) {
-        $seen[$nid] = TRUE;
+        $seen[$key] = TRUE;
         $output[] = $row;
       }
     }
 
-    foreach ($solrRows as ['nid' => $nid, 'score' => $score]) {
-      if (isset($seen[$nid])) {
+    foreach ($solrRows as ['id' => $itemId, 'score' => $score]) {
+      $key = $this->dedupeKey($itemId);
+      if (isset($seen[$key])) {
         continue;
       }
-      $row = $this->buildRow($nid, $score, 'keyword', $entityTypes);
+      $entity = $this->entityFromItemId($itemId);
+      if ($entity === NULL) {
+        continue;
+      }
+      $row = $this->buildRowFromEntity($entity, $score, 'keyword', $entityTypes, $itemId);
       if ($row !== NULL) {
-        $seen[$nid] = TRUE;
+        $seen[$key] = TRUE;
         $output[] = $row;
       }
     }
 
     foreach ($milvusItems as $item) {
-      $nid = (int) ($item->getField('nid')?->getValues()[0] ?? 0);
-      if ($nid === 0 || isset($seen[$nid])) {
+      $itemId = $item->getId();
+      $key = $this->dedupeKey($itemId);
+      if (isset($seen[$key])) {
         continue;
       }
-      $row = $this->buildRow(
-        $nid,
+      $entity = $this->entityFromItemId($itemId);
+      if ($entity === NULL) {
+        continue;
+      }
+      $row = $this->buildRowFromEntity(
+        $entity,
         round((float) $item->getScore(), 4),
         'semantic',
         $entityTypes,
-        $item->getId(),
-        (string) ($item->getField('title')?->getValues()[0] ?? ''),
+        $itemId,
       );
       if ($row !== NULL) {
-        $seen[$nid] = TRUE;
+        $seen[$key] = TRUE;
         $output[] = $row;
       }
     }
@@ -241,7 +265,7 @@ class SearchController extends ControllerBase {
    * @param int $limit
    *   The user-requested result limit.
    *
-   * @return list<array{nid: int, score: float}>
+   * @return list<array{id: string, score: float}>
    *   Solr results sorted by normalised score, or empty array.
    */
   private function runSolrQuery(DecomposedQuery $decomposition, int $limit): array {
@@ -303,10 +327,13 @@ class SearchController extends ControllerBase {
   }
 
   /**
-   * Loads a node and builds a result row, or returns NULL if filtered out.
+   * Builds a result row from a node or spells term.
    *
-   * @param int $nid
-   *   The node ID.
+   * Spell terms report type "spell" so the frontend filter matches the
+   * decomposer's entity_types. `nid` is the node id or the term id.
+   *
+   * @param \Drupal\node\NodeInterface|\Drupal\taxonomy\TermInterface $entity
+   *   The matched entity.
    * @param float $relevance
    *   Relevance score in [0.0, 1.0].
    * @param string $matchType
@@ -314,41 +341,81 @@ class SearchController extends ControllerBase {
    * @param list<string> $entityTypes
    *   Active entity type filter. Empty means all types are accepted.
    * @param string|null $id
-   *   Optional Search API item ID; falls back to "entity:node/<nid>".
-   * @param string|null $titleFallback
-   *   Optional pre-fetched title.
+   *   Optional Search API item ID.
    *
    * @return array<string, mixed>|null
-   *   Result row array, or NULL if the node is excluded by the type filter.
+   *   Result row array, or NULL if the entity is excluded by the type filter.
    */
-  private function buildRow(
-    int $nid,
+  private function buildRowFromEntity(
+    NodeInterface|TermInterface $entity,
     float $relevance,
     string $matchType,
     array $entityTypes,
     ?string $id = NULL,
-    ?string $titleFallback = NULL,
   ): ?array {
-    $node = $this->nodeStorage->load($nid);
-    if (!$node) {
-      return NULL;
+    if ($entity instanceof TermInterface) {
+      if ($entity->bundle() !== 'spells') {
+        return NULL;
+      }
+      $type = 'spell';
+      $entity_id = (int) $entity->id();
+      $row_id = $id ?? 'entity:taxonomy_term/' . $entity_id;
+    }
+    else {
+      $type = $entity->bundle();
+      $entity_id = (int) $entity->id();
+      $row_id = $id ?? 'entity:node/' . $entity_id;
     }
 
-    $bundle = $node->bundle();
-    if ($entityTypes !== [] && !in_array($bundle, $entityTypes, TRUE)) {
+    if ($entityTypes !== [] && !in_array($type, $entityTypes, TRUE)) {
       return NULL;
     }
 
     return [
-      'id' => $id ?? "entity:node/$nid",
-      'nid' => $nid,
-      'title' => ($titleFallback !== NULL && $titleFallback !== '')
-        ? $titleFallback
-        : (string) $node->label(),
-      'type' => $bundle,
+      'id' => $row_id,
+      'nid' => $entity_id,
+      'title' => (string) $entity->label(),
+      'type' => $type,
       'relevance' => $relevance,
       'match_type' => $matchType,
     ];
+  }
+
+  /**
+   * Load a node or term from a Search API item id.
+   *
+   * @param string $itemId
+   *   Item id such as entity:node/12:en or entity:taxonomy_term/34:en.
+   *
+   * @return \Drupal\node\NodeInterface|\Drupal\taxonomy\TermInterface|null
+   *   The entity, or NULL when the id is not recognised or the load fails.
+   */
+  private function entityFromItemId(string $itemId): NodeInterface|TermInterface|null {
+    if (preg_match('#^entity:(node|taxonomy_term)/(\d+)#', $itemId, $matches) !== 1) {
+      return NULL;
+    }
+    $storage = $matches[1] === 'node' ? $this->nodeStorage : $this->termStorage;
+    $entity = $storage->load((int) $matches[2]);
+    if ($entity instanceof NodeInterface || $entity instanceof TermInterface) {
+      return $entity;
+    }
+    return NULL;
+  }
+
+  /**
+   * Normalise a Search API item id for duplicate detection.
+   *
+   * @param string $itemId
+   *   Raw item id, possibly with a language suffix.
+   *
+   * @return string
+   *   entity:{type}/{id} without the language suffix.
+   */
+  private function dedupeKey(string $itemId): string {
+    if (preg_match('#^(entity:[^/]+/\d+)#', $itemId, $matches) === 1) {
+      return $matches[1];
+    }
+    return $itemId;
   }
 
 }

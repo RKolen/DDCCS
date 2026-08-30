@@ -1,6 +1,17 @@
 /**
  * Shared spell shapes and display helpers for the public page and console.
+ *
+ * Vault entries are `taxonomy_term.spells` (`Drupal_TermSpell`), not nodes.
+ * graphql_compose exposes `field_spell_*` as `spellLevel`, `spellCastingTime`,
+ * and so on. The display record still uses `title` so SpellSheet stays stable.
  */
+
+/**
+ * Connection page size for the vault. Requires graphql_compose
+ * `settings.edge_max_limit` >= 500; the compose default is 100 and
+ * rejects a larger `first`.
+ */
+export const SPELL_QUERY_FIRST = 500;
 
 export interface SpellRecord {
   id: string;
@@ -15,6 +26,22 @@ export interface SpellRecord {
   concentration: boolean | null;
   ritual: boolean | null;
   descriptionHtml: string | null;
+}
+
+/** One `termSpells` / `TermSpell` node as graphql_compose returns it. */
+export interface SpellTermNode {
+  id: string;
+  name: string;
+  path: string | null;
+  spellLevel: number | null;
+  spellCastingTime: string | null;
+  spellRange: string | null;
+  spellComponents: string | null;
+  spellDuration: string | null;
+  spellConcentration: boolean | null;
+  spellRitual: boolean | null;
+  spellDescription: { processed?: string | null } | null;
+  spellSchool: { name: string | null } | null;
 }
 
 export const SPELL_SCHOOLS = [
@@ -35,6 +62,14 @@ export function levelLabel(level: number): string {
   return `Level ${String(level)}`;
 }
 
+/** Drupal text_long processed HTML (taxonomy spell description). */
+export function flattenText(
+  field: { processed?: string | null } | null | undefined,
+): string | null {
+  const html = field?.processed ?? '';
+  return html === '' ? null : html;
+}
+
 export function flattenDescription(
   description: Array<{ text: Array<{ processed: string }> | null }> | null,
 ): string | null {
@@ -53,6 +88,30 @@ export function schoolName(
 ): string | null {
   const name = spellSchool?.name;
   return name != null && name !== '' ? name : null;
+}
+
+function emptyToNull(value: string | null | undefined): string | null {
+  if (value == null) return null;
+  const trimmed = value.trim();
+  return trimmed === '' ? null : trimmed;
+}
+
+/** Map a graphql_compose spell term onto the shared display record. */
+export function spellTermToRecord(term: SpellTermNode): SpellRecord {
+  return {
+    id: term.id,
+    title: term.name,
+    path: emptyToNull(term.path),
+    spellLevel: term.spellLevel ?? 0,
+    school: schoolName(term.spellSchool),
+    castingTime: emptyToNull(term.spellCastingTime),
+    spellRange: emptyToNull(term.spellRange),
+    spellComponents: emptyToNull(term.spellComponents),
+    spellDuration: emptyToNull(term.spellDuration),
+    concentration: term.spellConcentration,
+    ritual: term.spellRitual,
+    descriptionHtml: flattenText(term.spellDescription),
+  };
 }
 
 /** Casting time, range, and ritual/concentration flags as a single line. */

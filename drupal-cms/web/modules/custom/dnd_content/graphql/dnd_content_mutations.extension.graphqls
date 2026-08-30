@@ -64,10 +64,11 @@ extend type Mutation {
   ): NodeCharacter
 
   """
-  Create a spell node (homebrew or an official spell imported from the
-  rules wiki). Creating a title that already exists returns the existing
-  node rather than a duplicate. School is a spell_schools term, created
-  on first use. Description is stored as a wysiwyg paragraph.
+  Create a spells-vocabulary term (homebrew or an official spell imported
+  from the rules wiki). Creating a name that already exists returns the
+  existing term rather than a duplicate; empty stub fields are filled.
+  School is a spell_schools term, created on first use. Description is
+  stored on field_spell_description.
   """
   createSpell(
     "Spell name."
@@ -88,9 +89,9 @@ extend type Mutation {
     concentration: Boolean
     "Whether the spell can be cast as a ritual."
     ritual: Boolean
-    "Rules text stored as a wysiwyg paragraph."
+    "Rules text stored on field_spell_description."
     description: String
-  ): NodeSpell
+  ): TermSpell
 
   """
   Save character arc analysis results onto a character node. The payload is the

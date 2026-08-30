@@ -1,9 +1,9 @@
 /**
  * /spells/ — the Spell Compendium index.
  *
- * Level-grouped index over Drupal spell nodes, including school when the
- * `spell_schools` term is set. Detail pages are built in gatsby-node
- * from each node's path (`/spells/{title}`).
+ * Level-grouped index over Drupal spells-vocabulary terms, including school
+ * when `field_spell_school` is set. Detail pages are built in gatsby-node
+ * from each term's path (`/spells/{name}`).
  */
 
 import React from 'react';
@@ -11,25 +11,26 @@ import { graphql, Link } from 'gatsby';
 import type { HeadFC, PageProps } from 'gatsby';
 import { BaseTemplate } from '../components/templates/BaseTemplate';
 import { schoolName } from '../types/spell';
+import '../graphql/spellTerm';
 import * as styles from './spells.module.css';
 
 // -- Types ---------------------------------------------------------------------
 
-interface SpellNode {
-  id:              string;
-  title:           string;
-  path:            string | null;
-  spellLevel:      number;
-  castingTime:     string | null;
-  spellRange:      string | null;
-  concentration:   boolean | null;
-  ritual:          boolean | null;
-  spellSchool:     { name: string | null } | null;
+interface SpellRow {
+  id: string;
+  name: string;
+  path: string | null;
+  spellLevel: number | null;
+  spellCastingTime: string | null;
+  spellRange: string | null;
+  spellConcentration: boolean | null;
+  spellRitual: boolean | null;
+  spellSchool: { name: string | null } | null;
 }
 
 interface SpellsData {
   drupal: {
-    nodeSpells: { nodes: SpellNode[] };
+    termSpells: { nodes: SpellRow[] };
   };
 }
 
@@ -37,18 +38,19 @@ interface SpellsData {
 
 interface LevelGroup {
   level:  number;
-  spells: SpellNode[];
+  spells: SpellRow[];
 }
 
-function groupByLevel(nodes: SpellNode[]): LevelGroup[] {
-  const map = new Map<number, SpellNode[]>();
+function groupByLevel(nodes: SpellRow[]): LevelGroup[] {
+  const map = new Map<number, SpellRow[]>();
 
   for (const node of nodes) {
-    const existing = map.get(node.spellLevel);
+    const level = node.spellLevel ?? 0;
+    const existing = map.get(level);
     if (existing) {
       existing.push(node);
     } else {
-      map.set(node.spellLevel, [node]);
+      map.set(level, [node]);
     }
   }
 
@@ -56,7 +58,7 @@ function groupByLevel(nodes: SpellNode[]): LevelGroup[] {
     .sort(([a], [b]) => a - b)
     .map(([level, spells]) => ({
       level,
-      spells: spells.slice().sort((a, b) => a.title.localeCompare(b.title)),
+      spells: spells.slice().sort((a, b) => a.name.localeCompare(b.name)),
     }));
 }
 
@@ -66,24 +68,28 @@ function levelLabel(level: number): string {
 }
 
 /** Casting time and range, with the ritual/concentration flags Drupal carries. */
-function spellMeta(spell: SpellNode): string {
+function spellMeta(spell: SpellRow): string {
   const parts: string[] = [];
   const school = schoolName(spell.spellSchool);
   if (school !== null) parts.push(school);
-  if (spell.castingTime !== null && spell.castingTime !== '') parts.push(spell.castingTime);
-  if (spell.spellRange !== null && spell.spellRange !== '')   parts.push(spell.spellRange);
-  if (spell.concentration === true) parts.push('concentration');
-  if (spell.ritual === true)        parts.push('ritual');
+  if (spell.spellCastingTime !== null && spell.spellCastingTime !== '') {
+    parts.push(spell.spellCastingTime);
+  }
+  if (spell.spellRange !== null && spell.spellRange !== '') {
+    parts.push(spell.spellRange);
+  }
+  if (spell.spellConcentration === true) parts.push('concentration');
+  if (spell.spellRitual === true) parts.push('ritual');
   return parts.join(' · ');
 }
 
 // -- Spell card ----------------------------------------------------------------
 
-function SpellCard({ spell }: { spell: SpellNode }): React.ReactElement {
+function SpellCard({ spell }: { spell: SpellRow }): React.ReactElement {
   const meta = spellMeta(spell);
   const body = (
     <>
-      <h3 className={styles.spellName}>{spell.title}</h3>
+      <h3 className={styles.spellName}>{spell.name}</h3>
       {meta !== '' && <p className={styles.spellMeta}>{meta}</p>}
     </>
   );
@@ -97,7 +103,7 @@ function SpellCard({ spell }: { spell: SpellNode }): React.ReactElement {
 // -- Page ----------------------------------------------------------------------
 
 const SpellsPage: React.FC<PageProps<SpellsData>> = ({ data, location }) => {
-  const spellNodes = data.drupal.nodeSpells.nodes;
+  const spellNodes = data.drupal.termSpells.nodes;
   const groups     = groupByLevel(spellNodes);
 
   return (
@@ -125,8 +131,8 @@ const SpellsPage: React.FC<PageProps<SpellsData>> = ({ data, location }) => {
           ))
         ) : (
           <p className={styles.empty}>
-            No spells in Drupal yet. Create Spell nodes in the CMS and they will
-            appear here on the next build.
+            No spells in Drupal yet. Create spells-vocabulary terms in the CMS
+            and they will appear here on the next build.
           </p>
         )}
       </div>
@@ -139,17 +145,9 @@ const SpellsPage: React.FC<PageProps<SpellsData>> = ({ data, location }) => {
 export const query = graphql`
   query SpellCompendium {
     drupal {
-      nodeSpells(first: 100) {
+      termSpells(first: 500) {
         nodes {
-          id
-          title
-          path
-          spellLevel
-          castingTime
-          spellRange
-          concentration
-          ritual
-          spellSchool { ... on Drupal_TermSpellSchool { name } }
+          ...SpellTermFields
         }
       }
     }

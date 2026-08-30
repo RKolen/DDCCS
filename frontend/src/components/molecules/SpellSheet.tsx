@@ -102,6 +102,7 @@ export function SpellSheet({ spell }: SpellSheetProps): React.ReactElement {
           unfurlHint="Tap to unfurl the spell"
           unfurlLabel="Unfurl the spell"
           rollUpLabel="Roll up the spell"
+          highlightSpells={false}
         />
       ) : (
         <p className={styles.empty}>No rules text recorded yet.</p>

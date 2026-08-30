@@ -46,8 +46,10 @@ class SolrResolver {
    * @param int $limit
    *   Maximum number of raw results to fetch before normalisation.
    *
-   * @return list<array{nid: int, score: float}>
+   * @return list<array{id: string, score: float}>
    *   Results sorted by normalised score descending, or empty on any failure.
+   *   `id` is the Search API item id (`entity:node/12:en` or
+   *   `entity:taxonomy_term/34:en`).
    */
   public function search(DecomposedQuery $query, int $limit): array {
     if ($query->keywordQuery === '') {
@@ -83,11 +85,11 @@ class SolrResolver {
 
     $rows = [];
     foreach ($results->getResultItems() as $item) {
-      $nid = (int) ($item->getField('nid')?->getValues()[0] ?? 0);
-      if ($nid === 0) {
+      $item_id = $item->getId();
+      if ($item_id === '') {
         continue;
       }
-      $rows[] = ['nid' => $nid, 'score' => (float) $item->getScore()];
+      $rows[] = ['id' => $item_id, 'score' => (float) $item->getScore()];
     }
 
     if ($rows === []) {
