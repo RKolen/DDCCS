@@ -19,6 +19,7 @@ build_shot_prompt = shot.build_shot_prompt
 parse_shot = shot.parse_shot
 analyze_shot = shot.analyze_shot
 build_scene_prompt = prompt.build_scene_prompt
+SceneFraming = import_module("src.story_images.framing").SceneFraming
 
 ROSTER = [
     RosterEntry(
@@ -124,11 +125,35 @@ def test_scene_prompt_is_a_wide_shot_not_a_portrait() -> None:
         ShotPerson(name="Barliman Butterbur", appearance="stout innkeeper"),
     ]
     positive, negative = build_scene_prompt(analysis, people)
-    assert "wide shot" in positive
+    # Default framing shows whole figures rather than a portrait crop, and the
+    # negative must never ban the crowd a scene is supposed to contain.
+    assert "full body shot" in positive
     assert "Aragorn" in positive
+    assert "Barliman Butterbur" in positive
     assert "multiple people" not in negative
-    assert "head and shoulders only" in negative
-    print("  [OK] Scene style, named people, portrait negative avoided")
+    assert "two people" not in negative
+    print("  [OK] Whole figures, named people, crowd not banned")
+
+
+def test_scene_prompt_framing_bans_rear_views() -> None:
+    """Asking for faces must also ban the back view that SD defaults to."""
+    print("\n[TEST] build_scene_prompt - framing")
+    analysis = ShotAnalysis(setting="a lamplit street", action="the group walks out")
+    people = [ShotPerson(name="Aragorn", appearance="weathered ranger")]
+
+    positive, negative = build_scene_prompt(
+        analysis, people, SceneFraming(shot="full", angle="front")
+    )
+    assert "full body shot" in positive
+    assert "faces clearly visible" in positive
+    assert "back turned" in negative
+
+    # Choosing "behind" must not then ban itself in the negative.
+    _, behind_negative = build_scene_prompt(
+        analysis, people, SceneFraming(shot="wide", angle="behind")
+    )
+    assert "back turned" not in behind_negative
+    print("  [OK] Framing terms applied, rear view banned only when unwanted")
 
 
 def test_apply_roster_fills_likeness_when_a_portrait_exists() -> None:
@@ -149,6 +174,7 @@ def run_all_tests() -> None:
     test_analyze_shot_without_ai_is_empty()
     test_analyze_shot_calls_the_model()
     test_scene_prompt_is_a_wide_shot_not_a_portrait()
+    test_scene_prompt_framing_bans_rear_views()
     test_apply_roster_fills_likeness_when_a_portrait_exists()
     print("\n[PASS] All story-image shot tests passed.")
 

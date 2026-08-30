@@ -4,6 +4,8 @@ from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field, field_validator
 
+from src.story_images.framing import DEFAULT_ANGLE, DEFAULT_SHOT
+
 
 class ParseQueryRequest(BaseModel):
     """Incoming query parse request from Drupal."""
@@ -652,6 +654,10 @@ class StorySceneRequest(BaseModel):
     roster: List[StoryRosterPerson] = Field(default_factory=list)
     people: List[StoryScenePerson] = Field(default_factory=list)
     seed: Optional[int] = None
+    shot: str = Field(default=DEFAULT_SHOT, description="wide|full|medium|close")
+    angle: str = Field(
+        default=DEFAULT_ANGLE, description="front|three_quarter|side|behind"
+    )
 
     @field_validator("excerpt")
     @classmethod
@@ -684,6 +690,7 @@ class StorySceneResponse(BaseModel):
     action: str = ""
     mood: str = ""
     used_ipadapter: int = 0
+    lead_faces: List[str] = Field(default_factory=list)
     swapped_faces: List[str] = Field(default_factory=list)
     people: List[StoryScenePerson] = Field(default_factory=list)
 

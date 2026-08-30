@@ -2,7 +2,7 @@
 
 import hashlib
 import logging
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import List, Optional, Sequence, Tuple
 
 from src.ai.comfyui_client import ComfyUIClient
@@ -20,7 +20,25 @@ from src.story_images.types import ShotPerson
 
 logger = logging.getLogger(__name__)
 
-LEAD_WEIGHTS = (0.65, 0.5)
+# Scene weights, deliberately below portrait strength. IPAdapter transfers
+# composition as well as identity, so a portrait reference at 0.65 rebuilds
+# the portrait - its framing, its pose, and any animal companion standing in
+# it - instead of placing that face in the scene the prompt describes.
+LEAD_WEIGHTS = (0.4, 0.3)
+
+
+@dataclass
+class SceneRenderResult:
+    """What one scene render produced, and who got a likeness how.
+
+    Two mechanisms put faces in a scene and they are not interchangeable, so
+    the console has to be able to say which applied to whom: ``leads`` came
+    from the IPAdapter (at most two), ``swapped`` from ReActor afterwards.
+    """
+
+    png: Optional[bytes]
+    leads: List[str]
+    swapped: List[str]
 
 
 @dataclass
@@ -95,7 +113,7 @@ def split_likeness(
     return eligible[:2], eligible[2:]
 
 
-def render_scene(request: SceneRenderRequest) -> Tuple[Optional[bytes], int, List[str]]:
+def render_scene(request: SceneRenderRequest) -> SceneRenderResult:
     """Generate a scene PNG, applying likeness in series.
 
     Unloads ComfyUI after the base render and after every swap. A failed swap
@@ -105,8 +123,8 @@ def render_scene(request: SceneRenderRequest) -> Tuple[Optional[bytes], int, Lis
         request: Client, config, prompts, seed, cast, and CA bundle.
 
     Returns:
-        (png_bytes, ipadapter_count, swapped_names). png_bytes is None when
-        the base render failed.
+        The PNG with the names that took each likeness path. ``png`` is None
+        when the base render failed.
     """
     leads, swap_targets = split_likeness(request.people)
     identities = _upload_leads(request, leads)
@@ -117,16 +135,21 @@ def render_scene(request: SceneRenderRequest) -> Tuple[Optional[bytes], int, Lis
             negative=request.negative,
             seed=request.seed,
             identities=identities,
-            render=SCENE_RENDER,
+            render=replace(
+                SCENE_RENDER,
+                width=request.comfyui.assets.scene.width,
+                height=request.comfyui.assets.scene.height,
+            ),
         )
     )
+    lead_names = [person.name for person in leads[: len(identities)]]
     png = request.client.generate_then_free(workflow)
     if png is None:
-        return None, len(identities), []
+        return SceneRenderResult(png=None, leads=lead_names, swapped=[])
     if not request.comfyui.assets.supports_reactor() or not swap_targets:
-        return png, len(identities), []
+        return SceneRenderResult(png=png, leads=lead_names, swapped=[])
     last_png, swapped = _swap_remaining(request, png, identities, swap_targets)
-    return last_png, len(identities), swapped
+    return SceneRenderResult(png=last_png, leads=lead_names, swapped=swapped)
 
 
 def _upload_leads(
@@ -142,7 +165,11 @@ def _upload_leads(
         Identity references that uploaded successfully.
     """
     identities: List[IdentityReference] = []
-    if not request.comfyui.assets.supports_identity():
+    # A scene needs the face adapter, never the full-image one: see
+    # ComfyUIScene.ipadapter_model. With none configured the scene is
+    # rendered from its prompt, which is right-without-likeness rather than
+    # wrong-with-it.
+    if not request.comfyui.assets.supports_scene_identity():
         return identities
     for index, person in enumerate(leads):
         uploaded = _upload_portrait(
@@ -153,7 +180,7 @@ def _upload_leads(
         identities.append(
             IdentityReference(
                 image=uploaded,
-                ipadapter_model=request.comfyui.assets.ipadapter_model,
+                ipadapter_model=request.comfyui.assets.scene.ipadapter_model,
                 clip_vision=request.comfyui.assets.clip_vision,
                 weight=LEAD_WEIGHTS[min(index, len(LEAD_WEIGHTS) - 1)],
             )
@@ -206,6 +233,16 @@ def _swap_remaining(
                 "ReActor swap failed for %s; keeping the last scene", person.name
             )
             break
+        # ReActor returns its input untouched when it finds no face at that
+        # index - which is what a scene shot from behind gives it. Reporting
+        # that as a likeness hid the failure behind a name in the review note.
+        if result == current:
+            logger.warning(
+                "ReActor found no face at index %d for %s; nothing was swapped",
+                len(identities) + index,
+                person.name,
+            )
+            continue
         current = result
         swapped.append(person.name)
     return current, swapped

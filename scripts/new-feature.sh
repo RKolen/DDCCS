@@ -12,8 +12,11 @@
 # directories, so it never collides with a branch someone already pushed.
 #
 # The untracked things a fresh worktree does not get - .venv, .env,
-# frontend/node_modules - are symlinked back to the primary checkout.
-# ./check.sh needs .venv/bin/python and will not run without it.
+# frontend/.env.development, frontend/node_modules - are symlinked back to
+# the primary checkout. ./check.sh needs .venv/bin/python and will not run
+# without it; gatsby needs GATSBY_DRUPAL_BASE_URL from .env.development or
+# it silently stitches no Drupal schema at all, and every Drupal_* type in
+# every query becomes an unknown-type error.
 #
 # game_data is deliberately NOT linked. A worktree gets only the tracked
 # Example Campaign data, which is what every clone has. Features must work
@@ -36,7 +39,7 @@
 set -euo pipefail
 
 BASE_BRANCH="master"
-SHARED_PATHS=(".venv" ".env" "frontend/node_modules")
+SHARED_PATHS=(".venv" ".env" "frontend/.env.development" "frontend/node_modules")
 
 # Resolve the primary checkout even when this script is run from a worktree:
 # --git-common-dir always points at the primary .git directory.

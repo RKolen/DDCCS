@@ -2114,11 +2114,18 @@
 
 /* ── Story scene illustration wizard ── */
 .story-image-wizard { position: relative; }
+/* Fixed, not absolute: the wizard button sits low inside .action-body, which
+   is an overflow-y:auto scroll container. An absolute panel opening upward
+   was clipped by it the moment a preview image made it tall, hiding the top
+   of the dialog behind .action-header. */
 .story-image-panel {
-  position: absolute;
-  bottom: calc(100% + 12px);
-  left: 0;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   width: min(420px, 90vw);
+  max-height: 82vh;
+  overflow-y: auto;
   z-index: 30;
   background: var(--canvas);
   border: 1px solid var(--rule-strong);
@@ -2158,6 +2165,37 @@
   display: inline-block;
   background: var(--canvas-soft);
 }
+.story-image-group {
+  margin: 12px 0 4px;
+  font-family: var(--font-display);
+  font-size: 10px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.story-image-framing {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.story-image-framing label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+  font-family: var(--font-display);
+  font-size: 10px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.story-image-framing select { width: 100%; }
+.story-image-likeness--none {
+  color: var(--ink-faint);
+  font-style: italic;
+  cursor: default;
+}
 .story-image-likeness {
   display: flex;
   align-items: center;
@@ -2177,6 +2215,8 @@
   display: block;
   width: 100%;
   height: auto;
+  max-height: 40vh;
+  object-fit: contain;
   margin: 8px 0;
   border: 1px solid var(--rule);
   border-radius: 2px;
@@ -2203,8 +2243,10 @@
   border-radius: 50%;
 }
 .big-medallion--compact .ai-tag { display: none; }
+/* The compact trigger is on the public story page, whose sidebar does not
+   scroll-clip; it still centres, so one panel behaves the same everywhere. */
 .story-image-wizard--compact .story-image-panel {
-  left: calc(100% + 12px);
+  left: 50%;
+  top: 50%;
   bottom: auto;
-  top: 0;
 }

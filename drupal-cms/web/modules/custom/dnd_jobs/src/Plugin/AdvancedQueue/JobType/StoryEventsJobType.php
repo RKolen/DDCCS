@@ -9,6 +9,7 @@ use Drupal\advancedqueue\Job;
 use Drupal\advancedqueue\JobResult;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\dnd_jobs\Service\JobReview;
+use Drupal\node\NodeInterface;
 
 /**
  * Extracts selectable key events from a story body.
@@ -51,8 +52,13 @@ final class StoryEventsJobType extends AiJobTypeBase {
         'events' => $events,
       ]);
 
+      // Proposing nothing is an empty result, not a failure: the console falls
+      // back to letting the operator pick a passage themselves.
       if ($events === []) {
-        return JobResult::failure('The model found no illustratable events in this story.');
+        return JobResult::success(sprintf(
+          'No events proposed in %s; pick a passage yourself.',
+          $node->label(),
+        ));
       }
 
       return JobResult::success(sprintf(
@@ -77,7 +83,7 @@ final class StoryEventsJobType extends AiJobTypeBase {
    * @return string
    *   The body, empty when the field is missing or blank.
    */
-  private function storyBody(\Drupal\node\NodeInterface $node): string {
+  private function storyBody(NodeInterface $node): string {
     if (!$node->hasField('field_body') || $node->get('field_body')->isEmpty()) {
       return '';
     }

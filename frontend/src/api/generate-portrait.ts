@@ -155,7 +155,14 @@ export default async function handler(
     return;
   }
 
-  const portrait = (await sidecarRes.json()) as SidecarPortrait;
+  let portrait: SidecarPortrait;
+  try {
+    portrait = (await sidecarRes.json()) as SidecarPortrait;
+  } catch (err) {
+    const detail = err instanceof Error ? err.message : String(err);
+    res.status(502).json({ error: `Unreadable response from the sidecar: ${detail}` });
+    return;
+  }
   if (!portrait?.image_base64) {
     res.status(502).json({ error: 'Portrait generation returned no image' });
     return;
@@ -192,7 +199,14 @@ export default async function handler(
     return;
   }
 
-  const payload = (await drupalRes.json()) as GraphQlResponse;
+  let payload: GraphQlResponse;
+  try {
+    payload = (await drupalRes.json()) as GraphQlResponse;
+  } catch (err) {
+    const detail = err instanceof Error ? err.message : String(err);
+    res.status(502).json({ error: `Unreadable response from Drupal: ${detail}` });
+    return;
+  }
   if (payload.errors && payload.errors.length > 0) {
     res.status(400).json({ error: payload.errors[0].message });
     return;

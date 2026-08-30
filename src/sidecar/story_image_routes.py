@@ -30,7 +30,9 @@ from src.sidecar.models import (
     StorySceneRequest,
     StorySceneResponse,
 )
+from src.story_images.appearance import fill_appearances
 from src.story_images.events import extract_events
+from src.story_images.framing import SceneFraming
 from src.story_images.render import SceneRenderRequest, render_scene
 from src.story_images.scene_prompt import build_scene_prompt
 from src.story_images.shot import analyze_shot
@@ -45,13 +47,14 @@ router = APIRouter(prefix="/story", tags=["story-images"])
 def get_story_image_ai_client() -> Optional[AIClient]:
     """Return the AI client used for event extraction and shot analysis.
 
-    Instruct model, same reason as arc drafting: a local thinking model spends
-    the whole budget reasoning. Override with ``STORY_IMAGE_PROFILE``.
+    Must be an instruct model, same reason as ``/relations/suggest``: a local
+    "thinking" model returns empty content over the OpenAI endpoint, which
+    reads here as a story with no events. Override with ``STORY_IMAGE_PROFILE``.
 
     Returns:
         A configured AIClient, or None when no profile is usable.
     """
-    return build_profile_client(os.getenv("STORY_IMAGE_PROFILE", "fast"))
+    return build_profile_client(os.getenv("STORY_IMAGE_PROFILE", "creative"))
 
 
 def _roster(entries: Sequence[StoryRosterPerson]) -> List[RosterEntry]:
@@ -132,7 +135,13 @@ def _analyse_event(
     people = _people_from_request(list(req.people), roster)
     if not people:
         people = analysis.people
-    positive, negative = build_scene_prompt(analysis, people)
+    config = load_config()
+    # A blank record leaves only lineage and class in the prompt, so anything
+    # the portrait shows and nobody wrote down is lost. Caption it instead.
+    people = fill_appearances(people, config.comfyui, config.drupal.ca_bundle)
+    positive, negative = build_scene_prompt(
+        analysis, people, SceneFraming(shot=req.shot, angle=req.angle)
+    )
     return analysis, people, positive, negative
 
 
@@ -193,7 +202,7 @@ def story_scene_endpoint(req: StorySceneRequest) -> StorySceneResponse:
         if freed:
             logger.info("Unloaded %d Ollama model(s) before scene generation", freed)
 
-    png, used_ipadapter, swapped = render_scene(
+    result = render_scene(
         SceneRenderRequest(
             client=client,
             comfyui=comfyui,
@@ -204,20 +213,21 @@ def story_scene_endpoint(req: StorySceneRequest) -> StorySceneResponse:
             ca_bundle=load_config().drupal.ca_bundle,
         )
     )
-    if png is None:
+    if result.png is None:
         raise HTTPException(
             status_code=500, detail="ComfyUI generation failed or timed out"
         )
 
     return StorySceneResponse(
-        image_base64=base64.b64encode(png).decode("ascii"),
+        image_base64=base64.b64encode(result.png).decode("ascii"),
         seed=seed,
         prompt=positive,
         alt=alt,
         setting=analysis.setting,
         action=analysis.action,
         mood=analysis.mood,
-        used_ipadapter=used_ipadapter,
-        swapped_faces=swapped,
+        used_ipadapter=len(result.leads),
+        lead_faces=result.leads,
+        swapped_faces=result.swapped,
         people=[StoryScenePerson(**person.to_dict()) for person in people],
     )

@@ -100,7 +100,14 @@ export default async function handler(
     return;
   }
 
-  const data = (await segRes.json()) as { segments: SidecarSegment[] };
+  let data: { segments: SidecarSegment[] };
+  try {
+    data = (await segRes.json()) as { segments: SidecarSegment[] };
+  } catch (err) {
+    const detail = err instanceof Error ? err.message : String(err);
+    res.status(502).json({ error: `Unreadable response from Drupal: ${detail}` });
+    return;
+  }
   res.status(200).json({
     segments: (data.segments ?? []).map(s => ({
       text:    s.text,

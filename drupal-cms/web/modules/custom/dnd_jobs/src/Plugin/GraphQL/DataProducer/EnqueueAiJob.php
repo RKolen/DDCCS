@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\dnd_jobs\Plugin\GraphQL\DataProducer;
 
+use Drupal\Component\Plugin\Exception\PluginException;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Plugin\Context\ContextDefinition;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
@@ -89,7 +90,8 @@ final class EnqueueAiJob extends DataProducerPluginBase implements ContainerFact
    *   The queued job record.
    *
    * @throws \GraphQL\Error\UserError
-   *   When the payload is not a JSON object or the queue is unavailable.
+   *   When the payload is not a JSON object, the job type is not registered,
+   *   or the queue is unavailable.
    */
   public function resolve(string $type, string $payload, string $label): array {
     $decoded = json_decode($payload, TRUE);
@@ -105,6 +107,13 @@ final class EnqueueAiJob extends DataProducerPluginBase implements ContainerFact
 
     try {
       return $this->jobQueue->enqueue(trim($type), $decoded);
+    }
+    catch (PluginException) {
+      // Uncaught, GraphQL masks this as "Internal server error".
+      throw new UserError(sprintf(
+        'Unknown job type "%s". Run "ddev drush cache:rebuild" if the job type was just added.',
+        trim($type),
+      ));
     }
     catch (\RuntimeException | \InvalidArgumentException $e) {
       throw new UserError('Could not queue the job: ' . $e->getMessage());

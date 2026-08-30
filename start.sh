@@ -71,13 +71,25 @@ if [[ -z "${MKCERT_CA:-}" ]]; then
     [[ -f "$snap_ca" ]] && MKCERT_CANDIDATES+=("$snap_ca")
   done
 
+  # Dedupe on the certificate fingerprint, never on file contents: every PEM
+  # shares the "-----BEGIN CERTIFICATE-----" line, and `grep -f` treats each
+  # line of the candidate as a pattern, so a line-based check called every CA
+  # after the first a duplicate. The bundle then held exactly one CA, and if
+  # that was not the one DDEV signed with, every HTTPS fetch failed.
   : > "$MKCERT_CA_BUNDLE"
   MKCERT_FOUND=0
+  MKCERT_SEEN=""
   for ca in "${MKCERT_CANDIDATES[@]}"; do
-    if [[ -f "$ca" ]] && ! grep -qxFf "$ca" "$MKCERT_CA_BUNDLE" 2>/dev/null; then
-      cat "$ca" >> "$MKCERT_CA_BUNDLE"
-      MKCERT_FOUND=$((MKCERT_FOUND + 1))
-    fi
+    [[ -f "$ca" ]] || continue
+    fingerprint=$(openssl x509 -in "$ca" -noout -fingerprint -sha256 2>/dev/null \
+      | cut -d= -f2)
+    [[ -n "$fingerprint" ]] || continue
+    case " $MKCERT_SEEN " in
+      *" $fingerprint "*) continue ;;
+    esac
+    MKCERT_SEEN="$MKCERT_SEEN $fingerprint"
+    cat "$ca" >> "$MKCERT_CA_BUNDLE"
+    MKCERT_FOUND=$((MKCERT_FOUND + 1))
   done
 
   if [[ "$MKCERT_FOUND" -gt 0 ]]; then

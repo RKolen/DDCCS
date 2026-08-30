@@ -80,7 +80,14 @@ export default async function handler(
     }),
   });
 
-  const payload = (await drupalRes.json()) as { errors?: Array<{ message: string }> };
+  let payload: { errors?: Array<{ message: string }> };
+  try {
+    payload = (await drupalRes.json()) as { errors?: Array<{ message: string }> };
+  } catch (err) {
+    const detail = err instanceof Error ? err.message : String(err);
+    res.status(502).json({ error: `Unreadable response from Drupal: ${detail}` });
+    return;
+  }
   if (!drupalRes.ok || (payload.errors && payload.errors.length > 0)) {
     const message = payload.errors?.[0]?.message ?? `Drupal returned ${drupalRes.status}`;
     res.status(502).json({ error: message });

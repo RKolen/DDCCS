@@ -78,7 +78,14 @@ export default async function handler(
     return;
   }
 
-  const data = (await sidecarRes.json()) as SidecarArcResponse;
+  let data: SidecarArcResponse;
+  try {
+    data = (await sidecarRes.json()) as SidecarArcResponse;
+  } catch (err) {
+    const detail = err instanceof Error ? err.message : String(err);
+    res.status(502).json({ error: `Unreadable response from the sidecar: ${detail}` });
+    return;
+  }
   res.status(200).json({
     direction:       data.direction,
     stage:           data.stage,

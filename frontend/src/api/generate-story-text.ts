@@ -79,7 +79,14 @@ export default async function handler(
     return;
   }
 
-  const completion = (await llmRes.json()) as ChatCompletion;
+  let completion: ChatCompletion;
+  try {
+    completion = (await llmRes.json()) as ChatCompletion;
+  } catch (err) {
+    const detail = err instanceof Error ? err.message : String(err);
+    res.status(502).json({ error: `Unreadable response from Drupal: ${detail}` });
+    return;
+  }
   const message = completion.choices?.[0]?.message;
   // Fall back to reasoning_content if the model ignored /no_think and routed
   // everything through thinking tokens - same tolerance as the stream reader.

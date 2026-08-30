@@ -118,15 +118,57 @@ def build_events_prompt(chunk: str, story_title: str) -> str:
     )
 
 
-def _excerpt_for(chunk: str, hint: str) -> str:
-    """Take a bounded window of ``chunk`` around ``hint``, or the chunk start.
+def _keywords(text: str) -> set[str]:
+    """Distinctive lower-case words of ``text``, for overlap scoring.
+
+    Args:
+        text: Any phrase.
+
+    Returns:
+        Words longer than three characters.
+    """
+    return {word for word in re.findall(r"[a-z']+", text.lower()) if len(word) > 3}
+
+
+def _anchor_by_overlap(haystack: str, terms: set[str]) -> int:
+    """Index of the sentence sharing the most words with ``terms``.
+
+    Args:
+        haystack: The passage to search.
+        terms: Distinctive words from the model's title and hint.
+
+    Returns:
+        Character index of the best sentence, or -1 when nothing overlaps.
+    """
+    if not terms:
+        return -1
+    best_index, best_score, cursor = -1, 0, 0
+    for sentence in re.split(r"(?<=[.!?])\s+", haystack):
+        score = len(_keywords(sentence) & terms)
+        if score > best_score:
+            best_index, best_score = cursor, score
+        cursor += len(sentence) + 1
+    return best_index if best_score >= 2 else -1
+
+
+def _excerpt_for(chunk: str, hint: str, title: str = "") -> str:
+    """Take a bounded window of ``chunk`` around the moment the model named.
+
+    A model that paraphrases instead of copying leaves no verbatim hint to
+    find. Falling back to the start of the chunk looked harmless and was not:
+    the operator picks a title, the renderer receives 900 characters about a
+    different character in a different place, and the picture is faithful to
+    text nobody chose. So an unfindable moment scores sentences on word
+    overlap instead, and yields nothing at all when even that fails.
 
     Args:
         chunk: The passage this event was read from.
         hint: A phrase the model copied from the passage.
+        title: The event title, a second source of anchor words.
 
     Returns:
-        An excerpt within ``MAX_EXCERPT_CHARS``.
+        An excerpt within ``MAX_EXCERPT_CHARS``, empty when the moment cannot
+        be located in the passage.
     """
     haystack = chunk.strip()
     needle = " ".join(hint.split())
@@ -135,7 +177,14 @@ def _excerpt_for(chunk: str, hint: str) -> str:
         if index >= 0:
             start = max(0, index - 120)
             return clip_to_budget(haystack[start:], MAX_EXCERPT_CHARS)
-    return clip_to_budget(haystack, MAX_EXCERPT_CHARS)
+
+    # Start on the matched sentence, not before it: the analyser reads the
+    # excerpt top-down and takes its subject from the opening lines, so any
+    # lead-in hands it the previous scene's character.
+    index = _anchor_by_overlap(haystack, _keywords(f"{title} {needle}"))
+    if index < 0:
+        return ""
+    return clip_to_budget(haystack[index:], MAX_EXCERPT_CHARS)
 
 
 def parse_events(response: str, chunk: str) -> List[StoryEvent]:
@@ -183,7 +232,7 @@ def _read_event(item: Any, chunk: str) -> Optional[StoryEvent]:
         return None
     one_line = clip_to_budget(str(item.get("one_line", "")), MAX_LINE_CHARS)
     hint = str(item.get("excerpt_hint", "") or item.get("excerpt", ""))
-    excerpt = _excerpt_for(chunk, hint)
+    excerpt = _excerpt_for(chunk, hint, title)
     if not excerpt:
         return None
     if not one_line:

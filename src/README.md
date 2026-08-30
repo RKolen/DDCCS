@@ -303,6 +303,27 @@ with ComfyUI `/free` between steps. ReActor is optional (`COMFYUI_REACTOR_*`);
 without it the job still ships and reports `used_ipadapter` / `swapped_faces`
 honestly. Do not load Flux, SDXL, or extra FaceID graphs on this CPU box.
 
+Scene likeness uses `COMFYUI_SCENE_IPADAPTER_MODEL`, a **face** adapter, and
+never the full-image `COMFYUI_IPADAPTER_MODEL` the portraits use: a full-image
+adapter transfers the reference's framing, background and companions, so a
+scene request comes back as a redrawn portrait. Unset means the scene renders
+from its prompt alone.
+
+`framing.py` carries the shot type and camera angle. Without them every
+render came back a wide shot of backs walking away, and a face swap on a face
+nobody can see costs CPU minutes and changes zero pixels - so `render.py` now
+also drops a swap that returned its input untouched rather than reporting a
+likeness that did not happen. Per-character direction is not a prompt change:
+SD 1.5 will not bind an attribute to one named subject among six, so that
+needs regional conditioning (ControlNet pose).
+
+`appearance.py` captions a portrait into visual tags when the character record
+carries no appearance text of its own. Lineage and class alone ("human wizard")
+drop every detail nobody wrote down - spectacles, a scar, a particular hat -
+and those are exactly the details that make a face recognisable. The stored
+`field_image_prompt` always wins; captioning is only the fallback, and runs one
+vision call per in-frame person who needs it.
+
 ## Running the System
 
 ### Search/spotlight sidecar (used by the frontend)

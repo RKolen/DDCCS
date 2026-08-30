@@ -123,7 +123,14 @@ export default async function handler(
     return;
   }
 
-  const result = (await drupalRes.json()) as GraphQlResponse;
+  let result: GraphQlResponse;
+  try {
+    result = (await drupalRes.json()) as GraphQlResponse;
+  } catch (err) {
+    const detail = err instanceof Error ? err.message : String(err);
+    res.status(502).json({ error: `Unreadable response from Drupal: ${detail}` });
+    return;
+  }
   if (result.errors && result.errors.length > 0) {
     res.status(400).json({ error: result.errors[0].message });
     return;

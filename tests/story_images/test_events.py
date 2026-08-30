@@ -80,6 +80,57 @@ def test_parse_events_attaches_excerpt_from_the_chunk() -> None:
     print("  [OK] Excerpt includes the hinted phrase")
 
 
+def test_parse_events_anchors_a_paraphrased_hint() -> None:
+    """A hint the model reworded still lands on the right sentence."""
+    print("\n[TEST] parse_events - paraphrased hint anchors by overlap")
+    chunk = (
+        "Gandalf the Grey studied the maps by candlelight. The common room "
+        "was loud that night. As she entered the city, Aragorn adjusted the "
+        "brooch on her cloak so the Ranger insignia showed. Barliman "
+        "Butterbur dropped a tankard."
+    )
+    raw = json.dumps(
+        {
+            "events": [
+                {
+                    "title": "Adjusting the Insignia",
+                    "one_line": "She makes the insignia visible.",
+                    "excerpt_hint": "she fixes her cloak pin at the gate",
+                }
+            ]
+        }
+    )
+    events = parse_events(raw, chunk)
+    assert len(events) == 1
+    # The excerpt must open on the chosen moment, not on the passage start:
+    # the shot analyser takes its subject from the opening lines.
+    assert events[0].excerpt.startswith("As she entered the city")
+    assert "Gandalf" not in events[0].excerpt
+    print("  [OK] Excerpt opens on the paraphrased moment")
+
+
+def test_parse_events_drops_an_unlocatable_event() -> None:
+    """An event no sentence supports is dropped, not given the chunk start."""
+    print("\n[TEST] parse_events - unlocatable event dropped")
+    chunk = (
+        "Gandalf the Grey studied the maps by candlelight. Barliman "
+        "Butterbur dropped a tankard and swore at the rain."
+    )
+    raw = json.dumps(
+        {
+            "events": [
+                {
+                    "title": "Zephyr Quux Vortex",
+                    "one_line": "Nothing in this passage.",
+                    "excerpt_hint": "zephyr quux vortex",
+                }
+            ]
+        }
+    )
+    assert parse_events(raw, chunk) == []
+    print("  [OK] Empty list")
+
+
 def test_parse_events_skips_blank_titles() -> None:
     """An entry without a title is dropped."""
     print("\n[TEST] parse_events - blank title dropped")
@@ -135,6 +186,8 @@ def run_all_tests() -> None:
     test_chunk_story_keeps_a_short_body_whole()
     test_prompt_asks_for_json_events()
     test_parse_events_attaches_excerpt_from_the_chunk()
+    test_parse_events_anchors_a_paraphrased_hint()
+    test_parse_events_drops_an_unlocatable_event()
     test_parse_events_skips_blank_titles()
     test_merge_events_dedupes_by_title()
     test_extract_events_map_reduces_chunks()

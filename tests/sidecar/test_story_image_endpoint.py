@@ -13,6 +13,10 @@ from tests.test_helpers import setup_test_environment, import_module
 
 setup_test_environment()
 
+SceneRenderResult = import_module(
+    "src.story_images.render"
+).SceneRenderResult
+
 _app_mod = import_module("src.sidecar.app")
 app = _app_mod.app
 _HTTP = TestClient(app)
@@ -89,7 +93,11 @@ def test_scene_success_returns_png() -> None:
         "src.sidecar.story_image_routes.analyze_shot", return_value=analysis
     ), patch(
         "src.sidecar.story_image_routes.render_scene",
-        return_value=(b"PNGDATA", 1, ["Gandalf the Grey"]),
+        return_value=SceneRenderResult(
+            png=b"PNGDATA",
+            leads=["Aragorn"],
+            swapped=["Gandalf the Grey"],
+        ),
     ), patch(
         "src.sidecar.story_image_routes.get_story_image_ai_client", return_value=MagicMock()
     ):
@@ -107,8 +115,11 @@ def test_scene_success_returns_png() -> None:
     assert base64.b64decode(body["image_base64"]) == b"PNGDATA"
     assert body["seed"] == 9
     assert body["used_ipadapter"] == 1
+    # Both likeness paths are named: a count beside a name list reads as a
+    # contradiction to whoever has to review the picture.
+    assert body["lead_faces"] == ["Aragorn"]
     assert body["swapped_faces"] == ["Gandalf the Grey"]
-    print("  [OK] PNG, seed, and likeness metadata returned")
+    print("  [OK] PNG, seed, and both likeness paths named")
 
 
 def run_all_tests() -> None:

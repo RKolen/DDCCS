@@ -8,6 +8,7 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\dnd_content\Service\IllustrationWriter;
 use Drupal\dnd_content\Service\PortraitWriter;
+use Drupal\file\FileInterface;
 use Drupal\media\MediaInterface;
 use Drupal\node\NodeInterface;
 
@@ -147,6 +148,9 @@ final class JobReview {
     if ($accepted) {
       $this->apply((string) ($job['type'] ?? ''), $result);
     }
+    else {
+      $this->discardMedia($result);
+    }
 
     $updated = $this->jobQueue->updateResult($job_id, [
       'review' => $accepted ? self::ACCEPTED : self::DISCARDED,
@@ -263,16 +267,50 @@ final class JobReview {
   }
 
   /**
-   * Load an image media entity by UUID.
+   * Delete the image a discarded job generated.
+   *
+   * A discarded render is never attached to anything, so leaving its media
+   * entity behind pollutes the library with pictures nobody chose and nobody
+   * can find their way back to.
+   *
+   * @param array<string, mixed> $result
+   *   The pending result values.
+   */
+  private function discardMedia(array $result): void {
+    $uuid = $result['mediaId'] ?? NULL;
+    if (!is_string($uuid) || trim($uuid) === '') {
+      return;
+    }
+    $entities = $this->entityTypeManager
+      ->getStorage('media')
+      ->loadByProperties(['uuid' => trim($uuid), 'bundle' => 'image']);
+    $media = reset($entities);
+    if (!$media instanceof MediaInterface) {
+      return;
+    }
+    // Take the file with it. Media deletion only decrements file usage, so the
+    // image would otherwise sit in the files table until someone ran a cleanup,
+    // which is the orphaned-media problem this discard is meant to prevent.
+    $file = $media->hasField('field_media_image')
+      ? $media->get('field_media_image')->entity
+      : NULL;
+    $media->delete();
+    if ($file instanceof FileInterface) {
+      $file->delete();
+    }
+  }
+
+  /**
+   * Load the image media a result refers to.
    *
    * @param string $uuid
-   *   The image media UUID.
+   *   The media UUID.
    *
    * @return \Drupal\media\MediaInterface
    *   The image media entity.
    *
    * @throws \RuntimeException
-   *   When no image media matches the UUID.
+   *   When no such image media exists.
    */
   private function loadImageMedia(string $uuid): MediaInterface {
     $entities = $this->entityTypeManager

@@ -462,6 +462,15 @@ render in the media library with `review: pending`, and the console decides:
 queue, follow, pick a job back up by id, accept, discard - and both portrait
 screens drive it, so neither can grow a path that attaches without asking.
 
+#### Serverless function error handling
+
+Every function guards **both** the `fetch` and the body read. A dropped
+connection while reading a response rejects outside the fetch's `catch`, and
+in `gatsby develop` an unhandled rejection kills the dev server outright -
+`job-status` is polled every few seconds, so any Drupal restart used to take
+the frontend down with it. Helpers that read a body inside a function the
+handler already wraps in `try` are covered by that wrapper.
+
 #### Story scene illustrations
 
 **Generate image** on the story reader (`ReadStoryFileScreen`) and the public
@@ -470,6 +479,11 @@ prompt, so the work is two jobs:
 
 1. `dnd_story_events` posts the body to sidecar `/story/events`, which chunks
    it and returns selectable moments. The operator picks one.
+
+   Returning nothing is an empty result, never a failure. The wizard then
+   offers the story's own paragraphs, plus a free-text box, so which moment
+   gets drawn is always the operator's call and not the model's. The same
+   passage picker is reachable from the proposal list at any time.
 2. `dnd_story_illustration` posts that excerpt plus the checked cast to
    `/story/scene`. ComfyUI renders 768x512 DreamShaper with at most two
    IPAdapter leads, then staggered ReActor swaps. The PNG is stored pending

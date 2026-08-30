@@ -436,10 +436,19 @@ def _apply_env_comfyui_overrides(
     ipadapter_model = get_env("COMFYUI_IPADAPTER_MODEL")
     if ipadapter_model:
         config.comfyui.assets.ipadapter_model = ipadapter_model
+    scene_ipadapter = get_env("COMFYUI_SCENE_IPADAPTER_MODEL")
+    if scene_ipadapter:
+        config.comfyui.assets.scene.ipadapter_model = scene_ipadapter
     clip_vision = get_env("COMFYUI_CLIP_VISION")
     if clip_vision:
         config.comfyui.assets.clip_vision = clip_vision
     _apply_env_reactor(config.comfyui.assets, get_env)
+    config.comfyui.assets.scene.width = get_env_int(
+        "COMFYUI_SCENE_WIDTH", config.comfyui.assets.scene.width
+    )
+    config.comfyui.assets.scene.height = get_env_int(
+        "COMFYUI_SCENE_HEIGHT", config.comfyui.assets.scene.height
+    )
     config.comfyui.scene_timeout = get_env_float(
         "COMFYUI_SCENE_TIMEOUT", config.comfyui.scene_timeout
     )

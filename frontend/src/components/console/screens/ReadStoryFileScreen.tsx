@@ -188,6 +188,7 @@ export function ReadStoryFileScreen({ ctx, setCtx }: ScreenProps): React.ReactEl
                     roster={roster}
                     presentIds={story.charactersPresentIds}
                     reviewJobId={reviewJobId}
+                    storyBody={html}
                   />
                 )}
                 {activeIdx < stories.length - 1 && (

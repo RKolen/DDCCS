@@ -75,7 +75,14 @@ export default async function handler(
     return;
   }
 
-  const data = (await sidecarRes.json()) as SidecarResponse;
+  let data: SidecarResponse;
+  try {
+    data = (await sidecarRes.json()) as SidecarResponse;
+  } catch (err) {
+    const detail = err instanceof Error ? err.message : String(err);
+    res.status(502).json({ error: `Unreadable response from the sidecar: ${detail}` });
+    return;
+  }
   const scores: Record<string, number> = {};
   for (const entry of data.entries) {
     scores[entry.name] = entry.score;

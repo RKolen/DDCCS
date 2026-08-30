@@ -24,6 +24,7 @@ interface CharacterRef {
   id: string | null;
   title: string;
   image: CharacterImage | null;
+  imagePrompt: string | null;
 }
 
 interface StoryNode {
@@ -143,6 +144,7 @@ function ActionSidebar({
         storyId={storyId}
         storyTitle={title}
         roster={roster}
+        storyBody={storyText}
       />
     </div>
   );
@@ -198,6 +200,7 @@ const StoryPage: React.FC<PageProps<StoryData, StoryPageContext>> = ({ data, loc
       id: c.id,
       title: c.title,
       imageUrl: c.image?.mediaImage?.url ?? '',
+      imagePrompt: c.imagePrompt,
       isNpc: false,
     }));
   // Prefer value (plain_text) but run through toNarrationText so HTML bodies
@@ -314,6 +317,7 @@ export const query = graphql`
                 ... on Drupal_NodeCharacter {
                   id
                   title
+                  imagePrompt
                   image {
                     ... on Drupal_MediaImage {
                       mediaImage { url alt }

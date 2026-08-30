@@ -73,6 +73,8 @@ final class JobQueue {
    * @return array<string, mixed>
    *   The normalised job record, as returned by describe().
    *
+   * @throws \Drupal\Component\Plugin\Exception\PluginException
+   *   When the job type plugin is not registered.
    * @throws \RuntimeException
    *   When the queue is missing or the job cannot be enqueued.
    */
@@ -258,7 +260,7 @@ final class JobQueue {
     }
 
     $rows = $this->database->select(self::TABLE, 'aq')
-      ->fields('aq', ['job_id', 'payload'])
+      ->fields('aq', ['job_id', 'payload', 'state'])
       ->condition('queue_id', self::QUEUE_ID)
       ->condition('state', $wanted, 'IN')
       ->execute()
@@ -297,6 +299,13 @@ final class JobQueue {
    *   TRUE when the job's result is marked pending review.
    */
   private function awaitsReview(array $row): bool {
+    // Only a successful job has a result anyone can act on. A failed job that
+    // stored a pending marker before failing is awaiting nothing: resolve()
+    // refuses it for not having succeeded, so holding it back here left a row
+    // that could neither be reviewed nor cleared.
+    if (($row['state'] ?? '') !== Job::STATE_SUCCESS) {
+      return FALSE;
+    }
     $payload = json_decode((string) ($row['payload'] ?? ''), TRUE);
     if (!is_array($payload) || !is_array($payload['result'] ?? NULL)) {
       return FALSE;

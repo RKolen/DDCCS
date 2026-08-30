@@ -349,6 +349,8 @@ src/
 |   |-- types.py              # StoryEvent, RosterEntry, ShotAnalysis
 |   |-- events.py             # Chunked Ollama event extraction
 |   |-- shot.py               # Shot analysis against the Drupal roster
+|   |-- appearance.py         # Portrait captions when a record says nothing
+|   |-- framing.py            # Shot type and camera angle for the scene
 |   |-- scene_prompt.py       # Landscape SD prompt from the analysis
 |   |-- render.py             # DreamShaper scene + 2 IPAdapters + ReActor
 |-- npcs/            # NPC management and auto-detection
@@ -632,9 +634,12 @@ scripts/new-feature.sh
 
 That creates branch `feature/ddcs-<n>` - numbered from 1, next free number -
 checked out at `../ddcs-worktrees/ddcs-<n>/`, and symlinks the untracked
-things a fresh worktree does not inherit: `.venv`, `.env`, and
-`frontend/node_modules`. Without the `.venv` link `./check.sh` refuses to
-run at all.
+things a fresh worktree does not inherit: `.venv`, `.env`,
+`frontend/.env.development`, and `frontend/node_modules`. Without the
+`.venv` link `./check.sh` refuses to run at all; without the
+`.env.development` link `npm run develop` has no `GATSBY_DRUPAL_BASE_URL`,
+stitches no Drupal schema, and fails every query with unknown `Drupal_*`
+types.
 
 `game_data` is deliberately not linked. A worktree sees only the tracked
 Example Campaign data, which is what every clone has. Features have to work

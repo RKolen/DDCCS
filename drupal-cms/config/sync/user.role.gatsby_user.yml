@@ -111,6 +111,7 @@ permissions:
   - 'delete any wiki_cache content'
   - 'edit any character content'
   - 'edit any character_analysis content'
+  - 'edit any story content'
   - 'edit any story_arc content'
   - 'edit any wiki_cache content'
   - 'edit terms in campaign'

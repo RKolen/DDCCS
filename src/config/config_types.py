@@ -307,6 +307,27 @@ class ComfyUIReactor:
 
 
 @dataclass
+class ComfyUIScene:
+    """Assets and canvas for a story-scene render, kept apart from portraits.
+
+    ``ipadapter_model`` is the *face* variant. A full-image adapter such as
+    ``ip-adapter-plus_sd15`` transfers the whole reference - framing,
+    background, pose, and any animal companion standing in the portrait - so
+    asking it to place a character in a new scene returns a redrawn portrait
+    instead. Unset means a scene renders from its prompt alone, which is the
+    correct picture without the likeness rather than the wrong picture with it.
+
+    ``width`` / ``height`` size the canvas. A crowd needs room: a face swap
+    works on the pixels a face actually occupies, so six people across 768px
+    are a row of smudges no swapper can rescue. Cost rises with pixel count.
+    """
+
+    ipadapter_model: str = ""
+    width: int = 768
+    height: int = 512
+
+
+@dataclass
 class ComfyUIAssets:
     """The model files ComfyUI generation and image->prompt need.
 
@@ -325,14 +346,24 @@ class ComfyUIAssets:
     ``reactor`` is the InsightFace swapper used after the two IPAdapter leads
     on a story scene. ``scene_timeout`` is the longer ComfyUI wait for that
     path (base render plus staggered swaps).
+
     """
 
     image_to_prompt_model: str = ""
     checkpoint: str = ""
     ipadapter_model: str = ""
     clip_vision: str = ""
+    scene: ComfyUIScene = field(default_factory=ComfyUIScene)
     reactor: ComfyUIReactor = field(default_factory=ComfyUIReactor)
     scene_timeout: float = 1800.0
+
+    def supports_scene_identity(self) -> bool:
+        """Check whether a face-only adapter is configured for scenes.
+
+        Returns:
+            True when a scene IPAdapter model and CLIP vision pair are set.
+        """
+        return bool(self.scene.ipadapter_model) and bool(self.clip_vision)
 
     def supports_identity(self) -> bool:
         """Check whether IPAdapter identity conditioning can be used.

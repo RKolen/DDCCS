@@ -84,6 +84,8 @@ final class StoryIllustrationJobType extends AiJobTypeBase {
         'roster' => $this->arrayValue($payload, 'roster'),
         'people' => $this->arrayValue($payload, 'people'),
         'seed' => $this->optionalInt($payload, 'seed'),
+        'shot' => $this->optionalString($payload, 'shot') ?? 'full',
+        'angle' => $this->optionalString($payload, 'angle') ?? 'three_quarter',
       ]);
 
       $encoded = $response['image_base64'] ?? NULL;
@@ -106,6 +108,7 @@ final class StoryIllustrationJobType extends AiJobTypeBase {
         'seed' => is_int($response['seed'] ?? NULL) ? $response['seed'] : NULL,
         'prompt' => is_string($response['prompt'] ?? NULL) ? $response['prompt'] : '',
         'usedIpadapter' => is_int($response['used_ipadapter'] ?? NULL) ? $response['used_ipadapter'] : 0,
+        'leadFaces' => is_array($response['lead_faces'] ?? NULL) ? $response['lead_faces'] : [],
         'swappedFaces' => is_array($response['swapped_faces'] ?? NULL) ? $response['swapped_faces'] : [],
         'review' => JobReview::PENDING,
       ]);
