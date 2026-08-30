@@ -3,21 +3,21 @@ langcode: en
 status: true
 dependencies:
   config:
-    - node.type.spell
+    - taxonomy.vocabulary.spells
   module:
-    - node
+    - taxonomy
 id: spell
 label: Spell
-type: 'canonical_entities:node'
-pattern: '/spells/[node:title]'
+type: 'canonical_entities:taxonomy_term'
+pattern: '/spells/[term:name]'
 selection_criteria:
   b3d8f5d7-a986-446d-b5c6-7d5ccb192a7b:
-    id: 'entity_bundle:node'
+    id: 'entity_bundle:taxonomy_term'
     negate: false
     context_mapping:
-      node: node
+      taxonomy_term: taxonomy_term
     bundles:
-      spell: spell
+      spells: spells
 selection_logic: and
 weight: -5
 relationships: {  }

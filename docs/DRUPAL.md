@@ -104,11 +104,10 @@ Full field sets live in
 - **monster** — `field_challenge_rating`, `field_ability_scores`,
   `field_armor_class`, `field_maximum_hitpoints`, `field_monster_*` (actions,
   traits, senses, languages, legendary/lair actions), `field_type`.
-- **spell** — `field_spell_level` (int, 0 = cantrip), `field_spell_school`
-  (-> `spell_schools`), `field_casting_time`, `field_spell_range`,
-  `field_spell_components`, `field_spell_duration`, `field_concentration`,
-  `field_ritual`, `field_description` (a `wysiwyg` paragraph). Pathauto
-  aliases are `/spells/[node:title]`.
+- **spell (unused node type)** — leftover `node--spell` from an earlier
+  vault. Do not create new ones. The live vault is the `spells` taxonomy
+  (see below). The node type is still installed; do not uninstall it in
+  this pass.
 
 ---
 
@@ -117,8 +116,9 @@ Full field sets live in
 Exposure is configured in
 `drupal-cms/config/sync/graphql_compose.settings.graphql_compose_server.yml`.
 
-**Exposed node bundles:** `character`, `story`, `story_arc`, `item`, `spell`,
-`monster` (each with `query_load_enabled`, `edges_enabled`, `simple_queries`).
+**Exposed node bundles:** `character`, `story`, `story_arc`, `item`, `spell`
+(unused; do not query), `monster` (each with `query_load_enabled`,
+`edges_enabled`, `simple_queries`).
 
 **Tools (`TermToolProfiency`)** carry `field_tool_category` (list:
 `artisan`/`other`/`gaming_set`/`musical_instrument`), seeded from the rules wiki.
@@ -139,17 +139,32 @@ term).
 `ability_scores`, `tool_profiencies`, `creature_types`, `factions`,
 `game_edition`, `magical_properties`, `weapon_category`, `weapon_range`,
 `weapon_properties`, `weapon_mastery`, `damage_types`, `vestige_level`,
-`traits`, `spell_schools`. A vocabulary must be listed here with
+`traits`, `spells`, `spell_schools`. A vocabulary must be listed here with
 `enabled: true` before its term type appears in `TermUnion`.
 
 **Term collection queries:** `abilities`, `class`, `skills`, `species`,
 `lineage`, `backgrounds`, `feats`, `ability_scores`, `tool_profiencies`,
-`factions`, and `traits` set `edges_enabled` + `simple_queries`, generating
+`factions`, `traits`, and `spells` set `edges_enabled` + `simple_queries`, generating
 collection queries (`termClasses`, `termSkills`, `termSpeciesItems`,
 `termLineages`, `termBackgrounds`, `termFeats`, `termAbilityScores`,
-`termToolProfiencies`, `termFactions`, `termTraits`) consumed by the
-character-creation wizard and the profile editor. Note the uncountable-noun
-quirk: the `species` collection is `termSpeciesItems`, not `termSpecies`.
+`termToolProfiencies`, `termFactions`, `termTraits`, `termSpells`) consumed
+by the character-creation wizard, the profile editor, and the spell vault.
+Note the uncountable-noun quirk: the `species` collection is
+`termSpeciesItems`, not `termSpecies`. `settings.edge_max_limit` is 500
+so `termSpells(first: 500)` can load the vault; graphql_compose otherwise
+rejects anything over 100.
+
+**Spells (`TermSpell`)** are the spell vault. Characters already reference
+them via `paragraph.spell_reference.field_spell`. Fields: `field_spell_level`
+(int, 0 = cantrip), `field_spell_school` (-> `spell_schools`),
+`field_spell_casting_time`, `field_spell_range`, `field_spell_components`,
+`field_spell_duration`, `field_spell_concentration`, `field_spell_ritual`,
+`field_spell_description` (`text_long`), `field_edition` (term default;
+not invented from the wiki). Pathauto aliases are `/spells/[term:name]`.
+List query: `termSpells`. Single load: `term(id)` / `... on TermSpell`.
+Both Search API indexes (`solr_content` and `milvus_ai_content`) include
+the `spells` vocabulary as an `entity:taxonomy_term` datasource. Type
+filter `spell` on `/api/content-search` maps to those terms.
 
 **Abilities (`TermAbility`)** carry the ability rules text and metadata:
 `field_ability_description` (text), `field_ability_source_type` (list:
@@ -404,11 +419,14 @@ line and `field_notes` its provenance. Creating a name the campaign already has
 returns the existing node, so a rerun of a non-deterministic model cannot fill
 the roster with duplicates.
 
-`createSpell` writes a `node--spell` from the console: title is required,
-level defaults to 0 (cantrip), and school is a `spell_schools` term created
-on first use. Description is a `wysiwyg` paragraph. Creating a title that
-already exists returns the existing node, so a wiki-import rerun cannot
-duplicate the vault. Pathauto aliases are `/spells/[node:title]`.
+`createSpell` writes a `taxonomy_term.spells` from the console: name
+(`title` argument) is required, level defaults to 0 (cantrip), and school
+is a `spell_schools` term created on first use. Description is
+`field_spell_description` (`text_long`). Lookup is case-insensitive and
+strips punctuation so "Melf's Acid Arrow" hits "Melfs Acid Arrow". A
+matching term is not duplicated; empty stub fields are filled and
+non-empty homebrew text is left alone. Permission is
+`create terms in spells`. Pathauto aliases are `/spells/[term:name]`.
 
 `createCharacter` persists a **source** character (`field_source_character =
 TRUE`, no campaign) from a sidecar-derived payload, building the

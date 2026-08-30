@@ -73,7 +73,8 @@ Examples:
 | `SkillRow` | Proficiency marker + skill name + modifier |
 | `CharacterBadgeGroup` | Class + race + alignment `Badge` atoms |
 | `SpellCard` | Spell name, school `Badge`, level, description excerpt |
-| `SpellSheet` | Hero + parchment scroll for one spell (public page + console read) |
+| `SpellSheet` | Hero + parchment scroll for one spell (public page + console read). Passes `highlightSpells={false}` so rules text does not link to itself |
+| `StoryScroll` | Unfurling chronicle. Highlights exact-case vault spell names after `cleanHtml()` |
 
 ### Organisms (`components/organisms/`)
 
@@ -135,7 +136,7 @@ not `fieldStoryNumber`). The `path` field is a plain `String` (not an object).
 | story | `drupal { nodeStories(first: N) { nodes { ... } } }` | `drupal { node(id: $id) { ... on Drupal_NodeStory { ... } } }` |
 | item | `drupal { nodeItems(first: N) { nodes { ... } } }` | `drupal { node(id: $id) { ... on Drupal_NodeItem { ... } } }` |
 | monster | `drupal { nodeMonsters(first: N) { nodes { ... } } }` | `drupal { node(id: $id) { ... on Drupal_NodeMonster { ... } } }` |
-| spell | `drupal { nodeSpells(first: N) { nodes { ... } } }` | `drupal { node(id: $id) { ... on Drupal_NodeSpell { ... } } }` |
+| spell | `drupal { termSpells(first: 500) { nodes { ... } } }` | `drupal { term(id: $id) { ... on Drupal_TermSpell { ... } } }` |
 
 **NPCs are character nodes**, not a separate type. There is no `nodeNpcs` /
 `Drupal_NodeNpc` (deprecated). Query `nodeCharacters` and filter on

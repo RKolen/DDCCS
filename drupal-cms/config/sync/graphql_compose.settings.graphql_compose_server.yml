@@ -165,6 +165,11 @@ entity_config:
       query_load_enabled: true
       edges_enabled: true
       simple_queries: '1'
+    spells:
+      enabled: true
+      query_load_enabled: true
+      edges_enabled: true
+      simple_queries: '1'
     spell_schools:
       enabled: true
       query_load_enabled: true
@@ -722,6 +727,29 @@ field_config:
         enabled: true
       field_edition:
         enabled: true
+    spells:
+      path:
+        enabled: true
+      field_edition:
+        enabled: true
+      field_spell_casting_time:
+        enabled: true
+      field_spell_components:
+        enabled: true
+      field_spell_concentration:
+        enabled: true
+      field_spell_description:
+        enabled: true
+      field_spell_duration:
+        enabled: true
+      field_spell_level:
+        enabled: true
+      field_spell_range:
+        enabled: true
+      field_spell_ritual:
+        enabled: true
+      field_spell_school:
+        enabled: true
     feats:
       field_feat_type:
         enabled: true
@@ -762,3 +790,5 @@ settings:
   site_front: true
   inflector_langcode: en
   inflector_singularize: true
+  # graphql_compose_edges defaults to 100. The spell vault is larger.
+  edge_max_limit: 500

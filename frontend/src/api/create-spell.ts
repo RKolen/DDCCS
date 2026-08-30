@@ -2,10 +2,10 @@ import type { GatsbyFunctionRequest, GatsbyFunctionResponse } from 'gatsby';
 import { drupalCredentials, runDrupalMutation } from '../utils/drupalMutation';
 
 /**
- * Create a spell node (homebrew or an official import).
+ * Create a spells-vocabulary term (homebrew or an official import).
  *
- * POST the Drupal field set. Creating a title that already exists returns
- * the existing node, so an import rerun cannot duplicate the vault.
+ * POST the Drupal field set. Creating a name that already exists returns
+ * the existing term so an import rerun cannot duplicate the vault.
  */
 
 interface CreateSpellBody {
@@ -23,7 +23,7 @@ interface CreateSpellBody {
 
 interface SpellResult {
   id: string;
-  title: string;
+  name: string;
   path: string | null;
 }
 
@@ -53,7 +53,7 @@ const CREATE_SPELL_MUTATION = `
       description: $description
     ) {
       id
-      title
+      name
       path
     }
   }

@@ -3,10 +3,14 @@ langcode: en
 status: true
 dependencies:
   config:
+    - field.storage.taxonomy_term.field_spell_description
+    - field.storage.taxonomy_term.field_spell_level
+    - field.storage.taxonomy_term.field_spell_school
     - search_api.server.milvus_ai_search
   module:
     - node
     - search_api_solr
+    - taxonomy
 id: milvus_ai_content
 name: 'Milvus AI Content Index'
 description: 'Indexes site content for semantic AI search via Milvus.'
@@ -132,6 +136,52 @@ field_settings:
     dependencies:
       module:
         - node
+  spell_description:
+    label: 'Spell description'
+    datasource_id: 'entity:taxonomy_term'
+    property_path: field_spell_description
+    type: text
+    dependencies:
+      config:
+        - field.storage.taxonomy_term.field_spell_description
+      module:
+        - taxonomy
+  spell_level:
+    label: 'Spell level'
+    datasource_id: 'entity:taxonomy_term'
+    property_path: field_spell_level
+    type: integer
+    dependencies:
+      config:
+        - field.storage.taxonomy_term.field_spell_level
+      module:
+        - taxonomy
+  spell_name:
+    label: 'Spell name'
+    datasource_id: 'entity:taxonomy_term'
+    property_path: name
+    type: text
+    dependencies:
+      module:
+        - taxonomy
+  spell_school_name:
+    label: 'Spell school'
+    datasource_id: 'entity:taxonomy_term'
+    property_path: 'field_spell_school:entity:name'
+    type: text
+    dependencies:
+      config:
+        - field.storage.taxonomy_term.field_spell_school
+      module:
+        - taxonomy
+  tid:
+    label: 'Term ID'
+    datasource_id: 'entity:taxonomy_term'
+    property_path: tid
+    type: integer
+    dependencies:
+      module:
+        - taxonomy
   status:
     label: 'Publishing status'
     datasource_id: 'entity:node'
@@ -161,6 +211,14 @@ datasource_settings:
     bundles:
       default: true
       selected: {  }
+    languages:
+      default: true
+      selected: {  }
+  'entity:taxonomy_term':
+    bundles:
+      default: false
+      selected:
+        - spells
     languages:
       default: true
       selected: {  }
@@ -197,6 +255,9 @@ processor_settings:
       - field_personality
       - field_personality_traits
       - field_species_name
+      - spell_description
+      - spell_name
+      - spell_school_name
       - title
   language_with_fallback: {  }
   rendered_item: {  }
@@ -217,6 +278,9 @@ processor_settings:
       - field_personality
       - field_personality_traits
       - field_species_name
+      - spell_description
+      - spell_name
+      - spell_school_name
       - title
     spaces: ''
     ignored: ''

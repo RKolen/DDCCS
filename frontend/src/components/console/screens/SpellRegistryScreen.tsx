@@ -1,8 +1,9 @@
 /**
  * SpellRegistryScreen — `spells/sp-list`.
  *
- * Filterable catalogue of Drupal spell nodes. A row jumps to Read Spell
- * with ctx.spellIdx set, the same way the loot vault jumps to the item sheet.
+ * Filterable catalogue of Drupal spells-vocabulary terms. A row jumps to
+ * Read Spell with ctx.spellIdx set, the same way the loot vault jumps to
+ * the item sheet.
  */
 
 import * as React from 'react';
@@ -10,50 +11,54 @@ import { graphql, useStaticQuery } from 'gatsby';
 import type { ScreenProps } from '../ScreenRouter';
 import { Icon } from '../atoms';
 import { SpellCard } from '../../molecules/SpellCard';
-import { levelLabel, schoolName } from '../../../types/spell';
-
-interface ListNode {
-  id: string;
-  title: string;
-  path: string | null;
-  spellLevel: number;
-  castingTime: string | null;
-  spellRange: string | null;
-  concentration: boolean | null;
-  ritual: boolean | null;
-  spellSchool: { name: string | null } | null;
-}
+import {
+  levelLabel,
+  schoolName,
+  type SpellTermNode,
+} from '../../../types/spell';
+import '../../../graphql/spellTerm';
 
 interface ListQuery {
-  drupal: { nodeSpells: { nodes: ListNode[] } };
+  drupal: { termSpells: { nodes: SpellTermNode[] } };
 }
 
 export function SpellRegistryScreen({ ctx, setCtx }: ScreenProps): React.ReactElement {
   const data = useStaticQuery<ListQuery>(graphql`
     query ConsoleSpellsList {
       drupal {
-        nodeSpells(first: 100) {
+        termSpells(first: 500) {
           nodes {
-            id title path spellLevel castingTime spellRange concentration ritual
-            spellSchool { ... on Drupal_TermSpellSchool { name } }
+            ...SpellTermFields
           }
         }
       }
     }
   `);
 
-  const nodes = data?.drupal?.nodeSpells?.nodes ?? [];
+  const nodes = data?.drupal?.termSpells?.nodes ?? [];
   const [search, setSearch] = React.useState('');
   const [levels, setLevels] = React.useState<Set<number>>(new Set());
+  const [schools, setSchools] = React.useState<Set<string>>(new Set());
   const [ritualOnly, setRitualOnly] = React.useState(false);
   const [concOnly, setConcOnly] = React.useState(false);
 
   const counts = React.useMemo(() => {
     const c: Partial<Record<number, number>> = {};
     nodes.forEach(node => {
-      c[node.spellLevel] = (c[node.spellLevel] ?? 0) + 1;
+      const level = node.spellLevel ?? 0;
+      c[level] = (c[level] ?? 0) + 1;
     });
     return c;
+  }, [nodes]);
+
+  const schoolCounts = React.useMemo(() => {
+    const c = new Map<string, number>();
+    nodes.forEach(node => {
+      const name = schoolName(node.spellSchool);
+      if (name == null) return;
+      c.set(name, (c.get(name) ?? 0) + 1);
+    });
+    return Array.from(c.entries()).sort(([a], [b]) => a.localeCompare(b));
   }, [nodes]);
 
   const filtered = React.useMemo(() => {
@@ -61,19 +66,31 @@ export function SpellRegistryScreen({ ctx, setCtx }: ScreenProps): React.ReactEl
     return nodes
       .map((node, origIdx) => ({ node, origIdx }))
       .filter(({ node }) => {
-        if (levels.size > 0 && !levels.has(node.spellLevel)) return false;
-        if (ritualOnly && node.ritual !== true) return false;
-        if (concOnly && node.concentration !== true) return false;
-        if (q !== '' && !node.title.toLowerCase().includes(q)) return false;
+        const level = node.spellLevel ?? 0;
+        if (levels.size > 0 && !levels.has(level)) return false;
+        const school = schoolName(node.spellSchool);
+        if (schools.size > 0 && (school == null || !schools.has(school))) {
+          return false;
+        }
+        if (ritualOnly && node.spellRitual !== true) return false;
+        if (concOnly && node.spellConcentration !== true) return false;
+        if (q !== '' && !node.name.toLowerCase().includes(q)) return false;
         return true;
       });
-  }, [nodes, search, levels, ritualOnly, concOnly]);
+  }, [nodes, search, levels, schools, ritualOnly, concOnly]);
 
   const toggleLevel = (level: number): void => {
     const next = new Set(levels);
     if (next.has(level)) next.delete(level);
     else next.add(level);
     setLevels(next);
+  };
+
+  const toggleSchool = (name: string): void => {
+    const next = new Set(schools);
+    if (next.has(name)) next.delete(name);
+    else next.add(name);
+    setSchools(next);
   };
 
   const openSpell = (origIdx: number): void => {
@@ -118,7 +135,7 @@ export function SpellRegistryScreen({ ctx, setCtx }: ScreenProps): React.ReactEl
         </header>
         <p className="screen-blurb">
           Search the rules wiki for an official spell, or create a homebrew
-          entry. Either path writes a Spell node.
+          entry. Either path writes a spells-vocabulary term.
         </p>
       </div>
     );
@@ -183,6 +200,17 @@ export function SpellRegistryScreen({ ctx, setCtx }: ScreenProps): React.ReactEl
             {levelLabel(level)} · {counts[level]}
           </button>
         ))}
+        {schoolCounts.map(([name, count]) => (
+          <button
+            key={name}
+            type="button"
+            className="filter-chip"
+            data-active={schools.has(name) || undefined}
+            onClick={() => toggleSchool(name)}
+          >
+            {name} · {count}
+          </button>
+        ))}
         <button
           type="button"
           className="filter-chip"
@@ -210,12 +238,12 @@ export function SpellRegistryScreen({ ctx, setCtx }: ScreenProps): React.ReactEl
           {filtered.map(({ node, origIdx }) => (
             <SpellCard
               key={node.id}
-              name={node.title}
-              level={node.spellLevel}
+              name={node.name}
+              level={node.spellLevel ?? 0}
               school={schoolName(node.spellSchool)}
-              concentration={node.concentration === true}
-              ritual={node.ritual === true}
-              description={[node.castingTime, node.spellRange].filter(Boolean).join(' · ')}
+              concentration={node.spellConcentration === true}
+              ritual={node.spellRitual === true}
+              description={[node.spellCastingTime, node.spellRange].filter(Boolean).join(' · ')}
               onClick={() => openSpell(origIdx)}
             />
           ))}

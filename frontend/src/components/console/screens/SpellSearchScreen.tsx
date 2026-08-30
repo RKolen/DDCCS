@@ -2,7 +2,7 @@
  * SpellSearchScreen — `spells/sp-search`.
  *
  * Looks up an official spell on the rules wiki via the sidecar, then
- * imports it as a Drupal spell node through /api/create-spell.
+ * imports it as a Drupal spells-vocabulary term through /api/create-spell.
  */
 
 import * as React from 'react';
@@ -15,11 +15,11 @@ import { refreshAndReload } from '../../../utils/refreshContent';
 
 interface VaultNode {
   id: string;
-  title: string;
+  name: string;
 }
 
 interface VaultQuery {
-  drupal: { nodeSpells: { nodes: VaultNode[] } };
+  drupal: { termSpells: { nodes: VaultNode[] } };
 }
 
 interface LookupSpell {
@@ -42,7 +42,7 @@ interface LookupResponse {
 
 interface CreateResult {
   id?: string;
-  title?: string;
+  name?: string;
   error?: string;
 }
 
@@ -78,16 +78,16 @@ export function SpellSearchScreen(_props: ScreenProps): React.ReactElement {
   const vault = useStaticQuery<VaultQuery>(graphql`
     query ConsoleSpellVaultTitles {
       drupal {
-        nodeSpells(first: 100) {
-          nodes { id title }
+        termSpells(first: 500) {
+          nodes { id name }
         }
       }
     }
   `);
   const known = React.useMemo(() => {
     const titles = new Set<string>();
-    (vault?.drupal?.nodeSpells?.nodes ?? []).forEach(node => {
-      titles.add(node.title.toLowerCase());
+    (vault?.drupal?.termSpells?.nodes ?? []).forEach(node => {
+      titles.add(node.name.toLowerCase());
     });
     return titles;
   }, [vault]);
@@ -159,7 +159,7 @@ export function SpellSearchScreen(_props: ScreenProps): React.ReactElement {
       if (!res.ok || payload.error != null) {
         throw new Error(payload.error ?? `Request failed (${res.status})`);
       }
-      setImported(payload.title ?? found.name);
+      setImported(payload.name ?? found.name);
       void refreshAndReload();
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
