@@ -258,6 +258,7 @@ violation of project standards.
 | | | `get_npcs_dir`, `get_calendars_dir` |
 | Strings | `src/utils/string_utils.py` | `sanitize_filename`, `normalize_name`, |
 | | | `slugify`, `truncate_text`, `clip_to_budget`, |
+| | | `clip_tags`, |
 | | | `get_session_date`, `get_timestamp` |
 | AI JSON | `src/utils/ai_json.py` | `extract_json_object` |
 | Validation | `src/utils/validation_helpers.py` | `validate_required_fields`, |

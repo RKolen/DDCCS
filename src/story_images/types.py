@@ -93,10 +93,18 @@ class ShotPerson:
     """Someone named in a selected event, matched against the roster or not.
 
     ``known`` is derived from ``character_id``: a Drupal match always has one.
+
+    ``appearance`` and ``action`` are deliberately separate. Appearance is who
+    someone is anywhere and belongs to their portrait record; action is what
+    they are doing in this one scene and belongs to the scene. The same elf
+    in a tavern should not be holding a drawn blade because their portrait
+    had one. This field was called ``role`` and held the same thing - the
+    shot analysis has always been asked for "one line on what they are doing
+    in this shot" - so the name now says what it is.
     """
 
     name: str
-    role: str = ""
+    action: str = ""
     character_id: str = ""
     portrait_url: str = ""
     appearance: str = ""
@@ -116,7 +124,7 @@ class ShotPerson:
         """
         return {
             "name": self.name,
-            "role": self.role,
+            "action": self.action,
             "known": self.known,
             "character_id": self.character_id,
             "portrait_url": self.portrait_url,
@@ -142,7 +150,10 @@ class ShotPerson:
             likeness = bool(character_id) and bool(portrait)
         return cls(
             name=str(data.get("name", "")).strip(),
-            role=str(data.get("role", "")).strip(),
+            # "role" is the old name for the same field, still
+            # accepted so a payload written against it keeps working.
+            action=str(data.get("action")
+                       or data.get("role", "")).strip(),
             character_id=character_id,
             portrait_url=portrait,
             appearance=str(data.get("appearance", "")).strip(),
@@ -215,7 +226,7 @@ def apply_roster(person: ShotPerson, roster: Sequence[RosterEntry]) -> ShotPerso
     portrait = person.portrait_url or entry.portrait_url
     return ShotPerson(
         name=entry.name,
-        role=person.role,
+        action=person.action,
         character_id=entry.character_id,
         portrait_url=portrait,
         appearance=person.appearance or entry.appearance,

@@ -54,6 +54,7 @@ src/
 |   |-- types.py              # StoryEvent, RosterEntry, ShotPerson, ShotAnalysis
 |   |-- events.py             # Chunked event extraction (never the whole story)
 |   |-- shot.py               # Who is in the picked excerpt
+|   |-- staging.py            # Named settings and moods an operator can pick
 |   |-- scene_prompt.py       # Wide-shot SD prompt (not a portrait prompt)
 |   `-- render.py             # 768x512 DreamShaper + 2 IPAdapters + staggered ReActor
 |
@@ -146,6 +147,7 @@ src/
 |   |-- comfyui_workflows.py   # ComfyUI API-JSON workflow builders (txt2img, IPAdapter, scene, ReActor)
 |   |-- portrait_prompt.py     # Builds SD positive/negative prompts from a character profile
 |   |-- ollama_admin.py        # Best-effort Ollama model unloading (free RAM before SD generation)
+|   |-- comfyui_admin.py       # Restart a local ComfyUI, freeing RAM
 |   `-- image_describe.py      # Image->prompt via an Ollama vision model (IMAGE_TO_PROMPT_MODEL)
 |
 |-- config/             # Centralized configuration
@@ -302,6 +304,174 @@ Remaining likenesses go through `reactor_swap_workflow()` one face at a time,
 with ComfyUI `/free` between steps. ReActor is optional (`COMFYUI_REACTOR_*`);
 without it the job still ships and reports `used_ipadapter` / `swapped_faces`
 honestly. Do not load Flux, SDXL, or extra FaceID graphs on this CPU box.
+
+### The scene prompt is budgeted, not truncated
+
+`build_scene_prompt` composes the scene first - action, setting, mood,
+framing, style - and gives the cast whatever characters are left, sharing them
+out and dropping whoever no longer fits. It used to join everything and clip
+the tail, which meant the cast silently ate the scene: six people at a hundred
+characters each came to 604 against a 480 budget, so the setting, the mood,
+the framing and the style were all cut off the end and the sixth person
+stopped mid-word. That render came back as one character in a forest, with no
+port, no night and no group.
+
+Person tags are cut with `clip_tags`, which keeps whole tags. Cutting on a
+word boundary left `"piercing green eyes,, teal"` in the prompt, and the model
+put the tiefling's colour on the elf.
+
+The budget is why a cast above two belongs in region mode: one 480-character
+prompt cannot describe six people *and* the place they are in, whereas each
+region gets its own `PROMPT_BUDGET_CHARS` to itself.
+
+### The skeleton is what ControlNet obeys
+
+Facing words in the prompt are not enough. An openpose figure drawn with both
+ears, both eyes and full-width shoulders **is** a front view, and
+`"side profile view, faces in profile"` lost to it in every render - the terms
+reached the prompt correctly and the picture came back facing the camera
+anyway. Measured before the fix: every pose drew shoulders at 46% of the box
+with two ears and two eyes, whatever the caption said.
+
+`turn_layout` rotates the skeleton instead. The body foreshortens
+horizontally by `cos(turn)`, floored so a profile stays a drawable figure
+rather than collapsing to a line, and the head keypoints are carried round the
+skull on their own bearings - nose 0, eyes +/-30, ears +/-90 - so anything
+that ends up on the far side is simply not drawn. A profile then has one eye
+and one ear with the nose leading; from behind there is no face at all, and
+the shoulders open back to full width **mirrored** - someone's right arm is on
+the viewer's right once you are behind them, and openpose reads limb identity
+from colour, so an unmirrored back view says "facing forward, arms crossed
+over".
+
+`_figure_pose` also honours the operator's chosen stance. `pose_for_index`
+exists so a cast is not six identical statues; it was overriding the staging
+rather than standing in for it.
+
+### A stride is fore-aft, so a flat layout cannot hold one
+
+`STANDING` and `POSE_VARIANTS` are `(dx, dy)`: what the camera sees head-on.
+A step has no width to see from there, so `walking` faked one by splaying the
+legs sideways. That reads from the front and nowhere else - the splay is
+lateral, so turning the figure squeezed it away exactly when a real stride
+would be widest, and a cast staged in profile came back standing to attention.
+
+`POSE_DEPTH` gives the joints that move fore and aft a third coordinate,
+positive toward the way the figure faces, and `turn_layout` trades one for the
+other: `x = dx*cos(turn) + dz*sin(turn)`. At a front view nothing changes; at
+a profile the lateral part is gone and the stride is all there is. A joint
+carrying a `dz` skips the foreshortening floor, because it has real width when
+turned and does not need the crutch - holding 45% of a splay against the
+stride was what cancelled it out.
+
+The magnitudes are deliberately larger than a real step, and the skeleton is
+the wrong thing to judge them by. Half these values looked like a natural
+walk drawn as a stick figure and rendered as a figure standing still: the
+ControlNet was weighing a 14%-of-height stride against its own prior that a
+lone character stands to attention, and the prior won at every strength up to
+1.6. Doubled, the same prompt and seed walk at the configured 0.85.
+
+Measured on a 480px figure: a walk strides 10% of its height at a front view,
+26% at three-quarter and 29% in profile, against 6% for a standing figure in
+profile. A control image is not a drawing; it is an instruction, and it has to
+out-argue the checkpoint.
+
+### Who is in front is not the same as who is nearest
+
+`place` pastes cutouts in sequence, so the last one in wins every overlap.
+That order was cast order, which meant whoever happened to be ticked last was
+painted on top - a character staged at the back could be pasted over one at
+the front, at a fraction of their height.
+
+Depth is the obvious fix and is not enough on its own. Depth also sets
+apparent size, and apparent size is not distance here: `SPECIES_HEIGHT` makes
+a halfling 0.62 of a human, so a halfling at the front of the scene is still
+smaller than an orc at the back. Pushing the small character forward until
+they stop being swallowed therefore ruins everyone else's distance.
+`Placement.order` is the separate control that problem needs - 1 is painted
+last - and `paint_order` lets it outrank depth, falling back to depth for
+anyone the operator did not number.
+
+### Which way round is not the same as how far round
+
+`Placement.facing` says how far a figure is turned. `Placement.toward` says
+whether that is to the left or the right, and without it a cast all set to
+side profile faced the same way - a group and the person walking up to meet
+them included. `TOWARD_SIGN` flips the turn angle, so left is the mirror of
+right; `front` and `behind` are unaffected, because a 180-degree turn has no
+handedness and the console hides the control for them. Empty means
+`DEFAULT_TOWARD`, so existing staging keeps the direction it already had.
+
+### Facing is per character, not per scene
+
+The Camera control says where the lens is. **Which way each person is turned
+is a property of that person**, and it lives on their `Placement.facing`.
+
+One angle for the whole cast cannot express "the group walks away while
+someone follows them": every figure would be told to turn the same way, and
+`ANGLE_NEGATIVES` would ban the backs of the ones who should be walking off.
+Worse, the live composite path (`paint_figures`, `composite=True`) passed **no
+angle at all** - the comment said the skeleton would set the orientation, but
+a 2D openpose skeleton cannot say "facing away". So each figure was rendered
+alone against grey with nothing telling it which way to stand, and a figure
+alone on grey faces the camera. That is why a six-person scene came back as a
+row of people looking at the lens.
+
+`facing` is opt-in: empty adds nothing and keeps the old behaviour, so no
+existing render is restaged. When set, that figure gets its own `ANGLES` terms
+*and* its own `ANGLE_NEGATIVES`, because the ban on "back turned" that
+protects a front view would otherwise forbid the figure asked to turn away.
+
+### Restarting ComfyUI between renders (`src/ai/comfyui_admin.py`)
+
+ComfyUI does not give system RAM back. `POST /free` unloads models from the
+GPU, but the process keeps the arena it grew loading them, so on a small box
+the second scene render of a session starts with no room and the kernel takes
+the process out mid-render. Restarting is the only thing that returns it.
+
+`COMFYUI_RESTART_AFTER_SCENE=true` makes `/story/scene` do that after each
+render, synchronously, before the response returns - so the next queued job
+finds a clean process rather than a full one. It runs before the
+render-failed check on purpose: a render that died part-way through has still
+grown the arena, and that is exactly when the next one gets killed.
+
+Two safety properties. "Local" is not guessed from the address - a loopback
+URL can still be somebody else's container - it means `COMFYUI_DIR` is set,
+because knowing where the install is, is the same thing as being able to
+relaunch it. And the process is found by its command line, never by what is
+listening on a port; a port says nothing about what you are about to stop.
+
+The mechanics live in `scripts/restart-comfyui.sh`, beside the `start.sh`
+that launches ComfyUI in the first place, so the launch recipe has one home.
+
+### Staging (`staging.py`)
+
+The shot analysis writes a setting and a mood as free prose, which is right
+until an operator wants the same duel in a castle. `staging.py` is the
+vocabulary they pick from, and the console mirrors it in
+`frontend/src/utils/storyImage.ts` - `tests/story_images/test_staging.py`
+fails if the two lists drift apart.
+
+A `Setting` is six fields rather than one sentence, because CLIP reads a
+caption in sequence and the same words composed differently render a
+different picture. `backdrop` is the field that earns its keep: something
+standing far behind the figures is what gives the empty middle of the frame
+somewhere to go, and without one a courtyard reads as a plain. `seat` and
+`seat_noun` are the same object said twice - once for the scene, which
+paints it, and once for whoever sits on it, whose own caption would
+otherwise ask for a stone bench in a forest.
+
+Anything not in the table is used as the place, keeping the default's time
+and light and dropping `ground` and `backdrop` - the two clauses most likely
+to contradict a location they were not written for.
+
+`ShotPerson.appearance` and `ShotPerson.action` are separate for the same
+reason: appearance is who someone is anywhere and comes from Drupal's
+`field_image_prompt`; action is what they are doing in this one scene. The
+same elf in a tavern should not be holding a drawn blade because their
+portrait had one. `action` was called `role` and held exactly this - the
+analysis has always been asked for "one line on what they are doing in this
+shot" - so both keys are still accepted on the way in.
 
 Scene likeness uses `COMFYUI_SCENE_IPADAPTER_MODEL`, a **face** adapter, and
 never the full-image `COMFYUI_IPADAPTER_MODEL` the portraits use: a full-image

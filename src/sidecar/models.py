@@ -642,8 +642,86 @@ class StoryScenePerson(BaseModel):
     appearance: str = Field(default="")
     is_npc: bool = False
     use_likeness: bool = False
-    role: str = Field(default="")
+    action: str = Field(
+        default="", description="what this person is doing in this shot"
+    )
     known: bool = False
+
+
+class StoryPlacement(BaseModel):
+    """Where one character stands, as the console's staging editor sets it."""
+
+    name: str = Field(..., min_length=1)
+    lateral: float = Field(
+        default=0.5, ge=0.0, le=1.0,
+        description="0 at the left edge of the frame, 1 at the right",
+    )
+    depth: float = Field(
+        default=1.0, ge=1.0, le=3.0,
+        description="1 at the front of the scene, larger further back",
+    )
+    pose: str = Field(default="", description="stance, or empty to choose one")
+    facing: str = Field(
+        default="",
+        description="which way this one character is turned; empty lets the "
+                    "stance decide. Per character, not per scene: one angle "
+                    "for the cast cannot say a group walks away while "
+                    "someone follows them",
+    )
+    toward: str = Field(
+        default="",
+        description="left|right: which way along the frame that turn points. "
+                    "Empty is right. Facing alone cannot say it, so a cast "
+                    "all set to profile faced the same way",
+    )
+    order: int = Field(
+        default=0, ge=0,
+        description="who wins an overlap: 1 is painted last and comes out "
+                    "whole. 0 lets depth decide. Separate from depth because "
+                    "apparent size is not distance - a halfling at the front "
+                    "is smaller than an orc at the back",
+    )
+    # Filled on the way out only. The console hit-tests a drag against the
+    # box the staging produced, so returning it beside the numbers that made
+    # it saves the editor from reimplementing the layout in TypeScript.
+    box: List[int] = Field(
+        default_factory=list,
+        description="left, top, width, height in canvas pixels, on responses",
+    )
+
+
+class StoryStageRequest(BaseModel):
+    """Ask for the skeleton preview of a staging, before any render."""
+
+    people: List[StoryScenePerson] = Field(default_factory=list)
+    placements: List[StoryPlacement] = Field(default_factory=list)
+    shot: str = Field(default=DEFAULT_SHOT, description="wide|full|medium|close")
+
+
+class StoryStageResponse(BaseModel):
+    """The skeleton canvas and the staging it was drawn from."""
+
+    image_base64: str
+    width: int
+    height: int
+    placements: List[StoryPlacement] = Field(default_factory=list)
+    poses: List[str] = Field(default_factory=list)
+    facings: List[str] = Field(default_factory=list)
+    towards: List[str] = Field(default_factory=list)
+
+
+class StorySceneOption(BaseModel):
+    """One named setting or mood the console can offer."""
+
+    name: str
+    description: str
+
+
+class StoryStagingResponse(BaseModel):
+    """The staging vocabulary, so the console need not hardcode it."""
+
+    settings: List[StorySceneOption] = Field(default_factory=list)
+    moods: List[StorySceneOption] = Field(default_factory=list)
 
 
 class StorySceneRequest(BaseModel):
@@ -657,6 +735,24 @@ class StorySceneRequest(BaseModel):
     shot: str = Field(default=DEFAULT_SHOT, description="wide|full|medium|close")
     angle: str = Field(
         default=DEFAULT_ANGLE, description="front|three_quarter|side|behind"
+    )
+    regions: bool = Field(
+        default=False,
+        description="Paint each character in their own masked region",
+    )
+    # The shot analysis writes a setting and a mood of its own. These
+    # override it when the operator has an opinion, and are left empty when
+    # they do not - so a scene nobody has staged still renders.
+    setting: str = Field(
+        default="",
+        description="a named setting, or free text used as the place",
+    )
+    mood: str = Field(
+        default="", description="a named mood, or free text used as the tone"
+    )
+    placements: List[StoryPlacement] = Field(
+        default_factory=list,
+        description="staging from the preview; empty means evenly spaced",
     )
 
     @field_validator("excerpt")

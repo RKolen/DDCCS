@@ -11,7 +11,7 @@ This module provides reusable functions for:
 
 import re
 from datetime import datetime
-from typing import Optional
+from typing import List, Optional
 
 
 def get_session_date() -> str:
@@ -181,6 +181,39 @@ def clip_to_budget(text: str, limit: int) -> str:
     if len(cleaned) <= limit:
         return cleaned
     return cleaned[:limit].rsplit(" ", 1)[0]
+
+
+def clip_tags(text: str, limit: int) -> str:
+    """Keep whole comma-separated tags up to a character budget.
+
+    Unlike :func:`clip_to_budget`, which cuts on a word boundary, this never
+    leaves half a tag behind. A prompt ending "piercing green eyes,, teal"
+    spends tokens on fragments the model has to guess at, and the guess is
+    what put a tiefling's colour on an elf.
+
+    Args:
+        text: Comma-separated tags.
+        limit: Maximum characters to keep.
+
+    Returns:
+        Whole tags only, within budget; empty when nothing fits.
+    """
+    if limit <= 0:
+        return ""
+    cleaned = " ".join(text.split())
+    if len(cleaned) <= limit:
+        return cleaned
+    kept: List[str] = []
+    used = 0
+    for tag in (part.strip() for part in cleaned.split(",")):
+        if not tag:
+            continue
+        cost = len(tag) if not kept else len(tag) + 2
+        if used + cost > limit:
+            break
+        kept.append(tag)
+        used += cost
+    return ", ".join(kept)
 
 
 def truncate_text(text: str, max_length: int, suffix: str = "...") -> str:

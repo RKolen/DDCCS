@@ -21,7 +21,13 @@ _TASK = (
     "You are a D&D campaign illustrator. Read this scene and say what a "
     "painting of it would show: where it is, what is happening, the mood, and "
     "who is in frame. Only name people the scene actually mentions. Do not "
-    "invent a crowd to fill the shot."
+    "invent a crowd to fill the shot.\n"
+    "Describe the setting by what is visible - the room, its furniture, its "
+    "light - never by its name. A renderer has never heard of your world, so "
+    "a place name paints nothing and it invents scenery instead.\n"
+    "Keep the mood to light and atmosphere. Anything you put there about "
+    "where the scene is will fight the setting: one scene said 'the "
+    "darkening outdoors' and the tavern came back as a forest."
 )
 
 
@@ -61,10 +67,13 @@ def build_shot_prompt(
         [
             "",
             "Reply with JSON only:",
-            '{"setting": "<place>", "action": "<what is happening>", '
-            '"mood": "<lighting and tone>", '
+            '{"setting": "<what the place looks like, 6-12 words of '
+            'visible detail, never a proper name>", '
+            '"action": "<what is happening>", '
+            '"mood": "<lighting and tone only, 4-8 words>", '
             '"people": [{"name": "<name as written>", '
-            '"role": "<one line on what they are doing in this shot>"}]}',
+            '"action": "<one line on what they are doing in this '
+            'shot>"}]}',
             "",
             "It is correct to name few people. Never invent a name.",
         ]
@@ -122,15 +131,16 @@ def _read_person(item: Any) -> Optional[ShotPerson]:
         The person, or None when there is no usable name.
     """
     if isinstance(item, str):
-        name, role = item.strip(), ""
+        name, action = item.strip(), ""
     elif isinstance(item, dict):
         name = str(item.get("name", "")).strip()
-        role = clip_to_budget(str(item.get("role", "")), MAX_FIELD_CHARS)
+        action = clip_to_budget(
+            str(item.get("action") or item.get("role", "")), MAX_FIELD_CHARS)
     else:
         return None
     if not name:
         return None
-    return ShotPerson(name=name, role=role)
+    return ShotPerson(name=name, action=action)
 
 
 def analyze_shot(

@@ -25,6 +25,7 @@ interface CharacterRef {
   title: string;
   image: CharacterImage | null;
   imagePrompt: string | null;
+  gender: string | null;
 }
 
 interface StoryNode {
@@ -201,6 +202,7 @@ const StoryPage: React.FC<PageProps<StoryData, StoryPageContext>> = ({ data, loc
       title: c.title,
       imageUrl: c.image?.mediaImage?.url ?? '',
       imagePrompt: c.imagePrompt,
+      gender: c.gender,
       isNpc: false,
     }));
   // Prefer value (plain_text) but run through toNarrationText so HTML bodies
@@ -318,6 +320,7 @@ export const query = graphql`
                   id
                   title
                   imagePrompt
+                  gender
                   image {
                     ... on Drupal_MediaImage {
                       mediaImage { url alt }

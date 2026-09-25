@@ -2,8 +2,8 @@
 
 import hashlib
 import logging
-from dataclasses import dataclass, replace
-from typing import List, Optional, Sequence, Tuple
+from dataclasses import dataclass, field, replace
+from typing import Dict, List, Optional, Sequence, Tuple
 
 from src.ai.comfyui_client import ComfyUIClient
 from src.ai.comfyui_workflows import (
@@ -16,6 +16,15 @@ from src.ai.comfyui_workflows import (
 )
 from src.ai.image_describe import fetch_image_bytes
 from src.config.config_types import ComfyUIConfig
+from src.story_images.composite import head_crop
+from src.story_images.regions import Placement
+from src.story_images.region_render import (
+    RegionFraming,
+    RegionInputs,
+    RegionRenderRequest,
+    paint_figures,
+    paint_regions,
+)
 from src.story_images.types import ShotPerson
 
 logger = logging.getLogger(__name__)
@@ -42,16 +51,45 @@ class SceneRenderResult:
 
 
 @dataclass
+class ScenePrompts:
+    """The prompts one scene render needs.
+
+    ``environment`` names nobody: region mode paints the empty place first and
+    then adds the cast one masked pass at a time.
+    """
+
+    positive: str
+    negative: str
+    environment: str = ""
+
+
+@dataclass
+class RegionMode:
+    """Whether to paint per character, and how the figures are framed.
+
+    Region mode is the only way per-character attributes survive: a prompt
+    naming several people cannot say which of them is the halfling, so each
+    one is painted from a prompt that names them alone.
+    """
+
+    enabled: bool = False
+    composite: bool = True
+    shot: str = "full"
+    angle_terms: str = ""
+    placements: Sequence[Placement] = field(default_factory=tuple)
+
+
+@dataclass
 class SceneRenderRequest:
     """Inputs for one serialized scene render."""
 
     client: ComfyUIClient
     comfyui: ComfyUIConfig
-    positive: str
-    negative: str
+    prompts: ScenePrompts
     seed: int
     people: Sequence[ShotPerson]
     ca_bundle: str
+    region: RegionMode = field(default_factory=RegionMode)
 
 
 def _upload_portrait(
@@ -126,13 +164,16 @@ def render_scene(request: SceneRenderRequest) -> SceneRenderResult:
         The PNG with the names that took each likeness path. ``png`` is None
         when the base render failed.
     """
+    if request.region.enabled:
+        return _render_by_region(request)
+
     leads, swap_targets = split_likeness(request.people)
     identities = _upload_leads(request, leads)
     workflow = scene_workflow(
         SceneIpAdapterParams(
             checkpoint=request.comfyui.assets.checkpoint,
-            positive=request.positive,
-            negative=request.negative,
+            positive=request.prompts.positive,
+            negative=request.prompts.negative,
             seed=request.seed,
             identities=identities,
             render=replace(
@@ -246,3 +287,97 @@ def _swap_remaining(
         current = result
         swapped.append(person.name)
     return current, swapped
+
+def _render_by_region(request: SceneRenderRequest) -> SceneRenderResult:
+    """Render the environment, then paint each character into their own box.
+
+    One prompt naming several people cannot bind an attribute to one of them,
+    so the cast is painted in separate masked passes instead. Each pass sees
+    one name and nothing can leak.
+
+    Args:
+        request: Client, config, prompts, seed, cast, and framing.
+
+    Returns:
+        The PNG and the names painted. ``png`` is None when the environment
+        render failed, since there is then nothing to paint into.
+    """
+    environment = request.client.generate_then_free(
+        scene_workflow(
+            SceneIpAdapterParams(
+                checkpoint=request.comfyui.assets.checkpoint,
+                positive=request.prompts.environment or request.prompts.positive,
+                negative=request.prompts.negative,
+                seed=request.seed,
+                identities=[],
+                render=replace(
+                    SCENE_RENDER,
+                    width=request.comfyui.assets.scene.width,
+                    height=request.comfyui.assets.scene.height,
+                ),
+            )
+        )
+    )
+    if environment is None:
+        return SceneRenderResult(png=None, leads=[], swapped=[])
+
+    portraits, heads = _upload_region_portraits(request)
+    # Compositing full-size figures beats inpainting them into columns of the
+    # scene: a figure in a 192px column has about 24 latents to exist in.
+    painter = paint_figures if request.region.composite else paint_regions
+    painted_png, painted = painter(
+        RegionRenderRequest(
+            client=request.client,
+            comfyui=request.comfyui,
+            inputs=RegionInputs(
+                scene_png=environment, portraits=portraits, heads=heads
+            ),
+            people=request.people,
+            negative=request.prompts.negative,
+            seed=request.seed,
+            framing=RegionFraming(
+                shot=request.region.shot,
+                angle_terms=request.region.angle_terms,
+                placements=request.region.placements,
+            ),
+        )
+    )
+    return SceneRenderResult(png=painted_png, leads=painted, swapped=[])
+
+
+def _upload_region_portraits(
+    request: SceneRenderRequest,
+) -> Tuple[Dict[str, str], Dict[str, str]]:
+    """Upload each likeness portrait, plus a head crop to fall back on.
+
+    The crop is uploaded up front rather than on demand: it costs one small
+    POST, and the fallback is only reached after a render has already failed,
+    which is a poor moment to discover the reference is missing.
+
+    Args:
+        request: The render request.
+
+    Returns:
+        (whole portraits, head crops), both keyed by character name.
+    """
+    whole: Dict[str, str] = {}
+    heads: Dict[str, str] = {}
+    if not request.comfyui.assets.supports_scene_identity():
+        return whole, heads
+    for index, person in enumerate(request.people):
+        if not person.use_likeness or not person.portrait_url:
+            continue
+        image_bytes = fetch_image_bytes(person.portrait_url, ca_bundle=request.ca_bundle)
+        if image_bytes is None:
+            logger.warning("Could not fetch scene reference %s", person.portrait_url)
+            continue
+        uploaded = _upload_png(request.client, image_bytes, f"region_id{index}")
+        if uploaded is not None:
+            whole[person.name] = uploaded
+        cropped = head_crop(image_bytes)
+        if cropped is None:
+            continue
+        head = _upload_png(request.client, cropped, f"region_head{index}")
+        if head is not None:
+            heads[person.name] = head
+    return whole, heads

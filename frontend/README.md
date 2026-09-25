@@ -496,6 +496,97 @@ the ComfyUI request.
 Helpers live in `src/utils/storyImage.ts` and
 `src/components/console/StoryImageWizard.tsx`.
 
+Two shortcuts sit under the button, because tuning a scene means queueing the
+same passage over and over:
+
+- **Pick a passage** opens straight at the passage list, skipping step 1. The
+  extraction job takes minutes of CPU inference and an operator who already
+  knows the paragraph discards its answer anyway.
+- **Repeat last setup** reinstates the passage, cast, likeness, per-character
+  facing and action, framing, staging and placements that the last render on
+  this story was queued with, landing on the cast step ready to queue again.
+  **Forget** drops it.
+
+The setup is saved per story in `localStorage` by
+`src/utils/storyImageSetup.ts` when a render is queued, and every field is
+validated on read so a setup written by an older build is treated as absent
+rather than trusted.
+
+#### Staging a scene
+
+Framing (shot and camera) decides how much of the figures you see. **Staging**
+decides what they are doing and where:
+
+- **Setting** and **Mood** are single selects over
+  `SETTING_OPTIONS` / `MOOD_OPTIONS`. These mirror `src/story_images/staging.py`
+  and `tests/story_images/test_staging.py` fails if the two drift apart, so add
+  a setting in the Python table first.
+The **staging canvas** above the cast list is the pre-render skeleton.
+**Click a figure and use the arrow keys**: left and right move across the
+frame, up moves further back, down brings them towards the camera, and Shift
+takes bigger steps. The selected figure's exact numbers are printed under the
+canvas as you go. Dragging works too, but it is the coarse tool.
+
+The drag used to set a figure to the pointer's own position rather than
+moving it by how far the pointer went, so grabbing a tall handle near the top
+threw that character to the back of the scene on contact, and every wobble
+during a sideways drag resized them. It moves by the delta now, which is also
+why the keyboard had to exist: a whole figure's height of travel mapped onto
+the full depth range is never going to be precise.
+
+Further back is smaller and stands higher, which is what makes depth read as
+depth rather than as a short person at your feet. The client's vertical
+mapping is approximate on purpose - the sidecar owns the perspective maths and
+returns the real boxes with every preview, so the editor cannot drift from the
+renderer. It talks to `src/api/stage-preview.ts`, which proxies
+`/story/stage`. Moves redraw once the input goes idle rather than once per
+pixel, since each redraw is a round trip.
+
+- **In front** is a number per cast member, 1 to the size of the cast. It is
+  the paint order: 1 is laid down last, so a 1 comes out whole wherever two
+  figures overlap. Typing a number reorders the rest rather than assigning a
+  duplicate. It is separate from depth because apparent size is not distance
+  here - a halfling at the front of the scene is still smaller than an orc at
+  the back, so dragging the small character forward to stop them being
+  swallowed made everyone else's distance wrong. The staging canvas shows the
+  same number on each handle, and warns when a figure ends up more than 60%
+  covered by the ones in front of it, which a skeleton preview cannot show.
+- **Pose** is a select per cast member over `POSE_OPTIONS`, mirroring
+  `POSE_VARIANTS` in `src/story_images/pose.py`. It is the stance the skeleton
+  is drawn in, and it is the only thing that decides one: ControlNet obeys
+  geometry, so a figure drawn standing to attention beats the word "walking"
+  in the prompt every time. Left on "Choose for me" the renderer deals a
+  stance from its rotating default, so a cast nobody posed is still not six
+  identical statues.
+- **Facing** is a select per cast member. The Camera control above says where
+  the lens is; this says which way that one person is turned, which is the
+  half that was missing - the renderer passed no angle at all, so every figure
+  was painted alone on grey facing the camera and the cast came out as a row.
+  Left on "From the pose" it adds nothing.
+- **Turned** appears beside Facing for the two turns that have a left and a
+  right. Facing says how far round someone is; it cannot say which way, so a
+  cast all set to side profile faced the same way and a group being walked up
+  to was drawn in single file. Front and away read the same either way, so the
+  control is hidden for those.
+- **Doing** is a text box per cast member, shown once they are in the shot.
+  It is *what they do in this scene*, kept apart from the appearance that comes
+  from their Drupal image prompt - the same elf in a tavern should not be
+  holding a drawn blade because their portrait had one. It reaches the prompt
+  only; use **Pose** to change the body.
+
+Every one of these is optional. Left blank, the shot analysis fills it, so an
+operator types only where they disagree with the model. Anything not in the
+setting or mood list is passed through as free text and used as the place or
+the tone.
+
+**Paint each character separately** is the other control that matters, and it
+defaults on above two people. Without it everyone shares one prompt and at
+most two get a likeness, so a large cast loses both ways: the shared prompt
+leaves about a name's worth of description each, and everyone past the second
+is a face swap rather than part of the composition. A six-person scene
+rendered as one character in a forest. With it, each character gets their own
+prompt and their own pass - slower, and the only way they all appear.
+
 #### Reading the drawer
 
 - **Queued** and **Running** are separate states with separate dots. A job

@@ -57,17 +57,23 @@ check_no_suppressions() {
     hits=$(grep -rnE --include='*.py' --include='*.pyi' \
         '# *(type: *ignore|pylint: *disable|noqa|pragma)' \
         src/ tests/ stubs/ 2>/dev/null || true)
+    local shell
+    shell=$(grep -rnE --include='*.sh' \
+        '# *shellcheck +disable' \
+        . --exclude-dir=node_modules --exclude-dir=.git \
+        --exclude-dir=vendor 2>/dev/null || true)
     local cfg
     cfg=$(grep -rn 'ignore_missing_imports' \
         mypy.ini pyrightconfig.json 2>/dev/null || true)
 
-    if [ -n "$hits" ] || [ -n "$cfg" ]; then
+    if [ -n "$hits" ] || [ -n "$shell" ] || [ -n "$cfg" ]; then
         echo "Found checker suppressions - fix the underlying issue instead:"
         [ -n "$hits" ] && echo "$hits"
+        [ -n "$shell" ] && echo "$shell"
         [ -n "$cfg" ] && echo "$cfg"
         return 1
     fi
-    echo "No type: ignore / pylint: disable / noqa / pragma found."
+    echo "No type: ignore / pylint: disable / noqa / pragma / shellcheck disable found."
     return 0
 }
 

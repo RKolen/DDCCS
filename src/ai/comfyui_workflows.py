@@ -11,7 +11,7 @@ rather than an option on the first.
 """
 
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Sequence
+from typing import Any, Dict, List, Optional, Sequence
 
 
 @dataclass
@@ -39,6 +39,32 @@ class Txt2ImgParams:
     render: RenderSettings = field(default_factory=RenderSettings)
 
 
+# FaceID variant used for figure likeness. Plus v2 keeps the face while the
+# prompt still decides wardrobe and pose.
+FACEID_PRESET = "FACEID PLUS V2"
+
+
+@dataclass
+class FaceIdSettings:
+    """How strongly the face-embedding adapter is applied."""
+
+    preset: str = FACEID_PRESET
+    lora_strength: float = 0.6
+
+
+@dataclass
+class WardrobeReference:
+    """The whole-image adapter that carries palette and fabric.
+
+    Deliberately weaker and released earlier than the face: held to the end
+    it reproduces the reference's background rather than its clothes.
+    """
+
+    model: str
+    weight: float = 0.45
+    end_at: float = 0.55
+
+
 @dataclass
 class IdentityReference:
     """An uploaded reference portrait and the models that read its likeness.
@@ -54,11 +80,33 @@ class IdentityReference:
     image: str
     ipadapter_model: str
     clip_vision: str
+    # Take likeness from a detected face's embedding rather than from the
+    # whole reference image. A portrait where the face is a fiftieth of the
+    # frame gave the CLIP-vision adapter almost no face to read, so it copied
+    # the backdrop instead; FaceID finds the face itself, and carries no
+    # scenery with it. It needs a face to find, so a non-human head - a
+    # dragonborn's snout - raises "No face detected" and the caller falls
+    # back to the whole-image adapter on a cropped reference.
+    # Set to take likeness from a detected face's embedding instead of the
+    # whole image; None uses the whole-image adapter alone.
+    faceid: Optional[FaceIdSettings] = None
+    # Whole-image adapter chained after FaceID, so the render keeps the
+    # portrait's palette and fabric as well as its face. FaceID carries a
+    # face embedding and nothing else: on its own it dressed a character
+    # from the caption alone - "black coat" for a navy one - and its
+    # human-face LoRA pulled an orc's green skin back towards human. The
+    # wardrobe reference is what puts the picture back in.
+    wardrobe: Optional[WardrobeReference] = None
     # How strongly the reference pulls the render towards the original face.
     # Above ~0.9 the prompt stops mattering and every render is the reference
     # again; below ~0.5 the likeness washes out. 0.8 keeps the face while the
     # prompt still moves pose, clothing, and mood.
     weight: float = 0.8
+    # Fraction of the schedule after which the adapter lets go. Held to the
+    # end it drags the reference's whole atmosphere across - a portrait's
+    # arcane backdrop and all - which is exactly what a figure being cut out
+    # of its background must not have.
+    end_at: float = 1.0
 
 
 @dataclass
@@ -247,6 +295,7 @@ def _adapter_node(
     model_ref: List[Any],
     image_node: str,
     weight: float,
+    end_at: float = 1.0,
 ) -> Dict[str, Any]:
     """Build one IPAdapterAdvanced node dict.
 
@@ -255,6 +304,7 @@ def _adapter_node(
             earlier adapter.
         image_node: Node id of the LoadImage holding this identity.
         weight: How strongly this reference pulls the render.
+        end_at: Fraction of the schedule after which the adapter lets go.
 
     Returns:
         The node dictionary.
@@ -270,7 +320,7 @@ def _adapter_node(
             "weight_type": "linear",
             "combine_embeds": "concat",
             "start_at": 0.0,
-            "end_at": 1.0,
+            "end_at": end_at,
             "embeds_scaling": "V only",
         },
     }
@@ -381,3 +431,333 @@ def reactor_swap_workflow(params: ReactorSwapParams) -> Dict[str, Any]:
             "inputs": {"filename_prefix": "scene_swap", "images": ["3", 0]},
         },
     }
+
+@dataclass
+class RegionImages:
+    """The scene being painted into, and the mask marking where."""
+
+    scene: str
+    mask: str
+
+
+@dataclass
+class InpaintSettings:
+    """Sampler and mask settings for one region pass."""
+
+    # Below the level where the region is regenerated rather than edited. At
+    # 0.92 each pass repainted its own background and the environment came
+    # back as a different room in every box.
+    denoise: float = 0.72
+    steps: int = 28
+    cfg: float = 7.0
+    feather: int = 24
+
+
+@dataclass
+class RegionPrompts:
+    """The single-character prompts for one region pass."""
+
+    positive: str
+    negative: str
+
+
+@dataclass
+class PoseControl:
+    """An OpenPose control image and how hard it constrains the render."""
+
+    image: str
+    model: str
+    strength: float = 0.85
+
+
+@dataclass
+class RegionInpaintParams:
+    """One character painted into one region of an existing scene.
+
+    ``conditioning`` bundles what steers the pass: the prompts, the optional
+    portrait, and the optional skeleton. Region rendering only works because
+    the prompt here names one person - anything shared across characters
+    leaks onto all of them.
+    """
+
+    checkpoint: str
+    images: RegionImages
+    prompts: RegionPrompts
+    seed: int
+    settings: InpaintSettings = field(default_factory=InpaintSettings)
+    identity: Optional[IdentityReference] = None
+    pose: Optional[PoseControl] = None
+
+
+def region_inpaint_workflow(params: RegionInpaintParams) -> Dict[str, Any]:
+    """Repaint one masked region from a prompt naming a single character.
+
+    This is what makes per-character attributes stick. A prompt listing six
+    people gives Stable Diffusion no way to bind "halfling" to one of them, so
+    every tag lands on every figure - two named people are enough to produce
+    the same face twice. Here the prompt describes one person and only their
+    region is denoised, so nothing can leak onto anyone else.
+
+    The mask is feathered: a hard boundary leaves a visible rectangle where
+    the new figure meets the scene it was painted into.
+
+    Node ids 10-13 are the identity chain, matching ``scene_workflow``, since
+    ``_adapter_node`` refers to the loaders at those ids.
+
+    Args:
+        params: Scene and mask filenames, the single-character prompts, seed,
+            and an optional portrait to condition likeness on.
+
+    Returns:
+        The workflow as a node-id -> node dict, ready to POST to /prompt.
+    """
+    workflow: Dict[str, Any] = {
+        "1": {
+            "class_type": "CheckpointLoaderSimple",
+            "inputs": {"ckpt_name": params.checkpoint},
+        },
+        "2": {"class_type": "LoadImage", "inputs": {"image": params.images.scene}},
+        "3": {
+            "class_type": "LoadImageMask",
+            "inputs": {"image": params.images.mask, "channel": "red"},
+        },
+        "4": {
+            "class_type": "FeatherMask",
+            "inputs": {
+                "mask": ["3", 0],
+                "left": params.settings.feather,
+                "top": params.settings.feather,
+                "right": params.settings.feather,
+                "bottom": params.settings.feather,
+            },
+        },
+        "5": {
+            "class_type": "CLIPTextEncode",
+            "inputs": {"text": params.prompts.positive, "clip": ["1", 1]},
+        },
+        "6": {
+            "class_type": "CLIPTextEncode",
+            "inputs": {"text": params.prompts.negative, "clip": ["1", 1]},
+        },
+        "7": {
+            "class_type": "VAEEncode",
+            "inputs": {"pixels": ["2", 0], "vae": ["1", 2]},
+        },
+        "8": {
+            "class_type": "SetLatentNoiseMask",
+            "inputs": {"samples": ["7", 0], "mask": ["4", 0]},
+        },
+        "9": {
+            "class_type": "KSampler",
+            "inputs": {
+                "model": ["1", 0],
+                "positive": ["5", 0],
+                "negative": ["6", 0],
+                "latent_image": ["8", 0],
+                "seed": params.seed,
+                "steps": params.settings.steps,
+                "cfg": params.settings.cfg,
+                "sampler_name": "dpmpp_2m",
+                "scheduler": "karras",
+                "denoise": params.settings.denoise,
+            },
+        },
+        "14": {
+            "class_type": "VAEDecode",
+            "inputs": {"samples": ["9", 0], "vae": ["1", 2]},
+        },
+        "15": {
+            "class_type": "SaveImage",
+            "inputs": {"filename_prefix": "scene_region", "images": ["14", 0]},
+        },
+    }
+
+    pose = params.pose
+    if pose is not None:
+        # The skeleton is what stops a masked rectangle over an empty room
+        # from being filled with more room: it asserts a figure of a given
+        # height stands here, so denoise can rise without the background
+        # following it.
+        workflow["16"] = {
+            "class_type": "ControlNetLoader",
+            "inputs": {"control_net_name": pose.model},
+        }
+        workflow["17"] = {
+            "class_type": "LoadImage",
+            "inputs": {"image": pose.image},
+        }
+        workflow["18"] = {
+            "class_type": "ControlNetApplyAdvanced",
+            "inputs": {
+                "positive": ["5", 0],
+                "negative": ["6", 0],
+                "control_net": ["16", 0],
+                "image": ["17", 0],
+                "strength": pose.strength,
+                "start_percent": 0.0,
+                "end_percent": 1.0,
+            },
+        }
+        workflow["9"]["inputs"]["positive"] = ["18", 0]
+        workflow["9"]["inputs"]["negative"] = ["18", 1]
+
+    identity = params.identity
+    if identity is not None:
+        workflow["10"] = {
+            "class_type": "IPAdapterModelLoader",
+            "inputs": {"ipadapter_file": identity.ipadapter_model},
+        }
+        workflow["11"] = {
+            "class_type": "CLIPVisionLoader",
+            "inputs": {"clip_name": identity.clip_vision},
+        }
+        workflow["12"] = {
+            "class_type": "LoadImage",
+            "inputs": {"image": identity.image},
+        }
+        workflow["13"] = _adapter_node(["1", 0], "12", identity.weight)
+        # Mask the adapter to the same region, or this portrait conditions the
+        # whole canvas and undoes the isolation the mask just bought.
+        workflow["13"]["inputs"]["attn_mask"] = ["4", 0]
+        workflow["9"]["inputs"]["model"] = ["13", 0]
+
+    return workflow
+
+@dataclass
+class FigureParams:
+    """One character rendered alone, at the checkpoint's native resolution.
+
+    Inpainting a character into a slice of a wide canvas gives them almost no
+    latent area - a 192px column of a 1152px frame is 24 latents wide, and a
+    face inside it about five. That is why those figures came out waxy and
+    flat however good the conditioning was. Rendering each one on their own
+    full-size canvas gives the sampler its whole budget for a single person;
+    scale and placement become a compositing step afterwards.
+    """
+
+    checkpoint: str
+    positive: str
+    negative: str
+    seed: int
+    render: RenderSettings = field(default_factory=lambda: SCENE_RENDER)
+    identity: Optional[IdentityReference] = None
+    pose: Optional[PoseControl] = None
+
+
+def figure_workflow(params: FigureParams) -> Dict[str, Any]:
+    """Build a single-character text-to-image graph on a plain backdrop.
+
+    The backdrop is asked for flatly so the figure can be cut out cleanly and
+    composited into a scene rendered separately.
+
+    Args:
+        params: Checkpoint, single-subject prompts, seed, size, and optional
+            identity and pose conditioning.
+
+    Returns:
+        The workflow as a node-id -> node dict, ready to POST to /prompt.
+    """
+    workflow = txt2img_workflow(
+        Txt2ImgParams(
+            checkpoint=params.checkpoint,
+            positive=params.positive,
+            negative=params.negative,
+            seed=params.seed,
+            render=params.render,
+        )
+    )
+    workflow["9"]["inputs"]["filename_prefix"] = "figure"
+
+    if params.pose is not None:
+        workflow["16"] = {
+            "class_type": "ControlNetLoader",
+            "inputs": {"control_net_name": params.pose.model},
+        }
+        workflow["17"] = {
+            "class_type": "LoadImage",
+            "inputs": {"image": params.pose.image},
+        }
+        workflow["18"] = {
+            "class_type": "ControlNetApplyAdvanced",
+            "inputs": {
+                "positive": ["6", 0],
+                "negative": ["7", 0],
+                "control_net": ["16", 0],
+                "image": ["17", 0],
+                "strength": params.pose.strength,
+                "start_percent": 0.0,
+                "end_percent": 1.0,
+            },
+        }
+        workflow["3"]["inputs"]["positive"] = ["18", 0]
+        workflow["3"]["inputs"]["negative"] = ["18", 1]
+
+    identity = params.identity
+    if identity is not None and identity.faceid is not None:
+        workflow["12"] = {
+            "class_type": "LoadImage",
+            "inputs": {"image": identity.image},
+        }
+        workflow["20"] = {
+            "class_type": "IPAdapterUnifiedLoaderFaceID",
+            "inputs": {
+                "model": ["4", 0],
+                "preset": identity.faceid.preset,
+                "lora_strength": identity.faceid.lora_strength,
+                # Insightface detection on the GPU faulted the ROCm context
+                # ("illegal memory access") and took the next render with it.
+                # It is a small detector; CPU costs a moment and cannot.
+                "provider": "CPU",
+            },
+        }
+        workflow["21"] = {
+            "class_type": "IPAdapterFaceID",
+            "inputs": {
+                "model": ["20", 0],
+                "ipadapter": ["20", 1],
+                "image": ["12", 0],
+                "weight": identity.weight,
+                "weight_faceidv2": identity.weight * 2.0,
+                "weight_type": "linear",
+                "combine_embeds": "concat",
+                "start_at": 0.0,
+                "end_at": identity.end_at,
+                "embeds_scaling": "V only",
+            },
+        }
+        workflow["3"]["inputs"]["model"] = ["21", 0]
+        wardrobe = identity.wardrobe
+        if wardrobe is not None:
+            workflow["10"] = {
+                "class_type": "IPAdapterModelLoader",
+                "inputs": {"ipadapter_file": wardrobe.model},
+            }
+            workflow["11"] = {
+                "class_type": "CLIPVisionLoader",
+                "inputs": {"clip_name": identity.clip_vision},
+            }
+            workflow["13"] = _adapter_node(
+                ["21", 0], "12", wardrobe.weight, wardrobe.end_at
+            )
+            workflow["3"]["inputs"]["model"] = ["13", 0]
+        return workflow
+
+    if identity is not None:
+        workflow["10"] = {
+            "class_type": "IPAdapterModelLoader",
+            "inputs": {"ipadapter_file": identity.ipadapter_model},
+        }
+        workflow["11"] = {
+            "class_type": "CLIPVisionLoader",
+            "inputs": {"clip_name": identity.clip_vision},
+        }
+        workflow["12"] = {
+            "class_type": "LoadImage",
+            "inputs": {"image": identity.image},
+        }
+        workflow["13"] = _adapter_node(
+            ["4", 0], "12", identity.weight, identity.end_at
+        )
+        workflow["3"]["inputs"]["model"] = ["13", 0]
+
+    return workflow

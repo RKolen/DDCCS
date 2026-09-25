@@ -166,6 +166,125 @@ def test_apply_roster_fills_likeness_when_a_portrait_exists() -> None:
     print("  [OK] Portrait implies likeness")
 
 
+def test_parse_shot_reads_action_under_either_key() -> None:
+    """The model may answer with "action" or the older "role".
+
+    The field has always held "one line on what they are doing in this
+    shot"; only the name changed. A payload written against the old key
+    must keep working, or a cached prompt silently loses every action.
+    """
+    print("\n[TEST] parse_shot - action and legacy role key")
+    modern = parse_shot(json.dumps({
+        "setting": "a road", "action": "they meet", "mood": "",
+        "people": [{"name": "Aragorn", "action": "drawing a sword"}],
+    }), ROSTER)
+    legacy = parse_shot(json.dumps({
+        "setting": "a road", "action": "they meet", "mood": "",
+        "people": [{"name": "Aragorn", "role": "drawing a sword"}],
+    }), ROSTER)
+    assert modern.people[0].action == "drawing a sword"
+    assert legacy.people[0].action == "drawing a sword"
+    print("  [OK] Both keys land in action")
+
+
+def test_scene_prompt_names_appearance_and_action() -> None:
+    """A person tag carries both, not one or the other.
+
+    With appearance alone a cast renders standing in a row; the
+    scene-level action cannot say who is doing what once there are more
+    than two of them.
+    """
+    print("\n[TEST] build_scene_prompt - appearance and action together")
+    analysis = ShotAnalysis(setting="a road", action="they meet", mood="")
+    people = [
+        ShotPerson(name="Aragorn", appearance="Human, Ranger",
+                   action="drawing a sword"),
+        ShotPerson(name="Frodo Baggins", appearance="Halfling, Rogue",
+                   action="hiding behind a cart"),
+    ]
+    positive, _ = build_scene_prompt(analysis, people)
+    for fragment in ("Human, Ranger", "drawing a sword",
+                     "Halfling, Rogue", "hiding behind a cart"):
+        assert fragment in positive, positive
+    print("  [OK] Both halves of both people are in the prompt")
+
+
+def _big_cast() -> list:
+    """Six people with full-length appearance tags, as Drupal supplies them."""
+    return [
+        ShotPerson(name="Aragorn", action="walking",
+                   appearance="male, human, ranger, weathered cloak, "
+                              "long dark hair, stubble, worn leather"),
+        ShotPerson(name="Frodo Baggins", action="walking",
+                   appearance="male, halfling, curly brown hair, bare feet, "
+                              "small stature, green waistcoat"),
+        ShotPerson(name="Gandalf the Grey", action="walking",
+                   appearance="male, human, wizard, long grey beard, "
+                              "pointed hat, grey robes, tall staff"),
+        ShotPerson(name="Barliman Butterbur", action="walking",
+                   appearance="male, human, innkeeper, red face, apron, "
+                              "balding, stout build"),
+        ShotPerson(name="Tobias Stone", action="walking",
+                   appearance="male, human, stonemason, broad shoulders, "
+                              "dusty tunic, short beard"),
+        ShotPerson(name="Rosie Cotton", action="approaching the group",
+                   appearance="female, halfling, auburn hair, apron, "
+                              "freckles, small stature"),
+    ]
+
+
+def test_a_large_cast_never_clips_the_scene_away() -> None:
+    """Setting, mood and style survive however many people are named.
+
+    Six people at a hundred characters each came to 604 against a 480
+    budget, and the joined string was then clipped from the end - which is
+    where the setting, the mood, the framing and the style all live. The
+    render came back as one character in a forest: no port, no night, no
+    group, and the sixth person cut off mid-word.
+    """
+    print("\n[TEST] build_scene_prompt - a large cast keeps the scene")
+    analysis = ShotAnalysis(
+        setting="the streets of a port city at night",
+        action="a group steps out into the cool night air",
+        mood="cool, companionable",
+    )
+    positive, _ = build_scene_prompt(analysis, _big_cast())
+    assert len(positive) <= prompt.MAX_PROMPT_CHARS, len(positive)
+    for fragment in ("port city", "night air", "cool, companionable",
+                     "fantasy illustration"):
+        assert fragment in positive, positive
+    print("  [OK] Setting, action, mood and style all present")
+
+
+def test_a_large_cast_names_everyone_or_nobody_by_halves() -> None:
+    """Nobody is left as a fragment of a tag.
+
+    "piercing green eyes,, teal" spends tokens on pieces the model has to
+    guess at, and the guess put a tiefling's colour on an elf.
+    """
+    print("\n[TEST] build_scene_prompt - no half-written person")
+    analysis = ShotAnalysis(setting="a port city", action="they walk",
+                            mood="cool")
+    positive, _ = build_scene_prompt(analysis, _big_cast())
+    assert ",," not in positive and "; ," not in positive
+    assert not positive.rstrip().endswith((",", ";"))
+    # Whoever is named is named in full: a bare trailing name is allowed,
+    # a half-finished tag is not.
+    print("  [OK] No dangling fragments")
+
+
+def test_small_cast_still_gets_rich_descriptions() -> None:
+    """Two people keep their whole appearance; the budget only bites later."""
+    print("\n[TEST] build_scene_prompt - small cast unaffected")
+    analysis = ShotAnalysis(setting="a port city at night", action="they meet",
+                            mood="cool")
+    pair = _big_cast()[:2]
+    positive, _ = build_scene_prompt(analysis, pair)
+    assert "weathered cloak" in positive, positive
+    assert "green waistcoat" in positive, positive
+    print("  [OK] Full appearance kept for a small cast")
+
+
 def run_all_tests() -> None:
     """Run all shot and prompt tests."""
     test_shot_prompt_lists_roster_spellings()
@@ -176,6 +295,11 @@ def run_all_tests() -> None:
     test_scene_prompt_is_a_wide_shot_not_a_portrait()
     test_scene_prompt_framing_bans_rear_views()
     test_apply_roster_fills_likeness_when_a_portrait_exists()
+    test_parse_shot_reads_action_under_either_key()
+    test_scene_prompt_names_appearance_and_action()
+    test_a_large_cast_never_clips_the_scene_away()
+    test_a_large_cast_names_everyone_or_nobody_by_halves()
+    test_small_cast_still_gets_rich_descriptions()
     print("\n[PASS] All story-image shot tests passed.")
 
 

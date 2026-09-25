@@ -16,6 +16,7 @@ from typing import Any, Callable, Dict, Optional
 from src.config.config_types import (
     AIConfig,
     ComfyUIAssets,
+    ComfyUILocal,
     DisplayConfig,
     DnDConfig,
     DrupalConfig,
@@ -401,6 +402,40 @@ def _apply_env_reactor(assets: ComfyUIAssets, get_env: Any) -> None:
         assets.reactor.node = node
 
 
+def _apply_env_comfyui_local(
+    local: ComfyUILocal,
+    get_env: Any,
+    get_env_bool: Any,
+    get_env_float: Any,
+) -> None:
+    """Apply the launch settings for a ComfyUI this host starts itself.
+
+    These mirror what ``start.sh`` reads, so a restarted ComfyUI is the
+    same one the deployment started with.
+
+    Args:
+        local: The local-process settings to update in place.
+        get_env: Callable to read a string env var.
+        get_env_bool: Callable to read a bool env var with default.
+        get_env_float: Callable to read a float env var with default.
+    """
+    install_dir = get_env("COMFYUI_DIR")
+    if install_dir:
+        local.install_dir = install_dir
+    extra_args = get_env("COMFYUI_EXTRA_ARGS")
+    if extra_args:
+        local.extra_args = extra_args
+    log_file = get_env("COMFYUI_LOG_FILE")
+    if log_file:
+        local.log_file = log_file
+    local.restart_after_scene = get_env_bool(
+        "COMFYUI_RESTART_AFTER_SCENE", local.restart_after_scene
+    )
+    local.restart_timeout = get_env_float(
+        "COMFYUI_RESTART_TIMEOUT", local.restart_timeout
+    )
+
+
 def _apply_env_comfyui_overrides(
     config: DnDConfig,
     get_env: Any,
@@ -420,12 +455,16 @@ def _apply_env_comfyui_overrides(
     config.comfyui.enabled = get_env_bool("COMFYUI_ENABLED", config.comfyui.enabled)
     host = get_env("COMFYUI_HOST")
     if host:
-        config.comfyui.host = host
-    config.comfyui.port = get_env_int("COMFYUI_PORT", config.comfyui.port)
+        config.comfyui.endpoint.host = host
+    config.comfyui.endpoint.port = get_env_int(
+        "COMFYUI_PORT", config.comfyui.endpoint.port
+    )
     base_url = get_env("COMFYUI_BASE_URL")
     if base_url:
-        config.comfyui.base_url = base_url
+        config.comfyui.endpoint.base_url = base_url
     config.comfyui.timeout = get_env_float("COMFYUI_TIMEOUT", config.comfyui.timeout)
+    _apply_env_comfyui_local(config.comfyui.local, get_env, get_env_bool,
+                             get_env_float)
 
     image_to_prompt_model = get_env("IMAGE_TO_PROMPT_MODEL")
     if image_to_prompt_model:
@@ -443,6 +482,12 @@ def _apply_env_comfyui_overrides(
     if clip_vision:
         config.comfyui.assets.clip_vision = clip_vision
     _apply_env_reactor(config.comfyui.assets, get_env)
+    pose_model = get_env("COMFYUI_POSE_MODEL")
+    if pose_model:
+        config.comfyui.assets.pose.model = pose_model
+    config.comfyui.assets.pose.strength = get_env_float(
+        "COMFYUI_POSE_STRENGTH", config.comfyui.assets.pose.strength
+    )
     config.comfyui.assets.scene.width = get_env_int(
         "COMFYUI_SCENE_WIDTH", config.comfyui.assets.scene.width
     )

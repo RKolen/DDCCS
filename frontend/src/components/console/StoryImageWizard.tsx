@@ -7,16 +7,23 @@
 
 import * as React from 'react';
 import { AiTag, Icon, Spinner } from './atoms';
+import StagingCanvas from './StagingCanvas';
 import {
   enqueueJob, fetchJob, isFinished, jobResult, resolveJob, useJobPolling, JOB_TYPES,
   type AiJob,
 } from '../../utils/aiJobs';
 import {
-  ANGLE_OPTIONS, DEFAULT_ANGLE, DEFAULT_SHOT, SHOT_OPTIONS,
+  ANGLE_OPTIONS, DEFAULT_ANGLE, DEFAULT_MOOD, DEFAULT_SETTING, DEFAULT_SHOT,
+  DEFAULT_TOWARD, FACING_OPTIONS, MAX_ACTION_CHARS, MOOD_OPTIONS,
+  POSE_OPTIONS, prefersRegions, reorderTo, TOWARD_OPTIONS,
+  SETTING_OPTIONS, SHOT_OPTIONS, type StagePlacement, toPlacementsPayload,
   eventsFromResult, passageTitle, passagesFromBody, toPeoplePayload, toRosterPayload,
   type StoryEventChoice, type StoryEventsJobResult,
   type StoryIllustrationJobResult, type StoryImageRosterPerson,
 } from '../../utils/storyImage';
+import {
+  clearSetup, loadSetup, saveSetup, setupSummary, type StoryImageSetup,
+} from '../../utils/storyImageSetup';
 
 export interface StoryImageWizardProps {
   storyId: string;
@@ -49,6 +56,13 @@ function likenessSummary(candidate: StoryIllustrationJobResult): string {
   const swapped = candidate.swappedFaces ?? [];
   const total = leads.length + swapped.length;
   if (total === 0) return 'No likeness applied - everyone is described in the prompt.';
+  // Region mode renders each character on their own canvas from their own
+  // portrait: there is no two-lead cap and nothing is swapped. Describing it
+  // in the whole-scene vocabulary named two people as favoured and told the
+  // operator four faces were swapped in when none were.
+  if (candidate.regions) {
+    return `Each of the ${leads.length} rendered from their own portrait: ${leads.join(', ')}.`;
+  }
   const parts: string[] = [];
   if (leads.length > 0) parts.push(`${leads.join(', ')} from portrait`);
   if (swapped.length > 0) parts.push(`${swapped.join(', ')} by face swap`);
@@ -68,6 +82,39 @@ function hasPortrait(person: StoryImageRosterPerson): boolean {
   return person.portraitUrl.trim() !== '';
 }
 
+interface PersonSelectProps {
+  label: string;
+  value: string;
+  options: ReadonlyArray<{ value: string; label: string }>;
+  onPick: (value: string) => void;
+}
+
+/**
+ * One labelled select in a character's row of staging controls.
+ *
+ * @param props Label, current value, the options, and what to do with a pick.
+ * @returns The labelled select.
+ */
+function PersonSelect({ label, value, options, onPick }: PersonSelectProps): React.ReactElement {
+  return (
+    <label className="story-image-action">
+      {label}
+      <select
+        className="arc-select"
+        value={value}
+        onChange={event => onPick(event.target.value)}
+      >
+        {options.map(option => (
+          <option key={option.value} value={option.value}>{option.label}</option>
+        ))}
+      </select>
+    </label>
+  );
+}
+
+/** Turns with a left and a right. Front and away read the same either way. */
+const HANDED = new Set(['three_quarter', 'side']);
+
 export function StoryImageWizard({
   storyId, storyTitle, roster, presentIds = [], reviewJobId = null, compact = false,
   storyBody = '',
@@ -86,6 +133,36 @@ export function StoryImageWizard({
   const [custom, setCustom] = React.useState('');
   const [shot, setShot] = React.useState(DEFAULT_SHOT);
   const [angle, setAngle] = React.useState(DEFAULT_ANGLE);
+  const [setting, setSetting] = React.useState(DEFAULT_SETTING);
+  const [mood, setMood] = React.useState(DEFAULT_MOOD);
+  // Per character, keyed by Drupal id. Absent means "whatever the shot
+  // analysis wrote", so an operator types only where they disagree.
+  const [actions, setActions] = React.useState<Map<string, string>>(new Map());
+  // null means "follow the cast size". Region mode is the right default for
+  // more than two people and the wrong one for a portrait-ish two-hander, so
+  // it tracks the cast until the operator says otherwise.
+  const [regionsChoice, setRegionsChoice] = React.useState<boolean | null>(null);
+  const regions = regionsChoice ?? prefersRegions(inShot.size);
+  // Per character. The Camera select above is where the lens is; this is
+  // which way each person is turned, which is the half that was missing.
+  const [facings, setFacings] = React.useState<Map<string, string>>(new Map());
+  // The stance itself. "Doing" only ever reached the prompt, and a skeleton
+  // drawn standing beats the word "walking": ControlNet obeys geometry.
+  const [poses, setPoses] = React.useState<Map<string, string>>(new Map());
+  // Which way a turned figure points. Facing says how far, not which way, so
+  // a cast all set to profile faced the same way.
+  const [towards, setTowards] = React.useState<Map<string, string>>(new Map());
+  // Where everyone stands. Seeded evenly, then dragged on the skeleton.
+  const [placements, setPlacements] = React.useState<StagePlacement[]>([]);
+  // Front to back, by character id. Who wins an overlap is its own control:
+  // depth also sets apparent size, so dragging a small character forward to
+  // stop them being swallowed made everyone else's distance wrong.
+  const [order, setOrder] = React.useState<string[]>([]);
+  // The setup the last render was queued with. Read after mount, never during
+  // render: Gatsby builds these pages in Node, where there is no localStorage.
+  const [saved, setSaved] = React.useState<StoryImageSetup | null>(null);
+
+  React.useEffect(() => { setSaved(loadSetup(storyId)); }, [storyId]);
 
   const passages = React.useMemo(() => passagesFromBody(storyBody), [storyBody]);
   const pcs = React.useMemo(() => roster.filter(person => !person.isNpc), [roster]);
@@ -191,6 +268,48 @@ export function StoryImageWizard({
     }
   };
 
+  /* Straight to the passage list. Extraction is a minutes-long Ollama job,
+     and an operator who already knows which paragraph they want dismisses it
+     with "None of these" the moment it finishes. */
+  const startPassages = (): void => {
+    setError(null);
+    setCandidate(null);
+    setPicked(null);
+    setEvents([]);
+    setOpen(true);
+    setPhase('manual');
+  };
+
+  /* Reinstate the last queued setup and land on the cast step, so a second
+     attempt at the same scene is two clicks rather than a refilled form. */
+  const repeatLast = (): void => {
+    if (saved == null) return;
+    setError(null);
+    setCandidate(null);
+    setEvents([]);
+    setPicked({ title: saved.title, oneLine: '', excerpt: saved.excerpt });
+    setInShot(new Set(saved.inShot));
+    setLikeness(new Set(saved.likeness));
+    setFacings(new Map(saved.facings));
+    setPoses(new Map(saved.poses));
+    setTowards(new Map(saved.towards));
+    setOrder(saved.order);
+    setActions(new Map(saved.actions));
+    setShot(saved.shot);
+    setAngle(saved.angle);
+    setSetting(saved.setting);
+    setMood(saved.mood);
+    setRegionsChoice(saved.regionsChoice);
+    setPlacements(saved.placements);
+    setOpen(true);
+    setPhase('cast');
+  };
+
+  const forgetLast = (): void => {
+    clearSetup(storyId);
+    setSaved(null);
+  };
+
   const chooseEvent = (event: StoryEventChoice): void => {
     setPicked(event);
     setInShot(new Set(defaultShot));
@@ -205,6 +324,18 @@ export function StoryImageWizard({
 
   const chooseExcerpt = (excerpt: string): void => {
     chooseEvent({ title: passageTitle(excerpt, storyTitle), oneLine: '', excerpt });
+  };
+
+  const setFor = (
+    setter: React.Dispatch<React.SetStateAction<Map<string, string>>>,
+    id: string,
+    value: string,
+  ): void => {
+    setter(previous => {
+      const next = new Map(previous);
+      next.set(id, value);
+      return next;
+    });
   };
 
   const toggle = (
@@ -223,6 +354,20 @@ export function StoryImageWizard({
     setError(null);
     setPhase('render');
     const selected = roster.filter(person => inShot.has(person.characterId));
+    const setup: StoryImageSetup = {
+      title: picked.title,
+      excerpt: picked.excerpt,
+      inShot: selected.map(person => person.characterId),
+      likeness: [...likeness],
+      facings: [...facings],
+      poses: [...poses],
+      towards: [...towards],
+      order,
+      actions: [...actions],
+      shot, angle, setting, mood, regionsChoice, placements,
+    };
+    saveSetup(storyId, setup);
+    setSaved(setup);
     try {
       const job = await enqueueJob(
         JOB_TYPES.illustration,
@@ -232,9 +377,13 @@ export function StoryImageWizard({
           title: picked.title,
           excerpt: picked.excerpt,
           roster: toRosterPayload(roster),
-          people: toPeoplePayload(selected, likeness),
+          people: toPeoplePayload(selected, likeness, actions),
+          placements,
           shot,
           angle,
+          setting,
+          mood,
+          regions,
         },
       );
       setRenderJobId(job.id);
@@ -243,6 +392,37 @@ export function StoryImageWizard({
       setPhase('cast');
     }
   };
+
+  // Re-seed when the cast changes, but keep where anyone already standing
+  // was put: losing a staging because one more person was ticked would make
+  // the editor useless for exactly the casts that need it.
+  const castKey = roster
+    .filter(person => inShot.has(person.characterId))
+    .map(person => person.characterId).join(',');
+  React.useEffect(() => {
+    const selected = roster.filter(person => inShot.has(person.characterId));
+    const ids = selected.map(person => person.characterId);
+    // Keep the order anyone already has; newcomers join at the back.
+    setOrder(previous => [
+      ...previous.filter(id => ids.includes(id)),
+      ...ids.filter(id => !previous.includes(id)),
+    ]);
+    setPlacements(previous => {
+      const held = new Map(previous.map(row => [row.name, row]));
+      return toPlacementsPayload(selected, facings, poses, towards, order).map(row => {
+        const before = held.get(row.name);
+        // Only where somebody stands is kept: pose, facing and direction are
+        // owned by the selects above, so a rebuild must not restore the
+        // values they have just replaced.
+        return before == null
+          ? row
+          : { ...row, lateral: before.lateral, depth: before.depth };
+      });
+    });
+    // castKey and the per-character maps are the inputs; roster identity
+    // is not.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [castKey, facings, poses, towards, order]);
 
   const review = async (accepted: boolean): Promise<void> => {
     if (candidate == null) return;
@@ -277,6 +457,34 @@ export function StoryImageWizard({
         <Icon name="image" size={compact ? 16 : 14} />
         {!compact && <span className="medallion-label">{label}</span>}
       </button>
+
+      {!running && phase !== 'review' && (
+        <div className="story-image-quick">
+          <button type="button" className="story-image-shortcut" onClick={startPassages}>
+            Pick a passage
+          </button>
+          {saved !== null && (
+            <>
+              <button
+                type="button"
+                className="story-image-shortcut"
+                title={setupSummary(saved)}
+                onClick={repeatLast}
+              >
+                Repeat last setup
+              </button>
+              <button
+                type="button"
+                className="story-image-shortcut story-image-shortcut--muted"
+                title="Forget the stored setup for this story"
+                onClick={forgetLast}
+              >
+                Forget
+              </button>
+            </>
+          )}
+        </div>
+      )}
 
       {open && (
         <div className="story-image-panel" role="dialog" aria-label="Generate a scene illustration">
@@ -393,6 +601,64 @@ export function StoryImageWizard({
                                 </span>
                               )
                           )}
+                          {inShot.has(person.characterId) && (
+                            <label className="story-image-action">
+                              In front
+                              <input
+                                type="number"
+                                className="arc-input story-image-order"
+                                min={1}
+                                max={inShot.size}
+                                value={order.indexOf(person.characterId) + 1}
+                                onChange={event => setOrder(previous => reorderTo(
+                                  previous, person.characterId,
+                                  Number(event.target.value),
+                                ))}
+                              />
+                            </label>
+                          )}
+                          {inShot.has(person.characterId) && (
+                            <PersonSelect
+                              label="Pose"
+                              value={poses.get(person.characterId) ?? ''}
+                              options={POSE_OPTIONS}
+                              onPick={value => setFor(setPoses, person.characterId, value)}
+                            />
+                          )}
+                          {inShot.has(person.characterId) && (
+                            <PersonSelect
+                              label="Facing"
+                              value={facings.get(person.characterId) ?? ''}
+                              options={FACING_OPTIONS}
+                              onPick={value => setFor(setFacings, person.characterId, value)}
+                            />
+                          )}
+                          {inShot.has(person.characterId)
+                            && HANDED.has(facings.get(person.characterId) ?? '') && (
+                            <PersonSelect
+                              label="Turned"
+                              value={towards.get(person.characterId) ?? DEFAULT_TOWARD}
+                              options={TOWARD_OPTIONS}
+                              onPick={value => setFor(setTowards, person.characterId, value)}
+                            />
+                          )}
+                          {inShot.has(person.characterId) && (
+                            <label className="story-image-action">
+                              Doing
+                              <input
+                                type="text"
+                                className="arc-input"
+                                maxLength={MAX_ACTION_CHARS}
+                                placeholder="from the story"
+                                value={actions.get(person.characterId) ?? ''}
+                                onChange={event => setActions(previous => {
+                                  const next = new Map(previous);
+                                  next.set(person.characterId, event.target.value);
+                                  return next;
+                                })}
+                              />
+                            </label>
+                          )}
                         </li>
                       ))}
                     </ul>
@@ -425,6 +691,54 @@ export function StoryImageWizard({
                   </select>
                 </label>
               </div>
+              <p className="story-image-group">Staging</p>
+              <div className="story-image-framing">
+                <label>
+                  Setting
+                  <select
+                    className="arc-select"
+                    value={setting}
+                    onChange={event => setSetting(event.target.value)}
+                  >
+                    {SETTING_OPTIONS.map(option => (
+                      <option key={option.value} value={option.value}>{option.label}</option>
+                    ))}
+                  </select>
+                </label>
+                <label>
+                  Mood
+                  <select
+                    className="arc-select"
+                    value={mood}
+                    onChange={event => setMood(event.target.value)}
+                  >
+                    {MOOD_OPTIONS.map(option => (
+                      <option key={option.value} value={option.value}>{option.label}</option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+              <StagingCanvas
+                people={roster
+                  .filter(person => inShot.has(person.characterId))
+                  .map(person => ({ name: person.name, characterId: person.characterId }))}
+                shot={shot}
+                placements={placements}
+                onChange={setPlacements}
+              />
+              <label className="story-image-regions">
+                <input
+                  type="checkbox"
+                  checked={regions}
+                  onChange={event => setRegionsChoice(event.target.checked)}
+                />
+                Paint each character separately
+              </label>
+              <p className="story-image-likeness--none story-image-regions-note">
+                {regions
+                  ? 'Each character gets their own prompt and pass. Slower, and the only way a large cast all appear.'
+                  : 'One prompt for everyone, likeness for at most two. Fine for one or two characters.'}
+              </p>
               {angle === 'behind' && likeness.size > 0 && (
                 <p className="story-image-likeness--none">
                   Faces are not visible from behind, so no likeness will apply.

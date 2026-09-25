@@ -6,10 +6,13 @@ reaches it directly. This client drives ComfyUI's workflow API: queue a prompt
 the produced image bytes.
 """
 
+import logging
 import time
 from typing import Any, Dict, Optional
 
 import requests
+
+logger = logging.getLogger(__name__)
 
 
 class ComfyUIClient:
@@ -108,18 +111,38 @@ class ComfyUIClient:
             self.free()
 
     def _queue(self, workflow: Dict[str, Any]) -> Optional[str]:
-        """Submit a workflow to /prompt, returning the prompt id."""
+        """Submit a workflow to /prompt, returning the prompt id.
+
+        A rejected workflow never reaches the queue, so it leaves no history
+        entry for `_await_image` to report on. ComfyUI names the offending
+        node in the response body, and that body is the only account of the
+        failure there will be - log it rather than returning a bare None.
+        """
         try:
             resp = requests.post(
                 f"{self.base_url}/prompt", json={"prompt": workflow}, timeout=30
             )
-            resp.raise_for_status()
+            if resp.status_code != 200:
+                logger.error(
+                    "ComfyUI rejected the workflow (HTTP %s): %s",
+                    resp.status_code,
+                    resp.text.strip()[:500],
+                )
+                return None
             return str(resp.json()["prompt_id"])
-        except (requests.RequestException, KeyError, ValueError):
+        except (requests.RequestException, KeyError, ValueError) as exc:
+            logger.error("ComfyUI workflow submission failed: %s", exc)
             return None
 
     def _await_image(self, prompt_id: str) -> Optional[Dict[str, str]]:
-        """Poll /history until the run produces an output image reference."""
+        """Poll /history until the run produces an output image reference.
+
+        A failed run produces no image, so waiting for one means waiting out
+        the whole timeout and then reporting nothing but None. ComfyUI says so
+        immediately in the history entry's status, and a node that raised - a
+        missing model, a face the detector could not find - is worth naming
+        rather than reporting as a timeout minutes later.
+        """
         deadline = time.monotonic() + self.timeout
         while time.monotonic() < deadline:
             history = self._history(prompt_id)
@@ -127,8 +150,40 @@ class ComfyUIClient:
                 image = self._first_image(history.get("outputs", {}))
                 if image is not None:
                     return image
+                if self._failed(history):
+                    return None
             time.sleep(1.0)
+        logger.warning("ComfyUI prompt %s produced no image before the timeout",
+                       prompt_id)
         return None
+
+    @staticmethod
+    def _failed(history: Dict[str, Any]) -> bool:
+        """Report whether a history entry says the run errored.
+
+        Args:
+            history: One /history entry.
+
+        Returns:
+            True when ComfyUI marked the run as failed.
+        """
+        status = history.get("status")
+        if not isinstance(status, dict) or status.get("status_str") != "error":
+            return False
+        for message in status.get("messages", []):
+            if not isinstance(message, list) or len(message) != 2:
+                continue
+            kind, detail = message
+            if kind == "execution_error" and isinstance(detail, dict):
+                logger.error(
+                    "ComfyUI node %s (%s) failed: %s",
+                    detail.get("node_id"),
+                    detail.get("node_type"),
+                    str(detail.get("exception_message", "")).strip(),
+                )
+                return True
+        logger.error("ComfyUI run failed without an execution_error message")
+        return True
 
     def _history(self, prompt_id: str) -> Optional[Dict[str, Any]]:
         """Fetch the history entry for a prompt id, or None if not ready."""

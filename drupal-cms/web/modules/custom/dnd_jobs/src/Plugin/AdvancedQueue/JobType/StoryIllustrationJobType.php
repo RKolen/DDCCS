@@ -86,6 +86,17 @@ final class StoryIllustrationJobType extends AiJobTypeBase {
         'seed' => $this->optionalInt($payload, 'seed'),
         'shot' => $this->optionalString($payload, 'shot') ?? 'full',
         'angle' => $this->optionalString($payload, 'angle') ?? 'three_quarter',
+        'regions' => (bool) ($payload['regions'] ?? FALSE),
+        // Empty means "let the shot analysis decide", which is what an
+        // unstaged scene wants. Passing them through unconditionally would
+        // be wrong only if the sidecar treated '' as a real setting, and
+        // it does not.
+        'setting' => $this->optionalString($payload, 'setting') ?? '',
+        'mood' => $this->optionalString($payload, 'mood') ?? '',
+        // Where each character stands and which way they are turned. Empty
+        // means evenly spaced at the front, which is what this did before
+        // staging existed.
+        'placements' => $this->arrayValue($payload, 'placements'),
       ]);
 
       $encoded = $response['image_base64'] ?? NULL;
@@ -110,6 +121,10 @@ final class StoryIllustrationJobType extends AiJobTypeBase {
         'usedIpadapter' => is_int($response['used_ipadapter'] ?? NULL) ? $response['used_ipadapter'] : 0,
         'leadFaces' => is_array($response['lead_faces'] ?? NULL) ? $response['lead_faces'] : [],
         'swappedFaces' => is_array($response['swapped_faces'] ?? NULL) ? $response['swapped_faces'] : [],
+        // Region mode gives every character their own render from their own
+        // portrait, so it has no leads and no swaps. Without knowing which
+        // mode ran, the review screen described the other one.
+        'regions' => (bool) ($payload['regions'] ?? FALSE),
         'review' => JobReview::PENDING,
       ]);
 

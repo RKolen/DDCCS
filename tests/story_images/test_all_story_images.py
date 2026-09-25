@@ -15,6 +15,8 @@ def run_all_story_images_tests():
         ("test_events", "Event extraction"),
         ("test_shot", "Shot analysis and scene prompt"),
         ("test_scene_workflow", "Scene workflow builders"),
+        ("test_regions", "Per-character region layout"),
+        ("test_staging", "Named settings and moods"),
     ]
     results = {}
     for test_file, test_name in tests:

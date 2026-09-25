@@ -27,3 +27,7 @@ fastapi>=0.100.0       # ASGI web framework for the query parser sidecar
 uvicorn[standard]>=0.22.0  # ASGI server to run the sidecar
 httpx>=0.24.0          # HTTP client required by FastAPI TestClient in tests
 
+# Image compositing for story scenes: region masks and the OpenPose skeletons
+# that tell the renderer a person of a given height stands in a given box.
+# A rectangle can be written by hand; a figure cannot.
+Pillow>=10.0.0

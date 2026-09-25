@@ -1,5 +1,6 @@
 """Start the D&D search query parser sidecar server."""
 
+import logging
 import os
 import sys
 
@@ -12,6 +13,14 @@ from src.sidecar.app import app
 def main() -> None:
     """Load config and start the uvicorn server."""
     config = load_config()
+    # uvicorn's log_level configures uvicorn's own loggers, not the
+    # application's. Without this every logger.info in src/ is swallowed by
+    # Python's default handler, which emits WARNING and above - so the lines
+    # that say what a render actually did never reach the log.
+    logging.basicConfig(
+        level=config.sidecar.log_level.upper(),
+        format="%(asctime)s %(levelname)s %(name)s: %(message)s",
+    )
     workers = int(os.getenv("SIDECAR_WORKERS", "1"))
     # The interface to listen on, which is not always the address clients dial:
     # binding every interface is what lets the DDEV web container reach the

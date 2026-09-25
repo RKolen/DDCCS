@@ -317,7 +317,8 @@ class ComfyUIScene:
     instead. Unset means a scene renders from its prompt alone, which is the
     correct picture without the likeness rather than the wrong picture with it.
 
-    ``width`` / ``height`` size the canvas. A crowd needs room: a face swap
+    ``timeout`` is the longer ComfyUI wait a scene needs: a base render plus
+    a pass per character. ``width`` / ``height`` size the canvas. A crowd needs room: a face swap
     works on the pixels a face actually occupies, so six people across 768px
     are a row of smudges no swapper can rescue. Cost rises with pixel count.
     """
@@ -325,6 +326,20 @@ class ComfyUIScene:
     ipadapter_model: str = ""
     width: int = 768
     height: int = 512
+    timeout: float = 1800.0
+
+
+@dataclass
+class ComfyUIPose:
+    """ControlNet OpenPose settings for region rendering.
+
+    Without a ``model`` a masked region over an empty room gives the renderer
+    no reason to put a person there, so it paints more room; the skeleton
+    asserts a figure of a given height stands in each box.
+    """
+
+    model: str = ""
+    strength: float = 0.85
 
 
 @dataclass
@@ -344,8 +359,7 @@ class ComfyUIAssets:
     generation falls back to text-to-image.
 
     ``reactor`` is the InsightFace swapper used after the two IPAdapter leads
-    on a story scene. ``scene_timeout`` is the longer ComfyUI wait for that
-    path (base render plus staggered swaps).
+    on a story scene.
 
     """
 
@@ -355,7 +369,7 @@ class ComfyUIAssets:
     clip_vision: str = ""
     scene: ComfyUIScene = field(default_factory=ComfyUIScene)
     reactor: ComfyUIReactor = field(default_factory=ComfyUIReactor)
-    scene_timeout: float = 1800.0
+    pose: ComfyUIPose = field(default_factory=ComfyUIPose)
 
     def supports_scene_identity(self) -> bool:
         """Check whether a face-only adapter is configured for scenes.
@@ -385,6 +399,62 @@ class ComfyUIAssets:
 
 
 @dataclass
+class ComfyUIEndpoint:
+    """Where ComfyUI answers. ``base_url`` wins when set."""
+
+    host: str = ""
+    port: int = 0
+    base_url: str = ""
+
+    def resolve(self) -> str:
+        """The base URL, or one built from host and port.
+
+        Returns:
+            The URL without a trailing slash, or an empty string when
+            neither a full URL nor a complete host/port pair is set -
+            reported as "not set up" rather than guessed at.
+        """
+        if self.base_url:
+            return self.base_url.rstrip("/")
+        if self.host and self.port:
+            return f"http://{self.host}:{self.port}"
+        return ""
+
+
+@dataclass
+class ComfyUILocal:
+    """A ComfyUI this deployment starts and may therefore restart.
+
+    ``install_dir`` is what makes an instance local: knowing where the
+    install is, is the same thing as being able to relaunch it. A remote or
+    shared ComfyUI has no directory here and is never touched.
+
+    ``restart_after_scene`` exists because ComfyUI does not return system
+    RAM. ``/free`` unloads models from the GPU but the process keeps its
+    arena, so on a small box the second scene render of a session has no
+    room and the kernel takes the process out. Restarting between renders
+    is the only thing that gives the memory back.
+
+    The launch parameters mirror the ones ``start.sh`` uses, so a restarted
+    ComfyUI is the same ComfyUI the deployment started with.
+    """
+
+    install_dir: str = ""
+    extra_args: str = ""
+    log_file: str = ""
+    restart_after_scene: bool = False
+    restart_timeout: float = 240.0
+
+    def manages_process(self) -> bool:
+        """Whether this deployment can start and stop ComfyUI itself.
+
+        Returns:
+            True when an install directory is configured.
+        """
+        return bool(self.install_dir)
+
+
+@dataclass
 class ComfyUIConfig:
     """Local ComfyUI (Stable Diffusion) portrait-generation service.
 
@@ -400,12 +470,11 @@ class ComfyUIConfig:
     """
 
     enabled: bool = False
-    host: str = ""
-    port: int = 0
-    base_url: str = ""
+    endpoint: ComfyUIEndpoint = field(default_factory=ComfyUIEndpoint)
     timeout: float = 900.0  # CPU generation is slow (minutes/image)
     assets: ComfyUIAssets = field(default_factory=ComfyUIAssets)
     ollama_url: str = ""
+    local: ComfyUILocal = field(default_factory=ComfyUILocal)
 
     def get_base_url(self) -> str:
         """Return the configured base URL, or one built from host/port.
@@ -416,11 +485,7 @@ class ComfyUIConfig:
             is configured - which ``is_configured()`` reports as "not set up"
             rather than guessing an address.
         """
-        if self.base_url:
-            return self.base_url.rstrip("/")
-        if self.host and self.port:
-            return f"http://{self.host}:{self.port}"
-        return ""
+        return self.endpoint.resolve()
 
     def is_configured(self) -> bool:
         """Check if ComfyUI is enabled and has a reachable base URL."""
@@ -429,7 +494,7 @@ class ComfyUIConfig:
     @property
     def scene_timeout(self) -> float:
         """Seconds to wait for a story-scene render, including staggered swaps."""
-        return self.assets.scene_timeout
+        return self.assets.scene.timeout
 
     @scene_timeout.setter
     def scene_timeout(self, value: float) -> None:
@@ -438,7 +503,7 @@ class ComfyUIConfig:
         Args:
             value: Seconds. Must stay under the Drupal job lease.
         """
-        self.assets.scene_timeout = value
+        self.assets.scene.timeout = value
 
 
 @dataclass
