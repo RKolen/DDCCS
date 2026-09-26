@@ -31,3 +31,12 @@ httpx>=0.24.0          # HTTP client required by FastAPI TestClient in tests
 # that tell the renderer a person of a given height stands in a given box.
 # A rectangle can be written by hand; a figure cannot.
 Pillow>=10.0.0
+pydantic>=2.0.0        # Sidecar request/response models. Imported directly by
+                       # src/sidecar/models.py, so it is declared directly;
+                       # arriving as a FastAPI dependency is luck, not a
+                       # contract.
+rembg>=2.0.0           # Background removal for story-scene figure cutouts.
+                       # src/story_images/composite.py imports it at module
+                       # level and the sidecar app imports that chain at
+                       # startup, so without it the sidecar does not start at
+                       # all. It pulls onnxruntime and a small ML stack.

@@ -22,6 +22,8 @@ import sys
 from pathlib import Path
 from typing import Dict, List, NamedTuple, Set
 
+from src.validation.gate import run_check
+
 STYLES_DIR = Path("frontend") / "src" / "styles"
 TOKENS_FILE = "tokens.css"
 
@@ -41,15 +43,6 @@ class Finding(NamedTuple):
     path: str
     line: int
     message: str
-
-
-def repo_root() -> Path:
-    """Return the repository root.
-
-    Returns:
-        The directory two levels above this module.
-    """
-    return Path(__file__).resolve().parents[2]
 
 
 def load_tokens(styles: Path) -> Dict[str, str]:
@@ -208,16 +201,5 @@ def format_report(found: List[Finding]) -> str:
     return "\n".join(lines)
 
 
-def main() -> int:
-    """Run the check.
-
-    Returns:
-        0 when the palette is clean, 1 otherwise.
-    """
-    found = scan(repo_root())
-    print(format_report(found))
-    return 1 if found else 0
-
-
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(run_check(scan, format_report))

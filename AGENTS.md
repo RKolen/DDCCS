@@ -135,6 +135,24 @@ errors pile up invisibly to anyone who is not looking at that exact file.
 
 For 3 never use the excuse these are pre existing issues, they must be fixed.
 
+### 3.2 Every third-party import must be in requirements.txt
+
+A package installed on your machine but missing from `requirements.txt` is
+invisible to every other gate, because every other gate runs in the
+environment that already has it. Pylint resolves the import, mypy and pyright
+resolve it, the tests pass - and the first machine to install only what is
+declared fails.
+
+`rembg` went undeclared while `src/story_images/composite.py` imported it at
+module scope. The sidecar app imports that chain at startup, so a clean clone
+produced a sidecar that could not boot, and CI failed on an `E0401` that no
+local run could reproduce.
+
+Enforced by `src/validation/dependency_declarations.py`, run as a gate from
+`./check.sh`. Declare a package you import directly even when something else
+already pulls it in: arriving as another package's dependency is luck, not a
+contract.
+
 ### 4. No Hardcoded Configuration Values
 
 Never hardcode values that should be configurable. This includes:
@@ -388,6 +406,8 @@ src/
 |   |-- items_validator.py / party_validator.py
 |   |-- example_world.py     # Live-campaign names must stay in game_data
 |   |-- css_palette.py       # Colours must live only in tokens.css
+|   |-- dependency_declarations.py  # Imports must be in requirements.txt
+|   |-- gate.py              # Shared scan/report/exit plumbing for the gates
 |   |-- validate_all.py
 |-- ai/              # AI client and RAG system
 |   |-- ai_client.py
@@ -810,6 +830,9 @@ python3 -m src.validation.example_world
 
 # Check the CSS palette has a single source of truth (rule 0.6)
 python3 -m src.validation.css_palette
+
+# Check every third-party import is declared in requirements.txt
+python3 -m src.validation.dependency_declarations
 ./check.sh --fast   # gates only, skip the test suite
 
 # Validate all game data

@@ -31,6 +31,7 @@ def run_all_validators_tests() -> int:
         ("test_profile_verifier", "Profile Verification Tests"),
         ("test_example_world", "Example Campaign World Tests"),
         ("test_css_palette", "CSS Palette Tests"),
+        ("test_dependency_declarations", "Dependency Declaration Tests"),
     )
 
     results: Dict[str, bool] = {}

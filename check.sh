@@ -85,6 +85,16 @@ check_css_palette() {
     "$PYTHON" -m src.validation.css_palette
 }
 
+check_dependency_declarations() {
+    # Every third-party import must be in requirements.txt. A package that is
+    # installed here but undeclared is invisible to every other gate, because
+    # every other gate runs in the environment that already has it - pylint
+    # resolves it, mypy resolves it, the tests pass, and the first clean
+    # install fails. rembg went undeclared exactly this way and the sidecar
+    # could not start on a fresh clone.
+    "$PYTHON" -m src.validation.dependency_declarations
+}
+
 check_example_world_only() {
     # Only the Example Campaign world may be named in code, tests, and docs.
     # A live campaign's cast belongs in game_data/ and docs/docs_personal/.
@@ -148,6 +158,7 @@ run_gate "commit-msg hook enabled" check_commit_hook_enabled
 run_gate "no checker suppressions" check_no_suppressions
 run_gate "Example Campaign world only" check_example_world_only
 run_gate "CSS palette single source" check_css_palette
+run_gate "dependencies declared" check_dependency_declarations
 run_gate "pylint (src/ tests/)" "$PYTHON" -m pylint src/ tests/
 run_gate "mypy (src/)" "$PYTHON" -m mypy src/
 run_gate "mypy (tests/)" "$PYTHON" -m mypy tests/

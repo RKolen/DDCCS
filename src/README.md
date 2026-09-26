@@ -126,6 +126,8 @@ src/
 |   |-- party_validator.py      # Party config validation
 |   |-- example_world.py        # Keeps live-campaign names out of the codebase
 |   |-- css_palette.py          # Keeps colours in tokens.css and nowhere else
+|   |-- dependency_declarations.py  # Every import must be in requirements.txt
+|   |-- gate.py                # Shared scan/report/exit plumbing for gates
 |   `-- validate_all.py         # Unified validator
 |
 |-- ai/                 # AI integration
