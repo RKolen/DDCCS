@@ -8,6 +8,7 @@
 import * as React from 'react';
 import { AiTag, Icon, Spinner } from './atoms';
 import StagingCanvas from './StagingCanvas';
+import { ImageLightbox } from '../atoms/ImageLightbox';
 import {
   enqueueJob, fetchJob, isFinished, jobResult, resolveJob, useJobPolling, JOB_TYPES,
   type AiJob,
@@ -130,6 +131,9 @@ export function StoryImageWizard({
   const [likeness, setLikeness] = React.useState<Set<string>>(new Set());
   const [candidate, setCandidate] = React.useState<StoryIllustrationJobResult & { jobId: string } | null>(null);
   const [reviewing, setReviewing] = React.useState<'accept' | 'discard' | null>(null);
+  // The review preview is capped at 40vh, too small to judge a face by.
+  const [enlarged, setEnlarged] = React.useState(false);
+  React.useEffect(() => { setEnlarged(false); }, [candidate]);
   const [custom, setCustom] = React.useState('');
   const [shot, setShot] = React.useState(DEFAULT_SHOT);
   const [angle, setAngle] = React.useState(DEFAULT_ANGLE);
@@ -413,10 +417,15 @@ export function StoryImageWizard({
         const before = held.get(row.name);
         // Only where somebody stands is kept: pose, facing and direction are
         // owned by the selects above, so a rebuild must not restore the
-        // values they have just replaced.
-        return before == null
-          ? row
-          : { ...row, lateral: before.lateral, depth: before.depth };
+        // values they have just replaced. Moved limbs were placed on the old
+        // skeleton, so they survive only while its stance and turn do.
+        if (before == null) return row;
+        const sameStance = before.pose === row.pose && before.facing === row.facing
+          && before.toward === row.toward;
+        return {
+          ...row, lateral: before.lateral, depth: before.depth,
+          limbs: sameStance ? before.limbs ?? [] : [],
+        };
       });
     });
     // castKey and the per-character maps are the inputs; roster identity
@@ -765,7 +774,21 @@ export function StoryImageWizard({
             <div className="portrait-review">
               <span className="portrait-review-tag">Not attached yet</span>
               {candidate.imageUrl && (
-                <img src={candidate.imageUrl} alt={candidate.alt} className="story-image-preview" />
+                <button
+                  type="button"
+                  className="story-image-preview-open"
+                  aria-label="Enlarge the illustration"
+                  onClick={() => setEnlarged(true)}
+                >
+                  <img src={candidate.imageUrl} alt={candidate.alt} className="story-image-preview" />
+                </button>
+              )}
+              {enlarged && candidate.imageUrl && (
+                <ImageLightbox
+                  src={candidate.imageUrl}
+                  alt={candidate.alt}
+                  onClose={() => setEnlarged(false)}
+                />
               )}
               <p className="portrait-review-note">
                 {likenessSummary(candidate)}{' '}

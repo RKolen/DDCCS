@@ -16,13 +16,14 @@ model was trained on. The colours are not decorative - the model reads limb
 identity from them.
 """
 
+import dataclasses
 import io
 import math
 from typing import Dict, List, Mapping, Optional, Sequence, Tuple
 
 from PIL import Image, ImageDraw
 
-from src.story_images.regions import Placement, Region
+from src.story_images.regions import Placement, Region, Stance
 
 # COCO-18 joint order.
 NOSE, NECK = 0, 1
@@ -31,6 +32,21 @@ L_SHOULDER, L_ELBOW, L_WRIST = 5, 6, 7
 R_HIP, R_KNEE, R_ANKLE = 8, 9, 10
 L_HIP, L_KNEE, L_ANKLE = 11, 12, 13
 R_EYE, L_EYE, R_EAR, L_EAR = 14, 15, 16, 17
+
+# The joints an operator may drag, by the name the console sends. The head is
+# left out: its keypoints are placed round the skull by the facing, and a
+# hand-moved eye would contradict the turn it belongs to.
+LIMB_JOINTS: Dict[str, int] = {
+    "r_shoulder": R_SHOULDER, "r_elbow": R_ELBOW, "r_wrist": R_WRIST,
+    "l_shoulder": L_SHOULDER, "l_elbow": L_ELBOW, "l_wrist": L_WRIST,
+    "r_hip": R_HIP, "r_knee": R_KNEE, "r_ankle": R_ANKLE,
+    "l_hip": L_HIP, "l_knee": L_KNEE, "l_ankle": L_ANKLE,
+}
+
+# How far a moved joint may go, in layout units. Half a unit either side is
+# the edge of a figure's own canvas; past it the render clips the hand.
+LIMB_REACH = 0.5
+LIMB_TOP, LIMB_BOTTOM = -0.1, 1.05
 
 # Joint positions for a standing figure, as fractions of the box: x from its
 # centre, y from its top. Proportioned on an eight-heads-tall figure.
@@ -394,9 +410,50 @@ def turn_layout(
     return turned
 
 
+def moved_joints(
+    limbs: Optional[Mapping[str, Tuple[float, float]]],
+) -> Dict[int, Tuple[float, float]]:
+    """Turn the operator's named limb moves into joint overrides.
+
+    Args:
+        limbs: Joint name -> (dx, dy) in layout units. Unknown names are
+            dropped, and every position is held inside the figure's reach.
+
+    Returns:
+        Joint index -> (dx, dy), ready for `figure_layout`.
+    """
+    return {
+        LIMB_JOINTS[name]: (min(max(dx, -LIMB_REACH), LIMB_REACH),
+                            min(max(dy, LIMB_TOP), LIMB_BOTTOM))
+        for name, (dx, dy) in (limbs or {}).items() if name in LIMB_JOINTS
+    }
+
+
+def figure_layout(stance: Stance) -> Dict[int, Tuple[float, float]]:
+    """A skeleton in layout units: stance, then turn, then the operator.
+
+    Hand-moved limbs land after the turn, not before it. They were placed on
+    the turned skeleton the console drew, so applying them to the flat one
+    and turning again would put every hand somewhere nobody dragged it.
+
+    Args:
+        stance: Pose (unknown names fall back to standing), facing,
+            direction and any moved limbs.
+
+    Returns:
+        Joint index -> (dx, dy): x from the box centre, y from its top.
+    """
+    layout = dict(STANDING)
+    layout.update(POSE_VARIANTS.get(stance.pose, {}))
+    layout = turn_layout(layout, stance.facing, POSE_DEPTH.get(stance.pose),
+                         stance.toward)
+    layout.update(moved_joints(stance.limbs))
+    return layout
+
+
 def joints_for(
     region: Region, pose: str = "standing", facing: str = "",
-    toward: str = "",
+    toward: str = "", limbs: Optional[Mapping[str, Tuple[float, float]]] = None,
 ) -> Dict[int, Tuple[int, int]]:
     """Place a skeleton's joints inside one region.
 
@@ -405,13 +462,12 @@ def joints_for(
         pose: A key into POSE_VARIANTS; unknown names fall back to standing.
         facing: Which way the figure is turned, or empty to face the camera.
         toward: Which way along the frame that turn points.
+        limbs: Joint name -> (dx, dy) the operator moved, if any.
 
     Returns:
         Joint index -> (x, y) in canvas pixels.
     """
-    layout = dict(STANDING)
-    layout.update(POSE_VARIANTS.get(pose, {}))
-    layout = turn_layout(layout, facing, POSE_DEPTH.get(pose), toward)
+    layout = figure_layout(Stance(pose, facing, toward, limbs or {}))
     centre = region.left + region.width / 2
     return {
         joint: (
@@ -450,13 +506,9 @@ def openpose_png(
     draw = ImageDraw.Draw(image)
     staged = {spot.name: spot for spot in (staging or ())}
     for region in regions:
-        spot = staged.get(region.name)
-        _draw_figure(
-            draw, region,
-            (spot.pose if spot and spot.pose else "standing"),
-            spot.facing if spot else "",
-            spot.toward if spot else "",
-        )
+        stance = staged[region.name].stance if region.name in staged else Stance()
+        _draw_figure(draw, region,
+                     dataclasses.replace(stance, pose=stance.pose or "standing"))
 
     buffer = io.BytesIO()
     image.save(buffer, format="PNG")
@@ -464,19 +516,17 @@ def openpose_png(
 
 
 def _draw_figure(
-    draw: ImageDraw.ImageDraw, region: Region, pose: str = "standing",
-    facing: str = "", toward: str = "",
+    draw: ImageDraw.ImageDraw, region: Region, stance: Stance,
 ) -> None:
     """Draw one skeleton into its region.
 
     Args:
         draw: The canvas to draw on.
         region: The box to stand the figure in.
-        pose: Which stance to draw.
-        facing: Which way the figure is turned, or empty to face the camera.
-        toward: Which way along the frame that turn points.
+        stance: Pose, facing, direction and any moved limbs.
     """
-    joints = joints_for(region, pose, facing, toward)
+    joints = joints_for(region, stance.pose, stance.facing, stance.toward,
+                        stance.limbs)
     limb_width = max(2, region.width // 28)
     for start, end, colour in LIMBS:
         # A turned head has no far eye and no far ear, and openpose says
@@ -533,8 +583,7 @@ def silhouette_png(width: int, height: int, region: Region) -> bytes:
     return buffer.getvalue()
 
 
-def figure_pose_png(width: int, height: int, pose: str,
-                    facing: str = "", toward: str = "") -> bytes:
+def figure_pose_png(width: int, height: int, stance: Stance) -> bytes:
     """Draw one skeleton filling a single-figure canvas.
 
     The scene-wide control image is no use to a figure rendered alone: it is
@@ -543,9 +592,7 @@ def figure_pose_png(width: int, height: int, pose: str,
     Args:
         width: Figure canvas width.
         height: Figure canvas height.
-        pose: Which stance to draw.
-        facing: Which way the figure is turned, or empty to face the camera.
-        toward: Which way along the frame that turn points.
+        stance: Pose, facing, direction and any moved limbs.
 
     Returns:
         PNG bytes of the pose control image.
@@ -558,14 +605,14 @@ def figure_pose_png(width: int, height: int, pose: str,
     # are what the joints do not account for.
     top = int(height * HEAD_ROOM)
     box = Region(
-        name=pose,
+        name=stance.pose,
         left=int(width * SIDE_ROOM),
         top=top,
         width=int(width * (1.0 - SIDE_ROOM * 2)),
         height=int(height * (1.0 - HEAD_ROOM - FOOT_ROOM)),
     )
     image = Image.new("RGB", (width, height), (0, 0, 0))
-    _draw_figure(ImageDraw.Draw(image), box, pose, facing, toward)
+    _draw_figure(ImageDraw.Draw(image), box, stance)
     buffer = io.BytesIO()
     image.save(buffer, format="PNG")
     return buffer.getvalue()

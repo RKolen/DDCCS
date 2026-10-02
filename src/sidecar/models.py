@@ -648,6 +648,19 @@ class StoryScenePerson(BaseModel):
     known: bool = False
 
 
+class StoryLimb(BaseModel):
+    """One joint of a staged skeleton, in the figure's own layout units.
+
+    ``x`` is from the figure's centre and ``y`` from the top of its box, both
+    as fractions of the box, so a move survives the figure being walked
+    further back and shrunk.
+    """
+
+    joint: str = Field(..., min_length=1, description="e.g. r_wrist, l_knee")
+    x: float
+    y: float
+
+
 class StoryPlacement(BaseModel):
     """Where one character stands, as the console's staging editor sets it."""
 
@@ -680,6 +693,16 @@ class StoryPlacement(BaseModel):
                     "whole. 0 lets depth decide. Separate from depth because "
                     "apparent size is not distance - a halfling at the front "
                     "is smaller than an orc at the back",
+    )
+    # A list, not a map: the render goes through Drupal's job payload, and
+    # PHP re-encodes an empty JSON object as [], which a map would reject.
+    limbs: List[StoryLimb] = Field(
+        default_factory=list,
+        description="joints the operator dragged, placed after the turn",
+    )
+    skeleton: List[StoryLimb] = Field(
+        default_factory=list,
+        description="every draggable joint as drawn, on responses",
     )
     # Filled on the way out only. The console hit-tests a drag against the
     # box the staging produced, so returning it beside the numbers that made

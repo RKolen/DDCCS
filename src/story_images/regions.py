@@ -11,8 +11,8 @@ apparent height follows from the box rather than from a word the model may
 ignore.
 """
 
-from dataclasses import dataclass
-from typing import Dict, List, Optional, Sequence, Tuple
+from dataclasses import dataclass, field
+from typing import Dict, List, Mapping, Optional, Sequence, Tuple
 
 from src.story_images.types import ShotPerson
 
@@ -60,14 +60,11 @@ FAR_DEPTH = 3.0
 WIDTH_RATIO = 0.42
 
 
-@dataclass
-class Placement:
-    """Where one character stands, before it becomes pixels.
+@dataclass(frozen=True)
+class Stance:
+    """How one figure holds itself, as opposed to where it stands.
 
-    ``lateral`` is 0.0 at the left edge of the frame and 1.0 at the right,
-    measured at the figure's centre. ``depth`` is 1.0 at the front of the
-    scene and larger further back. ``pose`` names the stance, or is empty to
-    let the renderer choose one.
+    ``pose`` names the stance, or is empty to let the renderer choose one.
 
     ``facing`` is which way this one character is turned, and it is per
     character on purpose. Each figure is rendered alone against grey and
@@ -77,16 +74,35 @@ class Placement:
     people looking at the lens. Empty keeps that behaviour: the stance sets
     the orientation and nothing argues with it.
 
+    ``toward`` is which way along the frame that turn points, left or right.
+    Facing alone cannot say it, so a cast all set to profile faced the same
+    way - the group and the person walking up to meet them included.
+
+    ``limbs`` is where the operator dragged individual joints, by name, in
+    the figure's own layout units after the turn. A stance is a starting
+    point; nine of them cannot say "sword raised, off hand out for balance".
+    """
+
+    pose: str = ""
+    facing: str = ""
+    toward: str = ""
+    limbs: Mapping[str, Tuple[float, float]] = field(default_factory=dict)
+
+
+@dataclass
+class Placement:
+    """Where one character stands, before it becomes pixels.
+
+    ``lateral`` is 0.0 at the left edge of the frame and 1.0 at the right,
+    measured at the figure's centre. ``depth`` is 1.0 at the front of the
+    scene and larger further back. ``stance`` is how they hold themselves.
+
     ``order`` is who is in front when two figures overlap: 1 is nearest the
     camera and is painted last, so it comes out whole. 0 means the operator
     has no opinion and depth decides. It is separate from depth on purpose -
     apparent size already does not follow distance here, because a halfling
     at the front of the scene is smaller than an orc at the back, so the
     figure that should win an overlap is not always the nearest one.
-
-    ``toward`` is which way along the frame that turn points, left or right.
-    Facing alone cannot say it, so a cast all set to profile faced the same
-    way - the group and the person walking up to meet them included.
 
     This is the operator's handle on staging: the console shows it as a
     skeleton that can be dragged, and the same numbers drive the render, so
@@ -96,9 +112,7 @@ class Placement:
     name: str
     lateral: float = 0.5
     depth: float = NEAR_DEPTH
-    pose: str = ""
-    facing: str = ""
-    toward: str = ""
+    stance: Stance = field(default_factory=Stance)
     order: int = 0
 
     def clamped(self) -> "Placement":
@@ -111,9 +125,7 @@ class Placement:
             name=self.name,
             lateral=min(max(self.lateral, 0.0), 1.0),
             depth=min(max(self.depth, NEAR_DEPTH), FAR_DEPTH),
-            pose=self.pose,
-            facing=self.facing,
-            toward=self.toward,
+            stance=self.stance,
             order=self.order,
         )
 

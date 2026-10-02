@@ -487,7 +487,12 @@ prompt, so the work is two jobs:
 2. `dnd_story_illustration` posts that excerpt plus the checked cast to
    `/story/scene`. ComfyUI renders 768x512 DreamShaper with at most two
    IPAdapter leads, then staggered ReActor swaps. The PNG is stored pending
-   review; **Accept** appends it to `field_illustrations`.
+   review; **Accept** appends it to `field_illustrations`. Click the review
+   preview to open it in `ImageLightbox`: scroll or double-click zooms (up
+   to 8x, about the cursor), dragging anywhere pans, `0` resets. Zoomed, a
+   backdrop click does not close it - Escape or the Close button does. It is
+   portalled to `<body>`, because the wizard dialog's centring transform
+   would otherwise trap a `position: fixed` overlay inside the dialog.
 
 The activity bar links both job types to `stories / read` (`?story=` + `?job=`
 off-console). Minutes-to-tens-of-minutes is expected; the browser never holds
@@ -526,6 +531,16 @@ The **staging canvas** above the cast list is the pre-render skeleton.
 frame, up moves further back, down brings them towards the camera, and Shift
 takes bigger steps. The selected figure's exact numbers are printed under the
 canvas as you go. Dragging works too, but it is the coarse tool.
+
+**The selected figure shows its joints** - shoulders, elbows, wrists, hips,
+knees and ankles. Drag a dot, or focus it and use the arrow keys (Shift for
+bigger steps), to move that limb; moved joints are ringed in gold and
+**Reset limbs** puts the stance back. Moves are stored on the placement as
+`limbs` in the figure's own units, so they survive walking the figure further
+back. They were made on one skeleton, so changing that character's pose,
+facing or direction clears them. `LIMB_REACH` / `LIMB_TOP` / `LIMB_BOTTOM`
+mirror `src/story_images/pose.py`, and `tests/story_images/test_staging.py`
+fails if they drift.
 
 The drag used to set a figure to the pointer's own position rather than
 moving it by how far the pointer went, so grabbing a tall handle near the top

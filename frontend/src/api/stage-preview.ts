@@ -16,6 +16,8 @@ interface StagePlacement {
   depth:    number;
   pose:     string;
   facing:   string;
+  toward?:  string;
+  limbs?:   Array<{ joint: string; x: number; y: number }>;
   box?:     number[];
 }
 

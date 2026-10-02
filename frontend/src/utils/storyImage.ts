@@ -348,6 +348,18 @@ export const DEFAULT_MOOD = '';
 /** How much per-character action text the prompt can carry. */
 export const MAX_ACTION_CHARS = 80;
 
+/**
+ * One joint of a staged skeleton, in the figure's own layout units: `x` from
+ * the centre of its box (a unit is twice the box width), `y` from the top
+ * (a unit is the box height). Relative to the figure, so a move survives
+ * them being walked further back and shrunk.
+ */
+export interface StageLimb {
+  joint: string;
+  x:     number;
+  y:     number;
+}
+
 /** One character's staging: where they stand, how far back, how turned. */
 export interface StagePlacement {
   name:    string;
@@ -358,8 +370,15 @@ export interface StagePlacement {
   toward:  string;
   /** 1 is painted last and comes out whole; 0 lets depth decide. */
   order:   number;
+  /**
+   * Joints the operator dragged, placed on the skeleton as drawn - after the
+   * turn. Only valid for the stance, facing and direction they were made on.
+   */
+  limbs?:  StageLimb[];
   /** left, top, width, height in canvas pixels; filled by the preview. */
   box?:    number[];
+  /** Every draggable joint as drawn; filled by the preview. */
+  skeleton?: StageLimb[];
 }
 
 /**
@@ -372,6 +391,17 @@ export interface StagePlacement {
  */
 export const NEAR_DEPTH = 1.0;
 export const FAR_DEPTH = 3.0;
+
+/**
+ * How far a dragged joint may go, in layout units, mirroring LIMB_REACH,
+ * LIMB_TOP and LIMB_BOTTOM in `src/story_images/pose.py`. The renderer clamps
+ * to these anyway; holding the handle to them too stops it drifting off to a
+ * spot the skeleton will never be drawn at.
+ * `tests/story_images/test_staging.py` fails if these drift.
+ */
+export const LIMB_REACH = 0.5;
+export const LIMB_TOP = -0.1;
+export const LIMB_BOTTOM = 1.05;
 
 /**
  * Which way one character is turned. Per character, not per scene.

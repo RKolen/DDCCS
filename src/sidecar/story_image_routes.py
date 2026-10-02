@@ -28,6 +28,7 @@ from src.sidecar.models import (
     StoryEventsRequest,
     StoryEventsResponse,
     StoryRosterPerson,
+    StoryLimb,
     StoryPlacement,
     StorySceneOption,
     StoryScenePerson,
@@ -51,12 +52,14 @@ from src.story_images.scene_prompt import (
     build_scene_prompt,
 )
 from src.story_images.pose import (
+    LIMB_JOINTS,
     POSE_VARIANTS,
     TOWARD_SIGN,
+    figure_layout,
     openpose_png,
     pose_for_index,
 )
-from src.story_images.regions import Placement, default_placements, lay_out
+from src.story_images.regions import Placement, Stance, default_placements, lay_out
 from src.story_images.shot import analyze_shot
 from src.story_images.staging import (
     MOODS,
@@ -133,9 +136,26 @@ def _staged(rows: Sequence[StoryPlacement]) -> List[Placement]:
         The same staging in the layout's own type.
     """
     return [Placement(name=row.name, lateral=row.lateral, depth=row.depth,
-                      pose=row.pose, facing=row.facing, toward=row.toward,
+                      stance=Stance(
+                          pose=row.pose, facing=row.facing, toward=row.toward,
+                          limbs={limb.joint: (limb.x, limb.y) for limb in row.limbs},
+                      ),
                       order=row.order)
             for row in rows]
+
+
+def _skeleton(spot: Placement) -> List[StoryLimb]:
+    """Every draggable joint of one staged figure, where it is drawn.
+
+    Args:
+        spot: The figure's staging, stance already dealt.
+
+    Returns:
+        One entry per limb joint, in layout units.
+    """
+    layout = figure_layout(spot.stance)
+    return [StoryLimb(joint=name, x=layout[joint][0], y=layout[joint][1])
+            for name, joint in LIMB_JOINTS.items()]
 
 
 @router.post("/stage", response_model=StoryStageResponse)
@@ -180,8 +200,9 @@ def story_stage_endpoint(req: StoryStageRequest) -> StoryStageResponse:
     regions = lay_out(people, width, height, req.shot, layout)
     png = openpose_png(width, height, regions, layout)
     boxes = {r.name: [r.left, r.top, r.width, r.height] for r in regions}
-    for row in staged:
+    for row, spot in zip(staged, layout):
         row.box = boxes.get(row.name, [])
+        row.skeleton = _skeleton(spot)
     return StoryStageResponse(
         image_base64=base64.b64encode(png).decode("ascii"),
         width=width, height=height, placements=staged,

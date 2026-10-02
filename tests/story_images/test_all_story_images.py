@@ -17,6 +17,7 @@ def run_all_story_images_tests():
         ("test_scene_workflow", "Scene workflow builders"),
         ("test_regions", "Per-character region layout"),
         ("test_staging", "Named settings and moods"),
+        ("test_composite", "Grounding pasted figures"),
     ]
     results = {}
     for test_file, test_name in tests:

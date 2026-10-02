@@ -641,68 +641,19 @@ modifier = DC_MODIFIERS.get(difficulty, 0)
 
 ## Workflow
 
-### Starting a Feature - One Worktree Per Agent
+### Work in the Primary Checkout
 
-More than one agent works in this repo at a time. **Never work directly in
-the primary checkout.** Two agents sharing one working directory overwrite
-each other's edits, and `./check.sh` cannot tell whose change failed.
+Make changes directly in the primary checkout, not in a separate git
+worktree. The maintainer tests against the dev servers already running from
+here - the sidecar and `npm run develop` - and a change made anywhere else is
+invisible to them, so it cannot be tried until someone moves the servers.
 
-Claim your own worktree before writing any code:
+A change is not ready to hand over until it can be tried as it stands:
+Gatsby hot-reloads the frontend, but the sidecar only reloads when
+`SIDECAR_RELOAD` is set, so say when it needs a restart.
 
-```bash
-scripts/new-feature.sh
-```
-
-That creates branch `feature/ddcs-<n>` - numbered from 1, next free number -
-checked out at `../ddcs-worktrees/ddcs-<n>/`, and symlinks the untracked
-things a fresh worktree does not inherit: `.venv`, `.env`,
-`frontend/.env.development`, and `frontend/node_modules`. Without the
-`.venv` link `./check.sh` refuses to run at all; without the
-`.env.development` link `npm run develop` has no `GATSBY_DRUPAL_BASE_URL`,
-stitches no Drupal schema, and fails every query with unknown `Drupal_*`
-types.
-
-`game_data` is deliberately not linked. A worktree sees only the tracked
-Example Campaign data, which is what every clone has. Features have to work
-universally, so build and test against data that ships with the repo rather
-than against one maintainer's private campaigns - the same reason rule 0.5
-exists.
-
-Run every gate from inside your own worktree:
-
-```bash
-cd ../ddcs-worktrees/ddcs-<n>
-./check.sh
-```
-
-Never `cd` back to the primary checkout to run a check - you would be
-testing someone else's uncommitted work and reporting the result as yours.
-
-When the branch is merged:
-
-```bash
-git worktree remove ../ddcs-worktrees/ddcs-<n>
-git branch -d feature/ddcs-<n>
-```
-
-#### Shared resources a worktree does NOT isolate
-
-A worktree forks the source tree. It does not fork the machine. The
-following are single instances shared by every agent - claim one before you
-use it, and say so:
-
-| Resource | Why it collides |
-|----------|-----------------|
-| DDEV / Drupal | One project, one database, one router port. Two agents running `ddev drush config:import -y` fight over the same DB. |
-| Gatsby dev server | Both want port 8000. Set `GATSBY_PORT`, or let only one agent run `npm run develop`. |
-| Ollama, Milvus, ComfyUI | Single instances on CPU inference. Two AI-heavy agents at once thrash the box. |
-| `frontend/node_modules` | Symlinked, not copied. `npm install` mutates it for every worktree at once. |
-
-Drupal schema work is a single-agent lane: `config/sync/*.yml` is
-per-worktree, but the database it imports into is global.
-
-Never free one of these by killing a process by port - find the PID and
-check what it is first.
+Never free a port by killing whatever holds it - find the PID and check what
+it is first.
 
 ### Before Starting Work
 
@@ -775,7 +726,7 @@ subject with no roster entry still scored matches.
 
 This is enforced, not merely documented. `.githooks/commit-msg` rejects a
 message that breaks any rule above, whoever or whatever wrote it. Enable it
-once per clone (worktrees share `.git/config`, so this covers all of them):
+once per clone:
 
 ```bash
 git config core.hooksPath .githooks
@@ -815,12 +766,6 @@ python3 -m mypy tests/
 
 # Run pyright (the engine behind Pylance - rule 3.1)
 .venv/bin/python -m pyright
-
-# Create an isolated worktree for a new feature (feature/ddcs-<n>)
-scripts/new-feature.sh
-
-# Summarise every feature worktree: ahead/behind, dirty files, diffstat
-scripts/review-features.sh
 
 # Run every quality gate at once (pylint + mypy + pyright + world + tests)
 ./check.sh

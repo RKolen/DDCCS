@@ -14,9 +14,10 @@ model cannot ignore the way it ignores the word.
 
 import hashlib
 import logging
+import re
 import struct
 import zlib
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from typing import Dict, List, Optional, Sequence, Tuple
 
 from src.ai.comfyui_client import ComfyUIClient
@@ -44,7 +45,7 @@ from src.story_images.pose import (
     visible_regions,
 )
 from src.story_images.framing import ANGLE_NEGATIVES, ANGLES
-from src.story_images.regions import NEAR_DEPTH, Placement, Region, lay_out
+from src.story_images.regions import NEAR_DEPTH, Placement, Region, Stance, lay_out
 from src.utils.string_utils import clip_tags
 from src.story_images.types import ShotPerson
 
@@ -126,6 +127,46 @@ REGION_NEGATIVE = (
     "cropped head, headless, out of frame, cut off at the neck, "
     "helmet, full helm, visor"
 )
+
+# Gender, as the caption states it: (positive word, negative terms). A lone
+# "male" lost to "elf, long flowing black hair, green eyes" - SD 1.5 reads
+# that cluster as a woman - so a long-haired elf came back female from a
+# plainly male portrait. Naming the gender plainly and banning the other is
+# what makes the one word stick.
+GENDER_TERMS: Dict[str, Tuple[str, str]] = {
+    "female": ("woman", "man, male, masculine"),
+    "male": ("man", "woman, female, feminine, breasts"),
+}
+_GENDER_WORD = re.compile(r"\b(female|woman|girl|male|man|boy)\b", re.IGNORECASE)
+_FEMININE = {"female", "woman", "girl"}
+
+
+def caption_gender(subject: str) -> str:
+    """The gender a caption states first, if any.
+
+    Args:
+        subject: A character's appearance caption.
+
+    Returns:
+        A key in GENDER_TERMS, or empty when the caption names none.
+    """
+    found = _GENDER_WORD.search(subject)
+    if found is None:
+        return ""
+    return "female" if found.group(1).lower() in _FEMININE else "male"
+
+
+def gender_negative(person: ShotPerson) -> str:
+    """Negative terms banning the gender this character is not.
+
+    Args:
+        person: The character being painted.
+
+    Returns:
+        Comma-joined terms, or empty when the caption names no gender.
+    """
+    gender = caption_gender(person.appearance or person.action)
+    return GENDER_TERMS[gender][1] if gender else ""
 
 
 @dataclass
@@ -313,7 +354,9 @@ def region_prompt(
         A single-subject prompt within the token budget.
     """
     subject = person.appearance.strip() or person.action.strip()
-    tail = ["solo", "full body in frame"]
+    gender = caption_gender(subject)
+    tail = [GENDER_TERMS[gender][0]] if gender else []
+    tail += ["solo", "full body in frame"]
     if not posed:
         tail.insert(1, "standing")
     tail.append("face visible" if covers_head(subject) else
@@ -375,7 +418,10 @@ def paint_regions(request: RegionRenderRequest) -> Tuple[bytes, List[str]]:
                             person, request.framing.angle_terms,
                             posed=pose_name is not None,
                         ),
-                        negative=f"{request.negative}, {REGION_NEGATIVE}",
+                        negative=", ".join(
+                            part for part in (request.negative, REGION_NEGATIVE,
+                                              gender_negative(person)) if part
+                        ),
                     ),
                     seed=request.seed + index,
                     settings=InpaintSettings(
@@ -427,7 +473,11 @@ def _upload_pose(
     drawable = visible_regions(regions)
     if not drawable:
         return None
-    return _upload(request.client, openpose_png(width, height, drawable), "region_pose")
+    return _upload(
+        request.client,
+        openpose_png(width, height, drawable, request.framing.placements),
+        "region_pose",
+    )
 
 
 def _pose_for(
@@ -452,8 +502,8 @@ def _pose_for(
 
 
 def _figure_pose(
-    request: RegionRenderRequest, stance: str, index: int, facing: str = "",
-    toward: str = "",
+    request: RegionRenderRequest, stance: str, index: int,
+    spot: Optional[Placement] = None,
 ) -> Optional[PoseControl]:
     """Build the pose control for one figure's own canvas.
 
@@ -466,8 +516,8 @@ def _figure_pose(
         request: The render request.
         stance: Which stance this character takes.
         index: Their position in the cast, to keep uploads distinct.
-        facing: Which way they are turned, or empty to face the camera.
-        toward: Which way along the frame that turn points.
+        spot: Their staging - facing, direction and any moved limbs - or
+            None to face the camera in the stance as drawn.
 
     Returns:
         The pose control, or None when pose conditioning is unavailable.
@@ -476,8 +526,9 @@ def _figure_pose(
         return None
     uploaded = _upload(
         request.client,
-        figure_pose_png(FIGURE_RENDER.width, FIGURE_RENDER.height, stance,
-                        facing, toward),
+        figure_pose_png(FIGURE_RENDER.width, FIGURE_RENDER.height,
+                        replace(spot.stance if spot else Stance(),
+                                pose=stance)),
         f"figure_pose{index}",
     )
     if uploaded is None:
@@ -627,7 +678,7 @@ def figure_framing(
         was chosen, which adds nothing and leaves the stance to decide.
     """
     spot = placement_for(placements, name)
-    facing = spot.facing if spot else ""
+    facing = spot.stance.facing if spot else ""
     if not facing:
         return "", ""
     return ANGLES.get(facing, ""), ANGLE_NEGATIVES.get(facing, "")
@@ -668,7 +719,8 @@ def _figure_params(
         ),
         negative=", ".join(
             part for part in
-            (request.negative, REGION_NEGATIVE, FIGURE_NEGATIVE, away) if part
+            (request.negative, REGION_NEGATIVE, FIGURE_NEGATIVE,
+             gender_negative(person), away) if part
         ),
         seed=request.seed + index,
         render=FIGURE_RENDER,
@@ -741,10 +793,9 @@ def paint_figures(request: RegionRenderRequest) -> Tuple[bytes, List[str]]:
         # `pose_for_index` exists so a cast is not six identical statues;
         # it was overriding the staging rather than standing in for it.
         spot = placement_for(request.framing.placements, person.name)
-        stance = (spot.pose if spot and spot.pose else pose_for_index(index))
-        pose = _figure_pose(request, stance, index,
-                            spot.facing if spot else "",
-                            spot.toward if spot else "")
+        stance = (spot.stance.pose if spot and spot.stance.pose
+                  else pose_for_index(index))
+        pose = _figure_pose(request, stance, index, spot)
         rendered = _render_figure(request, person, index, pose)
         if rendered is None:
             logger.warning("Figure render failed for %s", person.name)

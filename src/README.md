@@ -378,6 +378,23 @@ Measured on a 480px figure: a walk strides 10% of its height at a front view,
 profile. A control image is not a drawing; it is an instruction, and it has to
 out-argue the checkpoint.
 
+### A stance is a starting point: limbs can be moved by hand
+
+Nine stances cannot say "sword raised, off hand out for balance".
+`Stance.limbs` (a `Placement` holds its pose, facing, direction and limbs as
+one `Stance`) maps a joint name from `LIMB_JOINTS` (shoulders, elbows,
+wrists, hips, knees, ankles, `r_`/`l_` for the character's own side) to a
+`(dx, dy)` in layout units, and `figure_layout` applies it **after** the turn:
+the operator dragged the joint on the turned skeleton the console drew, so
+turning it again would put the hand somewhere nobody put it. The head is not
+movable - its keypoints are placed round the skull by the facing.
+`moved_joints` drops unknown names and clamps to `LIMB_REACH`, `LIMB_TOP` and
+`LIMB_BOTTOM`, the edge of a figure's own canvas; past it the hand is clipped.
+
+The same limbs reach the stage preview, the per-figure control image in
+`_figure_pose` and the region-inpaint control image, which until now drew
+every figure standing because it was never handed the staging.
+
 ### Who is in front is not the same as who is nearest
 
 `place` pastes cutouts in sequence, so the last one in wins every overlap.
@@ -423,6 +440,37 @@ row of people looking at the lens.
 existing render is restaged. When set, that figure gets its own `ANGLES` terms
 *and* its own `ANGLE_NEGATIVES`, because the ban on "back turned" that
 protects a front view would otherwise forbid the figure asked to turn away.
+
+### Gender is stated twice and the other one banned
+
+The portrait caption leads with gender ("male, elf, ..."), and that alone was
+not enough: one "male" loses to "elf, long flowing black hair, green eyes",
+which SD 1.5 reads as a woman, so a long-haired male elf rendered female from
+a plainly male portrait. `caption_gender` reads the first gender word of the
+caption; `region_prompt` adds a plain "man" or "woman", and `gender_negative`
+puts the other gender (`GENDER_TERMS`) in the region and figure negatives. A
+caption with no gender word gets neither.
+
+### Grounding a pasted figure (`composite.place`)
+
+Every figure is rendered alone under even studio light on grey, so pasted
+unchanged a cast stands in a night street lit like a catalogue shoot, with
+nothing joining their feet to the floor. `place` now does three things to each
+cutout before pasting it:
+
+- `soften_edge` erodes the alpha a pixel and feathers it, because rembg's cut
+  line is crisper than anything the scene renderer paints.
+- `match_light` moves the figure's brightness `LIGHT_MATCH` of the way to the
+  scene behind it, by **one gain for all three channels**. Hue is never
+  touched: matching channels separately turned a purple skin green against a
+  dark alley, and borrowing the alley's colour cast turned it grey - and skin
+  colour is part of who a character is.
+- `cast_contact_shadow` lays a soft, flat ellipse under the feet, sized from
+  the feet rather than the figure so a spread cloak does not cast a puddle.
+
+This is compositing only, so it cannot relight a figure from the scene's own
+light direction or fix a ground plane the environment render put somewhere
+else.
 
 ### Restarting ComfyUI between renders (`src/ai/comfyui_admin.py`)
 

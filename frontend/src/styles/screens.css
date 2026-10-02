@@ -2285,6 +2285,39 @@
   color: var(--ink-dim);
   white-space: nowrap;
 }
+/* A picked figure's joints. Drawn over the figure handle so a press on a
+   joint moves the limb rather than the whole person. */
+.staging-joint {
+  position: absolute;
+  z-index: 1;
+  width: 12px;
+  height: 12px;
+  margin: -6px 0 0 -6px;
+  padding: 0;
+  background: var(--canvas-soft);
+  border: 1px solid var(--ink-dim);
+  border-radius: 50%;
+  cursor: move;
+  touch-action: none;
+}
+.staging-joint--moved { border-color: var(--color-gold-mid); }
+.staging-joint--picked,
+.staging-joint:focus-visible {
+  background: var(--color-gold-mid);
+  border-color: var(--color-gold-mid);
+  outline: none;
+}
+.staging-limb-reset {
+  margin-top: 6px;
+  padding: 2px 8px;
+  background: transparent;
+  border: 1px solid var(--rule);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink-dim);
+  cursor: pointer;
+}
+.staging-limb-reset:hover { color: var(--ink); border-color: var(--color-gold-mid); }
 /* Front-to-back order, and the paint order with it: 1 is nearest and is
    laid down last, so it survives an overlap whole. */
 .staging-handle-rank {
@@ -2322,6 +2355,18 @@
   gap: 8px;
   margin-top: 10px;
   justify-content: flex-end;
+}
+.story-image-preview-open {
+  display: block;
+  width: 100%;
+  padding: 0;
+  background: none;
+  border: none;
+  cursor: zoom-in;
+}
+.story-image-preview-open:focus-visible {
+  outline: 1px solid var(--color-gold-mid);
+  outline-offset: 2px;
 }
 .story-image-preview {
   display: block;

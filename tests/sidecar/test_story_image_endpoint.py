@@ -320,6 +320,30 @@ def test_stage_preview_returns_a_skeleton_and_its_boxes() -> None:
     print(f"  [OK] PNG, {len(boxes)} boxes, far figure's feet higher")
 
 
+def test_stage_preview_returns_the_moved_limbs() -> None:
+    """A dragged joint comes back in the skeleton exactly where it was put.
+
+    The console draws its joint handles from this, so a move that was lost
+    on the way in would snap the handle back and nobody would know why.
+    """
+    print("\n[TEST] /story/stage - moved limbs")
+    with patch("src.sidecar.story_image_routes.load_config",
+               return_value=_config()):
+        resp = _HTTP.post("/story/stage", json={
+            "people": [{"name": "Aragorn"}],
+            "placements": [
+                {"name": "Aragorn", "pose": "standing", "facing": "side",
+                 "limbs": [{"joint": "r_wrist", "x": 0.21, "y": 0.1}]},
+            ],
+        })
+    assert resp.status_code == 200, resp.text
+    skeleton = {limb["joint"]: (limb["x"], limb["y"])
+                for limb in resp.json()["placements"][0]["skeleton"]}
+    assert skeleton["r_wrist"] == (0.21, 0.1), skeleton
+    assert len(skeleton) == 12, sorted(skeleton)
+    print("  [OK] Moved wrist returned as sent; all 12 limb joints listed")
+
+
 def test_stage_preview_needs_someone_in_the_shot() -> None:
     """An empty cast is a 422, not a blank canvas."""
     print("\n[TEST] /story/stage - empty cast rejected")
@@ -342,6 +366,7 @@ def run_all_tests() -> None:
     test_blank_person_action_falls_back_to_the_analysis()
     test_comfyui_is_restarted_only_when_configured()
     test_stage_preview_returns_a_skeleton_and_its_boxes()
+    test_stage_preview_returns_the_moved_limbs()
     test_stage_preview_needs_someone_in_the_shot()
     print("\n[PASS] All story-image endpoint tests passed.")
 

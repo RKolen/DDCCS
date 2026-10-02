@@ -13,7 +13,7 @@
  */
 
 import { DEFAULT_ANGLE, DEFAULT_MOOD, DEFAULT_SETTING, DEFAULT_SHOT,
-  type StagePlacement } from './storyImage';
+  type StageLimb, type StagePlacement } from './storyImage';
 
 const KEY_PREFIX = 'ddccs:storyImageSetup:';
 
@@ -52,14 +52,28 @@ function text(value: unknown, fallback: string): string {
   return typeof value === 'string' ? value : fallback;
 }
 
+function limbs(value: unknown): StageLimb[] {
+  if (!Array.isArray(value)) return [];
+  return value.filter((row): row is StageLimb => (
+    typeof row === 'object' && row !== null
+    && typeof (row as StageLimb).joint === 'string'
+    && typeof (row as StageLimb).x === 'number'
+    && typeof (row as StageLimb).y === 'number'
+  ));
+}
+
 function placements(value: unknown): StagePlacement[] {
   if (!Array.isArray(value)) return [];
-  return value.filter((row): row is StagePlacement => (
-    typeof row === 'object' && row !== null
-    && typeof (row as StagePlacement).name === 'string'
-    && typeof (row as StagePlacement).lateral === 'number'
-    && typeof (row as StagePlacement).depth === 'number'
-  ));
+  return value
+    .filter((row): row is StagePlacement => (
+      typeof row === 'object' && row !== null
+      && typeof (row as StagePlacement).name === 'string'
+      && typeof (row as StagePlacement).lateral === 'number'
+      && typeof (row as StagePlacement).depth === 'number'
+    ))
+    // Setups saved before limbs existed have none; a malformed list would
+    // fail at the sidecar rather than here.
+    .map(row => ({ ...row, limbs: limbs(row.limbs) }));
 }
 
 /**

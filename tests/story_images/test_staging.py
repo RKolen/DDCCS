@@ -115,6 +115,47 @@ def test_moods_never_mention_people() -> None:
     print(f"  [OK] {len(MOODS)} moods describe only light and colour")
 
 
+def test_the_caption_gender_is_found_and_only_a_real_word() -> None:
+    """"male" and "female" are read as words; "human" is not a man."""
+    print("\n[TEST] caption_gender")
+    gender = import_module("src.story_images.region_render").caption_gender
+    cases = {
+        "male, wood elf, long flowing black hair": "male",
+        "human female, pale skin, round glasses": "female",
+        "female tiefling, violet skin": "female",
+        "a grizzled woman in a cloak": "female",
+        "human, ranger, weathered cloak": "",
+    }
+    for caption, expected in cases.items():
+        assert gender(caption) == expected, (caption, gender(caption))
+    print(f"  [OK] {len(cases)} captions read correctly")
+
+
+def test_a_male_elf_is_asked_for_as_a_man() -> None:
+    """The prompt names the gender plainly and the negative bans the other.
+
+    A lone "male" lost to "elf, long flowing black hair, green eyes", which
+    SD 1.5 reads as a woman, and a male elf came back female.
+    """
+    print("\n[TEST] region_prompt / gender_negative")
+    region_render = import_module("src.story_images.region_render")
+    person_type = import_module("src.story_images.types").ShotPerson
+    elf = person_type.from_dict({
+        "name": "Aragorn", "appearance": "male, elf, long flowing black hair"})
+    assert ", man, " in region_render.region_prompt(elf, ""), elf
+    assert "woman" in region_render.gender_negative(elf)
+    hobbit = person_type.from_dict({
+        "name": "Frodo Baggins", "appearance": "female halfling, curly hair"})
+    assert ", woman, " in region_render.region_prompt(hobbit, "")
+    assert region_render.gender_negative(hobbit).startswith("man")
+    plain = person_type.from_dict({
+        "name": "Aragorn", "appearance": "human ranger, weathered cloak"})
+    prompt = region_render.region_prompt(plain, "")
+    assert ", man," not in prompt and ", woman," not in prompt, prompt
+    assert region_render.gender_negative(plain) == ""
+    print("  [OK] Named in the prompt, the other banned; nothing when unstated")
+
+
 def test_each_character_can_face_a_different_way() -> None:
     """Facing is per character, and two of them differ.
 
@@ -127,8 +168,9 @@ def test_each_character_can_face_a_different_way() -> None:
     region_render = import_module("src.story_images.region_render")
     regions_mod = import_module("src.story_images.regions")
     staged = [
-        regions_mod.Placement("Aragorn", facing="behind"),
-        regions_mod.Placement("Frodo Baggins", facing="front"),
+        regions_mod.Placement("Aragorn", stance=regions_mod.Stance(facing="behind")),
+        regions_mod.Placement("Frodo Baggins",
+                              stance=regions_mod.Stance(facing="front")),
     ]
     away, away_negative = region_render.figure_framing(staged, "Aragorn")
     toward, toward_negative = region_render.figure_framing(
@@ -217,9 +259,9 @@ def test_every_pose_draws_at_every_facing() -> None:
     for stance in pose.POSE_VARIANTS:
         for facing in ("", *pose.TURN_DEGREES):
             for toward in ("", *pose.TOWARD_SIGN):
-                spot = regions_mod.Placement(
-                    name=box.name, pose=stance, facing=facing, toward=toward)
-                assert pose.figure_pose_png(256, 384, stance, facing, toward)
+                held = regions_mod.Stance(stance, facing, toward)
+                spot = regions_mod.Placement(name=box.name, stance=held)
+                assert pose.figure_pose_png(256, 384, held)
                 assert pose.openpose_png(512, 384, [box], [spot])
                 drawn += 1
     print(f"  [OK] {drawn} stance/facing/direction combinations all drew")
@@ -310,6 +352,54 @@ def test_a_back_view_mirrors_left_and_right() -> None:
     print("  [OK] Shoulders swap sides between front and back")
 
 
+def test_a_moved_limb_is_drawn_where_it_was_put() -> None:
+    """A dragged joint overrides the stance, and only that joint moves.
+
+    Nine stances cannot say "sword raised, off hand out for balance", so the
+    operator can move a limb by hand. The move lands after the turn: it was
+    made on the turned skeleton the console drew, and turning it again would
+    put the hand somewhere nobody dragged it.
+    """
+    print("\n[TEST] pose - a moved limb lands where it was put")
+    pose = import_module("src.story_images.pose")
+    regions_mod = import_module("src.story_images.regions")
+    box = regions_mod.Region(name="x", left=0, top=0, width=200, height=600)
+    for facing in ("", "side", "behind"):
+        plain = pose.joints_for(box, "walking", facing)
+        moved = pose.joints_for(box, "walking", facing,
+                                limbs={"r_wrist": (0.2, 0.05), "tail": (0, 0)})
+        assert moved[pose.R_WRIST] == (100 + 80, 30), (facing, moved[pose.R_WRIST])
+        changed = {j for j in plain if plain.get(j) != moved.get(j)}
+        assert changed == {pose.R_WRIST}, (facing, changed)
+    print("  [OK] Exact position at every facing; nothing else moved")
+
+
+def test_a_moved_limb_stays_in_reach() -> None:
+    """A joint dragged off the figure is held at the edge of its canvas."""
+    print("\n[TEST] pose - moved limbs are clamped")
+    pose = import_module("src.story_images.pose")
+    held = pose.moved_joints({"l_ankle": (9.0, -9.0), "l_knee": (-9.0, 9.0)})
+    assert held[pose.L_ANKLE] == (pose.LIMB_REACH, pose.LIMB_TOP), held
+    assert held[pose.L_KNEE] == (-pose.LIMB_REACH, pose.LIMB_BOTTOM), held
+    stance_type = import_module("src.story_images.regions").Stance
+    for stance in pose.POSE_VARIANTS:
+        assert pose.figure_pose_png(
+            256, 384, stance_type(stance, limbs={"r_elbow": (0.4, -0.1)}))
+    print("  [OK] Both extremes held; every stance draws with a move")
+
+
+def test_console_limb_limits_match_the_renderer() -> None:
+    """The joint handles stop where the renderer's clamp does."""
+    print("\n[TEST] LIMB_REACH / LIMB_TOP / LIMB_BOTTOM mirror pose.py")
+    pose = import_module("src.story_images.pose")
+    source = FRONTEND.read_text(encoding="utf-8")
+    for name in ("LIMB_REACH", "LIMB_TOP", "LIMB_BOTTOM"):
+        found = re.search(rf"export const {name} = (-?[0-9.]+);", source)
+        assert found is not None, name
+        assert float(found.group(1)) == getattr(pose, name), name
+    print("  [OK] All three limits match src/story_images/pose.py")
+
+
 def test_console_offers_exactly_these_poses() -> None:
     """The wizard's stance list matches the renderer's variants.
 
@@ -395,6 +485,8 @@ def run_all_tests() -> None:
     test_every_setting_has_a_backdrop_and_a_seat()
     test_mood_resolves_named_and_free()
     test_moods_never_mention_people()
+    test_the_caption_gender_is_found_and_only_a_real_word()
+    test_a_male_elf_is_asked_for_as_a_man()
     test_each_character_can_face_a_different_way()
     test_no_facing_adds_nothing()
     test_a_turned_skeleton_is_what_controlnet_obeys()
@@ -403,6 +495,9 @@ def run_all_tests() -> None:
     test_a_walk_strides_widest_when_it_is_turned()
     test_a_turn_can_point_either_way()
     test_a_back_view_mirrors_left_and_right()
+    test_a_moved_limb_is_drawn_where_it_was_put()
+    test_a_moved_limb_stays_in_reach()
+    test_console_limb_limits_match_the_renderer()
     test_console_offers_exactly_these_poses()
     test_console_offers_exactly_these_directions()
     test_console_depth_limits_match_the_layout()
